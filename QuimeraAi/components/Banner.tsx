@@ -62,6 +62,7 @@ const Banner: React.FC<BannerProps> = ({
   buttonUrl = '#',
   showButton = true,
   backgroundImageUrl,
+  backgroundPosition = 'center',
   overlayEnabled = true,
   backgroundOverlayOpacity = 50,
   height = 400,
@@ -153,9 +154,10 @@ const Banner: React.FC<BannerProps> = ({
       {hasValidImage ? (
         <>
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0 bg-cover bg-no-repeat"
             style={{
               backgroundImage: `url(${backgroundImageUrl})`,
+              backgroundPosition: backgroundPosition || 'center',
             }}
           />
           {/* Overlay */}

@@ -813,7 +813,7 @@ Asistente:`;
         <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none" style={{ animation: 'fadeIn 0.3s ease' }}>
             <button
                 onClick={() => { setIsMinimized(false); setIsOpen(true); }}
-                className={`pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 border ${isLiveActive ? 'animate-pulse' : ''}`}
+                className={`pointer-events-auto shrink-0 flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 border ${isLiveActive ? 'animate-pulse' : ''}`}
                 style={{
                     backgroundColor: colors?.botBubbleBackground || '#111111',
                     borderColor: isLiveActive ? '#ef4444' : colors?.inputBorder || '#222222',
@@ -936,7 +936,7 @@ Asistente:`;
     // =========================================================================
     const drawerContent = (
         <div
-            className={`fixed z-[10000] border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}
+            className={`fixed z-[10000] border shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${isExpanded ? 'inset-0 md:inset-4 rounded-none md:rounded-3xl' : 'inset-0 rounded-none md:inset-auto md:bottom-6 md:right-6 md:w-[420px] md:h-[550px] md:rounded-3xl'}`}
             style={{
                 backgroundColor: colors?.background || '#000000',
                 borderColor: colors?.inputBorder || '#222222',
@@ -961,7 +961,7 @@ Asistente:`;
                         <Minus size={20} />
                     </button>
 
-                    <div className="relative">
+                    <div className="relative shrink-0">
                         <div
                             className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border"
                             style={{ backgroundColor: `${colors?.headerText}10`, borderColor: `${colors?.headerText}20` }}

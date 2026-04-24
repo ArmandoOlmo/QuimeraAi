@@ -73,7 +73,7 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
         aria-expanded={isOpen}
       >
         <h3
-          className="text-lg font-semibold transition-colors hover:opacity-80"
+          className="text-lg font-semibold transition-colors hover:opacity-80 font-header"
           style={{ color: isOpen ? accentColor : headingColor }}
         >
           {question}
@@ -90,7 +90,7 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="pb-6 pr-8" style={{ color: textColor }}>
+          <p className="pb-6 pr-8 font-body" style={{ color: textColor }}>
             {answer}
           </p>
         </div>
@@ -123,7 +123,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
           >
             <ChevronDown className="h-5 w-5" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-lg font-semibold" style={{ color: isOpen ? accentColor : headingColor }}>
+          <h3 className="text-lg font-semibold font-header" style={{ color: isOpen ? accentColor : headingColor }}>
             {question}
           </h3>
         </div>
@@ -133,7 +133,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
       >
         <div className="overflow-hidden">
           <div className="px-6 pb-6 pl-[4.5rem]">
-            <p style={{ color: textColor }}>
+            <p className="font-body" style={{ color: textColor }}>
               {answer}
             </p>
           </div>
@@ -166,7 +166,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
         aria-expanded={isOpen}
       >
         <h3
-          className="text-lg font-semibold transition-all duration-300 flex-1"
+          className="text-lg font-semibold transition-all duration-300 flex-1 font-header"
           style={{
             color: isOpen ? accentColor : headingColor,
             textShadow: isOpen ? `0 0 20px ${hexToRgba(accentColor, 0.25)}` : 'none'
@@ -197,7 +197,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
               className="pl-4 border-l-2"
               style={{ borderColor: accentColor }}
             >
-              <p style={{ color: textColor }}>
+              <p className="font-body" style={{ color: textColor }}>
                 {answer}
               </p>
             </div>
@@ -232,7 +232,7 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
         </div>
         <div className="flex-1">
           <h3
-            className="text-xl font-bold mb-2 transition-colors duration-300"
+            className="text-xl font-bold mb-2 transition-colors duration-300 font-header"
             style={{ color: isOpen ? accentColor : headingColor }}
           >
             {question}
@@ -241,7 +241,7 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
             className={`grid overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0 mt-0'}`}
           >
             <div className="overflow-hidden">
-              <p className="text-base leading-relaxed" style={{ color: textColor }}>
+              <p className="text-base leading-relaxed font-body" style={{ color: textColor }}>
                 {answer}
               </p>
             </div>

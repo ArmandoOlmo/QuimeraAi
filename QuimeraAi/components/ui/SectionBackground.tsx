@@ -12,6 +12,8 @@ interface SectionBackgroundProps {
     backgroundOverlayColor?: string;
     /** The section's background color (used as overlay base) */
     backgroundColor?: string;
+    /** Background image focal position (CSS background-position value). Defaults to 'center' */
+    backgroundPosition?: string;
     /** Children (the actual section component) */
     children: React.ReactNode;
 }
@@ -34,6 +36,7 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundOverlayOpacity = 60,
     backgroundOverlayColor,
     backgroundColor,
+    backgroundPosition = 'center',
     children,
 }) => {
     const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl);
@@ -59,9 +62,10 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
             `}</style>
             {/* Background Image Layer */}
             <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                className="absolute inset-0 bg-cover bg-no-repeat"
                 style={{
-                    backgroundImage: `url(${backgroundImageUrl})`,
+                    backgroundImage: `url('${backgroundImageUrl}')`,
+                    backgroundPosition: backgroundPosition || 'center',
                     zIndex: 0,
                 }}
             />

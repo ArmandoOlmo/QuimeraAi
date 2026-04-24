@@ -364,6 +364,38 @@ export const BackgroundImageControl: React.FC<{
               </div>
             </div>
           )}
+
+          {/* ── Background Position Grid ── */}
+          <div className="mt-4 pt-3 border-t border-editor-border/30">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+              {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+            </label>
+            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+              {[
+                { id: 'top left', label: '↖' },
+                { id: 'top center', label: '↑' },
+                { id: 'top right', label: '↗' },
+                { id: 'center left', label: '←' },
+                { id: 'center center', label: '●' },
+                { id: 'center right', label: '→' },
+                { id: 'bottom left', label: '↙' },
+                { id: 'bottom center', label: '↓' },
+                { id: 'bottom right', label: '↘' },
+              ].map((pos) => (
+                <button
+                  key={pos.id}
+                  onClick={() => setNestedData(`${sectionKey}.backgroundPosition`, pos.id)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(sectionData?.backgroundPosition || 'center center') === pos.id
+                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                  }`}
+                  title={pos.id}
+                >
+                  {pos.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

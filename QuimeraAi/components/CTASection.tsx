@@ -54,7 +54,7 @@ interface CTASectionProps extends CtaData {
 }
 
 const CTASection: React.FC<CTASectionProps> = ({
-  glassEffect, title, description, buttonText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate, showAccent, accentText, cardOpacity, showCardBorder }) => {
+  glassEffect, title, description, buttonText, secondaryText, buttonUrl, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, onNavigate, showAccent, accentText, cardOpacity, showCardBorder }) => {
   // Get design tokens with fallback to component colors
   const { getColor } = useDesignTokens();
 
@@ -68,6 +68,7 @@ const CTASection: React.FC<CTASectionProps> = ({
     description: colors?.description || colors?.text || '#ffffff',
     buttonBackground: colors?.buttonBackground || '#ffffff',
     buttonText: colors?.buttonText || '#4f46e5',
+    secondaryText: colors?.secondaryText || 'rgba(255, 255, 255, 0.6)',
   };
 
   return (
@@ -121,9 +122,11 @@ const CTASection: React.FC<CTASectionProps> = ({
               </a>
 
               {/* Secondary text */}
-              <span className="text-white/60 text-sm">
-                No credit card required • Cancel anytime
-              </span>
+              {secondaryText !== '' && (
+                <span className="text-sm font-medium" style={{ color: actualColors.secondaryText }}>
+                  {secondaryText !== undefined ? secondaryText : 'No credit card required • Cancel anytime'}
+                </span>
+              )}
             </div>
           </div>
         </div>

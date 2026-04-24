@@ -200,6 +200,8 @@ interface ColorControlProps {
     variant?: 'editor' | 'dashboard';
     /** Optional portal container to mount the popover into */
     portalContainer?: HTMLElement | null;
+    /** If true, renders a minimal swatch without text or label */
+    compact?: boolean;
 }
 
 // Style maps per variant
@@ -236,7 +238,7 @@ const variantStyles = {
     },
 };
 
-const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor', portalContainer: propPortalContainer }) => {
+const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, paletteColors: propPaletteColors, recentPalettes, variant = 'editor', portalContainer: propPortalContainer, compact }) => {
     const styles = variantStyles[variant];
     const project = useSafeProject();
     
@@ -662,20 +664,31 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
     );
 
     return (
-        <div className="mb-2">
-            {label && <label className={styles.sectionLabel}>{label}</label>}
+        <div className={compact ? "" : "mb-2"}>
+            {!compact && label && <label className={styles.sectionLabel}>{label}</label>}
             <div className="relative">
-                <button
-                    ref={triggerRef}
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={styles.trigger}
-                >
-                    <div className={styles.swatch}>
-                        <div className="w-full h-full rounded-[3px]" style={{ backgroundColor: safeValue }} />
-                    </div>
-                    <span className={styles.hexText}>{safeValue.toUpperCase()}</span>
-                    <ChevronDown size={14} className={`${styles.chevron} transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                </button>
+                {compact ? (
+                    <button
+                        ref={triggerRef}
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-8 h-8 rounded-full border-2 border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered hover:scale-105 transition-transform"
+                        title={label ? `${label}: ${safeValue}` : safeValue}
+                    >
+                        <div className="w-full h-full" style={{ backgroundColor: safeValue }} />
+                    </button>
+                ) : (
+                    <button
+                        ref={triggerRef}
+                        onClick={() => setIsOpen(!isOpen)}
+                        className={styles.trigger}
+                    >
+                        <div className={styles.swatch}>
+                            <div className="w-full h-full rounded-[3px]" style={{ backgroundColor: safeValue }} />
+                        </div>
+                        <span className={styles.hexText}>{safeValue.toUpperCase()}</span>
+                        <ChevronDown size={14} className={`${styles.chevron} transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                )}
                 {isOpen && portalContainer && createPortal(PopoverContent, portalContainer)}
             </div>
         </div>

@@ -292,11 +292,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             if (destination === 'admin') {
                 await uploadAdminAsset(file, (adminCategory as any) || 'ai_generated', {
-                    description: `Generated AI image: ${generationPrompt.substring(0, 50)}...`,
+                    description: `Generated AI image: ${promptText.substring(0, 50)}...`,
                     isAiGenerated: true,
-                    aiPrompt: generationPrompt,
-                    aiModel: selectedModel,
-                    aiProvider: 'quimera'
+                    aiPrompt: promptText,
                 });
                 console.log('✅ [ImageGeneratorPanel] Saved to admin library');
                 setSavedToLibrary(true);
@@ -956,7 +954,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             {showImageDetail && generatedImage && createPortal(
                 <div
-                    className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowImageDetail(false)}
                 >
                     <div className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative" onClick={e => e.stopPropagation()}>
@@ -1012,7 +1010,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             {/* Library Browser Modal */}
             {showLibraryBrowser && createPortal(
                 <div
-                    className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowLibraryBrowser(false)}
                 >
                     <div

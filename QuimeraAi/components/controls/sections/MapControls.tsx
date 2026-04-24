@@ -232,11 +232,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <div className="flex justify-between items-center mb-1">
           <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.map.mapHeight', 'Map Height')}</label>
-          <span className="text-xs text-editor-text-primary">{data?.map.height || 400}px</span>
+          <span className="text-xs text-editor-text-primary">{data?.map.height || (data?.map.mapVariant === 'modern' ? 500 : 400)}px</span>
         </div>
         <input
           type="range" min="200" max="800" step="50"
-          value={data?.map.height || 400}
+          value={data?.map.height || (data?.map.mapVariant === 'modern' ? 500 : 400)}
           onChange={(e) => setNestedData('map.height', parseInt(e.target.value))}
           className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
@@ -264,10 +264,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.title')} value={data?.map.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('map.colors.heading', v)} />
         <ColorControl label={t('controls.map.textColor', 'Text')} value={data?.map.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('map.colors.text', v)} />
         <ColorControl label={t('controls.map.accentColor', 'Marker/Accent')} value={data?.map.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.accent', v)} />
-        {(data?.map.mapVariant === 'modern' || data?.map.mapVariant === 'card-overlay') && (
-          <ColorControl label={t('controls.map.cardBackground', 'Card Background')} value={data?.map.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
-        )}
-
+        <ColorControl label={t('controls.map.buttonBackground', 'Button Background')} value={data?.map.colors?.buttonBackground || data?.map.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('map.colors.buttonBackground', v)} />
+        <ColorControl label={t('controls.map.buttonText', 'Button Text')} value={data?.map.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('map.colors.buttonText', v)} />
+        <ColorControl label={t('controls.map.cardBackground', 'Card/Gradient Background')} value={data?.map.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('map.colors.cardBackground', v)} />
 
         {/* Corner Gradient */}
         <CornerGradientControl

@@ -1874,7 +1874,7 @@ ${suggestAvailableSlots()}
                             className="px-4 py-5 text-center"
                             style={{ background: `linear-gradient(135deg, ${appearance.colors?.primaryColor}, ${appearance.colors?.accentColor || appearance.colors?.primaryColor}dd)` }}
                         >
-                            <div className="w-12 h-12 mx-auto rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl mb-2">
+                            <div className="w-12 h-12 mx-auto rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl mb-2 shrink-0">
                                 {appearance.branding.logoEmoji || '👋'}
                             </div>
                             <h3 className="text-sm font-bold text-white">
@@ -2207,15 +2207,15 @@ ${suggestAvailableSlots()}
                         style={{ backgroundColor: appearance.colors?.backgroundColor }}
                     >
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: appearance.colors?.botTextColor }}>
-                                <Calendar size={18} style={{ color: appearance.colors?.primaryColor }} />
+                            <h3 className="text-sm font-bold flex items-center gap-2 shrink-0" style={{ color: appearance.colors?.botTextColor }}>
+                                <Calendar size={18} className="shrink-0" style={{ color: appearance.colors?.primaryColor }} />
                                 Agendar Cita
                             </h3>
                             <button
                                 onClick={() => setShowAppointmentForm(false)}
-                                className="p-1 rounded-full hover:bg-black/10 transition-colors"
+                                className="p-1 rounded-full hover:bg-black/10 transition-colors shrink-0"
                             >
-                                <X size={16} style={{ color: appearance.colors?.botTextColor }} />
+                                <X size={16} className="shrink-0" style={{ color: appearance.colors?.botTextColor }} />
                             </button>
                         </div>
 
@@ -2400,7 +2400,7 @@ ${suggestAvailableSlots()}
                                     </>
                                 ) : (
                                     <>
-                                        <Calendar size={14} />
+                                        <Calendar size={14} className="shrink-0" />
                                         {t('landingChatbot.appointmentForm.confirm')}
                                     </>
                                 )}

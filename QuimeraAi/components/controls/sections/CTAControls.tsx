@@ -58,6 +58,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
         <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
+        <Input label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(e) => setNestedData('cta.secondaryText', e.target.value)} />
       </div>
 
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
@@ -208,6 +209,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
         <ColorControl label={t('controls.fondoBotn')} value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
+        <ColorControl label="Texto Secundario" value={data?.cta.colors?.secondaryText || 'rgba(255, 255, 255, 0.6)'} onChange={(v) => setNestedData('cta.colors.secondaryText', v)} />
       </div>
 
 

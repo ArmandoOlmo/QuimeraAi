@@ -70,7 +70,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     colors,
     titleFontSize = 'md',
     descriptionFontSize = 'md',
-    height = 400,
+    height,
     borderRadius = 'none',
     cornerGradient,
     phone,
@@ -88,6 +88,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         ...colors,
         heading: colors?.heading || primaryColor,
         cardBackground: colors?.cardBackground || primaryColor,
+        buttonBackground: colors?.buttonBackground || colors?.accent || primaryColor,
+        buttonText: colors?.buttonText || '#ffffff',
     };
 
     // Translated strings
@@ -100,6 +102,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     // Only load Google Maps if we have a valid API key (not a placeholder)
     const hasValidApiKey = apiKey && apiKey.trim().length > 20 && !apiKey.includes('your_') && !apiKey.includes('placeholder') && !apiKey.includes('api_key');
     
+    const finalHeight = height || (mapVariant === 'modern' ? 500 : 400);
+
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: hasValidApiKey ? apiKey : '',
@@ -252,21 +256,24 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         // ═══════════════════════════════════════════
         if (mapVariant === 'modern') {
             return (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-0" style={{ height: `${height}px` }}>
+                <div 
+                    className="flex flex-col @lg:grid @lg:grid-cols-5 gap-0" 
+                    style={{ '--map-height': `${finalHeight}px` } as React.CSSProperties}
+                >
                     {/* Info Card - Left Side (2/5) */}
                     <div
-                        className="lg:col-span-2 p-8 lg:p-10 flex flex-col justify-center"
+                        className="@lg:col-span-2 p-6 @lg:p-10 flex flex-col justify-center order-2 @lg:order-1"
                         style={{ backgroundColor: mapColors.cardBackground }}
                     >
-                        <div className="mb-8">
+                        <div className="mb-6 @lg:mb-8">
                             <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                                className="w-12 h-12 @lg:w-14 @lg:h-14 rounded-2xl flex items-center justify-center mb-4 @lg:mb-5"
                                 style={{ backgroundColor: accentColor + '15' }}
                             >
-                                <MapPin className="w-7 h-7" style={{ color: accentColor }} />
+                                <MapPin className="w-6 h-6 @lg:w-7 @lg:h-7" style={{ color: accentColor }} />
                             </div>
                             <h3
-                                className="text-2xl lg:text-3xl font-bold mb-3 font-header"
+                                className="text-2xl @lg:text-3xl font-bold mb-3 font-header"
                                 style={{ color: mapColors.heading }}
                             >
                                 {title}
@@ -277,7 +284,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                         </div>
 
                         {/* Contact details */}
-                        <div className="mb-8">
+                        <div className="mb-6 @lg:mb-8">
                             {renderContactInfo(colors?.text || '#94a3b8', accentColor)}
                         </div>
 
@@ -286,8 +293,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                             href={directionsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg w-full @sm:w-auto"
+                            style={{ backgroundColor: mapColors.buttonBackground, color: mapColors.buttonText }}
                         >
                             <Navigation className="w-4 h-4" />
                             {directionsText}
@@ -295,8 +302,10 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     </div>
 
                     {/* Map - Right Side (3/5) */}
-                    <div className="lg:col-span-3 relative">
-                        {renderMapEmbed()}
+                    <div className="@lg:col-span-3 relative h-[var(--map-height)] @lg:h-auto min-h-[var(--map-height)] order-1 @lg:order-2">
+                        <div className="absolute inset-0">
+                            {renderMapEmbed()}
+                        </div>
                     </div>
                 </div>
             );
@@ -307,22 +316,30 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         // ═══════════════════════════════════════════
         if (mapVariant === 'minimal') {
             return (
-                <div className="relative w-full" style={{ height: `${height}px` }}>
-                    {renderMapEmbed()}
-                    {/* Floating Badge - bottom left */}
-                    <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl p-5 max-w-sm border border-gray-100 shadow-xl">
-                        <div className="flex items-start gap-4">
+                <div 
+                    className="flex flex-col @md:block relative w-full"
+                    style={{ '--map-height': `${finalHeight}px` } as React.CSSProperties}
+                >
+                    <div className="w-full h-[var(--map-height)] shrink-0">
+                        {renderMapEmbed()}
+                    </div>
+                    {/* Floating Badge - bottom left on desktop, stacked below on mobile */}
+                    <div 
+                        className="@md:absolute @md:bottom-6 @md:left-6 backdrop-blur-md p-5 @md:rounded-2xl @md:max-w-sm border-t @md:border border-gray-100/20 shadow-xl z-10"
+                        style={{ backgroundColor: mapColors.cardBackground ? `${mapColors.cardBackground}F2` : 'rgba(255, 255, 255, 0.95)' }}
+                    >
+                        <div className="flex items-start gap-3 @md:gap-4">
                             <div
-                                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                                className="w-10 h-10 @md:w-12 @md:h-12 rounded-xl flex items-center justify-center shrink-0"
                                 style={{ backgroundColor: accentColor + '15' }}
                             >
                                 <MapPin className="w-5 h-5" style={{ color: accentColor }} />
                             </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-bold text-gray-900 mb-1 truncate">{title}</p>
-                                <p className="text-xs text-gray-500 mb-3">{address}</p>
+                            <div className="min-w-0 w-full">
+                                <p className="text-sm font-bold mb-1 truncate" style={{ color: mapColors.heading }}>{title}</p>
+                                <p className="text-xs mb-2 @md:mb-3" style={{ color: colors?.text }}>{address}</p>
                                 {phone && (
-                                    <p className="text-xs text-gray-500 flex items-center gap-1.5 mb-1">
+                                    <p className="text-xs flex items-center gap-1.5 mb-1" style={{ color: colors?.text }}>
                                         <Phone className="w-3 h-3" style={{ color: accentColor }} />
                                         {phone}
                                     </p>
@@ -331,7 +348,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                     href={directionsUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold mt-1 transition-colors hover:opacity-80"
+                                    className="inline-flex items-center gap-1.5 text-xs font-semibold mt-2 @md:mt-1 transition-colors hover:opacity-80"
                                     style={{ color: accentColor }}
                                 >
                                     <Navigation className="w-3.5 h-3.5" />
@@ -349,29 +366,39 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         // ═══════════════════════════════════════════
         if (mapVariant === 'dark-tech') {
             return (
-                <div className="relative w-full" style={{ height: `${height}px` }}>
-                    {renderMapEmbed()}
-                    {/* Tech Overlay Card - top right */}
-                    <div className="absolute top-6 right-6 bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-2xl p-6 max-w-sm border border-white/10 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-5">
+                <div 
+                    className="flex flex-col @md:block relative w-full"
+                    style={{ '--map-height': `${finalHeight}px` } as React.CSSProperties}
+                >
+                    <div className="w-full h-[var(--map-height)] shrink-0">
+                        {renderMapEmbed()}
+                    </div>
+                    {/* Tech Overlay Card - top left on desktop, stacked below on mobile */}
+                    <div 
+                        className="@md:absolute @md:top-6 @md:left-6 backdrop-blur-xl p-6 @md:rounded-2xl @md:max-w-sm border-t @md:border border-white/10 shadow-2xl z-10"
+                        style={{ background: mapColors.cardBackground ? `linear-gradient(to bottom right, ${mapColors.cardBackground}f2, ${mapColors.cardBackground}e6)` : 'linear-gradient(to bottom right, rgba(17, 24, 39, 0.95), rgba(3, 7, 18, 0.95))' }}
+                    >
+                        <div className="flex items-center gap-3 mb-4 @md:mb-5">
                             <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }} />
-                            <span className="text-xs font-mono uppercase tracking-widest text-gray-400">
+                            <span className="text-xs font-mono uppercase tracking-widest" style={{ color: colors?.text }}>
                                 {locationLabel}
                             </span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-2 font-header">{title}</h3>
-                        <p className="text-sm text-gray-400 mb-5 leading-relaxed">{description}</p>
+                        <h3 className="text-lg font-bold mb-2 font-header" style={{ color: mapColors.heading }}>{title}</h3>
+                        <p className="text-sm mb-4 @md:mb-5 leading-relaxed" style={{ color: colors?.text }}>{description}</p>
 
                         {/* Contact info */}
-                        {renderContactInfo('#cbd5e1', accentColor, true)}
+                        <div className="mb-5 @sm:mb-0">
+                            {renderContactInfo(colors?.text || '#cbd5e1', accentColor, true)}
+                        </div>
 
                         {/* Navigate button */}
                         <a
                             href={directionsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-5 inline-flex items-center gap-2 text-xs font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 hover:translate-x-1 hover:shadow-lg"
-                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
+                            className="mt-2 @sm:mt-5 flex @sm:inline-flex items-center justify-center gap-2 text-xs font-semibold px-5 py-3 @md:py-2.5 rounded-xl transition-all duration-300 hover:translate-x-1 hover:shadow-lg w-full @sm:w-auto"
+                            style={{ backgroundColor: mapColors.buttonBackground, color: mapColors.buttonText }}
                         >
                             <Navigation className="w-4 h-4" />
                             {navigateText}
@@ -385,16 +412,29 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         // ESTILO 4: NIGHT (default) — Full map with bottom gradient bar
         // ═══════════════════════════════════════════
         return (
-            <div className="relative w-full" style={{ height: `${height}px` }}>
-                {renderMapEmbed()}
-                {/* Bottom Info Bar */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900/95 via-gray-900/80 to-transparent pt-16 pb-6 px-6">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div 
+                className="flex flex-col @md:block relative w-full"
+                style={{ '--map-height': `${finalHeight}px` } as React.CSSProperties}
+            >
+                <div className="w-full h-[var(--map-height)] shrink-0">
+                    {renderMapEmbed()}
+                </div>
+                {/* Bottom Info Bar - bottom gradient on desktop, solid stacked below on mobile */}
+                <div 
+                    className="@md:absolute @md:bottom-0 @md:left-0 @md:right-0 pt-6 pb-6 px-6 @md:pt-16 @md:pointer-events-none"
+                    style={{ backgroundColor: mapColors.cardBackground || '#111827' }}
+                >
+                    {/* Desktop gradient overlay */}
+                    <div 
+                        className="hidden @md:block absolute inset-0 pointer-events-none" 
+                        style={{ background: mapColors.cardBackground ? `linear-gradient(to top, ${mapColors.cardBackground}f2, ${mapColors.cardBackground}cc, transparent)` : 'linear-gradient(to top, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8), transparent)' }}
+                    />
+                    <div className="max-w-7xl mx-auto flex flex-col @md:flex-row @md:items-end @md:justify-between gap-4 @md:pointer-events-auto relative z-10">
                         <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white mb-1 font-header">{title}</h3>
-                            <p className="text-sm text-gray-300 mb-1">{address}</p>
+                            <h3 className="text-xl font-bold mb-1 font-header" style={{ color: mapColors.heading }}>{title}</h3>
+                            <p className="text-sm mb-2 @md:mb-1" style={{ color: colors?.text }}>{address}</p>
                             {phone && (
-                                <p className="text-sm text-gray-400 flex items-center gap-2">
+                                <p className="text-sm flex items-center gap-2" style={{ color: colors?.text }}>
                                     <Phone className="w-3.5 h-3.5" style={{ color: accentColor }} />
                                     {phone}
                                 </p>
@@ -404,8 +444,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                             href={directionsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg shrink-0"
-                            style={{ backgroundColor: accentColor, color: '#ffffff' }}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg shrink-0 w-full @md:w-auto"
+                            style={{ backgroundColor: mapColors.buttonBackground, color: mapColors.buttonText }}
                         >
                             <Navigation className="w-5 h-5" />
                             {directionsText}
@@ -418,7 +458,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
 
     return (
         <section 
-            className={`w-full ${getPadding(paddingY)} relative overflow-hidden`}
+            className={`w-full ${getPadding(paddingY)} relative overflow-hidden @container`}
             style={{ backgroundColor: colors?.background }}
         >
             <CornerGradient config={cornerGradient} />

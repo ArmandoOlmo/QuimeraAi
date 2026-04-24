@@ -10,6 +10,14 @@ import Hero from '../../Hero';
 import HeroModern from '../../HeroModern';
 import HeroGradient from '../../HeroGradient';
 import HeroFitness from '../../HeroFitness';
+import HeroSplit from '../../HeroSplit';
+import HeroGallery from '../../HeroGallery';
+import HeroWave from '../../HeroWave';
+import HeroNova from '../../HeroNova';
+import HeroLead from '../../HeroLead';
+import Separator from '../../Separator';
+import TopBar from '../../TopBar';
+import LogoBanner from '../../LogoBanner';
 
 import Features from '../../Features';
 import Testimonials from '../../Testimonials';
@@ -142,11 +150,18 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         };
         const derivedColors = deriveColorsFromPalette(mergedColors, baseComponent);
 
+        // Merge cornerGradient if it exists
+        const mergedCornerGradient = (styles as any)?.cornerGradient ? {
+            ...(styles as any).cornerGradient,
+            ...(mockContent as any)?.cornerGradient,
+        } : (mockContent as any)?.cornerGradient;
+
         // Create merged props with derived colors
         const mergedProps = {
             ...mockContent as any,
             ...styles,
-            colors: derivedColors
+            colors: derivedColors,
+            ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
         };
 
         switch (baseComponent) {
@@ -161,6 +176,16 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
 
                     return <Hero {...mergedProps} borderRadius={hbr} />;
                 }
+            case 'heroSplit':
+                return <HeroSplit {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
+            case 'heroGallery':
+                return <HeroGallery {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
+            case 'heroWave':
+                return <HeroWave {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
+            case 'heroNova':
+                return <HeroNova {...mergedProps} borderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
+            case 'heroLead':
+                return <HeroLead {...mergedProps} cardBorderRadius={(styles as any).cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={(styles as any).inputBorderRadius || 'md'} buttonBorderRadius={(styles as any).buttonBorderRadius || theme.buttonBorderRadius} />;
             case 'features':
                 return <Features {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} />;
             case 'testimonials':
@@ -193,6 +218,17 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <Menu {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'banner':
                 return <Banner {...mergedProps} buttonBorderRadius={theme.buttonBorderRadius} />;
+            case 'topBar':
+                return <TopBar {...mergedProps} />;
+            case 'logoBanner':
+                return <LogoBanner {...mergedProps} />;
+            case 'separator1':
+            case 'separator2':
+            case 'separator3':
+            case 'separator4':
+            case 'separator5':
+            case 'separator':
+                return <Separator data={mergedProps} />;
             case 'footer':
                 return <Footer {...mergedProps} />;
             case 'chatbot':

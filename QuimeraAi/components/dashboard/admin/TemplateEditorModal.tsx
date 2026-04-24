@@ -171,7 +171,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     useEffect(() => {
         if (template) {
             setFormData({
-                name: template.name || '',
+                name: template.name === 'New Template' ? '' : (template.name || ''),
                 description: template.description || '',
                 category: template.category || template.brandIdentity?.industry || '',
                 tags: template.tags || [],
@@ -873,7 +873,7 @@ Name:`;
                     </div>
                     <div>
                         <h2 className="text-base font-semibold text-white">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
-                        <p className="text-xs text-editor-text-secondary">{template?.name}</p>
+                        <p className="text-xs text-editor-text-secondary">{template?.name === 'New Template' ? '' : template?.name}</p>
                     </div>
                 </div>
                 <button

@@ -16,6 +16,7 @@ const Separator: React.FC<SeparatorProps> = ({ data }) => {
     return (
         <SectionBackground
             backgroundImageUrl={data.backgroundImageUrl}
+            backgroundPosition={data.backgroundPosition}
             backgroundOverlayEnabled={data.backgroundOverlayEnabled}
             backgroundOverlayOpacity={data.backgroundOverlayOpacity}
             backgroundOverlayColor={data.backgroundOverlayColor}
@@ -25,7 +26,7 @@ const Separator: React.FC<SeparatorProps> = ({ data }) => {
                 className={data.glassEffect ? "backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]" : ""}
                 style={{
                     width: '100%',
-                    height: `${data.height}px`,
+                    height: `${data.height || 100}px`,
                     backgroundColor: data.glassEffect ? hexToRgba(bgColor, 0.4) : bgColor,
                 }}
             />

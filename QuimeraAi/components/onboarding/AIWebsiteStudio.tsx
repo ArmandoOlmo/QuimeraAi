@@ -14,12 +14,16 @@ import {
     X, Mic, MicOff, Send, Sparkles, Loader2, ChevronRight,
     Building2, Palette, Phone, CheckCircle2, Circle,
     MessageSquare, Zap, LayoutTemplate, Image, FileText, Package, Save, PartyPopper,
-    RefreshCcw, Volume2, Globe,
+    RefreshCcw, Volume2, Globe, Upload, Plus, Minus, Type
 } from 'lucide-react';
 import { useUI } from '../../contexts/core/UIContext';
 import { useAIWebsiteStudio, BusinessBrief, GenerationPhase, GenerationEvent } from './hooks/useAIWebsiteStudio';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
+import ColorControl from '../ui/ColorControl';
+import { PageSection } from '../../types/ui';
+import ImagePicker from '../ui/ImagePicker';
+import FontFamilyPicker from '../ui/FontFamilyPicker';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -254,7 +258,7 @@ const AIWebsiteStudio: React.FC = () => {
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
                     <div className="hidden lg:flex w-[300px] flex-col border-l border-editor-border bg-editor-panel-bg/30 overflow-y-auto custom-scrollbar">
-                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} />
+                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
                     </div>
 
                     {/* RIGHT: Business Brief Panel (mobile drawer) */}
@@ -266,7 +270,7 @@ const AIWebsiteStudio: React.FC = () => {
                                     <span className="text-sm font-semibold text-editor-text-primary">{t('aiWebsiteStudio.briefPanel.title')}</span>
                                     <button onClick={() => setIsMobileBriefOpen(false)} className="p-1 text-editor-text-secondary hover:text-editor-text-primary"><X size={16} /></button>
                                 </div>
-                                <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} />
+                                <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
                             </div>
                         </div>
                     )}
@@ -336,15 +340,69 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
 // BUSINESS BRIEF PANEL — uses editor tokens
 // ═══════════════════════════════════════════════════════════════════════════
 
+const AVAILABLE_COMPONENTS: { key: PageSection; label: string }[] = [
+    { key: 'hero', label: 'Hero' }, { key: 'heroSplit', label: 'Hero Split' },
+    { key: 'heroGallery', label: 'Hero Gallery' }, { key: 'heroWave', label: 'Hero Wave' },
+    { key: 'heroNova', label: 'Hero Nova' }, { key: 'heroLead', label: 'Hero Lead' },
+    { key: 'topBar', label: 'Top Bar' }, { key: 'logoBanner', label: 'Logo Banner' },
+    { key: 'banner', label: 'Banner' }, { key: 'features', label: 'Features' },
+    { key: 'testimonials', label: 'Testimonials' }, { key: 'pricing', label: 'Pricing' },
+    { key: 'faq', label: 'FAQ' }, { key: 'cta', label: 'CTA' },
+    { key: 'services', label: 'Services' }, { key: 'video', label: 'Video' },
+    { key: 'howItWorks', label: 'How It Works' }, { key: 'menu', label: 'Menu' },
+    { key: 'leads', label: 'Leads' }, { key: 'newsletter', label: 'Newsletter' },
+    { key: 'map', label: 'Map' }, { key: 'signupFloat', label: 'Signup Float' },
+    { key: 'slideshow', label: 'Slideshow' }, { key: 'portfolio', label: 'Portfolio' },
+    { key: 'team', label: 'Team' },
+    { key: 'separator1', label: 'Separator 1' }, { key: 'separator2', label: 'Separator 2' },
+    { key: 'separator3', label: 'Separator 3' },
+];
+
+const COLOR_KEYS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const;
+
 const BriefPanel: React.FC<{
     brief: BusinessBrief;
     canGenerate: boolean;
     isGenerating: boolean;
     onGenerate: () => void;
-}> = ({ brief, canGenerate, isGenerating, onGenerate }) => {
+    referenceImages: string[];
+    onAddReferenceImage: (base64: string) => void;
+    onRemoveReferenceImage: (index: number) => void;
+    onUpdateColor: (colorKey: string, newColor: string) => void;
+    onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: string) => void;
+    onToggleComponent: (component: PageSection) => void;
+}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent }) => {
     const { t } = useTranslation();
     const readiness = brief.readinessScore;
     const readinessColor = readiness >= 80 ? '#22c55e' : readiness >= 50 ? '#f59e0b' : readiness >= 20 ? '#ef4444' : '#6b7280';
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [showComponentPicker, setShowComponentPicker] = useState(false);
+    const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleFiles = async (files: FileList | File[]) => {
+        const remaining = 14 - referenceImages.length;
+        if (remaining <= 0) return;
+        const toProcess = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
+        for (const file of toProcess) {
+            try {
+                const base64 = await fileToBase64(file);
+                if (base64) onAddReferenceImage(base64);
+            } catch (e) { console.error('Error converting file:', e); }
+        }
+    };
+
+    // Components not yet selected
+    const availableToAdd = AVAILABLE_COMPONENTS.filter(c => !brief.suggestedComponents.includes(c.key));
 
     return (
         <div className="flex-1 flex flex-col p-4 space-y-4 text-xs">
@@ -409,28 +467,149 @@ const BriefPanel: React.FC<{
 
             {/* Color Palette */}
             <BriefSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={13} />}>
-                <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(brief.colorPalette).filter(([k]) => ['primary', 'secondary', 'accent'].includes(k)).map(([key, color]) => (
-                        <div key={key} className="flex items-center gap-1.5 bg-editor-bg rounded-lg px-2 py-1 border border-editor-border">
-                            <div className="w-3 h-3 rounded-full border border-editor-border" style={{ background: color }} />
-                            <span className="text-editor-text-secondary text-[10px]">{key}</span>
+                <div className="grid grid-cols-2 gap-2">
+                    {COLOR_KEYS.map(key => (
+                        <ColorControl
+                            key={key}
+                            label={key}
+                            value={brief.colorPalette[key]}
+                            onChange={(newColor) => onUpdateColor(key, newColor)}
+                            variant="editor"
+                        />
+                    ))}
+                </div>
+            </BriefSection>
+
+            {/* Typography */}
+            <BriefSection title={t('aiWebsiteStudio.briefPanel.typography', { defaultValue: 'Typography' })} icon={<Type size={13} />}>
+                <div className="space-y-2">
+                    {(['header', 'body', 'button'] as const).map(key => (
+                        <div key={key} className="flex flex-col gap-1">
+                            <span className="text-[10px] text-editor-text-secondary uppercase">{key}</span>
+                            <FontFamilyPicker
+                                value={brief.fontPairing[key]}
+                                onChange={(val) => onUpdateFont(key, val as any)}
+                            />
                         </div>
                     ))}
                 </div>
             </BriefSection>
 
-            {/* Components */}
-            {brief.suggestedComponents.length > 0 && (
-                <BriefSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
-                    <div className="flex flex-wrap gap-1">
-                        {brief.suggestedComponents.map(comp => (
-                            <span key={comp} className="px-2 py-0.5 rounded-md bg-primary/10 text-editor-accent/70 text-[10px] border border-primary/10">
-                                {comp}
-                            </span>
+            {/* Components — Uniform compact chips */}
+            <BriefSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
+                <div className="flex flex-wrap gap-[3px]">
+                    {brief.suggestedComponents.map(comp => (
+                        <button
+                            key={comp}
+                            onClick={() => onToggleComponent(comp as PageSection)}
+                            className="group/chip inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded bg-editor-accent/10 text-editor-accent text-[9px] font-medium border border-editor-accent/15 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-400 transition-all cursor-pointer leading-none"
+                            title={`Remove ${comp}`}
+                        >
+                            <span>{comp}</span>
+                            <X size={8} className="opacity-0 group-hover/chip:opacity-100 -mr-0.5 transition-opacity flex-shrink-0" />
+                        </button>
+                    ))}
+                    {/* Inline add button */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowComponentPicker(!showComponentPicker)}
+                            className="inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded border border-dashed border-editor-border text-editor-text-secondary/60 hover:border-editor-accent/40 hover:text-editor-accent text-[9px] font-medium transition-all cursor-pointer leading-none"
+                        >
+                            <Plus size={9} />
+                        </button>
+                        {showComponentPicker && availableToAdd.length > 0 && (
+                            <div className="absolute left-0 top-full mt-1 z-50 bg-editor-panel-bg border border-editor-border rounded-lg shadow-2xl shadow-black/40 max-h-52 overflow-y-auto w-44 custom-scrollbar py-1">
+                                {availableToAdd.map(comp => (
+                                    <button
+                                        key={comp.key}
+                                        onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
+                                        className="w-full text-left px-2.5 py-1 text-[10px] text-editor-text-secondary hover:bg-editor-accent/10 hover:text-editor-accent transition-colors cursor-pointer"
+                                    >
+                                        {comp.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </BriefSection>
+
+            {/* Reference Images */}
+            <BriefSection title={`${t('aiWebsiteStudio.briefPanel.referenceImages', { defaultValue: 'Reference Images' })} (${referenceImages.length}/14)`} icon={<Image size={13} />}>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                    className="hidden"
+                />
+                <div
+                    className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-4 flex flex-col items-center justify-center gap-2 ${
+                        isDragging ? 'border-editor-accent bg-editor-accent/10' : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg/30'
+                    }`}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files) handleFiles(e.dataTransfer.files); }}
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <div className="size-8 rounded-full bg-editor-border/20 group-hover:bg-editor-accent/10 flex items-center justify-center transition-colors">
+                        <Upload size={16} className="text-editor-text-secondary group-hover:text-editor-accent transition-colors" />
+                    </div>
+                    <span className="text-[10px] font-medium text-editor-text-secondary group-hover:text-editor-accent transition-colors text-center">
+                        {t('aiWebsiteStudio.briefPanel.uploadReference', { defaultValue: 'Upload reference images' })}
+                    </span>
+                    <span className="text-[9px] text-editor-text-secondary/50">
+                        {t('aiWebsiteStudio.briefPanel.uploadReferenceHint', { defaultValue: 'People, places, products, or style inspiration' })}
+                    </span>
+                </div>
+
+                <div className="flex gap-2 w-full mt-2">
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1 py-1.5 rounded-lg border border-editor-border hover:border-editor-accent text-[10px] text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center justify-center gap-1.5"
+                    >
+                        <Upload size={12} /> Local
+                    </button>
+                    <button
+                        onClick={() => setShowLibraryPicker(true)}
+                        className="flex-1 py-1.5 rounded-lg border border-editor-border hover:border-editor-accent text-[10px] text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center justify-center gap-1.5 bg-editor-accent/10 text-editor-accent border-editor-accent/20"
+                    >
+                        <Image size={12} /> Librería Admin
+                    </button>
+                </div>
+
+                {showLibraryPicker && (
+                    <ImagePicker
+                        label=""
+                        value=""
+                        onChange={(url) => {
+                            if (!referenceImages.includes(url) && referenceImages.length < 14) {
+                                onAddReferenceImage(url);
+                            }
+                        }}
+                        destination="admin"
+                        defaultOpen={true}
+                        onClose={() => setShowLibraryPicker(false)}
+                    />
+                )}
+
+                {referenceImages.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                        {referenceImages.map((img, idx) => (
+                            <div key={idx} className="relative w-11 h-11 rounded-lg overflow-hidden group/thumb border border-editor-border">
+                                <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onRemoveReferenceImage(idx); }}
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center"
+                                >
+                                    <X size={12} className="text-white" />
+                                </button>
+                            </div>
                         ))}
                     </div>
-                </BriefSection>
-            )}
+                )}
+            </BriefSection>
 
             {/* Generate Button */}
             <div className="pt-2 mt-auto">

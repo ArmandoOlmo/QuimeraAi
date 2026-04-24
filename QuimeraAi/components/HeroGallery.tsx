@@ -52,6 +52,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
     onNavigate,
     textHorizontalAlign = 'left',
     textVerticalAlign = 'bottom',
+    bgPosition = 'center',
 }) => {
     const { getColor } = useDesignTokens();
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -143,7 +144,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                                 style={{
                                     backgroundImage: `url(${bgImage})`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
+                                    backgroundPosition: bgPosition || 'center',
                                     backgroundColor: slideBg,
                                 }}
                             />

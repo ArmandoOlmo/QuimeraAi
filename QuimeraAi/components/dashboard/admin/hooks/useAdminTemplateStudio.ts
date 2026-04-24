@@ -105,6 +105,8 @@ export interface BusinessBrief {
     suggestedComponents: PageSection[];
     readinessScore: number;
     missingFields: string[];
+    /** How the user wants reference images applied (e.g. "Use this person as the owner in all photos") */
+    referenceImageContext?: string;
 }
 
 export interface GenerationEvent {
@@ -139,6 +141,7 @@ const createEmptyBrief = (): BusinessBrief => ({
     suggestedComponents: [],
     readinessScore: 0,
     missingFields: ['businessName', 'industry', 'description'],
+    referenceImageContext: '',
 });
 
 // ── ALL_SECTIONS constant ───────────────────────────────────────────────────
@@ -197,6 +200,12 @@ export function useAdminTemplateStudio(onSuccess?: () => void) {
     // ── Brief state ─────────────────────────────────────────────────────────
     const [businessBrief, setBusinessBrief] = useState<BusinessBrief>(createEmptyBrief());
 
+    // ── Reference images state ──────────────────────────────────────────────
+    const [referenceImages, setReferenceImages] = useState<string[]>([]);
+    const referenceImagesRef = useRef<string[]>([]);
+    // Keep ref in sync
+    useEffect(() => { referenceImagesRef.current = referenceImages; }, [referenceImages]);
+
     // ── Generation state ────────────────────────────────────────────────────
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationPhase, setGenerationPhase] = useState<GenerationPhase | null>(null);
@@ -253,7 +262,7 @@ CRITICAL RULES:
 1. Be conversational, warm, and enthusiastic. This is a creative collaboration, not a form.
 2. Ask 1-2 questions at a time, never overwhelm with many questions.
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
-   <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"]}-->
+   <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
 5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form — use it for lead-capture-heavy industries like Healthcare, Legal, Real Estate, Consulting. You can use separators (separator1, separator2) to create visual breaks with glassmorphism or colors between heavy sections.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
@@ -434,8 +443,27 @@ Ecommerce/Retail:
 - Display (syne, unbounded, red-hat-display) → Creative, attention-grabbing, for headlines only
 - Monospace (dm-mono, space-mono) → Developer, tech, data-driven brands
 
+═══════════════════════════════════════════════════════════
+REFERENCE IMAGES — STYLE TRANSFER & VISUAL GUIDANCE
+═══════════════════════════════════════════════════════════
+The user can upload reference images via the right panel. When the user uploads reference images, you MUST:
+1. Acknowledge that you see they uploaded reference image(s)
+2. Ask HOW they want the reference images applied. Examples:
+   - "I want this person to appear as the owner/model in all website photos"
+   - "Use this location/place as the setting for all photos"
+   - "Match the visual style, lighting, and mood of these images"
+   - "This is our product — feature it prominently"
+   - "Use these as inspiration for the overall aesthetic"
+3. Store their answer in the referenceImageContext field of the BRIEF tag
+4. Confirm back to the user how you'll use the reference images during generation
+
+In the BRIEF tag, include: "referenceImageContext":"[user's description of how to apply reference images]"
+Example: "referenceImageContext":"Use this person as the business owner in hero and team photos. Match the warm, golden-hour lighting style."
+
+${referenceImagesRef.current.length > 0 ? `⚠️ The user has currently uploaded ${referenceImagesRef.current.length} reference image(s). If you haven't already asked how they want them used, ASK NOW.` : ''}
+
 Remember: You are building a COMPLETE website — every component needs full, rich content. Be thorough in your information gathering.`;
-    }, [i18n.language]);
+    }, [i18n.language, referenceImages.length]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // INIT
@@ -636,6 +664,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 }
                 if (typeof briefData.readinessScore === 'number') updated.readinessScore = briefData.readinessScore;
                 if (briefData.missingFields && Array.isArray(briefData.missingFields)) updated.missingFields = briefData.missingFields;
+                if (briefData.referenceImageContext) updated.referenceImageContext = briefData.referenceImageContext;
                 return updated;
             });
         } catch (e) {
@@ -1115,6 +1144,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                             lighting: 'natural golden hour',
                             depthOfField: 'shallow cinematic bokeh',
                             projectId: finalProjectId,
+                            referenceImages: referenceImagesRef.current.length > 0 ? referenceImagesRef.current : undefined,
                         });
                         if (imageUrl) break;
                     } catch (err: any) {
@@ -1254,6 +1284,45 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     // PUBLIC API
     // ═════════════════════════════════════════════════════════════════════════
 
+    // ── Brief editing callbacks ───────────────────────────────────────────────
+    const updateBriefColor = useCallback((colorKey: string, newColor: string) => {
+        setBusinessBrief(prev => ({
+            ...prev,
+            colorPalette: { ...prev.colorPalette, [colorKey]: newColor },
+        }));
+    }, []);
+
+    const updateBriefFont = useCallback((fontKey: 'header' | 'body' | 'button', newFont: string) => {
+        setBusinessBrief(prev => ({
+            ...prev,
+            fontPairing: { ...prev.fontPairing, [fontKey]: newFont },
+        }));
+    }, []);
+
+    const toggleBriefComponent = useCallback((component: PageSection) => {
+        setBusinessBrief(prev => {
+            const exists = prev.suggestedComponents.includes(component);
+            return {
+                ...prev,
+                suggestedComponents: exists
+                    ? prev.suggestedComponents.filter(c => c !== component)
+                    : [...prev.suggestedComponents, component],
+            };
+        });
+    }, []);
+
+    // ── Reference image callbacks ────────────────────────────────────────────
+    const addReferenceImage = useCallback((base64: string) => {
+        setReferenceImages(prev => {
+            if (prev.length >= 14 || prev.includes(base64)) return prev;
+            return [...prev, base64];
+        });
+    }, []);
+
+    const removeReferenceImage = useCallback((index: number) => {
+        setReferenceImages(prev => prev.filter((_, i) => i !== index));
+    }, []);
+
     return {
         // Chat
         messages, input, setInput, isThinking,
@@ -1263,7 +1332,9 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         liveUserTranscript, liveModelTranscript,
         startVoiceSession, stopVoiceSession,
         // Brief
-        businessBrief,
+        businessBrief, updateBriefColor, updateBriefFont, toggleBriefComponent,
+        // Reference Images
+        referenceImages, addReferenceImage, removeReferenceImage,
         // Generation
         isGenerating, generationPhase, canGenerate, startGeneration,
         // Website extraction
@@ -1296,27 +1367,17 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     // ══════════════════════════════════════════════════════════════════════
 
     // ── Hero variants ─────────────────────────────────────────────────────
-    // Standard hero uses top-level imageUrl
-    if (componentOrder.includes('hero') && data.hero && typeof data.hero === 'object') {
-        if (!data.hero.imageUrl) {
-            slots.push({
-                path: 'hero.imageUrl',
-                componentType: 'hero',
-                context: data.hero.headline || data.hero.title || brief.tagline || brief.businessName,
-                aspectRatio: '16:9',
-            });
-        }
-    }
-
-    // heroSplit uses top-level imageUrl
-    if (componentOrder.includes('heroSplit') && data.heroSplit && typeof data.heroSplit === 'object') {
-        if (!data.heroSplit.imageUrl) {
-            slots.push({
-                path: 'heroSplit.imageUrl',
-                componentType: 'heroSplit',
-                context: data.heroSplit.headline || data.heroSplit.subheadline || brief.tagline || brief.businessName,
-                aspectRatio: '4:3',
-            });
+    // Standard hero, heroSplit, and heroLead use top-level imageUrl
+    for (const heroKey of ['hero', 'heroSplit', 'heroLead']) {
+        if (componentOrder.includes(heroKey) && data[heroKey] && typeof data[heroKey] === 'object') {
+            if (!data[heroKey].imageUrl) {
+                slots.push({
+                    path: `${heroKey}.imageUrl`,
+                    componentType: heroKey,
+                    context: data[heroKey].headline || data[heroKey].title || data[heroKey].subheadline || brief.tagline || brief.businessName,
+                    aspectRatio: heroKey === 'heroSplit' ? '4:3' : '16:9',
+                });
+            }
         }
     }
 
@@ -1386,7 +1447,16 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
 
     // ── Banner background image (ultra-wide) ────────────────────────────
     if (componentOrder.includes('banner')) {
-        if (data.banner && typeof data.banner === 'object' && !data.banner.backgroundImageUrl) {
+        // Force initialize banner if it doesn't exist so we can generate an image for it
+        if (!data.banner || typeof data.banner !== 'object') {
+            data.banner = {
+                headline: brief.tagline || brief.businessName,
+                subheadline: brief.description?.substring(0, 80) || '',
+                buttonText: 'Get Started',
+                backgroundImageUrl: '',
+            };
+        }
+        if (!data.banner.backgroundImageUrl) {
             slots.push({
                 path: 'banner.backgroundImageUrl',
                 componentType: 'banner',
@@ -1448,11 +1518,16 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
 
     const typeInstruction = typeInstructions[slot.componentType] || 'A professional, high-quality image.';
 
+    // Reference image context — user-specified instructions for how to apply reference images
+    const refContext = brief.referenceImageContext
+        ? `\n\nREFERENCE IMAGE GUIDANCE (from user):\n${brief.referenceImageContext}\nUse the provided reference images as visual guidance following the user's instructions above.`
+        : '';
+
     return `Ultra-realistic editorial commercial photography for a ${brief.industry} business called "${brief.businessName}" located in ${locationStr}.
 
 COMPONENT: ${slot.componentType}
 CONTEXT: ${slot.context}
-PURPOSE: ${typeInstruction}
+PURPOSE: ${typeInstruction}${refContext}
 
 REQUIREMENTS:
 - Shot on a high-end full-frame camera (Sony A7R V or Canon R5)
@@ -1762,7 +1837,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "howItWorks": {"title": "${isSpanish ? 'Cómo Funciona' : 'How It Works'}", "description": "[GENERATE_TEXT]", "steps": 3, "items": [{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "magic-wand"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "process"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "check"}]},
     "testimonials": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}]},
     "faq": {"faqVariant": "[SELECT: classic|cards|gradient|minimal]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},
-    "cta": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]"},
+    "cta": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]", "secondaryText": "[GENERATE_TEXT]"},
     "leads": {"leadsVariant": "[SELECT: classic|split-gradient|floating-glass|minimal-border]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 20, "size": 50}, "buttonText": "[GENERATE_TEXT]", "fields": [{"label": "${isSpanish ? 'Nombre' : 'Name'}", "type": "text", "placeholder": "[GENERATE_TEXT]"}, {"label": "Email", "type": "email", "placeholder": "[GENERATE_TEXT]"}]},
     "banner": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Ver Más' : 'Learn More'}", "backgroundImageUrl": "", "overlayEnabled": true, "backgroundOverlayOpacity": 50, "height": 400},
     "newsletter": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]"},

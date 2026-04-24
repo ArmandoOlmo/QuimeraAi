@@ -364,6 +364,8 @@ export interface HeroLeadData {
     // Font sizes
     headlineFontSize?: FontSize;
     subheadlineFontSize?: FontSize;
+    formTitleFontSize?: FontSize;
+    formDescriptionFontSize?: FontSize;
 
     // Colors
     colors: {
@@ -693,6 +695,7 @@ export interface CtaData {
     description: string;
     subheadline?: string;           // Alias for description
     buttonText: string;
+    secondaryText?: string;
     buttonUrl?: string;
     paddingY: PaddingSize;
     paddingX: PaddingSize;
@@ -708,6 +711,7 @@ export interface CtaData {
         description?: string;
         buttonBackground?: string;
         buttonText?: string;
+        secondaryText?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -1026,6 +1030,8 @@ export interface MapData {
         description?: string;
         accent: string;
         cardBackground?: string;
+        buttonBackground?: string;
+        buttonText?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -2195,6 +2201,7 @@ export interface SeparatorData {
     colors?: ComponentColors; // Coolors.co support
     glassEffect?: boolean;
     backgroundImageUrl?: string;
+    backgroundPosition?: string; // Added backgroundPosition support
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     backgroundOverlayColor?: string;

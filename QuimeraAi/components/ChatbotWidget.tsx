@@ -486,11 +486,24 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         xl: 700
     };
     const configuredHeight = heightMap[appearance.behavior.height as keyof typeof heightMap] || 530;
-    // Cap at 70% of viewport height or configured height, whichever is smaller
-    const maxHeightValue = Math.min(configuredHeight, typeof window !== 'undefined' ? window.innerHeight * 0.70 : configuredHeight);
-
     // Detect mobile viewport for fullscreen chat
-    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth < 640;
+    const [isWindowMobile, setIsWindowMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+    const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsWindowMobile(window.innerWidth < 640);
+            setWindowHeight(window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Active if browser is mobile OR if editor is simulating mobile view
+    const isMobileViewport = isWindowMobile || editorContext?.previewDevice === 'mobile';
+
+    // Cap at 70% of viewport height or configured height, whichever is smaller
+    const maxHeightValue = Math.min(configuredHeight, windowHeight * 0.70);
 
     // Widget content - use absolute positioning in editor to stay within preview
     const widgetContent = (
@@ -511,7 +524,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     }),
                     backgroundColor: appearance.colors?.backgroundColor,
                     borderColor: appearance.colors?.inputBorder,
-                    ...(isMobileViewport ? {} : { outline: '3px solid white', outlineOffset: '0px' })
+                    ...(isMobileViewport ? {} : { })
                 }}
             >
                 {isOpen && activeProject && (
@@ -560,13 +573,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         ${getShadowClasses(appearance.button.shadowSize)}
                         ${appearance.button.pulseEffect && !isOpen ? 'animate-pulse' : ''}
                         hover:scale-110 transition-all duration-300 flex items-center justify-center group relative mb-[55px] pointer-events-auto
-                        ${isInEditor ? 'pointer-events-auto cursor-default' : ''}
+                        ${isInEditor ? 'pointer-events-auto cursor-default' : ''} shrink-0
                     `}
                     style={{
                         backgroundColor: appearance.colors?.primaryColor,
-                        color: appearance.colors?.headerText,
-                        outline: '3px solid white',
-                        outlineOffset: '0px'
+                        color: appearance.colors?.headerText
                     }}
                     title={appearance.button.showTooltip ? appearance.button.tooltipText : undefined}
                 >

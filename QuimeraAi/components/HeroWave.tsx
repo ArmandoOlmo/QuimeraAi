@@ -92,6 +92,7 @@ const HeroWave: React.FC<HeroWaveProps> = ({
     textAlign = 'center',
     gradientColors,
     showTextStroke = false,
+    bgPosition = 'center',
 }) => {
     const { getColor } = useDesignTokens();
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -193,7 +194,7 @@ const HeroWave: React.FC<HeroWaveProps> = ({
                                 style={{
                                     backgroundImage: `url(${bgImage})`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
+                                    backgroundPosition: bgPosition || 'center',
                                 }}
                             />
                         )}

@@ -52,6 +52,7 @@ const HeroLead: React.FC<HeroLeadProps> = ({
   subheadline,
   badgeText,
   imageUrl,
+  imagePosition = 'center',
   overlayOpacity = 50,
   heroHeight = 85,
   // Form content
@@ -79,6 +80,8 @@ const HeroLead: React.FC<HeroLeadProps> = ({
   // Font sizes
   headlineFontSize = 'lg',
   subheadlineFontSize = 'md',
+  formTitleFontSize = 'sm',
+  formDescriptionFontSize = 'sm',
   // Colors
   colors,
   // Corner gradient
@@ -95,7 +98,7 @@ const HeroLead: React.FC<HeroLeadProps> = ({
   const c = {
     background: colors?.background || '#0f172a',
     infoBackground: colors?.infoBackground || 'transparent',
-    formBackground: colors?.formBackground || primaryColor,
+    formBackground: colors?.formBackground || '#1e293b',
     heading: colors?.heading || '#f8fafc',
     text: colors?.text || '#94a3b8',
     accent: colors?.accent || primaryColor,
@@ -206,8 +209,8 @@ const HeroLead: React.FC<HeroLeadProps> = ({
       {imageUrl && (
         <>
           <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${imageUrl})` }}
+            className="absolute inset-0 bg-cover"
+            style={{ backgroundImage: `url(${imageUrl})`, backgroundPosition: imagePosition || 'center' }}
           />
           <div
             className="absolute inset-0"
@@ -304,9 +307,10 @@ const HeroLead: React.FC<HeroLeadProps> = ({
         <div className="p-8 md:p-10">
           {formTitle && (
             <h3
-              className="text-xl md:text-2xl font-bold font-header mb-2"
+              className="font-bold font-header mb-2"
               style={{
                 color: c.formHeading,
+                fontSize: titleSizeMap[formTitleFontSize] || titleSizeMap.sm,
                 textTransform: 'var(--headings-transform, none)' as any,
                 letterSpacing: 'var(--headings-spacing, normal)',
               }}
@@ -315,7 +319,7 @@ const HeroLead: React.FC<HeroLeadProps> = ({
             </h3>
           )}
           {formDescription && (
-            <p className="text-sm mb-6 font-body" style={{ color: c.formText }}>
+            <p className="mb-6 font-body" style={{ color: c.formText, fontSize: descSizeMap[formDescriptionFontSize] || descSizeMap.sm }}>
               {formDescription}
             </p>
           )}

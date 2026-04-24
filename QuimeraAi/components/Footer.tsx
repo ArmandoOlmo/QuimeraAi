@@ -141,9 +141,9 @@ const Footer: React.FC<FooterData & {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-1 opacity-50 blur-sm pointer-events-none" style={{ backgroundColor: cardGlow?.color || '#144CCD' }} />
         )}
         <div className="container mx-auto px-6 py-12 relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            <div className="sm:col-span-2 lg:col-span-4">
+            <div className="lg:col-span-4">
               {/* Logo or Title */}
               {logoType === 'image' && logoImageUrl ? (
                 <img
@@ -246,8 +246,8 @@ const Footer: React.FC<FooterData & {
             )}
           </div>
 
-          <div className="mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center" style={{ borderTopColor: actualColors.border }}>
-            <div className="text-sm font-body mb-4 sm:mb-0 flex flex-wrap items-center gap-1" style={{ color: actualColors.text }}>
+          <div className="mt-12 pt-8 flex flex-col lg:flex-row justify-between items-center" style={{ borderTopColor: actualColors.border }}>
+            <div className="text-sm font-body mb-4 lg:mb-0 flex flex-wrap items-center gap-1" style={{ color: actualColors.text }}>
               <span>{finalCopyrightText}</span>
               {/* Made with Quimera badge - visible unless branding is hidden */}
               {!shouldHideBranding && (

@@ -96,7 +96,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
 
     // Selected Category for Admin Uploads
-    const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(adminCategory || 'other');
+    const defaultCategory = adminCategory || (activeProject?.status === 'Template' ? 'template' : 'other');
+    const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(defaultCategory);
 
     useEffect(() => {
         if (adminCategory) setSelectedAdminCategory(adminCategory);
@@ -252,7 +253,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             {isLibraryOpen && (() => {
                 const modalContent = (
                     <div
-                        className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
+                        className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
                         onClick={handleClose}
                     >
                         <div
@@ -306,7 +307,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         <div className="flex items-center gap-1.5 text-editor-text-secondary">
                                             <FolderOpen size={14} className="text-editor-accent" />
                                             <span className="text-xs font-medium text-editor-text-primary">
-                                                {activeTab === 'global' ? 'Activos Globales Admin' : activeProject?.name}
+                                                {activeTab === 'global' ? 'Activos Globales Admin' : destination === 'admin' ? 'Librería Admin' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
                                             </span>
                                             <span className="text-[10px] px-1.5 py-0.5 bg-editor-panel-bg rounded">
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
@@ -506,8 +507,9 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
                             {/* GENERATE TAB - REPLACED WITH ImageGeneratorPanel */}
                             {activeTab === 'generate' && (
-                                <ImageGeneratorPanel
+                            <ImageGeneratorPanel
                                     destination={destination}
+                                    adminCategory={adminCategory}
                                     className="h-full"
                                     generationContext={generationContext}
                                     onUseImage={(url) => {

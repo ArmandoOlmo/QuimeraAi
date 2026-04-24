@@ -147,7 +147,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
     <ul className={className}>
       {links.map((link, index) => (
         <li
-          key={link.text}
+          key={`${link.text}-${index}`}
           className="relative"
           style={isMobile ? {
             animationDelay: `${index * 50}ms`,
@@ -1159,8 +1159,8 @@ const Header: React.FC<HeaderData & {
                 {/* Navigation Links */}
                 <nav className="flex-1">
                   <ul className="space-y-1">
-                    {allLinks.map((link) => (
-                      <li key={link.text}>
+                    {allLinks.map((link, index) => (
+                      <li key={`${link.text}-${index}`}>
                         <a
                           href={link.href || '#'}
                           onClick={(e) => {

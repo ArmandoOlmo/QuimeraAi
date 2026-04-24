@@ -46,7 +46,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm animate-fade-in ${themeMode}`}
+      className={`fixed inset-0 bg-black/60 z-[100000] flex items-end sm:items-center justify-center backdrop-blur-sm animate-fade-in ${themeMode}`}
       style={{ animationDuration: '0.2s' }}
       aria-modal="true"
       role="dialog"

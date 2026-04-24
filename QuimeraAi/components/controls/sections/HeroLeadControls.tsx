@@ -52,7 +52,10 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
         </label>
 
         <Input label={t('controls.formTitle', 'Título del formulario')} value={hl.formTitle || ''} onChange={(e) => setNestedData('heroLead.formTitle', e.target.value)} />
+        <FontSizeSelector label={t('controls.formTitleSize', 'Tamaño del título')} value={hl.formTitleFontSize || 'sm'} onChange={(v) => setNestedData('heroLead.formTitleFontSize', v)} />
+        
         <TextArea label={t('controls.formDescription', 'Descripción del formulario')} value={hl.formDescription || ''} onChange={(e) => setNestedData('heroLead.formDescription', e.target.value)} rows={2} />
+        <FontSizeSelector label={t('controls.formDescriptionSize', 'Tamaño de la descripción')} value={hl.formDescriptionFontSize || 'sm'} onChange={(v) => setNestedData('heroLead.formDescriptionFontSize', v)} />
 
         <Input label={t('controls.namePlaceholder', 'Placeholder: Nombre')} value={hl.namePlaceholder || ''} onChange={(e) => setNestedData('heroLead.namePlaceholder', e.target.value)} />
         <Input label={t('controls.emailPlaceholder', 'Placeholder: Email')} value={hl.emailPlaceholder || ''} onChange={(e) => setNestedData('heroLead.emailPlaceholder', e.target.value)} />
@@ -80,6 +83,38 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
           Imagen de fondo (lado informativo)
         </label>
         <ImagePicker label={t('editor.controls.hero.image')} value={hl.imageUrl || ''} onChange={(url) => setNestedData('heroLead.imageUrl', url)} />
+        {hl.imageUrl && (
+          <div className="mt-3 pt-3 border-t border-editor-border/30">
+            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+              {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+            </label>
+            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+              {[
+                { id: 'top left', label: '↖' },
+                { id: 'top center', label: '↑' },
+                { id: 'top right', label: '↗' },
+                { id: 'center left', label: '←' },
+                { id: 'center center', label: '●' },
+                { id: 'center right', label: '→' },
+                { id: 'bottom left', label: '↙' },
+                { id: 'bottom center', label: '↓' },
+                { id: 'bottom right', label: '↘' },
+              ].map((pos) => (
+                <button
+                  key={pos.id}
+                  onClick={() => setNestedData('heroLead.imagePosition', pos.id)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(hl.imagePosition || 'center center') === pos.id
+                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                  }`}
+                  title={pos.id}
+                >
+                  {pos.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

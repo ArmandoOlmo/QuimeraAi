@@ -32,6 +32,7 @@ const HeroSplit = lazy(() => import('./HeroSplit'));
 const HeroGallery = lazy(() => import('./HeroGallery'));
 const HeroWave = lazy(() => import('./HeroWave'));
 const HeroNova = lazy(() => import('./HeroNova'));
+const HeroLead = lazy(() => import('./HeroLead'));
 const SignupFloat = lazy(() => import('./SignupFloat'));
 const Testimonials = lazy(() => import('./Testimonials'));
 const Slideshow = lazy(() => import('./Slideshow'));
@@ -1416,14 +1417,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     };
 
     // Derive any missing colors from the template palette
-    const derivedColors = deriveColorsFromPalette(mergedColors, componentKey);
+    const derivedColors = deriveColorsFromPalette(mergedColors, componentKey as string);
+
+    // Merge cornerGradient if it exists
+    const mergedCornerGradient = styles?.cornerGradient ? {
+      ...styles.cornerGradient,
+      ...componentData?.cornerGradient,
+    } : componentData?.cornerGradient;
 
     return {
       paddingY: 'lg',
       paddingX: 'sm',
       ...styles,
       ...componentData,
-      colors: derivedColors
+      colors: derivedColors,
+      ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
     };
   };
 
@@ -1434,6 +1442,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     heroGallery: mergeComponentData('heroGallery'),
     heroWave: mergeComponentData('heroWave'),
     heroNova: mergeComponentData('heroNova'),
+    heroLead: mergeComponentData('heroLead'),
     features: mergeComponentData('features'),
     testimonials: mergeComponentData('testimonials'),
     slideshow: mergeComponentData('slideshow'),
@@ -1608,6 +1617,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return compData ? withBackground(<HeroWave {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
       case 'heroNova':
         return compData ? withBackground(<HeroNova {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'heroLead':
+        return compData ? withBackground(<HeroLead {...compData} cardBorderRadius={compData.cardBorderRadius || borderRadius} inputBorderRadius={compData.inputBorderRadius || 'md'} buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius} />) : null;
       case 'features':
         return withBackground(<Features {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
       case 'testimonials':
