@@ -370,7 +370,8 @@ const AssetItem: React.FC<{
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
     onCopyUrl?: (url: string) => void;
-}> = ({ asset, onPreview, isSelected, onToggleSelect, isSelectionMode, onCopyUrl }) => {
+    onUseAsReference?: (url: string) => void;
+}> = ({ asset, onPreview, isSelected, onToggleSelect, isSelectionMode, onCopyUrl, onUseAsReference }) => {
     const { t } = useTranslation();
     const imgRef = useRef<HTMLImageElement>(null);
     const categoryConfig = CATEGORY_CONFIG[asset.category];
@@ -410,21 +411,17 @@ const AssetItem: React.FC<{
                     draggable={false}
                 />
 
-                {/* Category Badge */}
-                <div className="absolute top-2 left-2 z-10">
+                {/* Category Badge & AI Badge (left) */}
+                <div className="absolute top-2 left-2 z-10 flex gap-1">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border backdrop-blur-sm ${categoryConfig.color}`}>
                         {categoryConfig.icon}
                     </span>
-                </div>
-
-                {/* AI Badge */}
-                {asset.isAiGenerated && (
-                    <div className="absolute top-2 right-10 z-10">
+                    {asset.isAiGenerated && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-purple-500/80 text-white backdrop-blur-sm">
                             <Sparkles size={10} />
                         </span>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Selection checkbox */}
                 {isSelectionMode && (
@@ -445,18 +442,34 @@ const AssetItem: React.FC<{
                     </div>
                 )}
 
-                {/* Copy URL button - only when not in selection mode */}
-                {!isSelectionMode && onCopyUrl && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onCopyUrl(asset.downloadURL);
-                        }}
-                        className="absolute top-2 right-2 z-10 p-1.5 bg-primary hover:bg-primary/80 text-primary-foreground rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
-                        title={t('adminAssets.copyUrl', 'Copy URL')}
-                    >
-                        <Copy size={14} />
-                    </button>
+                {/* Actions container - top right */}
+                {!isSelectionMode && (
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onUseAsReference && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUseAsReference(asset.downloadURL);
+                                }}
+                                className="p-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-md shadow-lg transition-transform hover:scale-110"
+                                title={t('adminAssets.useAsReference', 'Use as Reference')}
+                            >
+                                <Zap size={14} />
+                            </button>
+                        )}
+                        {onCopyUrl && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onCopyUrl(asset.downloadURL);
+                                }}
+                                className="p-1.5 bg-primary hover:bg-primary/80 text-primary-foreground rounded-md shadow-lg transition-transform hover:scale-110"
+                                title={t('adminAssets.copyUrl', 'Copy URL')}
+                            >
+                                <Copy size={14} />
+                            </button>
+                        )}
+                    </div>
                 )}
 
                 {/* Filename overlay on hover */}
@@ -638,6 +651,21 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
         if (referenceFileInputRef.current) {
             referenceFileInputRef.current.value = '';
         }
+    };
+
+    const handleUseAsReference = (url: string) => {
+        if (referenceImages.length >= 14) {
+            showError(t('adminAssets.maxReferences', 'Maximum 14 reference images'));
+            return;
+        }
+        if (referenceImages.includes(url)) {
+            showError(t('adminAssets.alreadyReference', 'Image is already in references'));
+            return;
+        }
+        setReferenceImages(prev => [...prev, url]);
+        success(t('adminAssets.addedReference', 'Added to reference images'));
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleGenerate = async () => {
@@ -1547,6 +1575,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                                         onToggleSelect={() => toggleSelection(asset.id)}
                                                                         isSelectionMode={isSelectionMode}
                                                                         onCopyUrl={handleCopyUrl}
+                                                                        onUseAsReference={handleUseAsReference}
                                                                     />
                                                                 </div>
                                                             ))}
