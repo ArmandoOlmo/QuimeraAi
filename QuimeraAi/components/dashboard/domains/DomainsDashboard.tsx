@@ -11,8 +11,9 @@ import { ROUTES } from '../../../routes/config';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, ArrowLeft, Crown, Zap, ChevronDown, ChevronUp, Building2, Lock, ClipboardList, ShieldCheck, XCircle, User, Server, Sparkles, Timer } from 'lucide-react';
+import { Menu, Search, Plus, Link2, CheckCircle, AlertTriangle, Clock, Copy, Globe, ShoppingCart, ExternalLink, RefreshCw, Loader2, X, Trash2, Settings, Crown, Zap, ChevronDown, ChevronUp, Building2, Lock, ClipboardList, ShieldCheck, XCircle, User, Server, Sparkles, Timer } from 'lucide-react';
 import Modal from '../../ui/Modal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { Domain } from '../../../types';
 
 // --- IMPORTS ---
@@ -1336,14 +1337,7 @@ const DomainsDashboard: React.FC = () => {
                             {!customDomainsAllowed && <Crown className="w-4 h-4 text-yellow-500" />}
                             <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.buyDomain')}</span>
                         </button>
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:border sm:border-border/40 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 

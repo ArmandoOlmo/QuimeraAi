@@ -70,6 +70,9 @@ import ArticleContentSection from './ecommerce/sections/ArticleContentSection';
 import CartSection from './ecommerce/sections/CartSection';
 import CheckoutSection from './ecommerce/sections/CheckoutSection';
 import ProductGridSection from './ecommerce/sections/ProductGridSection';
+import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
+import PropertyDirectoryPage from './real-estate/PropertyDirectoryPage';
+import PropertyDetailSection from './real-estate/PropertyDetailSection';
 
 interface PageRendererProps {
     /** The page to render */
@@ -86,6 +89,10 @@ interface PageRendererProps {
     storefrontProducts?: PublicProduct[];
     /** Categories for ecommerce sections */
     categories?: PublicCategory[];
+    /** Optional internal navigation handler for previews */
+    onNavigate?: (href: string) => void;
+    /** Render only page content when an outer shell already owns header/footer. */
+    contentOnly?: boolean;
 }
 
 /**
@@ -99,6 +106,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     isPreview = false,
     storefrontProducts = [],
     categories = [],
+    onNavigate,
+    contentOnly = false,
 }) => {
     // Get component styles from project (published with the project)
     const componentStyles = project.componentStyles || {};
@@ -191,6 +200,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             productBundle: mergeComponentData('productBundle') || baseData.productBundle,
             announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
             cmsFeed: mergeComponentData('cmsFeed') || (baseData as any).cmsFeed,
+            realEstateListings: mergeComponentData('realEstateListings') || (baseData as any).realEstateListings,
             logoBanner: mergeComponentData('logoBanner') || (baseData as any).logoBanner,
             signupFloat: mergeComponentData('signupFloat') || (baseData as any).signupFloat,
             separator1: mergeComponentData('separator1') || (baseData as any).separator1,
@@ -249,6 +259,10 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
     // Universal link navigation handler for Hero CTAs, Header, Footer, Portfolio
     const handleLinkNavigation = (href: string) => {
+        if (onNavigate) {
+            onNavigate(href);
+            return;
+        }
         if (href.startsWith('http://') || href.startsWith('https://')) {
             window.open(href, '_blank');
         } else {
@@ -323,6 +337,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         links={navigationLinks}
                         isPreviewMode={isPreview}
                         onNavigate={handleLinkNavigation}
+                        forceSolid={page.sections.includes('propertyDetail') || page.sections.includes('propertyDirectory')}
                     />
                 );
 
@@ -857,6 +872,59 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     />
                 );
 
+            case 'realEstateListings':
+                return (
+                    <SectionBackground backgroundImageUrl={mergedData.realEstateListings?.backgroundImageUrl} backgroundColor={mergedData.realEstateListings?.colors?.background} backgroundOverlayEnabled={mergedData.realEstateListings?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.realEstateListings?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.realEstateListings?.backgroundOverlayColor} backgroundPosition={mergedData.realEstateListings?.backgroundPosition}>
+                        <RealEstateListingsSection
+                            key={key}
+                            data={mergedData.realEstateListings}
+                            projectId={project.id}
+                            isPreviewMode={isPreview}
+                            theme={theme}
+                            globalColors={globalColors}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
+                );
+
+            case 'propertyDirectory':
+                return (
+                    <PropertyDirectoryPage
+                        key={key}
+                        projectId={project.id}
+                        data={mergedData.realEstateListings}
+                        theme={theme}
+                        globalColors={globalColors}
+                    />
+                );
+
+            case 'propertyDetail': {
+                const propertySlug = page.slug?.replace('/listados/', '').replace(/\/$/, '') || '';
+                return (
+                    <PropertyDetailSection
+                        key={key}
+                        projectId={project.id}
+                        propertySlug={propertySlug}
+                        theme={theme}
+                        globalColors={globalColors}
+                        onNavigateToListings={() => {
+                            if (onNavigate) {
+                                onNavigate('/listados');
+                                return;
+                            }
+                            window.location.href = '/listados';
+                        }}
+                        onNavigateToProperty={(slug) => {
+                            if (onNavigate) {
+                                onNavigate(`/listados/${slug}`);
+                                return;
+                            }
+                            window.location.href = `/listados/${slug}`;
+                        }}
+                    />
+                );
+            }
+
             // Non-renderable sections (settings, colors, typography)
             case 'colors':
             case 'typography':
@@ -876,7 +944,11 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     // Filter and render visible sections
     // Also deduplicate sections (header/footer should only appear once)
     const seenSections = new Set<string>();
+    const shellSections: PageSection[] = ['header', 'footer', 'topBar', 'announcementBar'];
     const visibleSections = page.sections.filter(section => {
+        if (contentOnly && shellSections.includes(section)) {
+            return false;
+        }
         // Filter out non-renderable sections
         if (['colors', 'typography', 'storeSettings'].includes(section)) {
             return false;
@@ -905,13 +977,13 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
     return (
         <div
-            className="min-h-screen"
+            className={contentOnly ? 'w-full' : 'min-h-screen'}
             style={{ backgroundColor: theme.pageBackground || globalColors?.background }}
         >
             {orderedSections.map((section, index) => renderSection(section, index))}
 
             {/* Floating Sign-Up Overlay (rendered outside normal section flow) */}
-            {mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && (
+            {!contentOnly && mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && (
                 <SignupFloat
                     {...mergedData.signupFloat}
                     projectId={project.id}
@@ -924,4 +996,3 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 };
 
 export default PageRenderer;
-

@@ -16,7 +16,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
-import { PageSection, SitePage } from '../../types';
+import { PageSection } from '../../types';
 import PageSettings from '../dashboard/PageSettings';
 import { PageTemplateId, PAGE_TEMPLATES } from '../../types/onboarding';
 import GlobalStylesControl from '../ui/GlobalStylesControl';
@@ -29,7 +29,7 @@ import {
   Briefcase, MessageCircle, Mail, Send, Type,
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
   TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
-  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus,
+  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import AIContentAssistant from '../ui/AIContentAssistant';
@@ -69,6 +69,7 @@ import {
   renderProductsControlsWithTabs, renderSignupFloatControlsWithTabs,
   renderChatbotControlsWithTabs,
   renderSeparatorControlsWithTabs,
+  renderRealEstateListingsControlsWithTabs,
 } from './sections';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -169,23 +170,15 @@ const Controls: React.FC = () => {
   // ─── Page management handlers ─────────────────────────────────────────────
   const handleSelectPage = (pageId: string) => {
     const page = pages.find(p => p.id === pageId);
-    if (page) { setActivePage(page); onSectionSelect(null as any); }
+    if (page) { setActivePage(page.id); onSectionSelect(null as any); }
   };
 
   const handleAddPage = (templateId: PageTemplateId) => {
     const template = PAGE_TEMPLATES[templateId];
     if (template) {
-      const now = new Date().toISOString();
-      const newPage: SitePage = {
-        id: `page-${Date.now()}`, title: template.title,
-        slug: `/${templateId === 'home' ? '' : templateId}`,
-        type: template.type || 'static', sections: template.sections as PageSection[],
-        sectionData: {}, seo: { title: template.title, description: '' },
-        isHomePage: templateId === 'home', showInNavigation: true,
-        navigationOrder: pages.length + 1, createdAt: now, updatedAt: now,
-      };
-      if (template.dynamicSource) newPage.dynamicSource = template.dynamicSource;
-      addPage(newPage); setActivePage(newPage);
+      addPage(templateId).then((pageId) => {
+        setActivePage(pageId);
+      });
     }
   };
   const handleDuplicatePage = (pageId: string) => duplicatePage(pageId);
@@ -193,7 +186,7 @@ const Controls: React.FC = () => {
     const page = pages.find(p => p.id === pageId);
     if (page && !page.isHomePage) {
       deletePage(pageId);
-      if (activePage?.id === pageId) { const hp = pages.find(p => p.isHomePage); if (hp) setActivePage(hp); }
+      if (activePage?.id === pageId) { const hp = pages.find(p => p.isHomePage); if (hp) setActivePage(hp.id); }
     }
   };
   const handlePageSettings = (pageId: string) => setShowPageSettings(pageId);
@@ -344,6 +337,7 @@ const Controls: React.FC = () => {
     collectionBanner: { label: 'Collection Banner', icon: Image, renderer: () => null },
     productBundle: { label: 'Product Bundle', icon: ShoppingBag, renderer: () => null },
     announcementBar: { label: 'Announcement Bar', icon: MessageCircle, renderer: () => null },
+    realEstateListings: { label: t('realEstate.websiteListings.builderLabel'), icon: Building2, renderer: () => renderRealEstateListingsControlsWithTabs(deps) },
     cmsFeed: { label: 'CMS Feed', icon: FileText, renderer: () => renderCMSFeedControlsWithTabs(deps) },
     signupFloat: { label: 'Sign Up Float', icon: UserPlus, renderer: () => renderSignupFloatControlsWithTabs(deps) },
     chatbot: { label: 'Chatbot', icon: MessageSquare, renderer: () => renderChatbotControlsWithTabs(deps) },
@@ -446,6 +440,7 @@ const Controls: React.FC = () => {
       case 'productReviews': return productReviewsControls ? <TabbedControls contentTab={productReviewsControls.contentTab} styleTab={productReviewsControls.styleTab} /> : null;
       case 'productBundle': return productBundleControls ? <TabbedControls contentTab={productBundleControls.contentTab} styleTab={productBundleControls.styleTab} /> : null;
       case 'storeSettings': return storeSettingsControls ? <TabbedControls contentTab={storeSettingsControls.contentTab} styleTab={storeSettingsControls.styleTab} /> : null;
+      case 'realEstateListings': return renderRealEstateListingsControlsWithTabs(deps);
       default: return config.renderer();
     }
   };
@@ -549,7 +544,7 @@ const Controls: React.FC = () => {
               <X size={18} />
             </button>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
+          <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
           <div className="p-4 border-t border-border flex-shrink-0">
             <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
               <Check size={16} /> {saveButtonText}
@@ -563,7 +558,7 @@ const Controls: React.FC = () => {
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''}
         subtitle={t('landingEditor.editSection', 'Editar sección')}>
-        <div className="p-4">{renderActiveSectionControls()}</div>
+        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
         <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}
@@ -588,7 +583,7 @@ const Controls: React.FC = () => {
       <TabletSlidePanel isOpen={isTablet && !!activeSection}
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''} position="left">
-        <div className="p-4">{renderActiveSectionControls()}</div>
+        <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
         <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}

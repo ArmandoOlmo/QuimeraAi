@@ -51,6 +51,7 @@ export interface PlanFeatures {
     crmEnabled: boolean;
     crmPipelines: boolean;            // Múltiples pipelines
     crmAutomations: boolean;          // Automatizaciones
+    realEstateModule?: boolean;       // Quimera Real Estate OS
 
     // E-commerce
     ecommerceEnabled: boolean;
@@ -339,6 +340,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: false,
             crmPipelines: false,
             crmAutomations: false,
+            realEstateModule: false,
             ecommerceEnabled: false,
             ecommerceTransactionFee: 0,
             chatbotEnabled: false,
@@ -391,6 +393,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: true,
             crmPipelines: true,
             crmAutomations: true,
+            realEstateModule: true,
             ecommerceEnabled: true,
             ecommerceTransactionFee: 2,        // 2% fee en transacciones
             chatbotEnabled: true,
@@ -447,6 +450,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: true,
             crmPipelines: true,
             crmAutomations: true,
+            realEstateModule: true,
             ecommerceEnabled: true,
             ecommerceTransactionFee: 1,
             chatbotEnabled: true,
@@ -501,6 +505,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: true,
             crmPipelines: true,
             crmAutomations: true,
+            realEstateModule: true,
             ecommerceEnabled: true,
             ecommerceTransactionFee: 0.5,
             chatbotEnabled: true,
@@ -554,6 +559,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: true,
             crmPipelines: true,
             crmAutomations: true,
+            realEstateModule: true,
             ecommerceEnabled: true,
             ecommerceTransactionFee: 0,        // Sin fee de transacción
             chatbotEnabled: true,
@@ -607,6 +613,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             crmEnabled: true,
             crmPipelines: true,
             crmAutomations: true,
+            realEstateModule: true,
             ecommerceEnabled: true,
             ecommerceTransactionFee: 0.5,
             chatbotEnabled: true,
@@ -828,8 +835,6 @@ export function getAgencyPlans(): SubscriptionPlan[] {
 export function getIndividualPlans(): SubscriptionPlan[] {
     return Object.values(SUBSCRIPTION_PLANS).filter(plan => !plan.isAgencyPlan);
 }
-
-
 
 
 

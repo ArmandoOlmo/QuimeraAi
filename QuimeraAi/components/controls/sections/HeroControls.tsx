@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -78,8 +78,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
               };
               return (
-                <button
-                  key={pos.value}
+                <button type="button"                   key={pos.value}
                   title={labels[pos.value]}
                   onClick={() => setNestedData('hero.textLayout', pos.value)}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
@@ -123,22 +122,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
               {/* Overlaid action buttons at bottom-right */}
               <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
-                <button
-                  onClick={() => setShowHeroImagePicker(true)}
+                <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
                   className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
                   title="Librería de Imágenes"
                 >
                   <Grid size={14} />
                 </button>
-                <button
-                  onClick={() => setShowHeroImagePicker(true)}
+                <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
                   className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
                   title="Generar con IA"
                 >
                   <Zap size={14} />
                 </button>
-                <button
-                  onClick={() => setNestedData('hero.imageUrl', '')}
+                <button type="button"                   onClick={() => setNestedData('hero.imageUrl', '')}
                   className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                   title="Eliminar imagen"
                 >
@@ -169,14 +165,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Action row when no image */}
         {!data.hero.imageUrl && (
           <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => setShowHeroImagePicker(true)}
+            <button type="button"               onClick={() => setShowHeroImagePicker(true)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
             >
               <Grid size={12} /> Librería
             </button>
-            <button
-              onClick={() => setShowHeroImagePicker(true)}
+            <button type="button"               onClick={() => setShowHeroImagePicker(true)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
             >
               <Zap size={12} /> Generar IA
@@ -186,15 +180,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Overlay Opacity */}
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
-            <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label="Oscurecimiento"
             value={data.hero.overlayOpacity ?? 50}
-            onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('hero.overlayOpacity', v)}
+            min={0}
+            max={100}
+            step={5}
+            suffix="%"
           />
           <div className="flex justify-between mt-1">
             <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
@@ -211,20 +204,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {t('controls.heroHeight')}
         </label>
         <div className="bg-editor-bg/50 p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-editor-text-secondary">{t('controls.sectionHeight')}</span>
-            <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">
-              {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
-            </span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label={t('controls.sectionHeight')}
             value={data.hero.heroHeight ?? 0}
-            onChange={(e) => {
-              const val = parseInt(e.target.value);
-              setNestedData('hero.heroHeight', val === 0 ? undefined : val);
-            }}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('hero.heroHeight', v === 0 ? undefined : v)}
+            min={0}
+            max={100}
+            step={5}
+            suffix="vh"
           />
           <div className="flex justify-between mt-1">
             <span className="text-[9px] text-editor-text-secondary/50">{t('controls.auto')}</span>
@@ -287,8 +274,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <label className="block text-xs font-medium text-editor-text-secondary mb-1">{t('editor.controls.common.style')}</label>
               <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                 {['solid', 'outline', 'ghost'].map(style => (
-                  <button
-                    key={style}
+                  <button type="button"                     key={style}
                     onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
                     className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
                       ? 'bg-editor-accent text-editor-bg'
@@ -309,15 +295,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             {/* Opacity Slider - only for solid style */}
             {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
               <div className="mt-3">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium text-editor-text-secondary">{t('controls.opacity')}</label>
-                  <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
-                </div>
-                <input
-                  type="range" min="0" max="100" step="5"
+                <SliderControl
+                  label={t('controls.opacity')}
                   value={data.hero.secondaryButtonOpacity ?? 100}
-                  onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
-                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                  onChange={(v) => setNestedData('hero.secondaryButtonOpacity', v)}
+                  min={0}
+                  max={100}
+                  step={5}
+                  suffix="%"
                 />
               </div>
             )}
@@ -374,8 +359,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           onChange={(url) => setNestedData('hero.headlineImageUrl', url)}
         />
         {data.hero.headlineImageUrl && (
-          <button
-            onClick={() => setNestedData('hero.headlineImageUrl', '')}
+          <button type="button"             onClick={() => setNestedData('hero.headlineImageUrl', '')}
             className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
           >
             Quitar imagen y usar texto
@@ -399,8 +383,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'content', label: 'Contenido' },
             { value: 'manual', label: 'URL' },
           ].map(type => (
-            <button
-              key={type.value}
+            <button type="button"               key={type.value}
               onClick={() => {
                 setNestedData('hero.primaryCtaLinkType', type.value);
                 if (type.value === 'section') {
@@ -527,8 +510,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'content', label: 'Contenido' },
             { value: 'manual', label: 'URL' },
           ].map(type => (
-            <button
-              key={type.value}
+            <button type="button"               key={type.value}
               onClick={() => {
                 setNestedData('hero.secondaryCtaLinkType', type.value);
                 if (type.value === 'section') {
@@ -671,22 +653,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
               <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
-                <button
-                  onClick={() => setShowHeroImagePicker(true)}
+                <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
                   className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
                   title="Librería de Imágenes"
                 >
                   <Grid size={14} />
                 </button>
-                <button
-                  onClick={() => setShowHeroImagePicker(true)}
+                <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
                   className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
                   title="Generar con IA"
                 >
                   <Zap size={14} />
                 </button>
-                <button
-                  onClick={() => setNestedData('hero.imageUrl', '')}
+                <button type="button"                   onClick={() => setNestedData('hero.imageUrl', '')}
                   className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                   title="Eliminar imagen"
                 >
@@ -715,14 +694,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {!data.hero.imageUrl && (
           <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => setShowHeroImagePicker(true)}
+            <button type="button"               onClick={() => setShowHeroImagePicker(true)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
             >
               <Grid size={12} /> Librería
             </button>
-            <button
-              onClick={() => setShowHeroImagePicker(true)}
+            <button type="button"               onClick={() => setShowHeroImagePicker(true)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
             >
               <Zap size={12} /> Generar IA
@@ -732,15 +709,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Overlay Opacity */}
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
-            <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.overlayOpacity ?? 50}%</span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label="Oscurecimiento"
             value={data.hero.overlayOpacity ?? 50}
-            onChange={(e) => setNestedData('hero.overlayOpacity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('hero.overlayOpacity', v)}
+            min={0}
+            max={100}
+            step={5}
+            suffix="%"
           />
           <div className="flex justify-between mt-1">
             <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
@@ -797,8 +773,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 'left-bottom': 'Abajo Izquierda', 'center-bottom': 'Abajo Centro', 'right-bottom': 'Abajo Derecha',
               };
               return (
-                <button
-                  key={pos.value}
+                <button type="button"                   key={pos.value}
                   title={labels[pos.value]}
                   onClick={() => setNestedData('hero.textLayout', pos.value)}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
@@ -831,20 +806,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Altura de Sección
         </label>
         <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-medium text-editor-text-secondary">Altura</span>
-            <span className="text-xs text-editor-text-primary font-mono">
-              {data.hero.heroHeight ? `${data.hero.heroHeight}vh` : t('controls.auto')}
-            </span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label="Altura"
             value={data.hero.heroHeight ?? 0}
-            onChange={(e) => {
-              const val = parseInt(e.target.value);
-              setNestedData('hero.heroHeight', val === 0 ? undefined : val);
-            }}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('hero.heroHeight', v === 0 ? undefined : v)}
+            min={0}
+            max={100}
+            step={5}
+            suffix="vh"
           />
           <div className="flex justify-between">
             <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
@@ -886,8 +855,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('controls.secondaryButtonStyle')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['solid', 'outline', 'ghost'].map(style => (
-              <button
-                key={style}
+              <button type="button"                 key={style}
                 onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
                   ? 'bg-editor-accent text-editor-bg'
@@ -903,15 +871,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Opacity Slider - only for solid style */}
         {(data.hero.secondaryButtonStyle || 'solid') === 'solid' && (
           <div className="mt-3">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-medium text-editor-text-secondary">{t('controls.opacity')}</label>
-              <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{data.hero.secondaryButtonOpacity ?? 100}%</span>
-            </div>
-            <input
-              type="range" min="0" max="100" step="5"
+            <SliderControl
+              label={t('controls.opacity')}
               value={data.hero.secondaryButtonOpacity ?? 100}
-              onChange={(e) => setNestedData('hero.secondaryButtonOpacity', parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              onChange={(v) => setNestedData('hero.secondaryButtonOpacity', v)}
+              min={0}
+              max={100}
+              step={5}
+              suffix="%"
             />
           </div>
         )}

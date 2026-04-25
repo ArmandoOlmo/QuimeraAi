@@ -918,6 +918,31 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  realEstateListings: {
+    title: '',
+    subtitle: '',
+    buttonText: '',
+    buttonLink: '#leads',
+    maxItems: 6,
+    featuredOnly: false,
+    showPrice: true,
+    showLocation: true,
+    showStats: true,
+    showDescription: true,
+    paddingY: 'lg',
+    paddingX: 'md',
+    colors: {
+      background: '',
+      text: '',
+      textMuted: '',
+      heading: '',
+      accent: '',
+      cardBackground: '',
+      border: '',
+      buttonBackground: '',
+      buttonText: '#ffffff',
+    },
+  },
   cmsFeed: {
     title: 'Latest Articles',
     description: 'Stay up to date with our latest content',
@@ -1536,7 +1561,7 @@ const componentOrder: PageSection[] = [
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
     'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
     // Multi-page sections (for dynamic pages)
-    'productDetail', 'categoryProducts', 'articleContent', 'productGrid', 'cart', 'checkout',
+    'productDetail', 'categoryProducts', 'articleContent', 'productGrid', 'realEstateListings', 'cart', 'checkout',
     // Integrations
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat',
     // Footer

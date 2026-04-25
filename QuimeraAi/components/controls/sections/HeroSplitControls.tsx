@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -60,8 +60,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'collection', label: 'Collection' },
               { value: 'content', label: 'Contenido' }
             ].map((type) => (
-              <button
-                key={type.value}
+              <button type="button"                 key={type.value}
                 onClick={() => setNestedData('heroSplit.linkType', type.value)}
                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data.heroSplit.linkType || 'manual') === type.value
                   ? 'bg-editor-accent text-editor-bg'
@@ -151,8 +150,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-semibold text-editor-text-secondary mb-2">{t('controls.imagePosition')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['left', 'right'].map(pos => (
-              <button
-                key={pos}
+              <button type="button"                 key={pos}
                 onClick={() => setNestedData('heroSplit.imagePosition', pos)}
                 className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize ${data.heroSplit.imagePosition === pos
                   ? 'bg-editor-accent text-editor-bg'
@@ -170,29 +168,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Max Height */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.maxHeight')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroSplit.maxHeight || 500}px</span>
-          </div>
-          <input
-            type="range" min="300" max="800" step="50"
+          <SliderControl
+            label={t('controls.maxHeight')}
             value={data.heroSplit.maxHeight || 500}
-            onChange={(e) => setNestedData('heroSplit.maxHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroSplit.maxHeight', v)}
+            min={300} max={800} step={50} suffix="px"
           />
         </div>
 
         {/* Angle Intensity */}
         <div>
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.angleIntensity')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroSplit.angleIntensity || 15}%</span>
-          </div>
-          <input
-            type="range" min="0" max="30" step="5"
+          <SliderControl
+            label={t('controls.angleIntensity')}
             value={data.heroSplit.angleIntensity || 15}
-            onChange={(e) => setNestedData('heroSplit.angleIntensity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroSplit.angleIntensity', v)}
+            min={0} max={30} step={5} suffix="%"
           />
           <p className="text-xs text-editor-text-secondary mt-1 italic">
             0 = straight line, higher = more diagonal

@@ -37,6 +37,8 @@ import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import Separator from './Separator';
+import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
+import PropertyDetailSection from './real-estate/PropertyDetailSection';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { useSafeAuth } from '../contexts/core/AuthContext';
@@ -100,7 +102,7 @@ const LandingPageContent: React.FC = () => {
   const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
   const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
-  const { activeProjectId, activeProject, pages, activePage } = projectContext;
+  const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext;
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
@@ -108,6 +110,15 @@ const LandingPageContent: React.FC = () => {
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [isRouting, setIsRouting] = useState(false);
   const [blogSlugNotFound, setBlogSlugNotFound] = useState(false);
+  const [activePropertySlug, setActivePropertySlug] = useState<string | null>(null);
+
+  // Navigation guard: prevents handleNavigation (hashchange/popstate listener)
+  // from running redundantly after handleLinkNavigation already handled the event.
+  const navigationGuardRef = useRef(false);
+
+  // Ref to track activePage inside handleNavigation without adding it to deps
+  const activePageRef = useRef(activePage);
+  useEffect(() => { activePageRef.current = activePage; }, [activePage]);
 
   // Store view state for ecommerce hash routing
   const [storeView, setStoreView] = useState<StoreView>({ type: 'none' });
@@ -120,9 +131,11 @@ const LandingPageContent: React.FC = () => {
   const cart = useSafeStorefrontCart();
 
   // Multi-page architecture: Use active page's sections if available
+  // IMPORTANT: For the home page, always use the global componentOrder because
+  // it reflects the full set of sections the user has configured in the editor.
+  // activePage.sections for the home page may be a stale/incomplete snapshot.
   const effectiveComponentOrder = useMemo(() => {
-    // If not in editor mode (public view), use activePage sections
-    if (activePage?.sections?.length) {
+    if (activePage?.sections?.length && !activePage.isHomePage) {
       return activePage.sections;
     }
     // Fallback to componentOrder (either from editor or project context)
@@ -130,12 +143,14 @@ const LandingPageContent: React.FC = () => {
   }, [activePage, componentOrder]);
 
   const effectiveSectionVisibility = useMemo(() => {
-    if (activePage?.sections?.length) {
+    if (activePage?.sections?.length && !activePage.isHomePage) {
       // Create visibility based on page sections
       const visibility: Record<string, boolean> = {};
       activePage.sections.forEach(s => {
         visibility[s] = sectionVisibility[s] ?? true;
       });
+      visibility.header = sectionVisibility.header ?? true;
+      visibility.footer = sectionVisibility.footer ?? true;
       return visibility;
     }
     return sectionVisibility;
@@ -183,15 +198,47 @@ const LandingPageContent: React.FC = () => {
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
   useEffect(() => {
     const handleNavigation = () => {
+      // GUARD: If handleLinkNavigation already handled this navigation event,
+      // skip to avoid double-handling that resets state incorrectly.
+      if (navigationGuardRef.current) {
+        navigationGuardRef.current = false;
+        return;
+      }
+
       const path = window.location.pathname;
       const hash = window.location.hash;
       const decodedHash = decodeURIComponent(hash);
 
-      // Reset all views first
+      // ========================================
+      // ANCHOR SCROLL — handle FIRST, before any state resets.
+      // Anchor hashes (#services, #features) should scroll the current page
+      // without resetting views or switching pages.
+      // ========================================
+      if (hash.length > 1 && !hash.startsWith('#article:') && !hash.startsWith('#store') && !hash.startsWith('#checkout') && !hash.startsWith('#blog/')) {
+        // It's a simple anchor — just scroll, don't touch any state
+        const homePage = pages.find(page => page.isHomePage);
+        const currentPage = activePageRef.current;
+        // If we're on a non-home page, switch back to home first
+        const needsPageReset = currentPage && currentPage.id !== homePage?.id;
+        if (needsPageReset) {
+          setActivePage(homePage ? homePage.id : null);
+        }
+        setTimeout(() => {
+          const id = hash.substring(1);
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, needsPageReset ? 350 : 100);
+        return;
+      }
+
+      // Reset all views first (only for non-anchor navigation)
       setActivePost(null);
       setStoreView({ type: 'none' });
       setIsRouting(false);
       setBlogSlugNotFound(false);
+      setActivePropertySlug(null);
 
       // ========================================
       // REAL PATH ROUTING (Shopify/Wix style)
@@ -248,6 +295,59 @@ const LandingPageContent: React.FC = () => {
         return;
       }
 
+      // Property detail routing inside the editor preview canvas.
+      if (path.startsWith('/listados/') && path !== '/listados/' && path !== '/listados') {
+        const slug = path.replace('/listados/', '').replace(/\/$/, '');
+        setActivePropertySlug(slug);
+        window.scrollTo(0, 0);
+        return;
+      }
+
+      // Multi-page routing: match clean page slugs such as /listados
+      // IMPORTANT: Only match non-home pages here. For the root path (/),
+      // we fall through to the "root path" handler below.
+      if (pages && pages.length > 0) {
+        const pathSlug = path.replace(/^\//, '').replace(/\/$/, '');
+
+        // Skip empty slug — root path is handled separately below
+        if (pathSlug) {
+          const matchedPage = pages.find(page => {
+            const pageSlug = (page.slug || '').replace(/^\//, '').replace(/\/$/, '');
+            return pageSlug === pathSlug && !page.isHomePage;
+          });
+
+          if (matchedPage) {
+            setActivePage(matchedPage.id);
+            window.scrollTo(0, 0);
+            return;
+          }
+        }
+
+        if (path === '/listados' || path === '/listados/') {
+          // Check if a listing page already exists to avoid duplicates
+          const existingListingPage = pages.find(p => 
+            p.slug === '/listados' || p.slug === 'listados'
+          );
+          if (existingListingPage) {
+            setActivePage(existingListingPage.id);
+            window.scrollTo(0, 0);
+          } else {
+            addPage('real-estate-listings').then(pageId => {
+              setActivePage(pageId);
+              window.scrollTo(0, 0);
+            });
+          }
+          return;
+        }
+
+        // Root path with multi-page: ensure home page is active
+        if (path === '/' || path === '') {
+          const homePage = pages.find(p => p.isHomePage);
+          setActivePage(homePage ? homePage.id : null);
+          return;
+        }
+      }
+
       // ========================================
       // LEGACY HASH ROUTING (backward compatibility)
       // ========================================
@@ -298,18 +398,8 @@ const LandingPageContent: React.FC = () => {
         return;
       }
 
-      // ========================================
-      // ANCHOR SCROLL (/#section format)
-      // ========================================
-      if (hash.length > 1) {
-        setTimeout(() => {
-          const id = hash.substring(1);
-          const element = document.getElementById(id);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      }
+      // NOTE: Anchor scroll (/#section) is handled at the TOP of handleNavigation,
+      // before any state resets, to avoid disrupting the page shell.
     };
 
     // Check initial path/hash
@@ -322,14 +412,18 @@ const LandingPageContent: React.FC = () => {
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, isLoadingCMS]);
+  }, [addPage, cmsPosts, isLoadingCMS, pages, setActivePage]);
 
   const handleBackToHome = () => {
     window.history.pushState({}, '', '/');
     setActivePost(null);
     setActiveCategorySlug(null);
     setBlogSlugNotFound(false);
+    setActivePropertySlug(null);
     setStoreView({ type: 'none' });
+    // Reset multi-page active page to home (or null for legacy projects)
+    const homePage = pages.find(page => page.isHomePage);
+    setActivePage(homePage ? homePage.id : null);
     window.scrollTo(0, 0);
   };
 
@@ -360,14 +454,29 @@ const LandingPageContent: React.FC = () => {
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback((href: string) => {
+    // Set navigation guard to prevent handleNavigation from firing redundantly
+    // after this handler changes the URL (via pushState or scrollTo).
+    navigationGuardRef.current = true;
+    // Clear the guard after a tick in case no hashchange/popstate fires
+    setTimeout(() => { navigationGuardRef.current = false; }, 50);
+
     // Reset views
     setActivePost(null);
     setActiveCategorySlug(null);
     setStoreView({ type: 'none' });
     setBlogSlugNotFound(false);
+    setActivePropertySlug(null);
 
     // Home page
     if (href === '/' || href === '') {
+      const homePage = pages.find(page => page.isHomePage);
+      if (homePage) {
+        setActivePage(homePage.id);
+      } else {
+        // No home page in pages array — reset to null so
+        // effectiveComponentOrder falls back to the global componentOrder
+        setActivePage(null);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -375,12 +484,19 @@ const LandingPageContent: React.FC = () => {
     // Anchor scroll (/#section or #section)
     if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
       const id = href.replace('/#', '').replace('#', '');
+      const homePage = pages.find(page => page.isHomePage);
+      const needsPageReset = Boolean(activePage && activePage.id !== homePage?.id);
+
+      if (needsPageReset) {
+        setActivePage(homePage ? homePage.id : null);
+      }
+
       setTimeout(() => {
         const element = document.getElementById(id);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 100);
+      }, needsPageReset ? 350 : 100);
       return;
     }
 
@@ -388,6 +504,7 @@ const LandingPageContent: React.FC = () => {
     if (href.startsWith('/blog/categoria/')) {
       const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
       console.log('[LandingPage] Navigating to blog category:', slug);
+      setActivePropertySlug(null);
       setActiveCategorySlug(slug);
       window.scrollTo(0, 0);
       return;
@@ -398,6 +515,7 @@ const LandingPageContent: React.FC = () => {
       const slug = href.replace('/blog/', '').replace(/\/$/, '');
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
+        setActivePropertySlug(null);
         setActivePost(post);
         setBlogSlugNotFound(false);
         window.scrollTo(0, 0);
@@ -411,6 +529,7 @@ const LandingPageContent: React.FC = () => {
 
     // Store: /tienda
     if (href === '/tienda' || href === '/tienda/') {
+      setActivePropertySlug(null);
       setStoreView({ type: 'store' });
       window.scrollTo(0, 0);
       return;
@@ -419,6 +538,7 @@ const LandingPageContent: React.FC = () => {
     // Store category: /tienda/categoria/slug
     if (href.startsWith('/tienda/categoria/')) {
       const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
+      setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
       window.scrollTo(0, 0);
       return;
@@ -427,6 +547,7 @@ const LandingPageContent: React.FC = () => {
     // Store product: /tienda/producto/slug
     if (href.startsWith('/tienda/producto/')) {
       const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
+      setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
       window.scrollTo(0, 0);
       return;
@@ -434,6 +555,7 @@ const LandingPageContent: React.FC = () => {
 
     // Checkout
     if (href === '/checkout' || href === '/checkout/') {
+      setActivePropertySlug(null);
       setStoreView({ type: 'checkout' });
       window.scrollTo(0, 0);
       return;
@@ -451,6 +573,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (href === '#store') {
+      setActivePropertySlug(null);
       setStoreView({ type: 'store' });
       window.scrollTo(0, 0);
       return;
@@ -458,6 +581,7 @@ const LandingPageContent: React.FC = () => {
 
     if (href.startsWith('#store/category/')) {
       const slug = href.replace('#store/category/', '');
+      setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
       window.scrollTo(0, 0);
       return;
@@ -465,7 +589,17 @@ const LandingPageContent: React.FC = () => {
 
     if (href.startsWith('#store/product/')) {
       const slug = href.replace('#store/product/', '');
+      setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Real estate property detail: in editor/dashboard preview, route into the real public preview URL
+    // so the user stays inside the same editor canvas.
+    if (href.startsWith('/listados/') && href !== '/listados/' && href !== '/listados') {
+      const slug = href.replace('/listados/', '').replace(/\/$/, '');
+      setActivePropertySlug(slug);
       window.scrollTo(0, 0);
       return;
     }
@@ -476,13 +610,46 @@ const LandingPageContent: React.FC = () => {
       return;
     }
 
+    // Multi-page navigation: match website pages created by the builder
+    const pageSlug = href.replace(/^\//, '').replace(/\/$/, '');
+    if (pages && pages.length > 0) {
+      const matchedPage = pages.find(page => {
+        const normalizedSlug = (page.slug || '').replace(/^\//, '').replace(/\/$/, '');
+        return normalizedSlug === pageSlug;
+      });
+
+      if (matchedPage) {
+        setActivePage(matchedPage.id);
+        window.scrollTo(0, 0);
+        return;
+      }
+    }
+
+    if (href === '/listados' || href === '/listados/') {
+      setActivePropertySlug(null);
+      // Check if a listing page already exists to avoid duplicates
+      const existingListingPage = pages.find(p => 
+        p.slug === '/listados' || p.slug === 'listados'
+      );
+      if (existingListingPage) {
+        setActivePage(existingListingPage.id);
+        window.scrollTo(0, 0);
+      } else {
+        addPage('real-estate-listings').then(pageId => {
+          setActivePage(pageId);
+          window.scrollTo(0, 0);
+        });
+      }
+      return;
+    }
+
     // Fallback: try to scroll to element by ID
     const id = href.replace(/^\//, '').replace(/\/$/, '');
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [cmsPosts]);
+  }, [activePage, addPage, cmsPosts, pages, setActivePage]);
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
@@ -673,7 +840,8 @@ const LandingPageContent: React.FC = () => {
   const mergedCollectionBannerData = mergeComponentData('collectionBanner');
   const mergedProductBundleData = mergeComponentData('productBundle');
   const mergedAnnouncementBarData = mergeComponentData('announcementBar');
-  
+  const mergedRealEstateListingsData = mergeComponentData('realEstateListings');
+
   const mergedSeparator1Data = mergeComponentData('separator1');
   const mergedSeparator2Data = mergeComponentData('separator2');
   const mergedSeparator3Data = mergeComponentData('separator3');
@@ -747,7 +915,7 @@ const LandingPageContent: React.FC = () => {
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor}>
+      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition}>
         {(() => {
           const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
           const nav = handleLinkNavigation;
@@ -759,9 +927,9 @@ const LandingPageContent: React.FC = () => {
         })()}
       </SectionBackground>
     ),
-    heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background} backgroundOverlayEnabled={mergedHeroSplitData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroSplitData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroSplitData?.backgroundOverlayColor}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    heroSplit: <SectionBackground backgroundImageUrl={mergedHeroSplitData?.backgroundImageUrl} backgroundColor={mergedHeroSplitData?.colors?.background} backgroundOverlayEnabled={mergedHeroSplitData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroSplitData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroSplitData?.backgroundOverlayColor} backgroundPosition={mergedHeroSplitData?.backgroundPosition}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     heroGallery: mergedHeroGalleryData ? (
-      <SectionBackground backgroundImageUrl={mergedHeroGalleryData?.backgroundImageUrl} backgroundColor={mergedHeroGalleryData?.colors?.background} backgroundOverlayEnabled={mergedHeroGalleryData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroGalleryData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroGalleryData?.backgroundOverlayColor}>
+      <SectionBackground backgroundImageUrl={mergedHeroGalleryData?.backgroundImageUrl} backgroundColor={mergedHeroGalleryData?.colors?.background} backgroundOverlayEnabled={mergedHeroGalleryData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroGalleryData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroGalleryData?.backgroundOverlayColor} backgroundPosition={mergedHeroGalleryData?.backgroundPosition}>
         <HeroGallery
           {...mergedHeroGalleryData}
           borderRadius={mergedHeroGalleryData?.buttonBorderRadius || theme.buttonBorderRadius}
@@ -770,7 +938,7 @@ const LandingPageContent: React.FC = () => {
       </SectionBackground>
     ) : null,
     heroWave: mergedHeroWaveData ? (
-      <SectionBackground backgroundImageUrl={mergedHeroWaveData?.backgroundImageUrl} backgroundColor={mergedHeroWaveData?.colors?.background} backgroundOverlayEnabled={mergedHeroWaveData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroWaveData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroWaveData?.backgroundOverlayColor}>
+      <SectionBackground backgroundImageUrl={mergedHeroWaveData?.backgroundImageUrl} backgroundColor={mergedHeroWaveData?.colors?.background} backgroundOverlayEnabled={mergedHeroWaveData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroWaveData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroWaveData?.backgroundOverlayColor} backgroundPosition={mergedHeroWaveData?.backgroundPosition}>
         <HeroWave
           {...mergedHeroWaveData}
           borderRadius={mergedHeroWaveData?.buttonBorderRadius || theme.buttonBorderRadius}
@@ -779,7 +947,7 @@ const LandingPageContent: React.FC = () => {
       </SectionBackground>
     ) : null,
     heroNova: mergedHeroNovaData ? (
-      <SectionBackground backgroundImageUrl={mergedHeroNovaData?.backgroundImageUrl} backgroundColor={mergedHeroNovaData?.colors?.background} backgroundOverlayEnabled={mergedHeroNovaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroNovaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroNovaData?.backgroundOverlayColor}>
+      <SectionBackground backgroundImageUrl={mergedHeroNovaData?.backgroundImageUrl} backgroundColor={mergedHeroNovaData?.colors?.background} backgroundOverlayEnabled={mergedHeroNovaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroNovaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroNovaData?.backgroundOverlayColor} backgroundPosition={mergedHeroNovaData?.backgroundPosition}>
         <HeroNova
           {...mergedHeroNovaData}
           borderRadius={mergedHeroNovaData?.buttonBorderRadius || theme.buttonBorderRadius}
@@ -788,7 +956,7 @@ const LandingPageContent: React.FC = () => {
       </SectionBackground>
     ) : null,
     heroLead: mergedHeroLeadData ? (
-      <SectionBackground backgroundImageUrl={mergedHeroLeadData?.backgroundImageUrl} backgroundColor={mergedHeroLeadData?.colors?.background} backgroundOverlayEnabled={mergedHeroLeadData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroLeadData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroLeadData?.backgroundOverlayColor}>
+      <SectionBackground backgroundImageUrl={mergedHeroLeadData?.backgroundImageUrl} backgroundColor={mergedHeroLeadData?.colors?.background} backgroundOverlayEnabled={mergedHeroLeadData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroLeadData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroLeadData?.backgroundOverlayColor} backgroundPosition={mergedHeroLeadData?.backgroundPosition}>
         <HeroLead
           {...mergedHeroLeadData}
           cardBorderRadius={mergedHeroLeadData?.cardBorderRadius || theme.cardBorderRadius}
@@ -797,21 +965,21 @@ const LandingPageContent: React.FC = () => {
         />
       </SectionBackground>
     ) : null,
-    features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesData?.backgroundOverlayColor}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
-    testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsData?.backgroundOverlayColor}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
-    slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor}><Slideshow {...mergedSlideshowData} borderRadius={mergedSlideshowData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background} backgroundOverlayEnabled={mergedPricingData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingData?.backgroundOverlayColor}><Pricing {...mergedPricingData} cardBorderRadius={mergedPricingData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedPricingData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
-    faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background} backgroundOverlayEnabled={mergedFaqData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqData?.backgroundOverlayColor}><Faq {...mergedFaqData} borderRadius={mergedFaqData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background} backgroundOverlayEnabled={mergedLeadsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedLeadsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedLeadsData?.backgroundOverlayColor}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData?.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData?.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
-    newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background} backgroundOverlayEnabled={mergedNewsletterData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedNewsletterData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedNewsletterData?.backgroundOverlayColor}><Newsletter {...mergedNewsletterData} cardBorderRadius={mergedNewsletterData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedNewsletterData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
-    cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor}><CTASection {...mergedCtaData} cardBorderRadius={mergedCtaData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedCtaData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
-    portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor}><Portfolio {...mergedPortfolioData} borderRadius={mergedPortfolioData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor}><Services {...mergedServicesData} borderRadius={mergedServicesData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor}><Team {...mergedTeamData} borderRadius={mergedTeamData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
-    video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor}><Video {...mergedVideoData} borderRadius={mergedVideoData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor}><HowItWorks {...mergedHowItWorksData} borderRadius={mergedHowItWorksData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={mergedMapData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor}><Menu {...mergedMenuData} borderRadius={mergedMenuData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesData?.backgroundOverlayColor} backgroundPosition={mergedFeaturesData?.backgroundPosition}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsData?.backgroundOverlayColor} backgroundPosition={mergedTestimonialsData?.backgroundPosition}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
+    slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor} backgroundPosition={mergedSlideshowData?.backgroundPosition}><Slideshow {...mergedSlideshowData} borderRadius={mergedSlideshowData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background} backgroundOverlayEnabled={mergedPricingData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingData?.backgroundOverlayColor} backgroundPosition={mergedPricingData?.backgroundPosition}><Pricing {...mergedPricingData} cardBorderRadius={mergedPricingData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedPricingData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background} backgroundOverlayEnabled={mergedFaqData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqData?.backgroundOverlayColor} backgroundPosition={mergedFaqData?.backgroundPosition}><Faq {...mergedFaqData} borderRadius={mergedFaqData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background} backgroundOverlayEnabled={mergedLeadsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedLeadsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedLeadsData?.backgroundOverlayColor} backgroundPosition={mergedLeadsData?.backgroundPosition}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData?.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData?.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background} backgroundOverlayEnabled={mergedNewsletterData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedNewsletterData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedNewsletterData?.backgroundOverlayColor} backgroundPosition={mergedNewsletterData?.backgroundPosition}><Newsletter {...mergedNewsletterData} cardBorderRadius={mergedNewsletterData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedNewsletterData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
+    cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor} backgroundPosition={mergedCtaData?.backgroundPosition}><CTASection {...mergedCtaData} cardBorderRadius={mergedCtaData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedCtaData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor} backgroundPosition={mergedPortfolioData?.backgroundPosition}><Portfolio {...mergedPortfolioData} borderRadius={mergedPortfolioData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor} backgroundPosition={mergedServicesData?.backgroundPosition}><Services {...mergedServicesData} borderRadius={mergedServicesData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor} backgroundPosition={mergedTeamData?.backgroundPosition}><Team {...mergedTeamData} borderRadius={mergedTeamData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
+    video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor} backgroundPosition={mergedVideoData?.backgroundPosition}><Video {...mergedVideoData} borderRadius={mergedVideoData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor} backgroundPosition={mergedHowItWorksData?.backgroundPosition}><HowItWorks {...mergedHowItWorksData} borderRadius={mergedHowItWorksData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor} backgroundPosition={mergedMapData?.backgroundPosition}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={mergedMapData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor} backgroundPosition={mergedMenuData?.backgroundPosition}><Menu {...mergedMenuData} borderRadius={mergedMenuData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={mergedBannerData?.buttonBorderRadius || theme.buttonBorderRadius} />,
     topBar: mergedTopBarData ? (
       <TopBar
@@ -895,6 +1063,18 @@ const LandingPageContent: React.FC = () => {
     announcementBar: mergedAnnouncementBarData ? (
       <AnnouncementBar data={mergedAnnouncementBarData} />
     ) : null,
+    realEstateListings: (
+      <SectionBackground backgroundImageUrl={mergedRealEstateListingsData?.backgroundImageUrl} backgroundColor={mergedRealEstateListingsData?.colors?.background} backgroundOverlayEnabled={mergedRealEstateListingsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedRealEstateListingsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedRealEstateListingsData?.backgroundOverlayColor} backgroundPosition={mergedRealEstateListingsData?.backgroundPosition}>
+        <RealEstateListingsSection
+          data={mergedRealEstateListingsData || data.realEstateListings}
+          projectId={activeProjectId || null}
+          isPreviewMode={isEditorMode}
+          theme={theme}
+          globalColors={theme.globalColors}
+          onNavigate={handleLinkNavigation}
+        />
+      </SectionBackground>
+    ),
     // Store settings is a config section, not a visual component
     storeSettings: null,
     // CMS Feed section - renders blog posts grid
@@ -1066,6 +1246,7 @@ const LandingPageContent: React.FC = () => {
           backgroundOverlayEnabled={fd.backgroundOverlayEnabled}
           backgroundOverlayOpacity={fd.backgroundOverlayOpacity}
           backgroundOverlayColor={fd.backgroundOverlayColor}
+          backgroundPosition={fd.backgroundPosition}
         >
           <section id="cmsFeed" style={{ padding: `${py} ${px}`, background: colors.background || 'transparent' }}>
             {/* Corner Gradient */}
@@ -1273,7 +1454,7 @@ const LandingPageContent: React.FC = () => {
       <Header
         {...mergedHeaderData}
         links={headerLinks}
-        forceSolid={isStoreViewActive}
+        forceSolid={isStoreViewActive || Boolean(activePropertySlug) || Boolean(activePage?.sections?.includes('propertyDetail') || activePage?.sections?.includes('propertyDirectory'))}
         showCart={storefrontProducts.length > 0 && isAnyEcommerceComponentEnabled}
         cartItemCount={cart.itemCount}
         onCartClick={cart.toggleCart}
@@ -1381,6 +1562,22 @@ const LandingPageContent: React.FC = () => {
               Back to Home
             </button>
           </div>
+        )}
+
+        {/* 3.5. Real Estate Property Detail View */}
+        {!showArticleLoading && !activePost && !activeCategorySlug && activePropertySlug && activeProjectId && (
+          <PropertyDetailSection
+            projectId={activeProjectId}
+            propertySlug={activePropertySlug}
+            theme={theme}
+            globalColors={theme.globalColors}
+            onNavigateHome={handleBackToHome}
+            onNavigateToListings={() => handleLinkNavigation('/listados')}
+            onNavigateToProperty={(slug) => {
+              setActivePropertySlug(slug);
+              window.scrollTo(0, 0);
+            }}
+          />
         )}
 
         {/* 4. Store View - All Products */}
@@ -1596,7 +1793,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 7. Home View (Sections) - Only show when not in article, category, or store view */}
-        {!isArticleHash && !activePost && !activeCategorySlug && !isStoreViewActive && (
+        {!isArticleHash && !activePost && !activeCategorySlug && !activePropertySlug && !isStoreViewActive && (
           <>
             {effectiveComponentOrder
               .filter(key => {

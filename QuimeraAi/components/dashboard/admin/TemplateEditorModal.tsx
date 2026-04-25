@@ -866,13 +866,13 @@ Name:`;
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
             {/* Compact Header */}
-            <div className="px-5 py-4 border-b border-editor-border flex justify-between items-center bg-gradient-to-r from-editor-bg to-editor-surface">
+            <div className="px-5 py-4 border-b border-editor-border flex justify-between items-center bg-editor-bg">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-md bg-editor-accent/10 border border-editor-accent/20 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-editor-accent" />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-white">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
+                        <h2 className="text-base font-semibold text-editor-text-primary">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
                         <p className="text-xs text-editor-text-secondary">{template?.name === 'New Template' ? '' : template?.name}</p>
                     </div>
                 </div>
@@ -885,7 +885,7 @@ Name:`;
             </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                <div className="quimera-clean-controls p-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
                     {error && (
                         <p className="bg-red-500/10 text-red-400 text-sm p-2.5 rounded-lg mb-4">
                             {error}

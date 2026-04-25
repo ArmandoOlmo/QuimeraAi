@@ -91,8 +91,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
         >
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-bold text-editor-text-secondary">{itemLabel} #{index + 1}</span>
-            <button
-              onClick={() => {
+            <button type="button"               onClick={() => {
                 const newItems = (sectionData.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData(`${sectionKey}.items`, newItems);
               }}
@@ -143,8 +142,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           ))}
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItem = fields.reduce((acc, field) => ({ ...acc, [field.key]: '' }), {});
           setNestedData(`${sectionKey}.items`, [...(sectionData.items || []), newItem]);
         }}

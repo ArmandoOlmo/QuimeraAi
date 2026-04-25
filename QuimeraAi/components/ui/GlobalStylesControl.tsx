@@ -198,6 +198,18 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             gradientStart: colors?.primary,
             gradientEnd: colors?.secondary,
         },
+        realEstateListings: {
+            background: colors?.background,
+            heading: colors?.heading,
+            text: colors?.text,
+            textMuted: colors?.textMuted,
+            accent: colors?.primary,
+            cardBackground: colors?.surface,
+            border: colors?.border,
+            borderColor: colors?.border,
+            buttonBackground: colors?.primary,
+            buttonText: contrastText(colors?.primary, colors?.background, colors?.heading),
+        },
         newsletter: {
             background: colors?.surface,
             accent: colors?.accent,
@@ -1156,10 +1168,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                                 <button
                                     onClick={() => setTheme(prev => ({ ...prev, headingsAllCaps: !prev.headingsAllCaps }))}
-                                    className={`${theme.headingsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                    className={`${theme.headingsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.headingsAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.headingsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>
@@ -1173,10 +1185,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                                 <button
                                     onClick={() => setTheme(prev => ({ ...prev, buttonsAllCaps: !prev.buttonsAllCaps }))}
-                                    className={`${theme.buttonsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                    className={`${theme.buttonsAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.buttonsAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.buttonsAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>
@@ -1190,10 +1202,10 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                 </div>
                                 <button
                                     onClick={() => setTheme(prev => ({ ...prev, navLinksAllCaps: !prev.navLinksAllCaps }))}
-                                    className={`${theme.navLinksAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                                    className={`${theme.navLinksAllCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                                 >
                                     <span
-                                        className={`${theme.navLinksAllCaps ? 'translate-x-4' : 'translate-x-0'} pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                        className={`${theme.navLinksAllCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
                                     />
                                 </button>
                             </div>

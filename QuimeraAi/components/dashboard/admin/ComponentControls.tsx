@@ -28,11 +28,11 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
             onMouseDown={(e) => e.stopPropagation()}
             onDragStart={(e) => e.preventDefault()}
             draggable={false}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
         >
             <span
                 aria-hidden="true"
-                className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                className={`${checked ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
             />
         </button>
     </div>
@@ -538,11 +538,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             role="switch"
                             aria-checked={(s as any).enableCardAnimation !== false}
                             onClick={() => handleStyleChange('enableCardAnimation', !(s as any).enableCardAnimation !== false)}
-                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}
+                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out`}
                         >
                             <span
                                 aria-hidden="true"
-                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                className={`${(s as any).enableCardAnimation !== false ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
                             />
                         </button>
                     </div>
@@ -1063,11 +1063,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 disabled={!canRemoveBranding}
                                 aria-checked={s.hideBranding || false}
                                 onClick={() => handleStyleChange('hideBranding', !s.hideBranding)}
-                                className={`${s.hideBranding ? 'bg-editor-accent' : 'bg-editor-border'} ${!canRemoveBranding ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}
+                                className={`${s.hideBranding ? 'bg-editor-accent' : 'bg-editor-border'} ${!canRemoveBranding ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out`}
                             >
                                 <span
                                     aria-hidden="true"
-                                    className={`${s.hideBranding ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                                    className={`${s.hideBranding ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
                                 />
                             </button>
                         </div>
@@ -2454,6 +2454,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             case 'pricing':
             case 'portfolio':
             case 'leads':
+            case 'realEstateListings':
             case 'video':
             case 'banner':
             case 'heroSplit':

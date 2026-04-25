@@ -11,6 +11,7 @@ import { Menu, Bell, User, LogOut, Settings, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { auth, signOut } from '../../firebase';
 import { useRouter } from '../../hooks/useRouter';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 interface PortalLayoutProps {
     children: ReactNode;
@@ -20,7 +21,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     const { t } = useTranslation();
     const { portalConfig, theme, isLoadingPortal, error } = usePortal();
     const { user, userDocument } = useAuth();
-    const { navigate } = useRouter();
+    const { navigate, goBack } = useRouter();
     
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -169,6 +170,8 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                                 </>
                             )}
                         </div>
+
+                        <HeaderBackButton onClick={() => goBack()} />
                     </div>
                 </header>
 
@@ -189,8 +192,6 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
 };
 
 export default PortalLayout;
-
-
 
 
 

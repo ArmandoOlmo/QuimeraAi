@@ -1,0 +1,16 @@
+---
+description: Obliga a leer instrucciones base antes de cualquier tarea
+alwaysApply: true
+---
+
+# Leer instrucciones antes de comenzar
+
+Antes de analizar, planear o editar código, revisa primero:
+
+- `../.agents/rules/instrucciones.md`
+
+## Comportamiento esperado
+
+1. Lee ese archivo como primer paso de cada solicitud.
+2. Aplica esas instrucciones como prioridad durante toda la sesión.
+3. Si el archivo no existe o no es accesible, informa el bloqueo al usuario antes de continuar.

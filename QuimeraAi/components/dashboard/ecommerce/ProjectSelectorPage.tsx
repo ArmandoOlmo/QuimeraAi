@@ -20,7 +20,6 @@ import {
     List,
     Sparkles,
     Menu,
-    ArrowLeft,
     X,
 } from 'lucide-react';
 import { useUI } from '../../../contexts/core/UIContext';
@@ -29,6 +28,7 @@ import { Project } from '../../../types/components';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
 import MobileSearchModal from '../../ui/MobileSearchModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -114,7 +114,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         </div>
                     </div>
 
-                    {/* Right: Search icon + Back icon */}
+                    {/* Right: Search */}
                     <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
                         <button
                             onClick={() => setIsSearchOpen(true)}
@@ -123,15 +123,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                         >
                             <Search size={20} />
                         </button>
-                        {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                                aria-label={t('common.back', 'Volver')}
-                            >
-                                <ArrowLeft size={20} />
-                            </button>
-                        )}
+                        {onBack && <HeaderBackButton onClick={onBack} />}
                     </div>
                 </header>
 

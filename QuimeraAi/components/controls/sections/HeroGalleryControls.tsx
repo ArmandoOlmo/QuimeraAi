@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -46,7 +46,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
               {slides.length > 1 && (
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
                     const newSlides = slides.filter((_: any, i: number) => i !== slideIndex);
                     setNestedData('heroGallery.slides', newSlides);
                   }}
@@ -107,7 +109,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Add Slide Button */}
         <button
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
             const newSlide = {
               headline: 'New Slide Headline',
               subheadline: 'Subtitle here',
@@ -175,9 +179,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               const isSelected = currentH === pos.h && currentV === pos.v;
               return (
                 <button
+                  type="button"
                   key={`${pos.h}-${pos.v}`}
                   title={pos.label}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setNestedData('heroGallery.textHorizontalAlign', pos.h);
                     setNestedData('heroGallery.textVerticalAlign', pos.v);
                   }}
@@ -224,51 +230,25 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Overlay Opacity */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
-            <span className="text-xs text-editor-text-primary">{Math.round((data.heroGallery.overlayOpacity ?? 0.35) * 100)}%</span>
-          </div>
-          <input
-            type="range" min="0" max="80" step="5"
+          <SliderControl
+            label={t('controls.overlayDarkness')}
             value={Math.round((data.heroGallery.overlayOpacity ?? 0.35) * 100)}
-            onChange={(e) => setNestedData('heroGallery.overlayOpacity', parseInt(e.target.value) / 100)}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroGallery.overlayOpacity', v / 100)}
+            min={0}
+            max={80}
+            step={5}
+            suffix="%"
           />
         </div>
 
         <ToggleControl label={t('controls.grainTexture')} checked={data.heroGallery.showGrain ?? true} onChange={(v) => setNestedData('heroGallery.showGrain', v)} />
 
         {/* Image Focus Position */}
-        <div className="mt-3 pt-3 border-t border-editor-border/30">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
-            {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
-          </label>
-          <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
-            {[
-              { id: 'top left', label: '↖' },
-              { id: 'top center', label: '↑' },
-              { id: 'top right', label: '↗' },
-              { id: 'center left', label: '←' },
-              { id: 'center center', label: '●' },
-              { id: 'center right', label: '→' },
-              { id: 'bottom left', label: '↙' },
-              { id: 'bottom center', label: '↓' },
-              { id: 'bottom right', label: '↘' },
-            ].map((pos) => (
-              <button
-                key={pos.id}
-                onClick={() => setNestedData('heroGallery.bgPosition', pos.id)}
-                className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data?.heroGallery?.bgPosition || 'center center') === pos.id
-                  ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                  : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                }`}
-                title={pos.id}
-              >
-                {pos.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <PositionGridControl
+          label={t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+          value={data?.heroGallery?.bgPosition || 'center center'}
+          onChange={(val) => setNestedData('heroGallery.bgPosition', val)}
+        />
       </div>
 
       {/* Hero Height */}
@@ -280,15 +260,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Hero Height */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroGallery.heroHeight || 80}vh</span>
-          </div>
-          <input
-            type="range" min="50" max="100" step="5"
+          <SliderControl
+            label={t('controls.heroHeight')}
             value={data.heroGallery.heroHeight || 80}
-            onChange={(e) => setNestedData('heroGallery.heroHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroGallery.heroHeight', v)}
+            min={50}
+            max={100}
+            step={5}
+            suffix="vh"
           />
         </div>
 

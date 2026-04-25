@@ -36,8 +36,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.faqStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {['classic', 'cards', 'gradient', 'minimal'].map((variant) => (
-            <button
-              key={variant}
+            <button type="button"               key={variant}
               onClick={() => setNestedData('faq.faqVariant', variant)}
               className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${(data?.faq?.faqVariant || 'classic') === variant
                 ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'

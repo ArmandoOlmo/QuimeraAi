@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface AdminViewLayoutProps {
   title: string;
@@ -31,14 +32,9 @@ const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, childr
             </button>
             <h2 className="text-lg font-semibold text-editor-text-primary">{title}</h2>
           </div>
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver
-          </button>
+          <div className="flex items-center gap-2">
+            <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+          </div>
         </header>
 
         {/* Content */}

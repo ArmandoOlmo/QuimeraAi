@@ -28,9 +28,9 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             {/* Tab Selector */}
-            <div className="flex gap-1 bg-editor-panel-bg/95 backdrop-blur-md p-1 rounded-lg border border-editor-border/50 sticky top-0 z-10 shadow-sm">
+            <div className="flex gap-1 bg-editor-bg/70 backdrop-blur-md p-1 rounded-md border border-editor-border/50 sticky top-0 z-10">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
                     return (
@@ -38,14 +38,15 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`
-                                flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all
+                                flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-semibold transition-all
                                 ${activeTab === tab.id 
-                                    ? 'bg-editor-accent text-white shadow-sm' 
-                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg/50'
+                                    ? 'bg-editor-panel-bg text-editor-accent shadow-sm ring-1 ring-editor-border/70' 
+                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/60'
                                 }
                             `}
+                            title={tab.label}
                         >
-                            <Icon size={16} />
+                            <Icon size={15} strokeWidth={1.8} />
                             <span>{tab.label}</span>
                         </button>
                     );
@@ -61,4 +62,3 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
 };
 
 export default TabbedControls;
-

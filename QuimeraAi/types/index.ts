@@ -61,6 +61,8 @@ export * from './news';
 // Agency Plans Types (Plans that agencies create for their clients)
 export * from './agencyPlans';
 
+// Real Estate OS Types
+export * from './realEstate';
 
 
 

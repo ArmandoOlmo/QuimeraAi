@@ -2272,6 +2272,30 @@ export interface PageData {
     articleContent?: ArticleContentSectionData;
     /** Configuración de grid de productos */
     productGrid?: ProductGridSectionData;
+    /** Configuración de listados de real estate */
+    realEstateListings?: {
+        title?: string;
+        subtitle?: string;
+        buttonText?: string;
+        buttonLink?: string;
+        leadLink?: string;
+        maxItems?: number;
+        featuredOnly?: boolean;
+        showPrice?: boolean;
+        showLocation?: boolean;
+        showStats?: boolean;
+        showDescription?: boolean;
+        paddingY?: string;
+        paddingX?: string;
+        cardBorderRadius?: string;
+        buttonBorderRadius?: string;
+        colors?: Record<string, string>;
+        backgroundImageUrl?: string;
+        backgroundPosition?: string;
+        backgroundOverlayEnabled?: boolean;
+        backgroundOverlayOpacity?: number;
+        backgroundOverlayColor?: string;
+    };
     /** Configuración de sección de carrito */
     cart?: CartSectionData;
     /** Configuración de sección de checkout */
@@ -2283,4 +2307,3 @@ export interface PageData {
     /** Floating sign-up overlay component */
     signupFloat?: SignupFloatData;
 }
-

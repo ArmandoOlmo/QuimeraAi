@@ -12,7 +12,9 @@ import {
     Sparkles, Link2, Upload, Bold, Italic, Underline, List,
     LayoutGrid, Columns, Rows, Clock, Play, Pause, Settings, ImageIcon,
     RotateCcw, Info, Loader2, Grid, Check, FileText,
-    Waves, Wind, Flame, Droplets, Mountain, CloudFog, Zap, Paintbrush, Radio
+    Waves, Wind, Flame, Droplets, Mountain, CloudFog, Zap, Paintbrush, Radio, SlidersHorizontal,
+    ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, CircleDot, ArrowRight,
+    ArrowDownLeft, ArrowDown, ArrowDownRight
 } from 'lucide-react';
 import ImagePicker from '../../ui/ImagePicker';
 import ImagePickerModal from '../../ui/ImagePickerModal';
@@ -46,9 +48,12 @@ interface LandingPageControlsProps {
 }
 
 // Reusable control components
-const ControlGroup: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+const ControlGroup: React.FC<{ label: string; icon?: React.ElementType; children: React.ReactNode }> = ({ label, icon: Icon = SlidersHorizontal, children }) => (
     <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+        <label className="flex items-center gap-2 text-[11px] font-semibold text-editor-text-secondary uppercase tracking-wider">
+            <Icon size={14} />
+            {label}
+        </label>
         {children}
     </div>
 );
@@ -97,11 +102,11 @@ const Toggle: React.FC<{
             aria-label={label}
             onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
             onMouseDown={(e) => e.stopPropagation()}
-            className={`${checked ? 'bg-primary' : 'bg-editor-text-secondary/30'} relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-bg`}
+            className={`${checked ? 'bg-primary' : 'bg-editor-text-secondary/30'} relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-bg`}
         >
             <span
                 aria-hidden="true"
-                className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out`}
+                className={`${checked ? 'translate-x-[20px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
             />
         </button>
     </div>
@@ -141,7 +146,10 @@ const RangeControl: React.FC<{
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
     <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <div className="flex items-center justify-between">
-            <span className="text-sm text-editor-text-primary">{label}</span>
+            <span className="flex items-center gap-2 text-sm text-editor-text-primary">
+                <SlidersHorizontal size={14} className="text-editor-text-secondary" />
+                {label}
+            </span>
             <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{value}{unit}</span>
         </div>
         <input
@@ -226,12 +234,12 @@ const LINK_CATEGORIES = [
     {
         label: 'Secciones del Landing',
         items: [
-            { value: '#hero', label: '↑ Hero' },
-            { value: '#features', label: '↓ Features' },
-            { value: '#pricing', label: '↓ Precios' },
-            { value: '#testimonials', label: '↓ Testimonios' },
-            { value: '#faq', label: '↓ FAQ' },
-            { value: '#cta', label: '↓ CTA' },
+            { value: '#hero', label: 'Hero' },
+            { value: '#features', label: 'Features' },
+            { value: '#pricing', label: 'Precios' },
+            { value: '#testimonials', label: 'Testimonios' },
+            { value: '#faq', label: 'FAQ' },
+            { value: '#cta', label: 'CTA' },
         ],
     },
     {
@@ -570,28 +578,31 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </label>
                         <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
                             {[
-                                { id: 'top left', label: '↖' },
-                                { id: 'top center', label: '↑' },
-                                { id: 'top right', label: '↗' },
-                                { id: 'center left', label: '←' },
-                                { id: 'center center', label: '●' },
-                                { id: 'center right', label: '→' },
-                                { id: 'bottom left', label: '↙' },
-                                { id: 'bottom center', label: '↓' },
-                                { id: 'bottom right', label: '↘' },
-                            ].map((pos) => (
-                                <button
-                                    key={pos.id}
-                                    onClick={() => updateData('bgPosition', pos.id)}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data.bgPosition || 'center center') === pos.id
-                                        ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                                        : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                                    }`}
-                                    title={pos.id}
-                                >
-                                    {pos.label}
-                                </button>
-                            ))}
+                                { id: 'top left', icon: ArrowUpLeft },
+                                { id: 'top center', icon: ArrowUp },
+                                { id: 'top right', icon: ArrowUpRight },
+                                { id: 'center left', icon: ArrowLeft },
+                                { id: 'center center', icon: CircleDot },
+                                { id: 'center right', icon: ArrowRight },
+                                { id: 'bottom left', icon: ArrowDownLeft },
+                                { id: 'bottom center', icon: ArrowDown },
+                                { id: 'bottom right', icon: ArrowDownRight },
+                            ].map((pos) => {
+                                const Icon = pos.icon;
+                                return (
+                                    <button
+                                        key={pos.id}
+                                        onClick={() => updateData('bgPosition', pos.id)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${(data.bgPosition || 'center center') === pos.id
+                                            ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                                            : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                        }`}
+                                        title={pos.id}
+                                    >
+                                        <Icon size={14} />
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -820,28 +831,31 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     </label>
                                     <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
                                         {[
-                                            { id: 'top left', label: '↖' },
-                                            { id: 'top center', label: '↑' },
-                                            { id: 'top right', label: '↗' },
-                                            { id: 'center left', label: '←' },
-                                            { id: 'center center', label: '●' },
-                                            { id: 'center right', label: '→' },
-                                            { id: 'bottom left', label: '↙' },
-                                            { id: 'bottom center', label: '↓' },
-                                            { id: 'bottom right', label: '↘' },
-                                        ].map((pos) => (
-                                            <button
-                                                key={pos.id}
-                                                onClick={() => updateData('heroBgPosition', pos.id)}
-                                                className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data.heroBgPosition || 'center center') === pos.id
-                                                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                                                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                                                }`}
-                                                title={pos.id}
-                                            >
-                                                {pos.label}
-                                            </button>
-                                        ))}
+                                            { id: 'top left', icon: ArrowUpLeft },
+                                            { id: 'top center', icon: ArrowUp },
+                                            { id: 'top right', icon: ArrowUpRight },
+                                            { id: 'center left', icon: ArrowLeft },
+                                            { id: 'center center', icon: CircleDot },
+                                            { id: 'center right', icon: ArrowRight },
+                                            { id: 'bottom left', icon: ArrowDownLeft },
+                                            { id: 'bottom center', icon: ArrowDown },
+                                            { id: 'bottom right', icon: ArrowDownRight },
+                                        ].map((pos) => {
+                                            const Icon = pos.icon;
+                                            return (
+                                                <button
+                                                    key={pos.id}
+                                                    onClick={() => updateData('heroBgPosition', pos.id)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${(data.heroBgPosition || 'center center') === pos.id
+                                                        ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                                                        : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                                    }`}
+                                                    title={pos.id}
+                                                >
+                                                    <Icon size={14} />
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -951,10 +965,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     label="Dirección"
                                     value={data.gradientDirection || 'to bottom'}
                                     options={[
-                                        { value: 'to bottom', label: 'Vertical ↓' },
-                                        { value: 'to right', label: 'Horizontal →' },
-                                        { value: 'to bottom right', label: 'Diagonal ↘' },
-                                        { value: 'radial', label: 'Radial O' },
+                                        { value: 'to bottom', label: 'Vertical' },
+                                        { value: 'to right', label: 'Horizontal' },
+                                        { value: 'to bottom right', label: 'Diagonal' },
+                                        { value: 'radial', label: 'Radial' },
                                     ]}
                                     onChange={(v) => updateData('gradientDirection', v)}
                                 />
@@ -1763,7 +1777,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 />
                             </div>
                             <ColorControl portalContainer={portalContainer}
-                                label={t('landingEditor.checkmarkColor', 'Color de check ✓')}
+                                label={t('landingEditor.checkmarkColor', 'Color de check')}
                                 value={data.colors?.checkmarkColor || '#10b981'}
                                 onChange={(v) => updateNestedData('colors.checkmarkColor', v)}
                                 paletteColors={getSelectedPaletteColors()}
@@ -3394,9 +3408,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('headingsCaps', !data.headingsCaps)}
-                            className={`${data.headingsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.headingsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.headingsCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.headingsCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
 
@@ -3407,9 +3421,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('buttonsCaps', !data.buttonsCaps)}
-                            className={`${data.buttonsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.buttonsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.buttonsCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.buttonsCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
 
@@ -3420,9 +3434,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </span>
                         <button
                             onClick={() => updateData('navLinksCaps', !data.navLinksCaps)}
-                            className={`${data.navLinksCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.navLinksCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
-                            <span className={`${data.navLinksCaps ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
+                            <span className={`${data.navLinksCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
                     </div>
                 </div>

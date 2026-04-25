@@ -149,7 +149,7 @@ const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
-    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
+    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
@@ -264,7 +264,7 @@ CRITICAL RULES:
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
-5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form — use it for lead-capture-heavy industries like Healthcare, Legal, Real Estate, Consulting. You can use separators (separator1, separator2) to create visual breaks with glassmorphism or colors between heavy sections.
+5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form — use it for lead-capture-heavy industries like Healthcare, Legal, Real Estate, Consulting. Use realEstateListings only for realtor/property websites, and pair it with the existing leads component.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
 7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
 8. When readinessScore >= 80, you MUST do the following:
@@ -287,7 +287,7 @@ COMPONENT SELECTION GUIDE BY INDUSTRY
 - Photography/Videography: [HERO: heroGallery OR heroNova OR heroSplit], testimonials, services, faq, leads, cta, banner, signupFloat
 - Legal/Accounting/Finance: [HERO: heroLead OR heroSplit OR heroWave], topBar, services, features, testimonials, faq, leads, newsletter, cta, banner, map
 - Ecommerce/Retail/Online Store: [HERO: heroNova OR heroGallery OR heroWave], topBar, features, testimonials, faq, newsletter, cta, banner, signupFloat
-- Real Estate/Property: [HERO: heroLead OR heroGallery OR heroNova], topBar, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
+- Real Estate/Property: [HERO: heroLead OR heroGallery OR heroNova], topBar, realEstateListings, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
 - Beauty/Spa/Salon: [HERO: heroGallery OR heroSplit OR heroNova], topBar, services, features, pricing, testimonials, faq, leads, newsletter, map, banner, signupFloat
 - Education/Academy/Coaching: [HERO: hero OR heroWave OR heroSplit], topBar, services, features, howItWorks, testimonials, pricing, faq, leads, newsletter, cta, banner, signupFloat
 - Music/Audio/Entertainment: [HERO: heroNova OR heroWave OR heroGallery], topBar, features, services, testimonials, faq, leads, newsletter, cta, banner, signupFloat
@@ -1630,6 +1630,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         portfolio:    { es: 'Portafolio',       en: 'Portfolio',     href: '/#portfolio' },
         faq:          { es: 'FAQ',              en: 'FAQ',           href: '/#faq' },
         leads:        { es: 'Contacto',         en: 'Contact',       href: '/#leads' },
+        realEstateListings: { es: 'Listados',   en: 'Listings',      href: '/#realEstateListings' },
         map:          { es: 'Ubicación',        en: 'Location',      href: '/#map' },
         howItWorks:   { es: 'Cómo Funciona',    en: 'How it Works',  href: '/#how-it-works' },
     };
@@ -1841,6 +1842,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "faq": {"faqVariant": "[SELECT: classic|cards|gradient|minimal]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},
     "cta": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]", "secondaryText": "[GENERATE_TEXT]"},
     "leads": {"leadsVariant": "[SELECT: classic|split-gradient|floating-glass|minimal-border]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 20, "size": 50}, "buttonText": "[GENERATE_TEXT]", "fields": [{"label": "${isSpanish ? 'Nombre' : 'Name'}", "type": "text", "placeholder": "[GENERATE_TEXT]"}, {"label": "Email", "type": "email", "placeholder": "[GENERATE_TEXT]"}]},
+    "realEstateListings": {"title": "${isSpanish ? 'Propiedades destacadas' : 'Featured properties'}", "subtitle": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Solicitar información' : 'Request information'}", "buttonLink": "#leads", "maxItems": 6, "featuredOnly": false, "showPrice": true, "showLocation": true, "showStats": true, "showDescription": true, "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}", "textMuted": "${brief.colorPalette.text}99", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "border": "${brief.colorPalette.surface}", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}},
     "banner": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Ver Más' : 'Learn More'}", "backgroundImageUrl": "", "overlayEnabled": true, "backgroundOverlayOpacity": 50, "height": 400},
     "newsletter": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]"},
     "map": {"title": "${isSpanish ? 'Ubicación' : 'Location'}", "description": "${isSpanish ? 'Encuéntranos aquí' : 'Find us here'}", "address": "${fullMapAddress}", "city": "${safeStr(brief.contactInfo?.city || '')}", "state": "${safeStr(brief.contactInfo?.state || '')}", "lat": 0, "lng": 0, "zoom": 15, "mapVariant": "[SELECT: modern|minimal|dark-tech|night]", "height": 400, "phone": "${safeStr(brief.contactInfo?.phone || '')}", "email": "${safeStr(brief.contactInfo?.email || '')}", "businessHours": "${isSpanish ? 'Lun-Vie 9:00-18:00' : 'Mon-Fri 9:00AM-6:00PM'}", "buttonText": "${isSpanish ? 'Cómo Llegar' : 'Get Directions'}"},
@@ -1897,7 +1899,7 @@ CRITICAL RULES:
 4. For topBar: messages MUST be promotional announcements or call-to-actions (e.g. sales, special discounts, free shipping). NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
 5. For heroGallery: generate exactly 3 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage (empty string).
 6. For menu: generate EXACTLY 6 realistic menu items with real names, descriptions, and prices. TEXT ONLY — NO imageUrl or placeholders.
-7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services", "/#features", "/#menu", "/#testimonials", "/#leads"). Only link to sections that exist in the componentOrder.
+7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services", "/#features", "/#menu", "/#testimonials", "/#realEstateListings", "/#leads"). Only link to sections that exist in the componentOrder.
 8. For features: generate EXACTLY 4 items with specific benefits and icons. Include "imageUrl": "" in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
 10. For testimonials: generate EXACTLY 3 realistic testimonials with names. TEXT ONLY - NO imageUrl or placeholders.
@@ -1947,6 +1949,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
             portfolio:    { es: 'Portafolio',       en: 'Portfolio',     href: '/#portfolio' },
             faq:          { es: 'FAQ',              en: 'FAQ',           href: '/#faq' },
             leads:        { es: 'Contacto',         en: 'Contact',       href: '/#leads' },
+            realEstateListings: { es: 'Listados',   en: 'Listings',      href: '/#realEstateListings' },
             map:          { es: 'Ubicación',        en: 'Location',      href: '/#map' },
             howItWorks:   { es: 'Cómo Funciona',    en: 'How it Works',  href: '/#how-it-works' },
         };

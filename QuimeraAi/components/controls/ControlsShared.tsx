@@ -8,10 +8,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   GripVertical, ChevronDown, Trash2, Palette, X, Image, Grid, Zap,
+  ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, CircleDot, ArrowRight,
+  ArrowDownLeft, ArrowDown, ArrowDownRight,
 } from 'lucide-react';
 import ColorControl from '../ui/ColorControl';
 import ImagePicker from '../ui/ImagePicker';
-import { ToggleControl } from '../ui/EditorControlPrimitives';
+import { ToggleControl, PositionGridControl, SliderControl } from '../ui/EditorControlPrimitives';
 
 // ─── Shared Props Interface ─────────────────────────────────────────────────
 export interface SectionControlsProps {
@@ -85,10 +87,10 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
 }) => {
   const { t } = useTranslation();
   const cornerPositions = [
-    { value: 'top-left', label: '↖', title: t('editor.controls.startPosition') + ' TL' },
-    { value: 'top-right', label: '↗', title: t('editor.controls.startPosition') + ' TR' },
-    { value: 'bottom-left', label: '↙', title: t('editor.controls.startPosition') + ' BL' },
-    { value: 'bottom-right', label: '↘', title: t('editor.controls.startPosition') + ' BR' },
+    { value: 'top-left', icon: ArrowUpLeft, title: t('editor.controls.startPosition') + ' TL' },
+    { value: 'top-right', icon: ArrowUpRight, title: t('editor.controls.startPosition') + ' TR' },
+    { value: 'bottom-left', icon: ArrowDownLeft, title: t('editor.controls.startPosition') + ' BL' },
+    { value: 'bottom-right', icon: ArrowDownRight, title: t('editor.controls.startPosition') + ' BR' },
   ] as const;
 
   return (
@@ -108,53 +110,48 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
               {t('editor.controls.startPosition')}
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {cornerPositions.map((pos) => (
-                <button
-                  key={pos.value}
-                  onClick={() => onPositionChange(pos.value)}
-                  className={`py-2 px-3 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2 ${position === pos.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'bg-editor-panel-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
-                    }`}
-                  title={pos.title}
-                >
-                  <span className="text-lg">{pos.label}</span>
-                  <span className="text-xs">{pos.title}</span>
-                </button>
-              ))}
+              {cornerPositions.map((pos) => {
+                const Icon = pos.icon;
+                return (
+                  <button
+                    key={pos.value}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPositionChange(pos.value);
+                    }}
+                    className={`py-2 px-3 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2 ${position === pos.value
+                      ? 'bg-editor-accent text-editor-bg'
+                      : 'bg-editor-panel-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
+                      }`}
+                    title={pos.title}
+                  >
+                    <Icon size={15} />
+                    <span className="text-xs">{pos.title}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <ColorControl label={t('editor.controls.gradientColor')} value={color} onChange={onColorChange} />
 
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                {t('editor.controls.opacity')}
-              </label>
-              <span className="text-xs text-editor-text-primary">{opacity}%</span>
-            </div>
-            <input type="range" min="5" max="100" step="5" value={opacity}
-              onChange={(e) => onOpacityChange(parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-            />
-          </div>
+          <SliderControl
+            label={t('editor.controls.opacity')}
+            value={opacity}
+            onChange={(v) => onOpacityChange(v)}
+            min={5} max={100} step={5} suffix="%"
+          />
 
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
-                {t('editor.controls.size')}
-              </label>
-              <span className="text-xs text-editor-text-primary">{size}%</span>
-            </div>
-            <input type="range" min="20" max="100" step="5" value={size}
-              onChange={(e) => onSizeChange(parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-            />
+          <SliderControl
+            label={t('editor.controls.size')}
+            value={size}
+            onChange={(v) => onSizeChange(v)}
+            min={20} max={100} step={5} suffix="%"
+          />
             <p className="text-xs text-editor-text-secondary mt-1 italic">
               {t('editor.controls.size')}
             </p>
-          </div>
 
           <div>
             <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
@@ -234,17 +231,17 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {canRemove && onRemove && (
-            <button onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(); }}
               className="p-1 text-editor-text-secondary hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>
           )}
           <ToggleControl checked={isVisible} onChange={onToggleVisibility} />
-          <button
-            className="cursor-pointer p-1 hover:bg-editor-panel-bg rounded transition-colors"
+          <button type="button" className="cursor-pointer p-1 hover:bg-editor-panel-bg rounded transition-colors"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDoubleClick(); }}
-            type="button"
           >
             <span className={`block transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
               <ChevronDown size={16} className="text-editor-text-secondary" />
@@ -287,17 +284,23 @@ export const BackgroundImageControl: React.FC<{
             </div>
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
             <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
-              <button onClick={() => setShowPicker(true)}
+              <button 
+                type="button"
+                onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
                 className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
                 title={t('dashboard.imagePicker.openLibrary')}>
                 <Grid size={14} />
               </button>
-              <button onClick={() => setShowPicker(true)}
+              <button 
+                type="button"
+                onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
                 className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
                 title={t('dashboard.imagePicker.generateWithAI')}>
                 <Zap size={14} />
               </button>
-              <button onClick={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
+              <button 
+                type="button"
+                onClick={(e) => { e.preventDefault(); setNestedData(`${sectionKey}.backgroundImageUrl`, ''); }}
                 className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                 title={t('common.remove')}>
                 <X size={14} />
@@ -321,11 +324,15 @@ export const BackgroundImageControl: React.FC<{
 
       {!hasImage && (
         <div className="flex gap-2 mt-3">
-          <button onClick={() => setShowPicker(true)}
+          <button 
+            type="button"
+            onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium">
             <Grid size={12} /> Librería
           </button>
-          <button onClick={() => setShowPicker(true)}
+          <button 
+            type="button"
+            onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium">
             <Zap size={12} /> Generar IA
           </button>
@@ -347,55 +354,24 @@ export const BackgroundImageControl: React.FC<{
                 value={sectionData?.backgroundOverlayColor || sectionData?.colors?.background || '#000000'}
                 onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayColor`, v)}
               />
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium text-editor-text-secondary">Overlay Opacity</label>
-                  <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{sectionData?.backgroundOverlayOpacity ?? 60}%</span>
-                </div>
-                <input type="range" min="0" max="100" step="5"
-                  value={sectionData?.backgroundOverlayOpacity ?? 60}
-                  onChange={(e) => setNestedData(`${sectionKey}.backgroundOverlayOpacity`, parseInt(e.target.value))}
-                  className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-                />
+              <SliderControl
+                label="Overlay Opacity"
+                value={sectionData?.backgroundOverlayOpacity ?? 60}
+                onChange={(v) => setNestedData(`${sectionKey}.backgroundOverlayOpacity`, v)}
+                min={0} max={100} step={5} suffix="%"
+              />
                 <div className="flex justify-between mt-1">
                   <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
                   <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
                 </div>
-              </div>
             </div>
           )}
 
-          {/* ── Background Position Grid ── */}
-          <div className="mt-4 pt-3 border-t border-editor-border/30">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
-              {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
-            </label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
-              {[
-                { id: 'top left', label: '↖' },
-                { id: 'top center', label: '↑' },
-                { id: 'top right', label: '↗' },
-                { id: 'center left', label: '←' },
-                { id: 'center center', label: '●' },
-                { id: 'center right', label: '→' },
-                { id: 'bottom left', label: '↙' },
-                { id: 'bottom center', label: '↓' },
-                { id: 'bottom right', label: '↘' },
-              ].map((pos) => (
-                <button
-                  key={pos.id}
-                  onClick={() => setNestedData(`${sectionKey}.backgroundPosition`, pos.id)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(sectionData?.backgroundPosition || 'center center') === pos.id
-                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                  }`}
-                  title={pos.id}
-                >
-                  {pos.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PositionGridControl
+            label={t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+            value={sectionData?.backgroundPosition || 'center center'}
+            onChange={(val) => setNestedData(`${sectionKey}.backgroundPosition`, val)}
+          />
         </div>
       )}
     </div>
@@ -441,18 +417,12 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
               Glow Effect
             </label>
             <ColorControl label="Neon Glow" value={color} onChange={onColorChange} />
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-[10px] font-medium text-editor-text-secondary uppercase tracking-wider">
-                  Intensity
-                </label>
-                <span className="text-xs font-mono text-editor-text-primary">{intensity}%</span>
-              </div>
-              <input type="range" min="0" max="100" step="5" value={intensity}
-                onChange={(e) => onIntensityChange(parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-              />
-            </div>
+            <SliderControl
+              label="Intensity"
+              value={intensity}
+              onChange={(v) => onIntensityChange(v)}
+              min={0} max={100} step={5} suffix="%"
+            />
           </div>
 
           <div className="space-y-3">
@@ -463,18 +433,12 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
             <ColorControl label="End Color" value={gradientEnd} onChange={onGradientEndChange} />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
-                Border Radius
-              </label>
-              <span className="text-xs font-mono text-editor-text-primary">{borderRadius}px</span>
-            </div>
-            <input type="range" min="0" max="100" step="1" value={borderRadius}
-              onChange={(e) => onBorderRadiusChange(parseInt(e.target.value))}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-            />
-          </div>
+          <SliderControl
+            label="Border Radius"
+            value={borderRadius}
+            onChange={(v) => onBorderRadiusChange(v)}
+            min={0} max={100} step={1} suffix="px"
+          />
           
           <div>
             <label className="block text-[10px] font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">

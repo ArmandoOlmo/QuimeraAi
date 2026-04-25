@@ -36,8 +36,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {['text', 'image'].map(type => (
-            <button
-              key={type}
+            <button type="button"               key={type}
               onClick={() => setNestedData('footer.logoType', type)}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.footer.logoType || 'text') === type
                 ? 'bg-editor-accent text-editor-bg'
@@ -72,7 +71,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-editor-border focus:border-editor-accent flex-1 text-sm font-bold text-editor-text-primary px-1 min-w-0 focus:outline-none" />
-              <button onClick={() => {
+              <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
               }} className="text-red-400 hover:text-red-500 flex-shrink-0 hover:bg-red-500/10 rounded p-1 transition-colors"><Trash2 size={14} /></button>
@@ -98,13 +97,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
                     <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
                     <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
-                    <button onClick={() => {
+                    <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                     }} className="text-editor-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
                   </div>
                 ))}
-                <button onClick={() => {
+                <button type="button" onClick={() => {
                   const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                   setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                 }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
@@ -112,7 +111,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
         ))}
-        <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
+        <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
       </div>
       <SocialLinksEditor
         socialLinks={data.footer.socialLinks}
@@ -185,8 +184,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Quick copy buttons */}
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => {
+          <button type="button"             onClick={() => {
               const businessHours = data.footer.contactInfo?.businessHours || {};
               const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
               const newHours: any = {};
@@ -199,8 +197,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             Copy Mon → Weekdays
           </button>
-          <button
-            onClick={() => {
+          <button type="button"             onClick={() => {
               const businessHours = data.footer.contactInfo?.businessHours || {};
               const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
               const newHours: any = {};
@@ -234,8 +231,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             return (
               <div key={key} className="flex items-center gap-2">
                 <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
-                <button
-                  onClick={() => {
+                <button type="button"                   onClick={() => {
                     // When toggling, we need to handle the case where contactInfo or businessHours don't exist yet
                     if (!dayHours.isOpen) {
                       // Turning ON: Set the full object to ensure structure exists
@@ -427,8 +423,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {['text', 'image'].map(type => (
-            <button
-              key={type}
+            <button type="button"               key={type}
               onClick={() => setNestedData('footer.logoType', type)}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.footer.logoType || 'text') === type
                 ? 'bg-editor-accent text-editor-bg'
@@ -475,7 +470,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-editor-border focus:border-editor-accent flex-1 text-sm font-bold text-editor-text-primary px-1 min-w-0 focus:outline-none" />
-              <button onClick={() => {
+              <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
               }} className="text-red-400 hover:text-red-500 flex-shrink-0 hover:bg-red-500/10 rounded p-1 transition-colors"><Trash2 size={14} /></button>
@@ -499,13 +494,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
                     <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
                     <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
-                    <button onClick={() => {
+                    <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                     }} className="text-editor-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
                   </div>
                 ))}
-                <button onClick={() => {
+                <button type="button" onClick={() => {
                   const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                   setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
                 }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
@@ -513,7 +508,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
         ))}
-          <button onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
+          <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
         </div>
       </div>
 
@@ -561,8 +556,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Business Hours
         </label>
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => {
+          <button type="button"             onClick={() => {
               const businessHours = data.footer.contactInfo?.businessHours || {};
               const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
               const newHours: any = {};
@@ -575,8 +569,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             Copy Mon → Weekdays
           </button>
-          <button
-            onClick={() => {
+          <button type="button"             onClick={() => {
               const businessHours = data.footer.contactInfo?.businessHours || {};
               const monHours = businessHours.monday || { isOpen: true, openTime: '09:00', closeTime: '17:00' };
               const newHours: any = {};
@@ -608,8 +601,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             return (
               <div key={key} className="flex items-center gap-2">
                 <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
-                <button
-                  onClick={() => {
+                <button type="button"                   onClick={() => {
                     if (!dayHours.isOpen) {
                       setNestedData(`footer.contactInfo.businessHours.${key}`, {
                         isOpen: true,

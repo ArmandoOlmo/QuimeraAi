@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -141,8 +141,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               }
             }}
           />
-          <button
-            onClick={geocodeAddress}
+          <button type="button"             onClick={geocodeAddress}
             disabled={isGeocoding}
             className="px-3 py-2 bg-editor-accent text-white rounded-md hover:bg-editor-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
             title={t('controls.map.searchLocation', 'Search location')}
@@ -185,12 +184,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </details>
 
       <div className="mt-2">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.zoomLevel', 'Zoom Level')}: {data?.map.zoom}</label>
-        <input
-          type="range" min="1" max="20"
+        <SliderControl
+          label={t('controls.map.zoomLevel', 'Zoom Level')}
           value={data?.map.zoom || 14}
-          onChange={(e) => setNestedData('map.zoom', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('map.zoom', v)}
+          min={1} max={20} step={1}
         />
       </div>
 
@@ -230,15 +228,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Map Height */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.map.mapHeight', 'Map Height')}</label>
-          <span className="text-xs text-editor-text-primary">{data?.map.height || (data?.map.mapVariant === 'modern' ? 500 : 400)}px</span>
-        </div>
-        <input
-          type="range" min="200" max="800" step="50"
+        <SliderControl
+          label={t('controls.map.mapHeight', 'Map Height')}
           value={data?.map.height || (data?.map.mapVariant === 'modern' ? 500 : 400)}
-          onChange={(e) => setNestedData('map.height', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('map.height', v)}
+          min={200} max={800} step={50} suffix="px"
         />
       </div>
 

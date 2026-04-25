@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, Globe, Images, Menu, Search, ArrowLeft } from 'lucide-react';
+import { LayoutGrid, Globe, Images, Menu, Search } from 'lucide-react';
 import MobileSearchModal from '../ui/MobileSearchModal';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 interface DashboardHeaderProps {
     isDashboard: boolean;
@@ -75,7 +76,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Right Section - Search + Back */}
+                {/* Right Section - Search */}
                 <div className="flex items-center gap-3 flex-shrink-0 mr-2.5">
                     {/* Search Icon */}
                     {(isDashboard || isWebsites) && (
@@ -88,16 +89,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         </button>
                     )}
 
-                    {/* Back Button - Only when not on main dashboard (websites/assets) */}
-                    {!isDashboard && (
-                        <button
-                            onClick={onNavigateBack}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('common.goBack', 'Volver')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                    )}
+                    <HeaderBackButton onClick={onNavigateBack} />
                 </div>
             </header>
 

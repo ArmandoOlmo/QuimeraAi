@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -95,13 +95,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.cardHeading')} value={data?.newsletter.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardHeading', v)} />
         <ColorControl label={t('controls.cardText')} value={data?.newsletter.colors?.cardText || '#ffffff'} onChange={(v) => setNestedData('newsletter.colors.cardText', v)} />
         <div className="pt-2">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1">Opacidad de Tarjeta: {data?.newsletter.cardOpacity !== undefined ? data?.newsletter.cardOpacity : 100}%</label>
-          <input 
-            type="range" 
-            min="0" max="100" 
-            value={data?.newsletter.cardOpacity !== undefined ? data?.newsletter.cardOpacity : 100} 
-            onChange={(e) => setNestedData('newsletter.cardOpacity', parseInt(e.target.value))}
-            className="w-full accent-editor-accent" 
+          <SliderControl
+            label="Opacidad de Tarjeta"
+            value={data?.newsletter.cardOpacity !== undefined ? data?.newsletter.cardOpacity : 100}
+            onChange={(v) => setNestedData('newsletter.cardOpacity', v)}
+            min={0} max={100} suffix="%"
           />
         </div>
       </div>

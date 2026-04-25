@@ -91,12 +91,12 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
 
     // ── Tab definitions ─────────────────────────────────────────────────────
     const tabs: { id: UserEmailTab; label: string; icon: React.ReactNode; count?: number }[] = [
-        { id: 'overview', label: 'Vista General', icon: <Mail size={16} /> },
-        { id: 'campaigns', label: 'Campañas', icon: <Send size={16} />, count: campaigns.length },
-        { id: 'audiences', label: 'Audiencias', icon: <Users size={16} />, count: audiences.length },
-        { id: 'analytics', label: 'Analíticas', icon: <BarChart3 size={16} /> },
-        { id: 'automations', label: 'Automatizaciones', icon: <Zap size={16} />, count: automations.length },
-        { id: 'ai-studio', label: 'AI Studio', icon: <Sparkles size={16} /> },
+        { id: 'overview', label: t('email.hub.tabs.overview'), icon: <Mail size={16} /> },
+        { id: 'campaigns', label: t('email.hub.tabs.campaigns'), icon: <Send size={16} />, count: campaigns.length },
+        { id: 'audiences', label: t('email.hub.tabs.audiences'), icon: <Users size={16} />, count: audiences.length },
+        { id: 'analytics', label: t('email.hub.tabs.analytics'), icon: <BarChart3 size={16} /> },
+        { id: 'automations', label: t('email.hub.tabs.automations'), icon: <Zap size={16} />, count: automations.length },
+        { id: 'ai-studio', label: t('email.hub.tabs.aiStudio'), icon: <Sparkles size={16} /> },
     ];
 
     // ── Filtered lists ──────────────────────────────────────────────────────
@@ -141,22 +141,22 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-bold text-editor-text-primary">Campañas</h2>
-                    <p className="text-sm text-editor-text-secondary">{campaigns.length} campañas totales</p>
+                    <h2 className="text-lg font-bold text-editor-text-primary">{t('email.hub.campaigns.title')}</h2>
+                    <p className="text-sm text-editor-text-secondary">{t('email.hub.campaigns.totalCampaigns', { count: campaigns.length })}</p>
                 </div>
                 <button
                     onClick={() => setShowNewCampaignModal(true)}
                     className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all"
                 >
                     <Plus size={16} />
-                    Nueva Campaña
+                    {t('email.hub.campaigns.newCampaign')}
                 </button>
             </div>
             {/* Search */}
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
                 <div className="flex items-center gap-2 bg-editor-bg/50 rounded-lg px-3 py-2">
                     <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
-                    <input type="text" placeholder="Buscar campañas..." value={campaignSearch} onChange={e => setCampaignSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary" />
+                    <input type="text" placeholder={t('email.hub.campaigns.searchPlaceholder')} value={campaignSearch} onChange={e => setCampaignSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary" />
                     {campaignSearch && <button onClick={() => setCampaignSearch('')} className="text-editor-text-secondary hover:text-editor-text-primary"><X size={14} /></button>}
                 </div>
             </div>
@@ -176,13 +176,13 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                         <>
                                             <div className="text-center">
                                                 <p className="font-medium text-editor-text-primary text-sm">{campaign.stats.sent.toLocaleString()}</p>
-                                                <p>enviados</p>
+                                                <p>{t('email.hub.campaigns.sent')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="font-medium text-editor-text-primary text-sm">
                                                     {campaign.stats.sent > 0 ? `${(((campaign.stats.uniqueOpens || 0) / campaign.stats.sent) * 100).toFixed(1)}%` : '—'}
                                                 </p>
-                                                <p>apertura</p>
+                                                <p>{t('email.hub.campaigns.openRate')}</p>
                                             </div>
                                         </>
                                     )}
@@ -193,10 +193,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                 </span>
                                 <div className="flex items-center gap-1 flex-shrink-0">
                                     {(campaign.status === 'draft' || campaign.status === 'approved') && (
-                                        <button onClick={(e) => { e.stopPropagation(); handleEditCampaignVisual(campaign); }} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Editar"><Edit2 size={14} className="text-purple-400" /></button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleEditCampaignVisual(campaign); }} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title={t('email.hub.campaigns.editTooltip')}><Edit2 size={14} className="text-purple-400" /></button>
                                     )}
-                                    <button onClick={(e) => { e.stopPropagation(); handleDuplicateCampaign(campaign); }} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Duplicar"><Copy size={14} className="text-editor-text-secondary" /></button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign); }} className="p-2 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Eliminar"><Trash2 size={14} className="text-red-400" /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDuplicateCampaign(campaign); }} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title={t('email.hub.campaigns.duplicateTooltip')}><Copy size={14} className="text-editor-text-secondary" /></button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(campaign); }} className="p-2 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title={t('email.hub.campaigns.deleteTooltip')}><Trash2 size={14} className="text-red-400" /></button>
                                 </div>
                             </div>
                         ))}
@@ -206,14 +206,14 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 <div className="text-center py-16 bg-editor-panel-bg border border-editor-border rounded-xl">
                     <Send size={48} className="mx-auto text-editor-text-secondary mb-4 opacity-30" />
                     <h3 className="text-lg font-medium text-editor-text-primary mb-2">
-                        {campaignSearch ? 'No se encontraron campañas' : 'No hay campañas'}
+                        {campaignSearch ? t('email.hub.campaigns.noCampaignsFound') : t('email.hub.campaigns.noCampaigns')}
                     </h3>
                     <p className="text-editor-text-secondary text-sm mb-6">
-                        {campaignSearch ? 'Ajusta la búsqueda' : 'Crea tu primera campaña de email marketing'}
+                        {campaignSearch ? t('email.hub.campaigns.adjustSearch') : t('email.hub.campaigns.createFirstDesc')}
                     </p>
                     {!campaignSearch && (
                         <button onClick={() => setShowNewCampaignModal(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl">
-                            <Plus size={16} /> Crear Campaña
+                            <Plus size={16} /> {t('email.hub.campaigns.createCampaign')}
                         </button>
                     )}
                 </div>
@@ -224,39 +224,39 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowNewCampaignModal(false)}>
                     <div className="bg-editor-bg border border-editor-border w-full max-w-md rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="p-5 border-b border-editor-border flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-editor-text-primary">Nueva Campaña</h2>
+                            <h2 className="text-lg font-bold text-editor-text-primary">{t('email.hub.campaigns.newCampaignModal.title')}</h2>
                             <button onClick={() => setShowNewCampaignModal(false)} className="p-1.5 hover:bg-editor-border/40 rounded-lg"><X size={18} className="text-editor-text-secondary" /></button>
                         </div>
                         <div className="p-5 space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Nombre *</label>
-                                <input type="text" value={newCampaignForm.name} onChange={e => setNewCampaignForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder="Ej: Newsletter Mensual" />
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.campaigns.newCampaignModal.name')}</label>
+                                <input type="text" value={newCampaignForm.name} onChange={e => setNewCampaignForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('email.hub.campaigns.newCampaignModal.namePlaceholder')} />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Asunto *</label>
-                                <input type="text" value={newCampaignForm.subject} onChange={e => setNewCampaignForm(prev => ({ ...prev, subject: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder="Línea de asunto del email" />
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.campaigns.newCampaignModal.subject')}</label>
+                                <input type="text" value={newCampaignForm.subject} onChange={e => setNewCampaignForm(prev => ({ ...prev, subject: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('email.hub.campaigns.newCampaignModal.subjectPlaceholder')} />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Preview Text</label>
-                                <input type="text" value={newCampaignForm.previewText || ''} onChange={e => setNewCampaignForm(prev => ({ ...prev, previewText: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder="Texto de preview" />
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.campaigns.newCampaignModal.previewText')}</label>
+                                <input type="text" value={newCampaignForm.previewText || ''} onChange={e => setNewCampaignForm(prev => ({ ...prev, previewText: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('email.hub.campaigns.newCampaignModal.previewTextPlaceholder')} />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Audiencia</label>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.campaigns.newCampaignModal.audience')}</label>
                                 <select value={newCampaignForm.audienceType || 'all'} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceType: e.target.value as any }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50">
-                                    <option value="all">Todos los contactos</option>
-                                    <option value="segment">Segmento específico</option>
+                                    <option value="all">{t('email.hub.campaigns.newCampaignModal.allContacts')}</option>
+                                    <option value="segment">{t('email.hub.campaigns.newCampaignModal.specificSegment')}</option>
                                 </select>
                                 {newCampaignForm.audienceType === 'segment' && audiences.length > 0 && (
                                     <select value={newCampaignForm.audienceSegmentId || ''} onChange={e => setNewCampaignForm(prev => ({ ...prev, audienceSegmentId: e.target.value }))} className="w-full mt-2 bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50">
-                                        <option value="">Seleccionar segmento</option>
-                                        {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} ({a.estimatedCount || a.staticMemberCount || 0} contactos)</option>))}
+                                        <option value="">{t('email.hub.campaigns.newCampaignModal.selectSegment')}</option>
+                                        {audiences.map(a => (<option key={a.id} value={a.id}>{a.name} ({a.estimatedCount || a.staticMemberCount || 0} {t('email.hub.campaigns.newCampaignModal.contacts')})</option>))}
                                     </select>
                                 )}
                             </div>
                         </div>
                         <div className="p-5 border-t border-editor-border flex justify-end gap-3">
-                            <button onClick={() => setShowNewCampaignModal(false)} className="px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors">Cancelar</button>
-                            <button onClick={handleCreateCampaign} disabled={!newCampaignForm.name || !newCampaignForm.subject} className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all">Crear Campaña</button>
+                            <button onClick={() => setShowNewCampaignModal(false)} className="px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors">{t('email.hub.campaigns.newCampaignModal.cancel')}</button>
+                            <button onClick={handleCreateCampaign} disabled={!newCampaignForm.name || !newCampaignForm.subject} className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all">{t('email.hub.campaigns.newCampaignModal.create')}</button>
                         </div>
                     </div>
                 </div>
@@ -279,44 +279,44 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                         <div className="p-5 space-y-6">
                             {/* Status */}
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">Estado</label>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">{t('email.hub.campaigns.detailPanel.status')}</label>
                                 <div className="flex items-center gap-3">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border font-medium ${getStatusColor(detailCampaign.status)}`}>
                                         {getStatusIcon(detailCampaign.status)} {detailCampaign.status}
                                     </span>
                                     {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' && (
                                         <select value={detailCampaign.status} onChange={e => handleUpdateCampaignStatus(detailCampaign.id, e.target.value as CampaignStatus)} className="px-3 py-1.5 bg-editor-panel-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none">
-                                            <option value="draft">Borrador</option>
-                                            <option value="approved">Aprobada</option>
+                                            <option value="draft">{t('email.hub.campaigns.detailPanel.draft')}</option>
+                                            <option value="approved">{t('email.hub.campaigns.detailPanel.approved')}</option>
                                         </select>
                                     )}
                                 </div>
                             </div>
                             {/* Audience */}
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Target size={14} /> Audiencia</label>
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Target size={14} /> {t('email.hub.campaigns.detailPanel.audience')}</label>
                                 {detailCampaign.status !== 'sent' && detailCampaign.status !== 'sending' ? (
                                     <select value={detailCampaign.audienceType || 'all'} onChange={e => handleUpdateCampaignAudience(detailCampaign.id, e.target.value as any)} className="w-full px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-primary focus:outline-none">
-                                        <option value="all">Todos los contactos</option>
-                                        <option value="segment">Segmento específico</option>
+                                        <option value="all">{t('email.hub.campaigns.detailPanel.allContacts')}</option>
+                                        <option value="segment">{t('email.hub.campaigns.detailPanel.segment')}</option>
                                     </select>
                                 ) : (
                                     <p className="text-sm text-editor-text-primary bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2">
-                                        {detailCampaign.audienceType === 'all' ? 'Todos los contactos' : `🎯 ${audiences.find(a => a.id === detailCampaign.audienceSegmentId)?.name || 'Segmento'}`}
+                                        {detailCampaign.audienceType === 'all' ? t('email.hub.campaigns.detailPanel.allContacts') : `🎯 ${audiences.find(a => a.id === detailCampaign.audienceSegmentId)?.name || t('email.hub.campaigns.detailPanel.segment')}`}
                                     </p>
                                 )}
                             </div>
                             {/* Stats */}
                             {detailCampaign.stats && detailCampaign.stats.sent > 0 && (
                                 <div className="bg-editor-panel-bg border border-editor-border rounded-xl divide-y divide-editor-border">
-                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm"><span className="text-editor-text-secondary">Enviados</span><span className="text-editor-text-primary font-medium">{detailCampaign.stats.sent.toLocaleString()}</span></div>
-                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm"><span className="text-editor-text-secondary">Tasa de apertura</span><span className="text-editor-text-primary font-medium">{detailCampaign.stats.sent > 0 ? `${(((detailCampaign.stats.uniqueOpens || 0) / detailCampaign.stats.sent) * 100).toFixed(1)}%` : '—'}</span></div>
+                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm"><span className="text-editor-text-secondary">{t('email.hub.campaigns.detailPanel.sentLabel')}</span><span className="text-editor-text-primary font-medium">{detailCampaign.stats.sent.toLocaleString()}</span></div>
+                                    <div className="flex justify-between items-center px-4 py-2.5 text-sm"><span className="text-editor-text-secondary">{t('email.hub.campaigns.detailPanel.openRateLabel')}</span><span className="text-editor-text-primary font-medium">{detailCampaign.stats.sent > 0 ? `${(((detailCampaign.stats.uniqueOpens || 0) / detailCampaign.stats.sent) * 100).toFixed(1)}%` : '—'}</span></div>
                                 </div>
                             )}
                             {/* Email Preview */}
                             {detailCampaign.htmlContent && (
                                 <div>
-                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Eye size={14} /> Preview</label>
+                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block flex items-center gap-1.5"><Eye size={14} /> {t('email.hub.campaigns.detailPanel.preview')}</label>
                                     <div className="border border-editor-border rounded-xl overflow-hidden bg-white">
                                         <iframe srcDoc={detailCampaign.htmlContent} title="Email Preview" className="w-full border-0" style={{ height: '400px', pointerEvents: 'none' }} sandbox="allow-same-origin" />
                                     </div>
@@ -327,19 +327,19 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                 {(detailCampaign.status === 'draft' || detailCampaign.status === 'approved') && (
                                     <>
                                         <button onClick={() => { setShowDetailPanel(false); handleEditCampaignVisual(detailCampaign); }} className="w-full flex items-center gap-3 px-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl hover:border-purple-500/50 transition-all text-left">
-                                            <Edit2 size={18} className="text-purple-400" /><div><p className="text-sm font-medium text-editor-text-primary">Editar Email</p><p className="text-xs text-editor-text-secondary">Editor visual de bloques</p></div>
+                                            <Edit2 size={18} className="text-purple-400" /><div><p className="text-sm font-medium text-editor-text-primary">{t('email.hub.campaigns.detailPanel.editEmail')}</p><p className="text-xs text-editor-text-secondary">{t('email.hub.campaigns.detailPanel.editEmailDesc')}</p></div>
                                         </button>
                                         <button onClick={() => { setEditingCampaignId(detailCampaign.id); setTestEmail(''); setShowTestEmailModal(true); }} className="w-full flex items-center gap-3 px-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl hover:border-blue-500/50 transition-all text-left">
-                                            <TestTube size={18} className="text-blue-400" /><div><p className="text-sm font-medium text-editor-text-primary">Enviar Email de Prueba</p><p className="text-xs text-editor-text-secondary">Verifica antes de enviar</p></div>
+                                            <TestTube size={18} className="text-blue-400" /><div><p className="text-sm font-medium text-editor-text-primary">{t('email.hub.campaigns.detailPanel.sendTest')}</p><p className="text-xs text-editor-text-secondary">{t('email.hub.campaigns.detailPanel.sendTestDesc')}</p></div>
                                         </button>
                                         <button onClick={() => { setShowDetailPanel(false); handleOpenSendConfirm(detailCampaign.id); }} className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-500/30 rounded-xl hover:from-green-600/20 transition-all text-left">
-                                            <Send size={18} className="text-green-400" /><div><p className="text-sm font-medium text-editor-text-primary">Enviar Campaña</p><p className="text-xs text-editor-text-secondary">Enviar a todos los destinatarios</p></div>
+                                            <Send size={18} className="text-green-400" /><div><p className="text-sm font-medium text-editor-text-primary">{t('email.hub.campaigns.detailPanel.sendCampaign')}</p><p className="text-xs text-editor-text-secondary">{t('email.hub.campaigns.detailPanel.sendCampaignDesc')}</p></div>
                                         </button>
                                     </>
                                 )}
                                 <div className="flex gap-2 pt-2">
-                                    <button onClick={() => { handleDuplicateCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-secondary hover:text-editor-text-primary transition-all"><Copy size={14} /> Duplicar</button>
-                                    <button onClick={() => { handleDeleteCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all"><Trash2 size={14} /> Eliminar</button>
+                                    <button onClick={() => { handleDuplicateCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-secondary hover:text-editor-text-primary transition-all"><Copy size={14} /> {t('email.hub.campaigns.detailPanel.duplicate')}</button>
+                                    <button onClick={() => { handleDeleteCampaign(detailCampaign); setShowDetailPanel(false); }} className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-red-500/5 border border-red-500/20 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all"><Trash2 size={14} /> {t('email.hub.campaigns.detailPanel.delete')}</button>
                                 </div>
                             </div>
                         </div>
@@ -351,12 +351,12 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
             {showTestEmailModal && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowTestEmailModal(false)}>
                     <div className="bg-editor-bg border border-editor-border w-full max-w-sm rounded-2xl shadow-2xl p-6" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold text-editor-text-primary mb-4">Enviar Email de Prueba</h3>
-                        <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder="tu@email.com" className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 mb-4" />
+                        <h3 className="text-lg font-bold text-editor-text-primary mb-4">{t('email.hub.campaigns.testEmailModal.title')}</h3>
+                        <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder={t('email.hub.campaigns.testEmailModal.placeholder')} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 mb-4" />
                         <div className="flex gap-3">
-                            <button onClick={() => setShowTestEmailModal(false)} className="flex-1 px-4 py-2.5 text-sm text-editor-text-secondary border border-editor-border rounded-xl hover:bg-editor-border transition-colors">Cancelar</button>
+                            <button onClick={() => setShowTestEmailModal(false)} className="flex-1 px-4 py-2.5 text-sm text-editor-text-secondary border border-editor-border rounded-xl hover:bg-editor-border transition-colors">{t('email.hub.campaigns.testEmailModal.cancel')}</button>
                             <button onClick={() => handleSendTestEmail()} disabled={!testEmail || sendingTest} className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl disabled:opacity-50 transition-all">
-                                {sendingTest ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Enviar'}
+                                {sendingTest ? <Loader2 size={16} className="animate-spin mx-auto" /> : t('email.hub.campaigns.testEmailModal.send')}
                             </button>
                         </div>
                     </div>
@@ -373,18 +373,18 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-bold text-editor-text-primary">Audiencias</h2>
-                    <p className="text-sm text-editor-text-secondary">{audiences.length} audiencias</p>
+                    <h2 className="text-lg font-bold text-editor-text-primary">{t('email.hub.audiences.title')}</h2>
+                    <p className="text-sm text-editor-text-secondary">{t('email.hub.audiences.count', { count: audiences.length })}</p>
                 </div>
                 <button onClick={() => audienceActions.setShowCreateAudience(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-purple-500/20 transition-all">
-                    <Plus size={16} /> Nueva Audiencia
+                    <Plus size={16} /> {t('email.hub.audiences.newAudience')}
                 </button>
             </div>
             {/* Search */}
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
                 <div className="flex items-center gap-2 bg-editor-bg/50 rounded-lg px-3 py-2">
                     <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
-                    <input type="text" placeholder="Buscar audiencias..." value={audienceSearch} onChange={e => setAudienceSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary" />
+                    <input type="text" placeholder={t('email.hub.audiences.searchPlaceholder')} value={audienceSearch} onChange={e => setAudienceSearch(e.target.value)} className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary" />
                 </div>
             </div>
             {/* Audience Cards */}
@@ -400,12 +400,12 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                 <button onClick={() => audienceActions.handleDeleteAudience(aud.id, setConfirmModal)} className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} className="text-red-400" /></button>
                             </div>
                             <div className="flex items-center gap-4 text-xs text-editor-text-secondary mb-3">
-                                <span className="flex items-center gap-1"><Users size={12} /> {aud.estimatedCount || aud.staticMemberCount || 0} contactos</span>
+                                <span className="flex items-center gap-1"><Users size={12} /> {aud.estimatedCount || aud.staticMemberCount || 0} {t('email.hub.audiences.contacts')}</span>
                                 <span>{formatDate(aud.createdAt)}</span>
                             </div>
                             <div className="flex gap-2">
                                 <button onClick={() => { audienceActions.setSelectedAudienceId(aud.id); audienceActions.setManualEmail(''); }} className="flex-1 text-xs px-3 py-2 bg-editor-bg border border-editor-border rounded-lg hover:border-editor-accent/30 transition-colors text-editor-text-primary">
-                                    Gestionar
+                                    {t('email.hub.audiences.manage')}
                                 </button>
                                 <button onClick={() => { audienceActions.setSelectedAudienceId(aud.id); audienceActions.setShowImportCSV(true); }} className="text-xs px-3 py-2 bg-editor-bg border border-editor-border rounded-lg hover:border-editor-accent/30 transition-colors text-editor-text-primary flex items-center gap-1">
                                     <Upload size={12} /> CSV
@@ -416,7 +416,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                 <div className="mt-4 border-t border-editor-border pt-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <input type="email" value={audienceActions.manualEmail} onChange={e => audienceActions.setManualEmail(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') audienceActions.handleAddManualEmail(aud.id); }} placeholder="email@ejemplo.com" className="flex-1 bg-editor-bg border border-editor-border rounded-lg px-3 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent" />
-                                        <button onClick={() => audienceActions.handleAddManualEmail(aud.id)} className="px-3 py-1.5 text-xs bg-editor-accent/20 text-editor-accent rounded-lg hover:bg-editor-accent/30">Añadir</button>
+                                        <button onClick={() => audienceActions.handleAddManualEmail(aud.id)} className="px-3 py-1.5 text-xs bg-editor-accent/20 text-editor-accent rounded-lg hover:bg-editor-accent/30">{t('email.hub.audiences.add')}</button>
                                     </div>
                                     {(audienceActions.audienceMembers[aud.id] || (aud as any)?.members || []).length > 0 && (
                                         <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -433,10 +433,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                             {/* CSV import */}
                             {audienceActions.selectedAudienceId === aud.id && audienceActions.showImportCSV && (
                                 <div className="mt-4 border-t border-editor-border pt-4">
-                                    <label className="block text-xs font-medium text-editor-text-secondary mb-2">Importar CSV</label>
+                                    <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('email.hub.audiences.importCSV')}</label>
                                     <input type="file" accept=".csv" onChange={e => { if (e.target.files?.[0]) audienceActions.handleCSVUpload(aud.id, e.target.files[0]); }} disabled={audienceActions.csvUploading} className="text-xs text-editor-text-primary" />
-                                    {audienceActions.csvUploading && <p className="text-xs text-editor-accent mt-1">Importando...</p>}
-                                    <button onClick={() => audienceActions.setShowImportCSV(false)} className="mt-2 text-xs text-editor-text-secondary hover:text-editor-text-primary">Cerrar</button>
+                                    {audienceActions.csvUploading && <p className="text-xs text-editor-accent mt-1">{t('email.hub.audiences.importing')}</p>}
+                                    <button onClick={() => audienceActions.setShowImportCSV(false)} className="mt-2 text-xs text-editor-text-secondary hover:text-editor-text-primary">{t('email.hub.audiences.close')}</button>
                                 </div>
                             )}
                         </div>
@@ -445,10 +445,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
             ) : (
                 <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-xl">
                     <Users size={48} className="mx-auto text-editor-text-secondary mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium text-editor-text-primary mb-2">No hay audiencias</h3>
-                    <p className="text-editor-text-secondary text-sm mb-4">Crea tu primera audiencia</p>
+                    <h3 className="text-lg font-medium text-editor-text-primary mb-2">{t('email.hub.audiences.noAudiences')}</h3>
+                    <p className="text-editor-text-secondary text-sm mb-4">{t('email.hub.audiences.createFirstDesc')}</p>
                     <button onClick={() => audienceActions.setShowCreateAudience(true)} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl">
-                        <Plus size={16} /> Nueva Audiencia
+                        <Plus size={16} /> {t('email.hub.audiences.newAudience')}
                     </button>
                 </div>
             )}
@@ -458,22 +458,22 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => audienceActions.setShowCreateAudience(false)}>
                     <div className="bg-editor-bg border border-editor-border w-full max-w-md rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="p-5 border-b border-editor-border flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-editor-text-primary">Nueva Audiencia</h2>
+                            <h2 className="text-lg font-bold text-editor-text-primary">{t('email.hub.audiences.newAudienceModal.title')}</h2>
                             <button onClick={() => audienceActions.setShowCreateAudience(false)} className="p-1.5 hover:bg-editor-border/40 rounded-lg"><X size={18} className="text-editor-text-secondary" /></button>
                         </div>
                         <div className="p-5 space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Nombre *</label>
-                                <input type="text" value={audienceActions.newAudienceForm.name} onChange={e => audienceActions.setNewAudienceForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder="Ej: Clientes VIP" />
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.audiences.newAudienceModal.name')}</label>
+                                <input type="text" value={audienceActions.newAudienceForm.name} onChange={e => audienceActions.setNewAudienceForm(prev => ({ ...prev, name: e.target.value }))} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50" placeholder={t('email.hub.audiences.newAudienceModal.namePlaceholder')} />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">Descripción</label>
-                                <textarea value={audienceActions.newAudienceForm.description} onChange={e => audienceActions.setNewAudienceForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none" placeholder="Describe esta audiencia..." />
+                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('email.hub.audiences.newAudienceModal.description')}</label>
+                                <textarea value={audienceActions.newAudienceForm.description} onChange={e => audienceActions.setNewAudienceForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none" placeholder={t('email.hub.audiences.newAudienceModal.descriptionPlaceholder')} />
                             </div>
                         </div>
                         <div className="p-5 border-t border-editor-border flex justify-end gap-3">
-                            <button onClick={() => audienceActions.setShowCreateAudience(false)} className="px-4 py-2 text-sm text-editor-text-secondary">Cancelar</button>
-                            <button onClick={audienceActions.handleCreateAudience} disabled={!audienceActions.newAudienceForm.name} className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl disabled:opacity-50 transition-all">Crear Audiencia</button>
+                            <button onClick={() => audienceActions.setShowCreateAudience(false)} className="px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors">{t('email.hub.audiences.newAudienceModal.cancel')}</button>
+                            <button onClick={audienceActions.handleCreateAudience} disabled={!audienceActions.newAudienceForm.name} className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold rounded-xl disabled:opacity-50 transition-all">{t('email.hub.audiences.newAudienceModal.create')}</button>
                         </div>
                     </div>
                 </div>
@@ -495,10 +495,10 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                     <div className="flex items-center gap-3">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"><Menu className="w-5 h-5" /></button>
                         <Mail className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-semibold text-editor-text-primary">Email Hub</h1>
+                        <h1 className="text-lg font-semibold text-editor-text-primary">{t('email.hub.title')}</h1>
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-purple-500/20 text-purple-400 rounded-full">{projectName}</span>
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> Volver</button>
+                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> {t('email.hub.back')}</button>
                 </header>
 
                 {showEmailEditor && emailDocument ? (
@@ -530,7 +530,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                 <div className="flex items-center justify-center py-24">
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
-                                        <span className="text-sm text-editor-text-secondary">Cargando datos...</span>
+                                        <span className="text-sm text-editor-text-secondary">{t('email.hub.loadingData')}</span>
                                     </div>
                                 </div>
                             ) : (
@@ -599,8 +599,8 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                         <h3 className="text-lg font-bold text-editor-text-primary text-center mb-2">{confirmModal.title}</h3>
                         <p className="text-sm text-editor-text-secondary text-center mb-6 leading-relaxed">{confirmModal.message}</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))} className="flex-1 px-4 py-2.5 text-sm font-medium text-editor-text-secondary bg-editor-panel-bg border border-editor-border rounded-xl hover:bg-editor-border transition-colors">Cancelar</button>
-                            <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"><span className="flex items-center justify-center gap-2"><Trash2 size={14} /> Confirmar</span></button>
+                            <button onClick={() => setConfirmModal(null)} className="flex-1 px-4 py-2 border border-editor-border rounded-lg text-sm hover:bg-editor-border transition">{t('email.hub.confirm.cancel')}</button>
+                            <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition">{t('email.hub.confirm.confirm')}</button>
                         </div>
                     </div>
                 </div>

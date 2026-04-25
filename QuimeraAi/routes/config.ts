@@ -94,6 +94,7 @@ export const ROUTES = {
   EMAIL: '/email',
   BIOPAGE: '/biopage',
   BLOG_HUB: '/blog-hub',
+  REAL_ESTATE: '/real-estate',
 
   // Settings Routes (Workspace/Team)
   SETTINGS: '/settings',
@@ -501,6 +502,16 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     showInNav: true,
     icon: 'Newspaper',
+  },
+  {
+    path: ROUTES.REAL_ESTATE,
+    view: 'real-estate',
+    type: 'private',
+    title: 'Real Estate OS',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Home',
   },
 
   // =========================================================================
@@ -1154,7 +1165,6 @@ export function getAdminSubRoutes(userRole?: string): RouteConfig[] {
     return true;
   });
 }
-
 
 
 

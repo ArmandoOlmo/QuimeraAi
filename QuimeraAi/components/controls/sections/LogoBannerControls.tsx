@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -42,8 +42,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-editor-text-primary">Logo {idx + 1}</span>
             {logos.length > 1 && (
-              <button
-                onClick={() => {
+              <button type="button"                 onClick={() => {
                   const updated = logos.filter((_: any, i: number) => i !== idx);
                   setNestedData('logoBanner.logos', updated);
                 }}
@@ -71,8 +70,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Content' },
               ].map(type => (
-                <button
-                  key={type.value}
+                <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`logoBanner.logos.${idx}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(logo.linkType || 'manual') === type.value
                     ? 'bg-editor-accent text-editor-bg'
@@ -97,8 +95,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       ))}
 
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newLogo = { imageUrl: '', alt: `Brand ${logos.length + 1}`, link: '', linkText: '' };
           setNestedData('logoBanner.logos', [...logos, newLogo]);
         }}
@@ -119,40 +116,28 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ToggleControl label={t('controls.showDividerLines')} checked={data.logoBanner.showDivider ?? false} onChange={(v) => setNestedData('logoBanner.showDivider', v)} />
 
       {data.logoBanner.scrollEnabled && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-medium text-editor-text-secondary">Scroll Speed</span>
-            <span className="text-xs text-editor-text-primary">{data.logoBanner.scrollSpeed || 25}s</span>
-          </div>
-          <input type="range" min={5} max={60} step={5}
-            value={data.logoBanner.scrollSpeed || 25}
-            onChange={(e) => setNestedData('logoBanner.scrollSpeed', parseInt(e.target.value))}
-            className="w-full accent-blue-500" />
-        </div>
+        <SliderControl
+          label="Scroll Speed"
+          value={data.logoBanner.scrollSpeed || 25}
+          onChange={(v) => setNestedData('logoBanner.scrollSpeed', v)}
+          min={5} max={60} step={5} suffix="s"
+        />
       )}
 
       {/* Logo Size */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Logo Size</div>
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-medium text-editor-text-secondary">Logo Height</span>
-          <span className="text-xs text-editor-text-primary">{data.logoBanner.logoHeight || 40}px</span>
-        </div>
-        <input type="range" min={20} max={100} step={5}
-          value={data.logoBanner.logoHeight || 40}
-          onChange={(e) => setNestedData('logoBanner.logoHeight', parseInt(e.target.value))}
-          className="w-full accent-blue-500" />
-      </div>
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-medium text-editor-text-secondary">Gap Between Logos</span>
-          <span className="text-xs text-editor-text-primary">{data.logoBanner.logoGap || 48}px</span>
-        </div>
-        <input type="range" min={16} max={96} step={8}
-          value={data.logoBanner.logoGap || 48}
-          onChange={(e) => setNestedData('logoBanner.logoGap', parseInt(e.target.value))}
-          className="w-full accent-blue-500" />
-      </div>
+      <SliderControl
+        label="Logo Height"
+        value={data.logoBanner.logoHeight || 40}
+        onChange={(v) => setNestedData('logoBanner.logoHeight', v)}
+        min={20} max={100} step={5} suffix="px"
+      />
+      <SliderControl
+        label="Gap Between Logos"
+        value={data.logoBanner.logoGap || 48}
+        onChange={(v) => setNestedData('logoBanner.logoGap', v)}
+        min={16} max={96} step={8} suffix="px"
+      />
 
       {/* Font sizes */}
       <FontSizeSelector label={t('controls.titleSize')} value={data.logoBanner.titleFontSize || 'sm'} onChange={(v) => setNestedData('logoBanner.titleFontSize', v)} />
@@ -168,8 +153,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'lg', label: 'L' },
             { value: 'xl', label: 'XL' },
           ].map(opt => (
-            <button
-              key={opt.value}
+            <button type="button"               key={opt.value}
               onClick={() => setNestedData('logoBanner.paddingY', opt.value)}
               className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
                 (data.logoBanner.paddingY || 'md') === opt.value
@@ -191,16 +175,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div className="space-y-2">
           <ColorControl label={t('controls.gradientFrom')} value={data.logoBanner.gradientFrom || '#0f172a'} onChange={(v) => setNestedData('logoBanner.gradientFrom', v)} />
           <ColorControl label={t('controls.gradientTo')} value={data.logoBanner.gradientTo || '#1e293b'} onChange={(v) => setNestedData('logoBanner.gradientTo', v)} />
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-medium text-editor-text-secondary">Gradient Angle</span>
-              <span className="text-xs text-editor-text-primary">{data.logoBanner.gradientAngle ?? 90}°</span>
-            </div>
-            <input type="range" min={0} max={360} step={15}
+            <SliderControl
+              label="Gradient Angle"
               value={data.logoBanner.gradientAngle ?? 90}
-              onChange={(e) => setNestedData('logoBanner.gradientAngle', parseInt(e.target.value))}
-              className="w-full accent-blue-500" />
-          </div>
+              onChange={(v) => setNestedData('logoBanner.gradientAngle', v)}
+              min={0} max={360} step={15} suffix="°"
+            />
         </div>
       ) : (
         <ColorControl label={t('controls.backgroundColor')} value={data.logoBanner.backgroundColor || '#ffffff'} onChange={(v) => setNestedData('logoBanner.backgroundColor', v)} />

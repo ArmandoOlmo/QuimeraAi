@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, ArrowLeft, FolderOpen, Shield } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -25,6 +25,7 @@ import { AgencyProjects } from './AgencyProjects';
 import { WhiteLabelSettings } from './WhiteLabelSettings';
 import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import HeaderBackButton from '@/components/ui/HeaderBackButton';
 
 type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
 
@@ -204,7 +205,7 @@ const AgencyDashboardMain: React.FC = () => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header — Title + Back button (tabs moved to sidebar panel) */}
+                {/* Header — Title + right-aligned back action (tabs moved to sidebar panel) */}
                 <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
@@ -222,17 +223,8 @@ const AgencyDashboardMain: React.FC = () => {
                             </h1>
                         </div>
                     </div>
-
-                    {/* Right Section - Back Button */}
-                    <div className="flex items-center justify-end flex-shrink-0 ml-auto">
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                            title={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
+                    <div className="ml-auto flex items-center gap-2">
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 

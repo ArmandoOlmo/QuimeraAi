@@ -7,7 +7,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft,
     Monitor,
     Smartphone,
     Save,
@@ -17,6 +16,7 @@ import {
     Menu,
 } from 'lucide-react';
 import { useEmailEditor } from './EmailEditor';
+import HeaderBackButton from '../../../ui/HeaderBackButton';
 
 interface EmailEditorHeaderProps {
     documentName: string;
@@ -56,7 +56,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
     return (
         <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
             <div className="h-full flex items-center justify-between px-4 gap-4 relative">
-                {/* LEFT SECTION - Mobile Menu, Back & Name */}
+                {/* LEFT SECTION - Mobile Menu & Name */}
                 <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Menu Button */}
                     {onOpenMobileMenu && (
@@ -66,17 +66,6 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                             title={t('common.menu', 'Menú')}
                         >
                             <Menu className="w-5 h-5" />
-                        </button>
-                    )}
-
-                    {/* Back Button */}
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-md transition-colors"
-                            title={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
                         </button>
                     )}
 
@@ -164,6 +153,10 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                             </>
                         )}
                     </button>
+
+                    {onClose && (
+                        <HeaderBackButton onClick={onClose} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    )}
                 </div>
             </div>
         </header>
@@ -171,8 +164,6 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
 };
 
 export default EmailEditorHeader;
-
-
 
 
 

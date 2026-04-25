@@ -383,11 +383,30 @@ const Header: React.FC<HeaderData & {
     // Glass Effect
     const glassClasses = (glassEffect && !isTransparent) ? 'backdrop-blur-md bg-opacity-80 border-b border-white/10' : '';
     const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
+    const isFloatingLayout = style.startsWith('floating') || style === 'segmented-pill';
 
     // ============================================
     // ESTILOS DE CONTENEDOR SEGÚN VARIANTE
     // ============================================
     const getContainerClasses = (): string => {
+      // On public runtime pages without a hero behind the header, floating headers
+      // must participate in normal document flow so they push the page content down.
+      if (forceSolid && isFloatingLayout) {
+        switch (style) {
+          case 'floating-pill':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-5xl rounded-full border border-white/15 shadow-lg';
+          case 'floating-glass':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border border-white/20';
+          case 'floating-shadow':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden';
+          case 'segmented-pill':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container';
+          case 'floating':
+          default:
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl border border-white/10';
+        }
+      }
+
       switch (style) {
         // --- EDGE-TO-EDGE (Lisos de lado a lado, sin curvas) ---
         case 'edge-solid':
@@ -855,11 +874,15 @@ const Header: React.FC<HeaderData & {
       <>
         <header
           ref={headerRef}
+          data-site-header="true"
           className={`${positionClass} z-50 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
             }`}
           style={{ 
             height: shouldNotTakeSpace ? 0 : 'auto',
-            top: `${activeTopBarOffset}px`
+            top: `${activeTopBarOffset}px`,
+            backgroundColor: forceSolid && isFloatingLayout ? `var(--property-detail-bg, var(--site-base-bg, ${actualColors.background || 'transparent'}))` : undefined,
+            paddingTop: forceSolid && isFloatingLayout ? '16px' : undefined,
+            paddingBottom: forceSolid && isFloatingLayout ? '16px' : undefined
           }}
         >
           {/* === SCROLL PROGRESS BAR === */}
@@ -876,11 +899,11 @@ const Header: React.FC<HeaderData & {
               } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
             style={{
               ...backgroundStyle,
-              ...(style.startsWith('floating') || style === 'segmented-pill' ? {
+              ...(!forceSolid && isFloatingLayout ? {
                 top: `${(style === 'floating-pill' ? 16 : 24) + resolvedTopBarOffset}px`,
               } : {}),
-              height: style.startsWith('floating') ? 'auto' : computedHeight,
-              minHeight: style.startsWith('floating') ? 'auto' : computedMinHeight,
+              height: isFloatingLayout ? 'auto' : computedHeight,
+              minHeight: isFloatingLayout ? 'auto' : computedMinHeight,
               padding: style.startsWith('floating')
                 ? (style === 'floating-pill' ? '10px 48px' : '12px 24px')
                 : style === 'segmented-pill'

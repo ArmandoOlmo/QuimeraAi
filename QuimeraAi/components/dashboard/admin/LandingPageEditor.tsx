@@ -7,11 +7,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
+    Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
     Smartphone, Loader2, Check, Image, Type, Layout,
     Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
 import { UndoRedoGroup } from '../../ui/UndoButton';
 import { useUndo } from '../../../contexts/undo';
@@ -60,24 +61,30 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 // Available components for landing page (CONTENIDO section)
 const AVAILABLE_COMPONENTS = [
-    { type: 'hero', label: 'Hero Principal', icon: <Layout size={18} /> },
-    { type: 'heroModern', label: 'Hero Moderno', icon: <Layout size={18} /> },
-    { type: 'heroGradient', label: 'Hero Gradiente', icon: <Layout size={18} /> },
-    { type: 'features', label: 'Características', icon: <Layers size={18} /> },
-    { type: 'pricing', label: 'Precios', icon: <Type size={18} /> },
-    { type: 'testimonials', label: 'Testimonios', icon: <Type size={18} /> },
-    { type: 'faq', label: 'Preguntas Frecuentes', icon: <Type size={18} /> },
-    { type: 'cta', label: 'Llamada a Acción', icon: <Type size={18} /> },
-    { type: 'screenshotCarousel', label: 'Carrusel de Imágenes', icon: <Image size={18} />, isNew: true },
+    { type: 'hero', label: 'Hero Principal', icon: Layout },
+    { type: 'heroModern', label: 'Hero Moderno', icon: Layout },
+    { type: 'heroGradient', label: 'Hero Gradiente', icon: Layout },
+    { type: 'features', label: 'Características', icon: Layers },
+    { type: 'pricing', label: 'Precios', icon: Type },
+    { type: 'testimonials', label: 'Testimonios', icon: Type },
+    { type: 'faq', label: 'Preguntas Frecuentes', icon: Type },
+    { type: 'cta', label: 'Llamada a Acción', icon: Type },
+    { type: 'screenshotCarousel', label: 'Carrusel de Imágenes', icon: Image, isNew: true },
 ];
 
 // Structure items for global settings (ESTRUCTURA section)
 const STRUCTURE_ITEMS = [
-    { id: 'colors', type: 'colors', label: 'Colores', icon: <Palette size={18} /> },
-    { id: 'typography', type: 'typography', label: 'Tipografía', icon: <Type size={18} /> },
-    { id: 'navigation', type: 'header', label: 'Navegación', icon: <MenuIcon size={18} /> },
-    { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: <Layout size={18} /> },
+    { id: 'colors', type: 'colors', label: 'Colores', icon: Palette },
+    { id: 'typography', type: 'typography', label: 'Tipografía', icon: Type },
+    { id: 'navigation', type: 'header', label: 'Navegación', icon: MenuIcon },
+    { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: Layout },
 ];
+
+const getLandingSectionIcon = (type: string) => {
+    return AVAILABLE_COMPONENTS.find(component => component.type === type)?.icon
+        || STRUCTURE_ITEMS.find(item => item.type === type)?.icon
+        || Layout;
+};
 
 // Sortable Section Item Component
 interface SortableSectionItemProps {
@@ -109,6 +116,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
         transition,
         zIndex: isDragging ? 50 : undefined,
     };
+    const Icon = getLandingSectionIcon(section.type);
 
     return (
         <div
@@ -129,6 +137,8 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             >
                 <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
             </div>
+
+            <Icon size={16} className="text-muted-foreground flex-shrink-0" />
 
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate capitalize">{section.type}</p>
@@ -154,12 +164,16 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
 };
 
 // Drag Overlay Item (shown while dragging)
-const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => (
+const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => {
+    const Icon = getLandingSectionIcon(section.type);
+    return (
     <div className="flex items-center gap-2 p-2.5 bg-card border border-primary rounded-lg shadow-xl">
         <GripVertical size={14} className="text-primary" />
+        <Icon size={16} className="text-primary" />
         <span className="text-sm font-medium capitalize">{section.type}</span>
     </div>
-);
+    );
+};
 
 const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const { t } = useTranslation();
@@ -1261,14 +1275,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             </span>
                         </button>
 
-                        {/* Back button */}
-                        <button
-                            onClick={onBack}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} />
                     </div>
                 </header>
 
@@ -1296,6 +1303,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
+                                    <Layers size={14} />
                                     <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
                                     <span className="text-muted-foreground">({STRUCTURE_ITEMS.length})</span>
                                 </button>
@@ -1311,7 +1319,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                                     : 'hover:bg-secondary/50 border border-transparent'
                                                     }`}
                                             >
-                                                <span className="text-muted-foreground">{item.icon}</span>
+                                                {React.createElement(item.icon, { size: 16, className: 'text-muted-foreground flex-shrink-0' })}
                                                 <span className="text-sm font-medium">{item.label}</span>
                                             </button>
                                         ))}
@@ -1326,6 +1334,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-secondary/30 rounded transition-colors"
                                 >
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
+                                    <FileText size={14} />
                                     <span>{t('landingEditor.content', 'CONTENIDO')}</span>
                                     <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').length})</span>
                                 </button>
@@ -1439,15 +1448,17 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             </span>
                                         </h2>
                                     </div>
-                                    <LandingPageControls
-                                        key={currentStructureSection.id}
-                                        section={currentStructureSection}
-                                        onUpdateSection={updateSectionData}
-                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                        allSections={sections}
-                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                        portalContainer={previewOverlayRef.current}
-                                    />
+                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto">
+                                        <LandingPageControls
+                                            key={currentStructureSection.id}
+                                            section={currentStructureSection}
+                                            onUpdateSection={updateSectionData}
+                                            onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                            allSections={sections}
+                                            onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                            portalContainer={previewOverlayRef.current}
+                                        />
+                                    </div>
                                 </>
                             ) : (
                                 <>
@@ -1457,14 +1468,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
                                         </h2>
                                     </div>
-                                    <LandingPageControls
-                                        section={currentSection!}
-                                        onUpdateSection={updateSectionData}
-                                        onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
-                                        allSections={sections}
-                                        onApplyGlobalColors={applyGlobalColorsToAllSections}
-                                        portalContainer={previewOverlayRef.current}
-                                    />
+                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto">
+                                        <LandingPageControls
+                                            section={currentSection!}
+                                            onUpdateSection={updateSectionData}
+                                            onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                                            allSections={sections}
+                                            onApplyGlobalColors={applyGlobalColorsToAllSections}
+                                            portalContainer={previewOverlayRef.current}
+                                        />
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -1493,7 +1506,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors text-left"
                                 >
                                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                        {comp.icon}
+                                        {React.createElement(comp.icon, { size: 18 })}
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-medium text-sm">{comp.label}</p>

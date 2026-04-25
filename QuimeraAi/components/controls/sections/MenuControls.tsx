@@ -44,8 +44,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'elegant-list', label: '📋 Elegant' },
             { value: 'full-image', label: '📷 Full Photo' }
           ].map((variant) => (
-            <button
-              key={variant.value}
+            <button type="button"               key={variant.value}
               onClick={() => setNestedData('menu.menuVariant', variant.value)}
               className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.menuVariant || 'classic') === variant.value
                 ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
@@ -73,8 +72,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'center', icon: '●', label: 'Center' },
                 { value: 'right', icon: '▶', label: 'Right' }
               ].map((align) => (
-                <button
-                  key={align.value}
+                <button type="button"                   key={align.value}
                   onClick={() => setNestedData('menu.textAlignment', align.value)}
                   className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md border text-xs transition-all ${(data?.menu?.textAlignment || 'center') === align.value
                     ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold'

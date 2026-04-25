@@ -23,11 +23,11 @@ import {
     Layers,
     CheckCircle,
     ArrowRight,
-    ArrowLeft,
     BookOpen
 } from 'lucide-react';
 import { Project } from '../../types';
 import { INDUSTRIES } from '../../data/industries';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 const UserTemplates: React.FC = () => {
     const { t } = useTranslation();
@@ -153,7 +153,7 @@ const UserTemplates: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Right: Search icon + Back icon */}
+                    {/* Right: Search */}
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
@@ -162,6 +162,7 @@ const UserTemplates: React.FC = () => {
                         >
                             <Search size={20} />
                         </button>
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                         <MobileSearchModal
                             isOpen={isMobileSearchOpen}
                             searchQuery={searchTerm}
@@ -169,13 +170,6 @@ const UserTemplates: React.FC = () => {
                             onClose={() => setIsMobileSearchOpen(false)}
                             placeholder={t('userTemplates.searchPlaceholder', 'Buscar plantillas...')}
                         />
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('common.goBack', 'Volver')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
                     </div>
                 </header>
 
@@ -613,4 +607,3 @@ const UserTemplates: React.FC = () => {
 };
 
 export default UserTemplates;
-

@@ -10,6 +10,7 @@ import { useAgencyContent } from '../../../contexts/agency/AgencyContentContext'
 import AgencyArticleEditor from './AgencyArticleEditor';
 import AgencyLegalPageEditor from './AgencyLegalPageEditor';
 import AgencyContentCreatorAssistant from './AgencyContentCreatorAssistant';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     Plus,
     Search,
@@ -30,7 +31,6 @@ import {
     Edit2,
     Download,
     Sparkles,
-    ArrowLeft,
     Star,
     Shield,
     Lock,
@@ -422,15 +422,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                             <span className="hidden sm:inline">{t('contentManagement.newArticle', 'Nuevo Artículo')}</span>
                         </button>
 
-                        {/* Back Button */}
-                        <button
-                            onClick={onBack}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} />
                     </div>
                 </header>
 

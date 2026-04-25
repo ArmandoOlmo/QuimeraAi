@@ -37,7 +37,7 @@ export type FontFamily =
     'red-hat-display' | 'sora' | 'space-grotesk' | 'space-mono' | 'syne' |
     'ubuntu' | 'unbounded' | 'urbanist' | 'work-sans';
 
-export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub';
+export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub' | 'real-estate';
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode' | 'news' | 'landing-editor' | 'service-availability' | 'subdomains' | 'finances' | 'admin-leads' | 'admin-appointments' | 'admin-email';
 
 // Page Section Types
@@ -59,6 +59,9 @@ export type PageSection =
     | 'categoryProducts'   // Section for category page (/categoria/:slug)
     | 'articleContent'     // Section for blog article page (/blog/:slug)
     | 'productGrid'        // Configurable product grid section
+    | 'realEstateListings' // Realtor property listings section
+    | 'propertyDirectory'  // Public realtor directory page (/listados)
+    | 'propertyDetail'     // Public realtor property detail page (/listados/:slug)
     | 'cart'               // Cart section for cart page
     | 'checkout';          // Checkout section for checkout page
 
@@ -111,4 +114,3 @@ export interface ThemeData {
     // Se muestran en el selector de colores para acceso rápido
     paletteColors?: string[];
 }
-

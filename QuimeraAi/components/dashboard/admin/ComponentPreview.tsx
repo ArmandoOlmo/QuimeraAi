@@ -37,6 +37,7 @@ import ChatbotWidget from '../../ChatbotWidget';
 import BusinessMap from '../../BusinessMap';
 import Menu from '../../Menu';
 import Banner from '../../Banner';
+import RealEstateListingsSection from '../../real-estate/RealEstateListingsSection';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;
@@ -206,6 +207,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <Portfolio {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'leads':
                 return <Leads {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
+            case 'realEstateListings':
+                return <RealEstateListingsSection data={mergedProps} isPreviewMode={true} theme={theme} globalColors={theme.globalColors} />;
             case 'newsletter':
                 return <Newsletter {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'video':

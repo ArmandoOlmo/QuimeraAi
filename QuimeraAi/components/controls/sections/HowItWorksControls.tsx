@@ -66,8 +66,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-bold text-editor-text-secondary">Step #{index + 1}</span>
-            <button
-              onClick={() => {
+            <button type="button"               onClick={() => {
                 const newItems = (data?.howItWorks?.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData('howItWorks.items', newItems);
               }}
@@ -97,8 +96,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItems = [...(data?.howItWorks?.items || []), { title: 'New Step', description: 'Step description', icon: 'upload' }];
           setNestedData('howItWorks.items', newItems);
         }}

@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -66,8 +66,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   { value: 'collection', label: 'Collection' }
                 ].map((type) => (
                   <button
+                    type="button"
                     key={type.value}
-                    onClick={() => setNestedData('banner.linkType', type.value)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setNestedData('banner.linkType', type.value);
+                    }}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.banner?.linkType || 'manual') === type.value
                       ? 'bg-editor-accent text-editor-bg'
                       : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
@@ -164,15 +168,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.bannerHeight')}</label>
-            <span className="text-xs text-editor-text-primary">{data?.banner?.height || 400}px</span>
-          </div>
-          <input
-            type="range" min="200" max="800" step="50"
+          <SliderControl
+            label={t('controls.bannerHeight')}
             value={data?.banner?.height || 400}
-            onChange={(e) => setNestedData('banner.height', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('banner.height', v)}
+            min={200} max={800} step={50} suffix="px"
           />
         </div>
 
@@ -181,8 +181,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['left', 'center', 'right'] as const).map((align) => (
               <button
+                type="button"
                 key={align}
-                onClick={() => setNestedData('banner.textAlignment', align)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setNestedData('banner.textAlignment', align);
+                }}
                 className={`flex-1 py-2 text-xs font-medium rounded-sm transition-colors capitalize ${(data?.banner?.textAlignment || 'center') === align
                   ? 'bg-editor-accent text-editor-bg'
                   : 'text-editor-text-secondary hover:text-editor-text-primary'
@@ -216,53 +220,22 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="space-y-3 animate-fade-in-up mt-3">
             <ColorControl label={t('editor.controls.common.overlayColor')} value={data?.banner?.colors?.overlayColor || '#000000'} onChange={(v) => setNestedData('banner.colors.overlayColor', v)} />
 
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.overlayOpacity')}</label>
-                <span className="text-xs text-editor-text-primary">{data?.banner?.backgroundOverlayOpacity ?? 50}%</span>
-              </div>
-              <input
-                type="range" min="0" max="100" step="5"
+              <SliderControl
+                label={t('controls.overlayOpacity')}
                 value={data?.banner?.backgroundOverlayOpacity ?? 50}
-                onChange={(e) => setNestedData('banner.backgroundOverlayOpacity', parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                onChange={(v) => setNestedData('banner.backgroundOverlayOpacity', v)}
+                min={0} max={100} step={5} suffix="%"
               />
-            </div>
           </div>
         )}
 
         {/* Background Position */}
         {data?.banner?.backgroundImageUrl && (
-          <div className="mt-3 pt-3 border-t border-editor-border/30">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
-              {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
-            </label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
-              {[
-                { id: 'top left', label: '↖' },
-                { id: 'top center', label: '↑' },
-                { id: 'top right', label: '↗' },
-                { id: 'center left', label: '←' },
-                { id: 'center center', label: '●' },
-                { id: 'center right', label: '→' },
-                { id: 'bottom left', label: '↙' },
-                { id: 'bottom center', label: '↓' },
-                { id: 'bottom right', label: '↘' },
-              ].map((pos) => (
-                <button
-                  key={pos.id}
-                  onClick={() => setNestedData('banner.backgroundPosition', pos.id)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data?.banner?.backgroundPosition || 'center center') === pos.id
-                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                  }`}
-                  title={pos.id}
-                >
-                  {pos.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PositionGridControl
+            label={t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+            value={data?.banner?.backgroundPosition || 'center center'}
+            onChange={(val) => setNestedData('banner.backgroundPosition', val)}
+          />
         )}
 
         <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>

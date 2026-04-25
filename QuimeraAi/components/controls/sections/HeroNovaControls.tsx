@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -65,8 +65,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
                 {slides.length > 1 && (
-                  <button
-                    onClick={() => {
+                  <button type="button"                     onClick={() => {
                       const newSlides = slides.filter((_: any, i: number) => i !== slideIndex);
                       setNestedData('heroNova.slides', newSlides);
                     }}
@@ -105,8 +104,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.mediaType')}</label>
                 <div className="flex bg-editor-panel-bg p-1 rounded-md border border-editor-border">
                   {(['image', 'video'] as const).map((type) => (
-                    <button
-                      key={type}
+                    <button type="button"                       key={type}
                       onClick={() => setNestedData(`heroNova.slides.${slideIndex}.mediaType`, type)}
                       className={`flex-1 py-1.5 text-xs font-semibold rounded-sm capitalize transition-colors ${mediaType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
                     >
@@ -160,8 +158,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         })}
 
         {/* Add Slide */}
-        <button
-          onClick={() => {
+        <button type="button"           onClick={() => {
             const newSlide = {
               headline: 'New Slide',
               subheadline: '',
@@ -205,15 +202,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <FontSizeSelector label={t('controls.displaySize')} value={data.heroNova.headlineFontSize || 'md'} onChange={(v) => setNestedData('heroNova.headlineFontSize', v)} />
 
         <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.letterSpacing')}</label>
-            <span className="text-xs text-editor-text-primary">{(data.heroNova.displayLetterSpacing ?? 0).toFixed(2)}em</span>
-          </div>
-          <input
-            type="range" min="0" max="1" step="0.05"
+          <SliderControl
+            label={t('controls.letterSpacing')}
             value={data.heroNova.displayLetterSpacing ?? 0}
-            onChange={(e) => setNestedData('heroNova.displayLetterSpacing', parseFloat(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroNova.displayLetterSpacing', v)}
+            min={0} max={1} step={0.05} suffix="em"
           />
         </div>
       </div>
@@ -223,15 +216,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.overlay')}</label>
 
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
-            <span className="text-xs text-editor-text-primary">{Math.round((data.heroNova.overlayOpacity ?? 0.35) * 100)}%</span>
-          </div>
-          <input
-            type="range" min="0" max="80" step="5"
+          <SliderControl
+            label={t('controls.overlayDarkness')}
             value={Math.round((data.heroNova.overlayOpacity ?? 0.35) * 100)}
-            onChange={(e) => setNestedData('heroNova.overlayOpacity', parseInt(e.target.value) / 100)}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroNova.overlayOpacity', v / 100)}
+            min={0} max={80} step={5} suffix="%"
           />
         </div>
       </div>
@@ -241,15 +230,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.layout')}</label>
 
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroNova.heroHeight || 90}vh</span>
-          </div>
-          <input
-            type="range" min="50" max="100" step="5"
+          <SliderControl
+            label={t('controls.heroHeight')}
             value={data.heroNova.heroHeight || 90}
-            onChange={(e) => setNestedData('heroNova.heroHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroNova.heroHeight', v)}
+            min={50} max={100} step={5} suffix="vh"
           />
         </div>
       </div>

@@ -1376,27 +1376,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
      * Set the active page by ID
      */
     const setActivePage = useCallback((pageId: string | null) => {
-        if (!pageId) {
-            setActivePageId(null);
-            return;
-        }
-        const page = pages.find(p => p.id === pageId);
-        if (page) {
-            setActivePageId(pageId);
-            // Update the legacy data/componentOrder/sectionVisibility to match the active page
-            if (page.sectionData) {
-                setData(prev => prev ? { ...prev, ...page.sectionData } : page.sectionData as PageData);
-            }
-            if (page.sections) {
-                setComponentOrder(page.sections);
-                const visibility = page.sections.reduce((acc, section) => {
-                    acc[section] = true;
-                    return acc;
-                }, {} as Record<PageSection, boolean>);
-                setSectionVisibility(prev => ({ ...prev, ...visibility }));
-            }
-        }
-    }, [pages]);
+        // Simply set the active page ID. The derived `activePage` (line 258:
+        // pages.find(p => p.id === activePageId)) will resolve on the next
+        // render after any pending setPages() updates have been applied.
+        //
+        // IMPORTANT: Do NOT look up the page in `pages` here — that causes
+        // a stale-closure race when addPage() and setActivePage() are called
+        // back-to-back, because setPages() hasn't re-rendered yet and `pages`
+        // still holds the old array.
+        //
+        // We also do NOT merge page.sectionData into the global `data` state.
+        // The global data already contains all section data from the project.
+        // Merging page-specific defaults would overwrite user customizations.
+        setActivePageId(pageId);
+    }, []);
 
     /**
      * Add a new page to the project

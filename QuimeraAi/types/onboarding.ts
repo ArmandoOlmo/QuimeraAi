@@ -390,6 +390,7 @@ export type PageTemplateId =
     | 'about'
     | 'services'
     | 'portfolio'
+    | 'real-estate-listings'
     | 'pricing'
     | 'faq'
     | 'cart'
@@ -445,7 +446,7 @@ export const INDUSTRY_PAGE_DEFAULTS: Record<string, {
         pages: ['home', 'portfolio', 'pricing', 'about', 'contact'],
     },
     'real-estate': {
-        pages: ['home', 'portfolio', 'services', 'about', 'contact'],
+        pages: ['home', 'real-estate-listings', 'services', 'about', 'contact'],
     },
     'beauty-spa': {
         pages: ['home', 'services', 'pricing', 'about', 'contact'],
@@ -479,6 +480,7 @@ export const PAGE_TEMPLATE_SECTIONS: Record<PageTemplateId, PageSection[]> = {
     'about': ['header', 'hero', 'team', 'testimonials', 'footer'],
     'services': ['header', 'hero', 'services', 'testimonials', 'cta', 'footer'],
     'portfolio': ['header', 'hero', 'portfolio', 'testimonials', 'footer'],
+    'real-estate-listings': ['header', 'realEstateListings', 'leads', 'footer'],
     'pricing': ['header', 'hero', 'pricing', 'faq', 'cta', 'footer'],
     'faq': ['header', 'faq', 'cta', 'footer'],
     'cart': ['header', 'cart', 'footer'],
@@ -581,6 +583,15 @@ export const PAGE_TEMPLATES: Record<PageTemplateId, PageTemplate> = {
         showInNavigation: true,
         navigationOrder: 30,
     },
+    'real-estate-listings': {
+        id: 'real-estate-listings',
+        title: 'Listados',
+        slug: '/listados',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['real-estate-listings'],
+        showInNavigation: true,
+        navigationOrder: 25,
+    },
     'pricing': {
         id: 'pricing',
         title: 'Precios',
@@ -676,6 +687,7 @@ const getPageTitle = (templateId: PageTemplateId): string => {
         'about': 'Nosotros',
         'services': 'Servicios',
         'portfolio': 'Portafolio',
+        'real-estate-listings': 'Listados',
         'pricing': 'Precios',
         'faq': 'Preguntas Frecuentes',
         'cart': 'Carrito',
@@ -696,6 +708,7 @@ const getPageSlug = (templateId: PageTemplateId): string => {
         'about': '/nosotros',
         'services': '/servicios',
         'portfolio': '/portafolio',
+        'real-estate-listings': '/listados',
         'pricing': '/precios',
         'faq': '/preguntas-frecuentes',
         'cart': '/carrito',
@@ -721,8 +734,6 @@ const shouldShowInNav = (templateId: PageTemplateId): boolean => {
     // Dynamic pages and cart/checkout shouldn't show in main navigation
     return !['product-detail', 'category', 'article', 'cart', 'checkout'].includes(templateId);
 };
-
-
 
 
 

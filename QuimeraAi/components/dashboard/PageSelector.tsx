@@ -29,6 +29,7 @@ import {
     BookOpen,
     ShoppingCart,
     CreditCard,
+    Building2,
     Users,
     Briefcase,
     Image,
@@ -66,6 +67,7 @@ const PAGE_TEMPLATES: { id: PageTemplateId; label: string; icon: React.ReactNode
     { id: 'about', label: 'Nosotros', icon: <Users size={16} /> },
     { id: 'services', label: 'Servicios', icon: <Briefcase size={16} /> },
     { id: 'portfolio', label: 'Portafolio', icon: <Image size={16} /> },
+    { id: 'real-estate-listings', label: 'Listados', icon: <Building2 size={16} /> },
     { id: 'pricing', label: 'Precios', icon: <Tag size={16} /> },
     { id: 'contact', label: 'Contacto', icon: <Mail size={16} /> },
     { id: 'faq', label: 'Preguntas Frecuentes', icon: <HelpCircle size={16} /> },
@@ -86,6 +88,7 @@ const getPageIcon = (page: SitePage): React.ReactNode => {
     if (page.slug.includes('nosotros') || page.slug.includes('about')) return <Users size={16} />;
     if (page.slug.includes('servicio')) return <Briefcase size={16} />;
     if (page.slug.includes('portafolio') || page.slug.includes('portfolio')) return <Image size={16} />;
+    if (page.slug.includes('listados') || page.slug.includes('properties')) return <Building2 size={16} />;
     if (page.slug.includes('precio') || page.slug.includes('pricing')) return <Tag size={16} />;
     if (page.slug.includes('faq') || page.slug.includes('pregunta')) return <HelpCircle size={16} />;
     if (page.slug.includes('carrito') || page.slug.includes('cart')) return <ShoppingCart size={16} />;
@@ -390,5 +393,4 @@ const PageSelector: React.FC<PageSelectorProps> = ({
 };
 
 export default PageSelector;
-
 

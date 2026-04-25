@@ -904,6 +904,34 @@ export const componentStyles: ComponentStyles = {
     },
   },
 
+  realEstateListings: {
+    title: '',
+    subtitle: '',
+    buttonText: '',
+    buttonLink: '#leads',
+    maxItems: 6,
+    featuredOnly: false,
+    showPrice: true,
+    showLocation: true,
+    showStats: true,
+    showDescription: true,
+    paddingY: 'lg',
+    paddingX: 'md',
+    cardBorderRadius: 'md',
+    buttonBorderRadius: 'md',
+    colors: {
+      background: '',
+      heading: '',
+      text: '',
+      textMuted: '',
+      accent: '',
+      cardBackground: '',
+      border: '',
+      buttonBackground: '',
+      buttonText: '#ffffff',
+    },
+  },
+
   announcementBar: {
     variant: 'static',
     messages: [

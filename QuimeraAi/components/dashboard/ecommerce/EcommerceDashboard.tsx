@@ -30,10 +30,10 @@ import {
     Check,
     Layers,
     Sparkles,
-    ArrowLeft,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
@@ -490,7 +490,7 @@ const EcommerceDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Right Section: Alerts & Back Button */}
+                        {/* Right Section: Alerts */}
                         <div className="flex items-center gap-1 sm:gap-3">
                             {/* Alerts */}
                             {(pendingOrdersCount > 0 || lowStockCount > 0) && (
@@ -516,15 +516,7 @@ const EcommerceDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Back Button */}
-                            <button
-                                onClick={() => setView('dashboard')}
-                                className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:border sm:border-border/40 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                                aria-label={t('common.back', 'Volver')}
-                            >
-                                <ArrowLeft size={16} />
-                                <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                            </button>
+                            <HeaderBackButton onClick={() => setView('dashboard')} />
                         </div>
                     </header>
 

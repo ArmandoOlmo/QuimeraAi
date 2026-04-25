@@ -8,7 +8,8 @@ import {
     MonitorPlay, Grid, MessageSquare, Type, AlignJustify,
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
-    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus
+    ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus,
+    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check
 } from 'lucide-react';
 import {
     DndContext,
@@ -93,6 +94,16 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     separator3: Minus,
     separator4: Minus,
     separator5: Minus,
+    // Dynamic page sections
+    realEstateListings: Building2,
+    propertyDirectory: Building2,
+    propertyDetail: Home,
+    productDetail: ShoppingBag,
+    categoryProducts: Grid,
+    articleContent: Newspaper,
+    productGrid: Grid,
+    cart: ShoppingCart,
+    checkout: CreditCard,
 };
 
 // Fixed sections that cannot be reordered
@@ -205,13 +216,13 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                         }}
                         className="px-2 py-0.5 text-xs font-medium rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
                     >
-                        ✓
+                        <Check size={12} />
                     </button>
                     <button
                         onClick={() => setShowConfirm(false)}
                         className="px-2 py-0.5 text-xs font-medium rounded bg-editor-border/50 text-editor-text-secondary hover:bg-editor-border transition-colors"
                     >
-                        ✕
+                        <X size={12} />
                     </button>
                 </div>
             )}
@@ -345,6 +356,16 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         separator3: t('editor.separatorSection', 'Separador 3'),
         separator4: t('editor.separatorSection', 'Separador 4'),
         separator5: t('editor.separatorSection', 'Separador 5'),
+        // Dynamic page sections
+        realEstateListings: t('editor.realEstateListingsSection', 'Listados Inmobiliarios'),
+        propertyDirectory: t('editor.propertyDirectorySection', 'Directorio de Propiedades'),
+        propertyDetail: t('editor.propertyDetailSection', 'Detalle de Propiedad'),
+        productDetail: t('editor.productDetailSection', 'Detalle de Producto'),
+        categoryProducts: t('editor.categoryProductsSection', 'Productos por Categoría'),
+        articleContent: t('editor.articleContentSection', 'Contenido de Artículo'),
+        productGrid: t('editor.productGridSection', 'Cuadrícula de Productos'),
+        cart: t('editor.cartSection', 'Carrito'),
+        checkout: t('editor.checkoutSection', 'Checkout'),
     };
 
     // Group sections by category
@@ -438,6 +459,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         title: string,
         sections: PageSection[],
         groupKey: keyof typeof expandedGroups,
+        GroupIcon: React.ElementType,
         isDraggable = true
     ) => {
         if (sections.length === 0) return null;
@@ -458,6 +480,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
                         <ChevronDown size={14} />
                     </span>
+                    <GroupIcon size={14} className="text-editor-accent" />
                     {title}
                     <span className="text-editor-accent">({sections.length})</span>
                 </button>
@@ -579,9 +602,9 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             </div>
                         ) : (
                             <>
-                                {renderGroup(t('editor.structure'), structureSections, 'structure', false)}
-                                {renderGroup(t('editor.content'), contentSections, 'content', true)}
-                                {renderGroup('Ecommerce', ecommerceSections, 'ecommerce', true)}
+                                {renderGroup(t('editor.structure'), structureSections, 'structure', Layers, false)}
+                                {renderGroup(t('editor.content'), contentSections, 'content', FileText, true)}
+                                {renderGroup('Ecommerce', ecommerceSections, 'ecommerce', ShoppingBag, true)}
                             </>
                         )}
                     </SortableContext>

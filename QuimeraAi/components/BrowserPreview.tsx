@@ -29,12 +29,16 @@ const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = 
 const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ children }, ref) => {
   const { previewDevice, previewOrientation } = useUI();
   const { user } = useAuth();
-  const { activeProject } = useProject();
+  const { activeProject, activePage } = useProject();
   const { currentTenant } = useTenant();
 
   const projectSlug = activeProject?.name
     ? activeProject.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
     : 'new-project';
+  const activePath = activePage && !activePage.isHomePage
+    ? `/${(activePage.slug || '').replace(/^\//, '').replace(/\/$/, '')}`
+    : '';
+  const displayPath = `${projectSlug}${activePath}`;
 
   const handleOpenPreview = useCallback(() => {
     if (!user?.uid || !activeProject?.id) return;
@@ -42,13 +46,13 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
     let previewUrl = '';
     if (activeProject.id === 'agency-landing-mode') {
       if (!currentTenant?.id) return;
-      previewUrl = `${window.location.origin}/preview/agency/${currentTenant.id}`;
+      previewUrl = `${window.location.origin}/preview/agency/${currentTenant.id}${activePath}`;
     } else {
-      previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}`;
+      previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}${activePath}`;
     }
     
     window.open(previewUrl, '_blank');
-  }, [user?.uid, activeProject?.id, currentTenant?.id]);
+  }, [user?.uid, activeProject?.id, currentTenant?.id, activePath]);
 
   return (
     <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
@@ -67,7 +71,7 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
               className="bg-editor-panel-bg/50 text-editor-text-secondary text-xs rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-pointer hover:bg-editor-border/20 transition-all duration-200 border border-editor-border/30 group backdrop-blur-sm"
             >
               <span className="opacity-40 mr-0.5">https://quimera.ai/</span>
-              <span className="font-medium text-editor-text-primary/90">{projectSlug}</span>
+              <span className="font-medium text-editor-text-primary/90">{displayPath}</span>
               <ExternalLink size={11} className="ml-2 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" />
             </div>
           </div>

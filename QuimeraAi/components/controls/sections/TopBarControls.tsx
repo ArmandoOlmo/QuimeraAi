@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -47,8 +47,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-editor-text-primary">Message {idx + 1}</span>
             {topBarMessages.length > 1 && (
-              <button
-                onClick={() => {
+              <button type="button"                 onClick={() => {
                   const updated = topBarMessages.filter((_: any, i: number) => i !== idx);
                   setNestedData('topBar.messages', updated);
                 }}
@@ -64,8 +63,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div>
             <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Icon</div>
             <div className="grid grid-cols-7 gap-1">
-              <button
-                onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
+              <button type="button"                 onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
                 className={`p-1.5 rounded flex items-center justify-center ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
                 title="No icon"
               >
@@ -75,8 +73,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 const isActive = msg.icon === ic;
                 const IconComp = topBarIconMap[ic];
                 return (
-                  <button
-                    key={ic}
+                  <button type="button"                     key={ic}
                     onClick={() => setNestedData(`topBar.messages.${idx}.icon`, ic)}
                     className={`p-1.5 rounded flex items-center justify-center ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
                     title={ic}
@@ -99,8 +96,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Content' },
               ].map(type => (
-                <button
-                  key={type.value}
+                <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`topBar.messages.${idx}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(msg.linkType || 'manual') === type.value
                     ? 'bg-editor-accent text-editor-bg'
@@ -125,8 +121,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       ))}
 
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newMsg = { text: 'New announcement', icon: 'sparkles', link: '', linkText: '' };
           setNestedData('topBar.messages', [...topBarMessages, newMsg]);
         }}
@@ -152,45 +147,36 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ToggleControl label={t('controls.dismissible')} checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
 
       {data.topBar.scrollEnabled ? (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-medium text-editor-text-secondary">Scroll Speed</span>
-            <span className="text-xs text-editor-text-primary">{data.topBar.scrollSpeed || 30}s</span>
-          </div>
-          <input type="range" min={5} max={60} step={5}
+        <div className="mb-4">
+          <SliderControl
+            label="Scroll Speed"
             value={data.topBar.scrollSpeed || 30}
-            onChange={(e) => setNestedData('topBar.scrollSpeed', parseInt(e.target.value))}
-            className="w-full accent-blue-500" />
+            onChange={(v) => setNestedData('topBar.scrollSpeed', v)}
+            min={5} max={60} step={5} suffix="s"
+          />
         </div>
       ) : (
         <>
           <ToggleControl label={t('controls.showArrows')} checked={data.topBar.showRotatingArrows ?? true} onChange={(v) => setNestedData('topBar.showRotatingArrows', v)} />
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-medium text-editor-text-secondary">Rotate Speed</span>
-              <span className="text-xs text-editor-text-primary">{((data.topBar.rotateSpeed || 4000) / 1000).toFixed(1)}s</span>
-            </div>
-            <input type="range" min={1000} max={10000} step={500}
+            <SliderControl
+              label="Rotate Speed"
               value={data.topBar.rotateSpeed || 4000}
-              onChange={(e) => setNestedData('topBar.rotateSpeed', parseInt(e.target.value))}
-              className="w-full accent-blue-500" />
-          </div>
+              onChange={(v) => setNestedData('topBar.rotateSpeed', v)}
+              min={1000} max={10000} step={500}
+              formatValue={(val) => `${(val / 1000).toFixed(1)}s`}
+            />
         </>
       )}
 
       <FontSizeSelector label={t('controls.fontSize')} value={data.topBar.fontSize || 'sm'} onChange={(v) => setNestedData('topBar.fontSize', v)} />
 
       {/* Height Slider */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-medium text-editor-text-secondary">Bar Height</span>
-          <span className="text-xs text-editor-text-primary">{data.topBar.height || 40}px</span>
-        </div>
-        <input
-          type="range" min={20} max={120} step={1}
+      <div className="mb-4">
+        <SliderControl
+          label="Bar Height"
           value={data.topBar.height || 40}
-          onChange={(e) => setNestedData('topBar.height', parseInt(e.target.value))}
-          className="w-full accent-blue-500"
+          onChange={(v) => setNestedData('topBar.height', v)}
+          min={20} max={120} step={1} suffix="px"
         />
       </div>
 
@@ -204,8 +190,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'star', label: '★' },
             { value: 'none', label: 'None' },
           ].map(opt => (
-            <button
-              key={opt.value}
+            <button type="button"               key={opt.value}
               onClick={() => setNestedData('topBar.separator', opt.value)}
               className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
                 (data.topBar.separator || 'dot') === opt.value
@@ -227,16 +212,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div className="space-y-2">
           <ColorControl label={t('controls.gradientFrom')} value={data.topBar.gradientFrom || '#4f46e5'} onChange={(v) => setNestedData('topBar.gradientFrom', v)} />
           <ColorControl label={t('controls.gradientTo')} value={data.topBar.gradientTo || '#7c3aed'} onChange={(v) => setNestedData('topBar.gradientTo', v)} />
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-medium text-editor-text-secondary">Gradient Angle</span>
-              <span className="text-xs text-editor-text-primary">{data.topBar.gradientAngle ?? 90}°</span>
-            </div>
-            <input type="range" min={0} max={360} step={15}
+            <SliderControl
+              label="Gradient Angle"
               value={data.topBar.gradientAngle ?? 90}
-              onChange={(e) => setNestedData('topBar.gradientAngle', parseInt(e.target.value))}
-              className="w-full accent-blue-500" />
-          </div>
+              onChange={(v) => setNestedData('topBar.gradientAngle', v)}
+              min={0} max={360} step={15} suffix="°"
+            />
         </div>
       ) : (
         <ColorControl label={t('controls.backgroundColor')} value={data.topBar.backgroundColor || '#1a1a1a'} onChange={(v) => setNestedData('topBar.backgroundColor', v)} />

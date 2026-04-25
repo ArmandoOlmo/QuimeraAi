@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Send, Eye, MousePointer, AlertCircle, TrendingUp,
     BarChart3, Layers, Activity, CheckCircle,
@@ -18,15 +19,17 @@ interface AnalyticsTabProps {
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     stats, campaigns, monthlyData,
-}) => (
+}) => {
+    const { t } = useTranslation();
+    return (
     <div className="space-y-6">
         {/* Main KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-                { label: 'Emails Enviados', value: stats.totalSent.toLocaleString(), icon: <Send size={20} className="text-blue-400" />, bg: 'bg-blue-500/10' },
-                { label: 'Tasa de Apertura', value: `${stats.openRate}%`, icon: <Eye size={20} className="text-purple-400" />, bg: 'bg-purple-500/10', sub: `${stats.opened.toLocaleString()} abiertos` },
-                { label: 'Tasa de Click', value: `${stats.clickRate}%`, icon: <MousePointer size={20} className="text-amber-400" />, bg: 'bg-amber-500/10', sub: `${stats.clicked.toLocaleString()} clicks` },
-                { label: 'Tasa de Rebote', value: `${stats.bounceRate}%`, icon: <AlertCircle size={20} className="text-red-400" />, bg: 'bg-red-500/10', sub: `${stats.bounced.toLocaleString()} rebotados` },
+                { label: t('email.hub.analytics.emailsSent'), value: stats.totalSent.toLocaleString(), icon: <Send size={20} className="text-blue-400" />, bg: 'bg-blue-500/10' },
+                { label: t('email.hub.analytics.openRate'), value: `${stats.openRate}%`, icon: <Eye size={20} className="text-purple-400" />, bg: 'bg-purple-500/10', sub: `${stats.opened.toLocaleString()} ${t('email.hub.analytics.opened')}` },
+                { label: t('email.hub.analytics.clickRate'), value: `${stats.clickRate}%`, icon: <MousePointer size={20} className="text-amber-400" />, bg: 'bg-amber-500/10', sub: `${stats.clicked.toLocaleString()} ${t('email.hub.analytics.clicks')}` },
+                { label: t('email.hub.analytics.bounceRate'), value: `${stats.bounceRate}%`, icon: <AlertCircle size={20} className="text-red-400" />, bg: 'bg-red-500/10', sub: `${stats.bounced.toLocaleString()} ${t('email.hub.analytics.bounced')}` },
             ].map((metric, i) => (
                 <div key={i} className="bg-editor-panel-bg border border-editor-border rounded-xl p-5">
                     <div className={`p-2 ${metric.bg} rounded-lg w-fit mb-3`}>{metric.icon}</div>
@@ -41,7 +44,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         <div className="grid lg:grid-cols-2 gap-6">
             {/* Bar Chart */}
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-editor-text-primary mb-4">Rendimiento Mensual</h3>
+                <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('email.hub.analytics.monthlyPerformance')}</h3>
                 {monthlyData.some(d => d.sent > 0) ? (
                     <>
                         <div className="h-48 flex items-end gap-4 justify-between px-2">
@@ -64,11 +67,11 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                         <div className="flex items-center justify-center gap-6 mt-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-editor-accent/80 rounded" />
-                                <span className="text-sm text-editor-text-secondary">Enviados</span>
+                                <span className="text-sm text-editor-text-secondary">{t('email.hub.analytics.sent')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-purple-500/60 rounded" />
-                                <span className="text-sm text-editor-text-secondary">Abiertos</span>
+                                <span className="text-sm text-editor-text-secondary">{t('email.hub.analytics.openedLabel')}</span>
                             </div>
                         </div>
                     </>
@@ -76,7 +79,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                     <div className="h-48 flex items-center justify-center text-editor-text-secondary">
                         <div className="text-center">
                             <BarChart3 size={32} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Sin datos para mostrar</p>
+                            <p className="text-sm">{t('email.hub.analytics.noDataToShow')}</p>
                         </div>
                     </div>
                 )}
@@ -86,13 +89,13 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
                     <Activity size={18} className="text-green-400" />
-                    Salud del Email
+                    {t('email.hub.analytics.emailHealth')}
                 </h3>
                 <div className="space-y-4">
                     {[
-                        { label: 'Tasa de Entrega', value: parseFloat(String(stats.deliveryRate || 0)), threshold: { good: 95, warn: 90 }, hint: '> 95% es excelente' },
-                        { label: 'Tasa de Apertura', value: parseFloat(String(stats.openRate || 0)), threshold: { good: 20, warn: 12 }, hint: '> 20% es excelente' },
-                        { label: 'Tasa de Rebote', value: parseFloat(String(stats.bounceRate || 0)), threshold: { good: 2, warn: 5 }, inverted: true, hint: '< 2% es saludable' },
+                        { label: t('email.hub.analytics.deliveryRate'), value: parseFloat(String(stats.deliveryRate || 0)), threshold: { good: 95, warn: 90 }, hint: t('email.hub.analytics.excellentDelivery') },
+                        { label: t('email.hub.analytics.openRate'), value: parseFloat(String(stats.openRate || 0)), threshold: { good: 20, warn: 12 }, hint: t('email.hub.analytics.excellentOpens') },
+                        { label: t('email.hub.analytics.bounceRate'), value: parseFloat(String(stats.bounceRate || 0)), threshold: { good: 2, warn: 5 }, inverted: true, hint: t('email.hub.analytics.healthyBounce') },
                     ].map((metric, i) => {
                         const isGood = metric.inverted
                             ? metric.value <= metric.threshold.good
@@ -127,54 +130,54 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
                     <TrendingUp className="text-green-500" size={20} />
-                    <span className="text-editor-text-secondary text-sm">Tasa de Entrega</span>
+                    <span className="text-editor-text-secondary text-sm">{t('email.hub.analytics.deliveryRate')}</span>
                 </div>
                 <p className="text-2xl font-bold text-editor-text-primary">{stats.deliveryRate}%</p>
                 <p className="text-editor-text-secondary text-xs mt-1">
-                    {stats.delivered.toLocaleString()} de {stats.totalSent.toLocaleString()} enviados
+                    {t('email.hub.analytics.deliveredOf', { delivered: stats.delivered.toLocaleString(), total: stats.totalSent.toLocaleString() })}
                 </p>
             </div>
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
                     <AlertCircle className="text-amber-500" size={20} />
-                    <span className="text-editor-text-secondary text-sm">Rebotes</span>
+                    <span className="text-editor-text-secondary text-sm">{t('email.hub.analytics.bounces')}</span>
                 </div>
                 <p className="text-2xl font-bold text-editor-text-primary">{stats.bounced.toLocaleString()}</p>
-                <p className="text-editor-text-secondary text-xs mt-1">{stats.bounceRate}% del total</p>
+                <p className="text-editor-text-secondary text-xs mt-1">{t('email.hub.analytics.ofTotal', { rate: stats.bounceRate })}</p>
             </div>
             <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-2">
                     <Layers className="text-indigo-500" size={20} />
-                    <span className="text-editor-text-secondary text-sm">Total Campañas</span>
+                    <span className="text-editor-text-secondary text-sm">{t('email.hub.analytics.totalCampaigns')}</span>
                 </div>
                 <p className="text-2xl font-bold text-editor-text-primary">{stats.totalCampaigns}</p>
-                <p className="text-editor-text-secondary text-xs mt-1">En tu proyecto</p>
+                <p className="text-editor-text-secondary text-xs mt-1">{t('email.hub.analytics.inProject')}</p>
             </div>
         </div>
 
         {/* Per-Campaign Performance Table */}
         <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
             <div className="p-6 border-b border-editor-border">
-                <h3 className="text-lg font-semibold text-editor-text-primary">Rendimiento por Campaña</h3>
-                <p className="text-sm text-editor-text-secondary mt-1">Métricas detalladas de cada campaña enviada</p>
+                <h3 className="text-lg font-semibold text-editor-text-primary">{t('email.hub.analytics.campaignPerformance')}</h3>
+                <p className="text-sm text-editor-text-secondary mt-1">{t('email.hub.analytics.detailedMetrics')}</p>
             </div>
             {campaigns.filter(c => c.status === 'sent' || c.status === 'sending').length > 0 ? (
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-editor-border bg-editor-bg/30">
-                                <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Campaña</th>
-                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Enviados</th>
-                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Entregados</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.campaignCol')}</th>
+                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.sentCol')}</th>
+                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.deliveredCol')}</th>
                                 <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
-                                    <div className="flex items-center justify-center gap-1"><Eye size={12} /> Aperturas</div>
+                                    <div className="flex items-center justify-center gap-1"><Eye size={12} /> {t('email.hub.analytics.opensCol')}</div>
                                 </th>
-                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Tasa Apertura</th>
+                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.openRateCol')}</th>
                                 <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
-                                    <div className="flex items-center justify-center gap-1"><MousePointer size={12} /> Clics</div>
+                                    <div className="flex items-center justify-center gap-1"><MousePointer size={12} /> {t('email.hub.analytics.clicksCol')}</div>
                                 </th>
-                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">CTR</th>
-                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">Rebotes</th>
+                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.ctrCol')}</th>
+                                <th className="text-center px-3 py-3 text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{t('email.hub.analytics.bouncesCol')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-editor-border">
@@ -208,7 +211,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                                             <td className="px-3 py-3 text-center">
                                                 <p className="text-sm font-semibold text-purple-400">{uniqueOpens.toLocaleString()}</p>
                                                 {totalOpens > uniqueOpens && (
-                                                    <p className="text-[10px] text-editor-text-secondary">{totalOpens} total</p>
+                                                    <p className="text-[10px] text-editor-text-secondary">{totalOpens} {t('email.hub.analytics.total')}</p>
                                                 )}
                                             </td>
                                             <td className="px-3 py-3 text-center">
@@ -245,11 +248,12 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             ) : (
                 <div className="text-center py-12 text-editor-text-secondary">
                     <BarChart3 size={32} className="mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Envía una campaña para ver métricas detalladas</p>
+                    <p className="text-sm">{t('email.hub.analytics.sendCampaignToSeeMetrics')}</p>
                 </div>
             )}
         </div>
     </div>
-);
+    );
+};
 
 export default AnalyticsTab;

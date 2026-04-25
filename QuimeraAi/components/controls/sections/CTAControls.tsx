@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -73,8 +73,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'collection', label: 'Collection' },
             { value: 'content', label: 'Contenido' }
           ].map((type) => (
-            <button
-              key={type.value}
+            <button type="button"               key={type.value}
               onClick={() => setNestedData('cta.linkType', type.value)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.cta.linkType || 'manual') === type.value
                 ? 'bg-editor-accent text-editor-bg'
@@ -190,13 +189,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.gradientStart')} value={data?.cta.colors?.gradientStart || '#000'} onChange={(v) => setNestedData('cta.colors.gradientStart', v)} />
         <ColorControl label={t('controls.gradientEnd')} value={data?.cta.colors?.gradientEnd || '#000'} onChange={(v) => setNestedData('cta.colors.gradientEnd', v)} />
         <div className="pt-2">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1">Opacidad de Tarjeta: {data?.cta.cardOpacity !== undefined ? data?.cta.cardOpacity : 100}%</label>
-          <input 
-            type="range" 
-            min="0" max="100" 
-            value={data?.cta.cardOpacity !== undefined ? data?.cta.cardOpacity : 100} 
-            onChange={(e) => setNestedData('cta.cardOpacity', parseInt(e.target.value))}
-            className="w-full accent-editor-accent" 
+          <SliderControl
+            label="Opacidad de Tarjeta"
+            value={data?.cta.cardOpacity !== undefined ? data?.cta.cardOpacity : 100}
+            onChange={(v) => setNestedData('cta.cardOpacity', v)}
+            min={0} max={100} step={1} suffix="%"
           />
         </div>
       </div>

@@ -57,7 +57,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 bg-editor-panel-bg p-1 rounded-lg">
+                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         return (
@@ -65,9 +65,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
+                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-all
                                     ${activeTab === tab.id 
-                                        ? 'bg-editor-accent text-white shadow-sm' 
+                                        ? 'bg-editor-accent/15 text-editor-accent' 
                                         : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
                                     }
                                 `}
@@ -82,7 +82,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-                <div data-tab={activeTab} className="p-4">
+                <div data-tab={activeTab} className="quimera-clean-controls p-4">
                     {children}
                 </div>
             </div>
@@ -114,7 +114,6 @@ export const withTabOrganization = (
 };
 
 export default PropertiesPanel;
-
 
 
 

@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -61,8 +61,7 @@ const LeadDestinationSection: React.FC<{
           { value: 'audience', label: t('controls.signupFloat.saveToAudience', 'Audiencia'), icon: <Users size={12} /> },
           { value: 'both', label: t('controls.signupFloat.saveToBoth', 'Ambos'), icon: <Layers size={12} /> },
         ] as const).map(opt => (
-          <button
-            key={opt.value}
+          <button type="button"             key={opt.value}
             onClick={() => setNestedData('signupFloat.saveDestination', opt.value)}
             className={`py-2 px-1 text-[11px] font-medium rounded-sm transition-colors flex items-center justify-center gap-1.5 ${
               destination === opt.value
@@ -97,8 +96,7 @@ const LeadDestinationSection: React.FC<{
           ) : (
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
               {audiences.map((audience: any) => (
-                <button
-                  key={audience.id}
+                <button type="button"                   key={audience.id}
                   onClick={() => {
                     setNestedData('signupFloat.targetAudienceId', audience.id);
                     setNestedData('signupFloat.targetAudienceName', audience.name);
@@ -164,8 +162,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </label>
           <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['top', 'right', 'bottom', 'left'] as const).map((pos) => (
-              <button
-                key={pos}
+              <button type="button"                 key={pos}
                 onClick={() => setNestedData('signupFloat.imagePlacement', pos)}
                 className={`py-1.5 text-xs font-medium rounded-sm transition-colors flex items-center justify-center gap-1 ${
                   (data.signupFloat.imagePlacement || 'top') === pos
@@ -256,30 +253,25 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
         <div className="grid grid-cols-3 gap-2 bg-editor-bg p-2 rounded-lg border border-editor-border">
           {/* Top row */}
-          <button
-            onClick={() => setNestedData('signupFloat.floatPosition', 'top-left')}
+          <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'top-left')}
             className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-left' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >↖ TL</button>
           <div /> {/* Empty center-top */}
-          <button
-            onClick={() => setNestedData('signupFloat.floatPosition', 'top-right')}
+          <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'top-right')}
             className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >↗ TR</button>
           {/* Middle row */}
           <div />
-          <button
-            onClick={() => setNestedData('signupFloat.floatPosition', 'center')}
+          <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'center')}
             className={`p-2 text-xs font-medium rounded transition-colors ${(data.signupFloat.floatPosition || 'center') === 'center' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >⊙ {t('controls.signupFloat.center', 'Center')}</button>
           <div />
           {/* Bottom row */}
-          <button
-            onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-left')}
+          <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-left')}
             className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-left' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >↙ BL</button>
           <div />
-          <button
-            onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-right')}
+          <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-right')}
             className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >↘ BR</button>
         </div>
@@ -310,10 +302,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         )}
         <div className="mt-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
-            {t('controls.signupFloat.triggerDelay', 'Delay (seconds)')}: {data.signupFloat.triggerDelay ?? 3}s
-          </label>
-          <input type="range" min="0" max="30" step="1" value={data.signupFloat.triggerDelay ?? 3} onChange={(e) => setNestedData('signupFloat.triggerDelay', parseInt(e.target.value))} className="w-full accent-editor-accent" />
+          <SliderControl
+            label={t('controls.signupFloat.triggerDelay', 'Delay (seconds)')}
+            value={data.signupFloat.triggerDelay ?? 3}
+            onChange={(v) => setNestedData('signupFloat.triggerDelay', v)}
+            min={0} max={30} step={1} suffix="s"
+          />
         </div>
       </div>
 
@@ -324,18 +318,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {t('controls.signupFloat.dimensions', 'Dimensions')}
         </label>
         <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
-              {t('controls.signupFloat.width', 'Width')}: {data.signupFloat.width ?? 400}px
-            </label>
-            <input type="range" min="300" max="600" step="10" value={data.signupFloat.width ?? 400} onChange={(e) => setNestedData('signupFloat.width', parseInt(e.target.value))} className="w-full accent-editor-accent" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
-              {t('controls.signupFloat.imageHeight', 'Image Height')}: {data.signupFloat.imageHeight ?? 200}px
-            </label>
-            <input type="range" min="100" max="400" step="10" value={data.signupFloat.imageHeight ?? 200} onChange={(e) => setNestedData('signupFloat.imageHeight', parseInt(e.target.value))} className="w-full accent-editor-accent" />
-          </div>
+          <SliderControl
+            label={t('controls.signupFloat.width', 'Width')}
+            value={data.signupFloat.width ?? 400}
+            onChange={(v) => setNestedData('signupFloat.width', v)}
+            min={300} max={600} step={10} suffix="px"
+          />
+          <SliderControl
+            label={t('controls.signupFloat.imageHeight', 'Image Height')}
+            value={data.signupFloat.imageHeight ?? 200}
+            onChange={(v) => setNestedData('signupFloat.imageHeight', v)}
+            min={100} max={400} step={10} suffix="px"
+          />
           <BorderRadiusSelector label={t('editor.controls.common.borderRadius')} value={data.signupFloat.borderRadius || 'xl'} onChange={(v) => setNestedData('signupFloat.borderRadius', v)} />
           <BorderRadiusSelector label={t('editor.controls.common.buttonBorderRadius')} value={data.signupFloat.buttonBorderRadius || 'lg'} onChange={(v) => setNestedData('signupFloat.buttonBorderRadius', v)} />
         </div>

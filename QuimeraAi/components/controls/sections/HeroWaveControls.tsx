@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -46,7 +46,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
               {slides.length > 1 && (
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
                     const newSlides = slides.filter((_: any, i: number) => i !== slideIndex);
                     setNestedData('heroWave.slides', newSlides);
                   }}
@@ -102,7 +104,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Add Slide Button */}
         <button
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
             const newSlide = {
               headline: 'New Slide Headline',
               subheadline: 'Subtitle here',
@@ -157,7 +161,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               />
               {(data.heroWave.gradientColors || []).length > 2 && (
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
                     const newColors = [...(data.heroWave.gradientColors || [])].filter((_: any, idx: number) => idx !== i);
                     setNestedData('heroWave.gradientColors', newColors);
                   }}
@@ -171,7 +177,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           )
         )}
         <button
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
             const newColors = [...(data.heroWave.gradientColors || ['#ff006e', '#fb5607', '#ffbe0b', '#38b000', '#00b4d8']), '#8b5cf6'];
             setNestedData('heroWave.gradientColors', newColors);
           }}
@@ -182,15 +190,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Gradient Angle */}
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.gradientAngle')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroWave.gradientAngle || 135}°</span>
-          </div>
-          <input
-            type="range" min="0" max="360" step="15"
+          <SliderControl
+            label={t('controls.gradientAngle')}
             value={data.heroWave.gradientAngle || 135}
-            onChange={(e) => setNestedData('heroWave.gradientAngle', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroWave.gradientAngle', v)}
+            min={0}
+            max={360}
+            step={15}
+            suffix="°"
           />
         </div>
       </div>
@@ -229,8 +236,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['left', 'center', 'right'] as const).map(align => (
               <button
+                type="button"
                 key={align}
-                onClick={() => setNestedData('heroWave.textAlign', align)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setNestedData('heroWave.textAlign', align);
+                }}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.heroWave.textAlign || 'center') === align ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
               >
                 {align}
@@ -250,51 +261,25 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.imageOverlay')}</label>
 
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayDarkness')}</label>
-            <span className="text-xs text-editor-text-primary">{Math.round((data.heroWave.overlayOpacity ?? 0.15) * 100)}%</span>
-          </div>
-          <input
-            type="range" min="0" max="80" step="5"
+          <SliderControl
+            label={t('controls.overlayDarkness')}
             value={Math.round((data.heroWave.overlayOpacity ?? 0.15) * 100)}
-            onChange={(e) => setNestedData('heroWave.overlayOpacity', parseInt(e.target.value) / 100)}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroWave.overlayOpacity', v / 100)}
+            min={0}
+            max={80}
+            step={5}
+            suffix="%"
           />
         </div>
 
         <ToggleControl label={t('controls.grainTexture')} checked={data.heroWave.showGrain ?? false} onChange={(v) => setNestedData('heroWave.showGrain', v)} />
 
         {/* Image Focus Position */}
-        <div className="mt-3 pt-3 border-t border-editor-border/30">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
-            {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
-          </label>
-          <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
-            {[
-              { id: 'top left', label: '↖' },
-              { id: 'top center', label: '↑' },
-              { id: 'top right', label: '↗' },
-              { id: 'center left', label: '←' },
-              { id: 'center center', label: '●' },
-              { id: 'center right', label: '→' },
-              { id: 'bottom left', label: '↙' },
-              { id: 'bottom center', label: '↓' },
-              { id: 'bottom right', label: '↘' },
-            ].map((pos) => (
-              <button
-                key={pos.id}
-                onClick={() => setNestedData('heroWave.bgPosition', pos.id)}
-                className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(data?.heroWave?.bgPosition || 'center center') === pos.id
-                  ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                  : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                }`}
-                title={pos.id}
-              >
-                {pos.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <PositionGridControl
+          label={t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+          value={data?.heroWave?.bgPosition || 'center center'}
+          onChange={(val) => setNestedData('heroWave.bgPosition', val)}
+        />
       </div>
 
       {/* Layout */}
@@ -302,15 +287,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.layout')}</label>
 
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight')}</label>
-            <span className="text-xs text-editor-text-primary">{data.heroWave.heroHeight || 75}vh</span>
-          </div>
-          <input
-            type="range" min="50" max="100" step="5"
+          <SliderControl
+            label={t('controls.heroHeight')}
             value={data.heroWave.heroHeight || 75}
-            onChange={(e) => setNestedData('heroWave.heroHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroWave.heroHeight', v)}
+            min={50}
+            max={100}
+            step={5}
+            suffix="vh"
           />
         </div>
       </div>

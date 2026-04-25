@@ -12,7 +12,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -93,21 +93,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
             />
             {data.header.segmentedPillSlanted === true && (
-              <div className="animate-fade-in-up">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inclinacin')}</label>
-                  <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
-                    {data.header.segmentedPillSlantedAngle ?? 15}°
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="45"
-                  step="1"
+              <div className="animate-fade-in-up mt-2">
+                <SliderControl
+                  label={t('controls.inclinacin')}
                   value={data.header.segmentedPillSlantedAngle ?? 15}
-                  onChange={(e) => setNestedData('header.segmentedPillSlantedAngle', parseInt(e.target.value))}
-                  className="w-full accent-editor-accent"
+                  onChange={(v) => setNestedData('header.segmentedPillSlantedAngle', v)}
+                  min={5}
+                  max={45}
+                  step={1}
+                  suffix="°"
                 />
               </div>
             )}
@@ -119,8 +113,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
           {['text', 'image', 'both'].map(type => (
-            <button
-              key={type}
+            <button type="button"               key={type}
               onClick={() => setNestedData('header.logoType', type)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
             >
@@ -146,19 +139,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 }
               }}
             />
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.logoWidth')}</label>
-                <span className="text-xs text-editor-text-primary">{data.header.logoWidth}px</span>
-              </div>
-              <input
-                type="range"
-                min="40"
-                max="300"
-                step="5"
+            <div className="mt-3">
+              <SliderControl
+                label={t('editor.controls.header.logoWidth')}
                 value={data.header.logoWidth}
-                onChange={(e) => setNestedData('header.logoWidth', parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                onChange={(v) => setNestedData('header.logoWidth', v)}
+                min={40}
+                max={300}
+                step={5}
+                suffix="px"
               />
             </div>
           </div>
@@ -183,8 +172,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     className="w-full h-full object-contain p-1"
                   />
                 </div>
-                <button
-                  onClick={() => {
+                <button type="button"                   onClick={() => {
                     // TODO: Implement removeFavicon functionality
                   }}
                   className="absolute -top-2 -right-2 w-5 h-5 bg-red-500/90 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-500 transition-colors shadow-lg opacity-0 group-hover:opacity-100"
@@ -222,8 +210,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             }}
           />
 
-          <button
-            onClick={() => faviconInputRef.current?.click()}
+          <button type="button"             onClick={() => faviconInputRef.current?.click()}
             disabled={isUploadingFavicon}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
           >
@@ -282,8 +269,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             ]}
             noMargin
           />
-          <button
-            onClick={() => navigate(ROUTES.NAVIGATION)}
+          <button type="button"             onClick={() => navigate(ROUTES.NAVIGATION)}
             className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
             title="Manage Menus"
           >
@@ -321,8 +307,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   setNestedData(`header.links.${i}.href`, e.target.value);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
-                <button
-                  onClick={() => {
+                <button type="button"                   onClick={() => {
                     const newLinks = data.header.links.filter((_, idx) => idx !== i);
                     setNestedData('header.links', newLinks);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
@@ -334,8 +319,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 </button>
               </div>
             ))}
-            <button
-              onClick={() => {
+            <button type="button"               onClick={() => {
                 setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
                 if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
               }}
@@ -348,16 +332,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.heightHover')}</label>
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
-          <span className="text-xs text-editor-text-primary">{data.header.height || 70}px</span>
-        </div>
-        <input
-          type="range" min="50" max="120" step="5"
+      <div className="mt-3">
+        <SliderControl
+          label={t('editor.controls.navigation.height')}
           value={data.header.height || 70}
-          onChange={(e) => setNestedData('header.height', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('header.height', v)}
+          min={50}
+          max={120}
+          step={5}
+          suffix="px"
         />
       </div>
 
@@ -371,8 +354,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'highlight', label: 'Highlight' },
             { value: 'glow', label: 'Glow' }
           ].map(style => (
-            <button
-              key={style.value}
+            <button type="button"               key={style.value}
               onClick={() => setNestedData('header.hoverStyle', style.value)}
               className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
             >
@@ -382,19 +364,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.linkFontSize')}</label>
-          <span className="text-xs text-editor-text-primary">{data.header.linkFontSize || 14}px</span>
-        </div>
-        <input
-          type="range"
-          min="10"
-          max="24"
-          step="1"
+      <div className="mt-3">
+        <SliderControl
+          label={t('editor.controls.navigation.linkFontSize')}
           value={data.header.linkFontSize || 14}
-          onChange={(e) => setNestedData('header.linkFontSize', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+          onChange={(v) => setNestedData('header.linkFontSize', v)}
+          min={10}
+          max={24}
+          step={1}
+          suffix="px"
         />
       </div>
 
@@ -408,8 +386,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
             <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
               {[{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }].map((opt) => (
-                <button
-                  key={opt.v}
+                <button type="button"                   key={opt.v}
                   onClick={() => setNestedData('header.buttonBorderRadius', opt.v)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
                 >
@@ -425,8 +402,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
             <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
               {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
-                <button
-                  key={type.value}
+                <button type="button"                   key={type.value}
                   onClick={() => {
                     setNestedData('header.ctaLinkType', type.value);
                     if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
@@ -481,18 +457,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || data.header.colors?.background || '#1e1b4b') : (data.header.colors?.gradientFadeColor || data.header.colors?.background || '#c7d2fe')}
             onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
           />
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-editor-text-secondary">{t('controls.tamaoDelGradiente')}</label>
-              <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
+          <div className="mt-3">
+            <SliderControl
+              label={t('controls.tamaoDelGradiente')}
               value={data.header.gradientFadeSize ?? 15}
-              onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
-              className="w-full accent-editor-accent"
+              onChange={(v) => setNestedData('header.gradientFadeSize', v)}
+              min={0}
+              max={100}
+              step={1}
+              suffix="%"
             />
           </div>
         </>
@@ -534,8 +507,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
           {['text', 'image', 'both'].map(type => (
-            <button
-              key={type}
+            <button type="button"               key={type}
               onClick={() => setNestedData('header.logoType', type)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
             >
@@ -560,16 +532,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 }
               }}
             />
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.logoWidth')}</label>
-                <span className="text-xs text-editor-text-primary">{data.header.logoWidth}px</span>
-              </div>
-              <input
-                type="range" min="40" max="300" step="5"
+            <div className="mt-3">
+              <SliderControl
+                label={t('editor.controls.header.logoWidth')}
                 value={data.header.logoWidth}
-                onChange={(e) => setNestedData('header.logoWidth', parseInt(e.target.value))}
-                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                onChange={(v) => setNestedData('header.logoWidth', v)}
+                min={40}
+                max={300}
+                step={5}
+                suffix="px"
               />
             </div>
           </div>
@@ -597,8 +568,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     className="w-full h-full object-contain p-1"
                   />
                 </div>
-                <button
-                  onClick={async () => {
+                <button type="button"                   onClick={async () => {
                     if (activeProject) {
                       try {
                         await updateProjectFavicon(activeProject.id, null as any);
@@ -642,8 +612,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             }}
           />
 
-          <button
-            onClick={() => faviconInputRef.current?.click()}
+          <button type="button"             onClick={() => faviconInputRef.current?.click()}
             disabled={isUploadingFavicon}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
           >
@@ -710,8 +679,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ]}
               noMargin
             />
-            <button
-              onClick={() => navigate(ROUTES.NAVIGATION)}
+            <button type="button"               onClick={() => navigate(ROUTES.NAVIGATION)}
               className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
               title="Manage Menus"
             >
@@ -749,8 +717,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     setNestedData(`header.links.${i}.href`, e.target.value);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
-                  <button
-                    onClick={() => {
+                  <button type="button"                     onClick={() => {
                       const newLinks = data.header.links.filter((_, idx) => idx !== i);
                       setNestedData('header.links', newLinks);
                       if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
@@ -761,8 +728,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   </button>
                 </div>
               ))}
-              <button
-                onClick={() => {
+              <button type="button"                 onClick={() => {
                   setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }}
@@ -793,8 +759,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
               <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
                 {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
-                  <button
-                    key={type.value}
+                  <button type="button"                     key={type.value}
                     onClick={() => {
                       setNestedData('header.ctaLinkType', type.value);
                       if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
@@ -908,21 +873,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
               />
               {data.header.segmentedPillSlanted === true && (
-                <div className="animate-fade-in-up">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inclinacin')}</label>
-                    <span className="text-xs text-editor-text-primary bg-editor-bg px-2 py-0.5 rounded border border-editor-border">
-                      {data.header.segmentedPillSlantedAngle ?? 15}°
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="45"
-                    step="1"
+                <div className="animate-fade-in-up mt-2">
+                  <SliderControl
+                    label={t('controls.inclinacin')}
                     value={data.header.segmentedPillSlantedAngle ?? 15}
-                    onChange={(e) => setNestedData('header.segmentedPillSlantedAngle', parseInt(e.target.value))}
-                    className="w-full accent-editor-accent"
+                    onChange={(v) => setNestedData('header.segmentedPillSlantedAngle', v)}
+                    min={5}
+                    max={45}
+                    step={1}
+                    suffix="°"
                   />
                 </div>
               )}
@@ -941,16 +900,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Altura y Hover
         </label>
 
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.height')}</label>
-            <span className="text-xs text-editor-text-primary">{data.header.height || 70}px</span>
-          </div>
-          <input
-            type="range" min="50" max="120" step="5"
+        <div className="mt-3">
+          <SliderControl
+            label={t('editor.controls.navigation.height')}
             value={data.header.height || 70}
-            onChange={(e) => setNestedData('header.height', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('header.height', v)}
+            min={50}
+            max={120}
+            step={5}
+            suffix="px"
           />
         </div>
 
@@ -964,8 +922,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'highlight', label: 'Highlight' },
               { value: 'glow', label: 'Glow' }
             ].map(style => (
-              <button
-                key={style.value}
+              <button type="button"                 key={style.value}
                 onClick={() => setNestedData('header.hoverStyle', style.value)}
                 className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
               >
@@ -976,15 +933,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.navigation.linkFontSize')}</label>
-            <span className="text-xs text-editor-text-primary">{data.header.linkFontSize || 14}px</span>
-          </div>
-          <input
-            type="range" min="10" max="24" step="1"
+          <SliderControl
+            label={t('editor.controls.navigation.linkFontSize')}
             value={data.header.linkFontSize || 14}
-            onChange={(e) => setNestedData('header.linkFontSize', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('header.linkFontSize', v)}
+            min={10}
+            max={24}
+            step={1}
+            suffix="px"
           />
         </div>
       </div>
@@ -1000,8 +956,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {[{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }].map((opt) => (
-              <button
-                key={opt.v}
+              <button type="button"                 key={opt.v}
                 onClick={() => setNestedData('header.buttonBorderRadius', opt.v)}
                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
               >
@@ -1034,18 +989,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 value={data.header.style === 'transparent-gradient-dark' ? (data.header.colors?.gradientDarkColor || data.header.colors?.background || '#1e1b4b') : (data.header.colors?.gradientFadeColor || data.header.colors?.background || '#c7d2fe')}
                 onChange={(v) => setNestedData(data.header.style === 'transparent-gradient-dark' ? 'header.colors.gradientDarkColor' : 'header.colors.gradientFadeColor', v)}
               />
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-editor-text-secondary">{t('controls.tamaoDelGradiente')}</label>
-                  <span className="text-xs text-editor-text-secondary/70">{data.header.gradientFadeSize ?? 15}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
+              <div className="mt-3">
+                <SliderControl
+                  label={t('controls.tamaoDelGradiente')}
                   value={data.header.gradientFadeSize ?? 15}
-                  onChange={(e) => setNestedData('header.gradientFadeSize', parseInt(e.target.value))}
-                  className="w-full accent-editor-accent"
+                  onChange={(v) => setNestedData('header.gradientFadeSize', v)}
+                  min={0}
+                  max={100}
+                  step={1}
+                  suffix="%"
                 />
               </div>
             </>

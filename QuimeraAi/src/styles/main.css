@@ -534,6 +534,40 @@ body {
   background-color: hsla(var(--primary), 0.1);
 }
 
+/* Editor controls: flatter control groups with less visual framing. */
+.quimera-clean-controls .bg-editor-panel-bg\/50.p-4.rounded-lg.border.border-editor-border {
+  background: transparent;
+  border-width: 0 0 1px;
+  border-color: color-mix(in srgb, var(--editor-border) 58%, transparent);
+  border-radius: 0;
+  padding: 0 0 1.25rem;
+  box-shadow: none;
+}
+
+.quimera-clean-controls .bg-editor-surface\/50.rounded-xl.p-4.border.border-editor-border\/50 {
+  background: transparent;
+  border-width: 0 0 1px;
+  border-color: color-mix(in srgb, var(--editor-border) 58%, transparent);
+  border-radius: 0;
+  padding: 0 0 1.25rem;
+  box-shadow: none;
+}
+
+.quimera-clean-controls .bg-editor-panel-bg\/50.p-4.rounded-lg.border.border-editor-border:last-child {
+  border-bottom-width: 0;
+  padding-bottom: 0;
+}
+
+.quimera-clean-controls .bg-editor-surface\/50.rounded-xl.p-4.border.border-editor-border\/50:last-child {
+  border-bottom-width: 0;
+  padding-bottom: 0;
+}
+
+.quimera-clean-controls label svg,
+.quimera-clean-controls button svg {
+  stroke-width: 1.8;
+}
+
 .editing-section>section {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
@@ -1114,6 +1148,7 @@ body {
   min-height: 24px !important;
   max-height: 24px !important;
   flex-shrink: 0 !important;
+  position: relative !important;
 }
 
 [role="switch"]>span {
@@ -1122,6 +1157,47 @@ body {
   min-width: 20px !important;
   min-height: 20px !important;
   flex-shrink: 0 !important;
+  position: absolute !important;
+  top: 2px !important;
+}
+
+[role="switch"][data-state="checked"]>span,
+[role="switch"][aria-checked="true"]>span {
+  transform: translateX(20px) !important;
+}
+
+/* Editor control switches use physical anchors so the knob never escapes the track. */
+.quimera-editor-switch {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.quimera-editor-switch>.quimera-editor-switch-knob {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  top: 2px !important;
+  transform: none !important;
+}
+
+.quimera-editor-switch>.quimera-editor-switch-knob-on,
+.quimera-editor-switch[aria-checked="true"]>.quimera-editor-switch-knob {
+  left: auto !important;
+  right: 2px !important;
+  transform: none !important;
+}
+
+.quimera-editor-switch>.quimera-editor-switch-knob-off,
+.quimera-editor-switch[aria-checked="false"]>.quimera-editor-switch-knob {
+  left: 2px !important;
+  right: auto !important;
+  transform: none !important;
 }
 
 /* Custom peer-based toggle switches - prevent deformation in flex containers */
@@ -1180,16 +1256,72 @@ button.rounded-full[class*="h-6"][class*="w-11"],
 button.rounded-full[class*="h-6 w-11"] {
   flex-shrink: 0 !important;
   min-width: 44px !important;
+  width: 44px !important;
   min-height: 24px !important;
+  height: 24px !important;
   max-height: 24px !important;
+  position: relative !important;
 }
 
 /* Toggle knob inside button toggles */
 button.rounded-full > span.rounded-full {
   flex-shrink: 0 !important;
   aspect-ratio: 1 / 1 !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full {
+  position: absolute !important;
+  left: 2px !important;
+  top: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-5"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-6"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-[20px]"] {
+  transform: translateX(20px) !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-1"] {
+  transform: translateX(0) !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"],
+button.rounded-full[class*="h-5"][class*="w-10"] {
+  flex-shrink: 0 !important;
+  min-width: 36px !important;
+  width: 36px !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  max-height: 20px !important;
+  position: relative !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full,
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full {
+  position: absolute !important;
+  left: 2px !important;
+  top: 2px !important;
+  width: 16px !important;
+  height: 16px !important;
   min-width: 16px !important;
   min-height: 16px !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="translate-x-[16px]"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="translate-x-[16px]"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="left-5"] {
+  transform: translateX(16px) !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="left-0.5"] {
+  transform: translateX(0) !important;
 }
 
 /* Toggle pattern with nested div for the knob (instead of ::after) */
@@ -2447,3 +2579,151 @@ span.rounded-full.w-4 {
   100% { transform: translateX(-33.333%); }
 }
 
+/* Final switch override: keep editor knobs inside the track after broad legacy rules. */
+button.quimera-editor-switch {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+button.quimera-editor-switch > span.quimera-editor-switch-knob {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  top: 2px !important;
+  transform: none !important;
+}
+
+button.quimera-editor-switch > span.quimera-editor-switch-knob-off {
+  left: 2px !important;
+  right: auto !important;
+}
+
+button.quimera-editor-switch > span.quimera-editor-switch-knob-on {
+  left: auto !important;
+  right: 2px !important;
+}
+
+/* Final app-wide switch geometry. This must stay at the end of the file. */
+button[role="switch"],
+[role="switch"] {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+button[role="switch"] > span,
+[role="switch"] > span {
+  position: absolute !important;
+  top: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  transform: none !important;
+}
+
+button[role="switch"][aria-checked="true"] > span,
+button[role="switch"][data-state="checked"] > span,
+[role="switch"][aria-checked="true"] > span,
+[role="switch"][data-state="checked"] > span {
+  left: auto !important;
+  right: 2px !important;
+  transform: none !important;
+}
+
+button[role="switch"][aria-checked="false"] > span,
+button[role="switch"][data-state="unchecked"] > span,
+[role="switch"][aria-checked="false"] > span,
+[role="switch"][data-state="unchecked"] > span {
+  left: 2px !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] {
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full {
+  position: absolute !important;
+  top: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-5"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-6"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-[20px]"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="left-5"] {
+  left: auto !important;
+  right: 2px !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="translate-x-1"],
+button.rounded-full[class*="h-6"][class*="w-11"] > span.rounded-full[class*="left-0.5"] {
+  left: 2px !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"],
+button.rounded-full[class*="h-5"][class*="w-10"] {
+  width: 36px !important;
+  height: 20px !important;
+  min-width: 36px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full,
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full {
+  position: absolute !important;
+  top: 2px !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="translate-x-[16px]"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="translate-x-[16px]"],
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="left-5"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="left-5"] {
+  left: auto !important;
+  right: 2px !important;
+  transform: none !important;
+}
+
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="translate-x-0"],
+button.rounded-full[class*="h-5"][class*="w-9"] > span.rounded-full[class*="left-0.5"],
+button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="left-0.5"] {
+  left: 2px !important;
+  right: auto !important;
+  transform: none !important;
+}

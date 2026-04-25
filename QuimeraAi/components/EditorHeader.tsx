@@ -3,13 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
 import { PreviewDevice } from '../types';
+import { useRouter } from '../hooks/useRouter';
 // Replaced non-existent 'Cube' icon with 'Box'.
 import { Menu, Monitor, Tablet, Smartphone, LayoutDashboard, Check, CloudUpload, Box, Globe } from 'lucide-react';
+import HeaderBackButton from './ui/HeaderBackButton';
 
 const EditorHeader: React.FC = () => {
   const { t } = useTranslation();
   const { isSidebarOpen, setIsSidebarOpen, previewDevice, setPreviewDevice, previewOrientation, setPreviewOrientation, setView } = useUI();
   const { activeProject, renameActiveProject, saveProject, publishProject, isEditingTemplate, exitTemplateEditor } = useProject();
+  const { goBack } = useRouter();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [projectName, setProjectName] = useState(activeProject?.name || t('editor.untitledProject'));
@@ -234,6 +237,7 @@ const EditorHeader: React.FC = () => {
               </>
             )}
           </button>
+          <HeaderBackButton onClick={() => goBack()} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
         </div>
       </div>
     </header>

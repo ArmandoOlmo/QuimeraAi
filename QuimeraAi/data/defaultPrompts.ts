@@ -33,6 +33,7 @@ export const defaultPrompts: DefaultPrompt[] = [
 Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - Hero section is ALWAYS required as the entry point
 - For service businesses: Consider 'services', 'team', 'testimonials', 'leads'
+- For realtor/property businesses: Consider 'realEstateListings' with the existing 'leads' form
 - For e-commerce/products: Consider 'features', 'pricing', 'testimonials'
 - For portfolios/agencies: Consider 'portfolio', 'services', 'team'
 - For restaurants/food: Consider 'menu', 'slideshow', 'leads'
@@ -107,6 +108,7 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 - slideshow: Image gallery [variants: classic, kenburns, cards3d, thumbnails]
 - menu: Restaurant menu [variants: classic, modern-grid, elegant-list]
 - leads: Contact form [variants: classic, split-gradient, floating-glass, minimal-border]
+- realEstateListings: Realtor property listings connected to Quimera Real Estate OS and the existing leads form
 - newsletter: Email signup
 - map: Location map [variants: modern, minimal, dark-tech, retro, night]
 - video: Video embed
@@ -307,6 +309,7 @@ sparkles, zap, star, award, trophy, rocket, lightbulb, heart, check-circle, shie
       * Testimonials: Alternate from previous section (if features was light, testimonials should be dark or accent)
       * FAQ: SECONDARY color background to break visual monotony
       * Leads: PRIMARY brand color for form background, creates urgency
+      * RealEstateListings: Use page background, surface cards, primary brand CTA, and route CTA to #leads
     - Card backgrounds for Features, Menu, Testimonials, Map = PRIMARY brand color
     - Newsletter = PRIMARY brand color at 75% opacity
     - Chatbot widget = PRIMARY brand color

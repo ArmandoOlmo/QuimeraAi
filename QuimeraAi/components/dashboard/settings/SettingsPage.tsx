@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Palette, ArrowLeft, Building2, CreditCard, Menu } from 'lucide-react';
+import { Users, Palette, Building2, CreditCard, Menu } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useTenant, useSafeTenant } from '../../../contexts/tenant';
@@ -14,6 +14,7 @@ import SubscriptionSettings from './SubscriptionSettings';
 import { BrandingSettings } from '../tenant';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 type SettingsTab = 'team' | 'branding' | 'subscription';
 
@@ -109,14 +110,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                             </span>
                         )}
                     </div>
-                    <button
-                        onClick={() => navigate(ROUTES.DASHBOARD)}
-                        className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label={t('common.goBack', 'Volver')}
-                        title={t('common.back', 'Volver')}
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
+                    </div>
                 </header>
 
                 {/* Settings Content */}
@@ -159,8 +155,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
 };
 
 export default SettingsPage;
-
-
 
 
 

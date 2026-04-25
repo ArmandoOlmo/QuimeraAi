@@ -144,7 +144,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-3 group">
           <div className="flex justify-between items-center mb-3">
             <span className="text-xs font-bold text-editor-text-secondary">{t('editor.controls.pricing.tier')} #{index + 1}</span>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               const newTiers = data.pricing.tiers.filter((_, i) => i !== index);
               setNestedData('pricing.tiers', newTiers);
             }} className="text-editor-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
@@ -201,8 +201,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       ))}
 
-      <button
-        onClick={() => setNestedData('pricing.tiers', [
+      <button type="button"         onClick={() => setNestedData('pricing.tiers', [
           ...data.pricing.tiers,
           { name: 'New Plan', price: '$0', frequency: '/mo', description: '', features: [], buttonText: 'Get Started', buttonLink: '#', featured: false }
         ])}
@@ -244,8 +243,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'minimalist', label: 'Minimal', desc: 'Clean & simple' },
             { value: 'neon-glow', label: 'Neon Glow', desc: 'Deep inner glow' }
           ].map((variant) => (
-            <button
-              key={variant.value}
+            <button type="button"               key={variant.value}
               onClick={() => setNestedData('pricing.pricingVariant', variant.value)}
               className={`
                 p-3 text-left rounded-lg border transition-all
@@ -284,7 +282,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         >
           <div className="flex justify-between items-center mb-3">
             <span className="text-xs font-bold text-editor-text-secondary">Tier #{index + 1}</span>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               const newTiers = data.pricing.tiers.filter((_: any, i: number) => i !== index);
               setNestedData('pricing.tiers', newTiers);
             }} className="text-editor-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
@@ -341,8 +339,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       ))}
 
-      <button
-        onClick={() => setNestedData('pricing.tiers', [
+      <button type="button"         onClick={() => setNestedData('pricing.tiers', [
           ...data.pricing.tiers,
           { name: 'New Plan', price: '$0', frequency: '/mo', description: '', features: [], buttonText: 'Get Started', buttonLink: '#', featured: false }
         ])}

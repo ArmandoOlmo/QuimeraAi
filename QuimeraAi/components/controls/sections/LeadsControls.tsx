@@ -44,8 +44,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'floating-glass', label: 'Vidrio Flotante' },
             { value: 'minimal-border', label: 'Borde Minimalista' }
           ].map((variant) => (
-            <button
-              key={variant.value}
+            <button type="button"               key={variant.value}
               onClick={() => setNestedData('leads.leadsVariant', variant.value)}
               className={`p-3 text-xs font-medium rounded-md border-2 transition-all ${(data?.leads?.leadsVariant || 'classic') === variant.value
                 ? 'bg-editor-accent text-editor-bg border-editor-accent'

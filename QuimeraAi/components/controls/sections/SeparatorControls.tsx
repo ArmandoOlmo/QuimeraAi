@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
-import { ToggleControl } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import { AlignJustify, Image as ImageIcon, Settings, Layers } from 'lucide-react';
 import type { ControlsDeps } from '../ControlsShared';
 
@@ -18,20 +18,11 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
           Altura
         </label>
         <div className="bg-editor-bg/50 p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-medium text-editor-text-secondary">Altura del separador</span>
-            <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">
-              {data[separatorKey as keyof typeof data]?.height || 100}px
-            </span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="1000"
-            step="10"
+          <SliderControl
+            label="Altura del separador"
             value={data[separatorKey as keyof typeof data]?.height || 100}
-            onChange={(e) => setNestedData(`${separatorKey}.height`, parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData(`${separatorKey}.height`, v)}
+            min={10} max={1000} step={10} suffix="px"
           />
         </div>
       </div>
@@ -79,20 +70,14 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
         
         {data[separatorKey as keyof typeof data]?.backgroundImageUrl && (
           <div className="mt-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-medium text-editor-text-secondary">Oscurecimiento</span>
-              <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">
-                {data[separatorKey as keyof typeof data]?.backgroundOverlayOpacity ?? 50}%
-              </span>
-            </div>
-            <input
-              type="range" min="0" max="100" step="5"
+            <SliderControl
+              label="Oscurecimiento"
               value={data[separatorKey as keyof typeof data]?.backgroundOverlayOpacity ?? 50}
-              onChange={(e) => {
-                setNestedData(`${separatorKey}.backgroundOverlayOpacity`, parseInt(e.target.value));
+              onChange={(v) => {
+                setNestedData(`${separatorKey}.backgroundOverlayOpacity`, v);
                 setNestedData(`${separatorKey}.backgroundOverlayEnabled`, true);
               }}
-              className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+              min={0} max={100} step={5} suffix="%"
             />
           </div>
         )}

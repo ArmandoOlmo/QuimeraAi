@@ -47,7 +47,7 @@ const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
-    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
+    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];

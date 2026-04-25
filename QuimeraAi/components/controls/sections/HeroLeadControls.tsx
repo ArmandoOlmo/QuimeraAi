@@ -8,7 +8,7 @@ import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, ControlsDeps } from '../ControlsShared';
 import {
   Type, Layout, Palette, Layers, FormInput, Eye,
@@ -84,36 +84,11 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
         </label>
         <ImagePicker label={t('editor.controls.hero.image')} value={hl.imageUrl || ''} onChange={(url) => setNestedData('heroLead.imageUrl', url)} />
         {hl.imageUrl && (
-          <div className="mt-3 pt-3 border-t border-editor-border/30">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
-              {t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
-            </label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
-              {[
-                { id: 'top left', label: '↖' },
-                { id: 'top center', label: '↑' },
-                { id: 'top right', label: '↗' },
-                { id: 'center left', label: '←' },
-                { id: 'center center', label: '●' },
-                { id: 'center right', label: '→' },
-                { id: 'bottom left', label: '↙' },
-                { id: 'bottom center', label: '↓' },
-                { id: 'bottom right', label: '↘' },
-              ].map((pos) => (
-                <button
-                  key={pos.id}
-                  onClick={() => setNestedData('heroLead.imagePosition', pos.id)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all text-sm ${(hl.imagePosition || 'center center') === pos.id
-                    ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                    : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
-                  }`}
-                  title={pos.id}
-                >
-                  {pos.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PositionGridControl
+            label={t('editor.controls.common.bgPosition', 'Posición de Enfoque')}
+            value={hl.imagePosition || 'center center'}
+            onChange={(val) => setNestedData('heroLead.imagePosition', val)}
+          />
         )}
       </div>
     </div>
@@ -152,8 +127,12 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {(['left', 'right'] as const).map(pos => (
               <button
+                type="button"
                 key={pos}
-                onClick={() => setNestedData('heroLead.formPosition', pos)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setNestedData('heroLead.formPosition', pos);
+                }}
                 className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize ${hl.formPosition === pos
                   ? 'bg-editor-accent text-editor-bg'
                   : 'text-editor-text-secondary hover:bg-editor-border'
@@ -167,43 +146,31 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
 
         {/* Hero Height */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.heroHeight', 'Altura')}</label>
-            <span className="text-xs text-editor-text-primary">{hl.heroHeight || 85}vh</span>
-          </div>
-          <input
-            type="range" min="50" max="100" step="5"
+          <SliderControl
+            label={t('controls.heroHeight', 'Altura')}
             value={hl.heroHeight || 85}
-            onChange={(e) => setNestedData('heroLead.heroHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroLead.heroHeight', v)}
+            min={50} max={100} step={5} suffix="vh"
           />
         </div>
 
         {/* Overlay Opacity */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.overlayOpacity', 'Opacidad overlay')}</label>
-            <span className="text-xs text-editor-text-primary">{hl.overlayOpacity ?? 50}%</span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label={t('controls.overlayOpacity', 'Opacidad overlay')}
             value={hl.overlayOpacity ?? 50}
-            onChange={(e) => setNestedData('heroLead.overlayOpacity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroLead.overlayOpacity', v)}
+            min={0} max={100} step={5} suffix="%"
           />
         </div>
 
         {/* Form Card Opacity */}
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-semibold text-editor-text-secondary">{t('controls.formCardOpacity', 'Opacidad card formulario')}</label>
-            <span className="text-xs text-editor-text-primary">{hl.formCardOpacity ?? 100}%</span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="5"
+          <SliderControl
+            label={t('controls.formCardOpacity', 'Opacidad card formulario')}
             value={hl.formCardOpacity ?? 100}
-            onChange={(e) => setNestedData('heroLead.formCardOpacity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('heroLead.formCardOpacity', v)}
+            min={0} max={100} step={5} suffix="%"
           />
         </div>
 

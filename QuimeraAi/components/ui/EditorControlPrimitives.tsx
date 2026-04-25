@@ -1,26 +1,26 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, CircleDot, ArrowRight, ArrowDownLeft, ArrowDown, ArrowDownRight } from 'lucide-react';
 
 // --- Editor Control Primitives ---
 // Extracted from Controls.tsx for reusability across the editor
 
 export const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+  <div className={`mb-4 ${className || ''}`}>
+    {label && <label className="block text-[11px] font-semibold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
     <input
       {...props}
-      className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+      className="w-full bg-editor-bg/80 border border-editor-border/80 rounded-md px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/25 focus:border-editor-accent/70 transition-all placeholder:text-editor-text-secondary/50"
     />
   </div>
 );
 
 export const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) => (
-  <div className={`mb-3 ${className || ''}`}>
-    {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+  <div className={`mb-4 ${className || ''}`}>
+    {label && <label className="block text-[11px] font-semibold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
     <textarea
       {...props}
-      className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent resize-y min-h-[80px] transition-all placeholder:text-editor-text-secondary/50"
+      className="w-full bg-editor-bg/80 border border-editor-border/80 rounded-md px-3 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/25 focus:border-editor-accent/70 resize-y min-h-[88px] transition-all placeholder:text-editor-text-secondary/50"
     />
   </div>
 );
@@ -102,14 +102,14 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 
   return (
     <div className={`${noMargin ? '' : 'mb-3'} ${className || ''}`} ref={containerRef}>
-      {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+      {label && <label className="block text-[11px] font-semibold text-editor-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-editor-panel-bg border rounded-md px-3 py-2 text-sm text-editor-text-primary transition-all cursor-pointer ${
+        className={`w-full flex items-center justify-between bg-editor-bg/80 border rounded-md px-3 py-2.5 text-sm text-editor-text-primary transition-all cursor-pointer ${
           isOpen
-            ? 'border-editor-accent ring-1 ring-editor-accent'
-            : 'border-editor-border hover:border-editor-accent/50'
+            ? 'border-editor-accent/70 ring-2 ring-editor-accent/20'
+            : 'border-editor-border/80 hover:border-editor-accent/50'
         }`}
       >
         <span className="truncate">{selectedOption?.label || value}</span>
@@ -140,8 +140,8 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 };
 
 export const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-  <div className={`flex items-center ${label ? 'justify-between mb-3' : ''}`}>
-    {label && <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>}
+  <div className={`flex items-center ${label ? 'justify-between gap-4 rounded-md py-2.5 mb-1' : ''}`}>
+    {label && <label className="text-[11px] font-semibold text-editor-text-secondary uppercase tracking-wider leading-4">{label}</label>}
     <button
       type="button"
       role="switch"
@@ -150,11 +150,11 @@ export const ToggleControl = ({ label, checked, onChange }: { label?: string, ch
       onMouseDown={(e) => e.stopPropagation()}
       onDragStart={(e) => e.preventDefault()}
       draggable={false}
-      className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+      className={`${checked ? 'bg-editor-accent' : 'bg-editor-border/80'} quimera-editor-switch relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
     >
       <span
         aria-hidden="true"
-        className={`${checked ? 'translate-x-[18px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+        className={`${checked ? 'translate-x-5' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`}
       />
     </button>
   </div>
@@ -218,6 +218,105 @@ export const BorderRadiusSelector = ({ label, value, onChange, extended = false 
             {opt.l}
           </button>
         ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * SliderControl — reusable range slider primitive for editor controls.
+ *
+ * Renders a label row with value badge and a styled range input.
+ * Replaces duplicated `<input type="range" />` blocks across section controls.
+ */
+export const SliderControl = ({
+  label,
+  value,
+  onChange,
+  min = 0,
+  max = 100,
+  step = 1,
+  suffix = '',
+  formatValue,
+  className,
+}: {
+  /** Label shown above the slider */
+  label?: string;
+  /** Current numeric value */
+  value: number;
+  /** Change handler */
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  /** Unit displayed after the value (e.g. 'px', '%', 's', '°', 'vh') */
+  suffix?: string;
+  /** Custom value formatter — overrides default `value + suffix` display */
+  formatValue?: (value: number) => string;
+  className?: string;
+}) => {
+  const displayValue = formatValue ? formatValue(value) : `${value}${suffix}`;
+
+  return (
+    <div className={className || ''}>
+      {label && (
+        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+          {label}: {displayValue}
+        </label>
+      )}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full accent-editor-accent"
+      />
+    </div>
+  );
+};
+
+export const PositionGridControl = ({ label, value, onChange }: { label?: string, value: string, onChange: (val: string) => void }) => {
+  return (
+    <div className="mt-3 pt-3 border-t border-editor-border/30">
+      {label && (
+        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+          {label}
+        </label>
+      )}
+      <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+        {[
+          { id: 'top left', icon: ArrowUpLeft },
+          { id: 'top center', icon: ArrowUp },
+          { id: 'top right', icon: ArrowUpRight },
+          { id: 'center left', icon: ArrowLeft },
+          { id: 'center center', icon: CircleDot },
+          { id: 'center right', icon: ArrowRight },
+          { id: 'bottom left', icon: ArrowDownLeft },
+          { id: 'bottom center', icon: ArrowDown },
+          { id: 'bottom right', icon: ArrowDownRight },
+        ].map((pos) => {
+          const Icon = pos.icon;
+          return (
+            <button
+              key={pos.id}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onChange(pos.id);
+              }}
+              className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${
+                (value || 'center center') === pos.id
+                  ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
+                  : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+              }`}
+              title={pos.id}
+            >
+              <Icon size={14} />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

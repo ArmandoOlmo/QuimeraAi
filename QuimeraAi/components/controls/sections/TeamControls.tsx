@@ -41,8 +41,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'minimal', label: 'Minimal' },
             { value: 'overlay', label: 'Overlay' }
           ].map((variant) => (
-            <button
-              key={variant.value}
+            <button type="button"               key={variant.value}
               onClick={() => setNestedData('team.teamVariant', variant.value)}
               className={`p-2 text-xs font-medium rounded-md border transition-all ${(data?.team?.teamVariant || 'classic') === variant.value
                 ? 'bg-editor-accent text-editor-bg border-editor-accent'
@@ -93,8 +92,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Contenido' }
               ].map((type) => (
-                <button
-                  key={type.value}
+                <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`team.items.${index}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(member.linkType || 'manual') === type.value
                     ? 'bg-editor-accent text-editor-bg'
@@ -125,8 +123,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItems = [...(data?.team?.items || []), { name: 'New Member', role: 'Role', imageUrl: '' }];
           setNestedData('team.items', newItems);
         }}

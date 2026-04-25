@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -43,44 +43,37 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
       <div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'classic')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'classic')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             {t('editor.controls.hero.classic')}
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'modern')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'modern')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             {t('editor.controls.features.bento')}
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'bento-premium')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-premium')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-premium' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             {t('editor.controls.features.premium')}
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'bento-overlay')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-overlay')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             B. Overlay
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             {t('editor.controls.features.overlay')}
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'neon-glow')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'neon-glow')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'neon-glow' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             Neon Glow
           </button>
-          <button
-            onClick={() => setNestedData('features.featuresVariant', 'press-release')}
+          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'press-release')}
             className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'press-release' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
           >
             Press Release
@@ -107,8 +100,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.textAlignment')}</label>
             <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
               {(['left', 'center', 'right'] as const).map(align => (
-                <button
-                  key={align}
+                <button type="button"                   key={align}
                   onClick={() => setNestedData('features.overlayTextAlignment', align)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
                 >
@@ -119,8 +111,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
-            <button
-              onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
+            <button type="button"               onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
               className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
             >
               <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
@@ -133,8 +124,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {currentVariant === 'bento-overlay' && (
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
-          <button
-            onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
+          <button type="button"             onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
             className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
           >
             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
@@ -165,8 +155,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.columnsDesktop')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {[2, 3, 4].map(cols => (
-            <button
-              key={cols}
+            <button type="button"               key={cols}
               onClick={() => setNestedData('features.gridColumns', cols)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
             >
@@ -177,16 +166,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardImage')}</label>
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.features.imageHeight')}</label>
-          <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 430}px</span>
-        </div>
-        <input
-          type="range" min="100" max="600" step="10"
+      <div className="mb-3">
+        <SliderControl
+          label={t('editor.controls.features.imageHeight')}
           value={data.features.imageHeight || 430}
-          onChange={(e) => setNestedData('features.imageHeight', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('features.imageHeight', v)}
+          min={100} max={600} step={10} suffix="px"
         />
       </div>
 
@@ -194,8 +179,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
         <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
           {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
-            <button
-              key={fit}
+            <button type="button"               key={fit}
               onClick={() => setNestedData('features.imageObjectFit', fit)}
               className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
             >
@@ -226,27 +210,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={(data.features.colors as any)?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
       <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
       <div className="mb-3 mt-3">
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Thickness</label>
-          <span className="text-xs text-editor-text-primary">{data.features.cardBorderSize || 0}px</span>
-        </div>
-        <input
-          type="range" min="0" max="20" step="1"
+        <SliderControl
+          label="Border Thickness"
           value={data.features.cardBorderSize || 0}
-          onChange={(e) => setNestedData('features.cardBorderSize', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('features.cardBorderSize', v)}
+          min={0} max={20} step={1} suffix="px"
         />
       </div>
       <div className="mb-3">
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Opacity</label>
-          <span className="text-xs text-editor-text-primary">{data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}%</span>
-        </div>
-        <input
-          type="range" min="0" max="100" step="1"
+        <SliderControl
+          label="Border Opacity"
           value={data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}
-          onChange={(e) => setNestedData('features.cardBorderOpacity', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('features.cardBorderOpacity', v)}
+          min={0} max={100} step={1} suffix="%"
         />
       </div>
 
@@ -277,8 +253,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
         }}
         className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -325,8 +300,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           >
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-editor-text-secondary">Feature #{index + 1}</span>
-              <button
-                onClick={() => {
+              <button type="button"                 onClick={() => {
                   const newItems = data.features.items.filter((_, i) => i !== index);
                   setNestedData('features.items', newItems);
                 }}
@@ -365,8 +339,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   { value: 'collection', label: 'Collection' },
                   { value: 'content', label: 'Contenido' }
                 ].map((type) => (
-                  <button
-                    key={type.value}
+                  <button type="button"                     key={type.value}
                     onClick={() => setNestedData(`features.items.${index}.linkType`, type.value)}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(item.linkType || 'manual') === type.value
                       ? 'bg-editor-accent text-editor-bg'
@@ -430,8 +403,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
         ))}
-        <button
-          onClick={() => {
+        <button type="button"           onClick={() => {
             setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
           }}
           className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -542,8 +514,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.textAlignment')}</label>
               <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
                 {(['left', 'center', 'right'] as const).map(align => (
-                  <button
-                    key={align}
+                  <button type="button"                     key={align}
                     onClick={() => setNestedData('features.overlayTextAlignment', align)}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
                   >
@@ -554,8 +525,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
-              <button
-                onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
+              <button type="button"                 onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
                 className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
@@ -573,8 +543,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </label>
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
-              <button
-                onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
+              <button type="button"                 onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
                 className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
@@ -594,8 +563,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.columnsDesktop')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {[2, 3, 4].map(cols => (
-              <button
-                key={cols}
+              <button type="button"                 key={cols}
                 onClick={() => setNestedData('features.gridColumns', cols)}
                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
               >
@@ -614,24 +582,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             {t('editor.controls.features.cardImage', 'Card Image')}
           </label>
           <div className="mb-3">
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.features.imageHeight', 'Image Height')}</label>
-            <span className="text-xs text-editor-text-primary">{data.features.imageHeight || 430}px</span>
+            <SliderControl
+              label={t('editor.controls.features.imageHeight', 'Image Height')}
+              value={data.features.imageHeight || 430}
+              onChange={(v) => setNestedData('features.imageHeight', v)}
+              min={100} max={600} step={10} suffix="px"
+            />
           </div>
-          <input
-            type="range" min="100" max="600" step="10"
-            value={data.features.imageHeight || 430}
-            onChange={(e) => setNestedData('features.imageHeight', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
-          />
-        </div>
         {currentVariant !== 'cinematic-gym' && (
           <div>
             <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
             <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
               {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
-                <button
-                  key={fit}
+                <button type="button"                   key={fit}
                   onClick={() => setNestedData('features.imageObjectFit', fit)}
                   className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
                 >
@@ -674,27 +637,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.cardText')} value={data.features.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
         <ColorControl label={t('controls.border')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
         <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Thickness</label>
-            <span className="text-xs text-editor-text-primary">{data.features.cardBorderSize || 0}px</span>
-          </div>
-          <input
-            type="range" min="0" max="20" step="1"
+          <SliderControl
+            label="Border Thickness"
             value={data.features.cardBorderSize || 0}
-            onChange={(e) => setNestedData('features.cardBorderSize', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('features.cardBorderSize', v)}
+            min={0} max={20} step={1} suffix="px"
           />
         </div>
         <div className="mt-3">
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Border Opacity</label>
-            <span className="text-xs text-editor-text-primary">{data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}%</span>
-          </div>
-          <input
-            type="range" min="0" max="100" step="1"
+          <SliderControl
+            label="Border Opacity"
             value={data.features.cardBorderOpacity !== undefined ? data.features.cardBorderOpacity : 100}
-            onChange={(e) => setNestedData('features.cardBorderOpacity', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('features.cardBorderOpacity', v)}
+            min={0} max={100} step={1} suffix="%"
           />
         </div>
       </div>

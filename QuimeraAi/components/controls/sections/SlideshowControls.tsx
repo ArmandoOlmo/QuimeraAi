@@ -242,8 +242,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           )}
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItems = [...(data.slideshow.items || []), { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
           setNestedData('slideshow.items', newItems);
         }}
@@ -312,8 +311,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           )}
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItems = [...(data.slideshow.items || []), { imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800', altText: 'New slide', caption: '' }];
           setNestedData('slideshow.items', newItems);
         }}

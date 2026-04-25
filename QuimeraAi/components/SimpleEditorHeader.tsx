@@ -6,7 +6,8 @@ import { useProject } from '../contexts/project';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import { PreviewDevice } from '../types';
-import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, ArrowLeft, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Check, CloudUpload, Globe, SlidersHorizontal, Menu, Monitor, Smartphone } from 'lucide-react';
+import HeaderBackButton from './ui/HeaderBackButton';
 
 interface SimpleEditorHeaderProps {
   onOpenMobileMenu?: () => void;
@@ -170,16 +171,6 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Back Button - Go to projects/websites */}
-        <button
-          onClick={() => goBack()}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-          aria-label={t('common.back')}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">{t('common.back')}</span>
-        </button>
-
         {/* Save Button */}
         {showSaveButton && (
           <button
@@ -256,10 +247,11 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             )}
           </button>
         )}
+
+        <HeaderBackButton onClick={() => goBack()} />
       </div>
     </header>
   );
 };
 
 export default SimpleEditorHeader;
-

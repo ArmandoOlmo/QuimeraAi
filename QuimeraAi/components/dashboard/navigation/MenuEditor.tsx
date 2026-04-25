@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { NavigationMenu, NavigationMenuItem } from '../../../types';
 import { useCMS } from '../../../contexts/cms';
 import { useProject } from '../../../contexts/project';
-import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper, ShoppingBag, Tag, Package } from 'lucide-react';
+import { ArrowLeft, GripVertical, Plus, Trash2, X, Save, Loader2, ChevronRight, Search, Hash, Globe, FileText, ArrowUpLeft, Newspaper, ShoppingBag, Tag, Package, Building2 } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import DashboardSidebar from '../DashboardSidebar';
 import { Menu as MenuIcon } from 'lucide-react';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
+import { useRealEstateWebsiteNavigation } from '../../../hooks/useRealEstateWebsiteNavigation';
 import IconSelector from '../../ui/IconSelector';
 
 interface MenuEditorProps {
@@ -43,7 +44,7 @@ const SECTION_LINKS = [
 const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId }) => {
     const { t } = useTranslation();
     const { saveMenu, deleteMenu, cmsPosts, loadCMSPosts, categories } = useCMS();
-    const { data, activeProjectId } = useProject();
+    const { data, activeProjectId, pages, addPage } = useProject();
     const [title, setTitle] = useState(menu.title);
     const [handle, setHandle] = useState(menu.handle || '');
     const [items, setItems] = useState<NavigationMenuItem[]>(Array.isArray(menu.items) ? menu.items : []);
@@ -58,6 +59,11 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
     // Ecommerce data for link picker
     const { products: storeProducts, categories: storeCategories } = usePublicProducts(effectiveProjectId);
+    const { sectionLink: realEstateListingsLink } = useRealEstateWebsiteNavigation();
+    const sectionLinks = React.useMemo(
+        () => [...SECTION_LINKS, realEstateListingsLink],
+        [realEstateListingsLink]
+    );
     const [productSearch, setProductSearch] = useState('');
 
     // Check where this menu is being used
@@ -115,6 +121,18 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
             return alert("All menu items must have a link");
         }
 
+        const normalizeHref = (href: string) => {
+            const trimmed = href.trim();
+            if (trimmed === '/#realEstateListings' || trimmed === '#realEstateListings') {
+                return realEstateListingsLink.value;
+            }
+            return trimmed;
+        };
+
+        if (items.some(item => normalizeHref(item.href) === realEstateListingsLink.value)) {
+            await ensureRealEstateListingsPage();
+        }
+
         setIsSaving(true);
         const updatedMenu: NavigationMenu = {
             ...menu,
@@ -123,7 +141,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
             items: items.map(item => ({
                 ...item,
                 text: item.text.trim(),
-                href: item.href.trim()
+                href: normalizeHref(item.href)
             }))
         };
         await saveMenu(updatedMenu);
@@ -216,8 +234,22 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
 
     // Link Picker Logic
-    const handleLinkSelect = (item: NavigationMenuItem, value: string, linkType?: NavigationMenuItem['type']) => {
-        updateMenuItem(item.id, { href: value, ...(linkType ? { type: linkType } : {}) });
+    const ensureRealEstateListingsPage = useCallback(async () => {
+        const hasListingsPage = pages.some(page => page.slug === realEstateListingsLink.value);
+        if (!hasListingsPage) {
+            await addPage('real-estate-listings');
+        }
+    }, [addPage, pages, realEstateListingsLink.value]);
+
+    const handleLinkSelect = async (item: NavigationMenuItem, value: string, linkType?: NavigationMenuItem['type'], label?: string) => {
+        if (value === realEstateListingsLink.value) {
+            await ensureRealEstateListingsPage();
+        }
+        updateMenuItem(item.id, {
+            href: value,
+            ...(linkType ? { type: linkType } : {}),
+            ...(label && !item.text.trim() ? { text: label } : {}),
+        });
         setLinkPickerOpenId(null);
         setPickerCategory('root');
         setArticleSearch('');
@@ -243,6 +275,13 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             Sections
                         </div>
                         <ChevronRight size={16} className="text-muted-foreground" />
+                    </button>
+                    <button
+                        onClick={() => handleLinkSelect(item, realEstateListingsLink.value, 'page', realEstateListingsLink.label)}
+                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center group"
+                    >
+                        <Building2 size={16} className="mr-3 text-muted-foreground group-hover:text-primary" />
+                        {realEstateListingsLink.label}
                     </button>
                     <button
                         onClick={() => setPickerCategory('store')}
@@ -300,10 +339,10 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <span className="text-sm font-semibold">Sections</span>
                     </div>
                     <div className="py-1 max-h-48 overflow-y-auto custom-scrollbar">
-                        {SECTION_LINKS.map((link) => (
+                        {sectionLinks.map((link) => (
                             <button
                                 key={link.value}
-                                onClick={() => handleLinkSelect(item, link.value)}
+                                onClick={() => handleLinkSelect(item, link.value, 'section', link.label)}
                                 className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50"
                             >
                                 {link.label}

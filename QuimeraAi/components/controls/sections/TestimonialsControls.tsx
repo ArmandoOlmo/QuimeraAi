@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -82,8 +82,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.testimonials.cardShadow')}</label>
         <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
           {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
-            <button
-              key={shadow}
+            <button type="button"               key={shadow}
               onClick={() => setNestedData('testimonials.cardShadow', shadow)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
             >
@@ -102,8 +101,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'gradient', label: t('editor.controls.testimonials.gradient') },
             { value: 'glow', label: t('editor.controls.testimonials.glow') }
           ].map(style => (
-            <button
-              key={style.value}
+            <button type="button"               key={style.value}
               onClick={() => setNestedData('testimonials.borderStyle', style.value)}
               className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
             >
@@ -115,16 +113,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <ColorControl label={t('editor.controls.testimonials.borderColor')} value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
 
-      <div>
-        <div className="flex justify-between items-center mb-1">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardPadding')}</label>
-          <span className="text-xs text-editor-text-primary">{data.testimonials.cardPadding || 32}px</span>
-        </div>
-        <input
-          type="range" min="16" max="64" step="4"
+      <div className="mb-4">
+        <SliderControl
+          label={t('controls.cardPadding')}
           value={data.testimonials.cardPadding || 32}
-          onChange={(e) => setNestedData('testimonials.cardPadding', parseInt(e.target.value))}
-          className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+          onChange={(v) => setNestedData('testimonials.cardPadding', v)}
+          min={16}
+          max={64}
+          step={4}
+          suffix="px"
         />
       </div>
 
@@ -168,8 +165,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         >
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-bold text-editor-text-secondary">Testimonial #{index + 1}</span>
-            <button
-              onClick={() => {
+            <button type="button"               onClick={() => {
                 const newItems = (data.testimonials.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData('testimonials.items', newItems);
               }}
@@ -205,8 +201,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
       ))}
-      <button
-        onClick={() => {
+      <button type="button"         onClick={() => {
           const newItem = { quote: '', name: '', title: '', imageUrl: '' };
           setNestedData('testimonials.items', [...(data.testimonials.items || []), newItem]);
         }}
@@ -248,8 +243,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-editor-text-secondary">Testimonial #{index + 1}</span>
-              <button
-                onClick={() => {
+              <button type="button"                 onClick={() => {
                   const newItems = (data.testimonials.items || []).filter((_: any, i: number) => i !== index);
                   setNestedData('testimonials.items', newItems);
                 }}
@@ -275,8 +269,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <Input placeholder="Title/Role" value={item.title} onChange={(e) => setNestedData(`testimonials.items.${index}.title`, e.target.value)} className="mb-2" />
           </div>
         ))}
-        <button
-          onClick={() => {
+        <button type="button"           onClick={() => {
             setNestedData('testimonials.items', [...(data.testimonials.items || []), { quote: '', name: '', title: '', imageUrl: '' }]);
           }}
           className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -354,8 +347,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.cardShadow')}</label>
           <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
             {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
-              <button
-                key={shadow}
+              <button type="button"                 key={shadow}
                 onClick={() => setNestedData('testimonials.cardShadow', shadow)}
                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
               >
@@ -374,8 +366,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'gradient', label: 'Gradient' },
               { value: 'glow', label: 'Glow' }
             ].map(style => (
-              <button
-                key={style.value}
+              <button type="button"                 key={style.value}
                 onClick={() => setNestedData('testimonials.borderStyle', style.value)}
                 className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
               >
@@ -387,16 +378,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         <ColorControl label={t('controls.borderColor')} value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
 
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardPadding')}</label>
-            <span className="text-xs text-editor-text-primary">{data.testimonials.cardPadding || 32}px</span>
-          </div>
-          <input
-            type="range" min="16" max="64" step="4"
+        <div className="mb-3">
+          <SliderControl
+            label={t('controls.cardPadding')}
             value={data.testimonials.cardPadding || 32}
-            onChange={(e) => setNestedData('testimonials.cardPadding', parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            onChange={(v) => setNestedData('testimonials.cardPadding', v)}
+            min={16}
+            max={64}
+            step={4}
+            suffix="px"
           />
         </div>
       </div>

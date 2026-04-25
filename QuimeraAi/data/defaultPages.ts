@@ -529,6 +529,31 @@ export const createCheckoutPage = (): SitePage => {
     };
 };
 
+/**
+ * Create a real estate listings page
+ */
+export const createRealEstateListingsPage = (): SitePage => {
+    // Header/footer are included in sections for rendering order/visibility,
+    // but NOT in sectionData — their data comes from the global project data.
+    // Including them in sectionData would overwrite the user's customizations
+    // with initialData defaults when switching pages.
+    const contentSections: PageSection[] = ['realEstateListings', 'leads'];
+    return {
+        id: `page-real-estate-listings-${Date.now()}`,
+        title: 'Listados',
+        slug: '/listados',
+        type: 'static',
+        sections: ['header', ...contentSections, 'footer'],
+        sectionData: getDefaultSectionData(contentSections),
+        seo: createDefaultSEO('Listados', 'Explora propiedades disponibles'),
+        isHomePage: false,
+        showInNavigation: true,
+        navigationOrder: 25,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
+};
+
 // =============================================================================
 // PAGE FACTORY
 // =============================================================================
@@ -548,6 +573,7 @@ export const createPageFromTemplate = (templateId: PageTemplateId, businessName?
         'about': createAboutPage,
         'services': createServicesPage,
         'portfolio': createPortfolioPage,
+        'real-estate-listings': createRealEstateListingsPage,
         'pricing': createPricingPage,
         'faq': createFaqPage,
         'cart': createCartPage,
@@ -612,6 +638,4 @@ export const createIndustryPages = (industry: string, hasEcommerce: boolean = fa
     const pageTemplates = getIndustryPageDefaults(industry, hasEcommerce);
     return createPagesFromTemplates(pageTemplates);
 };
-
-
 

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
-import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage } from '../types';
+import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage, AiAssistantConfig } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
@@ -15,6 +15,8 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
 import SectionBackground from './ui/SectionBackground';
+import { usePublicRealEstateListings } from '../hooks/usePublicRealEstateListings';
+import { Property } from '../types/realEstate';
 
 // Core components — needed immediately for first paint
 import Header from './Header';
@@ -56,9 +58,32 @@ const BlogPost = lazy(() => import('./BlogPost'));
 const Products = lazy(() => import('./Products'));
 const PageRenderer = lazy(() => import('./PageRenderer'));
 const BlogCategoryPage = lazy(() => import('./BlogCategoryPage'));
+const RealEstateListingsSection = lazy(() => import('./real-estate/RealEstateListingsSection'));
+const PropertyDirectoryPage = lazy(() => import('./real-estate/PropertyDirectoryPage'));
+const PropertyDetailSection = lazy(() => import('./real-estate/PropertyDetailSection'));
 
 // Lazy load StorefrontApp for store views
 const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
+
+const PREVIEW_LOGICAL_ROUTE_SEGMENTS = new Set([
+  'listados',
+  'blog',
+  'tienda',
+  'producto',
+  'categoria',
+  'carrito',
+  'checkout',
+  'pedido',
+]);
+
+const resolvePreviewBaseFromPath = (pathname: string): string => {
+  if (!pathname.startsWith('/preview/')) return '';
+  const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+  if (parts.length === 0) return '/preview';
+  if (parts.length === 1) return `/preview/${parts[0]}`;
+  if (PREVIEW_LOGICAL_ROUTE_SEGMENTS.has(parts[1])) return `/preview/${parts[0]}`;
+  return `/preview/${parts[0]}/${parts[1]}`;
+};
 
 // Separate component for store view to isolate Suspense and avoid hook count issues
 interface StoreViewWrapperProps {
@@ -139,18 +164,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
    * For custom domains / subdomains this is empty (no prefix needed).
    */
   const previewBasePath = useMemo(() => {
-    const pathname = window.location.pathname;
-    if (pathname.startsWith('/preview/')) {
-      // Extract /preview/userId/projectId (first 3 segments)
-      const parts = pathname.replace('/preview/', '').split('/');
-      if (parts.length >= 2) {
-        return `/preview/${parts[0]}/${parts[1]}`;
-      }
-      if (parts.length === 1 && parts[0]) {
-        return `/preview/${parts[0]}`;
-      }
-    }
-    return '';
+    return resolvePreviewBaseFromPath(window.location.pathname);
   }, []);
 
   /**
@@ -285,6 +299,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const pathname = window.location.pathname;
     if (pathname.startsWith('/preview/')) {
       const parts = pathname.replace('/preview/', '').split('/').filter(Boolean);
+      // One-part preview with a subroute: /preview/projectId/listados/:slug
+      if (parts.length >= 2 && PREVIEW_LOGICAL_ROUTE_SEGMENTS.has(parts[1])) {
+        console.log('[PublicWebsitePreview] Parsed projectId from pathname with subroute:', { projectId: parts[0], logicalRoute: parts.slice(1).join('/') });
+        return { userId: null, projectId: parts[0] };
+      }
       // Two parts: /preview/userId/projectId
       if (parts.length >= 2) {
         console.log('[PublicWebsitePreview] Parsed IDs from pathname (full):', { userId: parts[0], projectId: parts[1] });
@@ -825,6 +844,29 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return;
       }
 
+      // Property detail routing: /listados/:slug
+      if (path.startsWith('/listados/') && path !== '/listados/' && path !== '/listados') {
+        const slug = path.replace('/listados/', '').replace(/\/$/, '');
+        const now = new Date().toISOString();
+        setActivePost(null);
+        setStoreView({ type: 'none' });
+        setActiveCategorySlug(null);
+        setActivePage({
+          id: `page-property-detail-${slug}`,
+          title: 'Property Detail',
+          slug: `/listados/${slug}`,
+          type: 'static',
+          sections: ['header', 'propertyDetail', 'footer'],
+          sectionData: {},
+          seo: { title: 'Property Detail' },
+          showInNavigation: false,
+          createdAt: now,
+          updatedAt: now,
+        } as SitePage);
+        window.scrollTo(0, 0);
+        return;
+      }
+
       // ========================================
       // MULTI-PAGE ROUTING (pages from project.pages)
       // ========================================
@@ -842,6 +884,29 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           window.scrollTo(0, 0);
           return;
         }
+      }
+
+      if (path === '/listados' || path === '/listados/') {
+        const now = new Date().toISOString();
+        setActivePost(null);
+        setStoreView({ type: 'none' });
+        setActivePage({
+          id: 'page-real-estate-listings-runtime',
+          title: 'Listados',
+          slug: '/listados',
+          type: 'static',
+          sections: ['header', 'propertyDirectory', 'footer'],
+          sectionData: {
+            realEstateListings: (project?.data as any)?.realEstateListings,
+          },
+          seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
+          showInNavigation: true,
+          navigationOrder: 25,
+          createdAt: now,
+          updatedAt: now,
+        } as SitePage);
+        window.scrollTo(0, 0);
+        return;
       }
 
       // ========================================
@@ -1064,6 +1129,31 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       return;
     }
 
+    if (href.startsWith('/listados/') && href !== '/listados/' && href !== '/listados') {
+      const slug = href.replace('/listados/', '').replace(/\/$/, '');
+      const now = new Date().toISOString();
+      const runtimePage: SitePage = {
+        id: `page-property-detail-${slug}`,
+        title: 'Property Detail',
+        slug: `/listados/${slug}`,
+        type: 'static',
+        sections: ['header', 'propertyDetail', 'footer'],
+        sectionData: {},
+        seo: { title: 'Property Detail' },
+        showInNavigation: false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      setActiveCategorySlug(null);
+      setActivePage(runtimePage);
+      updateBrowserUrl(`/listados/${slug}`);
+      updatePageSEO({ title: 'Property Detail', type: 'website', path: `/listados/${slug}` });
+      window.scrollTo(0, 0);
+      return;
+    }
+
     // External URLs - check if they match current domain
     if (href.startsWith('http://') || href.startsWith('https://')) {
       const currentOrigin = window.location.origin;
@@ -1092,11 +1182,38 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         setActivePost(null);
         setStoreView({ type: 'none' });
         setActivePage(matchedPage);
-        updateBrowserUrl(`/${matchedPage.slug}`);
-        updatePageSEO({ title: matchedPage.seo?.title || matchedPage.title, description: matchedPage.seo?.description, type: 'website', path: `/${matchedPage.slug}` });
+        const pagePath = matchedPage.slug?.startsWith('/') ? matchedPage.slug : `/${matchedPage.slug}`;
+        updateBrowserUrl(pagePath);
+        updatePageSEO({ title: matchedPage.seo?.title || matchedPage.title, description: matchedPage.seo?.description, type: 'website', path: pagePath });
         window.scrollTo(0, 0);
         return;
       }
+    }
+
+    if (href === '/listados' || href === '/listados/') {
+      const now = new Date().toISOString();
+      const runtimePage: SitePage = {
+        id: 'page-real-estate-listings-runtime',
+        title: 'Listados',
+        slug: '/listados',
+        type: 'static',
+        sections: ['header', 'propertyDirectory', 'footer'],
+        sectionData: {
+          realEstateListings: (project?.data as any)?.realEstateListings,
+        },
+        seo: { title: 'Listados', description: 'Explora propiedades disponibles' },
+        showInNavigation: true,
+        navigationOrder: 25,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      setActivePage(runtimePage);
+      updateBrowserUrl('/listados');
+      updatePageSEO({ title: 'Listados', description: 'Explora propiedades disponibles', type: 'website', path: '/listados' });
+      window.scrollTo(0, 0);
+      return;
     }
 
     // Fallback: try to scroll to element by ID (for anchor navigation like #features)
@@ -1340,6 +1457,20 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
+  const { properties: chatbotRealEstateProperties } = usePublicRealEstateListings(project?.id || propProjectId || null, {
+    limitCount: 50,
+    featuredOnly: false,
+    realtime: false,
+  });
+
+  const currentPropertyForChatbot = useMemo<Property | null>(() => {
+    const currentPath = getLogicalPath(window.location.pathname);
+    const isPropertyDetail = currentPath.startsWith('/listados/') && currentPath !== '/listados/' && currentPath !== '/listados';
+    if (!isPropertyDetail) return null;
+    const slug = currentPath.replace('/listados/', '').replace(/\/$/, '');
+    return chatbotRealEstateProperties.find(property => property.slug === slug) || null;
+  }, [activePage?.slug, chatbotRealEstateProperties, getLogicalPath]);
+
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
     const domainConfig = typeof window !== 'undefined' ? (window as any).__DOMAIN_CONFIG__ : null;
@@ -1463,6 +1594,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     logoBanner: mergeComponentData('logoBanner'),
     cmsFeed: mergeComponentData('cmsFeed'),
     signupFloat: mergeComponentData('signupFloat'),
+    realEstateListings: mergeComponentData('realEstateListings'),
     footer: mergeComponentData('footer'),
     header: mergeComponentData('header'),
     products: mergeComponentData('products'),
@@ -1580,6 +1712,32 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
   // Render component based on key, wrapped with SectionBackground for background images
   const renderComponent = (key: PageSection) => {
+    if (key === 'propertyDirectory') {
+      return (
+        <PropertyDirectoryPage
+          projectId={storeProjectId || ''}
+          data={mergedData.realEstateListings}
+          theme={theme}
+          globalColors={theme?.globalColors}
+        />
+      );
+    }
+
+    if (key === 'propertyDetail') {
+      const currentPath = getLogicalPath(window.location.pathname);
+      const propertySlug = currentPath.startsWith('/listados/') ? currentPath.replace('/listados/', '').replace(/\/$/, '') : '';
+      return (
+        <PropertyDetailSection
+          projectId={storeProjectId || ''}
+          propertySlug={propertySlug}
+          theme={theme}
+          globalColors={theme?.globalColors}
+          onNavigateToListings={() => handleLinkNavigation('/listados')}
+          onNavigateToProperty={(slug) => handleLinkNavigation(`/listados/${slug}`)}
+        />
+      );
+    }
+
     const compData = mergedData[key as keyof typeof mergedData];
     if (!compData) return null;
 
@@ -1594,6 +1752,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         backgroundOverlayOpacity={compData.backgroundOverlayOpacity}
         backgroundOverlayColor={compData.backgroundOverlayColor}
         backgroundColor={compData.colors?.background}
+        backgroundPosition={compData.backgroundPosition}
       >
         {element}
       </SectionBackground>
@@ -1631,6 +1790,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return withBackground(<Faq {...compData} borderRadius={borderRadius} />);
       case 'leads':
         return withBackground(<Leads {...compData} cardBorderRadius={compData.cardBorderRadius || borderRadius} inputBorderRadius={compData.inputBorderRadius || 'md'} buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius} />);
+      case 'realEstateListings':
+        return withBackground(
+          <RealEstateListingsSection
+            data={compData}
+            projectId={storeProjectId || null}
+            isPreviewMode={false}
+            theme={theme}
+            globalColors={theme?.globalColors}
+            onNavigate={handleLinkNavigation}
+          />
+        );
       case 'newsletter':
         return withBackground(<Newsletter {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />);
       case 'cta':
@@ -1721,6 +1891,102 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
+  const isRealEstateRuntimePage = Boolean(activePage?.sections?.includes('propertyDetail') || activePage?.sections?.includes('propertyDirectory'));
+  const fallbackChatbotConfig: AiAssistantConfig = {
+    // Fallback for legacy chatbot configuration
+    isActive: true,
+    agentName: 'Assistant',
+    tone: 'Professional',
+    languages: 'Spanish',
+    businessProfile: '',
+    productsServices: '',
+    policiesContact: '',
+    specialInstructions: '',
+    faqs: [],
+    knowledgeDocuments: [],
+    knowledgeLinks: [],
+    widgetColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+    leadCaptureEnabled: true,
+    enableLiveVoice: false,
+    voiceName: 'Zephyr',
+    appearance: {
+      branding: {
+        logoType: 'none',
+        logoSize: 'md',
+        showBotAvatar: true,
+        showUserAvatar: false,
+        userAvatarStyle: 'initials'
+      },
+      colors: {
+        primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        secondaryColor: '#ffffff',
+        accentColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        userTextColor: '#ffffff',
+        botBubbleColor: '#f1f5f9',
+        botTextColor: '#0f172a',
+        backgroundColor: project.data?.chatbot?.colors?.background || '#ffffff',
+        inputBackground: '#f8fafc',
+        inputBorder: '#e2e8f0',
+        inputText: '#0f172a',
+        headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
+        headerText: '#ffffff'
+      },
+      behavior: {
+        position: project.data?.chatbot?.position || 'bottom-right',
+        offsetX: 20,
+        offsetY: 20,
+        width: 'md',
+        height: 'md',
+        autoOpen: false,
+        autoOpenDelay: 5,
+        openOnScroll: 0,
+        openOnTime: 0,
+        fullScreenOnMobile: true
+      },
+      messages: {
+        welcomeMessage: project.data?.chatbot?.welcomeMessage || '¡Hola! ¿En qué puedo ayudarte hoy?',
+        welcomeMessageEnabled: true,
+        welcomeDelay: 1,
+        inputPlaceholder: project.data?.chatbot?.placeholderText || 'Escribe tu mensaje...',
+        quickReplies: [],
+        showTypingIndicator: true
+      },
+      button: {
+        buttonStyle: 'circle',
+        buttonSize: 'lg',
+        buttonIcon: 'chat',
+        showButtonText: false,
+        pulseEffect: true,
+        shadowSize: 'lg',
+        showTooltip: false,
+        tooltipText: 'Chat'
+      },
+      theme: 'light'
+    }
+  };
+  const baseStandaloneChatbotConfig = project.aiAssistantConfig || fallbackChatbotConfig;
+  const propertyChatbotContext = currentPropertyForChatbot ? [
+    'Current visitor context: the user is viewing a real estate property detail page.',
+    `Property title: ${currentPropertyForChatbot.title}`,
+    `Price: ${currentPropertyForChatbot.price}`,
+    `Address: ${[currentPropertyForChatbot.address, currentPropertyForChatbot.city, currentPropertyForChatbot.state, currentPropertyForChatbot.zipCode].filter(Boolean).join(', ')}`,
+    `Type: ${currentPropertyForChatbot.propertyType}`,
+    `Beds: ${currentPropertyForChatbot.bedrooms}`,
+    `Baths: ${currentPropertyForChatbot.bathrooms}`,
+    `Square feet: ${currentPropertyForChatbot.squareFeet}`,
+    `Year built: ${currentPropertyForChatbot.yearBuilt || 'N/A'}`,
+    `Amenities: ${(currentPropertyForChatbot.amenities || []).join(', ') || 'N/A'}`,
+    `Description: ${currentPropertyForChatbot.description}`,
+    'When asked about this property, answer using this context. For financing or investment questions, explain estimates clearly and invite the visitor to request official guidance from the realtor.',
+  ].join('\n') : '';
+  const enrichedStandaloneChatbotConfig = propertyChatbotContext ? {
+    ...baseStandaloneChatbotConfig,
+    specialInstructions: [
+      (baseStandaloneChatbotConfig as any).specialInstructions,
+      propertyChatbotContext,
+    ].filter(Boolean).join('\n\n'),
+  } : baseStandaloneChatbotConfig;
 
   return (
     <div
@@ -1751,7 +2017,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
       {!isStoreViewActive && componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
-        <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} />
+        <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} forceSolid={isRealEstateRuntimePage} />
       )}
 
       <main className="min-h-screen bg-site-base relative">
@@ -1837,8 +2103,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           /* Multi-Page View - Render specific page using PageRenderer */
           <PageRenderer
             page={activePage}
-            project={project}
+            project={{ ...project, menus: effectiveMenus }}
             isPreview={true}
+            onNavigate={handleLinkNavigation}
+            contentOnly={true}
           />
         ) : (
           /* Home View - Sections */
@@ -1894,78 +2162,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       {(project.aiAssistantConfig?.isActive || (project.data?.chatbot?.isActive)) && (
         <ChatbotWidget
           hidePoweredBy={hasWhiteLabelBranding}
-          standaloneConfig={project.aiAssistantConfig || {
-            // Fallback for legacy chatbot configuration
-            isActive: true,
-            agentName: 'Assistant',
-            tone: 'Professional',
-            languages: 'Spanish',
-            businessProfile: '',
-            productsServices: '',
-            policiesContact: '',
-            specialInstructions: '',
-            faqs: [],
-            knowledgeDocuments: [],
-            widgetColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-            leadCaptureEnabled: true,
-            enableLiveVoice: false,
-            voiceName: 'Zephyr',
-            appearance: {
-              branding: {
-                logoType: 'none',
-                logoSize: 'md',
-                showBotAvatar: true,
-                showUserAvatar: false,
-                userAvatarStyle: 'initials'
-              },
-              colors: {
-                primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                secondaryColor: '#ffffff',
-                accentColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                userTextColor: '#ffffff',
-                botBubbleColor: '#f1f5f9',
-                botTextColor: '#0f172a',
-                backgroundColor: project.data?.chatbot?.colors?.background || '#ffffff',
-                inputBackground: '#f8fafc',
-                inputBorder: '#e2e8f0',
-                inputText: '#0f172a',
-                headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
-                headerText: '#ffffff'
-              },
-              behavior: {
-                position: project.data?.chatbot?.position || 'bottom-right',
-                offsetX: 20,
-                offsetY: 20,
-                width: 'md',
-                height: 'md',
-                autoOpen: false,
-                autoOpenDelay: 5,
-                openOnScroll: 0,
-                openOnTime: 0,
-                fullScreenOnMobile: true
-              },
-              messages: {
-                welcomeMessage: project.data?.chatbot?.welcomeMessage || '¡Hola! ¿En qué puedo ayudarte hoy?',
-                welcomeMessageEnabled: true,
-                welcomeDelay: 1,
-                inputPlaceholder: project.data?.chatbot?.placeholderText || 'Escribe tu mensaje...',
-                quickReplies: [],
-                showTypingIndicator: true
-              },
-              button: {
-                buttonStyle: 'circle',
-                buttonSize: 'lg',
-                buttonIcon: 'chat',
-                showButtonText: false,
-                pulseEffect: true,
-                shadowSize: 'lg',
-                showTooltip: false,
-                tooltipText: 'Chat'
-              },
-              theme: 'light'
-            }
-          }}
+          standaloneConfig={enrichedStandaloneChatbotConfig}
           standaloneProject={{
             id: project.id || storeProjectId || '',
             userId: project.userId, // Important for ChatCore to know the project owner

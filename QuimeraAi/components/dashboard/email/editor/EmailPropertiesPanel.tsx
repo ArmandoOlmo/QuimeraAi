@@ -74,7 +74,7 @@ const EmailPropertiesPanel: React.FC = () => {
                 </div>
                 
                 {/* Tabs */}
-                <div className="flex gap-1 bg-editor-panel-bg p-1 rounded-lg">
+                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         return (
@@ -82,9 +82,9 @@ const EmailPropertiesPanel: React.FC = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all
+                                    flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-all
                                     ${activeTab === tab.id 
-                                        ? 'bg-editor-accent text-white shadow-sm' 
+                                        ? 'bg-editor-accent/15 text-editor-accent' 
                                         : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
                                     }
                                 `}
@@ -99,18 +99,18 @@ const EmailPropertiesPanel: React.FC = () => {
             
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-                <div className="p-4">
+                <div className="quimera-clean-controls p-4">
                     {activeTab === 'style' ? (
                         <>
                             {/* Style Sub-Tabs Header (Only if block is selected) */}
                             {selectedBlock && (
-                                <div className="flex gap-1 bg-editor-panel-bg p-1 rounded-lg mb-6 border border-editor-border">
+                                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1 mb-6">
                                     <button
                                         onClick={() => setStyleSubTab('block')}
                                         className={`
-                                            flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all text-center
+                                            flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center
                                             ${styleSubTab === 'block' 
-                                                ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/20' 
+                                                ? 'bg-editor-accent/15 text-editor-accent' 
                                                 : 'text-editor-text-secondary hover:text-editor-text-primary'
                                             }
                                         `}
@@ -120,9 +120,9 @@ const EmailPropertiesPanel: React.FC = () => {
                                     <button
                                         onClick={() => setStyleSubTab('global')}
                                         className={`
-                                            flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all text-center flex items-center justify-center gap-1.5
+                                            flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center flex items-center justify-center gap-1.5
                                             ${styleSubTab === 'global' 
-                                                ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/20' 
+                                                ? 'bg-editor-accent/15 text-editor-accent' 
                                                 : 'text-editor-text-secondary hover:text-editor-text-primary'
                                             }
                                         `}
@@ -261,7 +261,6 @@ const NoBlockStyleSelected: React.FC = () => {
 };
 
 export default EmailPropertiesPanel;
-
 
 
 
