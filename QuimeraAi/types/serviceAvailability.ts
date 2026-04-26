@@ -34,7 +34,9 @@ export type PlatformServiceId =
     | 'appointments'     // Sistema de citas
     | 'domains'          // Dominios personalizados
     | 'templates'        // Plantillas de sitio
-    | 'finance';         // Herramientas financieras
+    | 'finance'          // Herramientas financieras
+    | 'realEstate'       // Bienes Raíces
+    | 'restaurants';     // Restaurantes
 
 /**
  * Metadata de un servicio para la UI
@@ -63,6 +65,8 @@ export const PLATFORM_SERVICES: ServiceMetadata[] = [
     { id: 'domains', nameKey: 'services.domains', descriptionKey: 'services.domainsDesc', icon: 'Globe', category: 'tools' },
     { id: 'templates', nameKey: 'services.templates', descriptionKey: 'services.templatesDesc', icon: 'LayoutTemplate', category: 'core' },
     { id: 'finance', nameKey: 'services.finance', descriptionKey: 'services.financeDesc', icon: 'Wallet', category: 'tools' },
+    { id: 'realEstate', nameKey: 'services.realEstate', descriptionKey: 'services.realEstateDesc', icon: 'Home', category: 'tools' },
+    { id: 'restaurants', nameKey: 'services.restaurants', descriptionKey: 'services.restaurantsDesc', icon: 'Utensils', category: 'tools' },
 ];
 
 // =============================================================================

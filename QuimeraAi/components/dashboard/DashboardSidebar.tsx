@@ -212,8 +212,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
-    { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic' },
-    { id: 'real-estate', icon: Home, label: t('realEstate.title', 'Real Estate'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic' },
+    { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic', serviceId: 'restaurants' },
+    { id: 'real-estate', icon: Home, label: t('realEstate.title', 'Real Estate'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic', serviceId: 'realEstate' },
   ];
 
   // Blog - standalone outside tools section, above agency

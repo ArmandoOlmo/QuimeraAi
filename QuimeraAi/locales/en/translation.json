@@ -8400,7 +8400,11 @@
     "templates": "Templates",
     "templatesDesc": "Website templates",
     "finance": "Finance",
-    "financeDesc": "Financial tools"
+    "financeDesc": "Financial tools",
+    "realEstate": "Real Estate",
+    "realEstateDesc": "Real estate components and tools",
+    "restaurants": "Restaurants",
+    "restaurantsDesc": "Restaurant components and tools"
   },
   "settings": {
     "title": "Workspace Settings",

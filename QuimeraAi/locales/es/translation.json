@@ -8414,7 +8414,11 @@
     "templates": "Plantillas",
     "templatesDesc": "Plantillas de sitio web",
     "finance": "Finanzas",
-    "financeDesc": "Herramientas financieras"
+    "financeDesc": "Herramientas financieras",
+    "realEstate": "Bienes Raíces",
+    "realEstateDesc": "Componentes para bienes raíces",
+    "restaurants": "Restaurantes",
+    "restaurantsDesc": "Componentes para restaurantes"
   },
   "settings": {
     "title": "Configuración del Workspace",

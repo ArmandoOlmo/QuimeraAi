@@ -10,7 +10,7 @@ import {
     Save, RefreshCw, Clock, AlertTriangle,
     FileText, Users, ShoppingCart, Bot, Mail, Sparkles,
     BarChart3, Calendar, Globe, LayoutTemplate, Wallet,
-    Check, X, History, Filter, Menu
+    Check, X, History, Filter, Menu, Home, Utensils
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { useServiceAvailability } from '../../../hooks/useServiceAvailability';
@@ -50,6 +50,8 @@ const iconMap: Record<string, React.ReactNode> = {
     Globe: <Globe size={20} />,
     LayoutTemplate: <LayoutTemplate size={20} />,
     Wallet: <Wallet size={20} />,
+    Home: <Home size={20} />,
+    Utensils: <Utensils size={20} />,
 };
 
 // =============================================================================
