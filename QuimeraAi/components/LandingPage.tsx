@@ -11,6 +11,22 @@ import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
 import HeroNova from './HeroNova';
 import HeroLead from './HeroLead';
+// Lumina components
+import HeroLumina from './HeroLumina';
+import HeroNeon from './HeroNeon';
+import TestimonialsNeon from './TestimonialsNeon';
+import FeaturesNeon from './FeaturesNeon';
+import CtaNeon from './CtaNeon';
+import PortfolioNeon from './PortfolioNeon';
+import PricingNeon from './PricingNeon';
+import FaqNeon from './FaqNeon';
+import FeaturesLumina from './FeaturesLumina';
+import CtaLumina from './CtaLumina';
+import PortfolioLumina from './PortfolioLumina';
+import PricingLumina from './PricingLumina';
+import TestimonialsLumina from './TestimonialsLumina';
+import FaqLumina from './FaqLumina';
+
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Slideshow from './Slideshow';
@@ -33,11 +49,13 @@ import Menu from './Menu';
 import Banner from './Banner';
 import TopBar from './TopBar';
 import LogoBanner from './LogoBanner';
+import QuimeraLoader from './ui/QuimeraLoader';
 import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 import Products from './Products';
 import Separator from './Separator';
 import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
+import RestaurantReservation from './RestaurantReservation';
 import PropertyDetailSection from './real-estate/PropertyDetailSection';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
@@ -800,6 +818,23 @@ const LandingPageContent: React.FC = () => {
   const mergedHeroLeadData = mergeComponentData('heroLead');
   const mergedTopBarData = mergeComponentData('topBar');
   const mergedLogoBannerData = mergeComponentData('logoBanner');
+  const mergedRestaurantReservationData = mergeComponentData('restaurantReservation');
+  
+  // Lumina sections
+  const mergedHeroLuminaData = mergeComponentData('heroLumina');
+  const mergedHeroNeonData = mergeComponentData('heroNeon');
+  const mergedTestimonialsNeonData = mergeComponentData('testimonialsNeon');
+  const mergedFeaturesNeonData = mergeComponentData('featuresNeon');
+  const mergedCtaNeonData = mergeComponentData('ctaNeon');
+  const mergedPortfolioNeonData = mergeComponentData('portfolioNeon');
+  const mergedPricingNeonData = mergeComponentData('pricingNeon');
+  const mergedFaqNeonData = mergeComponentData('faqNeon');
+  const mergedFeaturesLuminaData = mergeComponentData('featuresLumina');
+  const mergedCtaLuminaData = mergeComponentData('ctaLumina');
+  const mergedPortfolioLuminaData = mergeComponentData('portfolioLumina');
+  const mergedPricingLuminaData = mergeComponentData('pricingLumina');
+  const mergedTestimonialsLuminaData = mergeComponentData('testimonialsLumina');
+  const mergedFaqLuminaData = mergeComponentData('faqLumina');
 
   // ─── TopBar height measurement for Header offset ────────────────────────
   const topBarAboveRef = useRef<HTMLDivElement>(null);
@@ -979,7 +1014,83 @@ const LandingPageContent: React.FC = () => {
     video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor} backgroundPosition={mergedVideoData?.backgroundPosition}><Video {...mergedVideoData} borderRadius={mergedVideoData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
     howItWorks: <SectionBackground backgroundImageUrl={mergedHowItWorksData?.backgroundImageUrl} backgroundColor={mergedHowItWorksData?.colors?.background} backgroundOverlayEnabled={mergedHowItWorksData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHowItWorksData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHowItWorksData?.backgroundOverlayColor} backgroundPosition={mergedHowItWorksData?.backgroundPosition}><HowItWorks {...mergedHowItWorksData} borderRadius={mergedHowItWorksData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
     map: <SectionBackground backgroundImageUrl={mergedMapData?.backgroundImageUrl} backgroundColor={mergedMapData?.colors?.background} backgroundOverlayEnabled={mergedMapData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMapData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMapData?.backgroundOverlayColor} backgroundPosition={mergedMapData?.backgroundPosition}><BusinessMap {...mergedMapData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={mergedMapData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
-    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor} backgroundPosition={mergedMenuData?.backgroundPosition}><Menu {...mergedMenuData} borderRadius={mergedMenuData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    menu: <SectionBackground backgroundImageUrl={mergedMenuData?.backgroundImageUrl} backgroundColor={mergedMenuData?.colors?.background} backgroundOverlayEnabled={mergedMenuData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedMenuData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedMenuData?.backgroundOverlayColor} backgroundPosition={mergedMenuData?.backgroundPosition}><Menu {...mergedMenuData} borderRadius={mergedMenuData?.borderRadius || theme.cardBorderRadius} dataSource={mergedMenuData?.dataSource} restaurantId={mergedMenuData?.restaurantId} /></SectionBackground>,
+    restaurantReservation: mergedRestaurantReservationData ? (
+      <SectionBackground backgroundImageUrl={mergedRestaurantReservationData?.backgroundImageUrl} backgroundColor={mergedRestaurantReservationData?.colors?.background} backgroundOverlayEnabled={mergedRestaurantReservationData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedRestaurantReservationData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedRestaurantReservationData?.backgroundOverlayColor} backgroundPosition={mergedRestaurantReservationData?.backgroundPosition}>
+        <RestaurantReservation data={mergedRestaurantReservationData} borderRadius={mergedRestaurantReservationData?.borderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedRestaurantReservationData?.buttonBorderRadius || theme.buttonBorderRadius} />
+      </SectionBackground>
+    ) : null,
+    // Lumina sections
+    heroLumina: mergedHeroLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedHeroLuminaData?.backgroundImageUrl} backgroundColor={mergedHeroLuminaData?.colors?.background} backgroundOverlayEnabled={mergedHeroLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroLuminaData?.backgroundOverlayColor} backgroundPosition={mergedHeroLuminaData?.backgroundPosition}>
+        <HeroLumina {...mergedHeroLuminaData} borderRadius={mergedHeroLuminaData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    heroNeon: mergedHeroNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedHeroNeonData?.backgroundImageUrl} backgroundColor={mergedHeroNeonData?.colors?.background} backgroundOverlayEnabled={mergedHeroNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroNeonData?.backgroundOverlayColor} backgroundPosition={mergedHeroNeonData?.backgroundPosition}>
+        <HeroNeon {...mergedHeroNeonData} borderRadius={mergedHeroNeonData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    testimonialsNeon: mergedTestimonialsNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedTestimonialsNeonData?.backgroundImageUrl} backgroundColor={mergedTestimonialsNeonData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsNeonData?.backgroundOverlayColor} backgroundPosition={mergedTestimonialsNeonData?.backgroundPosition}>
+        <TestimonialsNeon {...mergedTestimonialsNeonData} />
+      </SectionBackground>
+    ) : null,
+    featuresNeon: mergedFeaturesNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedFeaturesNeonData?.backgroundImageUrl} backgroundColor={mergedFeaturesNeonData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesNeonData?.backgroundOverlayColor} backgroundPosition={mergedFeaturesNeonData?.backgroundPosition}>
+        <FeaturesNeon {...mergedFeaturesNeonData} />
+      </SectionBackground>
+    ) : null,
+    ctaNeon: mergedCtaNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedCtaNeonData?.backgroundImageUrl} backgroundColor={mergedCtaNeonData?.colors?.background} backgroundOverlayEnabled={mergedCtaNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaNeonData?.backgroundOverlayColor} backgroundPosition={mergedCtaNeonData?.backgroundPosition}>
+        <CtaNeon {...mergedCtaNeonData} />
+      </SectionBackground>
+    ) : null,
+    portfolioNeon: mergedPortfolioNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedPortfolioNeonData?.backgroundImageUrl} backgroundColor={mergedPortfolioNeonData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioNeonData?.backgroundOverlayColor} backgroundPosition={mergedPortfolioNeonData?.backgroundPosition}>
+        <PortfolioNeon {...mergedPortfolioNeonData} />
+      </SectionBackground>
+    ) : null,
+    pricingNeon: mergedPricingNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedPricingNeonData?.backgroundImageUrl} backgroundColor={mergedPricingNeonData?.colors?.background} backgroundOverlayEnabled={mergedPricingNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingNeonData?.backgroundOverlayColor} backgroundPosition={mergedPricingNeonData?.backgroundPosition}>
+        <PricingNeon {...mergedPricingNeonData} />
+      </SectionBackground>
+    ) : null,
+    faqNeon: mergedFaqNeonData ? (
+      <SectionBackground backgroundImageUrl={mergedFaqNeonData?.backgroundImageUrl} backgroundColor={mergedFaqNeonData?.colors?.background} backgroundOverlayEnabled={mergedFaqNeonData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqNeonData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqNeonData?.backgroundOverlayColor} backgroundPosition={mergedFaqNeonData?.backgroundPosition}>
+        <FaqNeon {...mergedFaqNeonData} />
+      </SectionBackground>
+    ) : null,
+    featuresLumina: mergedFeaturesLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedFeaturesLuminaData?.backgroundImageUrl} backgroundColor={mergedFeaturesLuminaData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesLuminaData?.backgroundOverlayColor} backgroundPosition={mergedFeaturesLuminaData?.backgroundPosition}>
+        <FeaturesLumina {...mergedFeaturesLuminaData} borderRadius={mergedFeaturesLuminaData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    ctaLumina: mergedCtaLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedCtaLuminaData?.backgroundImageUrl} backgroundColor={mergedCtaLuminaData?.colors?.background} backgroundOverlayEnabled={mergedCtaLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaLuminaData?.backgroundOverlayColor} backgroundPosition={mergedCtaLuminaData?.backgroundPosition}>
+        <CtaLumina {...mergedCtaLuminaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    portfolioLumina: mergedPortfolioLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedPortfolioLuminaData?.backgroundImageUrl} backgroundColor={mergedPortfolioLuminaData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioLuminaData?.backgroundOverlayColor} backgroundPosition={mergedPortfolioLuminaData?.backgroundPosition}>
+        <PortfolioLumina {...mergedPortfolioLuminaData} borderRadius={theme.cardBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    pricingLumina: mergedPricingLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedPricingLuminaData?.backgroundImageUrl} backgroundColor={mergedPricingLuminaData?.colors?.background} backgroundOverlayEnabled={mergedPricingLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingLuminaData?.backgroundOverlayColor} backgroundPosition={mergedPricingLuminaData?.backgroundPosition}>
+        <PricingLumina {...mergedPricingLuminaData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />
+      </SectionBackground>
+    ) : null,
+    testimonialsLumina: mergedTestimonialsLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedTestimonialsLuminaData?.backgroundImageUrl} backgroundColor={mergedTestimonialsLuminaData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsLuminaData?.backgroundOverlayColor} backgroundPosition={mergedTestimonialsLuminaData?.backgroundPosition}>
+        <TestimonialsLumina {...mergedTestimonialsLuminaData} borderRadius={mergedTestimonialsLuminaData?.borderRadius || theme.cardBorderRadius} />
+      </SectionBackground>
+    ) : null,
+    faqLumina: mergedFaqLuminaData ? (
+      <SectionBackground backgroundImageUrl={mergedFaqLuminaData?.backgroundImageUrl} backgroundColor={mergedFaqLuminaData?.colors?.background} backgroundOverlayEnabled={mergedFaqLuminaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqLuminaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqLuminaData?.backgroundOverlayColor} backgroundPosition={mergedFaqLuminaData?.backgroundPosition}>
+        <FaqLumina {...mergedFaqLuminaData} borderRadius={theme.cardBorderRadius} />
+      </SectionBackground>
+    ) : null,
     banner: <Banner {...mergedBannerData} buttonBorderRadius={mergedBannerData?.buttonBorderRadius || theme.buttonBorderRadius} />,
     topBar: mergedTopBarData ? (
       <TopBar
@@ -1503,7 +1614,7 @@ const LandingPageContent: React.FC = () => {
         {/* 1. Loading State */}
         {showArticleLoading && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-editor-text-secondary">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <QuimeraLoader size="md" />
             <p>Loading article...</p>
           </div>
         )}

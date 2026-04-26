@@ -155,7 +155,8 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
             <ImageGeneratorModal
                 isOpen={isGeneratorOpen}
                 onClose={() => setIsGeneratorOpen(false)}
-                destination="global"
+                destination="admin"
+                adminCategory="ai_generated"
             />
 
             {/* Image Detail Modal */}

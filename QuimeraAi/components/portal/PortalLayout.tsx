@@ -7,11 +7,12 @@ import React, { useState, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePortal } from './PortalContext';
 import PortalSidebar from './PortalSidebar';
-import { Menu, Bell, User, LogOut, Settings, Loader2 } from 'lucide-react';
+import { Menu, Bell, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { auth, signOut } from '../../firebase';
 import { useRouter } from '../../hooks/useRouter';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import QuimeraLoader from '../ui/QuimeraLoader';
 
 interface PortalLayoutProps {
     children: ReactNode;
@@ -35,10 +36,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     if (isLoadingPortal) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 size={40} className="animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
-                </div>
+                <QuimeraLoader size="md" text={t('common.loading', 'Cargando...')} />
             </div>
         );
     }
@@ -192,7 +190,6 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
 };
 
 export default PortalLayout;
-
 
 
 

@@ -158,7 +158,8 @@ const ImageBlockControls: React.FC<ImageBlockControlsProps> = ({ block, activeTa
                     label={t('email.image', 'Imagen')}
                     value={content.src || ''}
                     onChange={(url) => updateContent({ src: url })}
-                    destination="global"
+                    destination="admin"
+                    adminCategory="template"
                 />
                 
                 <Input
@@ -213,7 +214,6 @@ const ImageBlockControls: React.FC<ImageBlockControlsProps> = ({ block, activeTa
 };
 
 export default ImageBlockControls;
-
 
 
 

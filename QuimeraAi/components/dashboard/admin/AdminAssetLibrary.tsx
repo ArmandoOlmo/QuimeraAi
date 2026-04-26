@@ -695,7 +695,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
             const options = {
                 aspectRatio,
                 style,
-                destination: 'global' as const,
+                destination: 'admin' as const,
                 resolution,
                 lighting: lighting !== 'None' ? lighting : undefined,
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
@@ -1652,7 +1652,6 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 };
 
 export default AdminAssetLibrary;
-
 
 
 

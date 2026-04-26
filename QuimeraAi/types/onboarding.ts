@@ -394,7 +394,8 @@ export type PageTemplateId =
     | 'pricing'
     | 'faq'
     | 'cart'
-    | 'checkout';
+    | 'checkout'
+    | 'menu';
 
 export interface PageTemplate {
     id: PageTemplateId;
@@ -417,11 +418,11 @@ export const INDUSTRY_PAGE_DEFAULTS: Record<string, {
     ecommercePages?: PageTemplateId[];
 }> = {
     'restaurant': {
-        pages: ['home', 'contact', 'about'],
+        pages: ['home', 'contact', 'about', 'menu'],
         ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
     },
     'cafe': {
-        pages: ['home', 'contact', 'about'],
+        pages: ['home', 'contact', 'about', 'menu'],
         ecommercePages: ['store', 'product-detail', 'category', 'cart', 'checkout'],
     },
     'technology': {
@@ -485,6 +486,7 @@ export const PAGE_TEMPLATE_SECTIONS: Record<PageTemplateId, PageSection[]> = {
     'faq': ['header', 'faq', 'cta', 'footer'],
     'cart': ['header', 'cart', 'footer'],
     'checkout': ['header', 'checkout', 'footer'],
+    'menu': ['header', 'menu', 'restaurantReservation', 'footer'],
 };
 
 /**
@@ -625,6 +627,15 @@ export const PAGE_TEMPLATES: Record<PageTemplateId, PageTemplate> = {
         type: 'static',
         sections: PAGE_TEMPLATE_SECTIONS['checkout'],
         showInNavigation: false,
+    },
+    'menu': {
+        id: 'menu',
+        title: 'Menú',
+        slug: '/menu',
+        type: 'static',
+        sections: PAGE_TEMPLATE_SECTIONS['menu'],
+        showInNavigation: true,
+        navigationOrder: 30,
     },
 };
 

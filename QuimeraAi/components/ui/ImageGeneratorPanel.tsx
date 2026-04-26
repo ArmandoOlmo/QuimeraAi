@@ -31,9 +31,10 @@ interface ImageGeneratorPanelProps {
 
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
-    const { uploadGlobalFile, uploadFile, uploadAdminAsset, hasActiveProject, files, globalFiles, adminAssets } = useFiles();
+    const { uploadFile, uploadAdminAsset, hasActiveProject, files, adminAssets, fetchAdminAssets } = useFiles();
     const { activeProjectId } = useProject();
     const { t } = useTranslation();
+    const effectiveDestination: 'user' | 'admin' = destination === 'global' ? 'admin' : destination;
 
     // Translation-dependent constants
     const ASPECT_RATIOS = [
@@ -192,28 +193,33 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
     const [librarySearchQuery, setLibrarySearchQuery] = useState('');
     const [loadingLibraryImage, setLoadingLibraryImage] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (effectiveDestination === 'admin') {
+            fetchAdminAssets();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [effectiveDestination]);
+
     // Filter project images for the library browser
     const effectiveProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
         let sourceFiles = files;
-        if (destination === 'admin') {
+        if (effectiveDestination === 'admin') {
             sourceFiles = adminAssets;
             if (adminCategory) {
                 sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
             }
-        } else if (destination === 'global') {
-            sourceFiles = globalFiles;
         }
         
-        let result = sourceFiles.filter(f => f.type?.startsWith('image/') || true);
-        if (destination === 'user' && effectiveProjectId) {
+        let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
+        if (effectiveDestination === 'user' && effectiveProjectId) {
             result = result.filter(f => f.projectId === effectiveProjectId);
         }
         if (librarySearchQuery) {
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, destination]);
+    }, [files, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, effectiveDestination]);
 
     // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {
@@ -290,7 +296,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
 
             let savedUrl: string | undefined;
 
-            if (destination === 'admin') {
+            if (effectiveDestination === 'admin') {
                 await uploadAdminAsset(file, (adminCategory as any) || 'ai_generated', {
                     description: `Generated AI image: ${promptText.substring(0, 50)}...`,
                     isAiGenerated: true,
@@ -298,13 +304,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
                 });
                 console.log('✅ [ImageGeneratorPanel] Saved to admin library');
                 setSavedToLibrary(true);
-            } else if (destination === 'global') {
-                // Save to global files library (Super Admin)
-                await uploadGlobalFile(file);
-                // uploadGlobalFile doesn't return URL, but the file is saved
-                console.log('✅ [ImageGeneratorPanel] Saved to global library');
-                setSavedToLibrary(true);
-                // The URL comes from the globalFiles state update via FilesContext
             } else if (hasActiveProject) {
                 // Save to user's project files
                 savedUrl = await uploadFile(file);
@@ -414,7 +413,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, 
             const options = {
                 aspectRatio,
                 style,
-                destination,
+                destination: effectiveDestination,
                 resolution,
                 model: selectedModel,
                 thinkingLevel: thinkingLevel !== 'none' ? thinkingLevel : undefined,

@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
     BarChart3,
-    Bot,
-    Calendar,
     CheckCircle2,
     Edit,
     Eye,
@@ -10,12 +8,9 @@ import {
     Loader2,
     MapPin,
     Menu,
-    MessageSquare,
     Plus,
-    Send,
     Sparkles,
     Trash2,
-    Users,
     X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -30,11 +25,10 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
-import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { Property, PropertyImage, PropertyStatus, PropertyType } from '../../../types/realEstate';
 import { useRealEstate } from './hooks/useRealEstate';
 
-type Tab = 'overview' | 'properties' | 'preview' | 'assistant';
+type Tab = 'overview' | 'properties' | 'preview';
 
 const emptyProperty = {
     title: '',
@@ -190,9 +184,6 @@ const RealEstateDashboard: React.FC = () => {
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [propertyForm, setPropertyForm] = useState(emptyProperty);
     const [amenityInput, setAmenityInput] = useState('');
-    const [assistantPrompt, setAssistantPrompt] = useState(() => t('realEstate.assistant.defaultPrompt'));
-    const [assistantResult, setAssistantResult] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
     const [isSeedingDemo, setIsSeedingDemo] = useState(false);
 
     const propertyStatuses = useMemo<Array<{ value: PropertyStatus; label: string }>>(() => [
@@ -290,27 +281,6 @@ const RealEstateDashboard: React.FC = () => {
         setEditingProperty(null);
     };
 
-    const saveLead = async (event: React.FormEvent) => {
-        event.preventDefault();
-        const leadId = await addPropertyLead({
-            ...leadForm,
-            propertyId: leadForm.propertyId || undefined,
-            stage: 'new',
-            source: 'manual',
-        });
-        if (leadId && leadForm.propertyId) {
-            await addShowing({
-                propertyId: leadForm.propertyId,
-                leadId,
-                scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                status: 'scheduled',
-                notes: t('realEstate.showings.autoCreatedNote'),
-            });
-        }
-        setLeadForm({ name: '', email: '', phone: '', propertyId: '', message: '' });
-        setLeadModalOpen(false);
-    };
-
     const addAmenity = () => {
         const value = amenityInput.trim();
         if (!value || propertyForm.amenities.includes(value)) return;
@@ -329,41 +299,6 @@ const RealEstateDashboard: React.FC = () => {
                 position: prev.images.length,
             }],
         }));
-    };
-
-    const generateAssistantContent = async (mode: 'description' | 'social' | 'followup' | 'score') => {
-        if (!activeProjectId || !user?.uid) return;
-        setIsGenerating(true);
-        try {
-            const propertyContext = selectedProperty
-                ? t('realEstate.assistant.propertyContext', {
-                    title: selectedProperty.title,
-                    price: money(selectedProperty.price),
-                    address: selectedProperty.address,
-                    city: selectedProperty.city,
-                    bedrooms: selectedProperty.bedrooms,
-                    bathrooms: selectedProperty.bathrooms,
-                    squareFeet: selectedProperty.squareFeet,
-                    description: selectedProperty.description,
-                })
-                : t('realEstate.assistant.noPropertyContext');
-            const prompt = t('realEstate.assistant.systemPrompt', {
-                mode,
-                request: assistantPrompt,
-                propertyContext,
-            });
-            const response = await generateContentViaProxy(activeProjectId, prompt, 'gemini-2.5-flash', { temperature: 0.7, maxOutputTokens: 900 }, user.uid);
-            const text = extractTextFromResponse(response);
-            setAssistantResult(text);
-            if (mode === 'description' && selectedProperty && text) {
-                await updateProperty(selectedProperty.id, { description: text });
-            }
-        } catch (error) {
-            console.error('[RealEstateDashboard] AI generation failed:', error);
-            setAssistantResult(t('realEstate.assistant.error'));
-        } finally {
-            setIsGenerating(false);
-        }
     };
 
     if (!activeProjectId) {
@@ -393,42 +328,88 @@ const RealEstateDashboard: React.FC = () => {
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+            {/* Section Navigation Panel — Desktop only */}
+            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-border bg-card/50 flex-shrink-0 overflow-hidden z-10">
+                <div className="h-14 px-4 border-b border-border flex items-center gap-2 flex-shrink-0">
+                    <Home size={20} className="text-primary" />
+                    <h2 className="text-sm font-bold text-foreground truncate">
+                        {t('realEstate.title')}
+                    </h2>
+                </div>
+                <nav className="flex-1 overflow-y-auto py-2 px-2">
+                    <div className="space-y-0.5">
+                        {[
+                            ['overview', BarChart3, t('realEstate.tabs.dashboard')],
+                            ['properties', Home, t('realEstate.tabs.properties')],
+                            ['preview', Eye, t('realEstate.tabs.preview')],
+                        ].map(([id, Icon, label]) => {
+                            const TabIcon = Icon as typeof Home;
+                            const isActive = activeTab === id;
+                            return (
+                                <button
+                                    key={id as string}
+                                    onClick={() => setActiveTab(id as Tab)}
+                                    className={`
+                                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                        ${isActive
+                                            ? 'bg-primary/10 text-primary shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                        }
+                                    `}
+                                >
+                                    <TabIcon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                                    <span className="truncate">{label as string}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </nav>
+            </div>
+
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
                 <RealEstateHeader
                     title={t('realEstate.title')}
                     projectName={activeProject?.name}
+                    onOpenMenu={() => setIsMobileMenuOpen(true)}
                     onBack={() => setView('dashboard')}
                     onAddProperty={() => openPropertyForm()}
                     onSeedDemo={seedDemoListings}
                     isSeedingDemo={isSeedingDemo}
                     t={t}
                 />
-                <div className="px-4 sm:px-6 border-b border-border bg-card/30 z-10">
-                    <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide" aria-label={t('realEstate.tabs.navigationLabel')}>
+                
+                {/* Mobile Tabs */}
+                <div className="md:hidden border-b border-border bg-background px-2 py-2 z-10">
+                    <div className="grid grid-cols-3 gap-1">
                         {[
                             ['overview', BarChart3, t('realEstate.tabs.dashboard')],
                             ['properties', Home, t('realEstate.tabs.properties')],
                             ['preview', Eye, t('realEstate.tabs.preview')],
-                            ['assistant', Bot, t('realEstate.tabs.assistant')],
                         ].map(([id, Icon, label]) => {
                             const TabIcon = Icon as typeof Home;
+                            const isActive = activeTab === id;
                             return (
                                 <button
                                     key={id as string}
                                     onClick={() => setActiveTab(id as Tab)}
-                                    className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === id ? 'border-primary text-foreground font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                    className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                        }`}
                                 >
-                                    <TabIcon className="w-4 h-4" />
-                                    {label as string}
+                                    <TabIcon className="w-4 h-4 shrink-0" />
+                                    <span className="truncate w-full text-center px-0.5">{label as string}</span>
                                 </button>
                             );
                         })}
-                    </nav>
+                    </div>
                 </div>
 
-                <main className="flex-1 min-w-0 overflow-y-auto relative z-10 p-4 sm:p-6 lg:p-8">
-                <div className="space-y-6">
+                <main className="flex-1 min-w-0 overflow-y-auto relative z-10 flex flex-col">
+                    <div className="w-full h-full p-4 sm:p-6 lg:p-8">
+                        <div className="max-w-7xl mx-auto space-y-6">
 
                     {isLoading ? (
                         <div className="h-64 flex items-center justify-center">
@@ -438,12 +419,10 @@ const RealEstateDashboard: React.FC = () => {
                         <>
                             {activeTab === 'overview' && (
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         {[
                                             [t('realEstate.metrics.totalProperties'), metrics.total, Home],
                                             [t('realEstate.metrics.active'), metrics.active, CheckCircle2],
-                                            [t('realEstate.metrics.newLeads'), metrics.newLeads, Users],
-                                            [t('realEstate.metrics.showings'), metrics.showings, Calendar],
                                             [t('realEstate.metrics.sold'), metrics.sold, Sparkles],
                                         ].map(([label, value, Icon]) => {
                                             const MetricIcon = Icon as typeof Home;
@@ -479,8 +458,6 @@ const RealEstateDashboard: React.FC = () => {
                                             <h2 className="font-bold text-lg mb-4">{t('realEstate.quickActions')}</h2>
                                             <div className="space-y-2">
                                                 <Button className="w-full justify-start" variant="secondary" onClick={() => openPropertyForm()}><Plus size={16} />{t('realEstate.actions.createProperty')}</Button>
-                                                <Button className="w-full justify-start" variant="secondary" onClick={() => setActiveTab('assistant')}><Sparkles size={16} />{t('realEstate.actions.generateDescription')}</Button>
-                                                <Button className="w-full justify-start" variant="secondary" onClick={() => setLeadModalOpen(true)}><Users size={16} />{t('realEstate.actions.addLead')}</Button>
                                                 <Button className="w-full justify-start" variant="secondary" onClick={() => setActiveTab('preview')}><Eye size={16} />{t('realEstate.actions.previewListing')}</Button>
                                             </div>
                                         </div>
@@ -526,58 +503,15 @@ const RealEstateDashboard: React.FC = () => {
                                 </div>
                             )}
 
-                            {activeTab === 'leads' && (
-                                <div className="grid grid-cols-1 xl:grid-cols-6 gap-3">
-                                    {leadStages.map(stage => (
-                                        <div key={stage.value} className="bg-card/50 border border-border rounded-xl p-3 min-h-72">
-                                            <h3 className="font-bold text-sm mb-3">{stage.label}</h3>
-                                            <div className="space-y-2">
-                                                {leads.filter(lead => lead.stage === stage.value).map(lead => (
-                                                    <LeadCard key={lead.id} lead={lead} properties={properties} stageOptions={leadStages} noContactLabel={t('realEstate.noContactInfo')} onStage={value => updatePropertyLead(lead.id, { stage: value })} />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
                             {activeTab === 'preview' && (
                                 <ListingPreview property={selectedProperty} properties={properties} onSelect={setSelectedPropertyId} onPublish={(propertyId) => updatePropertyStatus(propertyId, 'active')} onUnpublish={(propertyId) => updatePropertyStatus(propertyId, 'draft')} t={t} />
                             )}
 
-                            {activeTab === 'assistant' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-                                    <div className="bg-card/60 border border-border rounded-xl p-5 space-y-4">
-                                        <h2 className="font-bold text-lg flex items-center gap-2"><Bot size={20} />{t('realEstate.assistant.title')}</h2>
-                                        <DashboardSelect
-                                            value={selectedProperty?.id || ''}
-                                            onChange={setSelectedPropertyId}
-                                            placeholder={t('realEstate.selectProperty')}
-                                            options={properties.map(property => ({ value: property.id, label: property.title }))}
-                                        />
-                                        <textarea
-                                            value={assistantPrompt}
-                                            onChange={event => setAssistantPrompt(event.target.value)}
-                                            className="w-full min-h-28 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                                        />
-                                        <div className="grid grid-cols-1 gap-2">
-                                            <Button disabled={isGenerating} onClick={() => generateAssistantContent('description')}><Sparkles size={16} />{t('realEstate.assistant.propertyDescription')}</Button>
-                                            <Button disabled={isGenerating} variant="secondary" onClick={() => generateAssistantContent('social')}><Send size={16} />{t('realEstate.assistant.socialPost')}</Button>
-                                            <Button disabled={isGenerating} variant="secondary" onClick={() => generateAssistantContent('followup')}><MessageSquare size={16} />{t('realEstate.assistant.followUp')}</Button>
-                                            <Button disabled={isGenerating} variant="secondary" onClick={() => generateAssistantContent('score')}><BarChart3 size={16} />{t('realEstate.assistant.listingScore')}</Button>
-                                        </div>
-                                    </div>
-                                    <div className="bg-card/60 border border-border rounded-xl p-5 min-h-96">
-                                        {isGenerating ? <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div> : (
-                                            <div className="prose prose-invert max-w-none whitespace-pre-wrap text-sm text-foreground">{assistantResult || t('realEstate.assistant.emptyOutput')}</div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </>
                     )}
-                </div>
-            </main>
+                        </div>
+                    </div>
+                </main>
             </div>
 
             <Modal isOpen={propertyModalOpen} onClose={() => setPropertyModalOpen(false)} maxWidth="max-w-5xl" fullScreenMobile>
@@ -587,6 +521,16 @@ const RealEstateDashboard: React.FC = () => {
                         <Button type="button" variant="ghost" size="icon" onClick={() => setPropertyModalOpen(false)} aria-label={t('common.close')}><X size={16} /></Button>
                     </div>
                     <div className="p-5 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4 custom-scrollbar">
+                        <Field label={t('realEstate.form.gallery')} className="lg:col-span-2">
+                            <div className="grid gap-3 lg:grid-cols-[minmax(220px,320px)_1fr] lg:items-start">
+                                <div className="max-w-sm">
+                                    <ImagePicker label="" value={propertyForm.images[0]?.url || ''} onChange={addImageUrl} destination="user" />
+                                </div>
+                                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 gap-2">
+                                    {propertyForm.images.map(image => <img key={image.id} src={image.url} alt={image.altText || ''} className="h-16 sm:h-20 w-full rounded-lg object-cover border border-border" />)}
+                                </div>
+                            </div>
+                        </Field>
                         <Field label={t('realEstate.form.title')}><Input required value={propertyForm.title} onChange={event => setPropertyForm(prev => ({ ...prev, title: event.target.value }))} /></Field>
                         <Field label={t('realEstate.form.price')}><Input type="number" value={propertyForm.price} onChange={event => setPropertyForm(prev => ({ ...prev, price: Number(event.target.value) }))} /></Field>
                         <Field label={t('realEstate.form.address')}><Input value={propertyForm.address} onChange={event => setPropertyForm(prev => ({ ...prev, address: event.target.value }))} /></Field>
@@ -611,12 +555,6 @@ const RealEstateDashboard: React.FC = () => {
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {propertyForm.amenities.map(amenity => <button type="button" key={amenity} onClick={() => setPropertyForm(prev => ({ ...prev, amenities: prev.amenities.filter(item => item !== amenity) }))} className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground">{amenity}</button>)}
-                            </div>
-                        </Field>
-                        <Field label={t('realEstate.form.gallery')} className="lg:col-span-2">
-                            <ImagePicker label="" value={propertyForm.images[0]?.url || ''} onChange={addImageUrl} />
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3">
-                                {propertyForm.images.map(image => <img key={image.id} src={image.url} alt={image.altText || ''} className="aspect-video rounded-lg object-cover border border-border" />)}
                             </div>
                         </Field>
                     </div>

@@ -1,5 +1,6 @@
-import React from 'react';
-import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, AnimationType, CornerGradientConfig } from '../types';
+import React, { useMemo } from 'react';
+import { MenuData, PaddingSize, BorderRadiusSize, FontSize, ServiceIcon, AnimationType, CornerGradientConfig, MenuItem } from '../types';
+import { usePublicRestaurantMenu } from '../hooks/usePublicRestaurantMenu';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
@@ -657,6 +658,9 @@ const TextOnlyMenuCard: React.FC<{
 interface MenuProps extends MenuData {
     borderRadius: BorderRadiusSize;
     cornerGradient?: CornerGradientConfig;
+    // Dynamic data source support
+    dataSource?: 'manual' | 'restaurant';
+    restaurantId?: string;
 }
 
 const Menu: React.FC<MenuProps> = ({ 
@@ -675,14 +679,34 @@ const Menu: React.FC<MenuProps> = ({
     animationType = 'fade-in-up',
     enableCardAnimation = true,
     textAlignment = 'center',
-    cornerGradient
+    cornerGradient,
+    dataSource = 'manual',
+    restaurantId,
 }) => {
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
     const primaryColor = getColor('primary.main', '#4f46e5');
+
+    // Dynamic data source: fetch from restaurant dashboard when configured
+    const { items: restaurantItems, isLoading: isLoadingRestaurant } = usePublicRestaurantMenu(
+        dataSource === 'restaurant' ? restaurantId : null
+    );
+
+    // Map restaurant items to MenuItem format when using dynamic source
+    const effectiveItems: MenuItem[] = useMemo(() => {
+        if (dataSource !== 'restaurant' || !restaurantItems.length) return items;
+        return restaurantItems.map(ri => ({
+            name: ri.name,
+            description: ri.description || '',
+            price: ri.currency ? `${ri.currency} ${Number(ri.price || 0).toFixed(2)}` : `$${Number(ri.price || 0).toFixed(2)}`,
+            imageUrl: ri.imageUrl || '',
+            category: ri.category || '',
+            isSpecial: ri.dietaryTags?.includes('special') || ri.isAvailable === false ? false : undefined as any,
+        }));
+    }, [dataSource, restaurantItems, items]);
     
     // Group items by category if showCategories is true
-    const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
+    const categories = Array.from(new Set(effectiveItems.map(item => item.category).filter(Boolean)));
     
     // Use component colors - respect user's choices
     const sectionTitleColor = colors?.heading || '#ffffff';
@@ -735,7 +759,7 @@ const Menu: React.FC<MenuProps> = ({
             {/* Menu Items - Classic Variant */}
             {menuVariant === 'classic' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {items.map((item, index) => (
+                    {effectiveItems.map((item, index) => (
                         <ClassicMenuCard 
                             key={index} 
                             item={item} 
@@ -752,7 +776,7 @@ const Menu: React.FC<MenuProps> = ({
             {/* Menu Items - Modern Grid Variant */}
             {menuVariant === 'modern-grid' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {items.map((item, index) => (
+                    {effectiveItems.map((item, index) => (
                         <ModernGridCard 
                             key={index} 
                             item={item} 
@@ -767,7 +791,7 @@ const Menu: React.FC<MenuProps> = ({
             {/* Menu Items - Elegant List Variant */}
             {menuVariant === 'elegant-list' && (
                 <div className="space-y-6 max-w-6xl mx-auto">
-                    {items.map((item, index) => (
+                    {effectiveItems.map((item, index) => (
                         <ElegantListCard 
                             key={index} 
                             item={item} 
@@ -784,7 +808,7 @@ const Menu: React.FC<MenuProps> = ({
             {/* Menu Items - Full Image Variant */}
             {menuVariant === 'full-image' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {items.map((item, index) => (
+                    {effectiveItems.map((item, index) => (
                         <FullImageMenuCard 
                             key={index} 
                             item={item} 
@@ -802,7 +826,7 @@ const Menu: React.FC<MenuProps> = ({
             {/* Menu Items - Text Only Variant */}
             {menuVariant === 'text-only' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-6xl mx-auto">
-                    {items.map((item, index) => (
+                    {effectiveItems.map((item, index) => (
                         <TextOnlyMenuCard 
                             key={index} 
                             item={item} 

@@ -31,6 +31,9 @@ import {
   ChevronDown as ChevronDownIcon,
   User
 } from 'lucide-react';
+import CtaSection from './CtaSection';
+import ScreenshotCarousel from './ScreenshotCarousel';
+
 import LanguageSelector from './ui/LanguageSelector';
 import ImageCarousel from './ImageCarousel';
 import Separator from './Separator';
@@ -2493,6 +2496,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           </section>
         );
       }
+
+
 
       case 'screenshotCarousel': {
         const carouselPreview = section.data || {};

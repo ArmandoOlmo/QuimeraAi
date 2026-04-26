@@ -29,7 +29,7 @@ import {
   Briefcase, MessageCircle, Mail, Send, Type,
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
   TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
-  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2,
+  FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2, CalendarCheck,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import AIContentAssistant from '../ui/AIContentAssistant';
@@ -70,7 +70,23 @@ import {
   renderChatbotControlsWithTabs,
   renderSeparatorControlsWithTabs,
   renderRealEstateListingsControlsWithTabs,
+  renderRestaurantReservationControlsWithTabs,
+  renderHeroLuminaControls,
+  renderFeaturesLuminaControls,
+  renderCtaLuminaControls,
+  renderPortfolioLuminaControls,
+  renderPricingLuminaControls,
+  renderTestimonialsLuminaControls,
+  renderFaqLuminaControls,
 } from './sections';
+
+import { renderHeroNeonControls } from './sections/renderHeroNeonControls';
+import { renderTestimonialsNeonControls } from './sections/renderTestimonialsNeonControls';
+import { renderFeaturesNeonControls } from './sections/renderFeaturesNeonControls';
+import { renderCtaNeonControls } from './sections/renderCtaNeonControls';
+import { renderPortfolioNeonControls } from './sections/renderPortfolioNeonControls';
+import { renderPricingNeonControls } from './sections/renderPricingNeonControls';
+import { renderFaqNeonControls } from './sections/renderFaqNeonControls';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 const Controls: React.FC = () => {
@@ -338,9 +354,24 @@ const Controls: React.FC = () => {
     productBundle: { label: 'Product Bundle', icon: ShoppingBag, renderer: () => null },
     announcementBar: { label: 'Announcement Bar', icon: MessageCircle, renderer: () => null },
     realEstateListings: { label: t('realEstate.websiteListings.builderLabel'), icon: Building2, renderer: () => renderRealEstateListingsControlsWithTabs(deps) },
+    restaurantReservation: { label: t('editor.restaurantReservationSection'), icon: CalendarCheck, renderer: () => renderRestaurantReservationControlsWithTabs(deps) },
     cmsFeed: { label: 'CMS Feed', icon: FileText, renderer: () => renderCMSFeedControlsWithTabs(deps) },
     signupFloat: { label: 'Sign Up Float', icon: UserPlus, renderer: () => renderSignupFloatControlsWithTabs(deps) },
     chatbot: { label: 'Chatbot', icon: MessageSquare, renderer: () => renderChatbotControlsWithTabs(deps) },
+    heroLumina: { label: 'Hero Lumina', icon: MonitorPlay, renderer: () => renderHeroLuminaControls(deps) },
+    featuresLumina: { label: 'Features Lumina', icon: List, renderer: () => renderFeaturesLuminaControls(deps) },
+    ctaLumina: { label: 'CTA Lumina', icon: MessageCircle, renderer: () => renderCtaLuminaControls(deps) },
+    portfolioLumina: { label: 'Portfolio Lumina', icon: Briefcase, renderer: () => renderPortfolioLuminaControls(deps) },
+    pricingLumina: { label: 'Pricing Lumina', icon: DollarSign, renderer: () => renderPricingLuminaControls(deps) },
+    testimonialsLumina: { label: 'Testimonials Lumina', icon: Star, renderer: () => renderTestimonialsLuminaControls(deps) },
+    faqLumina: { label: 'FAQ Lumina', icon: HelpCircle, renderer: () => renderFaqLuminaControls(deps) },
+    heroNeon: { label: 'Hero Neon', icon: MonitorPlay, renderer: () => renderHeroNeonControls(deps) },
+    testimonialsNeon: { label: 'Testimonials Neon', icon: Star, renderer: () => renderTestimonialsNeonControls(deps) },
+    featuresNeon: { label: 'Features Neon', icon: List, renderer: () => renderFeaturesNeonControls(deps) },
+    ctaNeon: { label: 'CTA Neon', icon: MessageCircle, renderer: () => renderCtaNeonControls(deps) },
+    portfolioNeon: { label: 'Portfolio Neon', icon: Briefcase, renderer: () => renderPortfolioNeonControls(deps) },
+    pricingNeon: { label: 'Pricing Neon', icon: DollarSign, renderer: () => renderPricingNeonControls(deps) },
+    faqNeon: { label: 'FAQ Neon', icon: HelpCircle, renderer: () => renderFaqNeonControls(deps) },
   };
 
   if (!data) return null;
@@ -441,6 +472,21 @@ const Controls: React.FC = () => {
       case 'productBundle': return productBundleControls ? <TabbedControls contentTab={productBundleControls.contentTab} styleTab={productBundleControls.styleTab} /> : null;
       case 'storeSettings': return storeSettingsControls ? <TabbedControls contentTab={storeSettingsControls.contentTab} styleTab={storeSettingsControls.styleTab} /> : null;
       case 'realEstateListings': return renderRealEstateListingsControlsWithTabs(deps);
+      case 'restaurantReservation': return renderRestaurantReservationControlsWithTabs(deps);
+      case 'heroLumina': return renderHeroLuminaControls(deps);
+      case 'featuresLumina': return renderFeaturesLuminaControls(deps);
+      case 'ctaLumina': return renderCtaLuminaControls(deps);
+      case 'portfolioLumina': return renderPortfolioLuminaControls(deps);
+      case 'pricingLumina': return renderPricingLuminaControls(deps);
+      case 'testimonialsLumina': return renderTestimonialsLuminaControls(deps);
+      case 'faqLumina': return renderFaqLuminaControls(deps);
+      case 'heroNeon': return renderHeroNeonControls(deps);
+      case 'testimonialsNeon': return renderTestimonialsNeonControls(deps);
+      case 'featuresNeon': return renderFeaturesNeonControls(deps);
+      case 'ctaNeon': return renderCtaNeonControls(deps);
+      case 'portfolioNeon': return renderPortfolioNeonControls(deps);
+      case 'pricingNeon': return renderPricingNeonControls(deps);
+      case 'faqNeon': return renderFaqNeonControls(deps);
       default: return config.renderer();
     }
   };

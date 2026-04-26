@@ -38,6 +38,7 @@ export type AdminAssetCategory =
     | 'background' 
     | 'logo' 
     | 'testimonial'
+    | 'team'
     | 'product'
     | 'ai_generated'
     | 'other';

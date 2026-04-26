@@ -90,6 +90,51 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
 
+      {/* Data Source Toggle */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+          <List size={14} />
+          {t('restaurant.reservation.dataSourceLabel', 'Fuente de Datos')}
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: 'manual', label: `📝 ${t('restaurant.reservation.manual', 'Manual')}` },
+            { value: 'restaurant', label: `🍽️ ${t('restaurant.reservation.fromRestaurant', 'Restaurante')}` },
+          ].map((src) => (
+            <button type="button"
+              key={src.value}
+              onClick={() => setNestedData('menu.dataSource', src.value)}
+              className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.dataSource || 'manual') === src.value
+                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
+                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                }`}
+            >
+              {src.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-editor-text-secondary mt-2 italic">
+          {(data?.menu?.dataSource || 'manual') === 'manual'
+            ? t('restaurant.reservation.manualHint', '📝 Configura platos manualmente desde el editor.')
+            : t('restaurant.reservation.restaurantHint', '🍽️ Los platos se cargan automáticamente del módulo de Restaurantes.')}
+        </p>
+
+        {/* Restaurant ID — only visible when dataSource is 'restaurant' */}
+        {data?.menu?.dataSource === 'restaurant' && (
+          <div className="mt-3 pt-3 border-t border-editor-border/50 animate-fade-in-up">
+            <Input
+              label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
+              value={data?.menu?.restaurantId || ''}
+              onChange={(e) => setNestedData('menu.restaurantId', e.target.value)}
+            />
+            <p className="text-xs text-editor-text-secondary mt-1 italic">
+              {t('restaurant.reservation.restaurantIdHelp', 'Vincula este menú al restaurante creado en el módulo de Restaurantes.')}
+            </p>
+          </div>
+        )}
+      </div>
+
+
       {/* Content Controls */}
       <div className="space-y-3">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
@@ -118,14 +163,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
 
-      {/* Menu Items */}
-      {renderListSectionControls('menu', 'Dish', [
-        { key: 'name', label: 'Dish Name', type: 'input' },
-        { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'price', label: 'Price', type: 'input' },
-        { key: 'imageUrl', label: 'Photo', type: 'image' },
-        { key: 'category', label: 'Category', type: 'input' }
-      ])}
+      {/* Menu Items — only visible when dataSource is 'manual' */}
+      {(data?.menu?.dataSource || 'manual') === 'manual' && (
+        renderListSectionControls('menu', 'Dish', [
+          { key: 'name', label: 'Dish Name', type: 'input' },
+          { key: 'description', label: 'Description', type: 'textarea' },
+          { key: 'price', label: 'Price', type: 'input' },
+          { key: 'imageUrl', label: 'Photo', type: 'image' },
+          { key: 'category', label: 'Category', type: 'input' }
+        ])
+      )}
     </div>
   );
 

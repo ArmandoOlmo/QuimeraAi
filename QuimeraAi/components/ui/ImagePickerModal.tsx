@@ -1,12 +1,12 @@
 /**
  * ImagePickerModal
- * Modal to select images from the Super Admin global image library
+ * Modal to select images from the administration image library
  * Used for selecting logos, backgrounds, and other images in the landing page editor
  */
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Search, Image, Check, Star, Upload, Loader2 } from 'lucide-react';
+import { X, Search, Image, Check, Star, Upload, Loader2, FolderOpen } from 'lucide-react';
 import { useFiles } from '../../contexts/files';
 import { BRAND_ASSETS } from '../../constants/brandAssets';
 import { FileRecord } from '../../types';
@@ -16,28 +16,32 @@ interface ImagePickerModalProps {
     onClose: () => void;
     onSelect: (imageUrl: string) => void;
     title?: string;
+    useProjectLibrary?: boolean;
 }
 
 const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     isOpen,
     onClose,
     onSelect,
-    title = 'Seleccionar Imagen'
+    title = 'Seleccionar Imagen',
+    useProjectLibrary = false
 }) => {
     const { t } = useTranslation();
-    const { globalFiles, isGlobalFilesLoading, fetchGlobalFiles, uploadGlobalFile } = useFiles();
+    const { 
+        adminAssets, isAdminAssetsLoading, fetchAdminAssets, uploadAdminAsset,
+        files, isFilesLoading, uploadFile 
+    } = useFiles();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Fetch global files when modal opens and reset state when closed
+    // Fetch assets when modal opens and reset state when closed
     useEffect(() => {
         if (isOpen) {
-            // Only fetch if we don't already have global files loaded
-            if (globalFiles.length === 0) {
-                fetchGlobalFiles();
+            if (!useProjectLibrary && adminAssets.length === 0) {
+                fetchAdminAssets();
             }
         } else {
             // Reset state when modal closes
@@ -45,7 +49,6 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             setSearchQuery('');
             setUploadError(null);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
     // Handle file upload
@@ -69,9 +72,15 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         setUploadError(null);
 
         try {
-            await uploadGlobalFile(file);
-            // Refresh the files list to show the new upload
-            await fetchGlobalFiles();
+            if (useProjectLibrary) {
+                await uploadFile(file);
+                // `files` auto-updates via onSnapshot in context, no fetch needed.
+            } else {
+                await uploadAdminAsset(file, 'other', {
+                    description: 'Uploaded from image picker',
+                });
+                await fetchAdminAssets();
+            }
         } catch (error) {
             console.error('Error uploading image:', error);
             setUploadError(t('landingEditor.uploadError', 'Error al subir la imagen'));
@@ -84,9 +93,8 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         }
     };
 
-    // Combine brand assets with global files
+    // Combine brand assets with admin files
     const allImages = useMemo(() => {
-        // Convert brand assets to FileRecord-like format
         const brandAssetImages = BRAND_ASSETS.map(asset => ({
             id: asset.id,
             name: asset.name,
@@ -95,8 +103,9 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             isSystemAsset: true,
         }));
 
-        // Filter only images from global files
-        const userImages = globalFiles
+        const sourceList = useProjectLibrary ? files : adminAssets;
+        
+        const userImages = sourceList
             .filter(file => file.type?.startsWith('image/'))
             .map(file => ({
                 id: file.id,
@@ -107,7 +116,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             }));
 
         return [...brandAssetImages, ...userImages];
-    }, [globalFiles]);
+    }, [adminAssets, files, useProjectLibrary]);
 
     // Filter by search
     const filteredImages = useMemo(() => {
@@ -136,25 +145,30 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             />
 
             {/* Modal */}
-            <div className="relative bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4">
+            <div className="relative bg-card border border-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[84vh] flex flex-col m-4 overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between h-14 px-4 border-b border-border bg-card/95">
+                    <div className="flex items-center gap-2 min-w-0">
                         <Image size={20} className="text-primary" />
-                        <h2 className="font-semibold">{title}</h2>
+                        <h2 className="text-lg font-semibold text-foreground truncate">{title}</h2>
+                        <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md border border-border bg-muted/50 text-xs text-muted-foreground">
+                            <FolderOpen size={12} />
+                            {useProjectLibrary ? t('restaurants.projectLibrary', 'Project') : 'Administración'}
+                        </span>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+                        title={t('common.close', 'Cerrar')}
                     >
                         <X size={18} />
                     </button>
                 </div>
 
                 {/* Search and Upload */}
-                <div className="p-4 border-b border-border space-y-3">
+                <div className="p-4 border-b border-border space-y-3 bg-muted/20">
                     {/* Search */}
-                    <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
                         <Search size={16} className="text-muted-foreground" />
                         <input
                             type="text"
@@ -185,7 +199,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 h-9 px-3 rounded-md border border-dashed border-primary/50 text-primary hover:bg-primary/5 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isUploading ? (
                                 <>
@@ -215,7 +229,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 {/* Image Grid */}
                 <div className="flex-1 overflow-y-auto p-4">
                     {filteredImages.length === 0 ? (
-                        isGlobalFilesLoading ? (
+                        (useProjectLibrary ? isFilesLoading : isAdminAssetsLoading) ? (
                             <div className="flex items-center justify-center h-40">
                                 <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
                             </div>
@@ -226,14 +240,14 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                             </div>
                         )
                     ) : (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                             {filteredImages.map((img) => (
                                 <button
                                     key={img.id}
                                     onClick={() => setSelectedUrl(img.downloadURL)}
-                                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedUrl === img.downloadURL
+                                    className={`relative aspect-square rounded-md overflow-hidden border transition-all ${selectedUrl === img.downloadURL
                                             ? 'border-primary ring-2 ring-primary/30'
-                                            : 'border-transparent hover:border-muted-foreground/30'
+                                            : 'border-border/50 hover:border-primary/40'
                                         }`}
                                 >
                                     <img
@@ -263,7 +277,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                 </button>
                             ))}
                             {/* Loading indicator for more images */}
-                            {isGlobalFilesLoading && (
+                            {isAdminAssetsLoading && (
                                 <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                                     <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
                                 </div>
@@ -273,21 +287,21 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between p-4 border-t border-border">
+                <div className="flex items-center justify-between p-4 border-t border-border bg-card/95">
                     <p className="text-xs text-muted-foreground">
                         {filteredImages.length} {t('landingEditor.imagesAvailable', 'imágenes disponibles')}
                     </p>
                     <div className="flex gap-2">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
+                            className="h-9 px-4 rounded-md text-sm font-medium hover:bg-muted transition-colors"
                         >
                             {t('common.cancel', 'Cancelar')}
                         </button>
                         <button
                             onClick={handleSelect}
                             disabled={!selectedUrl}
-                            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             {t('common.select', 'Seleccionar')}
                         </button>

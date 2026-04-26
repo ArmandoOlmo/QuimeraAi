@@ -709,6 +709,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 buttonText: contrastText(colors.primary, colors.background, colors.heading),
             }
         },
+
         heroGallery: {
             colors: {
                 primary: colors.primary,

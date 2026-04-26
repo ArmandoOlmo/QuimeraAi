@@ -37,7 +37,7 @@ export type FontFamily =
     'red-hat-display' | 'sora' | 'space-grotesk' | 'space-mono' | 'syne' |
     'ubuntu' | 'unbounded' | 'urbanist' | 'work-sans';
 
-export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub' | 'real-estate';
+export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'restaurants' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub' | 'real-estate';
 export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode' | 'news' | 'landing-editor' | 'service-availability' | 'subdomains' | 'finances' | 'admin-leads' | 'admin-appointments' | 'admin-email';
 
 // Page Section Types
@@ -48,6 +48,10 @@ export type PageSection =
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
     | 'menu' | 'banner' | 'topBar' | 'logoBanner' | 'products' | 'cmsFeed' | 'signupFloat'
     | 'separator1' | 'separator2' | 'separator3' | 'separator4' | 'separator5'
+    // Lumina sections
+    | 'heroLumina' | 'featuresLumina' | 'ctaLumina' | 'portfolioLumina' | 'pricingLumina' | 'testimonialsLumina' | 'faqLumina'
+    // Neon suite
+    | 'heroNeon' | 'testimonialsNeon' | 'featuresNeon' | 'ctaNeon' | 'portfolioNeon' | 'pricingNeon' | 'faqNeon'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)
@@ -62,6 +66,7 @@ export type PageSection =
     | 'realEstateListings' // Realtor property listings section
     | 'propertyDirectory'  // Public realtor directory page (/listados)
     | 'propertyDetail'     // Public realtor property detail page (/listados/:slug)
+    | 'restaurantReservation' // Restaurant reservation section for public website
     | 'cart'               // Cart section for cart page
     | 'checkout';          // Checkout section for checkout page
 

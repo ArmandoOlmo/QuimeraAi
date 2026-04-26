@@ -2,9 +2,10 @@ import { resolveFontFamily } from "../utils/fontLoader";
 import React, { useState, useEffect } from 'react';
 import { db, doc, getDoc } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, SitePage } from '../types';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { AgencyLandingConfig } from '../types/agencyLanding';
 import { initialAgencyData } from './dashboard/agency/landing/initialAgencyData';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 import { getAgencyLanding } from '../services/agencyLandingService';
 
@@ -136,7 +137,7 @@ const AgencyLandingPreview: React.FC = () => {
   if (loading) {
     return (
       <div className="flex bg-slate-900 flex-col items-center justify-center min-h-screen">
-        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+        <QuimeraLoader size="lg" />
         <h2 className="text-xl font-semibold text-slate-200">Loading Preview...</h2>
       </div>
     );

@@ -1,0 +1,251 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
+import { getFontStack } from '../utils/fontLoader';
+import { sanitizeHtml } from '../utils/sanitize';
+import { PricingNeonData } from '../types/components';
+import { Check } from 'lucide-react';
+
+export interface PricingNeonProps extends PricingNeonData {
+    isPreviewMode?: boolean;
+    onNavigate?: (href: string) => void;
+}
+
+const PricingNeon: React.FC<PricingNeonProps> = (props) => {
+    const { t } = useTranslation();
+    const data = props;
+
+    // Fallbacks
+    const headline = data.headline || 'Simple, transparent pricing';
+    const subheadline = data.subheadline || 'No hidden fees. No surprise charges.';
+    const tiers = data.tiers && data.tiers.length > 0 ? data.tiers : [
+        {
+            name: 'Basic',
+            price: '$19',
+            billingPeriod: '/month',
+            description: 'Perfect for getting started.',
+            features: ['1 User', 'Basic Support', '10GB Storage'],
+            buttonText: 'Start Basic',
+            isPopular: false
+        },
+        {
+            name: 'Pro',
+            price: '$49',
+            billingPeriod: '/month',
+            description: 'Best for growing teams.',
+            features: ['5 Users', 'Priority Support', '100GB Storage', 'Advanced Analytics'],
+            buttonText: 'Start Pro',
+            isPopular: true
+        },
+        {
+            name: 'Enterprise',
+            price: '$99',
+            billingPeriod: '/month',
+            description: 'For large scale operations.',
+            features: ['Unlimited Users', '24/7 Support', 'Unlimited Storage', 'Custom Integrations'],
+            buttonText: 'Contact Sales',
+            isPopular: false
+        }
+    ];
+
+    const colors = data.colors || {};
+    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
+    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
+
+    // Box Shadow for Neon Glow
+    const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
+    const blurRadius = (intensity / 100) * 30;
+    const spreadRadius = (intensity / 100) * 5;
+    const opacity = (intensity / 100) * 0.5 + 0.1;
+    const neonColor = colors.neonGlow || '#FBB92B';
+    
+    const baseGlowStyle = {
+        boxShadow: `0 0 ${blurRadius}px ${spreadRadius}px ${neonColor}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`,
+        borderColor: neonColor
+    };
+
+    const handleNavigate = (e: React.MouseEvent<HTMLButtonElement>, href?: string) => {
+        if (!href) return;
+        if (data.onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
+            e.preventDefault();
+            data.onNavigate(href);
+        } else if (href) {
+            window.location.href = href;
+        }
+    };
+
+    return (
+        <section 
+            className="w-full relative overflow-hidden py-24 px-6 md:px-12 flex flex-col justify-center"
+            style={{ 
+                backgroundColor: colors.background,
+                minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '100vh'
+            }}
+        >
+            {/* Background Grid Pattern */}
+            {data.showBackgroundGrid !== false && (
+                <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+                    style={{
+                        backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,
+                        backgroundSize: '40px 40px',
+                        backgroundPosition: 'center center'
+                    }}
+                />
+            )}
+
+            <div className="relative z-10 w-full max-w-7xl mx-auto">
+                <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                    {headline && (
+                        <h2 
+                            className="text-4xl md:text-5xl font-bold font-header"
+                            style={{ 
+                                color: colors.heading || '#ffffff',
+                                fontFamily: headlineFontFamily,
+                                textTransform: 'var(--headings-transform, none)' as any,
+                                letterSpacing: 'var(--headings-spacing, normal)'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(headline) }}
+                        />
+                    )}
+                    {subheadline && (
+                        <p 
+                            className="text-lg md:text-xl font-body opacity-80"
+                            style={{ 
+                                color: colors.text || '#a1a1aa',
+                                fontFamily: subheadlineFontFamily
+                            }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
+                        />
+                    )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {tiers.map((tier, idx) => {
+                        const isHighlight = tier.isPopular;
+                        return (
+                            <div 
+                                key={idx}
+                                className={clsx(
+                                    "flex flex-col p-8 rounded-[2rem] transition-all duration-300 relative group overflow-hidden",
+                                    data.glassEffect ? "backdrop-blur-xl" : "",
+                                    isHighlight ? "scale-105 z-20" : "scale-100 z-10"
+                                )}
+                                style={{
+                                    backgroundColor: data.glassEffect 
+                                        ? `color-mix(in srgb, ${colors.cardBackground || '#141414'} ${isHighlight ? '80%' : '60%'}, transparent)` 
+                                        : (colors.cardBackground || '#141414'),
+                                    borderWidth: intensity > 0 || isHighlight ? '2px' : '0px',
+                                    borderStyle: 'solid',
+                                    borderColor: isHighlight ? neonColor : 'rgba(255,255,255,0.05)',
+                                    ...(isHighlight && intensity > 0 ? baseGlowStyle : {})
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (intensity > 0 && !isHighlight) {
+                                        Object.assign(e.currentTarget.style, baseGlowStyle);
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isHighlight) {
+                                        e.currentTarget.style.boxShadow = 'none';
+                                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                                    }
+                                }}
+                            >
+                                {/* Highlight Badge */}
+                                {isHighlight && (
+                                    <div 
+                                        className="absolute top-0 inset-x-0 py-1 text-center text-xs font-bold font-header tracking-widest uppercase"
+                                        style={{ backgroundColor: neonColor, color: '#000000' }}
+                                    >
+                                        Popular
+                                    </div>
+                                )}
+                                
+                                <div className={clsx("relative z-10 space-y-6", isHighlight ? "mt-4" : "")}>
+                                    <div>
+                                        <h3 
+                                            className="text-2xl font-bold font-header"
+                                            style={{ 
+                                                color: colors.heading || '#ffffff',
+                                                fontFamily: headlineFontFamily
+                                            }}
+                                        >
+                                            {tier.name}
+                                        </h3>
+                                        <p 
+                                            className="text-sm font-body opacity-80 mt-1"
+                                            style={{ 
+                                                color: colors.text || '#a1a1aa',
+                                            }}
+                                        >
+                                            {tier.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-baseline gap-2">
+                                        <span 
+                                            className="text-5xl font-bold font-header"
+                                            style={{ color: colors.heading || '#ffffff' }}
+                                        >
+                                            {tier.price}
+                                        </span>
+                                        {tier.billingPeriod && (
+                                            <span 
+                                                className="text-lg font-body opacity-70"
+                                                style={{ color: colors.text || '#a1a1aa' }}
+                                            >
+                                                {tier.billingPeriod}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <ul className="space-y-4 flex-grow border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                                        {tier.features?.map((feature, fIdx) => (
+                                            <li key={fIdx} className="flex items-start gap-3">
+                                                <Check size={20} style={{ color: neonColor }} className="mt-0.5 shrink-0" />
+                                                <span 
+                                                    className="font-body text-base opacity-90"
+                                                    style={{ color: colors.text || '#a1a1aa' }}
+                                                >
+                                                    {feature}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <div className="pt-6">
+                                            <button 
+                                                className="w-full py-4 rounded-full font-bold text-base font-button transition-all duration-300"
+                                                onClick={(e) => handleNavigate(e, tier.buttonLink)}
+                                                style={{
+                                                    backgroundColor: isHighlight ? neonColor : 'transparent',
+                                                    color: isHighlight ? '#000000' : (colors.heading || '#ffffff'),
+                                                    border: `1px solid ${isHighlight ? neonColor : 'rgba(255,255,255,0.2)'}`,
+                                                    textTransform: 'var(--buttons-transform, none)' as any,
+                                                    letterSpacing: 'var(--buttons-spacing, normal)',
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!isHighlight) {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!isHighlight) {
+                                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                                    }
+                                                }}
+                                            >
+                                                {tier.buttonText || 'Select Plan'}
+                                            </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+export default PricingNeon;

@@ -95,6 +95,8 @@ import {
     checkVerifiedPurchase
 } from './reviewsSync';
 
+import { onPublicReservationWrite } from './restaurantSync';
+
 import {
     createStoreUser,
     updateStoreUserRole,
@@ -308,6 +310,11 @@ export const reviews = {
     checkVerifiedPurchase
 };
 
+// Export Restaurant functions
+export const restaurants = {
+    onPublicReservationWrite
+};
+
 // Export Store Users Auth functions (Multi-tenant customer auth)
 export const storeUsers = {
     create: createStoreUser,
@@ -497,6 +504,8 @@ export {
     cleanupOldPendingReviews,
     getReviewStats,
     checkVerifiedPurchase,
+    // Restaurant exports
+    onPublicReservationWrite,
     // Email exports - Lead triggers
     onLeadCreatedSendEmail,
     onLeadScoreUpdate,

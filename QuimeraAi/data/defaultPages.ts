@@ -554,6 +554,27 @@ export const createRealEstateListingsPage = (): SitePage => {
     };
 };
 
+/**
+ * Create a restaurant menu page
+ */
+export const createMenuPage = (): SitePage => {
+    const contentSections: PageSection[] = ['menu', 'restaurantReservation'];
+    return {
+        id: `page-menu-${Date.now()}`,
+        title: 'Menú',
+        slug: '/menu',
+        type: 'static',
+        sections: ['header', ...contentSections, 'footer'],
+        sectionData: getDefaultSectionData(contentSections),
+        seo: createDefaultSEO('Menú', 'Explora nuestro delicioso menú y haz una reserva'),
+        isHomePage: false,
+        showInNavigation: true,
+        navigationOrder: 30,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
+};
+
 // =============================================================================
 // PAGE FACTORY
 // =============================================================================
@@ -578,6 +599,7 @@ export const createPageFromTemplate = (templateId: PageTemplateId, businessName?
         'faq': createFaqPage,
         'cart': createCartPage,
         'checkout': createCheckoutPage,
+        'menu': createMenuPage,
     };
     
     const factory = factories[templateId];

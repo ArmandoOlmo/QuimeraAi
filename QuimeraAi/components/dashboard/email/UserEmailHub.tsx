@@ -487,17 +487,53 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
     // =====================================================================
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-editor-bg text-editor-text-primary overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+            {/* Section Navigation Panel — Desktop only */}
+            {!showEmailEditor && (
+                <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-editor-border bg-editor-panel-bg flex-shrink-0 overflow-hidden">
+                    <div className="h-14 px-4 border-b border-editor-border flex items-center gap-2 flex-shrink-0">
+                        <Mail size={20} className="text-editor-accent" />
+                        <h2 className="text-sm font-bold text-editor-text-primary truncate">
+                            {t('email.hub.title')}
+                        </h2>
+                    </div>
+                    <nav className="flex-1 overflow-y-auto py-2 px-2">
+                        <div className="space-y-0.5">
+                            {tabs.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-editor-accent/10 text-editor-accent shadow-sm' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/30'}`}
+                                    >
+                                        <div className="flex items-center gap-3 truncate">
+                                            <div className={`flex-shrink-0 ${isActive ? 'text-editor-accent' : ''}`}>{tab.icon}</div>
+                                            <span className="truncate">{tab.label}</span>
+                                        </div>
+                                        {tab.count !== undefined && tab.count > 0 && (
+                                            <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${isActive ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>
+                                                {tab.count}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </nav>
+                </div>
+            )}
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"><Menu className="w-5 h-5" /></button>
-                        <Mail className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-semibold text-editor-text-primary">{t('email.hub.title')}</h1>
-                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-purple-500/20 text-purple-400 rounded-full">{projectName}</span>
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors rounded-xl"><Menu className="w-5 h-5" /></button>
+                        <Mail className="text-editor-accent w-5 h-5 hidden sm:block md:hidden lg:block" />
+                        <h1 className="text-lg font-semibold text-editor-text-primary hidden sm:block">{t('email.hub.title')}</h1>
+                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-purple-500/20 text-purple-400 rounded-full truncate max-w-[150px]">{projectName}</span>
                     </div>
                     <HeaderBackButton onClick={onBack} label={t('email.hub.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
@@ -512,22 +548,30 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                     </div>
                 ) : (
                     <>
-                        {/* Tab Navigation */}
-                        <div className="bg-editor-bg border-b border-editor-border px-4 sm:px-6 overflow-x-auto flex-shrink-0">
-                            <div className="flex items-center gap-1 min-w-max">
-                                {tabs.map(tab => (
-                                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}>
-                                        {tab.icon}
-                                        {tab.label}
-                                        {tab.count !== undefined && tab.count > 0 && (<span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${activeTab === tab.id ? 'bg-editor-accent/20 text-editor-accent' : 'bg-editor-border/50 text-editor-text-secondary'}`}>{tab.count}</span>)}
-                                    </button>
-                                ))}
+                        {/* Mobile Tabs */}
+                        <div className="md:hidden border-b border-editor-border bg-editor-bg px-2 py-2">
+                            <div className="flex overflow-x-auto gap-1 scrollbar-hide snap-x">
+                                {tabs.map((tab) => {
+                                    const isActive = activeTab === tab.id;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-lg text-[10px] font-medium transition-colors min-w-[70px] snap-center ${isActive ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/30'}`}
+                                        >
+                                            <div className="shrink-0">{tab.icon}</div>
+                                            <span className="truncate w-full text-center">{tab.label}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
                         {/* Content */}
-                        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                            {isLoading ? (
+                        <main className="flex-1 overflow-y-auto flex flex-col">
+                            <div className="w-full h-full p-4 sm:p-6 lg:p-8">
+                                <div className="max-w-7xl mx-auto">
+                                    {isLoading ? (
                                 <div className="flex items-center justify-center py-24">
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
@@ -587,6 +631,8 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                                     )}
                                 </>
                             )}
+                                </div>
+                            </div>
                         </main>
                     </>
                 )}

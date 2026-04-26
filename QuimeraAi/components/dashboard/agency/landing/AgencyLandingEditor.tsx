@@ -19,7 +19,7 @@ export const AgencyLandingEditor: React.FC = () => {
 
                 <div className="flex flex-1 overflow-hidden relative">
                     {/* Controls/Editor Sidebar */}
-                    <Suspense fallback={<QuimeraLoader />}>
+                    <Suspense fallback={null}>
                         <Controls />
                     </Suspense>
 

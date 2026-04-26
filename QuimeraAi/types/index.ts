@@ -64,6 +64,8 @@ export * from './agencyPlans';
 // Real Estate OS Types
 export * from './realEstate';
 
+// Restaurants Types
+export * from './restaurants';
 
 
 

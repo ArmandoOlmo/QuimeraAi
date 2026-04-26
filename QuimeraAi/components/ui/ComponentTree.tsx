@@ -9,7 +9,7 @@ import {
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
     ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus,
-    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check
+    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check, CalendarCheck, MessageSquareHeart
 } from 'lucide-react';
 import {
     DndContext,
@@ -75,6 +75,23 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     header: AlignJustify,
     typography: Type,
     colors: Palette,
+    // Lumina sections
+    heroLumina: MonitorPlay,
+    featuresLumina: List,
+    ctaLumina: MessageCircle,
+    portfolioLumina: Briefcase,
+    pricingLumina: DollarSign,
+    testimonialsLumina: Star,
+    faqLumina: HelpCircle,
+    // Neon sections
+    heroNeon: MonitorPlay,
+    testimonialsNeon: MessageSquareHeart,
+    featuresNeon: List,
+    ctaNeon: MessageCircle,
+    portfolioNeon: Briefcase,
+    pricingNeon: DollarSign,
+    faqNeon: HelpCircle,
+
     // Ecommerce
     storeSettings: Store,
     products: ShoppingBag,
@@ -104,6 +121,7 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     productGrid: Grid,
     cart: ShoppingCart,
     checkout: CreditCard,
+    restaurantReservation: CalendarCheck,
 };
 
 // Fixed sections that cannot be reordered
@@ -290,7 +308,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     const [expandedGroups, setExpandedGroups] = useState({
         structure: false,
         content: false,
-        ecommerce: false
+        ecommerce: false,
+        luminaAdd: false,
+        neonAdd: false,
+        legacyAdd: false,
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
 
@@ -337,6 +358,24 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         header: t('editor.navigationSection'),
         typography: t('editor.typographySection'),
         colors: t('editor.colorsSection'),
+        // Lumina sections
+        heroLumina: t('editor.heroLumina', 'Hero Lumina'),
+        featuresLumina: t('editor.featuresLumina', 'Features Lumina'),
+        ctaLumina: t('editor.ctaLumina', 'CTA Lumina'),
+        portfolioLumina: t('editor.portfolioLumina', 'Portfolio Lumina'),
+        pricingLumina: t('editor.pricingLumina', 'Pricing Lumina'),
+        testimonialsLumina: t('editor.testimonialsLumina', 'Testimonials Lumina'),
+        faqLumina: t('editor.faqLumina', 'FAQ Lumina'),
+
+        // Neon sections
+        heroNeon: t('editor.heroNeon', 'Hero Neon'),
+        testimonialsNeon: t('editor.testimonialsNeon', 'Testimonials Neon'),
+        featuresNeon: t('editor.featuresNeon', 'Features Neon'),
+        ctaNeon: t('editor.ctaNeon', 'CTA Neon'),
+        portfolioNeon: t('editor.portfolioNeon', 'Portfolio Neon'),
+        pricingNeon: t('editor.pricingNeon', 'Pricing Neon'),
+        faqNeon: t('editor.faqNeon', 'FAQ Neon'),
+
         // Ecommerce sections
         storeSettings: 'Store Settings',
         products: 'Products Grid',
@@ -366,6 +405,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         productGrid: t('editor.productGridSection', 'Cuadrícula de Productos'),
         cart: t('editor.cartSection', 'Carrito'),
         checkout: t('editor.checkoutSection', 'Checkout'),
+        restaurantReservation: t('editor.restaurantReservationSection', 'Reservaciones'),
     };
 
     // Group sections by category
@@ -562,24 +602,119 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         {t('editor.addComponent')}
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
-                        {availableComponents.map(section => {
-                            const Icon = sectionIcons[section] || Layout;
-                            return (
+                        {/* Legacy Suite in Add Menu */}
+                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon')).length > 0 && (
+                            <div className="mb-1">
                                 <button
-                                    key={section}
-                                    onClick={() => {
-                                        onAddComponent(section);
-                                        setShowAddMenu(false);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left"
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg rounded-md transition-colors"
                                 >
-                                    <Icon size={14} className="text-editor-accent" />
-                                    <span className="text-sm text-editor-text-primary font-medium">
-                                        {sectionLabels[section]}
+                                    <span className="flex items-center gap-2">
+                                        <Layers size={14} /> Legacy Suite
                                     </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.legacyAdd ? 'rotate-180' : ''}`} />
                                 </button>
-                            );
-                        })}
+                                
+                                {expandedGroups.legacyAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || Layout;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left"
+                                                >
+                                                    <Icon size={14} className="text-editor-accent" />
+                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {/* Lumina Group in Add Menu */}
+                        {availableComponents.filter(s => s.toLowerCase().includes('lumina')).length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-editor-border/50">
+                                <button
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, luminaAdd: !prev.luminaAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#10B981] hover:bg-editor-bg rounded-md transition-colors"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Layers size={14} /> Lumina Suite
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.luminaAdd ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {expandedGroups.luminaAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {availableComponents.filter(s => s.toLowerCase().includes('lumina')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || Layout;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left border-l border-transparent hover:border-[#10B981]/50"
+                                                >
+                                                    <Icon size={14} className="text-[#10B981]" />
+                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Neon Group in Add Menu */}
+                        {availableComponents.filter(s => s.toLowerCase().includes('neon')).length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-editor-border/50">
+                                <button
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, neonAdd: !prev.neonAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#FBB92B] hover:bg-editor-bg rounded-md transition-colors"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Layers size={14} /> Neon Suite
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.neonAdd ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {expandedGroups.neonAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {availableComponents.filter(s => s.toLowerCase().includes('neon')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || Layout;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left border-l border-transparent hover:border-[#FBB92B]/50"
+                                                >
+                                                    <Icon size={14} className="text-[#FBB92B]" />
+                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
                     </div>
                 </div>
             )}

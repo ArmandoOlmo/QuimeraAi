@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import MarketingLayout from './MarketingLayout';
 import { useLandingPlans, LandingPlan } from '../../hooks/useLandingPlans';
+import QuimeraLoader from '../ui/QuimeraLoader';
 
 // =============================================================================
 // FAQ DATA
@@ -148,7 +149,7 @@ const PricingPage: React.FC<PricingPageProps> = ({
         <section className="container mx-auto px-4 sm:px-6 pb-24 sm:pb-32 relative z-10">
           {isLoadingPlans ? (
             <div className="flex justify-center items-center py-24">
-              <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin shadow-[0_0_30px_rgba(250,204,21,0.5)]" />
+              <QuimeraLoader size="md" />
             </div>
           ) : dynamicPlans.length === 0 ? (
             <div className="text-center py-24">

@@ -20,9 +20,9 @@ interface QuimeraLoaderProps {
 }
 
 const sizeMap = {
-    sm: { logo: 'w-8 h-8', container: 'w-10 h-10', halo1: 'w-14 h-14', halo2: 'w-12 h-12', border: 'border', logoSize: 32 },
-    md: { logo: 'w-12 h-12', container: 'w-16 h-16', halo1: 'w-24 h-24', halo2: 'w-20 h-20', border: 'border-2', logoSize: 48 },
-    lg: { logo: 'w-14 h-14', container: 'w-20 h-20', halo1: 'w-32 h-32', halo2: 'w-24 h-24', border: 'border-2', logoSize: 56 },
+    sm: { logo: 'w-8 h-8', glow: 'w-14 h-14', logoSize: 32 },
+    md: { logo: 'w-12 h-12', glow: 'w-24 h-24', logoSize: 48 },
+    lg: { logo: 'w-14 h-14', glow: 'w-32 h-32', logoSize: 56 },
 };
 
 const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
@@ -39,30 +39,18 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
     const loader = (
         <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
             <div className="relative flex items-center justify-center">
-                {/* Pulsing halos */}
-                <div
-                    className={`absolute ${s.halo1} rounded-full bg-yellow-400/20 animate-ping`}
-                    style={{ animationDuration: '2s' }}
+                <div className={`absolute ${s.glow} rounded-full bg-gradient-to-br from-yellow-300/25 via-amber-400/10 to-fuchsia-500/15 blur-2xl animate-pulse`} />
+                <img
+                    src={effectiveLogo}
+                    alt="Loading..."
+                    className={`relative z-10 ${s.logo} object-contain animate-pulse drop-shadow-[0_0_22px_rgba(250,204,21,0.28)] ${isCustomLogo ? 'rounded-full' : ''}`}
+                    style={{ animationDuration: '1.5s' }}
+                    width={s.logoSize}
+                    height={s.logoSize}
+                    loading="eager"
+                    decoding="sync"
+                    fetchPriority="high"
                 />
-                <div
-                    className={`absolute ${s.halo2} rounded-full bg-yellow-400/30 animate-ping`}
-                    style={{ animationDuration: '1.5s', animationDelay: '0.2s' }}
-                />
-
-                {/* Logo container */}
-                <div className={`relative z-10 ${s.container} rounded-full bg-editor-panel-bg shadow-2xl flex items-center justify-center ${s.border} border-yellow-400/30`}>
-                    <img
-                        src={effectiveLogo}
-                        alt="Loading..."
-                        className={`${s.logo} object-contain animate-pulse ${isCustomLogo ? 'rounded-full' : ''}`}
-                        style={{ animationDuration: '1.5s' }}
-                        width={s.logoSize}
-                        height={s.logoSize}
-                        loading="eager"
-                        decoding="sync"
-                        fetchPriority="high"
-                    />
-                </div>
             </div>
 
             {text && (

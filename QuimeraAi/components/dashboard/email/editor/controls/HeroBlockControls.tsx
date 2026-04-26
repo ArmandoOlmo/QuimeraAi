@@ -158,7 +158,8 @@ const HeroBlockControls: React.FC<HeroBlockControlsProps> = ({ block, activeTab 
                     value={content.imageUrl || ''}
                     onChange={(url) => updateContent({ imageUrl: url })}
                     hideUrlInput={true}
-                    destination="global"
+                    destination="admin"
+                    adminCategory="template"
                 />
 
                 <Input

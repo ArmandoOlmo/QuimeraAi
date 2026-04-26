@@ -255,6 +255,298 @@ const pageData: PageData = {
       buttonText: '#ffffff',
     },
   },
+  heroLumina: {
+    headline: 'Welcome to Lumina',
+    subheadline: 'Experience the next generation of web design.',
+    primaryCta: 'Get Started',
+    primaryCtaLink: '#',
+    secondaryCta: 'Learn More',
+    secondaryCtaLink: '#',
+  },
+  heroNeon: {
+    glassEffect: true,
+    textPosition: 'bottom-left',
+    slides: [
+      {
+        headline: 'INNOVATION MEETS DESIGN',
+        subheadline: 'Experience the next generation of web interfaces.',
+        primaryCta: 'Explore Now',
+        secondaryCta: 'Learn More',
+        primaryCtaLink: '#',
+        primaryCtaLinkType: 'section',
+        secondaryCtaLink: '#',
+        secondaryCtaLinkType: 'section',
+        imageUrl: '',
+      }
+    ],
+    // Legacy support fields
+    headline: 'INNOVATION MEETS DESIGN',
+    subheadline: 'Experience the next generation of web interfaces.',
+    primaryCta: 'Explore Now',
+    secondaryCta: 'Learn More',
+    primaryCtaLink: '#',
+    secondaryCtaLink: '#',
+    headlineFont: 'inter',
+    subheadlineFont: 'inter',
+    showTopDots: true,
+    dotColors: ['#FF5F56', '#FFBD2E', '#27C93F'],
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        text: '#ffffff',
+        heading: '#ffffff',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        buttonBackground: '#FBB92B',
+        buttonText: '#000000',
+    },
+    buttonBorderRadius: 'full',
+  },
+  testimonialsNeon: {
+    headline: 'LO QUE DICEN',
+    subheadline: 'Opiniones de clientes que confían en nosotros.',
+    testimonials: [
+        {
+            quote: 'El mejor servicio que hemos contratado. El diseño es increíble.',
+            authorName: 'Ana García',
+            authorRole: 'Directora Creativa',
+        },
+        {
+            quote: 'La atención al detalle es excepcional. Muy recomendados.',
+            authorName: 'Carlos Ruiz',
+            authorRole: 'CEO de TechGroup',
+        }
+    ],
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        cardText: '#ffffff',
+    }
+  },
+
+  featuresNeon: {
+    headline: 'CARACTERÍSTICAS',
+    subheadline: 'Innovación y diseño en cada detalle',
+    features: [
+        { title: 'Velocidad', description: 'Rendimiento optimizado para la mejor experiencia.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
+        { title: 'Seguridad', description: 'Protección avanzada de datos.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
+        { title: 'Alcance Global', description: 'Preparado para escalar internacionalmente.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
+    ],
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        cardText: '#ffffff',
+    }
+  },
+
+  ctaNeon: {
+    headline: '¿LISTO PARA COMENZAR?',
+    subheadline: 'Únete a nuestra plataforma y transforma tu negocio hoy mismo.',
+    buttonText: 'Empezar Ahora',
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        buttonBackground: '#FBB92B',
+        buttonText: '#000000',
+    }
+  },
+
+  portfolioNeon: {
+    headline: 'NUESTRO TRABAJO',
+    subheadline: 'Proyectos recientes que destacan por su innovación.',
+    projects: [
+        {
+            title: 'Proyecto Alpha',
+            category: 'Diseño Web',
+            imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'
+        },
+        {
+            title: 'Proyecto Beta',
+            category: 'Desarrollo App',
+            imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
+        }
+    ],
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        cardText: '#ffffff',
+    }
+  },
+
+  pricingNeon: {
+    headline: 'PLANES Y PRECIOS',
+    subheadline: 'Opciones flexibles para cada necesidad.',
+    tiers: [
+        {
+            planName: 'Básico',
+            price: '$29',
+            frequency: '/mes',
+            features: ['Soporte estándar', '1 Proyecto', 'Actualizaciones'],
+            buttonText: 'Elegir Básico'
+        },
+        {
+            planName: 'Pro',
+            price: '$99',
+            frequency: '/mes',
+            features: ['Soporte 24/7', 'Proyectos ilimitados', 'Analíticas avanzadas'],
+            buttonText: 'Elegir Pro',
+            isFeatured: true
+        }
+    ],
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        cardText: '#ffffff',
+        priceColor: '#ffffff',
+        featuredAccent: '#FBB92B'
+    }
+  },
+
+  faqNeon: {
+    headline: 'PREGUNTAS FRECUENTES',
+    subheadline: 'Resolvemos tus dudas principales.',
+    questions: [
+        {
+            question: '¿Tienen soporte técnico?',
+            answer: 'Sí, ofrecemos soporte técnico 24/7 en todos nuestros planes premium.'
+        },
+        {
+            question: '¿Puedo cancelar en cualquier momento?',
+            answer: 'Claro, no hay contratos a largo plazo. Puedes cancelar tu suscripción cuando lo desees.'
+        }
+    ],
+    glassEffect: true,
+    glowIntensity: 50,
+    colors: {
+        background: '#0a0a0a',
+        heading: '#ffffff',
+        text: '#a0a0a0',
+        neonGlow: '#FBB92B',
+        cardBackground: 'rgba(20, 20, 20, 0.8)',
+        cardText: '#ffffff',
+    }
+  },  featuresLumina: {
+    headline: 'Core Features',
+    subheadline: 'Everything you need to succeed',
+    features: [
+        { title: 'Lightning Fast', description: 'Optimized for performance and speed.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
+        { title: 'Secure Design', description: 'Built with modern security practices.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
+        { title: 'Global Scale', description: 'Ready for users around the world.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
+    ]
+  },
+  ctaLumina: {
+    headline: 'Ready to Transform Your Business?',
+    subheadline: 'Join thousands of satisfied customers who are already using our platform to grow their business and achieve their goals.',
+    primaryCta: 'Get Started Now',
+    primaryCtaLink: '#',
+    secondaryCta: 'Talk to Sales',
+    secondaryCtaLink: '#',
+  },
+  portfolioLumina: {
+    headline: 'Our Recent Work',
+    subheadline: 'Explore some of the amazing projects we have delivered for our clients.',
+    projects: [
+        { title: 'Project Alpha', category: 'Web Development', imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3' },
+        { title: 'Project Beta', category: 'Mobile App', imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3' },
+        { title: 'Project Gamma', category: 'UI/UX Design', imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&q=80&w=2000&ixlib=rb-4.0.3' }
+    ]
+  },
+  pricingLumina: {
+    headline: 'Simple, Transparent Pricing',
+    subheadline: 'Choose the plan that best fits your needs.',
+    billingToggle: true,
+    tiers: [
+        {
+            name: 'Starter',
+            price: '$29',
+            period: '/mo',
+            description: 'Perfect for small businesses just getting started.',
+            features: ['Up to 5 Projects', 'Basic Analytics', '24/7 Support', 'Custom Domain'],
+            buttonText: 'Start Free Trial',
+            buttonLink: '#',
+            highlighted: false
+        },
+        {
+            name: 'Professional',
+            price: '$99',
+            period: '/mo',
+            description: 'Ideal for growing companies with more demands.',
+            features: ['Unlimited Projects', 'Advanced Analytics', 'Priority Support', 'Custom Domain', 'Team Collaboration'],
+            buttonText: 'Get Started',
+            buttonLink: '#',
+            highlighted: true
+        },
+        {
+            name: 'Enterprise',
+            price: '$299',
+            period: '/mo',
+            description: 'For large-scale organizations requiring dedicated resources.',
+            features: ['Everything in Pro', 'Dedicated Account Manager', 'Custom Integration', 'SLA Guarantee', 'On-premise Options'],
+            buttonText: 'Contact Sales',
+            buttonLink: '#',
+            highlighted: false
+        }
+    ]
+  },
+  testimonialsLumina: {
+    headline: 'What Our Clients Say',
+    subheadline: 'Don\'t just take our word for it. Hear from some of our satisfied customers.',
+    testimonials: [
+        {
+            quote: 'This platform has completely transformed how we do business. The results have been incredible and the support is top-notch.',
+            author: 'Sarah Johnson',
+            role: 'CEO, TechCorp',
+            avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
+        },
+        {
+            quote: 'We saw a 200% increase in productivity within the first month. I couldn\'t recommend this solution enough to other agencies.',
+            author: 'Michael Chen',
+            role: 'Director, CreateDesign',
+            avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
+        },
+        {
+            quote: 'The ease of use and powerful features make it the best tool in our stack. It paid for itself in a matter of days.',
+            author: 'Emily Davis',
+            role: 'Founder, StartupInc',
+            avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
+        }
+    ]
+  },
+  faqLumina: {
+    headline: 'Frequently Asked Questions',
+    subheadline: 'Find answers to common questions about our platform and services.',
+    faqs: [
+        { question: 'What payment methods do you accept?', answer: 'We accept all major credit cards, PayPal, and bank transfers for annual plans.' },
+        { question: 'Can I cancel my subscription at any time?', answer: 'Yes, you can cancel your subscription at any time. Your access will remain active until the end of your current billing period.' },
+        { question: 'Do you offer a free trial?', answer: 'Yes, we offer a 14-day free trial on all our plans. No credit card required.' },
+        { question: 'Is my data secure?', answer: 'Security is our top priority. We use industry-standard encryption and regularly audit our systems to ensure your data is safe.' }
+    ]
+  },
   features: {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
@@ -1554,9 +1846,9 @@ const componentOrder: PageSection[] = [
     // Structure
     'colors', 'typography', 'header',
     // Content
-    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
+    'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroLumina', 'heroNeon', 'topBar', 'logoBanner', 'banner', 'features', 'featuresLumina', 'featuresNeon', 'testimonials', 'testimonialsLumina', 'testimonialsNeon', 'slideshow',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
-    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
+    'pricing', 'pricingLumina', 'pricingNeon', 'faq', 'faqLumina', 'faqNeon', 'portfolio', 'portfolioLumina', 'portfolioNeon', 'cta', 'ctaLumina', 'ctaNeon', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
     'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',

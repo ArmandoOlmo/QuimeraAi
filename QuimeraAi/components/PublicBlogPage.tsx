@@ -22,6 +22,7 @@ import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppArticleCategory, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { QUIMERA_DEFAULT_LOGO } from '../hooks/useAppLogo';
 import MarketingLayout from './marketing/MarketingLayout';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 interface PublicBlogPageProps {
   onNavigateToHome: () => void;
@@ -278,7 +279,7 @@ const PublicBlogPage: React.FC<PublicBlogPageProps> = ({
           {/* Articles Grid */}
           {isLoading ? (
             <div className="flex items-center justify-center py-32">
-              <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin shadow-[0_0_30px_rgba(250,204,21,0.5)]" />
+              <QuimeraLoader size="md" />
             </div>
           ) : filteredArticles.length === 0 ? (
             <div className="text-center py-32 bg-[#111] border border-white/5 rounded-3xl max-w-3xl mx-auto p-12 shadow-2xl">

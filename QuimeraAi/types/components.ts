@@ -8,6 +8,46 @@ import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, Justif
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
 
+// Lumina Data Interfaces
+import { HeroLuminaData } from '../components/HeroLumina';
+import { FeaturesLuminaData } from '../components/FeaturesLumina';
+import { TestimonialsLuminaData } from '../components/TestimonialsLumina';
+import { FaqLuminaData } from '../components/FaqLumina';
+import { TestimonialsNeonData } from '../components/TestimonialsNeon';
+import { CtaLuminaData } from '../components/CtaLumina';
+import { PortfolioLuminaData } from '../components/PortfolioLumina';
+
+// Skeuo Data Interfaces
+import { HeroSkeuoData } from '../components/HeroSkeuo';
+import { FeaturesSkeuoData } from '../components/FeaturesSkeuo';
+import { PricingSkeuoData } from '../components/PricingSkeuo';
+
+// Auralis Data Interfaces
+import { HeroAuralisData } from '../components/hero/HeroAuralis';
+import { FeaturesAuralisData } from '../components/features/FeaturesAuralis';
+import { PricingAuralisData } from '../components/pricing/PricingAuralis';
+import { CtaAuralisData } from '../components/cta/CtaAuralis';
+import { TestimonialsAuralisData } from '../components/testimonials/TestimonialsAuralis';
+import { FaqAuralisData } from '../components/faq/FaqAuralis';
+
+// Neon Data Interfaces
+import { HeroNeonData } from '../components/HeroNeon';
+
+
+// =============================================================================
+// LUMINA ANIMATION CONFIGURATION
+// =============================================================================
+export interface LuminaAnimationConfig {
+    enabled?: boolean;
+    colors?: {
+        bg?: string;
+        primary?: string;
+        accent?: string;
+    };
+    pulseSpeed?: number;
+    interactionStrength?: number;
+}
+
 // =============================================================================
 // CORNER GRADIENT (Diagonal gradient overlay)
 // =============================================================================
@@ -391,6 +431,205 @@ export interface HeroLeadData {
     // Corner gradient
     cornerGradient?: CornerGradientConfig;
 }
+
+// =============================================================================
+// HERO NEON
+// =============================================================================
+export interface HeroNeonSlide {
+    headline: string;
+    subheadline: string;
+    imageUrl?: string;
+    primaryCta?: string;
+    secondaryCta?: string;
+    primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+    secondaryCtaLink?: string;
+    secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+}
+
+export interface HeroNeonData {
+    // Shared Background
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    sectionHeight?: number; // Representing vh
+
+    glassEffect?: boolean;
+    textPosition: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+    
+    // Slider Content
+    slides?: HeroNeonSlide[];
+
+    // Legacy Fallbacks (for older instances)
+    headline?: string;
+    subheadline?: string;
+    primaryCta?: string;
+    secondaryCta?: string;
+    primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+    secondaryCtaLink?: string;
+    secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+
+    // Specific font overrides
+    headlineFont?: FontFamily;
+    subheadlineFont?: FontFamily;
+    // Top Dots colors (from Coolors.co palette)
+    showTopDots: boolean;
+    dotColors: string[];
+    // Neon glow intensity (0-100)
+    glowIntensity?: number;
+    colors: {
+        background: string;
+        text: string;
+        heading: string;
+        neonGlow: string; // The primary neon outline/glow color
+        cardBackground: string; // The inner card background
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+}
+
+export interface FeaturesNeonData {
+    headline?: string;
+    subheadline?: string;
+    features?: {
+        title: string;
+        description: string;
+        imageUrl?: string; // Optional image to show in the feature card
+    }[];
+    
+    // Golden Standard Controls
+    glassEffect?: boolean;
+    sectionHeight?: number;
+    showBackgroundGrid?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    glowIntensity?: number; // 0-100
+    
+    colors?: {
+        background?: string;
+        cardBackground?: string;
+        heading?: string;
+        text?: string;
+        neonGlow?: string;
+    };
+}
+
+export interface CtaNeonData {
+    headline?: string;
+    subheadline?: string;
+    primaryCta?: string;
+    primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+    secondaryCta?: string;
+    secondaryCtaLink?: string;
+    secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+
+    // Golden Standard Controls
+    glassEffect?: boolean;
+    sectionHeight?: number;
+    showBackgroundGrid?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    glowIntensity?: number; // 0-100
+    
+    colors?: {
+        background?: string;
+        cardBackground?: string;
+        heading?: string;
+        text?: string;
+        neonGlow?: string;
+    };
+}
+
+export interface PortfolioNeonData {
+    headline?: string;
+    subheadline?: string;
+    images?: {
+        url: string;
+        title?: string;
+        description?: string;
+    }[];
+
+    // Golden Standard Controls
+    glassEffect?: boolean;
+    sectionHeight?: number;
+    showBackgroundGrid?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    glowIntensity?: number; // 0-100
+    
+    colors?: {
+        background?: string;
+        cardBackground?: string;
+        heading?: string;
+        text?: string;
+        neonGlow?: string;
+    };
+}
+
+export interface PricingNeonData {
+    headline?: string;
+    subheadline?: string;
+    tiers?: {
+        name: string;
+        price: string;
+        billingPeriod?: string;
+        description?: string;
+        features?: string[];
+        buttonText?: string;
+        buttonLink?: string;
+        buttonLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
+        isPopular?: boolean;
+    }[];
+
+    // Golden Standard Controls
+    glassEffect?: boolean;
+    sectionHeight?: number;
+    showBackgroundGrid?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    glowIntensity?: number; // 0-100
+    
+    colors?: {
+        background?: string;
+        cardBackground?: string;
+        heading?: string;
+        text?: string;
+        neonGlow?: string;
+    };
+}
+
+export interface FaqNeonData {
+    headline?: string;
+    subheadline?: string;
+    faqs?: {
+        question: string;
+        answer: string;
+    }[];
+
+    // Golden Standard Controls
+    glassEffect?: boolean;
+    sectionHeight?: number;
+    showBackgroundGrid?: boolean;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    glowIntensity?: number; // 0-100
+    
+    colors?: {
+        background?: string;
+        cardBackground?: string;
+        heading?: string;
+        text?: string;
+        neonGlow?: string;
+    };
+}
+
 
 // =============================================================================
 // FEATURES
@@ -1090,6 +1329,58 @@ export interface MenuData {
     enableCardAnimation?: boolean;
     // For full-image variant
     textAlignment?: TextAlignment;
+    // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
+    // Dynamic data source: 'manual' uses editor items, 'restaurant' fetches from dashboard
+    dataSource?: 'manual' | 'restaurant';
+    restaurantId?: string;
+}
+
+// =============================================================================
+// RESTAURANT RESERVATION (Website Section)
+// =============================================================================
+export interface RestaurantReservationData {
+    title: string;
+    subtitle?: string;
+    description?: string;
+    buttonText?: string;
+    successMessage?: string;
+    // Field visibility
+    showPhone?: boolean;
+    showNotes?: boolean;
+    showTablePreference?: boolean;
+    // Capacity constraints
+    maxPartySize?: number;
+    minPartySize?: number;
+    // Styling
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: {
+        background: string;
+        heading: string;
+        text: string;
+        accent: string;
+        cardBackground?: string;
+        inputBackground?: string;
+        inputBorder?: string;
+        inputText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        description?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    buttonBorderRadius?: BorderRadiusSize;
+    animationType?: AnimationType;
+    // Restaurant link
+    restaurantId?: string;
+    // Background
+    backgroundImageUrl?: string;
+    backgroundPosition?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
 }
@@ -2226,6 +2517,36 @@ export interface PageData {
     heroWave?: HeroWaveData;
     heroNova?: HeroNovaData;
     heroLead?: HeroLeadData;
+    // Lumina sections
+    heroLumina?: HeroLuminaData;
+    featuresLumina?: FeaturesLuminaData;
+    ctaLumina?: CtaLuminaData;
+    portfolioLumina?: PortfolioLuminaData;
+    pricingLumina?: PricingLuminaData;
+    testimonialsLumina?: TestimonialsLuminaData;
+    faqLumina?: FaqLuminaData;
+
+    // Skeuo sections
+    heroSkeuo?: HeroSkeuoData;
+    featuresSkeuo?: FeaturesSkeuoData;
+    pricingSkeuo?: PricingSkeuoData;
+
+    // Auralis sections
+    heroAuralis?: HeroAuralisData;
+    featuresAuralis?: FeaturesAuralisData;
+    pricingAuralis?: PricingAuralisData;
+    ctaAuralis?: CtaAuralisData;
+    testimonialsAuralis?: TestimonialsAuralisData;
+    faqAuralis?: FaqAuralisData;
+    // Neon suite
+    heroNeon?: HeroNeonData;
+    testimonialsNeon?: TestimonialsNeonData;
+    featuresNeon?: FeaturesNeonData;
+    ctaNeon?: CtaNeonData;
+    portfolioNeon?: PortfolioNeonData;
+    pricingNeon?: PricingNeonData;
+    faqNeon?: FaqNeonData;
+    // Original sections
     features: FeaturesData;
     testimonials: TestimonialsData;
     slideshow: SlideshowData;
@@ -2298,6 +2619,8 @@ export interface PageData {
         backgroundOverlayOpacity?: number;
         backgroundOverlayColor?: string;
     };
+    /** Configuración de sección de reservación de restaurante */
+    restaurantReservation?: RestaurantReservationData;
     /** Configuración de sección de carrito */
     cart?: CartSectionData;
     /** Configuración de sección de checkout */

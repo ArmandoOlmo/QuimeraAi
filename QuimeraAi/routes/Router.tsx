@@ -52,6 +52,7 @@ const PricingPage = lazyWithRetry(() => import('../components/marketing/PricingP
 const AboutPage = lazyWithRetry(() => import('../components/marketing/AboutPage'));
 const ContactPage = lazyWithRetry(() => import('../components/marketing/ContactPage'));
 const FeaturesPage = lazyWithRetry(() => import('../components/marketing/FeaturesPage'));
+const PublicRestaurantMenuPage = lazyWithRetry(() => import('../components/dashboard/restaurants/PublicRestaurantMenuPage'));
 
 
 // Lazy-loaded ecommerce components
@@ -345,6 +346,15 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
   // PUBLIC ROUTES
   // =========================================================================
+
+  if (path.startsWith('/menu/')) {
+    const restaurantId = path.split('/menu/')[1]?.split('/')[0];
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicRestaurantMenuPage restaurantId={restaurantId} />
+      </Suspense>
+    );
+  }
 
   // Invite page (accept team invitation)
   if (path.startsWith('/invite/')) {
@@ -655,7 +665,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

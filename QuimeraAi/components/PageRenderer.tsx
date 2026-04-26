@@ -13,6 +13,7 @@ import { Project, SitePage } from '../types/project';
 import { PageData, ThemeData, PageSection } from '../types';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
+import { initialData } from '../data/initialData';
 
 // Import section components
 import Header from './Header';
@@ -26,6 +27,13 @@ import HeroGallery from './HeroGallery';
 import HeroWave from './HeroWave';
 import HeroNova from './HeroNova';
 import HeroLead from './HeroLead';
+import HeroNeon from './HeroNeon';
+import TestimonialsNeon from './TestimonialsNeon';
+import FeaturesNeon from './FeaturesNeon';
+import CtaNeon from './CtaNeon';
+import PortfolioNeon from './PortfolioNeon';
+import PricingNeon from './PricingNeon';
+import FaqNeon from './FaqNeon';
 import Features from './Features';
 import Testimonials from './Testimonials';
 import Pricing from './Pricing';
@@ -42,11 +50,23 @@ import HowItWorks from './HowItWorks';
 import Footer from './Footer';
 import BusinessMap from './BusinessMap';
 import Menu from './Menu';
+import RestaurantReservation from './RestaurantReservation';
 import Banner from './Banner';
 import TopBar from './TopBar';
 import LogoBanner from './LogoBanner';
 import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
+
+// Import Lumina components
+import HeroLumina from './HeroLumina';
+import FeaturesLumina from './FeaturesLumina';
+import CtaLumina from './CtaLumina';
+import PortfolioLumina from './PortfolioLumina';
+import PricingLumina from './PricingLumina';
+import FaqLumina from './FaqLumina';
+
+// Import Neon components
+import HeroNeon from './HeroNeon';
 
 // Import ecommerce sections
 import FeaturedProducts from './ecommerce/sections/FeaturedProducts';
@@ -125,8 +145,14 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     // User changes in data take priority over componentStyles defaults
     // Then derive any missing colors from the template palette
     const mergeComponentData = useCallback((componentKey: string) => {
-        const componentData = (baseData as any)[componentKey];
+        let componentData = (baseData as any)[componentKey];
         const styles = (componentStyles as any)[componentKey];
+        const defaults = (initialData.data as any)[componentKey] || {};
+
+        // If the user hasn't supplied data, fall back to global defaults
+        if (!componentData || Object.keys(componentData).length === 0) {
+            componentData = defaults;
+        }
 
         // If neither exists, return the component data or undefined
         if (!componentData && !styles) return undefined;
@@ -188,6 +214,24 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             map: mergeComponentData('map') || baseData.map,
             menu: mergeComponentData('menu') || baseData.menu,
             banner: mergeComponentData('banner') || baseData.banner,
+            // Lumina sections
+            heroLumina: mergeComponentData('heroLumina') || (baseData as any).heroLumina,
+            featuresLumina: mergeComponentData('featuresLumina') || (baseData as any).featuresLumina,
+            ctaLumina: mergeComponentData('ctaLumina') || (baseData as any).ctaLumina,
+            portfolioLumina: mergeComponentData('portfolioLumina') || (baseData as any).portfolioLumina,
+            pricingLumina: mergeComponentData('pricingLumina') || (baseData as any).pricingLumina,
+            testimonialsLumina: mergeComponentData('testimonialsLumina') || (baseData as any).testimonialsLumina,
+            faqLumina: mergeComponentData('faqLumina') || (baseData as any).faqLumina,
+
+            // Neon sections
+            heroNeon: mergeComponentData('heroNeon') || (baseData as any).heroNeon,
+            testimonialsNeon: mergeComponentData('testimonialsNeon') || (baseData as any).testimonialsNeon,
+            featuresNeon: mergeComponentData('featuresNeon') || (baseData as any).featuresNeon,
+            ctaNeon: mergeComponentData('ctaNeon') || (baseData as any).ctaNeon,
+            portfolioNeon: mergeComponentData('portfolioNeon') || (baseData as any).portfolioNeon,
+            pricingNeon: mergeComponentData('pricingNeon') || (baseData as any).pricingNeon,
+            faqNeon: mergeComponentData('faqNeon') || (baseData as any).faqNeon,
+
             // Ecommerce sections
             featuredProducts: mergeComponentData('featuredProducts') || baseData.featuredProducts,
             categoryGrid: mergeComponentData('categoryGrid') || baseData.categoryGrid,
@@ -208,6 +252,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             separator3: mergeComponentData('separator3') || (baseData as any).separator3,
             separator4: mergeComponentData('separator4') || (baseData as any).separator4,
             separator5: mergeComponentData('separator5') || (baseData as any).separator5,
+            restaurantReservation: mergeComponentData('restaurantReservation') || (baseData as any).restaurantReservation,
         } as PageData;
     }, [baseData, mergeComponentData]);
 
@@ -591,6 +636,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             key={key}
                             {...mergedData.menu}
                             borderRadius={cardBorderRadius}
+                            dataSource={mergedData.menu?.dataSource}
+                            restaurantId={mergedData.menu?.restaurantId}
                         />
                     </SectionBackground>
                 );
@@ -633,6 +680,135 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         onNavigate={handleLinkNavigation}
                     />
                 );
+
+            // Lumina sections
+            case 'heroLumina': {
+                const data = (mergedData as any).heroLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <HeroLumina key={key} {...data} borderRadius={data.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'featuresLumina': {
+                const data = (mergedData as any).featuresLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <FeaturesLumina key={key} {...data} borderRadius={data.borderRadius || cardBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'ctaLumina': {
+                const data = (mergedData as any).ctaLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <CtaLumina key={key} {...data} cardBorderRadius={cardBorderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'portfolioLumina': {
+                const data = (mergedData as any).portfolioLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <PortfolioLumina key={key} {...data} borderRadius={cardBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'pricingLumina': {
+                const data = (mergedData as any).pricingLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <PricingLumina key={key} {...data} cardBorderRadius={cardBorderRadius} buttonBorderRadius={buttonBorderRadius} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'testimonialsLumina': {
+                const data = (mergedData as any).testimonialsLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <TestimonialsLumina key={key} {...data} borderRadius={data.borderRadius || cardBorderRadius} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'faqLumina': {
+                const data = (mergedData as any).faqLumina;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <FaqLumina key={key} {...data} borderRadius={cardBorderRadius} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            // Neon sections
+            case 'heroNeon': {
+                const data = (mergedData as any).heroNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <HeroNeon key={key} {...data} borderRadius={data.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'testimonialsNeon': {
+                const data = (mergedData as any).testimonialsNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <TestimonialsNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'featuresNeon': {
+                const data = (mergedData as any).featuresNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <FeaturesNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'ctaNeon': {
+                const data = (mergedData as any).ctaNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <CtaNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'portfolioNeon': {
+                const data = (mergedData as any).portfolioNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <PortfolioNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'pricingNeon': {
+                const data = (mergedData as any).pricingNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <PricingNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
+            case 'faqNeon': {
+                const data = (mergedData as any).faqNeon;
+                return data ? (
+                    <SectionBackground backgroundImageUrl={data?.backgroundImageUrl} backgroundColor={data?.colors?.background} backgroundOverlayEnabled={data?.backgroundOverlayEnabled} backgroundOverlayOpacity={data?.backgroundOverlayOpacity} backgroundOverlayColor={data?.backgroundOverlayColor} backgroundPosition={data?.backgroundPosition}>
+                        <FaqNeon key={key} {...data} />
+                    </SectionBackground>
+                ) : null;
+            }
+
 
             // Ecommerce sections - with path-based navigation for SSR
             case 'featuredProducts':
@@ -935,6 +1111,20 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'products': // Legacy products grid - use ProductGridSection instead
             case 'signupFloat': // Rendered as floating overlay outside section loop
                 return null;
+
+            case 'restaurantReservation': {
+                const resData = (mergedData as any).restaurantReservation;
+                return resData ? (
+                    <SectionBackground backgroundImageUrl={resData?.backgroundImageUrl} backgroundColor={resData?.colors?.background} backgroundOverlayEnabled={resData?.backgroundOverlayEnabled} backgroundOverlayOpacity={resData?.backgroundOverlayOpacity} backgroundOverlayColor={resData?.backgroundOverlayColor} backgroundPosition={resData?.backgroundPosition}>
+                        <RestaurantReservation
+                            key={key}
+                            data={resData}
+                            borderRadius={cardBorderRadius}
+                            buttonBorderRadius={buttonBorderRadius}
+                        />
+                    </SectionBackground>
+                ) : null;
+            }
 
             default:
                 console.warn(`[PageRenderer] Unknown section type: ${section}`);

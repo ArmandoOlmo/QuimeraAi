@@ -150,7 +150,8 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                     label={t('email.logoImage', 'Logo')}
                     value={content.src || ''}
                     onChange={(url) => updateContent({ src: url })}
-                    destination="global"
+                    destination="admin"
+                    adminCategory="template"
                 />
 
                 <Input

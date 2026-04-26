@@ -12,6 +12,8 @@ import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontL
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { initialData } from '../data/initialData';
+import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
 import SectionBackground from './ui/SectionBackground';
@@ -20,6 +22,13 @@ import { Property } from '../types/realEstate';
 
 // Core components — needed immediately for first paint
 import Header from './Header';
+import HeroNeon from './HeroNeon';
+import TestimonialsNeon from './TestimonialsNeon';
+import FeaturesNeon from './FeaturesNeon';
+import CtaNeon from './CtaNeon';
+import PortfolioNeon from './PortfolioNeon';
+import PricingNeon from './PricingNeon';
+import FaqNeon from './FaqNeon';
 import Hero from './Hero';
 import Features from './Features';
 import Separator from './Separator';
@@ -61,6 +70,19 @@ const BlogCategoryPage = lazy(() => import('./BlogCategoryPage'));
 const RealEstateListingsSection = lazy(() => import('./real-estate/RealEstateListingsSection'));
 const PropertyDirectoryPage = lazy(() => import('./real-estate/PropertyDirectoryPage'));
 const PropertyDetailSection = lazy(() => import('./real-estate/PropertyDetailSection'));
+const RestaurantReservationComponent = lazy(() => import('./RestaurantReservation'));
+
+// Lumina components
+const HeroLumina = lazy(() => import('./HeroLumina'));
+const HeroNeon = lazy(() => import('./HeroNeon'));
+const FeaturesLumina = lazy(() => import('./FeaturesLumina'));
+const CtaLumina = lazy(() => import('./CtaLumina'));
+const PortfolioLumina = lazy(() => import('./PortfolioLumina'));
+const PricingLumina = lazy(() => import('./PricingLumina'));
+const TestimonialsLumina = lazy(() => import('./TestimonialsLumina'));
+const FaqLumina = lazy(() => import('./FaqLumina'));
+
+
 
 // Lazy load StorefrontApp for store views
 const StorefrontApp = lazy(() => import('./ecommerce/StorefrontApp'));
@@ -1529,13 +1551,19 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     || '#0f172a';
 
   // Helper to merge component data with styles and derive missing colors from palette
-  const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
-    const componentData = data?.[componentKey];
-    const projectStyles = componentStyles?.[componentKey];
-    const defaultStyles = defaultComponentStyles[componentKey];
+  const mergeComponentData = (componentKey: keyof typeof componentStyles | string) => {
+    let componentData = (data as any)?.[componentKey];
+    const projectStyles = (componentStyles as any)?.[componentKey];
+    const defaultStyles = (defaultComponentStyles as any)[componentKey];
+    const defaults = (initialData.data as any)[componentKey] || {};
     
     // Fall back to default styles if project styles are missing
     const styles = projectStyles || defaultStyles;
+
+    // If the user hasn't supplied data, fall back to global defaults
+    if (!componentData || Object.keys(componentData).length === 0) {
+        componentData = defaults;
+    }
 
     if (!componentData && !styles) return undefined;
     if (!componentData && styles) return styles as any;
@@ -1589,6 +1617,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     howItWorks: mergeComponentData('howItWorks'),
     map: mergeComponentData('map'),
     menu: mergeComponentData('menu'),
+    restaurantReservation: mergeComponentData('restaurantReservation'),
     banner: mergeComponentData('banner'),
     topBar: mergeComponentData('topBar'),
     logoBanner: mergeComponentData('logoBanner'),
@@ -1603,6 +1632,22 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     separator3: mergeComponentData('separator3'),
     separator4: mergeComponentData('separator4'),
     separator5: mergeComponentData('separator5'),
+    // Lumina sections
+    heroLumina: mergeComponentData('heroLumina'),
+    heroNeon: mergeComponentData('heroNeon'),
+    testimonialsNeon: mergeComponentData('testimonialsNeon'),
+    featuresNeon: mergeComponentData('featuresNeon'),
+    ctaNeon: mergeComponentData('ctaNeon'),
+    portfolioNeon: mergeComponentData('portfolioNeon'),
+    pricingNeon: mergeComponentData('pricingNeon'),
+    faqNeon: mergeComponentData('faqNeon'),
+    featuresLumina: mergeComponentData('featuresLumina'),
+    ctaLumina: mergeComponentData('ctaLumina'),
+    portfolioLumina: mergeComponentData('portfolioLumina'),
+    pricingLumina: mergeComponentData('pricingLumina'),
+    testimonialsLumina: mergeComponentData('testimonialsLumina'),
+    faqLumina: mergeComponentData('faqLumina'),
+
     // Ecommerce section components
     featuredProducts: mergeComponentData('featuredProducts'),
     categoryGrid: mergeComponentData('categoryGrid'),
@@ -1818,7 +1863,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'map':
         return withBackground(<BusinessMap {...compData} apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY || ''} borderRadius={borderRadius} />);
       case 'menu':
-        return withBackground(<MenuComponent {...compData} borderRadius={borderRadius} />);
+        return withBackground(<MenuComponent {...compData} borderRadius={borderRadius} dataSource={compData?.dataSource} restaurantId={compData?.restaurantId} />);
       case 'banner':
         return withBackground(<Banner {...compData} buttonBorderRadius={buttonBorderRadius} />);
       case 'topBar':
@@ -1827,6 +1872,39 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return compData ? <LogoBanner {...compData} onNavigate={handleLinkNavigation} /> : null;
       case 'products':
         return withBackground(<Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />);
+      
+      // Lumina sections
+      case 'heroLumina':
+        return compData ? withBackground(<HeroLumina {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'heroNeon':
+        return compData ? withBackground(<HeroNeon {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'testimonialsNeon':
+        return compData ? withBackground(<TestimonialsNeon {...compData} />) : null;
+      case 'featuresNeon':
+        return compData ? withBackground(<FeaturesNeon {...compData} />) : null;
+      case 'ctaNeon':
+        return compData ? withBackground(<CtaNeon {...compData} />) : null;
+      case 'portfolioNeon':
+        return compData ? withBackground(<PortfolioNeon {...compData} />) : null;
+      case 'pricingNeon':
+        return compData ? withBackground(<PricingNeon {...compData} />) : null;
+      case 'faqNeon':
+        return compData ? withBackground(<FaqNeon {...compData} />) : null;
+      case 'featuresLumina':
+        return compData ? withBackground(<FeaturesLumina {...compData} borderRadius={compData.borderRadius || borderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'ctaLumina':
+        return compData ? withBackground(<CtaLumina {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'portfolioLumina':
+        return compData ? withBackground(<PortfolioLumina {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />) : null;
+      case 'pricingLumina':
+        return compData ? withBackground(<PricingLumina {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />) : null;
+      case 'testimonialsLumina':
+        return compData ? withBackground(<TestimonialsLumina {...compData} borderRadius={compData.borderRadius || borderRadius} />) : null;
+      case 'faqLumina':
+        return compData ? withBackground(<FaqLumina {...compData} borderRadius={borderRadius} />) : null;
+
+
+
       // Ecommerce section components
       case 'featuredProducts':
         return compData ? withBackground(
@@ -1884,6 +1962,16 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'separator4':
       case 'separator5':
         return compData ? <Separator data={compData} /> : null;
+      case 'restaurantReservation': {
+        const resData = (mergedData as any).restaurantReservation;
+        return resData ? withBackground(
+          <RestaurantReservationComponent
+            data={resData}
+            borderRadius={borderRadius}
+            buttonBorderRadius={buttonBorderRadius}
+          />
+        ) : null;
+      }
       default:
         return null;
     }

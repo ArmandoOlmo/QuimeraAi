@@ -44,6 +44,7 @@ const DomainsDashboard = lazy(() => import('./dashboard/domains/DomainsDashboard
 const SEODashboard = lazy(() => import('./dashboard/SEODashboard'));
 const FinanceDashboard = lazy(() => import('./dashboard/finance/FinanceDashboard'));
 const EcommerceDashboard = lazy(() => import('./dashboard/ecommerce/EcommerceDashboard'));
+const RestaurantsDashboard = lazy(() => import('./dashboard/restaurants/RestaurantsDashboard'));
 const EmailDashboard = lazy(() => import('./dashboard/email/EmailDashboard'));
 const AssetsDashboard = lazy(() => import('./dashboard/assets/AssetsDashboard'));
 const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
@@ -89,6 +90,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'seo': SEODashboard,
     'finance': FinanceDashboard,
     'ecommerce': EcommerceDashboard,
+    'restaurants': RestaurantsDashboard,
     'email': EmailDashboard,
     'assets': AssetsDashboard,
     'templates': UserTemplates,
@@ -200,7 +202,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
                     <div className="flex flex-1 overflow-hidden relative">
                         {/* Controls/Editor Sidebar - Siempre visible en desktop, toggle en mobile */}
-                        <Suspense fallback={<ViewLoading logoUrl={agencyLogoUrl} />}>
+                        <Suspense fallback={null}>
                             <Controls />
                         </Suspense>
 

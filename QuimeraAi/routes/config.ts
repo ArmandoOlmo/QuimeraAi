@@ -71,6 +71,7 @@ export const ROUTES = {
 
   // Public Bio Page Route
   PUBLIC_BIO: '/bio/:username',
+  PUBLIC_RESTAURANT_MENU: '/menu/:restaurantId',
 
   // Dashboard Routes
   DASHBOARD: '/dashboard',
@@ -91,6 +92,7 @@ export const ROUTES = {
   SEO: '/seo',
   FINANCE: '/finance',
   ECOMMERCE: '/ecommerce',
+  RESTAURANTS: '/restaurants',
   EMAIL: '/email',
   BIOPAGE: '/biopage',
   BLOG_HUB: '/blog-hub',
@@ -323,6 +325,12 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Bio Page',
     requiresAuth: false,
   },
+  {
+    path: ROUTES.PUBLIC_RESTAURANT_MENU,
+    type: 'public',
+    title: 'Restaurant Menu',
+    requiresAuth: false,
+  },
 
   // =========================================================================
   // DASHBOARD ROUTES (Private - Authenticated Users)
@@ -472,6 +480,16 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     showInNav: true,
     icon: 'ShoppingBag',
+  },
+  {
+    path: ROUTES.RESTAURANTS,
+    view: 'restaurants',
+    type: 'private',
+    title: 'Restaurants',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'Utensils',
   },
   {
     path: ROUTES.EMAIL,
@@ -1165,7 +1183,5 @@ export function getAdminSubRoutes(userRole?: string): RouteConfig[] {
     return true;
   });
 }
-
-
 
 

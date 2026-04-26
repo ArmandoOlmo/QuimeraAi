@@ -6,7 +6,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import {
     Shield, Users, LayoutTemplate, Bot, BarChart3, Puzzle,
-    ArrowLeft, Menu, Image, MessageSquare, PackageSearch, Palette,
+    ArrowLeft, Menu, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
     Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail
@@ -25,7 +25,6 @@ const UsageStatistics = React.lazy(() => import('./admin/UsageStatistics'));
 const TemplateManagement = React.lazy(() => import('./admin/TemplateManagement'));
 const ComponentsDashboard = React.lazy(() => import('./admin/ComponentsDashboard'));
 const FinancialDashboard = React.lazy(() => import('./admin/FinancialDashboard'));
-const ImageLibraryManagement = React.lazy(() => import('./admin/ImageLibraryManagement'));
 const AdminAssetLibrary = React.lazy(() => import('./admin/AdminAssetLibrary'));
 const GlobalAssistantSettings = React.lazy(() => import('./admin/GlobalAssistantSettings'));
 const GlobalSEOSettings = React.lazy(() => import('./admin/GlobalSEOSettings'));
@@ -266,8 +265,7 @@ const SuperAdminDashboard = () => {
         { id: 'templates', title: t('superadmin.websiteTemplates'), description: t('superadmin.websiteTemplatesDesc'), icon: <LayoutTemplate size={24} />, category: 'content', route: ROUTES.ADMIN_TEMPLATES, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'components', title: t('superadmin.componentsTitle'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT, allowedRoles: ['owner', 'superadmin', 'admin'] },
-        { id: 'images', title: t('superadmin.imageLibrary'), description: t('superadmin.imageLibraryDesc'), icon: <Image size={24} />, category: 'content', route: ROUTES.ADMIN_IMAGES, allowedRoles: ['owner', 'superadmin', 'admin'] },
-        { id: 'admin-assets', title: t('superadmin.adminAssets'), description: t('superadmin.adminAssetsDesc'), icon: <FolderOpen size={24} />, category: 'content', route: ROUTES.ADMIN_ASSETS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'admin-assets', title: t('superadmin.imageLibrary', 'Librería de Imágenes'), description: t('superadmin.adminAssetsDesc', 'Biblioteca completa de imágenes de administración, templates y generaciones IA'), icon: <FolderOpen size={24} />, category: 'content', route: ROUTES.ADMIN_ASSETS, isNew: true, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-editor', title: t('superadmin.landingEditor', 'Editor Landing Page'), description: t('superadmin.landingEditorDesc', 'Editar componentes de la landing page con vista previa en tiempo real'), icon: <Layout size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_EDITOR, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
@@ -344,7 +342,7 @@ const SuperAdminDashboard = () => {
             case 'subscriptions': return <SubscriptionManagement onBack={handleBack} />;
             case 'templates': return <TemplateManagement onBack={handleBack} />;
             case 'components': return <ComponentsDashboard onBack={handleBack} />;
-            case 'images': return <ImageLibraryManagement onBack={handleBack} />;
+            case 'images': return <AdminAssetLibrary onBack={handleBack} />;
             case 'admin-assets': return <AdminAssetLibrary onBack={handleBack} />;
             case 'global-assistant': return <GlobalAssistantSettings onBack={handleBack} />;
             case 'global-seo': return <GlobalSEOSettings onBack={handleBack} />;

@@ -25,7 +25,7 @@ interface ImagePickerProps {
     onClose?: () => void;
     /** Optional callback to remove/clear the image or item (shows trash icon) */
     onRemove?: () => void;
-    /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' uses Super Admin library. 'admin' uses Admin Asset Library. */
+    /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' is kept as a legacy alias for 'admin'. */
     destination?: 'user' | 'global' | 'admin';
     /** Admin category for filtering and uploading when destination is 'admin' */
     adminCategory?: string;
@@ -41,18 +41,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const { t } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
 
-    // Determine the actual destination. If not explicitly provided, use 'admin' for Templates, else default to 'user'.
-    const destination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
+    // Determine the actual destination. Templates and legacy "global" calls use the admin asset library.
+    const requestedDestination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
+    const destination: 'user' | 'admin' = requestedDestination === 'global' ? 'admin' : requestedDestination;
 
     const {
         files, uploadFile,
-        globalFiles, uploadGlobalFile, fetchGlobalFiles,
         adminAssets, fetchAdminAssets, uploadAdminAsset,
-        isFilesLoading, isGlobalFilesLoading
+        isFilesLoading
     } = useFiles();
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
-    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products' | 'global'>('library');
+    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');
 
     // Handle closing the modal
     const handleClose = () => {
@@ -62,15 +62,13 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
     };
 
-    // Fetch global files when library opens in global mode
+    // Fetch the admin asset library only when this picker is in admin context.
     useEffect(() => {
-        if ((destination === 'global' || activeTab === 'global') && isLibraryOpen) {
-            fetchGlobalFiles();
-        }
         if (destination === 'admin' && isLibraryOpen) {
             fetchAdminAssets();
         }
-    }, [destination, isLibraryOpen, activeTab, fetchGlobalFiles, fetchAdminAssets]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [destination, isLibraryOpen]);
 
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
@@ -110,9 +108,6 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                     description: 'Uploaded via ImagePicker'
                 });
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
-            } else if (destination === 'global') {
-                await uploadGlobalFile(file);
-                success(t('dashboard.imagePicker.uploadGlobalSuccess', { name: file.name, defaultValue: t('imageGeneration.uploadedToLibrary') }));
             } else {
                 await uploadFile(file);
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
@@ -126,24 +121,19 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
     // Filter and search image files based on destination
     const imageFiles = useMemo(() => {
-        // Choose source array based on destination or active tab
+        // Choose source array based on destination.
         let sourceFiles = files;
         if (destination === 'admin') {
             sourceFiles = adminAssets;
-            // Optionally filter by selected category if we want strict filtering,
-            // but usually in library view we want to see what's uploaded.
-            // If the parent forced a category (adminCategory prop), filter by it:
             if (adminCategory) {
                 sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
             }
-        } else if (destination === 'global' || activeTab === 'global') {
-            sourceFiles = globalFiles;
         }
 
-        let result = sourceFiles.filter(f => f.type?.startsWith('image/') || true); // ensure image
+        let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
 
-        // Only filter by project if using user destination and not looking at global
-        if (destination === 'user' && activeTab !== 'global' && activeProjectId) {
+        // Project library must only show images owned by the active project.
+        if (destination === 'user' && activeProjectId) {
             result = result.filter(f => f.projectId === activeProjectId);
         }
 
@@ -152,7 +142,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         return result;
-    }, [files, globalFiles, searchQuery, activeProjectId, destination, activeTab]);
+    }, [files, adminAssets, searchQuery, activeProjectId, destination, adminCategory]);
 
     return (
         <>
@@ -184,6 +174,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 {/* Overlaid action buttons at bottom-right */}
                                 <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
                                     <button
+                                        type="button"
                                         onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
                                         className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
                                         title={t('dashboard.imagePicker.openLibrary')}
@@ -191,6 +182,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         <Grid size={14} />
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
                                         className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
                                         title={t('dashboard.imagePicker.generateWithAI')}
@@ -199,6 +191,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     </button>
                                     {onRemove && (
                                         <button
+                                            type="button"
                                             onClick={onRemove}
                                             className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                                             title={t('common.remove')}
@@ -233,12 +226,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                     {!value && (
                         <div className="flex gap-2 mt-3">
                             <button
+                                type="button"
                                 onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
                                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
                             >
                                 <Grid size={12} /> Librería
                             </button>
                             <button
+                                type="button"
                                 onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
                                 className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
                             >
@@ -253,7 +248,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             {isLibraryOpen && (() => {
                 const modalContent = (
                     <div
-                        className="fixed inset-0 bg-black/60 z-[99999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
+                        className="fixed inset-0 bg-black/60 z-[100010] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
                         onClick={handleClose}
                     >
                         <div
@@ -264,21 +259,15 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         <div className="p-4 border-b border-editor-border flex justify-between items-center bg-editor-panel-bg">
                             <div className="flex gap-4">
                                 <button
+                                    type="button"
                                     onClick={() => setActiveTab('library')}
                                     className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'library' ? 'border-editor-accent text-editor-text-primary' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 >
                                     {t('dashboard.imagePicker.assetLibrary')}
                                 </button>
-                                {destination === 'user' && (
-                                    <button
-                                        onClick={() => setActiveTab('global')}
-                                        className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'global' ? 'border-editor-accent text-editor-text-primary' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
-                                    >
-                                        Globales
-                                    </button>
-                                )}
                                 {storeId && (
                                     <button
+                                        type="button"
                                         onClick={() => setActiveTab('products')}
                                         className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'products' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
                                     >
@@ -286,20 +275,21 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     </button>
                                 )}
                                 <button
+                                    type="button"
                                     onClick={() => setActiveTab('generate')}
                                     className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'generate' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
                                 >
                                     <Zap size={14} /> Quimera.ai
                                 </button>
                             </div>
-                            <button onClick={handleClose} className="p-1 rounded-full hover:bg-editor-border"><X size={20} /></button>
+                            <button type="button" onClick={handleClose} className="p-1 rounded-full hover:bg-editor-border"><X size={20} /></button>
                         </div>
 
                         {/* Content */}
                         <div className={`flex-grow overflow-hidden bg-editor-bg ${activeTab === 'generate' ? '' : 'p-6'}`}>
 
-                            {/* LIBRARY/GLOBAL TAB */}
-                            {(activeTab === 'library' || activeTab === 'global') && (
+                            {/* LIBRARY TAB */}
+                            {activeTab === 'library' && (
                                 <div className="h-full flex flex-col">
                                     {/* Library Controls - Compact */}
                                     <div className="flex items-center gap-3 mb-4">
@@ -307,14 +297,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         <div className="flex items-center gap-1.5 text-editor-text-secondary">
                                             <FolderOpen size={14} className="text-editor-accent" />
                                             <span className="text-xs font-medium text-editor-text-primary">
-                                                {activeTab === 'global' ? 'Activos Globales Admin' : destination === 'admin' ? 'Librería Admin' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
+                                                {destination === 'admin' ? 'Librería de administración' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
                                             </span>
                                             <span className="text-[10px] px-1.5 py-0.5 bg-editor-panel-bg rounded">
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
                                             </span>
-                                            {(destination === 'global' || activeTab === 'global') && (
+                                            {destination === 'admin' && (
                                                 <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20 ml-2">
-                                                    GLOBAL
+                                                    ADMIN
                                                 </span>
                                             )}
                                         </div>
@@ -333,14 +323,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                             />
                                             {searchQuery && (
-                                                <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <button type="button" onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
                                                     <X size={10} />
                                                 </button>
                                             )}
                                         </div>
 
                                         {/* Upload Button & Admin Category Selector */}
-                                        {(activeTab === 'library' || destination === 'global' || destination === 'admin') && (
+                                        {activeTab === 'library' && (
                                             <div className="flex items-center gap-2">
                                                 {destination === 'admin' && (
                                                     <select
@@ -368,7 +358,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     maxSizeMB={10}
                                                     variant="compact"
                                                 >
-                                                    <button className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                                    <button type="button" className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
                                                         <Upload size={14} /> {t('dashboard.imagePicker.upload')}
                                                     </button>
                                                 </DragDropZone>
@@ -406,6 +396,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 <Search size={48} className="mb-4 opacity-50" />
                                                 <p className="font-medium mb-2">{t('dashboard.imagePicker.noImagesFound')}</p>
                                                 <button
+                                                    type="button"
                                                     onClick={() => setSearchQuery('')}
                                                     className="text-editor-accent hover:underline text-sm"
                                                 >
@@ -416,7 +407,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
                                                 <Image size={48} className="mb-4 opacity-50" />
                                                 <p className="mb-2">{t('dashboard.imagePicker.noImagesInLibrary')}</p>
-                                                {(activeTab === 'library' || destination === 'global' || destination === 'admin') && (
+                                                {activeTab === 'library' && (
                                                     <div className="flex flex-col items-center gap-3 mt-2">
                                                         {destination === 'admin' && (
                                                             <select
@@ -444,7 +435,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                             maxSizeMB={10}
                                                             variant="compact"
                                                         >
-                                                            <button className="text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
+                                                            <button type="button" className="text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
                                                         </DragDropZone>
                                                     </div>
                                                 )}

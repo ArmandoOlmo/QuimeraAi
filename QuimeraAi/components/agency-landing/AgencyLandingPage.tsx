@@ -33,6 +33,7 @@ import Banner from '../Banner';
 import TopBar from '../TopBar';
 import LogoBanner from '../LogoBanner';
 import SectionBackground from '../ui/SectionBackground';
+import QuimeraLoader from '../ui/QuimeraLoader';
 import Products from '../Products';
 import Separator from '../Separator';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../../types';
@@ -1007,7 +1008,7 @@ const AgencyLandingPageContent: React.FC = () => {
         {/* 1. Loading State */}
         {showArticleLoading && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-editor-text-secondary">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <QuimeraLoader size="md" />
             <p>Loading article...</p>
           </div>
         )}

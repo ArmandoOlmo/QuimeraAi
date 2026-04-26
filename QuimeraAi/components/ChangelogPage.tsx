@@ -25,7 +25,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useChangelog } from '../hooks/useChangelog';
-import { 
+import {
   ChangelogEntry, 
   ChangelogTag, 
   CHANGELOG_TAG_COLORS, 
@@ -33,6 +33,7 @@ import {
 } from '../types/changelog';
 
 import MarketingLayout from './marketing/MarketingLayout';
+import QuimeraLoader from './ui/QuimeraLoader';
 
 interface ChangelogPageProps {
   onNavigateToHome: () => void;
@@ -491,7 +492,7 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
           <div className="container mx-auto px-4 sm:px-6">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-10 h-10 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4" />
+                <QuimeraLoader size="sm" />
                 <p className="text-gray-500">{t('changelog.loadingUpdates')}</p>
               </div>
             ) : error ? (
@@ -622,4 +623,3 @@ const ChangelogPage: React.FC<ChangelogPageProps> = ({
 };
 
 export default ChangelogPage;
-

@@ -7,7 +7,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { auth, signOut } from '../../firebase';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
@@ -212,6 +212,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
+    { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic' },
     { id: 'real-estate', icon: Home, label: t('realEstate.title', 'Real Estate'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic' },
   ];
 

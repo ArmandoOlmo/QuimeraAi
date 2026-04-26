@@ -7,11 +7,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { sanitizeHtml } from '../../utils/sanitize';
-import { Shield, Lock, Eye, Database, Users, Mail, Globe, FileText, Settings, Clock, AlertTriangle, Loader2, ScrollText } from 'lucide-react';
+import { Shield, Lock, Eye, Database, Users, Mail, Globe, FileText, Settings, Clock, AlertTriangle, ScrollText } from 'lucide-react';
 import { useSafeAppContent } from '../../contexts/appContent';
 import { LegalPage, getDefaultLegalPage } from '../../types/appContent';
 import { useTranslation } from 'react-i18next';
 import LegalPageLayout from './LegalPageLayout';
+import QuimeraLoader from '../ui/QuimeraLoader';
 import i18n from '../../i18n';
 
 // Icon mapping
@@ -96,7 +97,7 @@ const TermsOfServicePage: React.FC = () => {
         return (
             <LegalPageLayout>
                 <div className="flex items-center justify-center py-32">
-                    <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
+                    <QuimeraLoader size="sm" />
                 </div>
             </LegalPageLayout>
         );

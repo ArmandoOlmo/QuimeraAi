@@ -27,6 +27,7 @@ import {
     uploadBytes,
     getDownloadURL,
     deleteObject,
+    writeBatch,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { router } from '../../hooks/useRouter';
@@ -52,6 +53,80 @@ const getProjectStoragePath = (userId: string, projectId: string, tenantId?: str
         return `tenants/${tenantId}/projects/${projectId}`;
     }
     return `users/${userId}/projects/${projectId}`;
+};
+
+const cloneProjectValue = <T,>(value: T): T => {
+    if (typeof structuredClone === 'function') {
+        return structuredClone(value);
+    }
+    return JSON.parse(JSON.stringify(value));
+};
+
+const isLikelyImageUrl = (value: string): boolean => {
+    if (!value || value.startsWith('data:')) return false;
+    if (!/^https?:\/\//i.test(value)) return false;
+
+    const lower = value.toLowerCase();
+    return (
+        /\.(png|jpe?g|webp|gif|svg|avif|ico)(\?|#|$)/i.test(lower) ||
+        lower.includes('firebasestorage.googleapis.com') ||
+        lower.includes('images.unsplash.com') ||
+        lower.includes('lh3.googleusercontent.com')
+    );
+};
+
+const inferImageType = (url: string): string => {
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    if (cleanUrl.endsWith('.svg')) return 'image/svg+xml';
+    if (cleanUrl.endsWith('.webp')) return 'image/webp';
+    if (cleanUrl.endsWith('.gif')) return 'image/gif';
+    if (cleanUrl.endsWith('.avif')) return 'image/avif';
+    if (cleanUrl.endsWith('.ico')) return 'image/x-icon';
+    if (cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg')) return 'image/jpeg';
+    return 'image/png';
+};
+
+const getImageNameFromUrl = (url: string, index: number): string => {
+    try {
+        const parsed = new URL(url);
+        const storageName = decodeURIComponent(parsed.pathname.split('/').pop() || '');
+        const name = storageName.split('/').pop()?.split('?')[0];
+        if (name && name.includes('.')) return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    } catch {
+        // Fall through to deterministic name.
+    }
+    const extension = inferImageType(url).split('/')[1]?.replace('jpeg', 'jpg').replace('svg+xml', 'svg') || 'png';
+    return `template-image-${index + 1}.${extension}`;
+};
+
+const extractProjectImageUrls = (project: Partial<Project>): string[] => {
+    const urls = new Set<string>();
+    const visit = (value: unknown) => {
+        if (!value) return;
+        if (typeof value === 'string') {
+            if (isLikelyImageUrl(value)) urls.add(value);
+            return;
+        }
+        if (Array.isArray(value)) {
+            value.forEach(visit);
+            return;
+        }
+        if (typeof value === 'object') {
+            Object.values(value as Record<string, unknown>).forEach(visit);
+        }
+    };
+
+    visit({
+        data: project.data,
+        pages: project.pages,
+        theme: project.theme,
+        brandIdentity: project.brandIdentity,
+        thumbnailUrl: project.thumbnailUrl,
+        faviconUrl: project.faviconUrl,
+        previewImages: project.previewImages,
+    });
+
+    return [...urls];
 };
 
 // Helper to extract the hero image URL based on whatever Hero component is being used
@@ -1179,11 +1254,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const now = new Date().toISOString();
         const newProject: Omit<Project, 'id'> = {
             name: newName || `${template.name} Copy`,
-            data: { ...template.data },
-            theme: { ...template.theme },
-            brandIdentity: template.brandIdentity ? { ...template.brandIdentity } : initialData.brandIdentity,
+            data: cloneProjectValue(template.data),
+            theme: cloneProjectValue(template.theme),
+            brandIdentity: template.brandIdentity ? cloneProjectValue(template.brandIdentity) : initialData.brandIdentity,
             componentOrder: [...(template.componentOrder || initialData.componentOrder as PageSection[])],
-            sectionVisibility: { ...(template.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>) },
+            sectionVisibility: cloneProjectValue(template.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>),
+            pages: template.pages ? cloneProjectValue(template.pages) : undefined,
+            sourceTemplateId: templateId,
+            thumbnailUrl: template.thumbnailUrl,
+            faviconUrl: template.faviconUrl,
             status: 'Draft',
             createdAt: now,
             lastUpdated: now,
@@ -1194,6 +1273,29 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const pathSegments = ['users', user.uid, 'projects'];
             const projectsCol = collection(db, ...pathSegments);
             const docRef = await addDoc(projectsCol, newProject);
+            const templateImageUrls = extractProjectImageUrls(template);
+
+            if (templateImageUrls.length > 0) {
+                const batch = writeBatch(db);
+                const projectFilesCol = collection(db, 'users', user.uid, 'projects', docRef.id, 'files');
+
+                templateImageUrls.forEach((downloadURL, index) => {
+                    const fileRef = doc(projectFilesCol);
+                    batch.set(fileRef, {
+                        name: getImageNameFromUrl(downloadURL, index),
+                        type: inferImageType(downloadURL),
+                        size: 0,
+                        downloadURL,
+                        storagePath: '',
+                        projectId: docRef.id,
+                        sourceTemplateId: templateId,
+                        createdAt: now,
+                        notes: 'Imported from template',
+                    });
+                });
+
+                await batch.commit();
+            }
 
             const createdProject = { ...newProject, id: docRef.id } as Project;
             setProjects(prev => {

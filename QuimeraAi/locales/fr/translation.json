@@ -1268,5 +1268,30 @@
       "hintAudience": "Les soumissions seront ajoutées à l'audience Email Marketing sélectionnée.",
       "hintBoth": "Les soumissions seront enregistrées comme leads ET ajoutées à l'audience email."
     }
+  },
+  "restaurants": {
+    "title": "Restaurants",
+    "overview": "Vue d’ensemble",
+    "menu": "Menu",
+    "reservations": "Réservations",
+    "marketing": "Marketing",
+    "reviews": "Avis",
+    "settings": "Paramètres",
+    "generateMenu": "Générer le menu avec AI",
+    "createDish": "Créer un plat",
+    "editDish": "Modifier le plat",
+    "deleteDish": "Supprimer le plat",
+    "confirmReservation": "Confirmer la réservation",
+    "cancelReservation": "Annuler la réservation",
+    "generateWithAI": "Générer avec AI",
+    "emptyMenu": "Aucun plat pour le moment",
+    "emptyReservations": "Aucune réservation pour le moment",
+    "digitalMenu": "Menu numérique",
+    "premiumGateTitle": "Restaurants est un module premium",
+    "premiumGateDescription": "Passez à un plan supérieur pour gérer menus, QR, réservations et workflows AI.",
+    "createReservation": "Créer une réservation",
+    "copyMenuLink": "Copier le lien du menu",
+    "previewPublicMenu": "Aperçu public du menu",
+    "publishQr": "Publier le menu QR"
   }
 }
