@@ -61,6 +61,7 @@ import { AIPreparationPanel } from './components/AIPreparationPanel';
 import { CalendarToolbar } from './components/CalendarToolbar';
 import { BlockDateModal } from './components/BlockDateModal';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // Import views
 import { CalendarWeekView } from './views/CalendarWeekView';
@@ -689,6 +690,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 {isGoogleConnected ? t('appointments.google.syncButton') : t('appointments.google.googleButton')}
                             </span>
                         </button>
+                        <HeaderBackButton onClick={() => setView('dashboard')} />
                     </div>
                 </header>
 
@@ -967,5 +969,4 @@ const AppointmentsDashboard: React.FC = () => {
 };
 
 export default AppointmentsDashboard;
-
 

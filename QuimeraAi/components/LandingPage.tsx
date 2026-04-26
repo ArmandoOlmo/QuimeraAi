@@ -1856,7 +1856,7 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* Chatbot Widget - Renders independently outside component order */}
-      <ChatbotWidget />
+      <ChatbotWidget isPreview={isEditorMode} />
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
       {data?.signupFloat && effectiveComponentOrder.includes('signupFloat') && (sectionVisibility.signupFloat !== false) && (

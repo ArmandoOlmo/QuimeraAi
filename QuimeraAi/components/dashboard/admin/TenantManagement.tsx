@@ -6,12 +6,13 @@ import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { Tenant, TenantStatus, TenantType, UserDocument } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import {
-    ArrowLeft, Users, Trash2, Building2, User, Search, Filter,
+    Users, Trash2, Building2, User, Search, Filter,
     Plus, ChevronDown, ChevronRight, MoreVertical, Edit2, UserPlus,
     Folder, HardDrive, Zap, DollarSign, CheckCircle, AlertCircle,
     Clock, XCircle, X, CreditCard, History, Gift
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { db, collection, getDocs, query, where, orderBy, limit } from '../../../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
@@ -279,25 +280,12 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button
-                            onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
-                            title={t('superadmin.goBack')}
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <div className="flex items-center gap-2">
                             <Users className="text-editor-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.tenant.title', 'Gestión de Tenants')}</h1>
                         </div>
                     </div>
-                    <button
-                        onClick={onBack}
-                        className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        {t('superadmin.tenant.back', 'Volver')}
-                    </button>
+                    <HeaderBackButton onClick={onBack} label={t('superadmin.tenant.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
@@ -1423,4 +1411,3 @@ const TenantDetailsModal: React.FC<{
 };
 
 export default TenantManagement;
-

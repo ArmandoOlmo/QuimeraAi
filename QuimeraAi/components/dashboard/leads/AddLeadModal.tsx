@@ -1,12 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     X, User, Mail, Phone, Briefcase, Building2,
     Globe, DollarSign, Plus, Loader2, Sparkles,
-    ChevronLeft, ChevronRight, Check, AlertCircle
+    ChevronLeft, ChevronRight, Check, AlertCircle,
+    ClipboardList, Calendar, Hash, ToggleLeft
 } from 'lucide-react';
 import Modal from '../../ui/Modal';
-import { Lead } from '../../../types';
+import { Lead, CRMCustomFieldDef } from '../../../types';
 
 // =============================================================================
 // TYPES
@@ -16,14 +17,11 @@ interface AddLeadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (leadData: Partial<Lead>) => Promise<void>;
+    /** Industry-specific custom fields from project crmConfig */
+    customFields?: CRMCustomFieldDef[];
 }
 
-type WizardStep = 'contact' | 'company';
-
-const STEPS: { id: WizardStep; label: string; icon: React.ElementType }[] = [
-    { id: 'contact', label: 'Información de Contacto', icon: User },
-    { id: 'company', label: 'Detalles de Empresa', icon: Building2 },
-];
+type WizardStep = 'contact' | 'company' | 'industry';
 
 // =============================================================================
 // STEP COMPONENTS
@@ -157,11 +155,105 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
     );
 };
 
+// Step 3: Dynamic Industry Fields
+interface IndustryFieldsStepProps {
+    fields: CRMCustomFieldDef[];
+    dynamicData: Record<string, any>;
+    onDynamicChange: (fieldId: string, value: any) => void;
+    t: any;
+}
+
+const FIELD_ICONS: Record<string, React.ElementType> = {
+    text: ClipboardList,
+    number: Hash,
+    date: Calendar,
+    select: Globe,
+    checkbox: ToggleLeft,
+};
+
+const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamicData, onDynamicChange, t }) => {
+    return (
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                    <ClipboardList size={14} className="text-primary" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">
+                    {t('leads.crmSettings.customFields')}
+                </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {fields.map(field => {
+                    const Icon = FIELD_ICONS[field.type] || ClipboardList;
+
+                    if (field.type === 'checkbox') {
+                        return (
+                            <div key={field.id} className="flex items-center gap-3 py-2">
+                                <button
+                                    type="button"
+                                    onClick={() => onDynamicChange(field.id, !dynamicData[field.id])}
+                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                                        dynamicData[field.id]
+                                            ? 'bg-primary border-primary text-primary-foreground'
+                                            : 'border-border hover:border-primary/50'
+                                    }`}
+                                >
+                                    {dynamicData[field.id] && <Check size={12} />}
+                                </button>
+                                <label className="text-sm text-foreground cursor-pointer" onClick={() => onDynamicChange(field.id, !dynamicData[field.id])}>
+                                    {field.name}
+                                </label>
+                            </div>
+                        );
+                    }
+
+                    if (field.type === 'select' && field.options) {
+                        return (
+                            <div key={field.id} className="space-y-1.5 group">
+                                <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{field.name}</label>
+                                <div className="relative">
+                                    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                                    <select
+                                        value={dynamicData[field.id] || ''}
+                                        onChange={e => onDynamicChange(field.id, e.target.value)}
+                                        className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all hover:bg-secondary/50 appearance-none cursor-pointer"
+                                    >
+                                        <option value="">{t('common.select', 'Select...')}</option>
+                                        {field.options.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div key={field.id} className="space-y-1.5 group">
+                            <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{field.name}</label>
+                            <div className="relative">
+                                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                                <input
+                                    type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                                    value={dynamicData[field.id] || ''}
+                                    onChange={e => onDynamicChange(field.id, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                                    className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                                    placeholder={field.placeholder || field.name}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 
-const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, customFields = [] }) => {
     const { t } = useTranslation();
     const [currentStep, setCurrentStep] = useState<WizardStep>('contact');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,6 +270,21 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
         status: 'new'
     });
 
+    // Dynamic industry field data
+    const [dynamicFieldData, setDynamicFieldData] = useState<Record<string, any>>({});
+
+    // Build steps dynamically based on whether custom fields exist
+    const STEPS = useMemo(() => {
+        const base: { id: WizardStep; label: string; icon: React.ElementType }[] = [
+            { id: 'contact', label: t('leads.contactInfo', 'Contact Info'), icon: User },
+            { id: 'company', label: t('leads.companyDetails', 'Company Details'), icon: Building2 },
+        ];
+        if (customFields.length > 0) {
+            base.push({ id: 'industry', label: t('leads.crmSettings.customFields', 'Industry Fields'), icon: ClipboardList });
+        }
+        return base;
+    }, [customFields, t]);
+
     const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
     const isFirstStep = currentStepIndex === 0;
     const isLastStep = currentStepIndex === STEPS.length - 1;
@@ -185,8 +292,8 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
     const validateStep = (): boolean => {
         const newErrors: string[] = [];
         if (currentStep === 'contact') {
-            if (!formData.name?.trim()) newErrors.push('El nombre es requerido');
-            if (!formData.email?.trim()) newErrors.push('El email es requerido');
+            if (!formData.name?.trim()) newErrors.push(t('leads.errors.nameRequired', 'El nombre es requerido'));
+            if (!formData.email?.trim()) newErrors.push(t('leads.errors.emailRequired', 'El email es requerido'));
         }
         setErrors(newErrors);
         return newErrors.length === 0;
@@ -212,7 +319,20 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
 
         setIsSubmitting(true);
         try {
-            await onSubmit(formData);
+            // Merge dynamic fields into customFields array
+            const mergedCustomFields = customFields.map(f => ({
+                id: f.id,
+                name: f.name,
+                type: f.type,
+                options: f.options,
+                value: dynamicFieldData[f.id] ?? (f.type === 'checkbox' ? false : f.type === 'number' ? 0 : ''),
+            }));
+
+            await onSubmit({
+                ...formData,
+                customFields: mergedCustomFields.length > 0 ? mergedCustomFields : undefined,
+            });
+
             // Reset form
             setFormData({
                 name: '',
@@ -225,11 +345,12 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 source: 'manual',
                 status: 'new'
             });
+            setDynamicFieldData({});
             setCurrentStep('contact');
             onClose();
         } catch (error) {
             console.error("Error adding lead:", error);
-            setErrors(['Error al crear el lead. Inténtalo de nuevo.']);
+            setErrors([t('leads.errors.createError', 'Error al crear el lead. Inténtalo de nuevo.')]);
         } finally {
             setIsSubmitting(false);
         }
@@ -238,6 +359,10 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
     const handleChange = (field: keyof Lead, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
+
+    const handleDynamicChange = useCallback((fieldId: string, value: any) => {
+        setDynamicFieldData(prev => ({ ...prev, [fieldId]: value }));
+    }, []);
 
     // Reset when opening
     React.useEffect(() => {
@@ -253,6 +378,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                 source: 'manual',
                 status: 'new'
             });
+            setDynamicFieldData({});
             setCurrentStep('contact');
             setErrors([]);
         }
@@ -277,7 +403,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                                 {t('leads.addNewLead')}
                             </h2>
                             <p className="text-xs text-muted-foreground font-medium">
-                                {STEPS[currentStepIndex].label}
+                                {STEPS[currentStepIndex]?.label}
                             </p>
                         </div>
                     </div>
@@ -347,6 +473,14 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit }
                     )}
                     {currentStep === 'company' && (
                         <CompanyStep data={formData} onChange={handleChange} t={t} />
+                    )}
+                    {currentStep === 'industry' && customFields.length > 0 && (
+                        <IndustryFieldsStep
+                            fields={customFields}
+                            dynamicData={dynamicFieldData}
+                            onDynamicChange={handleDynamicChange}
+                            t={t}
+                        />
                     )}
                 </div>
 

@@ -11,7 +11,6 @@ import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import { AppArticle, AppArticleCategory } from '../../../types/appContent';
 import { 
-    ArrowLeft, 
     Save, 
     Eye, 
     Globe, 
@@ -33,6 +32,7 @@ import {
     Quote,
     Code
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface AppArticleEditorProps {
     article: AppArticle | null;
@@ -176,13 +176,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={onClose}
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            <ArrowLeft size={16} />
-                            Back
-                        </button>
+                        <HeaderBackButton onClick={onClose} label={t('common.back', 'Back')} />
                         <div className="h-6 w-px bg-border" />
                         <h1 className="text-lg font-semibold">
                             {article ? 'Edit Article' : 'New Article'}
@@ -540,7 +534,6 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
 };
 
 export default AppArticleEditor;
-
 
 
 

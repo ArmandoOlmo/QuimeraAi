@@ -11,7 +11,7 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 
-import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics } from './widgetApi';
+import { getWidgetConfig, submitWidgetLead, trackWidgetAnalytics, submitWidgetAppointment } from './widgetApi';
 import { generateContent, streamContent, getUsageStats, generateImage, getLiveApiKey } from './geminiProxy';
 import { textToSpeech, getVoices, voiceChat } from './voiceProxy';
 import { twilioVoiceWebhook } from './voice/twilioVoice';
@@ -229,6 +229,7 @@ import { extractContent } from './extractContent';
 export const widget = {
     getConfig: getWidgetConfig,
     submitLead: submitWidgetLead,
+    submitAppointment: submitWidgetAppointment,
     trackAnalytics: trackWidgetAnalytics
 };
 
@@ -448,6 +449,7 @@ export const knowledge = {
 export {
     getWidgetConfig,
     submitWidgetLead,
+    submitWidgetAppointment,
     trackWidgetAnalytics,
     generateContent,
     streamContent,

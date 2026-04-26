@@ -16,7 +16,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Mail, Send, Eye, MousePointer, AlertCircle, TrendingUp,
+    Mail, Send, Eye, MousePointer, AlertCircle, TrendingUp,
     BarChart3, Users, UserPlus, Search, Filter, Plus, MoreVertical,
     Zap, Clock, Calendar, Target, ShoppingCart, Heart, Gift, Star,
     Play, Pause, Trash2, Copy, Edit2, ChevronDown, ChevronRight,
@@ -25,6 +25,7 @@ import {
     Building2, Globe, Tag, Layers, PhoneOff, FileText, Upload, Download,
     TrendingDown, Activity, AlertTriangle, TestTube,
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import ReactMarkdown from 'react-markdown';
 import DashboardSidebar from '../DashboardSidebar';
 import { useAdmin } from '../../../contexts/admin/AdminContext';
@@ -933,12 +934,11 @@ const AdminEmailHub: React.FC<AdminEmailHubProps> = ({ onBack }) => {
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <button onClick={onBack} className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"><ArrowLeft className="w-5 h-5" /></button>
                         <Mail className="text-editor-accent w-5 h-5" />
                         <h1 className="text-lg font-semibold text-editor-text-primary">{t('adminEmail.hubTitle')}</h1>
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full">{tenants.length} tenants</span>
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> {t('adminEmail.back')}</button>
+                    <HeaderBackButton onClick={onBack} label={t('adminEmail.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
 
                 {/* Conditional Editor */}

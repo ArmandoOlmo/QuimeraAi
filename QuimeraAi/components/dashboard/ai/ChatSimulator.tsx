@@ -28,7 +28,8 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             if (!user || !projectId) return;
 
             try {
-                const appointmentsRef = collection(db, 'users', user.uid, 'projects', projectId, 'appointments');
+                const targetUserId = project?.userId || user.uid;
+                const appointmentsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'appointments');
                 const q = query(appointmentsRef, orderBy('startDate', 'asc'));
                 const snapshot = await getDocs(q);
 
@@ -74,15 +75,30 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             transcriptPreview: leadData.conversationTranscript?.substring(0, 200)
         });
 
-        const leadId = await addLead({
+        const fullLeadData = {
             ...leadData,
             source: 'quimera-chat',
             status: 'new',
             tags: ['quimera-chat', ...(leadData.tags || [])]
-        });
+        };
 
-        console.log('[ChatSimulator] ✅ Lead created with ID:', leadId);
-        return leadId;
+        try {
+            const targetUserId = project?.userId || user?.uid;
+            if (targetUserId && projectId) {
+                const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
+                const docRef = await addDoc(leadsRef, fullLeadData);
+                console.log('[ChatSimulator] ✅ Lead created directly with ID:', docRef.id);
+                return docRef.id;
+            } else if (addLead) {
+                // Fallback to CRM context
+                const leadId = await addLead(fullLeadData);
+                console.log('[ChatSimulator] ✅ Lead created via context with ID:', leadId);
+                return leadId;
+            }
+        } catch (error) {
+            console.error('[ChatSimulator] ❌ Error creating lead:', error);
+        }
+        return undefined;
     };
 
     // Handle updating lead transcript
@@ -163,10 +179,11 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
             console.log('[ChatSimulator] 📅 Appointment document to save:', JSON.stringify(appointmentDoc, null, 2));
 
-            const appointmentPath = `users/${user.uid}/projects/${projectId}/appointments`;
+            const targetUserId = project?.userId || user.uid;
+            const appointmentPath = `users/${targetUserId}/projects/${projectId}/appointments`;
             console.log('[ChatSimulator] 📍 Saving appointment to path:', appointmentPath);
 
-            const appointmentsRef = collection(db, 'users', user.uid, 'projects', projectId, 'appointments');
+            const appointmentsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'appointments');
             const docRef = await addDoc(appointmentsRef, appointmentDoc);
 
             console.log('[ChatSimulator] ✅ Appointment created:', docRef.id, 'at path:', docRef.path);
@@ -195,8 +212,10 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                         transcriptLength: appointmentData.conversationTranscript?.length || 0
                     });
 
-                    await addLead(leadData);
-                    console.log('[ChatSimulator] ✅ Lead created for appointment with transcript');
+                    const targetUserId = project?.userId || user.uid;
+                    const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
+                    await addDoc(leadsRef, leadData);
+                    console.log('[ChatSimulator] ✅ Lead created directly for appointment with transcript');
                 } catch (leadError) {
                     console.error('[ChatSimulator] ⚠️ Error creating lead (appointment still created):', leadError);
                 }

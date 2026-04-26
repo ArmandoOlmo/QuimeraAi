@@ -4,7 +4,8 @@ import { useAdmin } from '../../../contexts/admin';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import DashboardSidebar from '../DashboardSidebar';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { ArrowLeft, Bot, Save, RotateCcw, Info, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bot, Save, RotateCcw, Info, CheckCircle, AlertCircle } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface GlobalChatbotPromptsSettingsProps {
     onBack: () => void;
@@ -279,13 +280,6 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                            title="Volver"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <Bot className="text-editor-accent w-5 h-5" />
                         <h1 className="text-lg font-semibold text-editor-text-primary">
                             Prompts Globales del Chatbot
@@ -297,6 +291,7 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                         )}
                     </div>
                     <div className="flex items-center gap-2">
+                        <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                         <button
                             onClick={handleResetAll}
                             className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"

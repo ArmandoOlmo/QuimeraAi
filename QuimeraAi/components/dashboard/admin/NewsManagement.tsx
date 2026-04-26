@@ -18,7 +18,6 @@ import {
     NEWS_STATUS_COLORS,
 } from '../../../types/news';
 import {
-    ArrowLeft,
     Plus,
     Search,
     Filter,
@@ -40,6 +39,7 @@ import {
     ChevronDown,
     Sparkles,
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import DashboardSidebar from '../DashboardSidebar';
 import NewsEditor from './NewsEditor';
 import AINewsStudio from './AINewsStudio';
@@ -240,13 +240,6 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                 {/* Header */}
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <Newspaper className="text-editor-accent w-5 h-5" />
                         <h1 className="text-lg font-semibold">
                             {t('superadmin.news.title', 'Noticias y Novedades')}
@@ -271,13 +264,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                 {t('superadmin.news.create', 'Nueva Noticia')}
                             </span>
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            {t('common.back', 'Volver')}
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                     </div>
                 </header>
 

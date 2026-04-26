@@ -12,7 +12,6 @@ import DashboardSidebar from '../DashboardSidebar';
 import {
     Menu as MenuIcon,
     Plus,
-    ArrowLeft,
     Save,
     Trash2,
     Globe,
@@ -35,6 +34,7 @@ import {
     X,
     Eye
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     AppNavigation,
     AppNavItem,
@@ -300,13 +300,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                             Save Changes
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="flex items-center text-sm font-medium h-9 px-3 text-editor-text-secondary hover:text-editor-accent transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4 mr-1.5" />
-                            Back
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                     </div>
                 </header>
 

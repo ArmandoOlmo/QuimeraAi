@@ -67,6 +67,7 @@ export interface ChatCoreProps {
     hidePoweredBy?: boolean;
     currentPageContext?: PageContext;
     cmsArticles?: { id: string; title: string; content: string }[];
+    activePropertyContext?: any;
 }
 
 interface Message {
@@ -704,12 +705,11 @@ ${suggestAvailableSlots()}
             ${leadCapturePrompt}
             
             === VISUAL CONTEXT ===
-            You can SEE the user's screen. When an image is provided:
-            1. Use the screenshot to understand what the user is viewing
-            2. If they ask about something on screen, describe what you see
-            3. Reference specific elements, colors, text, or sections visible in the image
-            4. Help them understand how to use what they're seeing
-            5. Be specific about UI elements, buttons, or content shown
+            You can SEE the user's screen implicitly. When an image or section context is provided:
+            1. Use the visual context to understand what the user is referring to without explicitly mentioning that you are "seeing" it.
+            2. Answer questions based on the current screen gracefully. Do NOT explicitly say "I see you are viewing the X component" or "According to the screenshot".
+            3. Help them understand how to use what they are looking at naturally.
+            4. Be specific about UI elements or content, but present it as natural guidance rather than describing an image.
         `;
 
         return systemInstruction;
@@ -843,7 +843,7 @@ ${suggestAvailableSlots()}
 
             // Analyze customer intent using LLM (if there's conversation history)
             const intentAnalysis = messages.length > 0
-                ? await analyzeCustomerIntent(messages, project?.name || 'chatbot', user?.uid)
+                ? await analyzeCustomerIntent(messages, project?.id || 'chatbot', user?.uid)
                 : null;
 
             // Create conversation for Inbox with participant info
@@ -1143,11 +1143,19 @@ ${suggestAvailableSlots()}
 
             try {
                 const appointmentId = await onCreateAppointment(appointmentData);
-                console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
-                return {
-                    cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**',
-                    appointmentCreated: true
-                };
+                if (appointmentId) {
+                    console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
+                    return {
+                        cleanedResponse: response + '\n\n✅ **¡Cita registrada en el sistema!**',
+                        appointmentCreated: true
+                    };
+                } else {
+                    console.warn('[ChatCore] ⚠️ onCreateAppointment returned undefined');
+                    return {
+                        cleanedResponse: response + '\n\n⚠️ **Hubo un problema al registrar la cita. Por favor, intenta nuevamente.**',
+                        appointmentCreated: false
+                    };
+                }
             } catch (error) {
                 console.error('[ChatCore] ❌ Error creating appointment:', error);
                 return { cleanedResponse: response, appointmentCreated: false };
@@ -1209,13 +1217,21 @@ ${suggestAvailableSlots()}
 
         try {
             const appointmentId = await onCreateAppointment(appointmentData);
-            console.log('[ChatCore] 📅 Appointment created:', appointmentId);
-
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
-            return {
-                cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**',
-                appointmentCreated: true
-            };
+            
+            if (appointmentId) {
+                console.log('[ChatCore] 📅 Appointment created:', appointmentId);
+                return {
+                    cleanedResponse: cleanedResponse + '\n\n✅ **¡Cita agendada exitosamente!**',
+                    appointmentCreated: true
+                };
+            } else {
+                console.warn('[ChatCore] ⚠️ onCreateAppointment returned undefined');
+                return {
+                    cleanedResponse: cleanedResponse + '\n\n⚠️ **Hubo un problema al agendar la cita. Por favor, intenta nuevamente.**',
+                    appointmentCreated: false
+                };
+            }
         } catch (error) {
             console.error('[ChatCore] ❌ Error creating appointment:', error);
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
@@ -1265,7 +1281,7 @@ ${suggestAvailableSlots()}
             if (extracted.email) {
                 console.log('[ChatCore] 📧 Contact detected in message:', extracted);
                 const convText = newMessages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
-                const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.name || 'chatbot', user?.uid);
+                const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.id || 'chatbot', user?.uid);
                 await updateParticipantInfo({ email: extracted.email, phone: extracted.phone || undefined });
                 if (onLeadCapture) {
                     const leadId = await onLeadCapture({
@@ -1312,7 +1328,7 @@ ${suggestAvailableSlots()}
             if (currentPageContext?.pageData && currentPageContext.section) {
                 const sectionData = (currentPageContext.pageData as any)[currentPageContext.section];
                 if (sectionData) {
-                    const contextMessage = `[SYSTEM CONTEXT] The user is currently viewing the "${currentPageContext.section}" section.Content: ${JSON.stringify(sectionData).slice(0, 1500)} `;
+                    const contextMessage = `[SYSTEM CONTEXT - USE IMPLICITLY] The user is currently viewing the "${currentPageContext.section}" section. Use this information to understand their context, but DO NOT explicitly say "I see you are viewing the ${currentPageContext.section} section". Act naturally as if you share their screen. Content data: ${JSON.stringify(sectionData).slice(0, 1500)} `;
 
                     // Prepend context to the latest user message
                     const lastMessageIndex = conversationHistory.length - 1;

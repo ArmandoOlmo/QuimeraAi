@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     DollarSign, TrendingUp, TrendingDown, Users,
-    Activity, Crown, Wallet, BarChart3, ArrowLeft,
+    Activity, Crown, Wallet, BarChart3,
     RefreshCw, Menu, Calendar, PieChart as PieChartIcon,
     Building2, Zap, CloudDownload
 } from 'lucide-react';
@@ -22,6 +22,7 @@ import { fetchBillingData } from '../../../data/mockBillingData';
 import { BillingData } from '../../../types';
 import { useAdmin } from '../../../contexts/admin';
 import { getAuth } from 'firebase/auth';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -311,9 +312,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                         <button onClick={loadAllData} disabled={loading} className="text-muted-foreground hover:text-foreground transition-colors">
                             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         </button>
-                        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
+                        <HeaderBackButton onClick={onBack} />
                     </div>
                 </header>
 

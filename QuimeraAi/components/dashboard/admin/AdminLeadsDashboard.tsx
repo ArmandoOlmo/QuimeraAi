@@ -101,9 +101,10 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users, ArrowLeft,
+    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users,
     Megaphone,
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import LeadsFilters, { LeadsFiltersState } from '../leads/LeadsFilters';
 import LeadsTableView from '../leads/LeadsTableView';
@@ -404,14 +405,12 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                 {/* Header */}
                 <header className="h-14 bg-background/95 border-b border-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
                     <div className="flex items-center gap-3">
-                        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-secondary">
-                            <ArrowLeft size={20} />
-                        </button>
                         <Users className="w-5 h-5 text-primary" />
                         <h1 className="text-lg font-bold">{t('superadmin.platformLeads', 'Leads de Plataforma')}</h1>
                         <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{leads.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                        <HeaderBackButton onClick={onBack} />
                         {/* View Mode */}
                         <div className="hidden sm:flex items-center gap-1 bg-secondary rounded-lg p-0.5">
                             <button onClick={() => setViewMode('kanban')} className={`p-1.5 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}><Columns size={16} /></button>

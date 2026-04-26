@@ -3,8 +3,9 @@ import { useAdmin } from '../../../contexts/admin';
 import { LLMPrompt } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import PromptEditorModal from './PromptEditorModal';
-import { ArrowLeft, Menu, Bot, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { Menu, Bot, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface LLMPromptManagementProps {
     onBack: () => void;
@@ -135,26 +136,13 @@ const LLMPromptManagement: React.FC<LLMPromptManagementProps> = ({ onBack }) => 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button
-                                onClick={onBack}
-                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
-                                title="Volver"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
                             <div className="flex items-center gap-2">
                                 <Bot className="text-editor-accent w-5 h-5" />
                                 <h1 className="text-lg font-semibold text-editor-text-primary">LLM Prompt Management</h1>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={onBack}
-                                className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                            >
-                                <ArrowLeft size={16} />
-                                Volver
-                            </button>
+                            <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                             <button
                                 onClick={handleCreate}
                                 className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"

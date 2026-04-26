@@ -11,7 +11,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
     Mail, Send, Users, BarChart3, Zap, Sparkles,
-    Loader2, Plus, Search, X, ArrowLeft, Menu,
+    Loader2, Plus, Search, X, Menu,
     Eye, Edit2, Copy, Trash2, Upload, Target, AlertTriangle,
     TestTube,
 } from 'lucide-react';
@@ -36,6 +36,7 @@ import type { CampaignStatus } from '../../../types/email';
 
 // Shared components
 import DashboardSidebar from '../DashboardSidebar';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // Email editor
 import EmailEditor from './editor/EmailEditor';
@@ -498,7 +499,7 @@ const UserEmailHub: React.FC<UserEmailHubProps> = ({
                         <h1 className="text-lg font-semibold text-editor-text-primary">{t('email.hub.title')}</h1>
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-semibold bg-purple-500/20 text-purple-400 rounded-full">{projectName}</span>
                     </div>
-                    <button onClick={onBack} className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"><ArrowLeft className="w-4 h-4" /> {t('email.hub.back')}</button>
+                    <HeaderBackButton onClick={onBack} label={t('email.hub.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
 
                 {showEmailEditor && emailDocument ? (

@@ -9,12 +9,13 @@ import {
     Calendar, Plus, Search, ChevronLeft, ChevronRight,
     Columns, List, CalendarDays, RefreshCw,
     Loader2, Clock, CheckCircle2, XCircle, Download,
-    TrendingUp, ArrowLeft, CalendarRange,
+    TrendingUp, CalendarRange,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { Appointment, AppointmentStatus } from '../../../types';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // Reuse existing sub-components
 
@@ -226,14 +227,12 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                 {/* Header */}
                 <header className="h-14 bg-background/95 border-b border-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
                     <div className="flex items-center gap-3">
-                        <button onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-secondary">
-                            <ArrowLeft size={20} />
-                        </button>
                         <Calendar className="w-5 h-5 text-primary" />
                         <h1 className="text-lg font-bold">{t('superadmin.platformAppointments', 'Citas de Plataforma')}</h1>
                         <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{appointments.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                        <HeaderBackButton onClick={onBack} />
                         {/* View Mode switcher */}
                         <div className="hidden sm:flex items-center gap-0.5 bg-secondary rounded-lg p-0.5">
                             {viewModes.map(vm => {

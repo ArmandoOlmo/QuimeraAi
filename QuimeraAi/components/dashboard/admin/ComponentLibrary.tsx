@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { PageSection, CustomComponent } from '../../../types';
-import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Code, FileText, Image, LayoutGrid, AlertCircle, RefreshCw, Layers, ArrowLeft, MousePointerClick, Zap, Package, AlignCenter, X } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Code, FileText, Image, LayoutGrid, AlertCircle, RefreshCw, Layers, MousePointerClick, Zap, Package, AlignCenter, X } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';

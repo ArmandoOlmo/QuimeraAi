@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth } from '../../../contexts/core/AuthContext';
@@ -17,9 +17,11 @@ import {
     ArrowUpRight, Calendar, Trash2, MoveRight,
     Building2, Palette, Sparkles, Loader2, ThumbsUp,
     Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
-    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users
+    Globe, Briefcase, Linkedin, BookOpen, X, Save, Send, Users,
+    Settings, Home, Car, Shield, LineChart, Heart, GraduationCap,
+    ChevronDown, Pencil, Check
 } from 'lucide-react';
-import { Lead, LeadStatus } from '../../../types';
+import { Lead, LeadStatus, CRMIndustryType, CRMCustomStage, CRMConfig } from '../../../types';
 import Modal from '../../ui/Modal';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import LeadsTimeline from './LeadsTimeline';
@@ -34,6 +36,8 @@ import ImportLeadsModal from './ImportLeadsModal';
 import AddToAudienceModal from '../email/AddToAudienceModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import { logApiCall } from '../../../services/apiLoggingService';
+import { INDUSTRY_STAGES, INDUSTRY_FIELDS, INDUSTRY_META } from '../../../utils/crmIndustryPresets';
+import { db, doc, updateDoc } from '../../../firebase';
 
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
@@ -67,7 +71,7 @@ const cleanJsonResponse = (text: string): string => {
     return cleaned;
 };
 
-// Moved inside component or memoized hook
+// Default stages fallback (used when no crmConfig exists on the project)
 const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }[] => [
     { id: 'new', label: t('leads.stages.new'), color: 'bg-blue-500' },
     { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-yellow-500' },
@@ -76,6 +80,11 @@ const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }
     { id: 'won', label: t('leads.stages.won'), color: 'bg-green-500' },
     { id: 'lost', label: t('leads.stages.lost'), color: 'bg-red-500' },
 ];
+
+// Icon map for industry selector
+const INDUSTRY_ICONS: Record<string, React.ElementType> = {
+    Briefcase, Home, Car, Shield, LineChart, Heart, GraduationCap, Settings,
+};
 
 const CARD_COLORS = [
     { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-border', indicator: 'bg-slate-500' },
@@ -327,13 +336,93 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
 
 const LeadsDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
+    const DEFAULT_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
     const { setView } = useUI();
     const { navigate, query, setQueryParam } = useRouter();
     const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, hasActiveProject, isLoadingLeads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { activeProject } = useProject();
+
+    // =========================================================================
+    // CRM INDUSTRY CONFIG
+    // =========================================================================
+    const crmConfig = activeProject?.crmConfig;
+    const currentIndustry: CRMIndustryType = crmConfig?.industry || 'general';
+
+    // Resolve effective stages: project custom > industry preset > default i18n
+    const LEAD_STAGES = useMemo(() => {
+        if (crmConfig?.customStages && crmConfig.customStages.length > 0) {
+            return crmConfig.customStages as { id: LeadStatus; label: string; color: string }[];
+        }
+        return DEFAULT_STAGES;
+    }, [crmConfig?.customStages, DEFAULT_STAGES]);
+
+    // Industry selector state
+    const [showIndustryDropdown, setShowIndustryDropdown] = useState(false);
+    const industryDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Editable column header state
+    const [editingStageId, setEditingStageId] = useState<string | null>(null);
+    const [editingStageLabel, setEditingStageLabel] = useState('');
+    const stageInputRef = useRef<HTMLInputElement>(null);
+
+    // Close industry dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (industryDropdownRef.current && !industryDropdownRef.current.contains(e.target as Node)) {
+                setShowIndustryDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Auto-focus stage edit input
+    useEffect(() => {
+        if (editingStageId && stageInputRef.current) {
+            stageInputRef.current.focus();
+            stageInputRef.current.select();
+        }
+    }, [editingStageId]);
+
+    // --- CRM Config helpers ---
+    const saveCrmConfig = useCallback((newConfig: CRMConfig) => {
+        if (!activeProject || !user) return;
+        // Mutate in-memory for immediate UI update
+        (activeProject as any).crmConfig = newConfig;
+        // Persist to Firestore
+        const pathSegments = activeProject.status === 'Template'
+            ? ['templates', activeProject.id]
+            : ['users', user.uid, 'projects', activeProject.id];
+        updateDoc(doc(db, ...pathSegments), { crmConfig: newConfig }).catch(console.error);
+    }, [activeProject, user]);
+
+    const handleIndustryChange = useCallback((industry: CRMIndustryType) => {
+        const stages = INDUSTRY_STAGES[industry];
+        const fields = INDUSTRY_FIELDS[industry];
+        const newConfig: CRMConfig = {
+            industry,
+            customStages: stages,
+            customFields: fields,
+        };
+        saveCrmConfig(newConfig);
+        setShowIndustryDropdown(false);
+    }, [saveCrmConfig]);
+
+    const handleStageRename = useCallback((stageId: string, newLabel: string) => {
+        if (!newLabel.trim()) { setEditingStageId(null); return; }
+        const currentStages = crmConfig?.customStages || INDUSTRY_STAGES[currentIndustry];
+        const updatedStages = currentStages.map(s =>
+            s.id === stageId ? { ...s, label: newLabel.trim() } : s
+        );
+        saveCrmConfig({
+            industry: currentIndustry,
+            ...crmConfig,
+            customStages: updatedStages,
+        });
+        setEditingStageId(null);
+    }, [crmConfig, currentIndustry, saveCrmConfig]);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -929,6 +1018,56 @@ const LeadsDashboard: React.FC = () => {
                                     <LayoutGrid className="text-primary w-4 h-4 sm:w-5 sm:h-5" />
                                     <h1 className="text-sm sm:text-lg font-semibold text-foreground">{t('leads.dashboard.title')}</h1>
                                 </div>
+
+                                {/* Industry Selector */}
+                                <div className="relative" ref={industryDropdownRef}>
+                                    <button
+                                        onClick={() => setShowIndustryDropdown(!showIndustryDropdown)}
+                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-secondary/60 hover:bg-secondary border border-border/50 rounded-lg text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
+                                        title={t('leads.industry.title')}
+                                    >
+                                        {(() => {
+                                            const meta = INDUSTRY_META.find(m => m.id === currentIndustry);
+                                            const IconComp = meta ? INDUSTRY_ICONS[meta.icon] || Briefcase : Briefcase;
+                                            return <IconComp size={14} className="text-primary" />;
+                                        })()}
+                                        <span className="hidden sm:inline">{t(`leads.industry.${currentIndustry === 'auto_dealership' ? 'autoDealership' : currentIndustry === 'real_estate' ? 'realEstate' : currentIndustry}`)}</span>
+                                        <ChevronDown size={12} className={`transition-transform ${showIndustryDropdown ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {showIndustryDropdown && (
+                                        <div className="absolute top-full left-0 mt-2 w-[260px] bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 p-2 animate-fade-in-up">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-2 py-1.5 mb-1">
+                                                {t('leads.industry.title')}
+                                            </p>
+                                            {INDUSTRY_META.map(meta => {
+                                                const Icon = INDUSTRY_ICONS[meta.icon] || Briefcase;
+                                                const isActive = meta.id === currentIndustry;
+                                                return (
+                                                    <button
+                                                        key={meta.id}
+                                                        onClick={() => handleIndustryChange(meta.id)}
+                                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
+                                                            isActive
+                                                                ? 'bg-primary/10 text-primary border border-primary/20'
+                                                                : 'text-foreground hover:bg-secondary/80'
+                                                        }`}
+                                                    >
+                                                        <div className={`p-1.5 rounded-lg ${isActive ? 'bg-primary/20' : 'bg-secondary'}`}>
+                                                            <Icon size={14} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-semibold truncate">{t(meta.labelKey)}</p>
+                                                            <p className="text-[10px] text-muted-foreground truncate">{t(meta.descriptionKey)}</p>
+                                                        </div>
+                                                        {isActive && <Check size={14} className="text-primary shrink-0" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-border/50">
                                     <button
                                         onClick={() => setActiveTab('pipeline')}
@@ -1243,11 +1382,29 @@ const LeadsDashboard: React.FC = () => {
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
-                                                    {/* Column Header */}
+                                                    {/* Column Header - Editable */}
                                                     <div className="p-3 flex items-center justify-between shrink-0 border-b border-border/30">
                                                         <div className="flex items-center gap-2">
                                                             <div className={`w-2 h-2 rounded-full ${stage.color}`} />
-                                                            <h3 className="font-bold text-xs text-foreground">{stage.label}</h3>
+                                                            {editingStageId === stage.id ? (
+                                                                <input
+                                                                    ref={stageInputRef}
+                                                                    value={editingStageLabel}
+                                                                    onChange={e => setEditingStageLabel(e.target.value)}
+                                                                    onBlur={() => handleStageRename(stage.id, editingStageLabel)}
+                                                                    onKeyDown={e => { if (e.key === 'Enter') handleStageRename(stage.id, editingStageLabel); if (e.key === 'Escape') setEditingStageId(null); }}
+                                                                    className="font-bold text-xs text-foreground bg-transparent border-b border-primary outline-none w-24"
+                                                                />
+                                                            ) : (
+                                                                <h3
+                                                                    className="font-bold text-xs text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
+                                                                    onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
+                                                                    title={t('leads.crmSettings.editStageLabel')}
+                                                                >
+                                                                    {stage.label}
+                                                                    <Pencil size={8} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
+                                                                </h3>
+                                                            )}
                                                             <span className="bg-background px-1.5 py-0.5 rounded-full text-[10px] text-muted-foreground border border-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
@@ -1287,17 +1444,39 @@ const LeadsDashboard: React.FC = () => {
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
-                                                    {/* Column Header */}
+                                                    {/* Column Header - Editable */}
                                                     <div className="p-3 lg:p-4 flex items-center justify-between shrink-0">
                                                         <div className="flex items-center gap-2">
                                                             <div className={`w-2.5 h-2.5 rounded-full ${stage.color}`} />
-                                                            <h3 className="font-bold text-sm text-foreground">{stage.label}</h3>
+                                                            {editingStageId === stage.id ? (
+                                                                <input
+                                                                    ref={stageInputRef}
+                                                                    value={editingStageLabel}
+                                                                    onChange={e => setEditingStageLabel(e.target.value)}
+                                                                    onBlur={() => handleStageRename(stage.id, editingStageLabel)}
+                                                                    onKeyDown={e => { if (e.key === 'Enter') handleStageRename(stage.id, editingStageLabel); if (e.key === 'Escape') setEditingStageId(null); }}
+                                                                    className="font-bold text-sm text-foreground bg-transparent border-b border-primary outline-none w-32"
+                                                                />
+                                                            ) : (
+                                                                <h3
+                                                                    className="font-bold text-sm text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
+                                                                    onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
+                                                                    title={t('leads.crmSettings.editStageLabel')}
+                                                                >
+                                                                    {stage.label}
+                                                                    <Pencil size={10} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
+                                                                </h3>
+                                                            )}
                                                             <span className="bg-background px-2 py-0.5 rounded-full text-xs text-muted-foreground border border-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
                                                         </div>
-                                                        <button className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-background transition-colors">
-                                                            <MoreVertical size={14} />
+                                                        <button
+                                                            onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
+                                                            className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-background transition-colors"
+                                                            title={t('leads.crmSettings.editStageLabel')}
+                                                        >
+                                                            <Pencil size={14} />
                                                         </button>
                                                     </div>
 
@@ -2256,6 +2435,7 @@ const LeadsDashboard: React.FC = () => {
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onSubmit={handleAddSubmit}
+                    customFields={crmConfig?.customFields}
                 />
 
                 {/* Add to Audience Modal */}

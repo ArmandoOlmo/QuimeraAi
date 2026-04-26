@@ -16,12 +16,12 @@ import {
     ExternalLink, 
     CheckCircle, 
     Menu, 
-    ArrowLeft,
     BarChart3,
     TrendingUp,
     ShoppingCart,
     Users
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface GlobalTrackingPixelsProps {
     onBack?: () => void;
@@ -87,14 +87,7 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
-                        )}
+                        {onBack && <HeaderBackButton onClick={onBack} />}
                         <div className="flex items-center gap-2">
                             <Activity className="text-purple-500 w-5 h-5" />
                             <h1 className="text-lg font-semibold text-foreground">
@@ -549,6 +542,5 @@ const GlobalTrackingPixels: React.FC<GlobalTrackingPixelsProps> = ({ onBack }) =
 };
 
 export default GlobalTrackingPixels;
-
 
 

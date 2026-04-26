@@ -168,7 +168,7 @@ export interface InstagramChannelConfig extends SocialChannelConfig {
     username?: string;
 }
 
-export interface SocialChannelsConfig {
+export interface AiSocialChannelsConfig {
     facebook?: FacebookMessengerChannelConfig;
     whatsapp?: WhatsAppChannelConfig;
     instagram?: InstagramChannelConfig;
@@ -202,7 +202,7 @@ export interface AiAssistantConfig {
     // CMS articles included as chatbot knowledge sources
     cmsArticleIds?: string[];
     // Social media channel integrations
-    socialChannels?: SocialChannelsConfig;
+    socialChannels?: AiSocialChannelsConfig;
 }
 
 // =============================================================================

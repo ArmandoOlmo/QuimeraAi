@@ -31,7 +31,6 @@ import {
     Mic,
     Radio,
     BookOpen,
-    ArrowLeft,
     Package,
     Shield,
     Phone,
@@ -58,6 +57,7 @@ import {
     ExternalLink,
     Share2
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     LandingChatbotConfig,
     defaultLandingChatbotConfig,
@@ -1911,13 +1911,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <RefreshCw size={14} />
                             <span className="hidden sm:inline">Defaults</span>
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                        >
-                            <ArrowLeft size={16} />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} />
                     </div>
                 </header>
 

@@ -115,6 +115,10 @@
           "function": "trackWidgetAnalytics"
         },
         {
+          "source": "/api/widget/*/appointments",
+          "function": "submitWidgetAppointment"
+        },
+        {
           "source": "/api/widget/**",
           "function": "getWidgetConfig"
         },
@@ -180,6 +184,10 @@
         {
           "source": "/api/widget/*/analytics",
           "function": "trackWidgetAnalytics"
+        },
+        {
+          "source": "/api/widget/*/appointments",
+          "function": "submitWidgetAppointment"
         },
         {
           "source": "/api/widget/**",

@@ -15,6 +15,7 @@ import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import DashboardWaveRibbons from './DashboardWaveRibbons';
 import AdminViewLayout from './admin/AdminViewLayout';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 // Lazy-loaded admin panels — each loads on-demand (~905KB → ~30KB initial)
 const AdminManagement = React.lazy(() => import('./admin/AdminManagement'));
@@ -441,14 +442,11 @@ const SuperAdminDashboard = () => {
                             onClose={() => setIsMobileSearchOpen(false)}
                             placeholder={t('superadmin.searchFeatures')}
                         />
-                        <button
+                        <HeaderBackButton
                             onClick={handleBackToDashboard}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-editor-border/40"
-                            aria-label={t('superadmin.backToDashboard', 'Volver al Dashboard')}
-                            title={t('superadmin.backToDashboard', 'Volver al Dashboard')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
+                            label={t('superadmin.backToDashboard', 'Volver al Dashboard')}
+                            className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25"
+                        />
                     </div>
                 </header>
 

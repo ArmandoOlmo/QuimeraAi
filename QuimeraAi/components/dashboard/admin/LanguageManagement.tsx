@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle, ArrowLeft, Menu, X } from 'lucide-react';
+import { Globe, Check, Plus, Edit2, Trash2, Download, Upload, Save, AlertCircle, Menu, X } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 import { useLanguage } from '../../../contexts/LanguageContext';
 
@@ -250,13 +251,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('superadmin.backToAdmin')}
-            </button>
+            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
             {saveStatus === 'success' && (
               <div className="flex items-center gap-2 text-green-500 text-sm">
                 <Check size={16} />
@@ -628,4 +623,3 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
 };
 
 export default LanguageManagement;
-

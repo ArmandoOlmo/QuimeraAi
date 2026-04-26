@@ -12,6 +12,7 @@ import MenuEditor from './MenuEditor';
 import { Menu } from '../../../types';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import MobileSearchModal from '../../ui/MobileSearchModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 const NavigationDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -207,6 +208,7 @@ const NavigationDashboard: React.FC = () => {
                                 <Plus size={20} />
                             </button>
                         )}
+                        <HeaderBackButton onClick={() => setView('dashboard')} />
 
                         {/* View Toggle - bare icons */}
                         <div className="hidden sm:flex gap-2">

@@ -718,6 +718,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // A/B Testing (only include if exists)
             ...(project.abTests && { abTests: project.abTests }),
+
+            // CRM Configuration (only include if exists)
+            ...(project.crmConfig && { crmConfig: project.crmConfig }),
         });
 
         try {
@@ -788,6 +791,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (project.faviconUrl) snapshot.faviconUrl = project.faviconUrl;
         if (project.thumbnailUrl) snapshot.thumbnailUrl = project.thumbnailUrl;
         if (project.abTests) snapshot.abTests = project.abTests;
+        if (project.crmConfig) snapshot.crmConfig = project.crmConfig;
 
         return snapshot;
     }, [user, activeProjectId, data, theme, brandIdentity, componentOrder, sectionVisibility, pages, adminContext]);

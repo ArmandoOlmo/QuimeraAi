@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft,
     CheckCircle,
     Globe,
     Image as ImageIcon,
@@ -13,6 +12,7 @@ import {
     Upload
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
 import {
@@ -332,14 +332,6 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         >
                             <Menu className="w-4 h-4" />
                         </button>
-                        {/* Back button - Mobile */}
-                        <button
-                            onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-lg md:hidden transition-colors"
-                            title={t('common.back')}
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2">
                                 <Globe className="text-editor-accent w-5 h-5" />
@@ -372,14 +364,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                             <Save className="w-4 h-4" />
                             <span className="hidden sm:inline">{isSaving ? t('superadmin.saving') : t('superadmin.appInfo.saveChanges')}</span>
                         </button>
-                        {/* Back button - Desktop */}
-                        <button
-                            onClick={onBack}
-                            className="hidden md:flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            {t('common.back')}
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                     </div>
                 </header>
 
@@ -736,7 +721,6 @@ const ChecklistItem: React.FC<{ checked: boolean; label: string }> = ({ checked,
 );
 
 export default AppInformationSettings;
-
 
 
 

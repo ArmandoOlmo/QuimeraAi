@@ -21,7 +21,6 @@ import Modal from '../../ui/Modal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import { formatBytes, formatFileDate } from '../../../utils/fileHelpers';
 import {
-    ArrowLeft,
     Upload,
     Trash2,
     Download,
@@ -58,6 +57,7 @@ import {
     HardDrive,
     AlertTriangle
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface AdminAssetLibraryProps {
     onBack: () => void;
@@ -1125,13 +1125,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                             {isMigrating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                             {isMigrating ? 'Migrando...' : 'Recuperar Globales'}
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} />
                     </div>
                 </header>
 
@@ -1658,7 +1652,6 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 };
 
 export default AdminAssetLibrary;
-
 
 
 

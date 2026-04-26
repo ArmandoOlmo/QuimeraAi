@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import {
-    ArrowLeft,
     Menu,
     Sparkles,
     Users,
@@ -45,6 +44,7 @@ import {
     DollarSign,
     Layers,
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import DashboardSidebar from '../DashboardSidebar';
 import StatCard from './StatCard';
 import UnifiedPlanEditor from './UnifiedPlanEditor';
@@ -947,12 +947,6 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
-                            <button
-                                onClick={onBack}
-                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
                             <div className="flex items-center gap-2">
                                 <Sparkles className="w-5 h-5 text-editor-accent" />
                                 <h1 className="text-lg font-semibold text-editor-text-primary">
@@ -969,8 +963,9 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                             >
                                 <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                             </button>
-                        </div>
-                    </header>
+                    </div>
+                    <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                </header>
 
                     {/* Tabs */}
                     <div className="px-4 sm:px-6 border-b border-editor-border">

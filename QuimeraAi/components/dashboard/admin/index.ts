@@ -5,6 +5,7 @@
 export { default as AdminManagement } from './AdminManagement';
 export { default as AdminProfileView } from './AdminProfileView';
 export { default as AdminViewLayout } from './AdminViewLayout';
+export { default as AdminPageHeader } from './AdminPageHeader';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard';
 export { default as ComponentsDashboard } from './ComponentsDashboard';
 export { default as ComponentControls } from './ComponentControls';
@@ -31,4 +32,3 @@ export { default as TenantManagement } from './TenantManagement';
 export { default as UsageStatistics } from './UsageStatistics';
 export { default as SubscriptionManagement } from './SubscriptionManagement';
 export { default as UnifiedPlanEditor } from './UnifiedPlanEditor';
-

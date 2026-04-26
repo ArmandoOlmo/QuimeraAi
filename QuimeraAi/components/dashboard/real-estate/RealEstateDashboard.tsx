@@ -31,10 +31,10 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import { Property, PropertyImage, PropertyLead, PropertyLeadStage, PropertyStatus, PropertyType } from '../../../types/realEstate';
+import { Property, PropertyImage, PropertyStatus, PropertyType } from '../../../types/realEstate';
 import { useRealEstate } from './hooks/useRealEstate';
 
-type Tab = 'overview' | 'properties' | 'leads' | 'preview' | 'assistant';
+type Tab = 'overview' | 'properties' | 'preview' | 'assistant';
 
 const emptyProperty = {
     title: '',
@@ -167,35 +167,7 @@ const getDemoProperties = (t: (key: string) => string): Array<Omit<Property, 'id
     },
 ];
 
-const getDemoLeads = (t: (key: string) => string, propertyIds: string[]): Array<Omit<PropertyLead, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>> => [
-    {
-        propertyId: propertyIds[0],
-        name: t('realEstate.demo.leads.sofia.name'),
-        email: 'sofia.rivera@example.com',
-        phone: '(787) 555-0148',
-        message: t('realEstate.demo.leads.sofia.message'),
-        stage: 'new',
-        source: 'listing_page',
-    },
-    {
-        propertyId: propertyIds[1] || propertyIds[0],
-        name: t('realEstate.demo.leads.carlos.name'),
-        email: 'carlos.mendez@example.com',
-        phone: '(787) 555-0184',
-        message: t('realEstate.demo.leads.carlos.message'),
-        stage: 'showing_scheduled',
-        source: 'social',
-    },
-    {
-        propertyId: propertyIds[2] || propertyIds[0],
-        name: t('realEstate.demo.leads.valentina.name'),
-        email: 'valentina.cruz@example.com',
-        phone: '(787) 555-0192',
-        message: t('realEstate.demo.leads.valentina.message'),
-        stage: 'offer_made',
-        source: 'referral',
-    },
-].filter(lead => Boolean(lead.propertyId));
+
 
 const RealEstateDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -204,26 +176,19 @@ const RealEstateDashboard: React.FC = () => {
     const { activeProjectId, activeProject } = useProject();
     const {
         properties,
-        leads,
-        showings,
         isLoading,
         addProperty,
         updateProperty,
         updatePropertyStatus,
         deleteProperty,
-        addPropertyLead,
-        updatePropertyLead,
-        addShowing,
     } = useRealEstate(user?.uid, activeProjectId);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [propertyModalOpen, setPropertyModalOpen] = useState(false);
-    const [leadModalOpen, setLeadModalOpen] = useState(false);
     const [editingProperty, setEditingProperty] = useState<Property | null>(null);
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [propertyForm, setPropertyForm] = useState(emptyProperty);
-    const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '', propertyId: '', message: '' });
     const [amenityInput, setAmenityInput] = useState('');
     const [assistantPrompt, setAssistantPrompt] = useState(() => t('realEstate.assistant.defaultPrompt'));
     const [assistantResult, setAssistantResult] = useState('');
@@ -247,14 +212,7 @@ const RealEstateDashboard: React.FC = () => {
         { value: 'commercial', label: t('realEstate.propertyTypes.commercial') },
     ], [t]);
 
-    const leadStages = useMemo<Array<{ value: PropertyLeadStage; label: string }>>(() => [
-        { value: 'new', label: t('realEstate.leadStages.new') },
-        { value: 'contacted', label: t('realEstate.leadStages.contacted') },
-        { value: 'showing_scheduled', label: t('realEstate.leadStages.showingScheduled') },
-        { value: 'offer_made', label: t('realEstate.leadStages.offerMade') },
-        { value: 'closed', label: t('realEstate.leadStages.closed') },
-        { value: 'lost', label: t('realEstate.leadStages.lost') },
-    ], [t]);
+
 
     const statusLabels = useMemo(() => Object.fromEntries(propertyStatuses.map(status => [status.value, status.label])) as Record<PropertyStatus, string>, [propertyStatuses]);
 
@@ -266,10 +224,8 @@ const RealEstateDashboard: React.FC = () => {
     const metrics = useMemo(() => ({
         total: properties.length,
         active: properties.filter(property => property.status === 'active').length,
-        newLeads: leads.filter(lead => lead.stage === 'new').length,
-        showings: showings.filter(showing => showing.status === 'scheduled').length,
         sold: properties.filter(property => property.status === 'sold').length,
-    }), [leads, properties, showings]);
+    }), [properties]);
 
     const demoProperties = useMemo(() => getDemoProperties(t), [t]);
 
@@ -290,21 +246,7 @@ const RealEstateDashboard: React.FC = () => {
                 ? createdPropertyIds
                 : properties.slice(0, 3).map(property => property.id);
 
-            const existingLeadNames = new Set(leads.map(lead => lead.name.trim().toLowerCase()));
-            const demoLeads = getDemoLeads(t, targetPropertyIds);
-            for (const lead of demoLeads) {
-                if (existingLeadNames.has(lead.name.trim().toLowerCase())) continue;
-                const leadId = await addPropertyLead(lead);
-                if (leadId && lead.propertyId && lead.stage === 'showing_scheduled') {
-                    await addShowing({
-                        propertyId: lead.propertyId,
-                        leadId,
-                        scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-                        status: 'scheduled',
-                        notes: t('realEstate.demo.showingNote'),
-                    });
-                }
-            }
+
         } finally {
             setIsSeedingDemo(false);
         }
@@ -456,9 +398,7 @@ const RealEstateDashboard: React.FC = () => {
                 <RealEstateHeader
                     title={t('realEstate.title')}
                     projectName={activeProject?.name}
-                    onOpenMenu={() => setIsMobileMenuOpen(true)}
                     onBack={() => setView('dashboard')}
-                    onAddLead={() => setLeadModalOpen(true)}
                     onAddProperty={() => openPropertyForm()}
                     onSeedDemo={seedDemoListings}
                     isSeedingDemo={isSeedingDemo}
@@ -469,7 +409,6 @@ const RealEstateDashboard: React.FC = () => {
                         {[
                             ['overview', BarChart3, t('realEstate.tabs.dashboard')],
                             ['properties', Home, t('realEstate.tabs.properties')],
-                            ['leads', Users, t('realEstate.tabs.leads')],
                             ['preview', Eye, t('realEstate.tabs.preview')],
                             ['assistant', Bot, t('realEstate.tabs.assistant')],
                         ].map(([id, Icon, label]) => {
@@ -642,12 +581,12 @@ const RealEstateDashboard: React.FC = () => {
             </div>
 
             <Modal isOpen={propertyModalOpen} onClose={() => setPropertyModalOpen(false)} maxWidth="max-w-5xl" fullScreenMobile>
-                <form onSubmit={saveProperty} className="flex flex-col max-h-[100dvh]">
-                    <div className="p-5 border-b border-border flex items-center justify-between">
+                <form onSubmit={saveProperty} className="flex flex-col h-full flex-1 min-h-0">
+                    <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
                         <h2 className="text-xl font-bold">{editingProperty ? t('realEstate.form.editProperty') : t('realEstate.form.createProperty')}</h2>
                         <Button type="button" variant="ghost" size="icon" onClick={() => setPropertyModalOpen(false)} aria-label={t('common.close')}><X size={16} /></Button>
                     </div>
-                    <div className="p-5 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="p-5 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-4 custom-scrollbar">
                         <Field label={t('realEstate.form.title')}><Input required value={propertyForm.title} onChange={event => setPropertyForm(prev => ({ ...prev, title: event.target.value }))} /></Field>
                         <Field label={t('realEstate.form.price')}><Input type="number" value={propertyForm.price} onChange={event => setPropertyForm(prev => ({ ...prev, price: Number(event.target.value) }))} /></Field>
                         <Field label={t('realEstate.form.address')}><Input value={propertyForm.address} onChange={event => setPropertyForm(prev => ({ ...prev, address: event.target.value }))} /></Field>
@@ -681,27 +620,13 @@ const RealEstateDashboard: React.FC = () => {
                             </div>
                         </Field>
                     </div>
-                    <div className="p-5 border-t border-border flex justify-end gap-2">
+                    <div className="p-5 border-t border-border flex justify-end gap-2 shrink-0">
                         <Button type="button" variant="secondary" onClick={() => setPropertyModalOpen(false)}>{t('common.cancel')}</Button>
                         <Button type="submit">{t('realEstate.form.saveProperty')}</Button>
                     </div>
                 </form>
             </Modal>
 
-            <Modal isOpen={leadModalOpen} onClose={() => setLeadModalOpen(false)} maxWidth="max-w-xl">
-                <form onSubmit={saveLead} className="p-5 space-y-4">
-                    <h2 className="text-xl font-bold">{t('realEstate.leads.newPropertyLead')}</h2>
-                    <Field label={t('realEstate.leads.name')}><Input required value={leadForm.name} onChange={event => setLeadForm(prev => ({ ...prev, name: event.target.value }))} /></Field>
-                    <Field label={t('realEstate.leads.email')}><Input type="email" value={leadForm.email} onChange={event => setLeadForm(prev => ({ ...prev, email: event.target.value }))} /></Field>
-                    <Field label={t('realEstate.leads.phone')}><Input value={leadForm.phone} onChange={event => setLeadForm(prev => ({ ...prev, phone: event.target.value }))} /></Field>
-                    <Field label={t('realEstate.leads.property')}><DashboardSelect value={leadForm.propertyId} onChange={value => setLeadForm(prev => ({ ...prev, propertyId: value }))} placeholder={t('realEstate.selectProperty')} options={properties.map(property => ({ value: property.id, label: property.title }))} /></Field>
-                    <Field label={t('realEstate.leads.message')}><textarea value={leadForm.message} onChange={event => setLeadForm(prev => ({ ...prev, message: event.target.value }))} className="w-full min-h-24 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" /></Field>
-                    <div className="flex justify-end gap-2">
-                        <Button type="button" variant="secondary" onClick={() => setLeadModalOpen(false)}>{t('common.cancel')}</Button>
-                        <Button type="submit">{t('realEstate.leads.createLead')}</Button>
-                    </div>
-                </form>
-            </Modal>
         </div>
     );
 };
@@ -711,7 +636,6 @@ const RealEstateHeader = ({
     projectName,
     onOpenMenu,
     onBack,
-    onAddLead,
     onAddProperty,
     onSeedDemo,
     isSeedingDemo,
@@ -721,7 +645,6 @@ const RealEstateHeader = ({
     projectName?: string;
     onOpenMenu: () => void;
     onBack: () => void;
-    onAddLead?: () => void;
     onAddProperty?: () => void;
     onSeedDemo?: () => void;
     isSeedingDemo?: boolean;
@@ -751,12 +674,6 @@ const RealEstateHeader = ({
                 <Button variant="secondary" size="sm" onClick={onSeedDemo} disabled={isSeedingDemo} className="hidden lg:inline-flex">
                     {isSeedingDemo ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
                     {t('realEstate.demo.loadListings')}
-                </Button>
-            )}
-            {onAddLead && (
-                <Button variant="secondary" size="sm" onClick={onAddLead} className="hidden sm:inline-flex">
-                    <Users size={16} />
-                    {t('realEstate.actions.newLead')}
                 </Button>
             )}
             {onAddProperty && (
@@ -818,17 +735,6 @@ const PropertyRow = ({
     </div>
 );
 
-const LeadCard = ({ lead, properties, stageOptions, noContactLabel, onStage }: { lead: PropertyLead; properties: Property[]; stageOptions: Array<{ value: PropertyLeadStage; label: string }>; noContactLabel: string; onStage: (stage: PropertyLeadStage) => void }) => {
-    const property = properties.find(item => item.id === lead.propertyId);
-    return (
-        <div className="bg-background/70 border border-border rounded-lg p-3 space-y-2">
-            <p className="font-semibold text-sm">{lead.name}</p>
-            <p className="text-xs text-muted-foreground">{lead.email || lead.phone || noContactLabel}</p>
-            {property && <p className="text-xs text-primary line-clamp-1">{property.title}</p>}
-            <DashboardSelect value={lead.stage} onChange={value => onStage(value as PropertyLeadStage)} options={stageOptions} />
-        </div>
-    );
-};
 
 const ListingPreview = ({ property, properties, onSelect, onPublish, onUnpublish, t }: { property?: Property; properties: Property[]; onSelect: (id: string) => void; onPublish: (id: string) => void; onUnpublish: (id: string) => void; t: (key: string) => string }) => {
     if (!property) return <EmptyState label={t('realEstate.empty.previewProperty')} />;

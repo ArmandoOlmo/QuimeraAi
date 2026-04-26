@@ -159,6 +159,29 @@ function parseProjectId(fullProjectId: string): { userId: string | null; project
  * 2. Otherwise, look in top-level 'projects' collection
  * 3. As fallback, search across all users' projects (slower)
  */
+
+/**
+ * SECURITY: Optional Firebase Auth verification.
+ * If Authorization header with Firebase ID token is present, verify it and
+ * return the authenticated UID. This allows the project owner to test the widget
+ * even if it is currently disabled.
+ */
+async function verifyOptionalAuth(req: functions.https.Request): Promise<string | null> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+
+    try {
+        const idToken = authHeader.split('Bearer ')[1];
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        return decodedToken.uid;
+    } catch (error) {
+        console.warn('[widgetApi] Invalid Firebase token presented, ignoring');
+        return null;
+    }
+}
+
 async function findProject(fullProjectId: string): Promise<{
     exists: boolean;
     data: any;
@@ -218,7 +241,7 @@ export const getWidgetConfig = functions.https.onRequest(async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Vary', 'Origin');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -249,9 +272,14 @@ export const getWidgetConfig = functions.https.onRequest(async (req, res) => {
         }
 
         // Check if AI assistant is active
+        const verifiedUid = await verifyOptionalAuth(req);
         if (!projectData?.aiAssistantConfig?.isActive) {
-            res.status(403).json({ error: 'Chat widget is not active for this project' });
-            return;
+            if (verifiedUid && verifiedUid === userId) {
+                console.log(`[getWidgetConfig] Owner testing inactive chatbot: projectId=${projectId}`);
+            } else {
+                res.status(403).json({ error: 'Chat widget is not active for this project' });
+                return;
+            }
         }
 
         // Return sanitized configuration
@@ -296,7 +324,7 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
     // Enable CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -327,9 +355,14 @@ export const submitWidgetLead = functions.https.onRequest(async (req, res) => {
             return;
         }
 
+        const verifiedUid = await verifyOptionalAuth(req);
         if (!projectData?.aiAssistantConfig?.isActive) {
-            res.status(403).json({ error: 'Chat widget is not active for this project' });
-            return;
+            if (verifiedUid && verifiedUid === userId) {
+                console.log(`[submitWidgetLead] Owner testing inactive chatbot: projectId=${projectId}`);
+            } else {
+                res.status(403).json({ error: 'Chat widget is not active for this project' });
+                return;
+            }
         }
 
         // Rate limit check
@@ -417,7 +450,7 @@ export const trackWidgetAnalytics = functions.https.onRequest(async (req, res) =
     // Enable CORS
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -456,6 +489,169 @@ export const trackWidgetAnalytics = functions.https.onRequest(async (req, res) =
 
     } catch (error) {
         console.error('Error tracking analytics:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * Submit Appointment from Embedded Widget
+ * 
+ * POST /api/widget/:projectId/appointments
+ * 
+ * Captures an appointment from an embedded widget.
+ * Saves the appointment to the project owner's appointments collection.
+ */
+export const submitWidgetAppointment = functions.https.onRequest(async (req, res) => {
+    // Enable CORS
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
+    try {
+        // Extract project ID from path
+        const pathParts = req.path.split('/');
+        const fullProjectId = pathParts[pathParts.length - 2]; // Second to last part
+
+        if (!fullProjectId) {
+            res.status(400).json({ error: 'Project ID is required' });
+            return;
+        }
+
+        // Find project and get owner's userId
+        const { exists, data: projectData, userId, projectId } = await findProject(fullProjectId);
+
+        if (!exists || !projectData) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        const verifiedUid = await verifyOptionalAuth(req);
+        if (!projectData?.aiAssistantConfig?.isActive) {
+            if (verifiedUid && verifiedUid === userId) {
+                console.log(`[submitWidgetAppointment] Owner testing inactive chatbot: projectId=${projectId}`);
+            } else {
+                res.status(403).json({ error: 'Chat widget is not active for this project' });
+                return;
+            }
+        }
+
+        // Rate limit check
+        const clientIp = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
+        const safeIp = clientIp.replace(/[^a-zA-Z0-9]/g, '_');
+
+        const rateLimit = await checkRateLimit(projectId, safeIp);
+        if (!rateLimit.allowed) {
+            res.status(429).json({ error: rateLimit.message });
+            return;
+        }
+
+        // Get appointment data
+        const data = req.body;
+        
+        if (!data.startDate || !data.endDate) {
+            res.status(400).json({ error: 'Start date and end date are required' });
+            return;
+        }
+
+        // Convert ISO strings to Timestamps
+        const startDateTimestamp = admin.firestore.Timestamp.fromDate(new Date(data.startDate));
+        const endDateTimestamp = admin.firestore.Timestamp.fromDate(new Date(data.endDate));
+
+        const participants = [];
+        if (data.participantName || data.participantEmail) {
+            participants.push({
+                id: `participant_${Date.now()}`,
+                name: data.participantName || 'Cliente (via Chatbot)',
+                email: data.participantEmail || '',
+                phone: data.participantPhone || '',
+                role: 'attendee',
+                status: 'pending',
+                isRequired: true,
+            });
+        }
+
+        const appointmentDoc = {
+            title: data.title || 'Cita desde Chatbot',
+            description: data.description || '',
+            type: data.type || 'consultation',
+            status: 'scheduled',
+            priority: 'medium',
+            startDate: startDateTimestamp,
+            endDate: endDateTimestamp,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+            organizerId: userId || 'system',
+            organizerName: projectData.name || '',
+            organizerEmail: '',
+            participants,
+            location: { type: 'virtual' },
+            reminders: [
+                { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
+                { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
+            ],
+            attachments: [],
+            notes: [],
+            followUpActions: [],
+            aiPrepEnabled: true,
+            linkedLeadIds: data.linkedLeadId ? [data.linkedLeadId] : [],
+            tags: ['chatbot', 'auto-scheduled'],
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdBy: 'chatbot',
+            projectId,
+        };
+
+        let docRef;
+
+        if (userId && projectId) {
+            const appointmentsRef = db.collection('users').doc(userId).collection('projects').doc(projectId).collection('appointments');
+            docRef = await appointmentsRef.add(appointmentDoc);
+            console.log(`[WidgetAPI] Appointment saved to users/${userId}/projects/${projectId}/appointments/${docRef.id}`);
+            
+            // Also save a lead if contact info exists
+            if (data.participantName || data.participantEmail) {
+                const lead = {
+                    name: data.participantName || 'Cliente (via Chatbot)',
+                    email: data.participantEmail || '',
+                    phone: data.participantPhone || '',
+                    projectId,
+                    projectName: projectData.name || 'Unknown Project',
+                    source: 'embedded-widget',
+                    status: 'new',
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+                try {
+                    await db.collection('users').doc(userId).collection('projects').doc(projectId).collection('leads').add(lead);
+                    console.log(`[WidgetAPI] Also saved lead from appointment to users/${userId}/projects/${projectId}/leads`);
+                } catch (e) {
+                    console.warn('[WidgetAPI] Could not save lead for appointment', e);
+                }
+            }
+        } else {
+            console.error('[WidgetAPI] Cannot save appointment: no userId. Falling back to top-level appointments.');
+            docRef = await db.collection('appointments').add({
+                ...appointmentDoc,
+                _warning: 'Could not determine project owner or projectId'
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            appointmentId: docRef.id
+        });
+
+    } catch (error) {
+        console.error('Error submitting appointment:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

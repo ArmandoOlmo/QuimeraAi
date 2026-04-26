@@ -9,8 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { marked } from 'marked';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { useSafeAppContent } from '../../contexts/appContent';
+import { useUI } from '../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory } from '../../types/appContent';
 import DashboardSidebar from './DashboardSidebar';
+import HeaderBackButton from '../ui/HeaderBackButton';
 import {
   Menu,
   Search,
@@ -20,7 +22,6 @@ import {
   User,
   Tag,
   FileText,
-  ArrowLeft,
   ArrowRight,
   ExternalLink,
   X,
@@ -87,6 +88,7 @@ function groupByMonth(articles: AppArticle[], locale: string): { label: string; 
 
 const BlogHub: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { setView } = useUI();
   const appContent = useSafeAppContent();
   const articles = appContent?.articles || [];
   const isLoading = appContent?.isLoadingArticles || false;
@@ -211,13 +213,7 @@ const BlogHub: React.FC = () => {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => setSelectedArticle(null)}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                {t('blog.backToBlog', 'Volver al Blog')}
-              </button>
+              <HeaderBackButton onClick={() => setSelectedArticle(null)} label={t('blog.backToBlog', 'Volver al Blog')} />
             </div>
 
             <div className="ml-auto flex items-center gap-2">
@@ -450,6 +446,7 @@ const BlogHub: React.FC = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               )}
             </button>
+            <HeaderBackButton onClick={() => setView('dashboard')} />
           </div>
         </header>
 

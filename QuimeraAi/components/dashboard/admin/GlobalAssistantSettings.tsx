@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import DashboardSidebar from '../DashboardSidebar';
-import { ArrowLeft, MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X, Menu, RefreshCw, Edit } from 'lucide-react';
+import { MessageSquare, Mic, Radio, Save, CheckCircle, Sliders, Shield, Languages, Eye, Sparkles, X, Menu, RefreshCw, Edit } from 'lucide-react';
 import { GlobalAssistantConfig, ScopePermission } from '../../../types';
 import { PROMPT_TEMPLATES, getDefaultEnabledTemplates, compileTemplates } from '../../../data/promptTemplates';
 import PromptEditorModal from './PromptEditorModal';
 import { defaultPrompts } from '../../../data/defaultPrompts';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface GlobalAssistantSettingsProps {
     onBack: () => void;
@@ -195,13 +196,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={onBack}
-                                className="hidden sm:flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                {t('common.back')}
-                            </button>
+                            <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                             {showSuccess && (
                                 <span className="text-sm text-green-400 flex items-center animate-fade-in-up">
                                     <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.globalAssistant.saved', 'Saved')}

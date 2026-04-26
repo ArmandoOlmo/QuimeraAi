@@ -904,6 +904,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <PropertyDetailSection
                         key={key}
                         projectId={project.id}
+                        ownerId={project.userId}
                         propertySlug={propertySlug}
                         theme={theme}
                         globalColors={globalColors}

@@ -3,7 +3,7 @@
  * Tipos para todos los componentes de la página
  */
 
-import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType } from './ui';
+import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, ComponentColors } from './ui';
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
@@ -2151,6 +2151,8 @@ export interface SignupFloatData {
     showOnLoad: boolean;
     showCloseButton: boolean;
     triggerDelay?: number;
+    /** How many days to wait before auto-showing again if the user has already seen it */
+    cooldownDays?: number;
     /** When true, closing minimizes to a small pill instead of fully hiding */
     minimizeOnClose?: boolean;
     /** Label text shown on the minimized pill button */

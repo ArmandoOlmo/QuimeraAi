@@ -309,6 +309,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             min={0} max={30} step={1} suffix="s"
           />
         </div>
+        <div className="mt-3">
+          <SliderControl
+            label={t('controls.signupFloat.cooldownDays', 'Cooldown (days)')}
+            value={data.signupFloat.cooldownDays ?? 0}
+            onChange={(v) => setNestedData('signupFloat.cooldownDays', v)}
+            min={0} max={30} step={1} suffix="d"
+          />
+          <p className="text-[10px] text-editor-text-secondary mt-1">
+            {t('controls.signupFloat.cooldownHint', '0 = always show. If > 0, it will stay minimized for returning visitors.')}
+          </p>
+        </div>
       </div>
 
       {/* ========== DIMENSIONS ========== */}

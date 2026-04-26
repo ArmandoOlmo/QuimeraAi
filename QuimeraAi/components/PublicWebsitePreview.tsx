@@ -1917,21 +1917,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         showUserAvatar: false,
         userAvatarStyle: 'initials'
       },
-      colors: {
-        primaryColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-        secondaryColor: '#ffffff',
-        accentColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-        userBubbleColor: project.data?.chatbot?.colors?.primary || '#4f46e5',
-        userTextColor: '#ffffff',
-        botBubbleColor: '#f1f5f9',
-        botTextColor: '#0f172a',
-        backgroundColor: project.data?.chatbot?.colors?.background || '#ffffff',
-        inputBackground: '#f8fafc',
-        inputBorder: '#e2e8f0',
-        inputText: '#0f172a',
-        headerBackground: project.data?.chatbot?.colors?.primary || '#4f46e5',
-        headerText: '#ffffff'
-      },
       behavior: {
         position: project.data?.chatbot?.position || 'bottom-right',
         offsetX: 20,
@@ -2158,22 +2143,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         </div>
       )}
 
-      {/* Chatbot Widget (if enabled in project) */}
-      {(project.aiAssistantConfig?.isActive || (project.data?.chatbot?.isActive)) && (
-        <ChatbotWidget
+      {/* Chatbot Widget - Always rendered to support programmatic triggers via open-quimera-chat event */}
+      <ChatbotWidget
+        isPreview={false}
           hidePoweredBy={hasWhiteLabelBranding}
           standaloneConfig={enrichedStandaloneChatbotConfig}
           standaloneProject={{
             id: project.id || storeProjectId || '',
-            userId: project.userId, // Important for ChatCore to know the project owner
+            userId: project.userId || storeUserId || '', // Important for ChatCore to know the project owner
             name: project.name || '',
             data: project.data,
             theme: project.theme,
             componentOrder: project.componentOrder,
             sectionVisibility: project.sectionVisibility,
           }}
-        />
-      )}
+      />
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
       {mergedData.signupFloat && componentOrder?.includes('signupFloat') && (sectionVisibility?.signupFloat !== false) && (

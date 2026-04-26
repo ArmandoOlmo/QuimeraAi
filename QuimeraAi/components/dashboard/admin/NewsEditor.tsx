@@ -42,7 +42,6 @@ import {
     NEWS_STATUS_LABELS,
 } from '../../../types/news';
 import {
-    ArrowLeft,
     Save,
     Loader2,
     Image as ImageIcon,
@@ -71,6 +70,7 @@ import {
 } from 'lucide-react';
 
 import DashboardSidebar from '../DashboardSidebar';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
 import EditorBubbleMenu from '../../cms/modern/EditorBubbleMenu';
 import SlashCommands from '../../cms/modern/SlashCommands';
@@ -739,13 +739,7 @@ Text to format:
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <button
-                            onClick={onClose}
-                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
+                        <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} />
                         <Sparkles className="text-primary w-5 h-5 hidden md:block" />
                         <span className="text-sm font-bold text-foreground hidden md:inline">
                             {isEditing

@@ -425,7 +425,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     />
                     <TabButton
                         id="notes"
-                        label={t('appointments.notes')}
+                        label={t('appointments.notesTitle')}
                         icon={MessageSquare}
                         isActive={activeTab === 'notes'}
                         onClick={() => setActiveTab('notes')}
@@ -470,12 +470,12 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     </div>
                                     <div className="flex-1">
                                         <p className="font-medium text-foreground">
-                                            {appointment.location?.type === 'virtual' && 'Reunión virtual'}
-                                            {appointment.location?.type === 'physical' && 'Reunión presencial'}
-                                            {appointment.location?.type === 'phone' && 'Llamada telefónica'}
+                                            {appointment.location?.type === 'virtual' && t('appointments.drawer.virtualMeeting')}
+                                            {appointment.location?.type === 'physical' && t('appointments.drawer.physicalMeeting')}
+                                            {appointment.location?.type === 'phone' && t('appointments.drawer.phoneMeeting')}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {appointment.location?.meetingUrl || appointment.location?.address || appointment.location?.phoneNumber || 'Sin detalles'}
+                                            {appointment.location?.meetingUrl || appointment.location?.address || appointment.location?.phoneNumber || t('appointments.drawer.noDetails')}
                                         </p>
                                     </div>
                                     {appointment.location?.meetingUrl && (
@@ -633,7 +633,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all text-sm font-medium"
                                     >
                                         <Mail size={14} />
-                                        Añadir participantes a Audiencia Email
+                                        {t('appointments.drawer.addToAudience')}
                                     </button>
                                 </div>
                             )}
@@ -742,7 +742,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         className="flex-1 py-2 sm:py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                     >
                         <Download size={14} className="sm:w-4 sm:h-4" />
-                        <span className="hidden xs:inline">Exportar</span>
+                        <span className="hidden xs:inline">{t('appointments.drawer.export')}</span>
                     </button>
                     {onEdit && (
                         <button
@@ -750,7 +750,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             className="flex-1 py-2 sm:py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"
                         >
                             <Edit size={14} className="sm:w-4 sm:h-4" />
-                            <span className="hidden xs:inline">Editar</span>
+                            <span className="hidden xs:inline">{t('appointments.drawer.edit')}</span>
                         </button>
                     )}
                     {onDelete && (
@@ -773,8 +773,8 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         ?.filter(p => p.email)
                         .map(p => ({ email: p.email, name: p.name, source: 'appointments' })) || []
                 }
-                title={`Añadir ${appointment.participants?.filter(p => p.email).length || 0} participante(s) a Audiencia`}
-                description={`Participantes de la cita: ${appointment.title}`}
+                title={t('appointments.drawer.addParticipantsToAudienceTitle', { count: appointment.participants?.filter(p => p.email).length || 0 })}
+                description={t('appointments.drawer.appointmentParticipants', { title: appointment.title })}
             />
         </>
     );

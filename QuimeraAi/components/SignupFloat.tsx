@@ -84,6 +84,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
   showOnLoad = true,
   showCloseButton = true,
   triggerDelay = 3,
+  cooldownDays = 0,
   minimizeOnClose = true,
   minimizedLabel = '✉️ Sign Up',
   width = 400,
@@ -122,17 +123,45 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
   // Show component after delay
   useEffect(() => {
     if (viewState !== 'hidden') return;
+    if (isPreviewMode) return; // handled by the preview mode effect
+
+    // Check cooldown
+    if (cooldownDays && cooldownDays > 0) {
+      try {
+        const lastSeen = localStorage.getItem('signup_float_last_seen');
+        if (lastSeen) {
+          const lastSeenDate = new Date(lastSeen).getTime();
+          const now = new Date().getTime();
+          const daysSinceLastSeen = (now - lastSeenDate) / (1000 * 60 * 60 * 24);
+          
+          if (daysSinceLastSeen < cooldownDays) {
+            // Cooldown active -> go straight to minimized
+            setViewState('minimized');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('[SignupFloat] localStorage access blocked');
+      }
+    }
 
     if (showOnLoad) {
       const delay = (triggerDelay || 0) * 1000;
+      const showAndRecord = () => {
+        setViewState('open');
+        try {
+          localStorage.setItem('signup_float_last_seen', new Date().toISOString());
+        } catch (e) {}
+      };
+
       if (delay > 0) {
-        const timer = setTimeout(() => setViewState('open'), delay);
+        const timer = setTimeout(showAndRecord, delay);
         return () => clearTimeout(timer);
       } else {
-        setViewState('open');
+        showAndRecord();
       }
     }
-  }, [showOnLoad, triggerDelay, viewState]);
+  }, [showOnLoad, triggerDelay, cooldownDays, viewState, isPreviewMode]);
 
   // In preview mode, show immediately (but allow close/minimize to work)
   useEffect(() => {

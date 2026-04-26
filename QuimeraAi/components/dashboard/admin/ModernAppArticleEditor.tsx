@@ -31,11 +31,12 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory, HelpCenterCategory, HELP_CENTER_CATEGORIES } from '../../../types/appContent';
 import { PreviewDevice } from '../../../types';
 import {
-    ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
+    Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone,
     Languages, ExternalLink, Image as ImageIcon, Upload, Search, Grid, Trash2, Replace, Zap
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { BRAND_ASSETS } from '../../../constants/brandAssets';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
@@ -768,14 +769,7 @@ Text to format:
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                            onClick={onClose}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                            aria-label={t('common.back')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onClose} label={t('common.back')} />
                     </div>
                 </header>
 
@@ -992,9 +986,7 @@ Text to format:
                 {/* Editor Toolbar - Just below the main header */}
                 <div className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 shadow-sm">
                     <div className="flex items-center gap-4 flex-1">
-                        <button onClick={onClose} className="p-2 -ml-2 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
+                        <HeaderBackButton onClick={onClose} label={t('common.back')} />
                         <div className="h-6 w-px bg-border"></div>
                         <input
                             value={title}
@@ -1475,4 +1467,3 @@ Text to format:
 };
 
 export default ModernAppArticleEditor;
-

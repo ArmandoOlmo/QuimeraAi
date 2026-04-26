@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { sanitizeHtml } from '../../../utils/sanitize';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
+import { Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import { doc, setDoc, getDoc } from '../../../firebase';
 import { db } from '../../../firebase';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface GlobalSEOSettingsProps {
     onBack: () => void;
@@ -127,13 +128,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onBack}
-                            className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-editor-border/40 hover:bg-editor-border text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            {t('common.back')}
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                         <button
                             onClick={handleSaveAll}
                             disabled={isSaving}
@@ -570,4 +565,3 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
 };
 
 export default GlobalSEOSettings;
-

@@ -7,7 +7,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    ArrowLeft, Save, RefreshCw, Clock, AlertTriangle,
+    Save, RefreshCw, Clock, AlertTriangle,
     FileText, Users, ShoppingCart, Bot, Mail, Sparkles,
     BarChart3, Calendar, Globe, LayoutTemplate, Wallet,
     Check, X, History, Filter, Menu
@@ -22,6 +22,7 @@ import {
     getStatusColor,
     ServiceAuditEntry,
 } from '../../../types/serviceAvailability';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // =============================================================================
 // TYPES
@@ -387,12 +388,6 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <button
-                            onClick={onBack}
-                            className="p-2 -ml-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors hidden md:block"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <div>
                             <h1 className="font-bold text-editor-text-primary">
                                 {t('serviceAvailability.title', 'Disponibilidad de Servicios')}
@@ -402,13 +397,7 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onBack}
-                        className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        {t('common.back', 'Volver')}
-                    </button>
+                    <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
 
                 {/* Tabs */}
@@ -529,4 +518,3 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
 };
 
 export default ServiceAvailabilityControl;
-

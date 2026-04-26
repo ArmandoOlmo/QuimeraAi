@@ -12,7 +12,7 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import {
     Menu, Bot, MessageSquare, Settings, Sliders, FileText,
     Save, Sparkles, User, Building2, Globe, Book, Activity, LayoutGrid, ChevronRight, Clock,
-    Mic, Radio, BookOpen, ArrowLeft, Package, Shield, Phone, Facebook, Instagram, Inbox,
+    Mic, Radio, BookOpen, Package, Shield, Phone, Facebook, Instagram, Inbox,
     TrendingUp, TrendingDown, Users, Zap, BarChart3, MessageCircle, RefreshCw, Search,
     ArrowUpRight, Loader2, Newspaper, CheckSquare, Square, Link2 as Link2Icon, PanelTopClose, PanelTopOpen
 } from 'lucide-react';
@@ -28,6 +28,7 @@ import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
 
@@ -224,13 +225,7 @@ const AiAssistantDashboard: React.FC = () => {
                             >
                                 <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
                             </button>
-                            <button
-                                onClick={() => setView('dashboard')}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                                aria-label={t('common.back', 'Volver')}
-                            >
-                                <ArrowLeft size={20} />
-                            </button>
+                            <HeaderBackButton onClick={() => setView('dashboard')} />
                         </div>
                     </header>
 
@@ -987,14 +982,7 @@ const AiAssistantDashboard: React.FC = () => {
                             <Save className="w-4 h-4" />
                             <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>
                         </button>
-                        <button
-                            onClick={() => setView('dashboard')}
-                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                            title={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
+                        <HeaderBackButton onClick={() => setView('dashboard')} />
                     </div>
                 </header>
 

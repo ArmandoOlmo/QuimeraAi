@@ -130,6 +130,42 @@ export interface PageMatch {
 }
 
 // =============================================================================
+// CRM CONFIG — Industry-flexible lead management
+// =============================================================================
+
+/** A single Kanban stage definition */
+export interface CRMCustomStage {
+    /** Matches a LeadStatus value (new, contacted, qualified, negotiation, won, lost) */
+    id: string;
+    /** Display label — freely editable by the user */
+    label: string;
+    /** Tailwind bg-* class for the stage indicator dot */
+    color: string;
+}
+
+/** Custom field definition for lead capture forms */
+export interface CRMCustomFieldDef {
+    id: string;
+    name: string;
+    type: 'text' | 'number' | 'date' | 'select' | 'checkbox';
+    options?: string[];           // Only used when type = 'select'
+    placeholder?: string;
+}
+
+/** Industry type identifier */
+export type CRMIndustryType = 'general' | 'real_estate' | 'auto_dealership' | 'insurance' | 'consulting' | 'healthcare' | 'education' | 'custom';
+
+/** Project-level CRM configuration */
+export interface CRMConfig {
+    /** Selected industry preset (or 'custom') */
+    industry: CRMIndustryType;
+    /** Custom Kanban stage labels/colors — overrides defaults when present */
+    customStages?: CRMCustomStage[];
+    /** Industry-specific fields shown in the Add Lead modal */
+    customFields?: CRMCustomFieldDef[];
+}
+
+// =============================================================================
 // PROJECT
 // =============================================================================
 export interface Project {
@@ -178,6 +214,9 @@ export interface Project {
     // Component customization
     componentStatus?: Record<PageSection, boolean>;
     componentStyles?: ComponentStyles;
+
+    // CRM Configuration — industry-flexible lead management
+    crmConfig?: CRMConfig;
 
     // Template-specific fields
     category?: string;

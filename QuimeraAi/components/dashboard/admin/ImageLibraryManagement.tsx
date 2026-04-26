@@ -7,12 +7,13 @@ import { useToast } from '../../../contexts/ToastContext';
 import { useAssetLibrary } from '../../../hooks/useAssetLibrary';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
-import { ArrowLeft, Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X, Eye, Copy, Calendar, HardDrive, FileType, Star, Shapes, Layout, FolderOpen, Grid } from 'lucide-react';
+import { Image, Upload, Trash2, Download, Zap, Search, Filter, ArrowUpDown, CheckSquare, Square, ChevronLeft, ChevronRight, Menu, Sparkles, X, Eye, Copy, Calendar, HardDrive, FileType, Star, Shapes, Layout, FolderOpen, Grid } from 'lucide-react';
 import { FileRecord } from '../../../types';
 import ImageGeneratorModal from '../../ui/ImageGeneratorModal';
 import DragDropZone from '../../ui/DragDropZone';
 import { formatBytes } from '../../../utils/fileHelpers';
 import { DEFAULT_FOLDERS, BRAND_ASSETS, AssetFolder, BrandAsset } from '../../../constants/brandAssets';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface ImageLibraryManagementProps {
     onBack: () => void;
@@ -411,10 +412,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             )}
                         </div>
                         <div className="flex items-center gap-1">
-                            <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40">
-                                <ArrowLeft className="w-4 h-4" />
-                                {t('superadmin.backToAdmin', 'Back to Admin')}
-                            </button>
+                            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                             <button
                                 onClick={() => setIsGeneratorOpen(true)}
                                 className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-purple-500 hover:text-purple-400"

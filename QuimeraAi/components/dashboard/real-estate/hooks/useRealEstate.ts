@@ -12,7 +12,7 @@ import {
     updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../../../firebase';
-import { Property, PropertyLead, PropertyStatus, Showing } from '../../../../types/realEstate';
+import { Property, PropertyStatus } from '../../../../types/realEstate';
 
 const toSlug = (value: string) =>
     value
@@ -24,8 +24,6 @@ const toSlug = (value: string) =>
 
 export const useRealEstate = (userId?: string, projectId?: string | null) => {
     const [properties, setProperties] = useState<Property[]>([]);
-    const [leads, setLeads] = useState<PropertyLead[]>([]);
-    const [showings, setShowings] = useState<Showing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const basePath = useMemo(() => {
@@ -52,8 +50,6 @@ export const useRealEstate = (userId?: string, projectId?: string | null) => {
     useEffect(() => {
         if (!basePath || !projectId) {
             setProperties([]);
-            setLeads([]);
-            setShowings([]);
             setIsLoading(false);
             return;
         }
@@ -74,25 +70,7 @@ export const useRealEstate = (userId?: string, projectId?: string | null) => {
                     console.error('[useRealEstate] Error loading properties:', error);
                     setIsLoading(false);
                 }
-            ),
-            onSnapshot(
-                query(collection(db, `${basePath}/propertyLeads`), orderBy('createdAt', 'desc')),
-                snapshot => setLeads(snapshot.docs.map(item => ({
-                    id: item.id,
-                    projectId,
-                    ...item.data(),
-                })) as PropertyLead[]),
-                error => console.error('[useRealEstate] Error loading property leads:', error)
-            ),
-            onSnapshot(
-                query(collection(db, `${basePath}/showings`), orderBy('scheduledAt', 'asc')),
-                snapshot => setShowings(snapshot.docs.map(item => ({
-                    id: item.id,
-                    projectId,
-                    ...item.data(),
-                })) as Showing[]),
-                error => console.error('[useRealEstate] Error loading showings:', error)
-            ),
+            )
         ];
 
         return () => unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -137,47 +115,14 @@ export const useRealEstate = (userId?: string, projectId?: string | null) => {
         await syncPublicProperty(propertyId, {}, true);
     }, [basePath, syncPublicProperty]);
 
-    const addPropertyLead = useCallback(async (data: Omit<PropertyLead, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        if (!basePath || !projectId) return undefined;
-        const ref = await addDoc(collection(db, `${basePath}/propertyLeads`), {
-            ...data,
-            projectId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        return ref.id;
-    }, [basePath, projectId]);
 
-    const updatePropertyLead = useCallback(async (leadId: string, updates: Partial<PropertyLead>) => {
-        if (!basePath) return;
-        await updateDoc(doc(db, `${basePath}/propertyLeads`, leadId), {
-            ...updates,
-            updatedAt: serverTimestamp(),
-        });
-    }, [basePath]);
-
-    const addShowing = useCallback(async (data: Omit<Showing, 'id' | 'projectId' | 'createdAt' | 'updatedAt'>) => {
-        if (!basePath || !projectId) return undefined;
-        const ref = await addDoc(collection(db, `${basePath}/showings`), {
-            ...data,
-            projectId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        return ref.id;
-    }, [basePath, projectId]);
 
     return {
         properties,
-        leads,
-        showings,
         isLoading,
         addProperty,
         updateProperty,
         updatePropertyStatus,
         deleteProperty,
-        addPropertyLead,
-        updatePropertyLead,
-        addShowing,
     };
 };

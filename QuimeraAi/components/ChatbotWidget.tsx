@@ -7,7 +7,7 @@ import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
-import { db, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy } from '../firebase';
+import { db, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy, auth } from '../firebase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
@@ -39,13 +39,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
     const authContext = useSafeAuth();
-    const user = authContext?.user ?? null;
+    const user = authContext?.user || auth?.currentUser || null;
     const tenantContext = useSafeTenant();
     const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
     const { t } = useTranslation();
 
     // Data source: standaloneConfig (public pages) or editorContext (editor)
-    const rawConfig = standaloneConfig || editorContext?.aiAssistantConfig || { isActive: false } as AiAssistantConfig;
+    const rawConfig = standaloneConfig || editorContext?.aiAssistantConfig || projectContext?.activeProject?.aiAssistantConfig || data?.chatbot || { isActive: false } as AiAssistantConfig;
 
     const aiAssistantConfig: AiAssistantConfig = {
         ...rawConfig,
@@ -96,47 +96,28 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const themeFallbackPrimary = globalColors.primary || heroButtonColor || themePrimaryColor || defaultPrimaryColor;
 
     // Build the final appearance:
-    // Priority: AI Dashboard colors → theme fallbacks (only for missing values) → legacy → defaults
-    const appearance = hasAiDashboardAppearance
-        ? {
-            // AI Dashboard configured: use those colors as-is, theme fills gaps only
-            ...baseAppearance,
-            colors: {
-                primaryColor: baseAppearance.colors?.primaryColor || themeFallbackPrimary,
-                secondaryColor: baseAppearance.colors?.secondaryColor || globalColors.secondary || defaultPrimaryColor,
-                accentColor: baseAppearance.colors?.accentColor || globalColors.accent || defaultPrimaryColor,
-                userBubbleColor: baseAppearance.colors?.userBubbleColor || baseAppearance.colors?.primaryColor || themeFallbackPrimary,
-                userTextColor: baseAppearance.colors?.userTextColor || '#ffffff',
-                botBubbleColor: baseAppearance.colors?.botBubbleColor || '#f3f4f6',
-                botTextColor: baseAppearance.colors?.botTextColor || '#1f2937',
-                backgroundColor: baseAppearance.colors?.backgroundColor || '#ffffff',
-                inputBackground: baseAppearance.colors?.inputBackground || '#ffffff',
-                inputBorder: baseAppearance.colors?.inputBorder || '#e5e7eb',
-                inputText: baseAppearance.colors?.inputText || '#1f2937',
-                headerBackground: baseAppearance.colors?.headerBackground || baseAppearance.colors?.primaryColor || themeFallbackPrimary,
-                headerText: baseAppearance.colors?.headerText || '#ffffff',
-            }
+    // Priority: AI Dashboard colors (explicitly stored) → theme fallbacks → legacy → defaults
+    const finalPrimaryColor = storedAppearance?.colors?.primaryColor || themeFallbackPrimary;
+    
+    const appearance = {
+        ...baseAppearance,
+        colors: {
+            ...baseAppearance.colors,
+            primaryColor: finalPrimaryColor,
+            secondaryColor: storedAppearance?.colors?.secondaryColor || legacyChatbotColors.secondaryColor || globalColors.secondary || defaultPrimaryColor,
+            accentColor: storedAppearance?.colors?.accentColor || legacyChatbotColors.accentColor || globalColors.accent || heroColors.primary || defaultPrimaryColor,
+            userBubbleColor: storedAppearance?.colors?.userBubbleColor || legacyChatbotColors.userBubbleColor || finalPrimaryColor,
+            userTextColor: storedAppearance?.colors?.userTextColor || legacyChatbotColors.userTextColor || '#ffffff',
+            botBubbleColor: storedAppearance?.colors?.botBubbleColor || legacyChatbotColors.botBubbleColor || globalColors.surface || '#f3f4f6',
+            botTextColor: storedAppearance?.colors?.botTextColor || legacyChatbotColors.botTextColor || globalColors.text || '#1f2937',
+            backgroundColor: storedAppearance?.colors?.backgroundColor || legacyChatbotColors.backgroundColor || globalColors.background || heroColors.background || '#ffffff',
+            inputBackground: storedAppearance?.colors?.inputBackground || legacyChatbotColors.inputBackground || globalColors.surface || '#ffffff',
+            inputBorder: storedAppearance?.colors?.inputBorder || legacyChatbotColors.inputBorder || globalColors.border || '#e5e7eb',
+            inputText: storedAppearance?.colors?.inputText || legacyChatbotColors.inputText || globalColors.text || '#1f2937',
+            headerBackground: storedAppearance?.colors?.headerBackground || legacyChatbotColors.headerBackground || finalPrimaryColor,
+            headerText: storedAppearance?.colors?.headerText || legacyChatbotColors.headerText || '#ffffff',
         }
-        : {
-            // No AI Dashboard config: use theme/hero/legacy as primary sources
-            ...baseAppearance,
-            colors: {
-                ...baseAppearance.colors,
-                primaryColor: legacyChatbotColors.primaryColor || themeFallbackPrimary,
-                secondaryColor: legacyChatbotColors.secondaryColor || globalColors.secondary || baseAppearance.colors?.secondaryColor,
-                accentColor: legacyChatbotColors.accentColor || globalColors.accent || heroColors.primary || baseAppearance.colors?.accentColor,
-                userBubbleColor: legacyChatbotColors.userBubbleColor || themeFallbackPrimary,
-                userTextColor: legacyChatbotColors.userTextColor || baseAppearance.colors?.userTextColor,
-                botBubbleColor: legacyChatbotColors.botBubbleColor || globalColors.surface || baseAppearance.colors?.botBubbleColor,
-                botTextColor: legacyChatbotColors.botTextColor || globalColors.text || baseAppearance.colors?.botTextColor,
-                backgroundColor: legacyChatbotColors.backgroundColor || globalColors.background || heroColors.background || baseAppearance.colors?.backgroundColor,
-                inputBackground: legacyChatbotColors.inputBackground || globalColors.surface || baseAppearance.colors?.inputBackground,
-                inputBorder: legacyChatbotColors.inputBorder || globalColors.border || baseAppearance.colors?.inputBorder,
-                inputText: legacyChatbotColors.inputText || globalColors.text || baseAppearance.colors?.inputText,
-                headerBackground: legacyChatbotColors.headerBackground || themeFallbackPrimary,
-                headerText: legacyChatbotColors.headerText || baseAppearance.colors?.headerText,
-            }
-        };
+    };
 
     // Debug log - always log in standalone mode for debugging
     if (standaloneProject || standaloneConfig) {
@@ -160,14 +141,28 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const [currentSection, setCurrentSection] = useState<string>('hero');
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
     const [cmsArticles, setCmsArticles] = useState<{ id: string; title: string; content: string }[]>([]);
+    const [activePropertyContext, setActivePropertyContext] = useState<any>(null);
+
+    // Listen for global open chat event
+    useEffect(() => {
+        const handleOpenChat = (e: Event) => {
+            const customEvent = e as CustomEvent<{ propertyContext?: any }>;
+            if (customEvent.detail?.propertyContext) {
+                setActivePropertyContext(customEvent.detail.propertyContext);
+            }
+            setIsOpen(true);
+        };
+        window.addEventListener('open-quimera-chat', handleOpenChat);
+        return () => window.removeEventListener('open-quimera-chat', handleOpenChat);
+    }, []);
 
     // Detect if we're in the editor (editor view showing the preview)
     // We use both the context view and the URL route to be robust
     const { isEditorRoute } = useRouter();
     const isInEditor = view === 'editor' || isEditorRoute;
 
-    // Don't render if not active and not in preview
-    if (!aiAssistantConfig.isActive && !isPreview) return null;
+    // We no longer return null here so that programmatic triggers (like open-quimera-chat) 
+    // can always work. The floating button visibility is controlled below.
 
     // Load CMS articles for chatbot knowledge
     useEffect(() => {
@@ -319,12 +314,27 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
                 // Always use production API for reliability across domains
                 const apiUrl = 'https://quimera.ai/api/widget';
+                
+                // Use userId_projectId format if available to help the API find it
+                const ownerId = activeProject?.userId || standaloneProject?.userId;
+                const apiProjectId = ownerId ? `${ownerId}_${projectId}` : projectId;
 
-                const response = await fetch(`${apiUrl}/${projectId}/leads`, {
+                let authHeaders: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (user) {
+                    try {
+                        const token = await user.getIdToken();
+                        authHeaders['Authorization'] = `Bearer ${token}`;
+                    } catch (e) {
+                        console.warn('[ChatbotWidget] Failed to get id token for lead API', e);
+                    }
+                }
+
+                const response = await fetch(`${apiUrl}/${apiProjectId}/leads`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: authHeaders,
                     body: JSON.stringify(fullLeadData)
                 });
 
@@ -363,89 +373,184 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Handle creating appointment from chat
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
-        if (!user || !activeProject?.id) {
-            console.error('[ChatbotWidget] Cannot create appointment: no user or project');
+        const projectId = activeProject?.id || standaloneProject?.id;
+        const ownerId = activeProject?.userId || standaloneProject?.userId;
+
+        if (!projectId) {
+            console.error('[ChatbotWidget] Cannot create appointment: no project ID');
             return undefined;
         }
 
-        try {
-            // Convert dates to Firestore timestamps
-            const dateToTimestamp = (date: Date) => ({
-                seconds: Math.floor(date.getTime() / 1000),
-                nanoseconds: 0
-            });
-
-            const now = dateToTimestamp(new Date());
-
-            // Build participant if we have contact info
-            const participants = [];
-            if (appointmentData.participantName || appointmentData.participantEmail) {
-                participants.push({
-                    id: `participant_${Date.now()}`,
-                    name: appointmentData.participantName || 'Cliente',
-                    email: appointmentData.participantEmail || '',
-                    phone: appointmentData.participantPhone || '',
-                    role: 'attendee',
-                    status: 'pending',
-                    isRequired: true,
+        // If user is authenticated and matches ownerId (e.g. inside Editor)
+        if (user && user.uid === ownerId) {
+            try {
+                // Convert dates to Firestore timestamps
+                const dateToTimestamp = (date: Date) => ({
+                    seconds: Math.floor(date.getTime() / 1000),
+                    nanoseconds: 0
                 });
-            }
 
-            // Create the appointment document
-            const appointmentDoc = {
+                const now = dateToTimestamp(new Date());
+
+                // Build participant if we have contact info
+                const participants = [];
+                if (appointmentData.participantName || appointmentData.participantEmail) {
+                    participants.push({
+                        id: `participant_${Date.now()}`,
+                        name: appointmentData.participantName || 'Cliente',
+                        email: appointmentData.participantEmail || '',
+                        phone: appointmentData.participantPhone || '',
+                        role: 'attendee',
+                        status: 'pending',
+                        isRequired: true,
+                    });
+                }
+
+                // Create the appointment document
+                const appointmentDoc = {
+                    title: appointmentData.title,
+                    description: appointmentData.description || '',
+                    type: appointmentData.type || 'consultation',
+                    status: 'scheduled',
+                    priority: 'medium',
+                    startDate: dateToTimestamp(appointmentData.startDate),
+                    endDate: dateToTimestamp(appointmentData.endDate),
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    organizerId: user.uid,
+                    organizerName: user.displayName || '',
+                    organizerEmail: user.email || '',
+                    participants,
+                    location: { type: 'virtual' },
+                    reminders: [
+                        { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
+                        { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
+                    ],
+                    attachments: [],
+                    notes: [],
+                    followUpActions: [],
+                    aiPrepEnabled: true,
+                    linkedLeadIds: appointmentData.linkedLeadId ? [appointmentData.linkedLeadId] : [],
+                    tags: ['chatbot', 'auto-scheduled'],
+                    createdAt: now,
+                    createdBy: user.uid,
+                    projectId: projectId,
+                };
+
+                // Save to Firestore: users/{userId}/projects/{projectId}/appointments
+                const appointmentsRef = collection(db, 'users', ownerId, 'projects', projectId, 'appointments');
+                const docRef = await addDoc(appointmentsRef, appointmentDoc);
+
+                console.log('[ChatbotWidget] ✅ Appointment created via Firestore:', docRef.id);
+
+                // Also create a lead if we have contact info and no lead was captured yet
+                if (appointmentData.participantEmail || appointmentData.participantName) {
+                    try {
+                        const leadData = {
+                            name: appointmentData.participantName || 'Cliente desde Chat',
+                            email: appointmentData.participantEmail,
+                            phone: appointmentData.participantPhone,
+                            source: 'chatbot-widget',
+                            status: 'new',
+                            message: `Cita agendada: ${appointmentData.title}`,
+                            tags: ['chatbot', 'appointment-scheduled'],
+                            notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
+                        };
+
+                        if (addLead) {
+                            const leadId = await addLead(leadData);
+                            console.log('[ChatbotWidget] ✅ Lead created from appointment via context:', leadId);
+                        } else {
+                            // Write directly to Firestore since we are the owner (e.g. in standalone preview)
+                            const leadsRef = collection(db, 'users', ownerId, 'projects', projectId, 'leads');
+                            const leadDocRef = await addDoc(leadsRef, {
+                                ...leadData,
+                                createdAt: now,
+                                createdBy: user.uid,
+                                projectId: projectId
+                            });
+                            console.log('[ChatbotWidget] ✅ Lead created from appointment via Firestore:', leadDocRef.id);
+                        }
+                        setLeadCaptured(true);
+                    } catch (e) {
+                        console.error('[ChatbotWidget] ❌ Error creating lead from appointment:', e);
+                    }
+                }
+
+                return docRef.id;
+            } catch (error) {
+                console.error('[ChatbotWidget] ❌ Error creating appointment via Firestore:', error);
+                return undefined;
+            }
+        }
+
+        // Fallback: Save via API when in standalone mode (public site)
+        try {
+            console.log('[ChatbotWidget] 🌐 specific API appointment capture (standalone mode)');
+            // Always use production API for reliability across domains
+            const apiUrl = 'https://quimera.ai/api/widget';
+
+            const appointmentPayload = {
                 title: appointmentData.title,
-                description: appointmentData.description || '',
-                type: appointmentData.type || 'consultation',
-                status: 'scheduled',
-                priority: 'medium',
-                startDate: dateToTimestamp(appointmentData.startDate),
-                endDate: dateToTimestamp(appointmentData.endDate),
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                organizerId: user.uid,
-                organizerName: user.displayName || '',
-                organizerEmail: user.email || '',
-                participants,
-                location: { type: 'virtual' },
-                reminders: [
-                    { id: `reminder_1_${Date.now()}`, type: 'email', minutes: 60, sent: false },
-                    { id: `reminder_2_${Date.now()}`, type: 'email', minutes: 1440, sent: false }
-                ],
-                attachments: [],
-                notes: [],
-                followUpActions: [],
-                aiPrepEnabled: true,
-                linkedLeadIds: appointmentData.linkedLeadId ? [appointmentData.linkedLeadId] : [],
-                tags: ['chatbot', 'auto-scheduled'],
-                createdAt: now,
-                createdBy: user.uid,
-                projectId: activeProject.id,
+                description: appointmentData.description,
+                type: appointmentData.type,
+                startDate: appointmentData.startDate.toISOString(),
+                endDate: appointmentData.endDate.toISOString(),
+                participantName: appointmentData.participantName,
+                participantEmail: appointmentData.participantEmail,
+                participantPhone: appointmentData.participantPhone,
+                linkedLeadId: appointmentData.linkedLeadId
             };
 
-            // Save to Firestore: users/{userId}/projects/{projectId}/appointments
-            const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProject.id, 'appointments');
-            const docRef = await addDoc(appointmentsRef, appointmentDoc);
-
-            console.log('[ChatbotWidget] ✅ Appointment created:', docRef.id);
-
-            // Also create a lead if we have contact info and no lead was captured yet
-            if (addLead && (appointmentData.participantEmail || appointmentData.participantName)) {
-                const leadId = await addLead({
-                    name: appointmentData.participantName || 'Cliente desde Chat',
-                    email: appointmentData.participantEmail,
-                    phone: appointmentData.participantPhone,
-                    source: 'chatbot-widget',
-                    status: 'new',
-                    message: `Cita agendada: ${appointmentData.title}`,
-                    tags: ['chatbot-widget', 'appointment-scheduled'],
-                    notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
-                });
-                setLeadCaptured(true);
-                console.log('[ChatbotWidget] ✅ Lead created from appointment:', leadId);
+            const apiProjectId = ownerId ? `${ownerId}_${projectId}` : projectId;
+            
+            let authHeaders: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            
+            if (user) {
+                try {
+                    const token = await user.getIdToken();
+                    authHeaders['Authorization'] = `Bearer ${token}`;
+                } catch (e) {
+                    console.warn('[ChatbotWidget] Failed to get id token for appointments API', e);
+                }
             }
 
-            return docRef.id;
+            const response = await fetch(`${apiUrl}/${apiProjectId}/appointments`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify(appointmentPayload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[ChatbotWidget] ✅ Appointment saved successfully via API:', data.appointmentId);
+                
+                // If the user submits an appointment via API, mark lead as captured
+                // AND actually call handleLeadCapture to save the lead to the DB!
+                if (appointmentData.participantName || appointmentData.participantEmail) {
+                    try {
+                        await handleLeadCapture({
+                            name: appointmentData.participantName || 'Cliente desde Chat',
+                            email: appointmentData.participantEmail,
+                            phone: appointmentData.participantPhone,
+                            message: `Cita agendada: ${appointmentData.title}`,
+                            tags: ['chatbot', 'appointment-scheduled'],
+                            notes: `Cita programada para ${appointmentData.startDate.toLocaleDateString()} a las ${appointmentData.startDate.toLocaleTimeString()}`
+                        });
+                    } catch (e) {
+                        console.error('[ChatbotWidget] Error capturing lead during appointment fallback:', e);
+                    }
+                    setLeadCaptured(true);
+                }
+                
+                return data.appointmentId;
+            } else {
+                console.error('[ChatbotWidget] ❌ API Error for appointment:', await response.text());
+                return undefined;
+            }
         } catch (error) {
-            console.error('[ChatbotWidget] ❌ Error creating appointment:', error);
+            console.error('[ChatbotWidget] ❌ Error saving appointment via API:', error);
             return undefined;
         }
     };
@@ -546,6 +651,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                             visibleSections: (componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []
                         }}
                         cmsArticles={cmsArticles}
+                        activePropertyContext={activePropertyContext}
                         hidePoweredBy={hasWhiteLabelBranding || propHidePoweredBy}
                     />
                 )}
@@ -564,7 +670,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             </div>
 
             {/* Chat Button - hidden on mobile when chat is fullscreen open */}
-            {!(isMobileViewport && isOpen) && (
+            {!(isMobileViewport && isOpen) && (aiAssistantConfig.isActive || isPreview) && (
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`

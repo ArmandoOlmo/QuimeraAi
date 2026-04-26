@@ -7,11 +7,12 @@ import { UserRole, UserDocument } from '../../../types';
 import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isOwner } from '../../../constants/roles';
 import AdminProfileView from './AdminProfileView';
 import {
-    ArrowLeft, Users, Plus, Crown, Shield, UserCog,
+    Users, Plus, Crown, Shield, UserCog,
     Eye, Trash2, AlertCircle
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface AdminManagementProps {
     onBack: () => void;
@@ -123,25 +124,12 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
-                        <button
-                            onClick={onBack}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden mr-2 transition-colors"
-                            title="Volver"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <div className="flex items-center gap-2">
                             <Shield className="text-editor-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold">{t('superadmin.admins.title', 'Gestión de Administradores')}</h1>
                         </div>
                     </div>
-                    <button
-                        onClick={onBack}
-                        className="hidden md:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        {t('superadmin.admins.back', 'Volver')}
-                    </button>
+                    <HeaderBackButton onClick={onBack} label={t('superadmin.admins.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">

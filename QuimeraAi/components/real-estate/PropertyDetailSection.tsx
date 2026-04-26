@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft,
@@ -6,6 +6,8 @@ import {
     BedDouble,
     CalendarDays,
     Check,
+    ChevronLeft,
+    ChevronRight,
     Clock,
     DollarSign,
     Home,
@@ -19,7 +21,6 @@ import {
     PieChart,
     Ruler,
     Share2,
-    Sparkles,
     Star,
     Tag,
     TrendingUp,
@@ -30,9 +31,12 @@ import { ThemeData } from '../../types';
 import { Property } from '../../types/realEstate';
 import { usePublicRealEstateListings } from '../../hooks/usePublicRealEstateListings';
 import { extractTextFromResponse, generateContentViaProxy } from '../../utils/geminiProxyClient';
+import { useSafeEditor } from '../../contexts/EditorContext';
+import { db, collection, addDoc, serverTimestamp } from '../../firebase';
 
 interface PropertyDetailSectionProps {
     projectId: string;
+    ownerId?: string;
     propertySlug?: string;
     colors?: { background?: string; heading?: string; text?: string; accent?: string };
     theme?: ThemeData;
@@ -135,6 +139,7 @@ const colorWithAlpha = (color: string | undefined, alpha: number, fallback = 'rg
 
 const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
     projectId,
+    ownerId,
     propertySlug = '',
     colors: propColors,
     theme,
@@ -165,8 +170,9 @@ const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
         accentSofter: colorWithAlpha(accent, 0.08),
         buttonBackground: themeColors.buttonBackground || accent,
         buttonText: themeColors.buttonText || '#ffffff',
-        inputBackground: themeColors.inputBackground || themeColors.surface || themeColors.background || '#ffffff',
+        inputBackground: themeColors.inputBackground || themeColors.background || '#0f172a',
         inputText: themeColors.inputText || themeColors.text || '#111827',
+        inputBorder: themeColors.inputBorder || themeColors.border || 'rgba(148, 163, 184, 0.5)',
         overlay: themeColors.overlay || 'rgba(0, 0, 0, 0.55)',
         imageOverlay: themeColors.imageOverlay || 'rgba(17, 24, 39, 0.82)',
         badgeBackground: themeColors.badgeBackground || themeColors.surface || 'rgba(255, 255, 255, 0.92)',
@@ -193,11 +199,6 @@ const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
     }, [properties, property]);
 
     const [selectedImage, setSelectedImage] = useState(0);
-    const [aiSummary, setAiSummary] = useState('');
-    const [aiInsights, setAiInsights] = useState<string[]>([]);
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiError, setAiError] = useState('');
-    const [enhancedDescription, setEnhancedDescription] = useState('');
     const [investmentMode, setInvestmentMode] = useState(false);
     const [downPayment, setDownPayment] = useState(20);
     const [interestRate, setInterestRate] = useState(6.75);
@@ -254,20 +255,7 @@ const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
 
     useEffect(() => {
         setSelectedImage(0);
-        setAiSummary('');
-        setAiInsights([]);
-        setEnhancedDescription('');
-        setAiError('');
     }, [propertySlug]);
-
-    useEffect(() => {
-        if (!property || aiSummary) return;
-        const timeout = window.setTimeout(() => {
-            generateAiSummary();
-        }, 350);
-        return () => window.clearTimeout(timeout);
-    }, [property?.id]);
-
     useEffect(() => {
         if (!property || typeof property.latitude === 'number' || typeof property.longitude === 'number') {
             setGeocodedPoint(null);
@@ -291,77 +279,6 @@ const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
             cancelled = true;
         };
     }, [property?.id]);
-
-    const generateAiSummary = async () => {
-        if (!property) return;
-        setAiLoading(true);
-        setAiError('');
-        try {
-            const prompt = `Create a concise premium real estate summary in ${i18n.language === 'en' ? 'English' : 'Spanish'}.
-Use three short paragraphs or bullets around: ideal buyer, standout features, and best use case.
-
-${buildPropertyContext(property)}`;
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', { temperature: 0.6, maxOutputTokens: 500 });
-            const text = extractTextFromResponse(response).trim();
-            setAiSummary(text || fallbackSummary(property));
-        } catch (err) {
-            console.error('Property AI summary failed:', err);
-            setAiError(t('realEstate.assistant.error'));
-            setAiSummary(fallbackSummary(property));
-        } finally {
-            setAiLoading(false);
-        }
-    };
-
-    const generateAiInsights = async () => {
-        if (!property) return;
-        setAiLoading(true);
-        setAiError('');
-        try {
-            const prompt = `Return exactly four concise real estate insights in ${i18n.language === 'en' ? 'English' : 'Spanish'} for this listing:
-1. Estimated sale time
-2. Price comparison
-3. Zone demand level
-4. Improvement suggestions
-
-Keep each insight under 22 words.
-
-${buildPropertyContext(property)}`;
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', { temperature: 0.5, maxOutputTokens: 450 });
-            const text = extractTextFromResponse(response).trim();
-            const lines = text.split(/\n+/).map(line => line.replace(/^\d+[\).]\s*/, '').replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 4);
-            setAiInsights(lines.length === 4 ? lines : fallbackInsights(property));
-        } catch (err) {
-            console.error('Property AI insights failed:', err);
-            setAiError(t('realEstate.assistant.error'));
-            setAiInsights(fallbackInsights(property));
-        } finally {
-            setAiLoading(false);
-        }
-    };
-
-    const enhanceDescription = async (premium = false) => {
-        if (!property) return;
-        setAiLoading(true);
-        setAiError('');
-        try {
-            const prompt = `${premium ? 'Generate a polished luxury listing description' : 'Improve this real estate listing description'} in ${i18n.language === 'en' ? 'English' : 'Spanish'}.
-Keep it ready to publish, clear, and conversion-focused.
-
-${buildPropertyContext(property)}`;
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', { temperature: 0.7, maxOutputTokens: 850 });
-            setEnhancedDescription(extractTextFromResponse(response).trim());
-        } catch (err) {
-            console.error('Property description AI failed:', err);
-            setAiError(t('realEstate.assistant.error'));
-        } finally {
-            setAiLoading(false);
-        }
-    };
-
-    const fallbackSummary = (item: Property) => {
-        return t('realEstate.detail.summaryFallback', 'This property is ideal for buyers who want a move-ready home with strong lifestyle appeal. It stands out for its location, usable layout, and core property features. It is a strong fit for personal use, relocation, or a long-term real estate plan.', { title: item.title });
-    };
 
     const fallbackInsights = (item: Property) => [
         t('realEstate.detail.insightSaleTime', 'Estimated sale time: competitive if priced near recent local activity.'),
@@ -415,31 +332,51 @@ ${buildPropertyContext(property)}`;
         ];
     }, [property, t]);
 
+    const editorContext = useSafeEditor();
+    const addLead = editorContext?.addLead;
+
+    const resolvedOwnerId = ownerId || editorContext?.activeProject?.userId || '';
+    const resolvedProjectId = projectId || editorContext?.activeProject?.id || '';
+
     const submitLead = async (event: React.FormEvent) => {
         event.preventDefault();
         if (!property) return;
         setLeadStatus('saving');
+        
+        const leadPayload = {
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            message: [
+                form.message,
+                form.preferredDate ? `Preferred date: ${form.preferredDate}` : '',
+                form.offerAmount ? `Offer amount: ${form.offerAmount}` : '',
+            ].filter(Boolean).join('\n'),
+            source: 'property-detail',
+            status: 'new' as const,
+            value: 0,
+            leadScore: 50,
+            tags: ['real-estate', `property:${property.slug}`, modal || 'property-detail'],
+            propertyId: property.id,
+            propertyTitle: property.title,
+        };
+        
         try {
-            const response = await fetch(`https://quimera.ai/api/widget/${projectId}/leads`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: form.name,
-                    email: form.email,
-                    phone: form.phone,
-                    message: [
-                        form.message,
-                        form.preferredDate ? `Preferred date: ${form.preferredDate}` : '',
-                        form.offerAmount ? `Offer amount: ${form.offerAmount}` : '',
-                    ].filter(Boolean).join('\n'),
-                    source: 'property-detail',
-                    status: 'new',
-                    tags: ['real-estate', `property:${property.slug}`, modal || 'property-detail'],
-                    propertyId: property.id,
-                    propertyTitle: property.title,
-                }),
-            });
-            if (!response.ok) throw new Error(await response.text());
+            if (addLead) {
+                // Inside editor — use EditorContext
+                await addLead(leadPayload);
+            } else if (resolvedOwnerId && resolvedProjectId) {
+                // Public site — write directly to Firestore
+                const leadsPath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/leads`;
+                await addDoc(collection(db, leadsPath), {
+                    ...leadPayload,
+                    projectId: resolvedProjectId,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+            } else {
+                throw new Error('Missing owner or project ID for lead submission');
+            }
             setLeadStatus('saved');
             setForm(initialLeadForm);
             window.setTimeout(() => {
@@ -563,18 +500,6 @@ ${buildPropertyContext(property)}`;
 
                 <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div className="space-y-6">
-                        <Panel colors={colors} title={t('realEstate.detail.aiSummary', 'AI Summary')} icon={<Sparkles size={20} />}>
-                            <div className="rounded-lg border p-5 backdrop-blur" style={{ borderColor: colors.border, backgroundColor: colors.surfaceAlt }}>
-                                <div className="whitespace-pre-line leading-7" style={{ color: colors.text }}>
-                                    {aiSummary || t('realEstate.detail.aiSummaryEmpty', 'Generate an AI summary for this property.')}
-                                </div>
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                    <button type="button" onClick={generateAiSummary} disabled={aiLoading} className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold font-button" style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}><Wand2 size={16} />{aiLoading ? t('common.loading', 'Loading...') : t('realEstate.detail.generateAiSummary', 'Generate AI Summary')}</button>
-                                    {aiError && <span className="text-sm" style={{ color: colors.error }}>{aiError}</span>}
-                                </div>
-                            </div>
-                        </Panel>
-
                         <Panel colors={colors} title={t('realEstate.detail.propertyScore', 'Property Score')} icon={<LineChart size={20} />}>
                             <div className="grid gap-4 md:grid-cols-2">
                                 {scores.map(score => (
@@ -592,11 +517,7 @@ ${buildPropertyContext(property)}`;
                         </Panel>
 
                         <Panel colors={colors} title={t('realEstate.detail.description', 'Description')} icon={<Info size={20} />}>
-                            <p className="whitespace-pre-line leading-8">{enhancedDescription || property.description}</p>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                <button type="button" onClick={() => enhanceDescription(false)} disabled={aiLoading} className="rounded-md border px-3 py-2 text-sm font-semibold font-button" style={{ borderColor: colors.border, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}>{t('realEstate.detail.enhanceWithAi', 'Enhance with AI')}</button>
-                                <button type="button" onClick={() => enhanceDescription(true)} disabled={aiLoading} className="rounded-md px-3 py-2 text-sm font-semibold font-button" style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}>{t('realEstate.detail.generatePremiumDescription', 'Generate Premium Description')}</button>
-                            </div>
+                            <p className="whitespace-pre-line leading-8">{property.description}</p>
                         </Panel>
 
                         <Panel colors={colors} title={t('realEstate.detail.featuresDetails', 'Features & Details')} icon={<Tag size={20} />}>
@@ -634,19 +555,9 @@ ${buildPropertyContext(property)}`;
                             </div>
                             <p className="mt-3 text-sm" style={{ color: colors.muted }}>{fullAddress}</p>
                         </Panel>
+                    </div>
 
-                        <Panel colors={colors} title={t('realEstate.detail.aiInsights', 'AI Insights')} icon={<Sparkles size={20} />}>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                {(aiInsights.length ? aiInsights : fallbackInsights(property)).map((insight, index) => (
-                                    <div key={index} className="rounded-lg border p-5" style={{ borderColor: colors.border, backgroundColor: colors.surface }}>
-                                        <p className="text-sm font-semibold font-header" style={{ color: colors.accent }}>{['Estimated Sale Time', 'Price Comparison', 'Zone Demand Level', 'Improvement Suggestions'][index]}</p>
-                                        <p className="mt-2 leading-6">{insight}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <button type="button" onClick={generateAiInsights} disabled={aiLoading} className="mt-4 rounded-md border px-3 py-2 text-sm font-semibold font-button" style={{ borderColor: colors.border, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}>{t('realEstate.detail.refreshInsights', 'Refresh AI Insights')}</button>
-                        </Panel>
-
+                    <div className="space-y-6">
                         {(property.videoUrl || property.virtualTourUrl) && (
                             <Panel colors={colors} title={t('realEstate.detail.mediaTour', 'Media / Virtual Tour')} icon={<Maximize2 size={20} />}>
                                 <div className="grid gap-4">
@@ -739,11 +650,11 @@ ${buildPropertyContext(property)}`;
                             <LeadInput label={t('realEstate.leads.name')} value={form.name} onChange={value => setForm(current => ({ ...current, name: value }))} required colors={colors} />
                             <LeadInput label={t('realEstate.leads.email')} type="email" value={form.email} onChange={value => setForm(current => ({ ...current, email: value }))} required colors={colors} />
                             {(modal === 'tour' || modal === 'financing') && <LeadInput label={t('realEstate.leads.phone')} value={form.phone} onChange={value => setForm(current => ({ ...current, phone: value }))} colors={colors} />}
-                            {modal === 'tour' && <LeadInput label={t('realEstate.detail.preferredDate', 'Preferred date')} type="date" value={form.preferredDate} onChange={value => setForm(current => ({ ...current, preferredDate: value }))} colors={colors} />}
+                            {modal === 'tour' && <CalendarPicker label={t('realEstate.detail.preferredDate', 'Preferred date')} value={form.preferredDate} onChange={value => setForm(current => ({ ...current, preferredDate: value }))} colors={colors} />}
                             {modal === 'offer' && <LeadInput label={t('realEstate.detail.offerAmount', 'Offer amount')} value={form.offerAmount} onChange={value => setForm(current => ({ ...current, offerAmount: value }))} colors={colors} />}
                             <label className="block text-sm font-semibold font-body">
                                 {t('realEstate.leads.message')}
-                                <textarea value={form.message} onChange={event => setForm(current => ({ ...current, message: event.target.value }))} rows={4} className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none font-body" style={{ borderColor: colors.border, backgroundColor: colors.inputBackground, color: colors.inputText }} />
+                                <textarea value={form.message} onChange={event => setForm(current => ({ ...current, message: event.target.value }))} rows={4} className="mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none font-body transition-colors focus:ring-1" style={{ borderColor: colors.inputBorder, backgroundColor: colors.inputBackground, color: colors.inputText, ['--tw-ring-color' as any]: colors.accent }} />
                             </label>
                             <button type="submit" disabled={leadStatus === 'saving'} className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-semibold font-button" style={{ backgroundColor: colors.buttonBackground, color: colors.buttonText, textTransform: 'var(--buttons-transform, none)' as any, letterSpacing: 'var(--buttons-spacing, normal)' }}>
                                 {leadStatus === 'saving' ? <Clock size={16} /> : <Phone size={16} />}
@@ -802,8 +713,128 @@ const ResponsiveFrame: React.FC<{ title: string; src: string; colors: any }> = (
 const LeadInput: React.FC<{ label: string; value: string; onChange: (value: string) => void; colors: any; type?: string; required?: boolean }> = ({ label, value, onChange, colors, type = 'text', required = false }) => (
     <label className="block text-sm font-semibold font-body">
         {label}
-        <input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} className="mt-1 h-11 w-full rounded-md border px-3 text-sm outline-none font-body" style={{ borderColor: colors.border, backgroundColor: colors.inputBackground, color: colors.inputText }} />
+        <input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} className="mt-1 h-11 w-full rounded-md border px-3 text-sm outline-none font-body transition-colors focus:ring-1" style={{ borderColor: colors.inputBorder, backgroundColor: colors.inputBackground, color: colors.inputText, ['--tw-ring-color' as any]: colors.accent }} />
     </label>
 );
+
+/* ── Custom Calendar Picker (replaces native date input) ── */
+const DAYS_ES = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
+const DAYS_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const CalendarPicker: React.FC<{ label: string; value: string; onChange: (value: string) => void; colors: any }> = ({ label, value, onChange, colors }) => {
+    const { i18n } = useTranslation();
+    const isEs = i18n.language?.startsWith('es');
+    const dayNames = isEs ? DAYS_ES : DAYS_EN;
+    const monthNames = isEs ? MONTHS_ES : MONTHS_EN;
+    const [open, setOpen] = useState(false);
+    const today = new Date();
+    const [viewMonth, setViewMonth] = useState(today.getMonth());
+    const [viewYear, setViewYear] = useState(today.getFullYear());
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Close on outside click
+    useEffect(() => {
+        if (!open) return;
+        const handler = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const selectedDateStr = value; // yyyy-mm-dd
+
+    const selectDay = (day: number) => {
+        const iso = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
+        onChange(iso);
+        setOpen(false);
+    };
+
+    const goMonth = (delta: number) => {
+        let m = viewMonth + delta;
+        let y = viewYear;
+        if (m < 0) { m = 11; y--; }
+        if (m > 11) { m = 0; y++; }
+        setViewMonth(m);
+        setViewYear(y);
+    };
+
+    const displayValue = value
+        ? (() => {
+            const [y, m, d] = value.split('-').map(Number);
+            return `${d} ${monthNames[m - 1]?.slice(0, 3)} ${y}`;
+        })()
+        : '';
+
+    const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+
+    return (
+        <div ref={containerRef} className="relative block text-sm font-semibold font-body">
+            <span>{label}</span>
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
+                className="mt-1 flex h-11 w-full items-center justify-between rounded-md border px-3 text-sm font-normal font-body transition-colors"
+                style={{ borderColor: colors.inputBorder, backgroundColor: colors.inputBackground, color: value ? colors.inputText : colors.muted }}
+            >
+                <span>{displayValue || (isEs ? 'Seleccionar fecha' : 'Select date')}</span>
+                <CalendarDays size={16} style={{ color: colors.muted }} />
+            </button>
+
+            {open && (
+                <div className="absolute left-0 z-50 mt-1 w-full min-w-[280px] rounded-lg border p-3 shadow-xl" style={{ borderColor: colors.border, backgroundColor: colors.surface }}>
+                    {/* Header */}
+                    <div className="mb-2 flex items-center justify-between">
+                        <button type="button" onClick={() => goMonth(-1)} className="rounded-md p-1 hover:opacity-70" style={{ color: colors.text }}><ChevronLeft size={18} /></button>
+                        <span className="text-sm font-semibold font-header" style={{ color: colors.heading }}>{monthNames[viewMonth]} {viewYear}</span>
+                        <button type="button" onClick={() => goMonth(1)} className="rounded-md p-1 hover:opacity-70" style={{ color: colors.text }}><ChevronRight size={18} /></button>
+                    </div>
+                    {/* Day names */}
+                    <div className="grid grid-cols-7 gap-0.5 text-center text-xs font-semibold" style={{ color: colors.muted }}>
+                        {dayNames.map(d => <span key={d} className="py-1">{d}</span>)}
+                    </div>
+                    {/* Day cells */}
+                    <div className="grid grid-cols-7 gap-0.5 text-center text-sm">
+                        {cells.map((day, idx) => {
+                            if (day === null) return <span key={`e-${idx}`} />;
+                            const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
+                            const isSelected = dateStr === selectedDateStr;
+                            const isToday = dateStr === todayStr;
+                            const isPast = new Date(viewYear, viewMonth, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                            return (
+                                <button
+                                    key={day}
+                                    type="button"
+                                    disabled={isPast}
+                                    onClick={() => selectDay(day)}
+                                    className="rounded-md py-1.5 text-sm transition-colors"
+                                    style={{
+                                        backgroundColor: isSelected ? colors.accent : 'transparent',
+                                        color: isSelected ? colors.buttonText : isPast ? colors.muted : colors.text,
+                                        fontWeight: isToday || isSelected ? 700 : 400,
+                                        opacity: isPast ? 0.4 : 1,
+                                        cursor: isPast ? 'default' : 'pointer',
+                                        border: isToday && !isSelected ? `1px solid ${colors.accent}` : '1px solid transparent',
+                                    }}
+                                >
+                                    {day}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default PropertyDetailSection;

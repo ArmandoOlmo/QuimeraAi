@@ -319,6 +319,10 @@ EXPERT COLOR THEORY — PALETTE DESIGN RULES
 - Dark backgrounds (#0a0a0a to #1a1a2e) → Use white (#ffffff) or very light text
 - Light backgrounds (#fafafa to #ffffff) → Use very dark text (#111827 or #1a1a1a)
 
+**Typography & Component Rules (CRITICAL):**
+- Typography color over any colored background MUST ALWAYS be white (#ffffff), unless it is a specific character detail that requires another color for design reasons.
+- The footer background MUST NEVER be white (#ffffff). It must be a solid color or match the header color.
+
 **Modern Palette Trends 2025-2026:**
 - Clay & earth palettes: warm neutrals with terracotta accents
 - Deep cool: midnight navy/charcoal with electric blue or mint accents

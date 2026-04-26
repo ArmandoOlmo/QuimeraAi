@@ -881,9 +881,13 @@ export const generateContent = functions.runWith({ timeoutSeconds: 540, memory: 
         // Check if AI assistant is active (default to true for user's own projects)
         const isActive = projectData.aiAssistantConfig?.isActive ?? true;
         if (!isActive) {
-            console.warn(`[gemini-generate] AI assistant not active: projectId=${projectId}`);
-            res.status(403).json({ error: 'AI assistant is not active for this project' });
-            return;
+            if (verifiedUid && verifiedUid === projectData.userId) {
+                console.log(`[gemini-generate] Owner testing inactive chatbot: projectId=${projectId}`);
+            } else {
+                console.warn(`[gemini-generate] AI assistant not active: projectId=${projectId}`);
+                res.status(403).json({ error: 'AI assistant is not active for this project' });
+                return;
+            }
         }
 
         // Rate limiting

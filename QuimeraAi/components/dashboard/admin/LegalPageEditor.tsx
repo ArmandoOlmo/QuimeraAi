@@ -10,7 +10,6 @@ import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import {
-    ArrowLeft,
     Save,
     Plus,
     Trash2,
@@ -30,6 +29,7 @@ import {
     ChevronUp,
     ChevronDown
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { LegalPage, LegalPageSection, LegalPageType, LEGAL_PAGE_LABELS } from '../../../types/appContent';
 
 interface LegalPageEditorProps {
@@ -162,13 +162,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
             {/* Header */}
             <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={onClose}
-                        className="flex items-center gap-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
-                    >
-                        <ArrowLeft size={18} />
-                        {t('common.back', 'Volver')}
-                    </button>
+                    <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
                     <div className="flex items-center gap-2">
                         <Shield className="text-editor-accent" size={20} />
                         <h1 className="text-lg font-semibold text-editor-text-primary">
@@ -420,6 +414,5 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 };
 
 export default LegalPageEditor;
-
 
 

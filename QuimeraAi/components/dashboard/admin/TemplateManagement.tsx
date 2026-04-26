@@ -5,7 +5,6 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
 import {
-    ArrowLeft,
     Menu,
     LayoutTemplate,
     Plus,
@@ -31,6 +30,7 @@ import {
     Megaphone,
     Sparkles
 } from 'lucide-react';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
 import ConfirmationModal from '../../ui/ConfirmationModal';
@@ -282,9 +282,6 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <button onClick={onBack} className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary md:hidden transition-colors flex-shrink-0" title="Volver">
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <LayoutTemplate className="text-editor-accent w-5 h-5" />
                             <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
@@ -310,10 +307,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                     <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         {/* Back Button - First */}
-                        <button onClick={onBack} className="hidden sm:flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary">
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden lg:inline">{t('superadmin.templateManagement.back', 'Back')}</span>
-                        </button>
+                        <HeaderBackButton onClick={onBack} label={t('superadmin.templateManagement.back', 'Back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
 
                         {/* View Mode Toggle - Mobile */}
                         <div className="flex sm:hidden items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
