@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import { Input, TextArea, Select, ToggleControl, SliderControl } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
-import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
+import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Link, Settings, Layout, Layers, RotateCcw, Trash2, Plus, Image as ImageIcon, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
@@ -87,7 +87,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         {linkType === 'section' && (
             <Select
               value={slide[linkKey] || '/#cta'}
-              onChange={(e) => setNestedData(`heroNeon.slides.${index}.${linkKey}`, e.target.value)}
+              onChange={(v) => setNestedData(`heroNeon.slides.${index}.${linkKey}`, v)}
               options={[
                 { value: '/', label: 'Inicio' },
                 { value: '/#features', label: 'Features' },
@@ -111,7 +111,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           <Input
             label=""
             value={slide[linkKey] || ''}
-            onChange={(e) => setNestedData(`heroNeon.slides.${index}.${linkKey}`, e.target.value)}
+            onChange={(v) => setNestedData(`heroNeon.slides.${index}.${linkKey}`, v)}
             placeholder="https://... o /pagina"
             className="mb-0"
           />
@@ -210,7 +210,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           <Select
             label="Headline Font Override"
             value={sectionData.headlineFont || ''}
-            onChange={(e) => setNestedData('heroNeon.headlineFont', e.target.value)}
+            onChange={(v) => setNestedData('heroNeon.headlineFont', v)}
             options={[
                 { value: '', label: 'Default Theme Font' },
                 { value: 'ubuntu', label: 'Ubuntu' },
@@ -223,7 +223,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           <Select
             label="Subheadline Font Override"
             value={sectionData.subheadlineFont || ''}
-            onChange={(e) => setNestedData('heroNeon.subheadlineFont', e.target.value)}
+            onChange={(v) => setNestedData('heroNeon.subheadlineFont', v)}
             options={[
                 { value: '', label: 'Default Theme Font' },
                 { value: 'ubuntu', label: 'Ubuntu' },
@@ -350,32 +350,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           checked={sectionData.glassEffect ?? true}
           onChange={(v) => setNestedData('heroNeon.glassEffect', v)}
         />
-        <ToggleControl
-          label="Mostrar Indicadores Superiores (Dots)"
-          checked={sectionData.showTopDots ?? true}
-          onChange={(v) => setNestedData('heroNeon.showTopDots', v)}
-        />
-        {sectionData.showTopDots !== false && (
-          <div className="space-y-2 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
-            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots (Máx 6)</label>
-            <div className="flex flex-wrap gap-2">
-              {(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA', '#F8E71C']).map((color: string, i: number) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => {
-                      const newColors = [...(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA', '#F8E71C'])];
-                      newColors[i] = e.target.value;
-                      setNestedData('heroNeon.dotColors', newColors);
-                    }}
-                    className="w-8 h-8 rounded border-none cursor-pointer"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <TopDotsControl sectionKey="heroNeon" data={data} setNestedData={setNestedData} />
 
         <ToggleControl
           label="Mostrar Líneas de Neón"
@@ -387,7 +362,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
             <Select
               label="Estilo de Líneas"
               value={sectionData.neonLineStyle || 'stacked'}
-              onChange={(e) => setNestedData('heroNeon.neonLineStyle', e.target.value)}
+              onChange={(v) => setNestedData('heroNeon.neonLineStyle', v)}
               options={[
                 { value: 'minimal', label: 'Minimalista (2 líneas)' },
                 { value: 'stacked', label: 'Apilado (5 líneas)' }
@@ -396,7 +371,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
             <Select
               label="Posición de Líneas"
               value={sectionData.neonLinePosition || 'top-right'}
-              onChange={(e) => setNestedData('heroNeon.neonLinePosition', e.target.value)}
+              onChange={(v) => setNestedData('heroNeon.neonLinePosition', v)}
               options={[
                 { value: 'top-left', label: 'Superior Izquierda' },
                 { value: 'top-right', label: 'Superior Derecha' },
@@ -408,16 +383,16 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               <label className="block text-[10px] font-bold text-editor-text-secondary uppercase mb-2">Colores de Líneas de Neón</label>
               <div className="flex flex-wrap gap-2">
                 {(sectionData.neonLineColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA']).slice(0, sectionData.neonLineStyle === 'minimal' ? 2 : 5).map((color: string, i: number) => (
-                  <input
+                  <ColorControl
                     key={i}
-                    type="color"
+                    label=""
+                    compact={true}
                     value={color}
-                    onChange={(e) => {
+                    onChange={(newColor) => {
                       const newColors = [...(sectionData.neonLineColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA'])];
-                      newColors[i] = e.target.value;
+                      newColors[i] = newColor;
                       setNestedData('heroNeon.neonLineColors', newColors);
                     }}
-                    className="w-8 h-8 rounded border-none cursor-pointer"
                   />
                 ))}
               </div>

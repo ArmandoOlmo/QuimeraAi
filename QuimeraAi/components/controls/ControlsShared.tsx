@@ -463,6 +463,45 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
   );
 };
 
+// ─── TopDotsControl ─────────────────────────────────────────────────────────
+export const TopDotsControl: React.FC<{
+  sectionKey: string;
+  data: any;
+  setNestedData: (path: string, value: any) => void;
+}> = ({ sectionKey, data, setNestedData }) => {
+  const sectionData = data?.[sectionKey] || {};
+  return (
+    <div className="space-y-2 mt-4 pt-4 border-t border-editor-border/50">
+      <ToggleControl
+        label="Mostrar Puntos Decorativos (Dots)"
+        checked={sectionData.showTopDots ?? true}
+        onChange={(v) => setNestedData(`${sectionKey}.showTopDots`, v)}
+      />
+      {sectionData.showTopDots !== false && (
+        <div className="space-y-2 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+          <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots</label>
+          <div className="flex flex-wrap gap-2">
+            {(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F']).slice(0, 3).map((color: string, i: number) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <ColorControl
+                  label=""
+                  compact={true}
+                  value={color}
+                  onChange={(newColor) => {
+                    const newColors = [...(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F'])];
+                    newColors[i] = newColor;
+                    setNestedData(`${sectionKey}.dotColors`, newColors);
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── ControlsDeps ───────────────────────────────────────────────────────────
 // Interface capturing the closure variables that section render functions need
 export interface ControlsDeps {

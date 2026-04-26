@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
+import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Link, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
@@ -67,7 +67,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             {linkType === 'section' && (
                 <Select
                   value={sectionData[linkKey] || '/#cta'}
-                  onChange={(e) => setNestedData(`ctaNeon.${linkKey}`, e.target.value)}
+                  onChange={(v) => setNestedData(`ctaNeon.${linkKey}`, v)}
                   options={[
                     { value: '/', label: 'Inicio' },
                     { value: '/#features', label: 'Features' },
@@ -100,7 +100,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
               <Input
                 label=""
                 value={sectionData[linkKey] || ''}
-                onChange={(e) => setNestedData(`ctaNeon.${linkKey}`, e.target.value)}
+                onChange={(v) => setNestedData(`ctaNeon.${linkKey}`, v)}
                 placeholder="https://... o /pagina"
                 className="mb-0"
               />
@@ -198,7 +198,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                   <Select
                     label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
                     value={sectionData.cardBorderRadius || '3xl'}
-                    onChange={(e) => setNestedData('ctaNeon.cardBorderRadius', e.target.value)}
+                    onChange={(v) => setNestedData('ctaNeon.cardBorderRadius', v)}
                     options={[
                       { value: 'none', label: 'Cuadrada (None)' },
                       { value: 'md', label: 'Suave (MD)' },
@@ -226,6 +226,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                     checked={sectionData.showBackgroundGrid !== false}
                     onChange={(checked) => setNestedData('ctaNeon.showBackgroundGrid', checked)}
                 />
+                <TopDotsControl sectionKey="ctaNeon" data={data} setNestedData={setNestedData} />
                 <div>
                     <label className="block text-xs text-editor-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
@@ -285,6 +286,11 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                     value={sectionData.colors?.neonGlow || '#FBB92B'}
                     onChange={(color) => setNestedData('ctaNeon.colors.neonGlow', color)}
                 />
+                <div className="space-y-2 pt-2 border-t border-editor-border/50">
+                    <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botón Primario')}</p>
+                    <ColorControl label={t('editor.controls.common.background', 'Fondo del Botón')} value={sectionData.colors?.buttonBackground} onChange={(v) => setNestedData('ctaNeon.colors.buttonBackground', v)} />
+                    <ColorControl label={t('editor.controls.common.text', 'Texto del Botón')} value={sectionData.colors?.buttonText} onChange={(v) => setNestedData('ctaNeon.colors.buttonText', v)} />
+                </div>
             </div>
         </div>
     );

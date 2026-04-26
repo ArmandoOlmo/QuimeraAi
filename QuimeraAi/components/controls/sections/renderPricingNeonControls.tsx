@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
+import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, List, CreditCard } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
@@ -74,7 +74,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
               <Input
                 label=""
                 value={tiers[tierIndex]?.[linkKey] || ''}
-                onChange={(e) => setNestedData(`pricingNeon.tiers.${tierIndex}.${linkKey}`, e.target.value)}
+                onChange={(v) => setNestedData(`pricingNeon.tiers.${tierIndex}.${linkKey}`, v)}
                 placeholder="https://... o /pagina"
                 className="mb-0"
               />
@@ -259,7 +259,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                   <Select
                     label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
                     value={sectionData.cardBorderRadius || '3xl'}
-                    onChange={(e) => setNestedData('pricingNeon.cardBorderRadius', e.target.value)}
+                    onChange={(v) => setNestedData('pricingNeon.cardBorderRadius', v)}
                     options={[
                       { value: 'none', label: 'Cuadrada (None)' },
                       { value: 'md', label: 'Suave (MD)' },
@@ -287,6 +287,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     checked={sectionData.showBackgroundGrid !== false}
                     onChange={(checked) => setNestedData('pricingNeon.showBackgroundGrid', checked)}
                 />
+                <TopDotsControl sectionKey="pricingNeon" data={data} setNestedData={setNestedData} />
                 <div>
                     <label className="block text-xs text-editor-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
@@ -346,6 +347,11 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     value={sectionData.colors?.neonGlow || '#FBB92B'}
                     onChange={(color) => setNestedData('pricingNeon.colors.neonGlow', color)}
                 />
+                <div className="space-y-2 pt-2 border-t border-editor-border/50">
+                    <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botones de Compra')}</p>
+                    <ColorControl label={t('editor.controls.common.background', 'Fondo del Botón')} value={sectionData.colors?.buttonBackground} onChange={(v) => setNestedData('pricingNeon.colors.buttonBackground', v)} />
+                    <ColorControl label={t('editor.controls.common.text', 'Texto del Botón')} value={sectionData.colors?.buttonText} onChange={(v) => setNestedData('pricingNeon.colors.buttonText', v)} />
+                </div>
             </div>
         </div>
     );

@@ -65,6 +65,9 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
         borderColor: neonColor
     };
 
+    const showTopDots = data.showTopDots ?? true;
+    const dotColors = data.dotColors?.length ? data.dotColors : ['#FF5F56', '#FFBD2E', '#27C93F'];
+
     const handleNavigate = (e: React.MouseEvent<HTMLButtonElement>, href?: string) => {
         if (!href) return;
         if (data.onNavigate && !href.startsWith('http://') && !href.startsWith('https://')) {
@@ -163,6 +166,27 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                     </div>
                                 )}
                                 
+                                {/* Decorative Dots */}
+                                {showTopDots && dotColors.length > 0 && (
+                                    <div className={clsx(
+                                        "absolute right-4 flex items-center gap-1.5 z-20 bg-white/5 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.5)]",
+                                        isHighlight ? "top-10" : "top-4"
+                                    )}>
+                                        {dotColors.map((color, i) => (
+                                            <div 
+                                                key={i}
+                                                className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full relative"
+                                                style={{ 
+                                                    backgroundColor: color,
+                                                    boxShadow: `inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5)`
+                                                }}
+                                            >
+                                                <div className="absolute top-[10%] left-[20%] w-[40%] h-[30%] bg-white/60 rounded-full blur-[1px]"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                
                                 <div className={clsx("relative z-10 space-y-6", isHighlight ? "mt-4" : "")}>
                                     <div>
                                         <h3 
@@ -217,24 +241,24 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
 
                                     <div className="pt-6">
                                             <button 
-                                                className="w-full py-4 rounded-full font-bold text-base font-button transition-all duration-300"
+                                                className={clsx(
+                                                    "w-full py-4 rounded-full font-bold text-base font-button transition-transform hover:scale-105 active:scale-95 relative overflow-hidden",
+                                                    isHighlight 
+                                                        ? "shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)]" 
+                                                        : "border shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                                                )}
                                                 onClick={(e) => handleNavigate(e, tier.buttonLink)}
-                                                style={{
-                                                    backgroundColor: isHighlight ? neonColor : 'transparent',
-                                                    color: isHighlight ? '#000000' : (colors.heading || '#ffffff'),
-                                                    border: `1px solid ${isHighlight ? neonColor : 'rgba(255,255,255,0.2)'}`,
+                                                style={isHighlight ? {
+                                                    background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
+                                                    color: colors.buttonText || '#000000',
                                                     textTransform: 'var(--buttons-transform, none)' as any,
                                                     letterSpacing: 'var(--buttons-spacing, normal)',
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    if (!isHighlight) {
-                                                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    if (!isHighlight) {
-                                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                                    }
+                                                } : {
+                                                    borderColor: colors.buttonBackground || neonColor,
+                                                    color: colors.text || '#ffffff',
+                                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
+                                                    textTransform: 'var(--buttons-transform, none)' as any,
+                                                    letterSpacing: 'var(--buttons-spacing, normal)',
                                                 }}
                                             >
                                                 {tier.buttonText || 'Select Plan'}

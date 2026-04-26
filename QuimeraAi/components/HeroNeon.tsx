@@ -56,7 +56,8 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
     const showNeonLines = data.showNeonLines ?? false;
     const neonLineStyle = data.neonLineStyle || 'stacked';
     const neonLinePosition = data.neonLinePosition || 'top-right';
-    const neonLineColors = data.neonLineColors?.length ? data.neonLineColors : dotColors;
+    const defaultNeonLineColors = ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA'];
+    const neonLineColors = data.neonLineColors?.length ? data.neonLineColors : defaultNeonLineColors;
     const colors = data.colors || {
         background: 'transparent',
         text: '#ffffff',
@@ -102,37 +103,44 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
     const renderNeonLines = () => {
         if (!showNeonLines) return null;
         
-        const positionClasses = {
-            'top-left': 'top-0 left-0 -translate-x-1/3 -translate-y-1/3 rotate-0',
-            'top-right': 'top-0 right-0 translate-x-1/3 -translate-y-1/3 rotate-90',
-            'bottom-left': 'bottom-0 left-0 -translate-x-1/3 translate-y-1/3 -rotate-90',
-            'bottom-right': 'bottom-0 right-0 translate-x-1/3 translate-y-1/3 rotate-180',
+        const positionClassesMap: Record<string, string> = {
+            'top-right': 'top-0 right-0',
+            'top-left': 'top-0 left-0 -scale-x-100',
+            'bottom-right': 'bottom-0 right-0 -scale-y-100',
+            'bottom-left': 'bottom-0 left-0 -scale-x-100 -scale-y-100',
         };
 
-        if (neonLineStyle === 'minimal') {
-            return (
-                <div className={`absolute z-0 pointer-events-none ${positionClasses[neonLinePosition]} w-64 h-64 opacity-70`}>
-                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-                        <path d="M -20,150 Q 150,150 150,-20" stroke={neonLineColors[0] || neonColor} strokeWidth="3" strokeLinecap="round" />
-                        <path d="M 20,170 Q 170,170 170,20" stroke={neonLineColors[1] || neonColor} strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                </div>
-            );
-        }
+        const transformClass = positionClassesMap[neonLinePosition] || positionClassesMap['top-right'];
+        const colorsArray = neonLineColors.length ? neonLineColors : ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA'];
+        const isMinimal = neonLineStyle === 'minimal';
+        const lineCount = isMinimal ? 2 : 5;
 
         return (
-            <div className={`absolute z-0 pointer-events-none ${positionClasses[neonLinePosition]} w-96 h-96 opacity-90`}>
-                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                    {neonLineColors.slice(0, 5).map((color, i) => (
-                        <path 
-                            key={i} 
-                            d={`M ${-20 + i*15},${150 + i*15} Q ${150 + i*15},${150 + i*15} ${150 + i*15},${-20 + i*15}`} 
-                            stroke={color} 
-                            strokeWidth={3} 
-                            strokeLinecap="round" 
-                            style={{ filter: `drop-shadow(0 0 8px ${color})` }} 
-                        />
-                    ))}
+            <div className={`absolute z-20 pointer-events-none ${transformClass} w-[400px] h-[400px] opacity-90 mix-blend-screen`}>
+                <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                    {Array.from({ length: lineCount }).map((_, i) => {
+                        const color = colorsArray[i % colorsArray.length] || neonColor;
+                        const gap = isMinimal ? 20 : 12;
+                        const r = 15 + i * gap;
+                        
+                        const cx = 280; 
+                        const cy = 120;  
+                        
+                        const startX = cx - r;
+                        const endY = cy + r;
+                        
+                        return (
+                            <path 
+                                key={i} 
+                                d={`M ${startX}, -20 L ${startX}, ${cy} A ${r} ${r} 0 0 0 ${cx}, ${endY} L 420, ${endY}`} 
+                                stroke={color} 
+                                strokeWidth={isMinimal ? 2 : 1.5} 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                                style={{ filter: `drop-shadow(0 0 ${isMinimal ? 8 : 6 + i}px ${color})` }} 
+                            />
+                        );
+                    })}
                 </svg>
             </div>
         );

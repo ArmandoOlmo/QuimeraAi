@@ -514,6 +514,8 @@ export interface FeaturesNeonData {
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     colors?: {
         background?: string;
@@ -543,6 +545,8 @@ export interface CtaNeonData {
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     colors?: {
         background?: string;
@@ -550,6 +554,8 @@ export interface CtaNeonData {
         heading?: string;
         text?: string;
         neonGlow?: string;
+        buttonBackground?: string;
+        buttonText?: string;
     };
 }
 
@@ -571,6 +577,8 @@ export interface PortfolioNeonData {
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     colors?: {
         background?: string;
@@ -605,6 +613,8 @@ export interface PricingNeonData {
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     colors?: {
         background?: string;
@@ -612,6 +622,8 @@ export interface PricingNeonData {
         heading?: string;
         text?: string;
         neonGlow?: string;
+        buttonBackground?: string;
+        buttonText?: string;
     };
 }
 
@@ -632,6 +644,8 @@ export interface FaqNeonData {
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     colors?: {
         background?: string;

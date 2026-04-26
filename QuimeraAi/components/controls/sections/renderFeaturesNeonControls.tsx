@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
+import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2, Trash2, Plus, List } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
@@ -151,7 +151,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                   <Select
                     label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
                     value={sectionData.cardBorderRadius || '3xl'}
-                    onChange={(e) => setNestedData('featuresNeon.cardBorderRadius', e.target.value)}
+                    onChange={(v) => setNestedData('featuresNeon.cardBorderRadius', v)}
                     options={[
                       { value: 'none', label: 'Cuadrada (None)' },
                       { value: 'md', label: 'Suave (MD)' },
@@ -179,6 +179,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                     checked={sectionData.showBackgroundGrid !== false}
                     onChange={(checked) => setNestedData('featuresNeon.showBackgroundGrid', checked)}
                 />
+                <TopDotsControl sectionKey="featuresNeon" data={data} setNestedData={setNestedData} />
                 <div>
                     <label className="block text-xs text-editor-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}

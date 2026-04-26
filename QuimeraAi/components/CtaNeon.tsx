@@ -32,6 +32,9 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
     const opacity = (intensity / 100) * 0.7 + 0.1;
     const neonColor = colors.neonGlow || '#FBB92B';
     
+    const showTopDots = data.showTopDots ?? true;
+    const dotColors = data.dotColors?.length ? data.dotColors : ['#FF5F56', '#FFBD2E', '#27C93F'];
+    
     const glowStyle = {
         boxShadow: `0 0 ${blurRadius}px ${spreadRadius}px ${neonColor}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`,
         borderColor: neonColor
@@ -81,6 +84,23 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                     ...glowStyle
                 }}
             >
+                {/* Decorative Dots */}
+                {showTopDots && dotColors.length > 0 && (
+                    <div className="absolute top-6 right-6 flex items-center gap-2 z-20 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.5)]">
+                        {dotColors.map((color, i) => (
+                            <div 
+                                key={i}
+                                className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full relative"
+                                style={{ 
+                                    backgroundColor: color,
+                                    boxShadow: `inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5)`
+                                }}
+                            >
+                                <div className="absolute top-[10%] left-[20%] w-[40%] h-[30%] bg-white/60 rounded-full blur-[1px]"></div>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 <div className="max-w-3xl mx-auto space-y-8">
                     {headline && (
                         <h2 
@@ -109,14 +129,13 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
                         {primaryCta && (
                                 <button 
-                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button transition-all duration-300 hover:scale-105"
+                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
                                     onClick={(e) => handleNavigate(e, data.primaryCtaLink)}
                                     style={{
-                                        backgroundColor: neonColor,
-                                        color: '#000000',
+                                        background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
+                                        color: colors.buttonText || '#000000',
                                         textTransform: 'var(--buttons-transform, none)' as any,
                                         letterSpacing: 'var(--buttons-spacing, normal)',
-                                        boxShadow: `0 0 20px ${neonColor}80`
                                     }}
                                 >
                                     {primaryCta}
@@ -125,12 +144,14 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                         
                         {secondaryCta && (
                                 <button 
-                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button transition-all duration-300 hover:bg-white/5 border border-white/20"
+                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button border transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
                                     onClick={(e) => handleNavigate(e, data.secondaryCtaLink)}
                                     style={{
-                                        color: '#ffffff',
+                                        borderColor: colors.buttonBackground || neonColor,
+                                        color: colors.text || '#ffffff',
+                                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
                                         textTransform: 'var(--buttons-transform, none)' as any,
-                                        letterSpacing: 'var(--buttons-spacing, normal)'
+                                        letterSpacing: 'var(--buttons-spacing, normal)',
                                     }}
                                 >
                                     {secondaryCta}

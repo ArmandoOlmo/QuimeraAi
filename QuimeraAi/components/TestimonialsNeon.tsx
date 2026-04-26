@@ -23,6 +23,8 @@ export interface TestimonialsNeonData {
     showBackgroundGrid?: boolean;
     glowIntensity?: number; // 0-100
     cardBorderRadius?: string;
+    showTopDots?: boolean;
+    dotColors?: string[];
     
     // Colors
     colors?: {
@@ -96,6 +98,9 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
         borderColor: neonColor
     };
 
+    const showTopDots = data.showTopDots ?? true;
+    const dotColors = data.dotColors?.length ? data.dotColors : ['#FF5F56', '#FFBD2E', '#27C93F'];
+
     return (
         <section 
             className="w-full relative overflow-hidden py-20 px-6 md:px-12 flex flex-col justify-center"
@@ -159,6 +164,24 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                                     borderStyle: 'solid'
                                 }}
                             >
+                                {/* Decorative Dots */}
+                                {showTopDots && dotColors.length > 0 && (
+                                    <div className="absolute top-4 right-4 flex items-center gap-1.5 z-20 bg-white/5 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.5)]">
+                                        {dotColors.map((color, i) => (
+                                            <div 
+                                                key={i}
+                                                className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full relative"
+                                                style={{ 
+                                                    backgroundColor: color,
+                                                    boxShadow: `inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5)`
+                                                }}
+                                            >
+                                                <div className="absolute top-[10%] left-[20%] w-[40%] h-[30%] bg-white/60 rounded-full blur-[1px]"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {/* Quote Icon */}
                                 <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
                                      style={{ backgroundColor: neonColor, color: '#000' }}>
