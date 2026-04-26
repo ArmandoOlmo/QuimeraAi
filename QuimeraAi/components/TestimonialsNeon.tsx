@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 
 export interface NeonTestimonial {
     quote?: string;
@@ -21,6 +22,7 @@ export interface TestimonialsNeonData {
     glassEffect?: boolean;
     showBackgroundGrid?: boolean;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     // Colors
     colors?: {
@@ -144,7 +146,8 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                             <div 
                                 key={idx}
                                 className={clsx(
-                                    "flex flex-col p-8 rounded-3xl transition-all duration-300 relative",
+                                    "flex flex-col p-8 transition-all duration-300 relative",
+                                    getBorderRadiusClass(data.cardBorderRadius),
                                     data.glassEffect ? "backdrop-blur-xl" : ""
                                 )}
                                 style={{

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 import { PortfolioNeonData } from '../types/components';
 
 export interface PortfolioNeonProps extends PortfolioNeonData {
@@ -100,7 +101,8 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
                         <div 
                             key={idx}
                             className={clsx(
-                                "group relative overflow-hidden rounded-[2rem] transition-all duration-500 cursor-pointer h-80",
+                                "group relative overflow-hidden transition-all duration-500 cursor-pointer h-80",
+                                getBorderRadiusClass(data.cardBorderRadius),
                                 data.glassEffect ? "backdrop-blur-xl" : ""
                             )}
                             style={{

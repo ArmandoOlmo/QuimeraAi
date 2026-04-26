@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 import { FeaturesNeonData } from '../types/components';
 
 export interface FeaturesNeonProps extends FeaturesNeonData {
@@ -97,7 +98,8 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
                         <div 
                             key={idx}
                             className={clsx(
-                                "flex flex-col p-8 rounded-[2rem] transition-all duration-300 relative group overflow-hidden",
+                                "flex flex-col p-8 transition-all duration-300 relative group overflow-hidden",
+                                getBorderRadiusClass(data.cardBorderRadius),
                                 data.glassEffect ? "backdrop-blur-xl" : ""
                             )}
                             style={{

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 import { FaqNeonData } from '../types/components';
 import { ChevronDown } from 'lucide-react';
 
@@ -81,7 +82,8 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
 
                 <div 
                     className={clsx(
-                        "rounded-[2rem] p-6 md:p-10 transition-all duration-300 relative",
+                        "p-6 md:p-10 transition-all duration-300 relative",
+                        getBorderRadiusClass(data.cardBorderRadius),
                         data.glassEffect ? "backdrop-blur-xl" : ""
                     )}
                     style={{

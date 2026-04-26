@@ -478,6 +478,13 @@ export interface HeroNeonData {
     dotColors: string[];
     // Neon glow intensity (0-100)
     glowIntensity?: number;
+    // Golden Standard Controls
+    cardBorderRadius?: string;
+    // Neon Corner Lines
+    showNeonLines?: boolean;
+    neonLineStyle?: 'minimal' | 'stacked';
+    neonLinePosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    neonLineColors?: string[];
     colors: {
         background: string;
         text: string;
@@ -506,6 +513,7 @@ export interface FeaturesNeonData {
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     colors?: {
         background?: string;
@@ -534,6 +542,7 @@ export interface CtaNeonData {
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     colors?: {
         background?: string;
@@ -561,6 +570,7 @@ export interface PortfolioNeonData {
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     colors?: {
         background?: string;
@@ -594,6 +604,7 @@ export interface PricingNeonData {
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     colors?: {
         background?: string;
@@ -620,6 +631,7 @@ export interface FaqNeonData {
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
     glowIntensity?: number; // 0-100
+    cardBorderRadius?: string;
     
     colors?: {
         background?: string;

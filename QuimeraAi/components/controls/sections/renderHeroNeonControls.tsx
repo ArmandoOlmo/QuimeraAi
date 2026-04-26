@@ -323,6 +323,21 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
             onChange={(v) => setNestedData('heroNeon.sectionHeight', v)}
             min={50} max={100} step={5} suffix="vh"
         />
+        <div className="mt-3">
+          <Select
+            label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
+            value={sectionData.cardBorderRadius || '3xl'}
+            onChange={(e) => setNestedData('heroNeon.cardBorderRadius', e.target.value)}
+            options={[
+              { value: 'none', label: 'Cuadrada (None)' },
+              { value: 'md', label: 'Suave (MD)' },
+              { value: 'xl', label: 'Media (XL)' },
+              { value: '2xl', label: 'Redondeada (2XL)' },
+              { value: '3xl', label: 'Muy Redondeada (3XL)' },
+              { value: 'full', label: 'Circular (Full)' }
+            ]}
+          />
+        </div>
       </div>
 
       {/* ========== GLASSMORPHISM & EFFECTS ========== */}
@@ -340,6 +355,75 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           checked={sectionData.showTopDots ?? true}
           onChange={(v) => setNestedData('heroNeon.showTopDots', v)}
         />
+        {sectionData.showTopDots !== false && (
+          <div className="space-y-2 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots (Máx 6)</label>
+            <div className="flex flex-wrap gap-2">
+              {(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA', '#F8E71C']).map((color: string, i: number) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => {
+                      const newColors = [...(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA', '#F8E71C'])];
+                      newColors[i] = e.target.value;
+                      setNestedData('heroNeon.dotColors', newColors);
+                    }}
+                    className="w-8 h-8 rounded border-none cursor-pointer"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <ToggleControl
+          label="Mostrar Líneas de Neón"
+          checked={sectionData.showNeonLines ?? true}
+          onChange={(v) => setNestedData('heroNeon.showNeonLines', v)}
+        />
+        {sectionData.showNeonLines !== false && (
+          <div className="space-y-3 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+            <Select
+              label="Estilo de Líneas"
+              value={sectionData.neonLineStyle || 'stacked'}
+              onChange={(e) => setNestedData('heroNeon.neonLineStyle', e.target.value)}
+              options={[
+                { value: 'minimal', label: 'Minimalista (2 líneas)' },
+                { value: 'stacked', label: 'Apilado (5 líneas)' }
+              ]}
+            />
+            <Select
+              label="Posición de Líneas"
+              value={sectionData.neonLinePosition || 'top-right'}
+              onChange={(e) => setNestedData('heroNeon.neonLinePosition', e.target.value)}
+              options={[
+                { value: 'top-left', label: 'Superior Izquierda' },
+                { value: 'top-right', label: 'Superior Derecha' },
+                { value: 'bottom-left', label: 'Inferior Izquierda' },
+                { value: 'bottom-right', label: 'Inferior Derecha' }
+              ]}
+            />
+            <div>
+              <label className="block text-[10px] font-bold text-editor-text-secondary uppercase mb-2">Colores de Líneas de Neón</label>
+              <div className="flex flex-wrap gap-2">
+                {(sectionData.neonLineColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA']).slice(0, sectionData.neonLineStyle === 'minimal' ? 2 : 5).map((color: string, i: number) => (
+                  <input
+                    key={i}
+                    type="color"
+                    value={color}
+                    onChange={(e) => {
+                      const newColors = [...(sectionData.neonLineColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA'])];
+                      newColors[i] = e.target.value;
+                      setNestedData('heroNeon.neonLineColors', newColors);
+                    }}
+                    className="w-8 h-8 rounded border-none cursor-pointer"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2 pt-2">
             <label className="text-xs font-bold text-editor-text-secondary">Neon Glow Intensity</label>

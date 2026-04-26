@@ -289,7 +289,12 @@ const pageData: PageData = {
     headlineFont: 'inter',
     subheadlineFont: 'inter',
     showTopDots: true,
-    dotColors: ['#FF5F56', '#FFBD2E', '#27C93F'],
+    dotColors: ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA', '#F8E71C'],
+    showNeonLines: true,
+    neonLineStyle: 'stacked',
+    neonLinePosition: 'top-right',
+    neonLineColors: ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2'],
+    cardBorderRadius: '3xl',
     glowIntensity: 50,
     colors: {
         background: '#0a0a0a',
@@ -319,6 +324,7 @@ const pageData: PageData = {
     ],
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -339,6 +345,7 @@ const pageData: PageData = {
     ],
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -355,6 +362,7 @@ const pageData: PageData = {
     buttonText: 'Empezar Ahora',
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -383,6 +391,7 @@ const pageData: PageData = {
     ],
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -415,6 +424,7 @@ const pageData: PageData = {
     ],
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -442,6 +452,7 @@ const pageData: PageData = {
     ],
     glassEffect: true,
     glowIntensity: 50,
+    cardBorderRadius: '3xl',
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',

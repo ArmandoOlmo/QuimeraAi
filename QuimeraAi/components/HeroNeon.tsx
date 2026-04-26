@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 
 export interface HeroNeonProps extends HeroNeonData {
     isPreviewMode?: boolean;
@@ -52,6 +53,10 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
     const textPosition = data.textPosition || 'bottom-left';
     const showTopDots = data.showTopDots ?? true;
     const dotColors = data.dotColors?.length ? data.dotColors : ['#FF5F56', '#FFBD2E', '#27C93F'];
+    const showNeonLines = data.showNeonLines ?? false;
+    const neonLineStyle = data.neonLineStyle || 'stacked';
+    const neonLinePosition = data.neonLinePosition || 'top-right';
+    const neonLineColors = data.neonLineColors?.length ? data.neonLineColors : dotColors;
     const colors = data.colors || {
         background: 'transparent',
         text: '#ffffff',
@@ -94,6 +99,45 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
         borderColor: neonColor
     };
 
+    const renderNeonLines = () => {
+        if (!showNeonLines) return null;
+        
+        const positionClasses = {
+            'top-left': 'top-0 left-0 -translate-x-1/3 -translate-y-1/3 rotate-0',
+            'top-right': 'top-0 right-0 translate-x-1/3 -translate-y-1/3 rotate-90',
+            'bottom-left': 'bottom-0 left-0 -translate-x-1/3 translate-y-1/3 -rotate-90',
+            'bottom-right': 'bottom-0 right-0 translate-x-1/3 translate-y-1/3 rotate-180',
+        };
+
+        if (neonLineStyle === 'minimal') {
+            return (
+                <div className={`absolute z-0 pointer-events-none ${positionClasses[neonLinePosition]} w-64 h-64 opacity-70`}>
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">
+                        <path d="M -20,150 Q 150,150 150,-20" stroke={neonLineColors[0] || neonColor} strokeWidth="3" strokeLinecap="round" />
+                        <path d="M 20,170 Q 170,170 170,20" stroke={neonLineColors[1] || neonColor} strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                </div>
+            );
+        }
+
+        return (
+            <div className={`absolute z-0 pointer-events-none ${positionClasses[neonLinePosition]} w-96 h-96 opacity-90`}>
+                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                    {neonLineColors.slice(0, 5).map((color, i) => (
+                        <path 
+                            key={i} 
+                            d={`M ${-20 + i*15},${150 + i*15} Q ${150 + i*15},${150 + i*15} ${150 + i*15},${-20 + i*15}`} 
+                            stroke={color} 
+                            strokeWidth={3} 
+                            strokeLinecap="round" 
+                            style={{ filter: `drop-shadow(0 0 8px ${color})` }} 
+                        />
+                    ))}
+                </svg>
+            </div>
+        );
+    };
+
     return (
         <div 
             className="w-full relative overflow-hidden flex items-center justify-center p-6 md:p-12 lg:p-24 bg-transparent"
@@ -102,7 +146,8 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
             {/* The Neon Card */}
             <div 
                 className={clsx(
-                    "w-full max-w-7xl min-h-[500px] rounded-3xl md:rounded-[40px] relative flex flex-col p-8 md:p-12 lg:p-16 transition-all duration-500",
+                    "w-full max-w-7xl min-h-[500px] relative flex flex-col p-8 md:p-12 lg:p-16 transition-all duration-500",
+                    getBorderRadiusClass(data.cardBorderRadius),
                     data.glassEffect ? "backdrop-blur-xl bg-opacity-40" : "",
                     positionClasses,
                     "overflow-hidden"
@@ -114,15 +159,22 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                     borderStyle: 'solid'
                 }}
             >
+                {renderNeonLines()}
+
                 {/* Top Dots (Decorative) */}
                 {showTopDots && dotColors.length > 0 && (
-                    <div className="absolute top-6 right-8 md:top-8 md:right-12 flex items-center gap-2 md:gap-3 z-20">
+                    <div className="absolute top-6 right-8 md:top-8 md:right-12 flex items-center gap-2 md:gap-3 z-20 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.5)]">
                         {dotColors.map((color, idx) => (
                             <div 
                                 key={idx}
-                                className="w-3 h-3 md:w-4 md:h-4 rounded-full shadow-sm"
-                                style={{ backgroundColor: color }}
-                            />
+                                className="w-3 h-3 md:w-4 md:h-4 rounded-full relative"
+                                style={{ 
+                                    backgroundColor: color,
+                                    boxShadow: `inset 0 2px 4px rgba(255,255,255,0.6), inset 0 -2px 4px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)`
+                                }}
+                            >
+                                <div className="absolute top-[10%] left-[20%] w-[40%] h-[30%] bg-white/60 rounded-full blur-[1px]"></div>
+                            </div>
                         ))}
                     </div>
                 )}
@@ -180,10 +232,10 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                 )}>
                                     {currentSlide.primaryCta && (
                                         <button
-                                            className="px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-lg"
+                                            className="px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
                                             onClick={() => props.onNavigate && currentSlide.primaryCtaLink && props.onNavigate(currentSlide.primaryCtaLink)}
                                             style={{
-                                                backgroundColor: colors.buttonBackground || neonColor,
+                                                background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
                                                 color: colors.buttonText || '#000000',
                                                 textTransform: 'var(--buttons-transform, none)' as any,
                                                 letterSpacing: 'var(--buttons-spacing, normal)',
@@ -197,12 +249,12 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                     
                                     {currentSlide.secondaryCta && (
                                         <button
-                                            className="px-8 py-4 rounded-full font-semibold text-lg border-2 transition-transform hover:scale-105 active:scale-95 font-button shadow-lg backdrop-blur-sm"
+                                            className="px-8 py-4 rounded-full font-semibold text-lg border transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
                                             onClick={() => props.onNavigate && currentSlide.secondaryCtaLink && props.onNavigate(currentSlide.secondaryCtaLink)}
                                             style={{
                                                 borderColor: colors.buttonBackground || neonColor,
                                                 color: colors.text || '#ffffff',
-                                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                                background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
                                                 textTransform: 'var(--buttons-transform, none)' as any,
                                                 letterSpacing: 'var(--buttons-spacing, normal)',
                                                 borderRadius: props.borderRadius || '9999px'

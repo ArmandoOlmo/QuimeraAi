@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { getFontStack } from '../utils/fontLoader';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getBorderRadiusClass } from '../utils/styleUtils';
 import { CtaNeonData } from '../types/components';
 
 export interface CtaNeonProps extends CtaNeonData {
@@ -67,7 +68,8 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
 
             <div 
                 className={clsx(
-                    "relative z-10 w-full max-w-5xl mx-auto text-center p-10 md:p-16 lg:p-20 rounded-[2.5rem] md:rounded-[4rem] transition-all duration-300",
+                    "relative z-10 w-full max-w-5xl mx-auto text-center p-10 md:p-16 lg:p-20 transition-all duration-300",
+                    getBorderRadiusClass(data.cardBorderRadius),
                     data.glassEffect ? "backdrop-blur-2xl" : ""
                 )}
                 style={{

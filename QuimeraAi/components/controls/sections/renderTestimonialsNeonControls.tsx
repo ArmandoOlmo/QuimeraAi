@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
 import ImagePicker from '../../ui/ImagePicker';
 
 export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
@@ -115,6 +115,21 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                     onChange={(v) => setNestedData('testimonialsNeon.sectionHeight', v)}
                     min={50} max={120} step={5} suffix="vh"
                 />
+                <div className="mt-3">
+                  <Select
+                    label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
+                    value={sectionData.cardBorderRadius || '3xl'}
+                    onChange={(e) => setNestedData('testimonialsNeon.cardBorderRadius', e.target.value)}
+                    options={[
+                      { value: 'none', label: 'Cuadrada (None)' },
+                      { value: 'md', label: 'Suave (MD)' },
+                      { value: 'xl', label: 'Media (XL)' },
+                      { value: '2xl', label: 'Redondeada (2XL)' },
+                      { value: '3xl', label: 'Muy Redondeada (3XL)' },
+                      { value: 'full', label: 'Circular (Full)' }
+                    ]}
+                  />
+                </div>
             </div>
 
             {/* Effect Settings */}
