@@ -1194,30 +1194,53 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             if (isDev) console.log(`[AIWebsiteStudio] Images: ${completed}/${imageSlots.length} (${failed} failed)`);
 
             // ══════════════════════════════════════════════════════════════════
-            // PHASE 5.5: Propagate hero image as background to glass sections
+            // PHASE 5.5: Propagate hero images as background to glass sections
             // ══════════════════════════════════════════════════════════════════
-            const heroImageForBg =
-                finalData.hero?.imageUrl
-                || finalData.heroSplit?.imageUrl
-                || finalData.heroGallery?.slides?.[0]?.backgroundImage
-                || finalData.heroWave?.slides?.[0]?.backgroundImage
-                || finalData.heroNova?.slides?.[0]?.backgroundImage
-                || finalData.heroNeon?.slides?.[0]?.imageUrl
-                || '';
+            const heroImagesForBg: string[] = [];
 
-            if (heroImageForBg) {
+            if (finalData.hero?.imageUrl) heroImagesForBg.push(finalData.hero.imageUrl);
+            if (finalData.heroSplit?.imageUrl) heroImagesForBg.push(finalData.heroSplit.imageUrl);
+            if (finalData.heroLead?.imageUrl) heroImagesForBg.push(finalData.heroLead.imageUrl);
+            if (finalData.heroLumina?.imageUrl) heroImagesForBg.push(finalData.heroLumina.imageUrl);
+            if (finalData.heroNova?.imageUrl) heroImagesForBg.push(finalData.heroNova.imageUrl);
+
+            if (finalData.heroGallery?.slides && Array.isArray(finalData.heroGallery.slides)) {
+                finalData.heroGallery.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
+            }
+            if (finalData.heroWave?.slides && Array.isArray(finalData.heroWave.slides)) {
+                finalData.heroWave.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
+            }
+            if (finalData.heroNova?.slides && Array.isArray(finalData.heroNova.slides)) {
+                finalData.heroNova.slides.forEach((s: any) => { if (s.backgroundImage) heroImagesForBg.push(s.backgroundImage) });
+            }
+            if (finalData.heroNeon?.slides && Array.isArray(finalData.heroNeon.slides)) {
+                finalData.heroNeon.slides.forEach((s: any) => { if (s.imageUrl) heroImagesForBg.push(s.imageUrl) });
+            }
+
+            if (heroImagesForBg.length > 0) {
                 const glassBgSections = [
                     'features', 'services', 'testimonials', 'pricing', 'faq',
                     'cta', 'leads', 'newsletter', 'video', 'howItWorks',
+                    'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
+                    'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'testimonialsNeon', 'faqNeon'
                 ];
+                let bgIndex = 0;
                 for (const comp of glassBgSections) {
-                    if (finalData[comp] && typeof finalData[comp] === 'object' && finalData[comp].glassEffect) {
-                        finalData[comp].backgroundImageUrl = heroImageForBg;
-                        finalData[comp].backgroundOverlayEnabled = true;
-                        finalData[comp].backgroundOverlayOpacity = 75;
+                    if (finalData[comp] && typeof finalData[comp] === 'object') {
+                        const isSuite = comp.includes('Lumina') || comp.includes('Neon');
+                        // Use background image if it specifically asked for glassEffect or if it's a Neon/Lumina component which looks good with backgrounds
+                        if (finalData[comp].glassEffect || isSuite) {
+                            const bgImage = heroImagesForBg[bgIndex % heroImagesForBg.length];
+                            finalData[comp].backgroundImageUrl = bgImage;
+                            finalData[comp].imageUrl = bgImage; // Fallback for components that might use imageUrl instead
+                            finalData[comp].backgroundOverlayEnabled = true;
+                            finalData[comp].backgroundOverlayOpacity = 75;
+                            finalData[comp].glassEffect = true;
+                            bgIndex++;
+                        }
                     }
                 }
-                if (isDev) console.log(`[AIWebsiteStudio] Glass backgrounds set for sections using hero image`);
+                if (isDev) console.log(`[AIWebsiteStudio] Glass backgrounds set for sections using ${heroImagesForBg.length} hero images sequentially`);
             }
 
             // ══════════════════════════════════════════════════════════════════
