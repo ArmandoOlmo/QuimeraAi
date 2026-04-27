@@ -86,16 +86,6 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '75vh'
             }}
         >
-            {/* Background Grid Pattern */}
-            {data.showBackgroundGrid === true && (
-                <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
-                    style={{
-                        backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,
-                        backgroundSize: '40px 40px',
-                        backgroundPosition: 'center center'
-                    }}
-                />
-            )}
 
             <div className="relative z-10 w-full max-w-7xl mx-auto">
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
@@ -123,14 +113,19 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className={clsx(
+                    "flex flex-wrap gap-8",
+                    data.cardsAlignment === 'start' ? 'justify-start' : 
+                    data.cardsAlignment === 'end' ? 'justify-end' : 'justify-center',
+                    "max-w-7xl mx-auto"
+                )}>
                     {tiers.map((tier, idx) => {
                         const isHighlight = tier.isPopular;
                         return (
                             <div 
                                 key={idx}
                                 className={clsx(
-                                    "flex flex-col p-8 transition-all duration-300 relative group overflow-hidden",
+                                    "flex flex-col p-8 transition-all duration-300 relative group overflow-hidden w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md",
                                     getBorderRadiusClass(data.cardBorderRadius),
                                     data.glassEffect ? "backdrop-blur-xl" : "",
                                     isHighlight ? "scale-105 z-20" : "scale-100 z-10"
@@ -192,7 +187,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                         <h3 
                                             className="text-2xl font-bold font-header"
                                             style={{ 
-                                                color: colors.heading || '#ffffff',
+                                                color: colors.cardHeading || colors.heading || '#ffffff',
                                                 fontFamily: headlineFontFamily
                                             }}
                                         >
@@ -201,7 +196,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                         <p 
                                             className="text-sm font-body opacity-80 mt-1"
                                             style={{ 
-                                                color: colors.text || '#a1a1aa',
+                                                color: colors.cardText || colors.text || '#a1a1aa',
                                             }}
                                         >
                                             {tier.description}
@@ -211,14 +206,14 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                     <div className="flex items-baseline gap-2">
                                         <span 
                                             className="text-5xl font-bold font-header"
-                                            style={{ color: colors.heading || '#ffffff' }}
+                                            style={{ color: colors.cardHeading || colors.heading || '#ffffff' }}
                                         >
                                             {tier.price}
                                         </span>
                                         {tier.billingPeriod && (
                                             <span 
                                                 className="text-lg font-body opacity-70"
-                                                style={{ color: colors.text || '#a1a1aa' }}
+                                                style={{ color: colors.cardText || colors.text || '#a1a1aa' }}
                                             >
                                                 {tier.billingPeriod}
                                             </span>
@@ -231,7 +226,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                                 <Check size={20} style={{ color: neonColor }} className="mt-0.5 shrink-0" />
                                                 <span 
                                                     className="font-body text-base opacity-90"
-                                                    style={{ color: colors.text || '#a1a1aa' }}
+                                                    style={{ color: colors.cardText || colors.text || '#a1a1aa' }}
                                                 >
                                                     {feature}
                                                 </span>

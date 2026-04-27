@@ -1393,11 +1393,6 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     const slots: ImageSlot[] = [];
     if (!data || typeof data !== 'object') return slots;
 
-    // ══════════════════════════════════════════════════════════════════════
-    // TOKEN OPTIMIZATION: Only generate images for HERO + BANNER
-    // All other components use icons/text only — no AI image generation.
-    // ══════════════════════════════════════════════════════════════════════
-
     // ── Hero variants ─────────────────────────────────────────────────────
     // Standard hero, heroSplit, and heroLead use top-level imageUrl
     for (const heroKey of ['hero', 'heroSplit', 'heroLead']) {
@@ -1419,29 +1414,41 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         if (heroData && typeof heroData === 'object') {
             const slides = heroData.slides;
             if (Array.isArray(slides) && slides.length > 0) {
-                // Only generate image for the first slide
-                if (!slides[0].imageUrl) {
+                slides.slice(0, 2).forEach((slide: any, i: number) => {
+                    if (!slide.imageUrl) {
+                        slots.push({
+                            path: `heroNeon.slides.${i}.imageUrl`,
+                            componentType: 'heroNeon',
+                            context: slide.headline || slide.subheadline || brief.tagline || brief.businessName,
+                            aspectRatio: '16:9',
+                        });
+                    }
+                });
+            } else {
+                // No slides array — create one with empty imageUrls for 2 slides
+                data['heroNeon'].slides = [
+                    {
+                        headline: brief.tagline || brief.businessName,
+                        subheadline: brief.description?.substring(0, 80) || '',
+                        primaryCta: 'Get Started',
+                        primaryCtaLink: '/#services',
+                        imageUrl: '',
+                    },
+                    {
+                        headline: brief.services?.[0]?.name || 'Our Services',
+                        subheadline: brief.services?.[0]?.description?.substring(0, 80) || '',
+                        primaryCta: 'Learn More',
+                        primaryCtaLink: '/#features',
+                        imageUrl: '',
+                    }
+                ];
+                [0, 1].forEach(i => {
                     slots.push({
-                        path: `heroNeon.slides.0.imageUrl`,
+                        path: `heroNeon.slides.${i}.imageUrl`,
                         componentType: 'heroNeon',
-                        context: slides[0].headline || slides[0].subheadline || brief.tagline || brief.businessName,
+                        context: data['heroNeon'].slides[i].headline || brief.tagline || brief.businessName,
                         aspectRatio: '16:9',
                     });
-                }
-            } else {
-                // No slides array — create one with an empty imageUrl
-                data['heroNeon'].slides = [{
-                    headline: brief.tagline || brief.businessName,
-                    subheadline: brief.description?.substring(0, 80) || '',
-                    primaryCta: 'Get Started',
-                    primaryCtaLink: '/#services',
-                    imageUrl: '',
-                }];
-                slots.push({
-                    path: `heroNeon.slides.0.imageUrl`,
-                    componentType: 'heroNeon',
-                    context: brief.tagline || brief.businessName,
-                    aspectRatio: '16:9',
                 });
             }
         }
@@ -1453,29 +1460,41 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         if (data[heroKey] && typeof data[heroKey] === 'object') {
             const slides = data[heroKey].slides;
             if (Array.isArray(slides) && slides.length > 0) {
-                // Only generate image for the first slide (one hero image)
-                if (!slides[0].backgroundImage) {
+                slides.slice(0, 2).forEach((slide: any, i: number) => {
+                    if (!slide.backgroundImage) {
+                        slots.push({
+                            path: `${heroKey}.slides.${i}.backgroundImage`,
+                            componentType: heroKey,
+                            context: slide.headline || slide.subheadline || brief.tagline || brief.businessName,
+                            aspectRatio: '16:9',
+                        });
+                    }
+                });
+            } else {
+                // No slides array — create one with empty backgroundImage
+                data[heroKey].slides = [
+                    {
+                        headline: brief.tagline || brief.businessName,
+                        subheadline: brief.description?.substring(0, 80) || '',
+                        primaryCta: 'Get Started',
+                        primaryCtaLink: '/#services',
+                        backgroundImage: '',
+                    },
+                    {
+                        headline: brief.services?.[0]?.name || 'Our Services',
+                        subheadline: brief.services?.[0]?.description?.substring(0, 80) || '',
+                        primaryCta: 'Learn More',
+                        primaryCtaLink: '/#features',
+                        backgroundImage: '',
+                    }
+                ];
+                [0, 1].forEach(i => {
                     slots.push({
-                        path: `${heroKey}.slides.0.backgroundImage`,
+                        path: `${heroKey}.slides.${i}.backgroundImage`,
                         componentType: heroKey,
-                        context: slides[0].headline || slides[0].subheadline || brief.tagline || brief.businessName,
+                        context: data[heroKey].slides[i].headline || brief.tagline || brief.businessName,
                         aspectRatio: '16:9',
                     });
-                }
-            } else {
-                // No slides array — create one with an empty backgroundImage
-                data[heroKey].slides = [{
-                    headline: brief.tagline || brief.businessName,
-                    subheadline: brief.description?.substring(0, 80) || '',
-                    primaryCta: 'Get Started',
-                    primaryCtaLink: '/#services',
-                    backgroundImage: '',
-                }];
-                slots.push({
-                    path: `${heroKey}.slides.0.backgroundImage`,
-                    componentType: heroKey,
-                    context: brief.tagline || brief.businessName,
-                    aspectRatio: '16:9',
                 });
             }
         }
@@ -1484,7 +1503,7 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     // ── HeroGallery slides ─────────────────────────────────────────────────
     if (componentOrder.includes('heroGallery')) {
         if (data.heroGallery?.slides && Array.isArray(data.heroGallery.slides)) {
-            data.heroGallery.slides.forEach((slide: any, i: number) => {
+            data.heroGallery.slides.slice(0, 2).forEach((slide: any, i: number) => {
             if (!slide.backgroundImage) {
                 slots.push({
                     path: `heroGallery.slides.${i}.backgroundImage`,
@@ -1497,8 +1516,7 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     } else if (data.heroGallery && !data.heroGallery.slides) {
         data.heroGallery.slides = [
             { backgroundImage: '', headline: brief.tagline || brief.businessName, subheadline: brief.description?.substring(0, 80) || '', primaryCta: 'Explore', primaryCtaLink: '/#services' },
-            { backgroundImage: '', headline: brief.services?.[0]?.name || 'Our Services', subheadline: brief.services?.[0]?.description?.substring(0, 80) || '', primaryCta: 'Learn More', primaryCtaLink: '/#features' },
-            { backgroundImage: '', headline: brief.services?.[1]?.name || 'Quality & Excellence', subheadline: brief.services?.[1]?.description?.substring(0, 80) || '', primaryCta: 'Contact Us', primaryCtaLink: '/#leads' },
+            { backgroundImage: '', headline: brief.services?.[0]?.name || 'Our Services', subheadline: brief.services?.[0]?.description?.substring(0, 80) || '', primaryCta: 'Learn More', primaryCtaLink: '/#features' }
         ];
         data.heroGallery.slides.forEach((slide: any, i: number) => {
             slots.push({
@@ -1535,7 +1553,7 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     // ── Features items ─────────────────────────────────────────────────────
     if (componentOrder.includes('features')) {
         if (data.features?.items && Array.isArray(data.features.items)) {
-            data.features.items.forEach((item: any, i: number) => {
+            data.features.items.slice(0, 3).forEach((item: any, i: number) => {
                 if (!item.imageUrl) {
                     slots.push({
                         path: `features.items.${i}.imageUrl`,
@@ -1548,7 +1566,74 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         }
     }
 
-    // NOTE: No images for services, menu, testimonials, signupFloat, etc.
+    // ── Portfolio items ─────────────────────────────────────────────────────
+    for (const portfolioKey of ['portfolio', 'portfolioNeon', 'portfolioLumina']) {
+        if (componentOrder.includes(portfolioKey) && data[portfolioKey]) {
+            const items = data[portfolioKey].items || data[portfolioKey].projects; // support both keys
+            if (Array.isArray(items)) {
+                items.slice(0, 3).forEach((item: any, i: number) => {
+                    if (!item.imageUrl) {
+                        const pathKey = data[portfolioKey].projects ? 'projects' : 'items';
+                        slots.push({
+                            path: `${portfolioKey}.${pathKey}.${i}.imageUrl`,
+                            componentType: portfolioKey,
+                            context: item.title || item.description || item.category || `Portfolio image ${i + 1}`,
+                            aspectRatio: '4:3',
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    // ── Team items ─────────────────────────────────────────────────────────
+    if (componentOrder.includes('team') && data.team?.items && Array.isArray(data.team.items)) {
+        data.team.items.slice(0, 3).forEach((item: any, i: number) => {
+            if (!item.imageUrl) {
+                slots.push({
+                    path: `team.items.${i}.imageUrl`,
+                    componentType: 'team',
+                    context: `${item.name || 'Team member'} - ${item.role || 'Professional'}`,
+                    aspectRatio: '1:1',
+                });
+            }
+        });
+    }
+
+    // ── Testimonials items ─────────────────────────────────────────────────
+    for (const testmKey of ['testimonials', 'testimonialsNeon', 'testimonialsLumina']) {
+        if (componentOrder.includes(testmKey) && data[testmKey]) {
+            const items = data[testmKey].items || data[testmKey].testimonials; // support both keys
+            if (Array.isArray(items)) {
+                items.slice(0, 3).forEach((item: any, i: number) => {
+                    if (item.imageUrl === "" || !item.imageUrl) { // only if intentionally empty or missing
+                        const pathKey = data[testmKey].testimonials ? 'testimonials' : 'items';
+                        slots.push({
+                            path: `${testmKey}.${pathKey}.${i}.imageUrl`,
+                            componentType: testmKey,
+                            context: `${item.name || item.author || item.authorName || 'Customer'} - ${item.role || item.authorRole || 'Client'}`,
+                            aspectRatio: '1:1',
+                        });
+                    }
+                });
+            }
+        }
+    }
+
+    // ── Slideshow items ────────────────────────────────────────────────────
+    if (componentOrder.includes('slideshow') && data.slideshow?.items && Array.isArray(data.slideshow.items)) {
+        data.slideshow.items.slice(0, 3).forEach((item: any, i: number) => {
+            if (!item.imageUrl) {
+                slots.push({
+                    path: `slideshow.items.${i}.imageUrl`,
+                    componentType: 'slideshow',
+                    context: item.altText || item.caption || `Slideshow image ${i + 1}`,
+                    aspectRatio: '16:9',
+                });
+            }
+        });
+    }
+
     return slots;
 }
 
@@ -1597,16 +1682,14 @@ CONTEXT: ${slot.context}
 PURPOSE: ${typeInstruction}${refContext}
 
 REQUIREMENTS:
-- Shot on a high-end full-frame camera (Sony A7R V or Canon R5)
-- Natural golden-hour or soft diffused lighting
-- Shallow depth of field with creamy bokeh (f/1.8-f/2.8)
-- Color grading: warm/neutral with shadows leaning toward ${brief.colorPalette.primary} tones
-- Ultra high-resolution, no noise, no artifacts
-- The scene must feel authentic to ${locationStr} — local architecture, vegetation, demographics
-- Subtly incorporate brand colors (${brief.colorPalette.primary}, ${brief.colorPalette.accent}) through props, environment, or color grading
-- Professional, premium, aspirational mood
-- NO text, watermarks, logos, or UI elements
-- Professional composition using rule of thirds or centered symmetry
+- LENS & CAMERA: Shot on a high-end full-frame camera (Sony A7R V or Canon R5) with premium prime lenses (35mm or 50mm).
+- LIGHTING: Cinematic, natural lighting. Use golden-hour sunlight, soft diffused studio light, or moody atmospheric lighting depending on the subject.
+- DEPTH: Masterful use of depth of field. Creamy bokeh (f/1.4-f/2.8) to isolate subjects where appropriate.
+- GEOGRAPHIC COHERENCE: The scene MUST feel authentically grounded in ${locationStr}. Strictly respect local architecture styles, endemic vegetation, realistic weather, and local demographics. If in a specific city/country, the environment must unmistakably reflect it.
+- BRAND COLOR INTEGRATION: The image's color palette MUST strictly harmonize with the brand. Subtly but clearly incorporate the brand colors (Primary: ${brief.colorPalette.primary}, Accent: ${brief.colorPalette.accent}) into the scene through props, wardrobe, lighting gels, or background elements. Do not just overlay color; integrate it naturally into the scene.
+- QUALITY: Ultra high-resolution 8k, flawless photorealism, no noise, no AI artifacts. Professional, premium, aspirational mood.
+- STRICT RULE: NO text, words, letters, watermarks, or logos of any kind should appear in the image. The image must be completely textless, UNLESS it is explicitly a UI (User Interface) being presented.
+- COMPOSITION: Professional composition using rule of thirds, leading lines, or perfect centered symmetry.
 - STRICT RULE: Generate exactly ONE SINGLE PHOTOGRAPH in the frame. DO NOT generate collages, split-screens, or multiple images stitched together.`;
 }
 
@@ -1647,7 +1730,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     // Removed old topBar contact info mapping. The topBar will now be generated by the AI as an announcement bar.
 
     // Filter out excluded components from generation
-    const EXCLUDED_COMPONENTS = ['slideshow', 'portfolio', 'team'];
+    const EXCLUDED_COMPONENTS: string[] = []; // Removed exclusions to allow portfolio, team, slideshow
 
     // Default to a rich set of components if suggestedComponents is somehow empty
     const baseComponents = (brief.suggestedComponents && brief.suggestedComponents.length > 0)
@@ -1927,7 +2010,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "glassEffect": true,
       "glowIntensity": 50,
       "showTopDots": true,
-      "showBackgroundGrid": true,
+
       "colors": { "background": "${brief.colorPalette.background}", "heading": "#ffffff", "text": "#a1a1aa", "cardBackground": "#141414", "neonGlow": "${brief.colorPalette.accent}" },
       "features": [
         {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": ""},
@@ -2112,23 +2195,21 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-1. ONLY set imageUrl/backgroundImageUrl to empty string "" for: hero/heroGallery, banner, and features. ALL other components MUST NOT have image fields.
+1. For components that support images (hero/heroGallery, banner, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl or backgroundImageUrl to an empty string "".
 2. Include RICH, detailed, REAL content for EVERY component — no lorem ipsum, no placeholder text.
-3. Each component's items array MUST have the correct number of items with full content.
-4. For topBar: messages MUST be promotional announcements or call-to-actions (e.g. sales, special discounts, free shipping). NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
-5. For heroGallery: generate exactly 3 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage (empty string).
-6. For menu: generate EXACTLY 6 realistic menu items with real names, descriptions, and prices. TEXT ONLY — NO imageUrl or placeholders.
-7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services", "/#features", "/#menu", "/#testimonials", "/#realEstateListings", "/#leads"). Only link to sections that exist in the componentOrder.
-8. For features: generate EXACTLY 4 items with specific benefits and icons. Include "imageUrl": "" in each item.
+3. Each component's items array MUST have the correct number of items with full content. ALL list-based components (features, portfolio, team, testimonials, services, faq) MUST have EXACTLY 3 items.
+4. For topBar: messages MUST be promotional announcements or call-to-actions. NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
+5. For heroGallery/heroNeon/heroNova/heroWave: generate EXACTLY 2 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage or imageUrl (empty string "").
+6. For menu: generate at least 6 realistic menu items with real names, descriptions, and prices. TEXT ONLY — NO imageUrl or placeholders.
+7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services"). Only link to sections that exist in the componentOrder.
+8. For features, portfolio, team, testimonials, and slideshow: generate EXACTLY 3 items. Include "imageUrl": "" (or "backgroundImage": "") in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
-10. For testimonials: generate EXACTLY 3 realistic testimonials with names. TEXT ONLY - NO imageUrl or placeholders.
-11. For FAQ: generate 5-8 relevant questions and answers.
-12. For leads: include proper form fields with labels and placeholders.
-13. For footer: Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'.
-14. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
-15. NEVER include slideshow, portfolio, or team components.
-16. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
-17. For header.style: VARY it based on the industry. Examples: restaurants/bars → 'transparent-gradient-dark' or 'edge-solid'; tech/SaaS → 'floating-glass' or 'floating-pill'; fitness/gym → 'sticky-solid' or 'edge-bordered'; luxury/spa → 'transparent-blur' or 'floating-shadow'; professional/corporate → 'edge-minimal' or 'sticky-solid'; creative/portfolio → 'transparent-bordered' or 'floating-glass'. NEVER always pick the same style.
+10. For FAQ: generate EXACTLY 3 relevant questions and answers.
+11. For leads: include proper form fields with labels and placeholders.
+12. For footer: Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'.
+13. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
+14. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
+15. For header.style: VARY it based on the industry. Examples: restaurants/bars → 'transparent-gradient-dark' or 'edge-solid'; tech/SaaS → 'floating-glass' or 'floating-pill'; fitness/gym → 'sticky-solid' or 'edge-bordered'; luxury/spa → 'transparent-blur' or 'floating-shadow'; professional/corporate → 'edge-minimal' or 'sticky-solid'; creative/portfolio → 'transparent-bordered' or 'floating-glass'. NEVER always pick the same style.
 18. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
 
 RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;

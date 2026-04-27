@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Eye, Layout, Palette, Type } from 'lucide-react';
+import { Building2, Eye, Layout, Palette, Type , Layers } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
 import { Input, Select, TextArea, ToggleControl } from '../../ui/EditorControlPrimitives';
@@ -21,6 +21,18 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
 
   const contentTab = (
     <div className="space-y-6">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={sectionData?.glassEffect || false}
+          onChange={(v) => setNestedData("realEstateListings.glassEffect", v)}
+        />
+      </div>
+
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <SectionHeader icon={Type} title={t('controls.content')} />
         <Input
@@ -60,8 +72,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
   );
 
   const styleTab = (
-    <div className="space-y-6">
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+    <div className="space-y-6">      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <SectionHeader icon={Layout} title={t('controls.layout')} />
         <Select
           label={t('realEstate.websiteListings.controls.maxItems')}

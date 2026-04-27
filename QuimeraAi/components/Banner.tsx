@@ -62,6 +62,7 @@ const Banner: React.FC<BannerProps> = ({
   buttonUrl = '#',
   showButton = true,
   backgroundImageUrl,
+  glassEffect,
   backgroundPosition = 'center',
   overlayEnabled = true,
   backgroundOverlayOpacity = 50,
@@ -144,10 +145,10 @@ const Banner: React.FC<BannerProps> = ({
   return (
     <section
       id="banner"
-      className={`relative w-full overflow-hidden ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}
+      className={`relative w-full overflow-hidden ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} ${!hasValidImage && glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
       style={{
         minHeight: `${height}px`,
-        backgroundColor: actualColors.background,
+        backgroundColor: (!hasValidImage && glassEffect) ? 'rgba(15, 23, 42, 0.4)' : actualColors.background,
       }}
     >
       {/* Background Image */}
@@ -163,7 +164,7 @@ const Banner: React.FC<BannerProps> = ({
           {/* Overlay */}
           {isOverlayActive && (
             <div
-              className="absolute inset-0"
+              className={`absolute inset-0 ${glassEffect ? 'backdrop-blur-md' : ''}`}
               style={overlayStyle}
             />
           )}

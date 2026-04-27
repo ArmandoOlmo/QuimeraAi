@@ -31,6 +31,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   return (
     <div className="space-y-4">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={data?.footer?.glassEffect || false}
+          onChange={(v) => setNestedData("footer.glassEffect", v)}
+        />
+      </div>
+
       {/* Logo Type Selector */}
       <div>
         <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>

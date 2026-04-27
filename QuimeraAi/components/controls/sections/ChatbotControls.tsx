@@ -7,7 +7,7 @@ import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
 import { Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
 import { ControlsDeps } from '../ControlsShared';
-import { MessageSquare, Settings, Palette } from 'lucide-react';
+import { MessageSquare, Settings, Palette , Layers } from 'lucide-react';
 
 export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
   const { data, setNestedData, t } = deps;
@@ -15,6 +15,18 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
 
   const contentTab = (
     <div className="space-y-4">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={data?.chatbot?.glassEffect || false}
+          onChange={(v) => setNestedData("chatbot.glassEffect", v)}
+        />
+      </div>
+
       {/* Content Settings */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">

@@ -41,6 +41,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-3">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={data?.topBar?.glassEffect || false}
+          onChange={(v) => setNestedData("topBar.glassEffect", v)}
+        />
+      </div>
+
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Messages</div>
       {topBarMessages.map((msg: any, idx: number) => (
         <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
@@ -133,8 +145,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-3">
-      {/* Position */}
+    <div className="space-y-3">      {/* Position */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Position</div>
       <ToggleControl label={t('controls.aboveHeader')} checked={data.topBar.aboveHeader ?? true} onChange={(v) => setNestedData('topBar.aboveHeader', v)} />
       <p className="text-[10px] text-editor-text-secondary -mt-1">

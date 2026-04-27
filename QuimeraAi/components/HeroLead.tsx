@@ -213,7 +213,7 @@ const HeroLead: React.FC<HeroLeadProps> = ({
             style={{ backgroundImage: `url(${imageUrl})`, backgroundPosition: imagePosition || 'center' }}
           />
           <div
-            className="absolute inset-0"
+            className={`absolute inset-0 ${glassEffect ? 'backdrop-blur-md' : ''}`}
             style={{ backgroundColor: hexToRgba(c.infoBackground || c.background, overlayOpacity / 100) }}
           />
         </>

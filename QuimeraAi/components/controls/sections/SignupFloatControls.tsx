@@ -144,6 +144,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={data?.signupFloat?.glassEffect || false}
+          onChange={(v) => setNestedData("signupFloat.glassEffect", v)}
+        />
+      </div>
+
       {/* ========== IMAGE ========== */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">

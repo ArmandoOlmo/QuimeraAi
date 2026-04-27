@@ -209,8 +209,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-4">
-      <BackgroundImageControl sectionKey="map" data={data} setNestedData={setNestedData} />
+    <div className="space-y-4">      <BackgroundImageControl sectionKey="map" data={data} setNestedData={setNestedData} />
       {/* Map Variant */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
         <Select

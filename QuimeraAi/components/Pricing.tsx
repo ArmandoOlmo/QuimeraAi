@@ -1,5 +1,5 @@
-
 import React, { useMemo } from 'react';
+import clsx from 'clsx';
 import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType, CornerGradientConfig } from '../types';
 import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
@@ -134,11 +134,15 @@ const Pricing: React.FC<PricingProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+          <div className={clsx(
+            "flex flex-wrap gap-8 items-center",
+            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
+          )}>
             {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
+                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
                     p-8 border border-white/10 relative flex flex-col h-full
                     transform transition-all duration-300 hover:scale-105
                     backdrop-blur-xl
@@ -252,11 +256,15 @@ const Pricing: React.FC<PricingProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+          <div className={clsx(
+            "flex flex-wrap gap-8 items-center",
+            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
+          )}>
             {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
+                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
                     p-8 relative flex flex-col h-full
                     transform transition-all duration-500 hover:scale-105 hover:-translate-y-2
                     backdrop-blur-xl border border-white/10
@@ -393,11 +401,15 @@ const Pricing: React.FC<PricingProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+          <div className={clsx(
+            "flex flex-wrap gap-8 items-stretch",
+            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
+          )}>
             {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
+                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
                     p-8 relative flex flex-col h-full
                     backdrop-blur-xl backdrop-saturate-150
                     border border-white/10
@@ -507,7 +519,14 @@ const Pricing: React.FC<PricingProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-gradient-to-r" style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
+          <div className={clsx(
+            "grid gap-px bg-gradient-to-r",
+            tiers?.length === 1 ? 'grid-cols-1 max-w-md' : 
+            tiers?.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl' : 
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+            cardsAlignment === 'start' ? 'mr-auto' : 
+            cardsAlignment === 'end' ? 'ml-auto' : 'mx-auto'
+          )} style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
             {(tiers || []).map((tier, index) => (
               <div
                 key={index}
@@ -621,11 +640,15 @@ const Pricing: React.FC<PricingProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+          <div className={clsx(
+            "flex flex-wrap gap-8 items-center",
+            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
+          )}>
             {(tiers || []).map((tier, index) => (
               <div
                 key={index}
                 className={`
+                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
                     p-10 relative flex flex-col h-full
                     transform transition-all duration-300 hover:scale-[1.02]
                     ${tier.featured ? 'md:scale-105 z-10' : ''}

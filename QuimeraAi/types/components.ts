@@ -508,7 +508,6 @@ export interface FeaturesNeonData {
     // Golden Standard Controls
     glassEffect?: boolean;
     sectionHeight?: number;
-    showBackgroundGrid?: boolean;
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
@@ -539,7 +538,6 @@ export interface CtaNeonData {
     // Golden Standard Controls
     glassEffect?: boolean;
     sectionHeight?: number;
-    showBackgroundGrid?: boolean;
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
@@ -567,11 +565,15 @@ export interface PortfolioNeonData {
         title?: string;
         description?: string;
     }[];
+    projects?: {
+        imageUrl?: string;
+        title?: string;
+        category?: string;
+    }[];
 
     // Golden Standard Controls
     glassEffect?: boolean;
     sectionHeight?: number;
-    showBackgroundGrid?: boolean;
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
@@ -590,6 +592,7 @@ export interface PortfolioNeonData {
 }
 
 export interface PricingNeonData {
+    cardsAlignment?: 'start' | 'center' | 'end';
     headline?: string;
     subheadline?: string;
     tiers?: {
@@ -607,7 +610,6 @@ export interface PricingNeonData {
     // Golden Standard Controls
     glassEffect?: boolean;
     sectionHeight?: number;
-    showBackgroundGrid?: boolean;
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
@@ -621,6 +623,8 @@ export interface PricingNeonData {
         cardBackground?: string;
         heading?: string;
         text?: string;
+        cardHeading?: string;
+        cardText?: string;
         neonGlow?: string;
         buttonBackground?: string;
         buttonText?: string;
@@ -638,7 +642,6 @@ export interface FaqNeonData {
     // Golden Standard Controls
     glassEffect?: boolean;
     sectionHeight?: number;
-    showBackgroundGrid?: boolean;
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
     backgroundOverlayOpacity?: number;
@@ -803,6 +806,7 @@ export interface PricingTier {
 }
 
 export interface PricingData {
+    cardsAlignment?: 'start' | 'center' | 'end';
     glassEffect?: boolean;
     pricingVariant?: PricingVariant;
     title: string;
@@ -1176,6 +1180,7 @@ export interface HowItWorksData {
  * This interface is kept for backwards compatibility with existing projects.
  */
 export interface ChatbotData {
+    glassEffect?: boolean;
     welcomeMessage: string;
     placeholderText: string;
     knowledgeBase: string;
@@ -1252,6 +1257,7 @@ export interface FooterContactInfo {
 }
 
 export interface FooterData {
+    glassEffect?: boolean;
     title: string;
     description: string;
     copyrightText: string;
@@ -1278,6 +1284,7 @@ export interface FooterData {
 export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night' | 'card-overlay';
 
 export interface MapData {
+    glassEffect?: boolean;
     title: string;
     description: string;
     address: string;
@@ -1327,6 +1334,7 @@ export interface MenuItem {
 }
 
 export interface MenuData {
+    glassEffect?: boolean;
     menuVariant?: MenuVariant;
     title: string;
     description: string;
@@ -1418,6 +1426,7 @@ export type BannerVariant = 'classic' | 'gradient-overlay' | 'side-text' | 'cent
 export type TextAlignment = 'left' | 'center' | 'right';
 
 export interface BannerData {
+    glassEffect?: boolean;
     bannerVariant?: BannerVariant;
     headline: string;
     subheadline: string;
@@ -1457,6 +1466,7 @@ export interface TopBarMessage {
 }
 
 export interface TopBarData {
+    glassEffect?: boolean;
     messages: TopBarMessage[];
     scrollEnabled?: boolean;
     scrollSpeed?: number;
@@ -1491,6 +1501,7 @@ export interface LogoBannerItem {
 }
 
 export interface LogoBannerData {
+    glassEffect?: boolean;
     title?: string;
     subtitle?: string;
     logos: LogoBannerItem[];
@@ -1561,6 +1572,7 @@ export interface ProductsProps {
 }
 
 export interface ProductsData {
+    glassEffect?: boolean;
     title: string;
     subtitle: string;
     products: StorefrontProductItem[];
@@ -2440,6 +2452,7 @@ export interface SignupFloatSocialLink {
 }
 
 export interface SignupFloatData {
+    glassEffect?: boolean;
     // Content
     headerText: string;
     descriptionText: string;
@@ -2594,6 +2607,10 @@ export interface PageData {
     topBar?: TopBarData;
     logoBanner?: LogoBannerData;
     products?: ProductsData;
+    cmsFeed?: {
+        glassEffect?: boolean;
+        [key: string]: any;
+    };
     // Ecommerce components - Store settings
     storeSettings?: StoreSettingsData;
     // Ecommerce components
@@ -2623,6 +2640,7 @@ export interface PageData {
     productGrid?: ProductGridSectionData;
     /** Configuración de listados de real estate */
     realEstateListings?: {
+        glassEffect?: boolean;
         title?: string;
         subtitle?: string;
         buttonText?: string;

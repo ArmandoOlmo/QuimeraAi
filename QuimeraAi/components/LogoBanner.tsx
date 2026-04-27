@@ -78,6 +78,11 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
   paddingY = 'md',
   showDivider = false,
   dividerColor = '#e2e8f0',
+  backgroundImageUrl,
+  backgroundOverlayEnabled = true,
+  backgroundOverlayOpacity = 50,
+  backgroundOverlayColor = '#000000',
+  glassEffect,
   onNavigate,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
@@ -88,7 +93,9 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
 
   const bgStyle: React.CSSProperties = useGradient
     ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
-    : { backgroundColor };
+    : { backgroundColor: (glassEffect && !backgroundImageUrl) ? 'rgba(255,255,255,0.05)' : backgroundColor };
+
+  const hasBgImage = !!backgroundImageUrl;
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!href) return;
@@ -142,8 +149,20 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
   // ─── Scrolling (Marquee) mode ───
   if (scrollEnabled && validLogos.length > 1) {
     return (
-      <div style={bgStyle} className={paddingMap[paddingY]}>
-        {(title || subtitle) && (
+      <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassEffect && !hasBgImage ? 'backdrop-blur-md' : ''}`}>
+        {hasBgImage && (
+          <>
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImageUrl})` }} />
+            {backgroundOverlayEnabled !== false && (
+              <div 
+                className={`absolute inset-0 ${glassEffect ? 'backdrop-blur-md' : ''}`} 
+                style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} 
+              />
+            )}
+          </>
+        )}
+        <div className="relative z-10">
+          {(title || subtitle) && (
           <div className="text-center mb-8 px-4">
             {title && (
               <p className={`${fontSizeMap[titleFontSize]} font-semibold uppercase tracking-widest`} style={{ color: titleColor }}>
@@ -196,14 +215,27 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
             width: max-content;
           }
         `}</style>
+        </div>
       </div>
     );
   }
 
   // ─── Static Grid mode ───
   return (
-    <div style={bgStyle} className={paddingMap[paddingY]}>
-      {(title || subtitle) && (
+    <div style={bgStyle} className={`relative overflow-hidden ${paddingMap[paddingY]} ${glassEffect && !hasBgImage ? 'backdrop-blur-md' : ''}`}>
+      {hasBgImage && (
+        <>
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImageUrl})` }} />
+          {backgroundOverlayEnabled !== false && (
+            <div 
+              className={`absolute inset-0 ${glassEffect ? 'backdrop-blur-md' : ''}`} 
+              style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} 
+            />
+          )}
+        </>
+      )}
+      <div className="relative z-10">
+        {(title || subtitle) && (
         <div className="text-center mb-8 px-4">
           {title && (
             <p className={`${fontSizeMap[titleFontSize]} font-semibold uppercase tracking-widest`} style={{ color: titleColor }}>
@@ -228,6 +260,7 @@ const LogoBanner: React.FC<LogoBannerProps> = ({
       </div>
 
       {showDivider && <div className="max-w-5xl mx-auto mt-8" style={{ height: '1px', backgroundColor: dividerColor }} />}
+      </div>
     </div>
   );
 };

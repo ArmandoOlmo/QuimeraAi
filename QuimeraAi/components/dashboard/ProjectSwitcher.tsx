@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useProject } from '../../contexts/project';
 import { Project } from '../../types/components';
+import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 
 interface ProjectSwitcherProps {
     collapsed?: boolean;
@@ -203,9 +204,9 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             >
                 {/* Project avatar */}
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
-                    {activeProject?.thumbnailUrl ? (
+                    {getDynamicThumbnailUrl(activeProject) ? (
                         <img
-                            src={activeProject.thumbnailUrl}
+                            src={getDynamicThumbnailUrl(activeProject)}
                             alt={activeProject.name}
                             className="w-full h-full object-cover"
                         />
@@ -309,9 +310,9 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                                 : 'bg-gradient-to-br from-muted-foreground/60 to-muted-foreground/40'
                                             }
                                         `}>
-                                            {project.thumbnailUrl ? (
+                                            {getDynamicThumbnailUrl(project) ? (
                                                 <img
-                                                    src={project.thumbnailUrl}
+                                                    src={getDynamicThumbnailUrl(project)}
                                                     alt={project.name}
                                                     className="w-full h-full object-cover"
                                                 />

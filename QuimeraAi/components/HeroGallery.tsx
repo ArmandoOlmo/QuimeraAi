@@ -157,7 +157,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
 
                         {/* Dark overlay for text readability */}
                         <div
-                            className="absolute inset-0 z-[1]"
+                            className={`absolute inset-0 z-[1] ${glassEffect ? 'backdrop-blur-md' : ''}`}
                             style={{
                                 backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})`,
                             }}

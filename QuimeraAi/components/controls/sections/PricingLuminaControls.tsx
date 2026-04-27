@@ -227,6 +227,19 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
 
       <BackgroundImageControl sectionKey="pricingLumina" data={data} setNestedData={setNestedData} />
       
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Alineación de Tarjetas</label>
+        <Select
+          value={data.pricingLumina.cardsAlignment || 'center'}
+          onChange={(v) => setNestedData('pricingLumina.cardsAlignment', v)}
+          options={[
+            { value: 'start', label: 'Izquierda' },
+            { value: 'center', label: 'Centro' },
+            { value: 'end', label: 'Derecha' }
+          ]}
+        />
+      </div>
+
       {renderLuminaAnimationControls(data.pricingLumina, (key, value) => setNestedData(`pricingLumina.${key}`, value))}
       
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">

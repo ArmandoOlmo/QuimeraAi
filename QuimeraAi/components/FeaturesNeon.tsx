@@ -59,16 +59,6 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
             }}
         >
-            {/* Background Grid Pattern */}
-            {data.showBackgroundGrid === true && (
-                <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
-                    style={{
-                        backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,
-                        backgroundSize: '40px 40px',
-                        backgroundPosition: 'center center'
-                    }}
-                />
-            )}
 
             <div className="relative z-10 w-full max-w-7xl mx-auto">
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">

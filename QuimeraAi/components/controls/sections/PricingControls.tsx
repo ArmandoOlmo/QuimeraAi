@@ -49,8 +49,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-
-      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
+      <div className="mb-4">
+        <Select
+          label="Alineación de Tarjetas (si hay pocas)"
+          value={data.pricing.cardsAlignment || 'center'}
+          onChange={(v) => setNestedData('pricing.cardsAlignment', v)}
+          options={[
+            { value: 'start', label: 'Izquierda' },
+            { value: 'center', label: 'Centro' },
+            { value: 'end', label: 'Derecha' }
+          ]}
+        />
+      </div>      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
       <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
@@ -264,8 +274,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-
-      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
+      <div className="mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Alineación de Tarjetas</label>
+        <Select
+          value={data.pricing.cardsAlignment || 'center'}
+          onChange={(v) => setNestedData('pricing.cardsAlignment', v)}
+          options={[
+            { value: 'start', label: 'Izquierda' },
+            { value: 'center', label: 'Centro' },
+            { value: 'end', label: 'Derecha' }
+          ]}
+        />
+      </div>      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
       <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
@@ -351,19 +371,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-4">
-      {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-          <Layers size={14} /> Efecto Cristal
-        </label>
-        <ToggleControl
-          label={t('controls.glassmorphismTransparencia')}
-          checked={data?.pricing?.glassEffect || false}
-          onChange={(v) => setNestedData('pricing.glassEffect', v)}
-        />
-      </div>
-      <BackgroundImageControl sectionKey="pricing" data={data} setNestedData={setNestedData} />
+    <div className="space-y-4">      <BackgroundImageControl sectionKey="pricing" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>

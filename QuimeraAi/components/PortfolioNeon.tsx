@@ -17,7 +17,9 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
     // Fallbacks
     const headline = data.headline || 'Our Work';
     const subheadline = data.subheadline || 'A glimpse into our recent projects and designs.';
-    const images = data.images && data.images.length > 0 ? data.images : [
+    const images = data.projects && data.projects.length > 0 
+        ? data.projects.map(p => ({ url: p.imageUrl || '', title: p.title, description: p.category }))
+        : data.images && data.images.length > 0 ? data.images : [
         {
             url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800&ixlib=rb-4.0.3',
             title: 'Project Alpha',
@@ -62,16 +64,6 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
             }}
         >
-            {/* Background Grid Pattern */}
-            {data.showBackgroundGrid === true && (
-                <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
-                    style={{
-                        backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,
-                        backgroundSize: '40px 40px',
-                        backgroundPosition: 'center center'
-                    }}
-                />
-            )}
 
             <div className="relative z-10 w-full max-w-7xl mx-auto">
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">

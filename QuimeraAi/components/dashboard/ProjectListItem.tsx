@@ -8,6 +8,7 @@ import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Downl
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import Modal from '../ui/Modal';
+import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 
 interface ProjectListItemProps {
   project: Project;
@@ -151,9 +152,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
     >
       {/* Thumbnail */}
       <div className="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-muted">
-        {project.thumbnailUrl ? (
+        {getDynamicThumbnailUrl(project) ? (
           <img
-            src={project.thumbnailUrl}
+            src={getDynamicThumbnailUrl(project)}
             alt={project.name}
             className="w-full h-full object-cover"
           />

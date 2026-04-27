@@ -44,6 +44,17 @@ const { data, setNestedData, t, setAiAssistField } = deps;
 
   return (
     <div className="space-y-4">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={sectionData?.glassEffect || false}
+          onChange={(v) => setNestedData(`${sectionKey}.glassEffect`, v)}
+        />
+      </div>
       <Input label={t('editor.controls.common.title')} value={sectionData.title} onChange={(e) => setNestedData(`${sectionKey}.title`, e.target.value)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={sectionData.titleFontSize || 'md'} onChange={(v) => setNestedData(`${sectionKey}.titleFontSize`, v)} />
 

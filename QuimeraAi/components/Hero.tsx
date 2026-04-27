@@ -118,13 +118,13 @@ const Hero: React.FC<HeroProps> = (props) => {
         />
         {/* Dark overlay for readability — stronger bottom gradient on mobile */}
         <div
-          className="absolute inset-0 hidden md:block"
+          className={`absolute inset-0 hidden md:block ${glassEffect ? 'backdrop-blur-md' : ''}`}
           style={{
             background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
           }}
         />
         <div
-          className="absolute inset-0 md:hidden"
+          className={`absolute inset-0 md:hidden ${glassEffect ? 'backdrop-blur-md' : ''}`}
           style={{
             background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${((overlayOpacity ?? 50) + 20) / 100}) 100%)`
           }}

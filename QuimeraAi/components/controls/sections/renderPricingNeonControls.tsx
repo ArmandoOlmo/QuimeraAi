@@ -256,6 +256,18 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     min={50} max={120} step={5} suffix="vh"
                 />
                 <div className="mt-3">
+                    <Select
+                        label="Alineación de Tarjetas"
+                        value={sectionData.cardsAlignment || 'center'}
+                        onChange={(v) => setNestedData('pricingNeon.cardsAlignment', v)}
+                        options={[
+                            { value: 'start', label: 'Izquierda' },
+                            { value: 'center', label: 'Centro' },
+                            { value: 'end', label: 'Derecha' }
+                        ]}
+                    />
+                </div>
+                <div className="mt-3">
                   <Select
                     label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
                     value={sectionData.cardBorderRadius || '3xl'}
@@ -281,11 +293,6 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     label={t('editor.controls.glassEffect', 'Efecto Cristal (Glassmorphism)')}
                     checked={sectionData.glassEffect !== false}
                     onChange={(checked) => setNestedData('pricingNeon.glassEffect', checked)}
-                />
-                <ToggleControl
-                    label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid === true}
-                    onChange={(checked) => setNestedData('pricingNeon.showBackgroundGrid', checked)}
                 />
                 <TopDotsControl sectionKey="pricingNeon" data={data} setNestedData={setNestedData} />
                 <div>
@@ -331,6 +338,16 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     label={t('editor.controls.cardBackground', 'Fondo de Tarjeta')}
                     value={sectionData.colors?.cardBackground || '#141414'}
                     onChange={(color) => setNestedData('pricingNeon.colors.cardBackground', color)}
+                />
+                <ColorControl
+                    label={t('editor.controls.cardHeadingColor', 'Color de Título de Tarjeta')}
+                    value={sectionData.colors?.cardHeading || sectionData.colors?.heading || '#ffffff'}
+                    onChange={(color) => setNestedData('pricingNeon.colors.cardHeading', color)}
+                />
+                <ColorControl
+                    label={t('editor.controls.cardTextColor', 'Color de Texto de Tarjeta')}
+                    value={sectionData.colors?.cardText || sectionData.colors?.text || '#a1a1aa'}
+                    onChange={(color) => setNestedData('pricingNeon.colors.cardText', color)}
                 />
                 <ColorControl
                     label={t('editor.controls.headingColor', 'Color de Títulos')}

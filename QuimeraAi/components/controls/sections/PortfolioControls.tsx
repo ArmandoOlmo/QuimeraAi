@@ -262,19 +262,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-4">
-      {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-          <Layers size={14} /> Efecto Cristal
-        </label>
-        <ToggleControl
-          label={t('controls.glassmorphismTransparencia')}
-          checked={data?.portfolio?.glassEffect || false}
-          onChange={(v) => setNestedData('portfolio.glassEffect', v)}
-        />
-      </div>
-      <BackgroundImageControl sectionKey="portfolio" data={data} setNestedData={setNestedData} />
+    <div className="space-y-4">      <BackgroundImageControl sectionKey="portfolio" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
         <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>

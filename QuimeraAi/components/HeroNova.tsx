@@ -287,7 +287,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
 
             {/* ─── Overlay ─── */}
             <div
-                className="absolute inset-0 z-[2]"
+                className={`absolute inset-0 z-[2] ${glassEffect ? 'backdrop-blur-md' : ''}`}
                 style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity > 1 ? overlayOpacity / 100 : overlayOpacity})` }}
             />
 

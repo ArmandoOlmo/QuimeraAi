@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import {
   GripVertical, ChevronDown, Trash2, Palette, X, Image, Grid, Zap,
   ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, CircleDot, ArrowRight,
-  ArrowDownLeft, ArrowDown, ArrowDownRight,
+  ArrowDownLeft, ArrowDown, ArrowDownRight, Layers,
 } from 'lucide-react';
 import ColorControl from '../ui/ColorControl';
 import ImagePicker from '../ui/ImagePicker';
@@ -374,6 +374,18 @@ export const BackgroundImageControl: React.FC<{
           />
         </div>
       )}
+
+      {/* Glass Effect should always be visible regardless of section background image */}
+      <div className="mt-4 pt-3 border-t border-editor-border/50 animate-fade-in-up">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2 mb-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t('controls.glassmorphismTransparencia', 'Glassmorphism Background')}
+          checked={sectionData?.glassEffect || false}
+          onChange={(v) => setNestedData(`${sectionKey}.glassEffect`, v)}
+        />
+      </div>
     </div>
   );
 };

@@ -33,6 +33,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-3">
+      {/* ========== GLASSMORPHISM ========== */}
+      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layers size={14} /> Efecto Cristal
+        </label>
+        <ToggleControl
+          label={t("controls.glassmorphismTransparencia", "Glassmorphism Background")}
+          checked={data?.logoBanner?.glassEffect || false}
+          onChange={(v) => setNestedData("logoBanner.glassEffect", v)}
+        />
+      </div>
+
       <Input label={t('controls.title')} value={data.logoBanner.title || ''} onChange={(e) => setNestedData('logoBanner.title', e.target.value)} placeholder="Trusted by industry leaders" />
       <Input label={t('controls.subtitle')} value={data.logoBanner.subtitle || ''} onChange={(e) => setNestedData('logoBanner.subtitle', e.target.value)} placeholder="" />
 
@@ -107,8 +119,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   );
 
   const styleTab = (
-    <div className="space-y-3">
-      {/* Scroll */}
+    <div className="space-y-3">      {/* Scroll */}
       <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
       <ToggleControl label={t('controls.scrollMarquee')} checked={data.logoBanner.scrollEnabled ?? false} onChange={(v) => setNestedData('logoBanner.scrollEnabled', v)} />
       <ToggleControl label={t('controls.pauseOnHover')} checked={data.logoBanner.pauseOnHover ?? true} onChange={(v) => setNestedData('logoBanner.pauseOnHover', v)} />

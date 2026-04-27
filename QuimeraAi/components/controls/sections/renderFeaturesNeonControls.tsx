@@ -174,11 +174,6 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                     checked={sectionData.glassEffect !== false}
                     onChange={(checked) => setNestedData('featuresNeon.glassEffect', checked)}
                 />
-                <ToggleControl
-                    label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid === true}
-                    onChange={(checked) => setNestedData('featuresNeon.showBackgroundGrid', checked)}
-                />
                 <TopDotsControl sectionKey="featuresNeon" data={data} setNestedData={setNestedData} />
                 <div>
                     <label className="block text-xs text-editor-text-secondary mb-1">

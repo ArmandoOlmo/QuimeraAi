@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import { LuminaBackground, LuminaPanel, LuminaButton, LuminaTypography } from './ui/lumina';
 import { sanitizeHtml } from '../utils/sanitize';
 import { LuminaAnimationConfig } from '../types/components';
@@ -18,6 +19,7 @@ export interface LuminaPricingTier {
 }
 
 export interface PricingLuminaData {
+    cardsAlignment?: 'start' | 'center' | 'end';
     headline: string;
     subheadline?: string;
     billingToggle?: boolean;
@@ -49,6 +51,7 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
     glassEffect = true,
     luminaAnimation,
     colors,
+    cardsAlignment,
     onNavigate
 }) => {
     headline = headline || 'Simple, Transparent Pricing';
@@ -96,11 +99,16 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto justify-center">
+                <div className={clsx(
+                    "flex flex-wrap gap-8 justify-center",
+                    cardsAlignment === 'start' ? 'justify-start' : 
+                    cardsAlignment === 'end' ? 'justify-end' : 'justify-center',
+                    "max-w-5xl mx-auto"
+                )}>
                     {tiers.map((tier, idx) => {
                         const isPopular = tier.isPopular || tier.highlighted;
                         return (
-                        <div key={idx} className={`relative flex flex-col h-full ${isPopular ? 'scale-105 z-10' : 'z-0'}`}>
+                        <div key={idx} className={`relative flex flex-col w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md ${isPopular ? 'scale-105 z-10' : 'z-0'}`}>
                             {isPopular && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#10B981] text-[#022C22] px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-20">
                                     Most Popular
