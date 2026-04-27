@@ -106,11 +106,11 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
             className="w-full relative overflow-hidden py-20 px-6 md:px-12 flex flex-col justify-center"
             style={{ 
                 backgroundColor: colors.background,
-                minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '100vh'
+                minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
             }}
         >
             {/* Background Grid Pattern */}
-            {data.showBackgroundGrid !== false && (
+            {data.showBackgroundGrid === true && (
                 <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                     style={{
                         backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,

@@ -148,6 +148,8 @@ const createEmptyBrief = (): BusinessBrief => ({
 const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
+    'heroLumina', 'featuresLumina', 'ctaLumina', 'portfolioLumina', 'pricingLumina', 'testimonialsLumina', 'faqLumina',
+    'heroNeon', 'testimonialsNeon', 'featuresNeon', 'ctaNeon', 'portfolioNeon', 'pricingNeon', 'faqNeon',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
@@ -264,7 +266,9 @@ CRITICAL RULES:
 3. After EVERY response, include a hidden brief update tag with ALL currently known information:
    <!--BRIEF:{"businessName":"[GENERATE_TEXT]","industry":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]","tagline":"[GENERATE_TEXT]","services":[{"name":"[GENERATE_TEXT]","description":"[GENERATE_TEXT]"}],"contactInfo":{"email":"[GENERATE_TEXT]","phone":"[GENERATE_TEXT]","address":"[GENERATE_TEXT]","city":"[GENERATE_TEXT]","state":"[GENERATE_TEXT]","country":"[GENERATE_TEXT]","businessHours":"[GENERATE_TEXT]","instagram":"[GENERATE_TEXT]","facebook":"[GENERATE_TEXT]","twitter":"[GENERATE_TEXT]","tiktok":"[GENERATE_TEXT]"},"hasEcommerce":false,"colorPalette":{"primary":"#hex","secondary":"#hex","accent":"#hex","background":"#hex","surface":"#hex","text":"#hex"},"fontPairing":{"header":"[FONT_KEY_FROM_GUIDE]","body":"[FONT_KEY_FROM_GUIDE]","button":"[FONT_KEY_FROM_GUIDE]"},"suggestedComponents":["hero","services","features","testimonials","faq","cta","leads","newsletter","map","signupFloat"],"readinessScore":0,"missingFields":["businessName","industry"],"referenceImageContext":""}-->
 4. Update readinessScore progressively: 0-20 (just started), 20-40 (basic info), 40-60 (good detail), 60-80 (almost ready), 80-100 (ready to generate)
-5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form — use it for lead-capture-heavy industries like Healthcare, Legal, Real Estate, Consulting. Use realEstateListings only for realtor/property websites, and pair it with the existing leads component.
+5. For suggestedComponents, pick from: hero, heroSplit, heroGallery, heroWave, heroNova, heroLead, topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, separator1, separator2, separator3. NEVER include: slideshow, portfolio, team. heroLead is a split hero with integrated lead form. Use realEstateListings only for realtor/property websites, and pair it with the existing leads component.
+   - IF THE USER REQUESTS "Lumina Suite", OR if the industry is related to AI, Luxury, Enterprise, or Data, you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
+   - IF THE USER REQUESTS "Neon Suite", OR if the industry is related to Tech, Gaming, Web3, Cyber, or eSports, you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
 6. Apply your expert color theory knowledge to choose palettes (see COLOR PALETTES section below)
 7. Apply your expert typography knowledge to choose font pairings (see TYPOGRAPHY section below). ALWAYS include fontPairing in the BRIEF tag using the exact font key strings from the available fonts list (e.g. "playfair-display", "space-grotesk", "inter"). Choose fonts that match the industry personality.
 8. When readinessScore >= 80, you MUST do the following:
@@ -320,7 +324,7 @@ EXPERT COLOR THEORY — PALETTE DESIGN RULES
 - Light backgrounds (#fafafa to #ffffff) → Use very dark text (#111827 or #1a1a1a)
 
 **Typography & Component Rules (CRITICAL):**
-- Typography color over any colored background MUST ALWAYS be white (#ffffff), unless it is a specific character detail that requires another color for design reasons.
+- Typography color over any colored background MUST ALWAYS be white (#ffffff), unless it is a specific character detail that requires another color for design reasons. THIS IS EXTREMELY IMPORTANT for the navigation and the Hero section, which must strictly enforce white text over colored backgrounds.
 - The footer background MUST NEVER be white (#ffffff). It must be a solid color or match the header color.
 
 **Modern Palette Trends 2025-2026:**
@@ -1200,6 +1204,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 || finalData.heroGallery?.slides?.[0]?.backgroundImage
                 || finalData.heroWave?.slides?.[0]?.backgroundImage
                 || finalData.heroNova?.slides?.[0]?.backgroundImage
+                || finalData.heroNeon?.slides?.[0]?.imageUrl
                 || '';
 
             if (heroImageForBg) {
@@ -1385,6 +1390,40 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         }
     }
 
+    // heroNeon uses slides[].imageUrl
+    if (componentOrder.includes('heroNeon')) {
+        const heroData = data['heroNeon'];
+        if (heroData && typeof heroData === 'object') {
+            const slides = heroData.slides;
+            if (Array.isArray(slides) && slides.length > 0) {
+                // Only generate image for the first slide
+                if (!slides[0].imageUrl) {
+                    slots.push({
+                        path: `heroNeon.slides.0.imageUrl`,
+                        componentType: 'heroNeon',
+                        context: slides[0].headline || slides[0].subheadline || brief.tagline || brief.businessName,
+                        aspectRatio: '16:9',
+                    });
+                }
+            } else {
+                // No slides array — create one with an empty imageUrl
+                data['heroNeon'].slides = [{
+                    headline: brief.tagline || brief.businessName,
+                    subheadline: brief.description?.substring(0, 80) || '',
+                    primaryCta: 'Get Started',
+                    primaryCtaLink: '/#services',
+                    imageUrl: '',
+                }];
+                slots.push({
+                    path: `heroNeon.slides.0.imageUrl`,
+                    componentType: 'heroNeon',
+                    context: brief.tagline || brief.businessName,
+                    aspectRatio: '16:9',
+                });
+            }
+        }
+    }
+
     // heroWave and heroNova use slides[].backgroundImage (NOT top-level)
     for (const heroKey of ['heroWave', 'heroNova']) {
         if (!componentOrder.includes(heroKey)) continue;
@@ -1510,6 +1549,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
         heroWave: `A hero background with flowing, dynamic composition. Atmospheric, wide angle.`,
         heroNova: `A modern hero image with bold, clean composition. Contemporary feel.`,
         heroLead: `A professional hero background for a lead-capture section. Clean, premium, and trustworthy.`,
+        heroNeon: `A vibrant, high-contrast hero background. Perfect for dark mode, with dynamic colors and deep shadows. Cyber, tech, or premium modern feel.`,
         features: `A detail shot representing this specific feature/benefit. Clean composition, focused subject.`,
         services: `A photo showing this service being performed or its result. Action-oriented, professional.`,
         slideshow: `A showcase image for a slideshow. Immersive, high-impact, telling a story.`,
@@ -1594,7 +1634,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     let filteredComponents = baseComponents.filter(c => !EXCLUDED_COMPONENTS.includes(c));
     
     // Ensure at least one hero variant is always present
-    const hasAnyHero = filteredComponents.some(c => ['hero', 'heroSplit', 'heroWave', 'heroNova', 'heroGallery', 'heroLead'].includes(c));
+    const hasAnyHero = filteredComponents.some(c => c.startsWith('hero'));
     if (!hasAnyHero) {
         filteredComponents.unshift('hero');
     }
@@ -1694,6 +1734,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "ctaText": "${isSpanish ? '¡Comienza Ya!' : 'Get Started'}",
       "ctaUrl": "/#leads",
       "colors": {
+        "background": "[GENERATE HEX COLOR MATCHING BRAND OR DARK THEME — NEVER use white #ffffff]",
+        "text": "#ffffff",
         "buttonBackground": "${brief.colorPalette.accent}",
         "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]",
         "gradientDarkColor": "[IF style IS 'transparent-gradient-dark' THEN generate a DARKER shade of the header background color — NEVER use pure black #000000, ELSE omit]",
@@ -1703,6 +1745,8 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "links": ${JSON.stringify(headerLinks)}
     },`;
 
+    const hasHeroLumina = filteredComponents.includes('heroLumina');
+    const hasHeroNeon = filteredComponents.includes('heroNeon');
     const hasHeroNova = filteredComponents.includes('heroNova');
     const hasHeroWave = filteredComponents.includes('heroWave');
     const hasHeroSplit = filteredComponents.includes('heroSplit');
@@ -1771,9 +1815,59 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "imageUrl": "",
       "imagePosition": "[SELECT: left|right]"
     },`;
-    } else {
+    } else if (hasHeroNeon) {
         componentExamples += `
-    "hero": {
+    "heroNeon": {
+      "slides": [
+        {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "primaryCta": "${isSpanish ? 'Comenzar' : 'Get Started'}", "primaryCtaLink": "/#services", "imageUrl": ""}
+      ],
+      "textPosition": "bottom-left",
+      "showTopDots": true,
+      "dotColors": ["#FF5F56", "#FFBD2E", "#27C93F"],
+      "showNeonLines": true,
+      "neonLineStyle": "stacked",
+      "neonLinePosition": "top-right",
+      "neonLineColors": ["#FF5F56", "#FFBD2E", "#27C93F", "#4A90E2", "#E14EAA"],
+      "glowIntensity": 50,
+      "colors": {
+        "background": "transparent",
+        "text": "#ffffff",
+        "heading": "#ffffff",
+        "neonGlow": "[GENERATE_HEX_COLOR_MATCHING_BRAND]",
+        "cardBackground": "rgba(20, 20, 20, 0.8)",
+        "buttonBackground": "[GENERATE_HEX_COLOR_MATCHING_BRAND]",
+        "buttonText": "#000000"
+      }
+    },`;
+    } else if (hasHeroLumina) {
+        componentExamples += `
+    "heroLumina": {
+      "headline": "[GENERATE_TEXT]",
+      "subheadline": "[GENERATE_TEXT]",
+      "primaryCta": "${isSpanish ? 'Comenzar' : 'Get Started'}",
+      "primaryCtaLink": "/#services",
+      "secondaryCta": "${isSpanish ? 'Saber Más' : 'Learn More'}",
+      "secondaryCtaLink": "/#features",
+      "textLayout": "center",
+      "glassEffect": true,
+      "luminaAnimation": {
+        "enabled": true,
+        "colors": ["[GENERATE_HEX_COLOR]", "[GENERATE_HEX_COLOR]"],
+        "pulseSpeed": 1.0,
+        "interactionStrength": 1.0
+      },
+      "colors": {
+        "panelBackground": "rgba(255, 255, 255, 0.05)",
+        "heading": "#ffffff",
+        "text": "#e2e8f0",
+        "primaryButtonBackground": "[GENERATE_HEX_COLOR]",
+        "primaryButtonText": "#ffffff"
+      }
+    },`;
+    } else {
+        const heroBaseKey = filteredComponents.find(c => c.startsWith('hero') && !['heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroSplit'].includes(c)) || 'hero';
+        componentExamples += `
+    "${heroBaseKey}": {
       "heroVariant": "[SELECT: classic|modern|gradient|cinematic|cinematic-gym|minimal|overlap|verticalSplit|stacked]",
       "headline": "[GENERATE_TEXT]",
       "subheadline": "[GENERATE_TEXT]",
@@ -1791,7 +1885,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         : '{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Star"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Zap"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Heart"}';
 
     componentExamples += `
-    "services": {
+    "${filteredComponents.find(c => c.startsWith('services')) || 'services'}": {
       "servicesVariant": "[SELECT: cards|grid|minimal]",
       "title": "${isSpanish ? 'Nuestros Servicios' : 'Our Services'}",
       "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 10, "size": 40},
@@ -1799,7 +1893,44 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     },`;
 
     componentExamples += `
-    "features": {
+`;
+
+    const featuresKey = filteredComponents.find(c => c.startsWith('features')) || 'features';
+    if (hasHeroNeon && featuresKey === 'featuresNeon') {
+        componentExamples += `
+    "featuresNeon": {
+      "headline": "${isSpanish ? 'Características' : 'Features'}",
+      "subheadline": "[GENERATE_TEXT]",
+      "glassEffect": true,
+      "glowIntensity": 50,
+      "showTopDots": true,
+      "showBackgroundGrid": true,
+      "colors": { "background": "${brief.colorPalette.background}", "heading": "#ffffff", "text": "#a1a1aa", "cardBackground": "#141414", "neonGlow": "${brief.colorPalette.accent}" },
+      "features": [
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": ""}
+      ]
+    },`;
+    } else if (hasHeroLumina && featuresKey === 'featuresLumina') {
+        componentExamples += `
+    "featuresLumina": {
+      "headline": "${isSpanish ? 'Características' : 'Features'}",
+      "subheadline": "[GENERATE_TEXT]",
+      "glassEffect": true,
+      "luminaAnimation": { "enabled": true, "colors": ["${brief.colorPalette.primary}", "${brief.colorPalette.secondary}"], "pulseSpeed": 1.0, "interactionStrength": 1.0 },
+      "colors": { "background": "${brief.colorPalette.background}", "heading": "#ffffff", "text": "#e2e8f0", "panelBackground": "rgba(255, 255, 255, 0.05)" },
+      "features": [
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Award", "image": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Heart", "image": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "CheckCircle", "image": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Star", "image": ""}
+      ]
+    },`;
+    } else {
+        componentExamples += `
+    "${featuresKey}": {
       "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay]",
       "gridColumns": "[IF featuresVariant IS 'image-overlay' THEN select 4 ELSE select 2 or 3]",
       "title": "${isSpanish ? 'Características' : 'Features'}",
@@ -1812,6 +1943,9 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Star", "imageUrl": ""}
       ]
     },`;
+    }
+
+    componentExamples += ``;
 
     if (hasMenu) {
         componentExamples += `
@@ -1839,14 +1973,74 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     const fullMapAddress = mapAddressParts.join(', ') || 'Business Address';
 
     componentExamples += `
-    "howItWorks": {"title": "${isSpanish ? 'Cómo Funciona' : 'How It Works'}", "description": "[GENERATE_TEXT]", "steps": 3, "items": [{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "magic-wand"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "process"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "check"}]},
-    "testimonials": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}]},
-    "faq": {"faqVariant": "[SELECT: classic|cards|gradient|minimal]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},
-    "cta": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]", "secondaryText": "[GENERATE_TEXT]"},
-    "leads": {"leadsVariant": "[SELECT: classic|split-gradient|floating-glass|minimal-border]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 20, "size": 50}, "buttonText": "[GENERATE_TEXT]", "fields": [{"label": "${isSpanish ? 'Nombre' : 'Name'}", "type": "text", "placeholder": "[GENERATE_TEXT]"}, {"label": "Email", "type": "email", "placeholder": "[GENERATE_TEXT]"}]},
+    "${filteredComponents.find(c => c.startsWith('howItWorks')) || 'howItWorks'}": {"title": "${isSpanish ? 'Cómo Funciona' : 'How It Works'}", "description": "[GENERATE_TEXT]", "steps": 3, "items": [{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "magic-wand"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "process"}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "check"}]},
+    "${filteredComponents.find(c => c.startsWith('leads')) || 'leads'}": {"leadsVariant": "[SELECT: classic|split-gradient|floating-glass|minimal-border]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 20, "size": 50}, "buttonText": "[GENERATE_TEXT]", "fields": [{"label": "${isSpanish ? 'Nombre' : 'Name'}", "type": "text", "placeholder": "[GENERATE_TEXT]"}, {"label": "Email", "type": "email", "placeholder": "[GENERATE_TEXT]"}]},`;
+
+    const testimonialsKey = filteredComponents.find(c => c.startsWith('testimonials')) || 'testimonials';
+    if (hasHeroNeon && testimonialsKey === 'testimonialsNeon') {
+        componentExamples += `
+    "testimonialsNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "showNeonLines": true, "glowIntensity": 50, "colors": {"background": "${brief.colorPalette.background}", "cardBackground": "#141414", "neonGlow": "${brief.colorPalette.accent}"}, "testimonials": [{"quote": "[GENERATE_TEXT]", "author": "[GENERATE_TEXT]", "role": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "author": "[GENERATE_TEXT]", "role": "[GENERATE_TEXT]"}]},`;
+    } else if (hasHeroLumina && testimonialsKey === 'testimonialsLumina') {
+        componentExamples += `
+    "testimonialsLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "testimonials": [{"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}]},`;
+    } else {
+        componentExamples += `
+    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]"}]},`;
+    }
+
+    const faqKey = filteredComponents.find(c => c.startsWith('faq')) || 'faq';
+    if (hasHeroNeon && faqKey === 'faqNeon') {
+        componentExamples += `
+    "faqNeon": {"headline": "FAQ", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "colors": {"background": "${brief.colorPalette.background}", "cardBackground": "#141414", "neonGlow": "${brief.colorPalette.accent}"}, "faqs": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
+    } else if (hasHeroLumina && faqKey === 'faqLumina') {
+        componentExamples += `
+    "faqLumina": {"headline": "FAQ", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "faqs": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
+    } else {
+        componentExamples += `
+    "${faqKey}": {"faqVariant": "[SELECT: classic|cards|gradient|minimal]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
+    }
+
+    const ctaKey = filteredComponents.find(c => c.startsWith('cta')) || 'cta';
+    if (hasHeroNeon && ctaKey === 'ctaNeon') {
+        componentExamples += `
+    "ctaNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "primaryCta": "[GENERATE_TEXT]", "secondaryCta": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "colors": {"background": "${brief.colorPalette.background}", "cardBackground": "#141414", "neonGlow": "${brief.colorPalette.accent}"}},`;
+    } else if (hasHeroLumina && ctaKey === 'ctaLumina') {
+        componentExamples += `
+    "ctaLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "primaryCta": "[GENERATE_TEXT]", "secondaryCta": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}},`;
+    } else {
+        componentExamples += `
+    "${ctaKey}": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]", "secondaryText": "[GENERATE_TEXT]"},`;
+    }
+
+    const portfolioKey = filteredComponents.find(c => c.startsWith('portfolio')) || 'portfolio';
+    if (hasHeroNeon && portfolioKey === 'portfolioNeon') {
+        componentExamples += `
+    "portfolioNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    } else if (hasHeroLumina && portfolioKey === 'portfolioLumina') {
+        componentExamples += `
+    "portfolioLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    } else {
+        componentExamples += `
+    "${portfolioKey}": {"title": "[GENERATE_TEXT]", "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    }
+
+    const pricingKey = filteredComponents.find(c => c.startsWith('pricing')) || 'pricing';
+    if (hasHeroNeon && pricingKey === 'pricingNeon') {
+        componentExamples += `
+    "pricingNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "period": "/mo", "description": "[GENERATE_TEXT]", "features": ["[GENERATE_TEXT]"], "isPopular": true, "buttonText": "[GENERATE_TEXT]"}]},`;
+    } else if (hasHeroLumina && pricingKey === 'pricingLumina') {
+        componentExamples += `
+    "pricingLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "period": "/mo", "description": "[GENERATE_TEXT]", "features": ["[GENERATE_TEXT]"], "isPopular": true, "buttonText": "[GENERATE_TEXT]"}]},`;
+    } else {
+        componentExamples += `
+    "${pricingKey}": {"title": "[GENERATE_TEXT]", "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "features": ["[GENERATE_TEXT]"], "isPopular": true}]},`;
+    }
+
+    componentExamples += `
     "realEstateListings": {"title": "${isSpanish ? 'Propiedades destacadas' : 'Featured properties'}", "subtitle": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Solicitar información' : 'Request information'}", "buttonLink": "#leads", "maxItems": 6, "featuredOnly": false, "showPrice": true, "showLocation": true, "showStats": true, "showDescription": true, "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "text": "${brief.colorPalette.text}", "textMuted": "${brief.colorPalette.text}99", "accent": "${brief.colorPalette.primary}", "cardBackground": "${brief.colorPalette.surface}", "border": "${brief.colorPalette.surface}", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff"}},
     "banner": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Ver Más' : 'Learn More'}", "backgroundImageUrl": "", "overlayEnabled": true, "backgroundOverlayOpacity": 50, "height": 400},
     "newsletter": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]"},
+        "logoBanner": {"title": "${isSpanish ? 'Confían en nosotros' : 'Trusted By'}", "scrollEnabled": true, "scrollSpeed": 30, "pauseOnHover": true, "grayscale": true, "useGradient": false, "logos": [{"imageUrl": "", "alt": "Logo 1"}, {"imageUrl": "", "alt": "Logo 2"}, {"imageUrl": "", "alt": "Logo 3"}, {"imageUrl": "", "alt": "Logo 4"}, {"imageUrl": "", "alt": "Logo 5"}]},
     "map": {"title": "${isSpanish ? 'Ubicación' : 'Location'}", "description": "${isSpanish ? 'Encuéntranos aquí' : 'Find us here'}", "address": "${fullMapAddress}", "city": "${safeStr(brief.contactInfo?.city || '')}", "state": "${safeStr(brief.contactInfo?.state || '')}", "lat": 0, "lng": 0, "zoom": 15, "mapVariant": "[SELECT: modern|minimal|dark-tech|night]", "height": 400, "phone": "${safeStr(brief.contactInfo?.phone || '')}", "email": "${safeStr(brief.contactInfo?.email || '')}", "businessHours": "${isSpanish ? 'Lun-Vie 9:00-18:00' : 'Mon-Fri 9:00AM-6:00PM'}", "buttonText": "${isSpanish ? 'Cómo Llegar' : 'Get Directions'}"},
     "footer": {"title": "${safeStr(brief.businessName)}", "description": "${isSpanish ? 'Síguenos en nuestras redes' : 'Follow us on social media'}", "linkColumns": [{"title": "Enlaces", "links": [{"text": "Inicio", "url": "/"}, {"text": "Servicios", "url": "/#services"}]}], "contactInfo": {"address": "${safeStr(brief.contactInfo?.address || '')}", "phone": "${safeStr(brief.contactInfo?.phone || '')}", "businessHours": {"monday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "tuesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "wednesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "thursday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "friday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}}}, "socialLinks": [{"platform": "facebook", "href": "https://facebook.com"}, {"platform": "instagram", "href": "https://instagram.com"}, {"platform": "whatsapp", "href": "https://wa.me/${(brief.contactInfo?.phone || '').replace(/[^0-9]/g, '')}"}]},
     "signupFloat": {"headerText": "[GENERATE_TEXT]", "descriptionText": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Registrarse' : 'Sign Up'}"}`;
@@ -1931,6 +2125,11 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.header.style) data.header.style = 'floating-glass';
         if (!data.header.layout) data.header.layout = 'minimal';
         if (data.header.isSticky === undefined) data.header.isSticky = true;
+
+        // Enforce white text for navigation
+        if (!data.header.colors) data.header.colors = {};
+        data.header.colors.text = '#ffffff';
+
         // Normalize: AI may generate 'navLinks' but HeaderData uses 'links'
         if (data.header.navLinks && !data.header.links) {
             data.header.links = data.header.navLinks;
@@ -1980,7 +2179,8 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
 
     // Hero defaults
     // Standard hero variants: use headline/subheadline/primaryCta (matching HeroData)
-    for (const heroKey of ['hero', 'heroSplit', 'heroWave', 'heroNova', 'heroLead']) {
+    const heroKeys = Object.keys(data).filter(k => k.startsWith('hero'));
+    for (const heroKey of heroKeys) {
         const hero = data[heroKey];
         if (hero && typeof hero === 'object') {
             // Normalize: if AI used title/subtitle, convert to headline/subheadline
@@ -2088,6 +2288,62 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.cta.title) data.cta.title = isSpanish ? '¿Listo para Comenzar?' : 'Ready to Get Started?';
         if (!data.cta.description) data.cta.description = brief.description?.substring(0, 120) || '';
         if (!data.cta.buttonText) data.cta.buttonText = isSpanish ? 'Contáctanos' : 'Contact Us';
+    }
+
+    // --- Neon & Lumina Completeness Fallbacks ---
+    const neonLuminaKeys = [
+        'featuresNeon', 'featuresLumina',
+        'ctaNeon', 'ctaLumina',
+        'portfolioNeon', 'portfolioLumina',
+        'pricingNeon', 'pricingLumina',
+        'testimonialsNeon', 'testimonialsLumina',
+        'faqNeon', 'faqLumina'
+    ];
+    
+    neonLuminaKeys.forEach(key => {
+        if (data[key] && typeof data[key] === 'object') {
+            if (!data[key].headline) data[key].headline = key.replace(/Neon|Lumina/, '');
+            
+            // Fix arrays
+            if (key.startsWith('features') && (!data[key].features || !Array.isArray(data[key].features))) {
+                data[key].features = data[key].items || [
+                    { title: 'Feature 1', description: 'Description 1' },
+                    { title: 'Feature 2', description: 'Description 2' }
+                ];
+            }
+            if (key.startsWith('portfolio') && (!data[key].projects || !Array.isArray(data[key].projects))) {
+                data[key].projects = data[key].items || [
+                    { title: 'Project 1', category: 'Category' }
+                ];
+            }
+            if (key.startsWith('pricing') && (!data[key].tiers || !Array.isArray(data[key].tiers))) {
+                data[key].tiers = data[key].items || [
+                    { name: 'Basic', price: '$10', features: ['Feature 1'] }
+                ];
+            }
+            if (key.startsWith('testimonials') && (!data[key].testimonials || !Array.isArray(data[key].testimonials))) {
+                data[key].testimonials = data[key].items || [
+                    { quote: 'Great!', author: 'John Doe', authorName: 'John Doe', role: 'CEO', authorRole: 'CEO' }
+                ];
+            }
+            if (key.startsWith('faq') && (!data[key].faqs || !Array.isArray(data[key].faqs))) {
+                data[key].faqs = data[key].items || [
+                    { question: 'Question?', answer: 'Answer.' }
+                ];
+            }
+        }
+    });
+
+    // LogoBanner defaults
+    if (data.logoBanner && typeof data.logoBanner === 'object') {
+        if (!data.logoBanner.logos || !Array.isArray(data.logoBanner.logos) || data.logoBanner.logos.length === 0) {
+            data.logoBanner.logos = [
+                { imageUrl: '', alt: 'Logo 1' },
+                { imageUrl: '', alt: 'Logo 2' },
+                { imageUrl: '', alt: 'Logo 3' },
+                { imageUrl: '', alt: 'Logo 4' }
+            ];
+        }
     }
 
     // Footer defaults

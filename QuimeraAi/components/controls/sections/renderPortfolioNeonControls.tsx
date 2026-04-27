@@ -143,7 +143,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                 </label>
                 <SliderControl
                     label={t('editor.controls.sectionHeight', 'Altura de la Sección (vh)')}
-                    value={sectionData.sectionHeight || 100}
+                    value={sectionData.sectionHeight || 60}
                     onChange={(v) => setNestedData('portfolioNeon.sectionHeight', v)}
                     min={50} max={120} step={5} suffix="vh"
                 />
@@ -176,7 +176,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                 />
                 <ToggleControl
                     label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid !== false}
+                    checked={sectionData.showBackgroundGrid === true}
                     onChange={(checked) => setNestedData('portfolioNeon.showBackgroundGrid', checked)}
                 />
                 <TopDotsControl sectionKey="portfolioNeon" data={data} setNestedData={setNestedData} />

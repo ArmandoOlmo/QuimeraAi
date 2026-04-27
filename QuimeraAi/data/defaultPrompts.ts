@@ -116,6 +116,10 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 - banner: Promotional banner [variants: classic, gradient-overlay, side-text, centered]
 - footer: Site footer (REQUIRED - always last)
 
+**DESIGN SUITE RULES:**
+- IF THE USER REQUESTS "Lumina Suite" OR "Lumina Style", you MUST exclusively use Lumina components (heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina) instead of the standard ones.
+- IF THE USER REQUESTS "Neon Suite" OR "Neon Style", you MUST exclusively use Neon components (heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon) instead of the standard ones.
+
 ═══════════════════════════════════════════════════════════
 EXPERT COLOR THEORY — PALETTE DESIGN
 ═══════════════════════════════════════════════════════════
@@ -248,6 +252,7 @@ Generate a JSON object defining the visual strategy.
 - features.featuresVariant: 'classic' | 'modern' | 'bento-premium' | 'image-overlay'
 - portfolio.portfolioVariant: 'classic' | 'image-overlay'
 - testimonials.testimonialsVariant: 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'floating-cards'
+- NOTE: If the component is a Lumina or Neon component (e.g., heroNeon, featuresLumina), DO NOT use the standard variant keys like heroVariant or featuresVariant. They represent their own unique standalone suite architecture.
 - pricing.pricingVariant: 'classic' | 'gradient' | 'glassmorphism' | 'minimalist'
 - faq.faqVariant: 'classic' | 'cards' | 'gradient' | 'minimal'
 - services.servicesVariant: 'cards' | 'grid' | 'minimal'

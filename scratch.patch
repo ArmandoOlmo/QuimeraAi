@@ -1,0 +1,11 @@
+--- QuimeraAi/types/ui.ts
++++ QuimeraAi/types/ui.ts
+@@ -49,6 +49,8 @@
+     | 'menu' | 'banner' | 'topBar' | 'logoBanner' | 'products' | 'cmsFeed' | 'signupFloat'
+     | 'separator1' | 'separator2' | 'separator3' | 'separator4' | 'separator5'
+     // Lumina sections
+     | 'heroLumina' | 'featuresLumina' | 'ctaLumina' | 'portfolioLumina' | 'pricingLumina' | 'testimonialsLumina' | 'faqLumina'
++    // Neon suite
++    | 'heroNeon'
+     // Store settings
+     | 'storeSettings'

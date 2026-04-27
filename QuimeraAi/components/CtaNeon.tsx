@@ -59,7 +59,7 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
             }}
         >
             {/* Background Grid Pattern */}
-            {data.showBackgroundGrid !== false && (
+            {data.showBackgroundGrid === true && (
                 <div className="absolute inset-0 z-0 opacity-10 pointer-events-none"
                     style={{
                         backgroundImage: `linear-gradient(${neonColor} 1px, transparent 1px), linear-gradient(90deg, ${neonColor} 1px, transparent 1px)`,

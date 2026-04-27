@@ -111,7 +111,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                 </label>
                 <SliderControl
                     label={t('editor.controls.sectionHeight', 'Altura de la Sección (vh)')}
-                    value={sectionData.sectionHeight || 100}
+                    value={sectionData.sectionHeight || 60}
                     onChange={(v) => setNestedData('testimonialsNeon.sectionHeight', v)}
                     min={50} max={120} step={5} suffix="vh"
                 />
@@ -144,7 +144,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                 />
                 <ToggleControl
                     label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid !== false}
+                    checked={sectionData.showBackgroundGrid === true}
                     onChange={(checked) => setNestedData('testimonialsNeon.showBackgroundGrid', checked)}
                 />
                 <TopDotsControl sectionKey="testimonialsNeon" data={data} setNestedData={setNestedData} />

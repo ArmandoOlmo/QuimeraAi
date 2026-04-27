@@ -74,7 +74,7 @@ const RestaurantReservationComponent = lazy(() => import('./RestaurantReservatio
 
 // Lumina components
 const HeroLumina = lazy(() => import('./HeroLumina'));
-const HeroNeon = lazy(() => import('./HeroNeon'));
+
 const FeaturesLumina = lazy(() => import('./FeaturesLumina'));
 const CtaLumina = lazy(() => import('./CtaLumina'));
 const PortfolioLumina = lazy(() => import('./PortfolioLumina'));
@@ -1664,6 +1664,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Get projectId for store components - use the loaded project's ID
   // This works correctly for both preview URLs and custom domains
   const storeProjectId = project?.id || propProjectId || getIdsFromURL().projectId;
+  const storeUserId = project?.userId || propUserId || getIdsFromURL().userId;
 
   /**
    * Verifica si un componente de ecommerce debe mostrarse en el landing page público

@@ -223,7 +223,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                 />
                 <ToggleControl
                     label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid !== false}
+                    checked={sectionData.showBackgroundGrid === true}
                     onChange={(checked) => setNestedData('ctaNeon.showBackgroundGrid', checked)}
                 />
                 <TopDotsControl sectionKey="ctaNeon" data={data} setNestedData={setNestedData} />

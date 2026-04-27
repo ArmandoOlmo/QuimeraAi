@@ -919,13 +919,116 @@ export const generateContent = functions.runWith({ timeoutSeconds: 540, memory: 
         const tools: any[] | undefined = req.body.tools;
 
         // ============================================================
-        // OPENROUTER: Primary AI provider for ALL requests
-        // Uses OpenAI-compatible format with vision support for images
-        // Falls back to direct Gemini API only if OpenRouter is not configured
+        // PRIMARY: Direct Gemini API (with OpenRouter fallback)
         // ============================================================
-        const useOpenRouter = OPENROUTER_CONFIG.enabled;
+        let geminiError: any = null;
+        let tryOpenRouterFallback = false;
 
-        if (useOpenRouter) {
+        const apiKey = GEMINI_CONFIG.apiKey;
+
+        if (apiKey) {
+            // --- Direct Gemini API path ---
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+            console.log(`[gemini-generate] Direct Gemini request: model=${model}, prompt length: ${prompt.length}, images: ${images.length}`);
+
+            // Build content parts (text + optional images)
+            const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+            parts.push({ text: prompt });
+            for (const img of images) {
+                parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
+            }
+
+            let contents: any[];
+            if (history.length > 0) {
+                contents = history.map((msg: { role: string; text: string }) => ({
+                    role: msg.role === 'model' ? 'model' : 'user',
+                    parts: [{ text: sanitizeString(msg.text, 50000) }]
+                }));
+                contents.push({ role: 'user', parts });
+                console.log(`[gemini-generate] Multi-turn request with ${history.length} history messages`);
+            } else {
+                contents = [{ parts }];
+            }
+
+            const generationConfig: Record<string, any> = {
+                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
+                topK: Math.min(Math.max(config.topK || 40, 1), 100),
+                topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
+                maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
+            };
+
+            if (config.responseMimeType) {
+                generationConfig.responseMimeType = config.responseMimeType;
+            }
+
+            if (config.thinkingLevel && ['minimal', 'low', 'medium', 'high'].includes(config.thinkingLevel)) {
+                generationConfig.thinkingConfig = { thinkingLevel: config.thinkingLevel.toUpperCase() };
+            }
+
+            const requestBody: Record<string, any> = {
+                contents,
+                generationConfig,
+                safetySettings: [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
+                ]
+            };
+
+            if (systemInstruction) {
+                requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
+            }
+
+            if (Array.isArray(tools) && tools.length > 0) {
+                requestBody.tools = tools.slice(0, 64);
+            }
+
+            try {
+                const geminiResponse = await fetch(geminiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!geminiResponse.ok) {
+                    const errorText = await geminiResponse.text();
+                    let errorData: any = {};
+                    try { errorData = JSON.parse(errorText); } catch { errorData = { rawError: errorText }; }
+                    console.error(`[gemini-generate] Gemini API error (${geminiResponse.status}):`, JSON.stringify(errorData));
+                    throw new Error(JSON.stringify({ status: geminiResponse.status, data: errorData }));
+                }
+
+                const data = await geminiResponse.json();
+                const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
+                trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
+
+                res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
+                res.status(200).json({
+                    response: data,
+                    metadata: {
+                        tokensUsed,
+                        model,
+                        provider: 'gemini-direct',
+                        remaining: rateLimitCheck.remaining
+                    }
+                });
+                return;
+            } catch (error: any) {
+                console.error(`[gemini-generate] Gemini API failed, attempting fallback to OpenRouter... Error:`, error.message);
+                geminiError = error.message;
+                tryOpenRouterFallback = true;
+            }
+        } else {
+            console.warn('[gemini-generate] GEMINI_API_KEY not configured, falling back to OpenRouter');
+            tryOpenRouterFallback = true;
+        }
+
+        // ============================================================
+        // FALLBACK: OpenRouter
+        // ============================================================
+        if (tryOpenRouterFallback && OPENROUTER_CONFIG.enabled) {
             // --- OpenRouter path (OpenAI-compatible with vision) ---
             const orModel = mapModelToOpenRouter(model);
             console.log(`[gemini-generate] OpenRouter request: model=${orModel} (from ${model}), prompt length: ${prompt.length}, images: ${images.length}`);
@@ -1046,108 +1149,30 @@ export const generateContent = functions.runWith({ timeoutSeconds: 540, memory: 
                     remaining: rateLimitCheck.remaining
                 }
             });
+            return;
 
-        } else {
-            // --- Direct Gemini API path (fallback for multimodal or no OpenRouter key) ---
-            const apiKey = GEMINI_CONFIG.apiKey;
-
-            if (!apiKey) {
-                console.error('[GeminiProxy] GEMINI_API_KEY not configured in .env');
-                res.status(500).json({ error: 'API configuration error' });
-                return;
-            }
-
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-            console.log(`[gemini-generate] Direct Gemini request: model=${model}, prompt length: ${prompt.length}, images: ${images.length}`);
-
-            // Build content parts (text + optional images)
-            const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-            parts.push({ text: prompt });
-            for (const img of images) {
-                parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
-            }
-
-            let contents: any[];
-            if (history.length > 0) {
-                contents = history.map((msg: { role: string; text: string }) => ({
-                    role: msg.role === 'model' ? 'model' : 'user',
-                    parts: [{ text: sanitizeString(msg.text, 50000) }]
-                }));
-                contents.push({ role: 'user', parts });
-                console.log(`[gemini-generate] Multi-turn request with ${history.length} history messages`);
-            } else {
-                contents = [{ parts }];
-            }
-
-            const generationConfig: Record<string, any> = {
-                temperature: Math.min(Math.max(config.temperature || 0.7, 0), 2),
-                topK: Math.min(Math.max(config.topK || 40, 1), 100),
-                topP: Math.min(Math.max(config.topP || 0.95, 0), 1),
-                maxOutputTokens: Math.min(config.maxOutputTokens || 8192, 32000),
-            };
-
-            if (config.responseMimeType) {
-                generationConfig.responseMimeType = config.responseMimeType;
-            }
-
-            if (config.thinkingLevel && ['minimal', 'low', 'medium', 'high'].includes(config.thinkingLevel)) {
-                generationConfig.thinkingConfig = { thinkingLevel: config.thinkingLevel.toUpperCase() };
-            }
-
-            const requestBody: Record<string, any> = {
-                contents,
-                generationConfig,
-                safetySettings: [
-                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
-                ]
-            };
-
-            if (systemInstruction) {
-                requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
-            }
-
-            if (Array.isArray(tools) && tools.length > 0) {
-                requestBody.tools = tools.slice(0, 64);
-            }
-
-            const geminiResponse = await fetch(geminiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!geminiResponse.ok) {
-                const errorText = await geminiResponse.text();
-                let errorData: any = {};
-                try { errorData = JSON.parse(errorText); } catch { errorData = { rawError: errorText }; }
-                console.error(`[gemini-generate] Gemini API error (${geminiResponse.status}):`, JSON.stringify(errorData));
-                res.status(geminiResponse.status).json({
-                    error: 'Gemini API error',
-                    details: errorData,
-                    model: model,
-                    status: geminiResponse.status
-                });
-                return;
-            }
-
-            const data = await geminiResponse.json();
-            const tokensUsed = data.usageMetadata?.totalTokenCount || 0;
-            trackUsage(projectId, finalUserId, tokensUsed, model).catch(console.error);
-
-            res.set('X-RateLimit-Remaining', String(rateLimitCheck.remaining || 0));
-            res.status(200).json({
-                response: data,
-                metadata: {
-                    tokensUsed,
-                    model,
-                    provider: 'gemini-direct',
-                    remaining: rateLimitCheck.remaining
+        } else if (tryOpenRouterFallback) {
+            // Neither succeeded or OpenRouter was not enabled
+            let parsedError: any = {};
+            let status = 500;
+            try {
+                if (geminiError) {
+                    const parsed = JSON.parse(geminiError);
+                    status = parsed.status || 500;
+                    parsedError = parsed.data || {};
+                } else {
+                    parsedError = { message: 'API configuration error' };
                 }
+            } catch {
+                parsedError = { message: geminiError || 'API configuration error' };
+            }
+            res.status(status).json({
+                error: 'Gemini API error',
+                details: parsedError,
+                model: model,
+                status: status
             });
+            return;
         }
 
     } catch (error) {

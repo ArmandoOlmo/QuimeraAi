@@ -356,6 +356,16 @@ const AVAILABLE_COMPONENTS: { key: PageSection; label: string }[] = [
     { key: 'team', label: 'Team' },
     { key: 'separator1', label: 'Separator 1' }, { key: 'separator2', label: 'Separator 2' },
     { key: 'separator3', label: 'Separator 3' },
+    // Lumina Suite
+    { key: 'heroLumina', label: 'Hero Lumina' }, { key: 'featuresLumina', label: 'Features Lumina' },
+    { key: 'ctaLumina', label: 'CTA Lumina' }, { key: 'portfolioLumina', label: 'Portfolio Lumina' },
+    { key: 'pricingLumina', label: 'Pricing Lumina' }, { key: 'testimonialsLumina', label: 'Testimonials Lumina' },
+    { key: 'faqLumina', label: 'FAQ Lumina' },
+    // Neon Suite
+    { key: 'heroNeon', label: 'Hero Neon' }, { key: 'testimonialsNeon', label: 'Testimonials Neon' },
+    { key: 'featuresNeon', label: 'Features Neon' }, { key: 'ctaNeon', label: 'CTA Neon' },
+    { key: 'portfolioNeon', label: 'Portfolio Neon' }, { key: 'pricingNeon', label: 'Pricing Neon' },
+    { key: 'faqNeon', label: 'FAQ Neon' },
 ];
 
 const COLOR_KEYS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text'] as const;
@@ -412,6 +422,36 @@ const BriefPanel: React.FC<{
                     <MessageSquare size={14} className="text-editor-accent" />
                     {t('aiWebsiteStudio.briefPanel.title')}
                 </h3>
+            </div>
+
+            {/* Generate Button */}
+            <div className="pb-2">
+                <button
+                    onClick={onGenerate}
+                    disabled={!canGenerate || isGenerating}
+                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        canGenerate && !isGenerating
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 cursor-pointer'
+                            : 'bg-editor-border/40 text-editor-text-secondary/40 cursor-not-allowed'
+                    }`}
+                >
+                    {isGenerating ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" />
+                            {t('aiWebsiteStudio.briefPanel.generating')}
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles size={16} />
+                            {t('aiWebsiteStudio.briefPanel.generateButton')}
+                        </>
+                    )}
+                </button>
+                {!canGenerate && !isGenerating && (
+                    <p className="text-center text-[10px] text-editor-text-secondary/50 mt-2">
+                        {t('aiWebsiteStudio.briefPanel.keepChatting')}
+                    </p>
+                )}
             </div>
 
             {/* Readiness Score */}
@@ -610,36 +650,6 @@ const BriefPanel: React.FC<{
                     </div>
                 )}
             </BriefSection>
-
-            {/* Generate Button */}
-            <div className="pt-2 mt-auto">
-                <button
-                    onClick={onGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                        canGenerate && !isGenerating
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 cursor-pointer'
-                            : 'bg-editor-border/40 text-editor-text-secondary/40 cursor-not-allowed'
-                    }`}
-                >
-                    {isGenerating ? (
-                        <>
-                            <Loader2 size={16} className="animate-spin" />
-                            {t('aiWebsiteStudio.briefPanel.generating')}
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles size={16} />
-                            {t('aiWebsiteStudio.briefPanel.generateButton')}
-                        </>
-                    )}
-                </button>
-                {!canGenerate && !isGenerating && (
-                    <p className="text-center text-[10px] text-editor-text-secondary/50 mt-2">
-                        {t('aiWebsiteStudio.briefPanel.keepChatting')}
-                    </p>
-                )}
-            </div>
         </div>
     );
 };

@@ -470,6 +470,8 @@ export const TopDotsControl: React.FC<{
   setNestedData: (path: string, value: any) => void;
 }> = ({ sectionKey, data, setNestedData }) => {
   const sectionData = data?.[sectionKey] || {};
+  const dotColors = sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F'];
+
   return (
     <div className="space-y-2 mt-4 pt-4 border-t border-editor-border/50">
       <ToggleControl
@@ -478,23 +480,42 @@ export const TopDotsControl: React.FC<{
         onChange={(v) => setNestedData(`${sectionKey}.showTopDots`, v)}
       />
       {sectionData.showTopDots !== false && (
-        <div className="space-y-2 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
-          <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots</label>
-          <div className="flex flex-wrap gap-2">
-            {(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F']).slice(0, 3).map((color: string, i: number) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <ColorControl
-                  label=""
-                  compact={true}
-                  value={color}
-                  onChange={(newColor) => {
-                    const newColors = [...(sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F'])];
-                    newColors[i] = newColor;
-                    setNestedData(`${sectionKey}.dotColors`, newColors);
-                  }}
-                />
-              </div>
-            ))}
+        <div className="space-y-4 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+          <SliderControl
+            label="Cantidad de Dots"
+            value={dotColors.length}
+            onChange={(v) => {
+              const newColors = [...dotColors];
+              if (v > newColors.length) {
+                const lastColor = newColors[newColors.length - 1] || '#ffffff';
+                while (newColors.length < v) {
+                  newColors.push(lastColor);
+                }
+              } else if (v < newColors.length) {
+                newColors.length = v;
+              }
+              setNestedData(`${sectionKey}.dotColors`, newColors);
+            }}
+            min={1} max={10} step={1}
+          />
+          <div className="space-y-2">
+            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots</label>
+            <div className="flex flex-wrap gap-2">
+              {dotColors.map((color: string, i: number) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <ColorControl
+                    label=""
+                    compact={true}
+                    value={color}
+                    onChange={(newColor) => {
+                      const newColors = [...dotColors];
+                      newColors[i] = newColor;
+                      setNestedData(`${sectionKey}.dotColors`, newColors);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

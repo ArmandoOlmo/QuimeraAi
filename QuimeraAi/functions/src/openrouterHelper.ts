@@ -89,63 +89,72 @@ export async function generateTextViaOpenRouter(
     // Gemini REST API path (primary)
     // ------------------------------------------------------------------ //
     const apiKey = GEMINI_CONFIG.apiKey;
+    let geminiError: any = null;
+
     if (apiKey) {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        try {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        // Build contents
-        const contents: any[] = [];
+            // Build contents
+            const contents: any[] = [];
 
-        if (opts.history && opts.history.length > 0) {
-            for (const msg of opts.history) {
-                contents.push({
-                    role: msg.role === 'model' ? 'model' : 'user',
-                    parts: [{ text: msg.text }],
-                });
+            if (opts.history && opts.history.length > 0) {
+                for (const msg of opts.history) {
+                    contents.push({
+                        role: msg.role === 'model' ? 'model' : 'user',
+                        parts: [{ text: msg.text }],
+                    });
+                }
             }
+
+            contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+            const requestBody: Record<string, any> = {
+                contents,
+                generationConfig: { temperature, maxOutputTokens: maxTokens },
+            };
+
+            if (opts.systemInstruction) {
+                requestBody.system_instruction = { parts: [{ text: opts.systemInstruction }] };
+            }
+
+            const geminiResponse = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody),
+            });
+
+            if (!geminiResponse.ok) {
+                const errorText = await geminiResponse.text();
+                throw new Error(`Gemini API error: ${geminiResponse.status} - ${errorText}`);
+            }
+
+            const geminiData = await geminiResponse.json();
+            const text =
+                geminiData?.candidates?.[0]?.content?.parts
+                    ?.map((p: any) => p.text)
+                    .filter(Boolean)
+                    .join('') || '';
+            const tokensUsed = geminiData?.usageMetadata?.totalTokenCount || 0;
+
+            return { text, tokensUsed, provider: 'gemini-direct' };
+        } catch (error) {
+            console.error('[OpenRouterHelper] Gemini API failed, attempting fallback...', error);
+            geminiError = error;
         }
-
-        contents.push({ role: 'user', parts: [{ text: prompt }] });
-
-        const requestBody: Record<string, any> = {
-            contents,
-            generationConfig: { temperature, maxOutputTokens: maxTokens },
-        };
-
-        if (opts.systemInstruction) {
-            requestBody.system_instruction = { parts: [{ text: opts.systemInstruction }] };
-        }
-
-        const geminiResponse = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            console.error('[OpenRouterHelper] Gemini API error:', errorText);
-            throw new Error(`Gemini API error: ${geminiResponse.status}`);
-        }
-
-        const geminiData = await geminiResponse.json();
-        const text =
-            geminiData?.candidates?.[0]?.content?.parts
-                ?.map((p: any) => p.text)
-                .filter(Boolean)
-                .join('') || '';
-        const tokensUsed = geminiData?.usageMetadata?.totalTokenCount || 0;
-
-        return { text, tokensUsed, provider: 'gemini-direct' };
     }
 
     // ------------------------------------------------------------------ //
-    // OpenRouter fallback (when Gemini API key is not set)
+    // OpenRouter fallback (when Gemini fails or API key is not set)
     // ------------------------------------------------------------------ //
     if (!OPENROUTER_CONFIG.enabled) {
+        if (geminiError) {
+            throw geminiError;
+        }
         throw new Error('Neither Gemini nor OpenRouter API keys are configured');
     }
 
-    console.warn('[OpenRouterHelper] Gemini API key not configured, falling back to OpenRouter');
+    console.warn('[OpenRouterHelper] Using OpenRouter as fallback or primary');
 
     const orModel = mapModelToOpenRouter(model);
 

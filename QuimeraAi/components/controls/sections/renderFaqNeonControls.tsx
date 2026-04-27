@@ -136,7 +136,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                 </label>
                 <SliderControl
                     label={t('editor.controls.sectionHeight', 'Altura de la Sección (vh)')}
-                    value={sectionData.sectionHeight || 100}
+                    value={sectionData.sectionHeight || 70}
                     onChange={(v) => setNestedData('faqNeon.sectionHeight', v)}
                     min={50} max={120} step={5} suffix="vh"
                 />
@@ -169,7 +169,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                 />
                 <ToggleControl
                     label={t('editor.controls.showBackgroundGrid', 'Mostrar Cuadrícula de Fondo')}
-                    checked={sectionData.showBackgroundGrid !== false}
+                    checked={sectionData.showBackgroundGrid === true}
                     onChange={(checked) => setNestedData('faqNeon.showBackgroundGrid', checked)}
                 />
                 <TopDotsControl sectionKey="faqNeon" data={data} setNestedData={setNestedData} />
