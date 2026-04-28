@@ -11,16 +11,15 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
-    const apiKey = process.env.VITE_GEMINI_API_KEY ||
-                   env.VITE_GEMINI_API_KEY || 
-                   env.GEMINI_API_KEY || 
-                   null;
+    // SECURITY: API keys are NOT injected into the SSR bundle.
+    // All AI calls go through the secure Cloud Functions proxy.
 
     return {
         plugins: [react()],
         define: {
-            'process.env.API_KEY': apiKey ? JSON.stringify(apiKey) : 'null',
-            'process.env.GEMINI_API_KEY': apiKey ? JSON.stringify(apiKey) : 'null',
+            // SECURITY: Keys are never embedded — proxy handles all AI API calls
+            'process.env.API_KEY': 'null',
+            'process.env.GEMINI_API_KEY': 'null',
         },
         resolve: {
             alias: {

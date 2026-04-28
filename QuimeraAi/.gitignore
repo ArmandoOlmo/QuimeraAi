@@ -50,3 +50,27 @@ functions/.runtimeconfig.json
 
 # Security - credential documentation
 VERIFICACION_CREDENCIALES.md
+
+# Development artifacts - logs, temp scripts, debug files
+*.pid
+dev-server.log
+dev.log
+dev*.log
+build_error.txt
+build_output.log
+tsc_errors.log
+tsc_editor.log
+ts_errors.txt
+
+# Scratch/temp scripts (Python, JS, CJS)
+scratch.*
+fix_*.py
+fix_*.ts
+tmp_replace*
+copy_editor.py
+check.js
+test-tokens.js
+test_layout.*
+query_global_files.cjs
+test_articles.cjs
+*_DEBUG_REPORT.md

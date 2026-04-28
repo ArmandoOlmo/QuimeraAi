@@ -8,7 +8,7 @@ interface ImportMetaEnv {
     readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
     readonly VITE_FIREBASE_APP_ID: string;
     readonly VITE_FIREBASE_MEASUREMENT_ID: string;
-    readonly VITE_GEMINI_API_KEY: string;
+    // SECURITY: VITE_GEMINI_API_KEY removed — all AI calls go through secure proxy
     readonly VITE_GOOGLE_CLIENT_ID: string;
     readonly VITE_GOOGLE_CLIENT_SECRET: string;
     readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
