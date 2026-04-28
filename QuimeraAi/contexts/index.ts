@@ -32,7 +32,7 @@ export { LanguageProvider, useLanguage } from './LanguageContext';
 // FEATURE CONTEXTS
 // =============================================================================
 export { ProjectProvider, useProject, useSafeProject } from './project';
-export { FilesProvider, useFiles } from './files';
+export { FilesProvider, useFiles, useSafeFiles } from './files';
 export { CRMProvider, useCRM } from './crm';
 export { CMSProvider, useCMS } from './cms';
 export { AdminProvider, useAdmin } from './admin';

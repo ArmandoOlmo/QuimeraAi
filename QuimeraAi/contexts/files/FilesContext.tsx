@@ -519,3 +519,7 @@ export const useFiles = (): FilesContextType => {
     }
     return context;
 };
+
+export const useSafeFiles = (): FilesContextType | null => {
+    return useContext(FilesContext) || null;
+};

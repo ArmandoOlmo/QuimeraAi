@@ -227,6 +227,9 @@ import { transferProjectToClient } from './agency/transferProjectToClient';
 // Knowledge content extraction
 import { extractContent } from './extractContent';
 
+// Project Limits Enforcement
+import { enforceTenantProjectLimits } from './projectLimits';
+
 // Export widget API functions
 export const widget = {
     getConfig: getWidgetConfig,
@@ -452,6 +455,11 @@ export const knowledge = {
     extractContent,
 };
 
+// Export Project Limits Enforcement
+export const projectLimits = {
+    enforceTenantProjectLimits,
+};
+
 // Alternative flat exports for easier routing
 export {
     getWidgetConfig,
@@ -618,6 +626,9 @@ export {
 
 // Knowledge content extraction exports
 export { extractContent };
+
+// Project Limits exports
+export { enforceTenantProjectLimits };
 
 // Direct export for Twilio Voice Webhook (ElevenLabs Conversational AI)
 export { twilioVoiceWebhook };

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { useFiles } from '../../contexts/files';
+import { useSafeFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
@@ -45,11 +45,13 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const requestedDestination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
     const destination: 'user' | 'admin' = requestedDestination === 'global' ? 'admin' : requestedDestination;
 
-    const {
-        files, uploadFile,
-        adminAssets, fetchAdminAssets, uploadAdminAsset,
-        isFilesLoading
-    } = useFiles();
+    const filesCtx = useSafeFiles();
+    const files = filesCtx?.files || [];
+    const uploadFile = filesCtx?.uploadFile || (async () => { throw new Error("Files context missing"); });
+    const adminAssets = filesCtx?.adminAssets || [];
+    const fetchAdminAssets = filesCtx?.fetchAdminAssets || (async () => {});
+    const uploadAdminAsset = filesCtx?.uploadAdminAsset || (async () => { throw new Error("Files context missing"); });
+    const isFilesLoading = filesCtx?.isFilesLoading || false;
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');

@@ -859,10 +859,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
  * Handles subscription created or updated events
  */
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
-    const { tenantId, planId } = subscription.metadata || {};
+    const metadata = subscription.metadata || {};
+    const tenantId = metadata.tenantId || metadata.clientTenantId;
+    const planId = metadata.planId;
 
     if (!tenantId) {
-        console.log('[Stripe Webhook] No tenantId in subscription metadata, skipping');
+        console.log('[Stripe Webhook] No tenantId or clientTenantId in subscription metadata, skipping');
         return;
     }
 
@@ -893,10 +895,11 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
  * Handles subscription deleted (cancelled) events
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-    const { tenantId } = subscription.metadata || {};
+    const metadata = subscription.metadata || {};
+    const tenantId = metadata.tenantId || metadata.clientTenantId;
 
     if (!tenantId) {
-        console.log('[Stripe Webhook] No tenantId in subscription metadata, skipping');
+        console.log('[Stripe Webhook] No tenantId or clientTenantId in subscription metadata, skipping');
         return;
     }
 
@@ -930,10 +933,12 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     try {
         const stripe = getStripe();
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const { tenantId, planId } = subscription.metadata || {};
+        const metadata = subscription.metadata || {};
+        const tenantId = metadata.tenantId || metadata.clientTenantId;
+        const planId = metadata.planId;
 
         if (!tenantId) {
-            console.log('[Stripe Webhook] No tenantId in subscription metadata');
+            console.log('[Stripe Webhook] No tenantId or clientTenantId in subscription metadata');
             return;
         }
 
@@ -984,7 +989,8 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     try {
         const stripe = getStripe();
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const { tenantId } = subscription.metadata || {};
+        const metadata = subscription.metadata || {};
+        const tenantId = metadata.tenantId || metadata.clientTenantId;
 
         if (!tenantId) {
             return;

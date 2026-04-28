@@ -201,13 +201,24 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/tenantMembers/$(tenantId + '_' + request.auth.uid));
     }
     
+    function isTenantActive(tenantId) {
+      let tenantPath = /databases/$(database)/documents/tenants/$(tenantId);
+      return exists(tenantPath) 
+        ? (get(tenantPath).data.get('subscriptionStatus', 'active') != 'suspended' && 
+           get(tenantPath).data.get('subscriptionStatus', 'active') != 'canceled' && 
+           get(tenantPath).data.get('subscriptionStatus', 'active') != 'past_due')
+        : true;
+    }
+    
     match /tenants/{tenantId} {
       allow read: if request.auth != null && (isTenantMember(tenantId) || isSuperAdminOrOwner());
       allow create: if request.auth != null && request.resource.data.ownerUserId == request.auth.uid;
-      allow update, delete: if request.auth != null && (isTenantOwner(tenantId) || isSuperAdminOrOwner());
+      allow update: if request.auth != null && (isTenantOwner(tenantId) || isSuperAdminOrOwner());
+      allow delete: if request.auth != null && (isTenantOwner(tenantId) || isSuperAdminOrOwner());
       
       match /{allPaths=**} {
-        allow read, write: if request.auth != null && isTenantMember(tenantId);
+        allow read: if request.auth != null && isTenantMember(tenantId);
+        allow write: if request.auth != null && isTenantMember(tenantId) && isTenantActive(tenantId);
       }
     }
 

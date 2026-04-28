@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAI } from '../../contexts/ai';
-import { useFiles } from '../../contexts/files';
+import { useSafeFiles } from '../../contexts/files';
 import { useProject } from '../../contexts/project';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,9 +29,14 @@ interface ImageGeneratorPanelProps {
     generationContext?: 'background' | 'general';
 }
 
-const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination, adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
+const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination = 'user', adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
-    const { uploadFile, uploadAdminAsset, hasActiveProject, files, adminAssets, fetchAdminAssets } = useFiles();
+    const filesCtx = useSafeFiles();
+    const uploadFile = filesCtx?.uploadFile || (async () => { throw new Error("Files context missing"); });
+    const uploadAdminAsset = filesCtx?.uploadAdminAsset || (async () => { throw new Error("Files context missing"); });
+    const files = filesCtx?.files || [];
+    const adminAssets = filesCtx?.adminAssets || [];
+    const fetchAdminAssets = filesCtx?.fetchAdminAssets || (async () => {});
     const { activeProjectId } = useProject();
     const { t } = useTranslation();
     const effectiveDestination: 'user' | 'admin' = destination === 'global' ? 'admin' : destination;

@@ -22,7 +22,7 @@
 import { useAuth } from '../core/AuthContext';
 import { useUI } from '../core/UIContext';
 import { useProject } from '../project';
-import { useFiles } from '../files';
+import { useSafeFiles } from '../files';
 import { useCRM } from '../crm';
 import { useCMS } from '../cms';
 import { useAdmin } from '../admin';
@@ -48,7 +48,7 @@ export const useEditorCompat = () => {
     const auth = useAuth();
     const ui = useUI();
     const project = useProject();
-    const files = useFiles();
+    const files = useSafeFiles();
     const crm = useCRM();
     const cms = useCMS();
     const admin = useAdmin();
