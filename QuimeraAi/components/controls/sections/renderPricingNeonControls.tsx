@@ -29,8 +29,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
       ) => {
         const linkType = tiers[tierIndex]?.[typeKey] || 'section';
         return (
-          <div className="mt-4 pt-4 border-t border-editor-border space-y-3">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+          <div className="mt-4 pt-4 border-t border-q-border space-y-3">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase">
               {label}
             </label>
             
@@ -41,7 +41,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
             />
     
             {/* Link Type Selector */}
-            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+            <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
               {[
                 { value: 'section', label: 'Sec' },
                 { value: 'product', label: 'Prod' },
@@ -60,8 +60,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     }
                   }}
                   className={`flex-1 py-1 text-[10px] font-medium rounded-sm transition-colors ${linkType === type.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                     }`}
                 >
                   {type.label}
@@ -112,8 +112,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
 
     const contentTab = (
         <div className="space-y-6">
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                     <Type size={14} /> {t('editor.controls.typography', 'Textos Principales')}
                 </label>
                 
@@ -148,15 +148,15 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                 </AIFormControl>
             </div>
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2 mb-4">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-4">
                     <CreditCard size={14} /> {t('editor.controls.pricingTiers', 'Planes de Precios')}
                 </label>
                 
                 {tiers.map((tier: any, index: number) => (
-                    <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-4 space-y-3 relative">
+                    <div key={index} className="bg-q-bg p-4 rounded-lg border border-q-border mb-4 space-y-3 relative">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-editor-accent uppercase">Plan {index + 1}</span>
+                            <span className="text-xs font-bold text-q-accent uppercase">Plan {index + 1}</span>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -208,7 +208,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         />
 
                         <div className="mt-3">
-                            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
+                            <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                                 Características (1 por línea)
                             </label>
                             <TextArea
@@ -232,7 +232,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         const newTier = { name: 'Nuevo Plan', price: '$0', billingPeriod: '/month', description: 'Descripción', features: ['Feature 1'], buttonText: 'Comprar', isPopular: false };
                         setNestedData('pricingNeon.tiers', [...tiers!, newTier]);
                     }}
-                    className="w-full py-2 mt-2 bg-editor-panel-bg border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                    className="w-full py-2 mt-2 bg-q-surface border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
                 >
                     <Plus size={14} /> {t('editor.controls.addTier', 'Añadir Plan')}
                 </button>
@@ -245,8 +245,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
             {/* Background Image Setup */}
             <BackgroundImageControl sectionKey="pricingNeon" data={data} setNestedData={setNestedData} />
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2 flex items-center gap-2">
                     <Maximize2 size={14} /> Layout
                 </label>
                 <SliderControl
@@ -285,8 +285,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Effect Settings */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase">
                     {t('editor.controls.effects', 'Efectos Neon')}
                 </label>
                 <ToggleControl
@@ -296,7 +296,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                 />
                 <TopDotsControl sectionKey="pricingNeon" data={data} setNestedData={setNestedData} />
                 <div>
-                    <label className="block text-xs text-editor-text-secondary mb-1">
+                    <label className="block text-xs text-q-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
                     </label>
                     <input
@@ -311,9 +311,9 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Colors */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-3">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-3">
                 <div className="flex items-center justify-between mb-4">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                         <Settings size={14} /> {t('editor.controls.colors', 'Colores')}
                     </label>
                     <button
@@ -322,7 +322,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                             setNestedData('pricingNeon.colors', undefined);
                             setNestedData('pricingNeon.glassEffect', undefined);
                         }}
-                        className="text-xs text-editor-text-secondary hover:text-editor-accent flex items-center gap-1 transition-colors"
+                        className="text-xs text-q-text-secondary hover:text-q-accent flex items-center gap-1 transition-colors"
                         title={t('editor.controls.restoreOriginalColors', 'Restaurar colores por defecto')}
                     >
                         <RotateCcw size={12} /> Restaurar
@@ -364,8 +364,8 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                     value={sectionData.colors?.neonGlow || '#FBB92B'}
                     onChange={(color) => setNestedData('pricingNeon.colors.neonGlow', color)}
                 />
-                <div className="space-y-2 pt-2 border-t border-editor-border/50">
-                    <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botones de Compra')}</p>
+                <div className="space-y-2 pt-2 border-t border-q-border/50">
+                    <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botones de Compra')}</p>
                     <ColorControl label={t('editor.controls.common.background', 'Fondo del Botón')} value={sectionData.colors?.buttonBackground} onChange={(v) => setNestedData('pricingNeon.colors.buttonBackground', v)} />
                     <ColorControl label={t('editor.controls.common.text', 'Texto del Botón')} value={sectionData.colors?.buttonText} onChange={(v) => setNestedData('pricingNeon.colors.buttonText', v)} />
                 </div>

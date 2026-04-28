@@ -336,7 +336,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
         <div
             ref={setNodeRef}
             style={style}
-            className={`group bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 hover:border-border transition-all ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
+            className={`group bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4 hover:border-q-border transition-all ${isDragging ? 'shadow-lg ring-2 ring-primary/20' : ''
                 }`}
         >
             <div className="flex items-start gap-3">
@@ -344,7 +344,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                 <div
                     {...attributes}
                     {...listeners}
-                    className="mt-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none"
+                    className="mt-2 cursor-grab active:cursor-grabbing text-q-text-muted hover:text-foreground touch-none"
                 >
                     <GripVertical size={18} />
                 </div>
@@ -356,7 +356,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                         value={link.title}
                         onChange={(e) => onUpdate({ title: e.target.value })}
                         placeholder={t('bioPage.linkTitle', 'Link title')}
-                        className="w-full bg-transparent text-foreground font-medium outline-none placeholder:text-muted-foreground/50"
+                        className="w-full bg-transparent text-foreground font-medium outline-none placeholder:text-q-text-muted/50"
                     />
 
                     {/* Only show URL field if not chatbot */}
@@ -371,7 +371,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                     )}
 
                     {/* Stats */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-q-text-muted">
                         <span>{link.clicks.toLocaleString()} {t('bioPage.clicks', 'clicks')}</span>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             {/* Only show open link button if not chatbot */}
@@ -400,7 +400,7 @@ const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                     onClick={onToggle}
                     className={`p-2 rounded-lg transition-colors ${link.enabled
                         ? 'bg-primary/20 text-primary'
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-q-text-muted'
                         }`}
                     title={link.enabled ? t('bioPage.enabled', 'Enabled') : t('bioPage.disabled', 'Disabled')}
                 >
@@ -881,8 +881,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 key={section.id}
                                 onClick={() => setDesignSubTab(section.id)}
                                 className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${designSubTab === section.id
-                                    ? 'bg-background text-primary shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                    ? 'bg-q-bg text-primary shadow-sm'
+                                    : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                     }`}
                             >
                                 <Icon size={18} />
@@ -909,7 +909,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => contextUpdateTheme({ profileLayout: 'circle' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.profileLayout === 'circle'
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                     >
                                         <div className="w-10 h-10 rounded-full bg-muted" />
@@ -919,7 +919,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => contextUpdateTheme({ profileLayout: 'hero' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.profileLayout === 'hero'
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                     >
                                         <div className="w-full h-8 rounded-lg bg-muted" />
@@ -938,7 +938,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => contextUpdateTheme({ titleStyle: 'text' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.titleStyle === 'text'
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                     >
                                         <span className="text-lg font-bold">Aa</span>
@@ -948,21 +948,21 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => contextUpdateTheme({ titleStyle: 'logo' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.titleStyle === 'logo'
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                     >
-                                        <Image size={20} className="text-muted-foreground" />
+                                        <Image size={20} className="text-q-text-muted" />
                                         <span className="text-[10px] font-medium">{t('bioPage.logo', 'Logo')}</span>
                                     </button>
                                     <button
                                         onClick={() => contextUpdateTheme({ titleStyle: 'both' })}
                                         className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.titleStyle === 'both'
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                     >
                                         <div className="flex flex-col items-center gap-0.5">
-                                            <Image size={14} className="text-muted-foreground" />
+                                            <Image size={14} className="text-q-text-muted" />
                                             <span className="text-[10px] font-bold leading-none">Aa</span>
                                         </div>
                                         <span className="text-[10px] font-medium">{t('bioPage.both', 'Both')}</span>
@@ -972,7 +972,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 {/* Logo Upload - Shows when logo or both is selected */}
                                 {(theme.titleStyle === 'logo' || theme.titleStyle === 'both') && (
                                     <div className="pt-3 space-y-2">
-                                        <label className="text-xs font-medium text-muted-foreground">
+                                        <label className="text-xs font-medium text-q-text-muted">
                                             {t('bioPage.uploadLogo', 'Upload your logo')}
                                         </label>
                                         <ImagePicker
@@ -1014,7 +1014,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             onClick={() => contextUpdateTheme({ profileSize: size })}
                                             className={`py-3 px-4 rounded-xl border-2 transition-all ${theme.profileSize === size
                                                 ? 'border-primary bg-primary/5'
-                                                : 'border-border hover:border-muted-foreground'
+                                                : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                         >
                                             <span className="text-sm font-medium capitalize">{t(`bioPage.${size}`, size)}</span>
@@ -1031,7 +1031,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <select
                                     value={theme.titleFont}
                                     onChange={(e) => contextUpdateTheme({ titleFont: e.target.value })}
-                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
                                 >
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
@@ -1061,7 +1061,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => applyThemePreset(preset.id)}
                                         className={`relative aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all ${theme.preset === preset.id
                                             ? 'border-primary ring-2 ring-primary/20'
-                                            : 'border-border hover:border-muted-foreground'
+                                            : 'border-q-border hover:border-muted-foreground'
                                             }`}
                                         style={{ backgroundColor: preset.bg }}
                                     >
@@ -1103,7 +1103,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             onClick={() => contextUpdateTheme({ backgroundType: style })}
                                             className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${theme.backgroundType === style
                                                 ? 'border-primary bg-primary/5'
-                                                : 'border-border hover:border-muted-foreground'
+                                                : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                         >
                                             <div className={`w-8 h-8 rounded-lg ${style === 'solid' ? 'bg-muted' :
@@ -1113,8 +1113,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                             style === 'image' ? 'bg-muted flex items-center justify-center' :
                                                                 'bg-muted flex items-center justify-center'
                                                 }`}>
-                                                {style === 'image' && <Image size={14} className="text-muted-foreground" />}
-                                                {style === 'video' && <Video size={14} className="text-muted-foreground" />}
+                                                {style === 'image' && <Image size={14} className="text-q-text-muted" />}
+                                                {style === 'video' && <Video size={14} className="text-q-text-muted" />}
                                             </div>
                                             <span className="text-[10px] font-medium capitalize">{t(`bioPage.${style}`, style)}</span>
                                         </button>
@@ -1153,7 +1153,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     onClick={() => contextUpdateTheme({ backgroundPattern: pattern })}
                                                     className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${(theme.backgroundPattern || 'dots') === pattern
                                                         ? 'border-primary bg-primary/5'
-                                                        : 'border-border hover:border-muted-foreground'
+                                                        : 'border-q-border hover:border-muted-foreground'
                                                         }`}
                                                 >
                                                     <div
@@ -1201,7 +1201,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 onChange={(e) => contextUpdateTheme({ patternSize: parseInt(e.target.value) })}
                                                 className="flex-1 accent-primary"
                                             />
-                                            <span className="text-sm text-muted-foreground w-8 text-right">
+                                            <span className="text-sm text-q-text-muted w-8 text-right">
                                                 {theme.patternSize || 20}px
                                             </span>
                                         </div>
@@ -1218,7 +1218,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </label>
 
                                     {/* Contrast Overlay Controls - Above Image */}
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                    <div className="p-4 rounded-xl border border-q-border/50 bg-q-surface/30 space-y-3">
                                         {/* Toggle Row */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
@@ -1229,7 +1229,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     <p className="text-sm font-medium text-foreground">
                                                         {t('bioPage.headerOverlay', 'Contrast overlay')}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-q-text-muted">
                                                         {t('bioPage.headerOverlayDesc', 'Better text readability')}
                                                     </p>
                                                 </div>
@@ -1248,7 +1248,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                         {/* Color Picker - Shows when overlay enabled */}
                                         {theme.headerOverlay && (
-                                            <div className="pt-3 border-t border-border/50">
+                                            <div className="pt-3 border-t border-q-border/50">
                                                 <ColorControl
                                                     label={t('bioPage.overlayColor', 'Overlay color')}
                                                     value={theme.headerOverlayColor || '#000000'}
@@ -1259,18 +1259,18 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </div>
 
                                     {/* Profile Box Controls */}
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                    <div className="p-4 rounded-xl border border-q-border/50 bg-q-surface/30 space-y-3">
                                         {/* Toggle Row */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-border/50">
+                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-q-border/50">
                                                     <Square size={16} className="text-foreground" />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-medium text-foreground">
                                                         {t('bioPage.profileBox', 'Profile box')}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-q-text-muted">
                                                         {t('bioPage.profileBoxDesc', 'Card behind name & bio')}
                                                     </p>
                                                 </div>
@@ -1289,7 +1289,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                         {/* Options when enabled */}
                                         {theme.profileBox && (
-                                            <div className="pt-3 border-t border-border/50 space-y-4">
+                                            <div className="pt-3 border-t border-q-border/50 space-y-4">
                                                 {/* Color Picker */}
                                                 <ColorControl
                                                     label={t('bioPage.profileBoxColor', 'Box color')}
@@ -1299,7 +1299,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                                 {/* Corner Radius - Same style as buttons */}
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                    <label className="text-xs font-medium text-q-text-muted">
                                                         {t('bioPage.profileBoxCorners', 'Corners')}
                                                     </label>
                                                     <div className="grid grid-cols-4 gap-2">
@@ -1309,7 +1309,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                                 onClick={() => contextUpdateTheme({ profileBoxRadius: radius })}
                                                                 className={`p-2 rounded-lg border transition-colors ${(theme.profileBoxRadius || 'md') === radius
                                                                     ? 'border-primary bg-primary/10'
-                                                                    : 'border-border hover:border-muted-foreground'
+                                                                    : 'border-q-border hover:border-muted-foreground'
                                                                     }`}
                                                             >
                                                                 <div
@@ -1364,7 +1364,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </label>
 
                                     {/* Contrast Overlay Controls - Above Video */}
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                    <div className="p-4 rounded-xl border border-q-border/50 bg-q-surface/30 space-y-3">
                                         {/* Toggle Row */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
@@ -1375,7 +1375,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                     <p className="text-sm font-medium text-foreground">
                                                         {t('bioPage.headerOverlay', 'Contrast overlay')}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-q-text-muted">
                                                         {t('bioPage.headerOverlayDesc', 'Better text readability')}
                                                     </p>
                                                 </div>
@@ -1394,7 +1394,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                         {/* Color Picker - Shows when overlay enabled */}
                                         {theme.headerOverlay && (
-                                            <div className="pt-3 border-t border-border/50">
+                                            <div className="pt-3 border-t border-q-border/50">
                                                 <ColorControl
                                                     label={t('bioPage.overlayColor', 'Overlay color')}
                                                     value={theme.headerOverlayColor || '#000000'}
@@ -1405,18 +1405,18 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </div>
 
                                     {/* Profile Box Controls */}
-                                    <div className="p-4 rounded-xl border border-border/50 bg-card/30 space-y-3">
+                                    <div className="p-4 rounded-xl border border-q-border/50 bg-q-surface/30 space-y-3">
                                         {/* Toggle Row */}
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-border/50">
+                                                <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center border border-q-border/50">
                                                     <Square size={16} className="text-foreground" />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-medium text-foreground">
                                                         {t('bioPage.profileBox', 'Profile box')}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-q-text-muted">
                                                         {t('bioPage.profileBoxDesc', 'Card behind name & bio')}
                                                     </p>
                                                 </div>
@@ -1435,7 +1435,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                         {/* Options when enabled */}
                                         {theme.profileBox && (
-                                            <div className="pt-3 border-t border-border/50 space-y-4">
+                                            <div className="pt-3 border-t border-q-border/50 space-y-4">
                                                 {/* Color Picker */}
                                                 <ColorControl
                                                     label={t('bioPage.profileBoxColor', 'Box color')}
@@ -1445,7 +1445,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                                                 {/* Corner Radius - Same style as buttons */}
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-medium text-muted-foreground">
+                                                    <label className="text-xs font-medium text-q-text-muted">
                                                         {t('bioPage.profileBoxCorners', 'Corners')}
                                                     </label>
                                                     <div className="grid grid-cols-4 gap-2">
@@ -1455,7 +1455,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                                 onClick={() => contextUpdateTheme({ profileBoxRadius: radius })}
                                                                 className={`p-2 rounded-lg border transition-colors ${(theme.profileBoxRadius || 'md') === radius
                                                                     ? 'border-primary bg-primary/10'
-                                                                    : 'border-border hover:border-muted-foreground'
+                                                                    : 'border-q-border hover:border-muted-foreground'
                                                                     }`}
                                                             >
                                                                 <div
@@ -1479,20 +1479,20 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             value={theme.backgroundVideo || ''}
                                             onChange={(e) => contextUpdateTheme({ backgroundVideo: e.target.value })}
                                             placeholder={t('bioPage.pasteVideoUrl', 'Paste video URL (MP4)')}
-                                            className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                            className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
                                         />
                                     </div>
 
                                     {/* Video Upload */}
-                                    <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-muted-foreground transition-colors cursor-pointer">
+                                    <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-q-border hover:border-muted-foreground transition-colors cursor-pointer">
                                         <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
-                                            <Upload size={20} className="text-muted-foreground" />
+                                            <Upload size={20} className="text-q-text-muted" />
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-foreground">
                                                 {t('bioPage.uploadVideo', 'Upload video')}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-q-text-muted">
                                                 {t('bioPage.videoFormats', 'MP4, WebM (max 50MB)')}
                                             </p>
                                         </div>
@@ -1549,7 +1549,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <select
                                     value={theme.bodyFont}
                                     onChange={(e) => contextUpdateTheme({ bodyFont: e.target.value })}
-                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
                                 >
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
@@ -1572,7 +1572,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <select
                                     value={theme.titleFont}
                                     onChange={(e) => contextUpdateTheme({ titleFont: e.target.value })}
-                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="w-full bg-muted/50 rounded-lg px-3 py-2.5 text-sm text-foreground border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
                                 >
                                     {FONT_OPTIONS.map(font => (
                                         <option key={font} value={font}>{font}</option>
@@ -1606,11 +1606,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             onClick={() => contextUpdateTheme({ buttonStyle: style })}
                                             className={`p-4 rounded-xl border-2 transition-all ${theme.buttonStyle === style
                                                 ? 'border-primary'
-                                                : 'border-border hover:border-muted-foreground'
+                                                : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                         >
                                             <div className={`w-full h-8 rounded-lg ${style === 'fill' ? 'bg-muted' :
-                                                style === 'glass' ? 'bg-muted/50 backdrop-blur border border-border' :
+                                                style === 'glass' ? 'bg-muted/50 backdrop-blur border border-q-border' :
                                                     'border-2 border-muted-foreground'
                                                 }`} />
                                             <span className="text-xs font-medium mt-2 block capitalize">{t(`bioPage.${style}`, style)}</span>
@@ -1631,7 +1631,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             onClick={() => contextUpdateTheme({ buttonShape: shape })}
                                             className={`p-3 border-2 transition-all ${theme.buttonShape === shape
                                                 ? 'border-primary bg-primary/10'
-                                                : 'border-border hover:border-muted-foreground'
+                                                : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                             style={{
                                                 borderRadius: shape === 'square' ? '4px' : shape === 'rounded' ? '8px' : shape === 'rounder' ? '16px' : '9999px'
@@ -1655,7 +1655,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             onClick={() => contextUpdateTheme({ buttonShadow: shadow })}
                                             className={`py-2 px-3 rounded-lg border-2 transition-all ${theme.buttonShadow === shadow
                                                 ? 'border-primary bg-primary/10'
-                                                : 'border-border hover:border-muted-foreground'
+                                                : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                         >
                                             <span className="text-xs font-medium capitalize">{t(`bioPage.${shadow}`, shadow)}</span>
@@ -1708,7 +1708,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             });
                                         }
                                     }}
-                                    className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all"
+                                    className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-q-border hover:border-primary hover:bg-primary/5 transition-all"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                                         <Download size={18} className="text-primary" />
@@ -1717,14 +1717,14 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         <p className="text-sm font-medium text-foreground">
                                             {t('bioPage.importWebColors', 'Import Web Colors')}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-q-text-muted">
                                             {t('bioPage.syncWithProject', 'Sync with your project theme palette')}
                                         </p>
                                     </div>
                                     {activeProject?.theme?.paletteColors && (
                                         <div className="flex gap-1">
                                             {activeProject.theme.paletteColors.slice(0, 5).map((c, i) => (
-                                                <div key={i} className="w-4 h-4 rounded border border-border" style={{ backgroundColor: c }} />
+                                                <div key={i} className="w-4 h-4 rounded border border-q-border" style={{ backgroundColor: c }} />
                                             ))}
                                         </div>
                                     )}
@@ -1740,7 +1740,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     <input
                                         type="text"
                                         placeholder={t('bioPage.pasteCoolorsUrl', 'Paste Coolors URL (coolors.co/palette/...)')}
-                                        className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-border focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="flex-1 bg-muted/50 rounded-lg px-3 py-2.5 text-sm border border-q-border focus:ring-2 focus:ring-primary/50 outline-none"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 const input = e.target as HTMLInputElement;
@@ -1773,7 +1773,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         {t('bioPage.openCoolors', 'Open Coolors')}
                                     </button>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-q-text-muted">
                                     {t('bioPage.coolorsHelp', 'Paste a Coolors URL and press Enter to import colors')}
                                 </p>
                             </div>
@@ -1797,7 +1797,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 gradientColor: '#0f0f1a',
                                             });
                                         }}
-                                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                        className="text-xs text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         {t('bioPage.resetColors', 'Reset to defaults')}
                                     </button>
@@ -1811,17 +1811,17 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     ].map((item) => (
                                         <div key={item.key} className="text-center">
                                             <div
-                                                className="w-full aspect-square rounded-lg border border-border mb-1"
+                                                className="w-full aspect-square rounded-lg border border-q-border mb-1"
                                                 style={{ backgroundColor: item.color }}
                                             />
-                                            <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                                            <span className="text-[10px] text-q-text-muted">{item.label}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             {/* All Color Controls */}
-                            <div className="space-y-4 pt-2 border-t border-border">
+                            <div className="space-y-4 pt-2 border-t border-q-border">
                                 <ColorControl
                                     label={t('bioPage.backgroundColor', 'Background')}
                                     value={theme.backgroundColor}
@@ -1864,11 +1864,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     const renderShopEditor = () => (
         <div className="space-y-6">
             <div className="text-center py-12">
-                <ShoppingBag size={48} className="mx-auto text-muted-foreground mb-4" />
+                <ShoppingBag size={48} className="mx-auto text-q-text-muted mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                     {t('bioPage.shopComingSoon', 'Shop Coming Soon')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-q-text-muted">
                     {t('bioPage.shopDescription', 'Add products to sell directly from your bio page')}
                 </p>
             </div>
@@ -1879,15 +1879,15 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         <div className="space-y-6">
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4">
+                <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
                     <p className="text-2xl font-bold text-foreground">
                         {links.reduce((sum, l) => sum + l.clicks, 0).toLocaleString()}
                     </p>
-                    <p className="text-sm text-muted-foreground">{t('bioPage.totalClicks', 'Total Clicks')}</p>
+                    <p className="text-sm text-q-text-muted">{t('bioPage.totalClicks', 'Total Clicks')}</p>
                 </div>
-                <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4">
+                <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
                     <p className="text-2xl font-bold text-foreground">{links.length}</p>
-                    <p className="text-sm text-muted-foreground">{t('bioPage.activeLinks', 'Active Links')}</p>
+                    <p className="text-sm text-q-text-muted">{t('bioPage.activeLinks', 'Active Links')}</p>
                 </div>
             </div>
 
@@ -1900,9 +1900,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     .map((link, index) => (
                         <div
                             key={link.id}
-                            className="flex items-center gap-3 bg-card/30 rounded-lg p-3"
+                            className="flex items-center gap-3 bg-q-surface/30 rounded-lg p-3"
                         >
-                            <span className="text-sm font-bold text-muted-foreground w-6">
+                            <span className="text-sm font-bold text-q-text-muted w-6">
                                 #{index + 1}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -1920,7 +1920,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     const renderAudience = () => (
         <div className="space-y-6">
             {/* Email Signup Toggle */}
-            <div className="flex items-center justify-between p-4 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                         <Mail size={20} className="text-primary" />
@@ -1929,7 +1929,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         <p className="font-medium text-foreground">
                             {t('bioPage.emailSignup', 'Email Signup')}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-q-text-muted">
                             {t('bioPage.emailSignupDesc', 'Collect emails from visitors')}
                         </p>
                     </div>
@@ -1947,15 +1947,15 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             </div>
 
             {/* Subscriber List */}
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border/50 flex items-center justify-between">
+            <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-q-border/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Users size={18} className="text-muted-foreground" />
+                        <Users size={18} className="text-q-text-muted" />
                         <h3 className="font-medium text-foreground text-sm">
                             {t('bioPage.subscribers', 'Subscribers')}
                         </h3>
                     </div>
-                    <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    <span className="text-xs font-semibold text-q-text-muted bg-muted px-2 py-1 rounded-full">
                         {subscribers.length}
                     </span>
                 </div>
@@ -1967,8 +1967,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
                     ) : subscribers.length === 0 ? (
                         <div className="text-center py-8 px-4">
-                            <Mail size={32} className="mx-auto text-muted-foreground/30 mb-3" />
-                            <p className="text-sm text-muted-foreground">
+                            <Mail size={32} className="mx-auto text-q-text-muted/30 mb-3" />
+                            <p className="text-sm text-q-text-muted">
                                 {emailSignupEnabled
                                     ? t('bioPage.noSubscribersYet', 'No subscribers yet. Share your bio page to start collecting emails!')
                                     : t('bioPage.enableSignupFirst', 'Enable email signup above to start collecting emails.')}
@@ -1984,7 +1984,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-sm font-medium text-foreground truncate">{sub.email}</p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-q-text-muted">
                                                 {sub.subscribedAt?.seconds
                                                     ? new Date(sub.subscribedAt.seconds * 1000).toLocaleDateString()
                                                     : t('common.recently', 'Recently')}
@@ -1994,7 +1994,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     <button
                                         onClick={() => handleDeleteSubscriber(sub.id)}
                                         disabled={isDeletingSubscriber === sub.id}
-                                        className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-md text-q-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
                                         title={t('common.delete', 'Delete')}
                                     >
                                         {isDeletingSubscriber === sub.id ? (
@@ -2419,7 +2419,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     // ==========================================================================
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* Dashboard Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -2429,11 +2429,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -2448,7 +2448,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     {/* Save Status Indicator + Save Button */}
                     <div className="flex items-center gap-3 text-xs">
                         {isSaving ? (
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <span className="flex items-center gap-1.5 text-q-text-muted">
                                 <Loader2 size={14} className="animate-spin" />
                                 <span className="hidden sm:inline">{t('common.saving', 'Saving...')}</span>
                             </span>
@@ -2558,7 +2558,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
                             title={t('common.back', 'Back')}
                         >
                             <ArrowLeft size={18} />
@@ -2568,10 +2568,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                 {/* Loading Overlay */}
                 {isLoadingBioPage && (
-                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-q-bg/80 backdrop-blur-sm z-50 flex items-center justify-center">
                         <div className="flex flex-col items-center gap-3">
                             <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                            <p className="text-muted-foreground text-sm">{t('bioPage.loading', 'Loading your bio page...')}</p>
+                            <p className="text-q-text-muted text-sm">{t('bioPage.loading', 'Loading your bio page...')}</p>
                         </div>
                     </div>
                 )}
@@ -2579,11 +2579,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 {/* 3-Column Layout */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Internal Sidebar */}
-                    <nav className="hidden md:flex w-56 border-r border-border/50 p-4 flex-col gap-1 bg-card/30">
+                    <nav className="hidden md:flex w-56 border-r border-q-border/50 p-4 flex-col gap-1 bg-q-surface/30">
                         {/* Profile Section - Click to Edit */}
                         <button
                             onClick={openProfileModal}
-                            className="mb-6 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-border/50 hover:bg-card/70 hover:border-primary/30 transition-all group w-full text-left"
+                            className="mb-6 p-4 bg-q-surface/50 backdrop-blur-sm rounded-xl border border-q-border/50 hover:bg-q-surface/70 hover:border-primary/30 transition-all group w-full text-left"
                         >
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="relative">
@@ -2604,13 +2604,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     <p className="font-semibold text-foreground text-sm truncate">
                                         {profile.name || t('bioPage.yourName', 'Your Name')}
                                     </p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <p className="text-xs text-q-text-muted flex items-center gap-1">
                                         <Edit3 size={10} />
                                         {t('bioPage.clickToEdit', 'Click to edit')}
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
+                            <p className="text-xs text-q-text-muted line-clamp-2">
                                 {profile.bio || t('bioPage.shortBio', 'Write a short bio...')}
                             </p>
                         </button>
@@ -2622,7 +2622,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 onClick={() => setActiveTab(item.id as ActiveTab)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
                                     ? 'bg-primary/20 text-primary'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                    : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                     }`}
                             >
                                 <item.icon size={18} />
@@ -2642,7 +2642,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         onClick={() => setActiveTab(item.id as ActiveTab)}
                                         className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
                                             ? 'bg-primary text-primary-foreground shadow-sm'
-                                            : 'bg-card text-muted-foreground border border-border hover:bg-muted/50'
+                                            : 'bg-q-surface text-q-text-muted border border-q-border hover:bg-muted/50'
                                             }`}
                                     >
                                         <item.icon size={18} className="flex-shrink-0" />
@@ -2661,7 +2661,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     </main>
 
                     {/* Live Preview */}
-                    <aside className="hidden lg:flex w-[400px] border-l border-border/50 bg-neutral-900/50 items-center justify-center p-8">
+                    <aside className="hidden lg:flex w-[400px] border-l border-q-border/50 bg-neutral-900/50 items-center justify-center p-8">
                         {renderMobilePreview()}
                     </aside>
                 </div>
@@ -2677,9 +2677,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     />
 
                     {/* Modal Content */}
-                    <div className="relative w-full max-w-3xl bg-background rounded-2xl shadow-2xl border border-border overflow-hidden max-h-[65vh] flex flex-col">
+                    <div className="relative w-full max-w-3xl bg-q-bg rounded-2xl shadow-2xl border border-q-border overflow-hidden max-h-[65vh] flex flex-col">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-border">
+                        <div className="flex items-center justify-between p-5 border-b border-q-border">
                             <h2 className="text-xl font-bold text-foreground">
                                 {t('bioPage.add', 'Add')}
                             </h2>
@@ -2687,21 +2687,21 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 onClick={closeAddLinkModal}
                                 className="p-2 rounded-lg hover:bg-muted transition-colors"
                             >
-                                <X size={20} className="text-muted-foreground" />
+                                <X size={20} className="text-q-text-muted" />
                             </button>
                         </div>
 
                         {/* Search Input */}
-                        <div className="p-5 border-b border-border">
+                        <div className="p-5 border-b border-q-border">
                             <div className="relative">
-                                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                 <input
                                     type="text"
                                     value={addLinkSearch}
                                     onChange={(e) => setAddLinkSearch(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && addLinkSearch && handleAddLinkFromSearch()}
                                     placeholder={t('bioPage.pasteOrSearch', 'Paste or search a link')}
-                                    className="w-full pl-12 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    className="w-full pl-12 pr-4 py-3 bg-muted/50 border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                                     autoFocus
                                 />
                             </div>
@@ -2710,14 +2710,14 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         {/* Main Content - Split Layout */}
                         <div className="flex flex-1 overflow-hidden">
                             {/* Categories Sidebar */}
-                            <nav className="w-48 border-r border-border p-3 overflow-y-auto flex-shrink-0">
+                            <nav className="w-48 border-r border-q-border p-3 overflow-y-auto flex-shrink-0">
                                 {effectiveLinkCategories.map((category) => (
                                     <button
                                         key={category.id}
                                         onClick={() => setAddLinkCategory(category.id)}
                                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${addLinkCategory === category.id
                                             ? 'bg-muted text-foreground'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                             }`}
                                     >
                                         <category.icon size={18} />
@@ -2730,7 +2730,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             <div className="flex-1 overflow-y-auto p-5">
 
                                 {/* Category Label */}
-                                <p className="text-sm font-medium text-muted-foreground mb-4">
+                                <p className="text-sm font-medium text-q-text-muted mb-4">
                                     {addLinkCategory === 'suggested'
                                         ? t('bioPage.suggested', 'Suggested')
                                         : t(`bioPage.category.${addLinkCategory}`, addLinkCategory)
@@ -2743,7 +2743,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         <button
                                             key={integration.id}
                                             onClick={() => addIntegrationLink(integration)}
-                                            className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:border-muted-foreground hover:bg-muted/30 transition-all group"
+                                            className="w-full flex items-center gap-4 p-4 rounded-xl border border-q-border hover:border-muted-foreground hover:bg-muted/30 transition-all group"
                                         >
                                             {/* Icon */}
                                             <div
@@ -2756,19 +2756,19 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             {/* Info */}
                                             <div className="flex-1 text-left">
                                                 <p className="font-semibold text-foreground">{integration.name}</p>
-                                                <p className="text-sm text-muted-foreground">{integration.description}</p>
+                                                <p className="text-sm text-q-text-muted">{integration.description}</p>
                                             </div>
 
                                             {/* Arrow */}
-                                            <ChevronRight size={20} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <ChevronRight size={20} className="text-q-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </button>
                                     ))}
 
                                     {/* Empty State */}
                                     {filteredIntegrations.length === 0 && (
                                         <div className="text-center py-12">
-                                            <Search size={32} className="mx-auto text-muted-foreground/50 mb-3" />
-                                            <p className="text-muted-foreground">
+                                            <Search size={32} className="mx-auto text-q-text-muted/50 mb-3" />
+                                            <p className="text-q-text-muted">
                                                 {t('bioPage.noResultsFound', 'No integrations found')}
                                             </p>
                                             <button
@@ -2796,9 +2796,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     />
 
                     {/* Modal Content */}
-                    <div className="relative w-full max-w-md bg-background rounded-2xl shadow-2xl border border-border overflow-hidden max-h-[70vh] flex flex-col">
+                    <div className="relative w-full max-w-md bg-q-bg rounded-2xl shadow-2xl border border-q-border overflow-hidden max-h-[70vh] flex flex-col">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-border bg-primary/10">
+                        <div className="flex items-center justify-between p-5 border-b border-q-border bg-primary/10">
                             <h2 className="text-lg font-bold text-foreground">
                                 {t('bioPage.forms', 'Forms')}
                             </h2>
@@ -2811,12 +2811,12 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex border-b border-border">
+                        <div className="flex border-b border-q-border">
                             <button
                                 onClick={() => setFormConfigTab('settings')}
                                 className={`flex-1 py-3 text-sm font-medium transition-colors ${formConfigTab === 'settings'
                                     ? 'text-foreground border-b-2 border-primary'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 {t('bioPage.linkSettings', 'Link Settings')}
@@ -2825,7 +2825,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 onClick={() => setFormConfigTab('layout')}
                                 className={`flex-1 py-3 text-sm font-medium transition-colors ${formConfigTab === 'layout'
                                     ? 'text-foreground border-b-2 border-primary'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 {t('bioPage.layout', 'Layout')}
@@ -2838,7 +2838,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <div>
                                     <div className="mb-4">
                                         <h3 className="font-semibold text-foreground mb-1">{t('bioPage.forms', 'Forms')}</h3>
-                                        <p className="text-sm text-muted-foreground">{t('bioPage.formTemplateDesc', 'Save time with a pre-built template')}</p>
+                                        <p className="text-sm text-q-text-muted">{t('bioPage.formTemplateDesc', 'Save time with a pre-built template')}</p>
                                     </div>
 
                                     <div className="space-y-2">
@@ -2848,7 +2848,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 onClick={() => setSelectedFormTemplate(template.id)}
                                                 className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${selectedFormTemplate === template.id
                                                     ? 'border-primary bg-primary/10'
-                                                    : 'border-border hover:border-muted-foreground hover:bg-muted/30'
+                                                    : 'border-q-border hover:border-muted-foreground hover:bg-muted/30'
                                                     }`}
                                             >
                                                 <div
@@ -2859,14 +2859,14 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 </div>
                                                 <div className="flex-1 text-left">
                                                     <p className="font-medium text-foreground">{template.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{template.description}</p>
+                                                    <p className="text-sm text-q-text-muted">{template.description}</p>
                                                 </div>
-                                                <ChevronRight size={20} className="text-muted-foreground" />
+                                                <ChevronRight size={20} className="text-q-text-muted" />
                                             </button>
                                         ))}
                                     </div>
 
-                                    <p className="text-center text-sm text-muted-foreground mt-6">
+                                    <p className="text-center text-sm text-q-text-muted mt-6">
                                         {t('bioPage.gotIdeas', 'Got ideas? We\'re listening!')} <span className="text-primary cursor-pointer hover:underline">{t('bioPage.shareFeedback', 'Share feedback')}</span>
                                     </p>
                                 </div>
@@ -2874,7 +2874,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
                             {formConfigTab === 'layout' && (
                                 <div>
-                                    <p className="text-sm text-muted-foreground mb-4">{t('bioPage.chooseLayout', 'Choose a layout for your link')}</p>
+                                    <p className="text-sm text-q-text-muted mb-4">{t('bioPage.chooseLayout', 'Choose a layout for your link')}</p>
 
                                     <div className="space-y-3">
                                         {FORM_LAYOUTS.map((layout) => (
@@ -2883,7 +2883,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 onClick={() => setSelectedFormLayout(layout.id)}
                                                 className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${selectedFormLayout === layout.id
                                                     ? 'border-primary bg-primary/10'
-                                                    : 'border-border hover:border-muted-foreground hover:bg-muted/30'
+                                                    : 'border-q-border hover:border-muted-foreground hover:bg-muted/30'
                                                     }`}
                                             >
                                                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedFormLayout === layout.id
@@ -2896,7 +2896,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 </div>
                                                 <div className="flex-1 text-left">
                                                     <p className="font-medium text-foreground">{layout.name}</p>
-                                                    <p className="text-sm text-muted-foreground">{layout.description}</p>
+                                                    <p className="text-sm text-q-text-muted">{layout.description}</p>
                                                 </div>
                                                 {/* Layout Preview */}
                                                 <div className={`w-16 h-10 rounded border border-muted-foreground/30 flex items-center justify-center ${layout.id === 'featured' ? 'bg-primary/20' : 'bg-muted'
@@ -2907,7 +2907,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         ))}
                                     </div>
 
-                                    <p className="text-center text-sm text-muted-foreground mt-6">
+                                    <p className="text-center text-sm text-q-text-muted mt-6">
                                         {t('bioPage.gotIdeas', 'Got ideas? We\'re listening!')} <span className="text-primary cursor-pointer hover:underline">{t('bioPage.shareFeedback', 'Share feedback')}</span>
                                     </p>
                                 </div>
@@ -2915,7 +2915,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
 
                         {/* Footer */}
-                        <div className="p-4 border-t border-border">
+                        <div className="p-4 border-t border-q-border">
                             <button
                                 onClick={handleAddForm}
                                 className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
@@ -2937,9 +2937,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     />
 
                     {/* Modal */}
-                    <div className="relative w-full max-w-md bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
+                    <div className="relative w-full max-w-md bg-q-surface rounded-2xl shadow-2xl border border-q-border overflow-hidden">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-border">
+                        <div className="flex items-center justify-between p-5 border-b border-q-border">
                             <h2 className="text-lg font-bold text-foreground">
                                 {t('bioPage.editProfile', 'Edit Profile')}
                             </h2>
@@ -2947,7 +2947,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 onClick={closeProfileModal}
                                 className="p-2 rounded-lg hover:bg-muted transition-colors"
                             >
-                                <X size={20} className="text-muted-foreground" />
+                                <X size={20} className="text-q-text-muted" />
                             </button>
                         </div>
 
@@ -2976,13 +2976,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     <Sparkles size={16} />
                                     {t('bioPage.chooseAvatar', 'Choose Avatar')}
                                 </button>
-                                <p className="text-xs text-muted-foreground text-center">
+                                <p className="text-xs text-q-text-muted text-center">
                                     {t('bioPage.avatarHint', 'Select from library, upload, or generate with AI')}
                                 </p>
                             </div>
 
                             {/* Divider */}
-                            <div className="border-t border-border" />
+                            <div className="border-t border-q-border" />
 
                             {/* Name Input */}
                             <div>
@@ -2994,7 +2994,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     value={profile.name}
                                     onChange={(e) => contextUpdateProfile({ name: e.target.value })}
                                     placeholder={t('bioPage.yourName', 'Your Name')}
-                                    className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-foreground outline-none focus:ring-2 focus:ring-primary/50"
+                                    className="w-full px-4 py-3 bg-muted/50 border border-q-border rounded-lg text-foreground outline-none focus:ring-2 focus:ring-primary/50"
                                 />
                             </div>
 
@@ -3022,16 +3022,16 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     onChange={(e) => contextUpdateProfile({ bio: e.target.value })}
                                     placeholder={t('bioPage.shortBio', 'Write a short bio...')}
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                    className="w-full px-4 py-3 bg-muted/50 border border-q-border rounded-lg text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="text-xs text-q-text-muted mt-1">
                                     {profile.bio.length}/150 {t('bioPage.characters', 'characters')}
                                 </p>
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="p-5 border-t border-border">
+                        <div className="p-5 border-t border-q-border">
                             <button
                                 onClick={closeProfileModal}
                                 className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
@@ -3059,13 +3059,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             {/* ===== NOTIFICATION MODAL ===== */}
             {notificationModal.isOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]" onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}>
-                    <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-q-surface border border-q-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center">
                             <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${notificationModal.type === 'success' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
                                 {notificationModal.type === 'success' ? <Check size={24} /> : <X size={24} />}
                             </div>
                             <h3 className="text-lg font-bold text-foreground mb-2">{notificationModal.title}</h3>
-                            <p className="text-sm text-muted-foreground break-all mb-6">{notificationModal.message}</p>
+                            <p className="text-sm text-q-text-muted break-all mb-6">{notificationModal.message}</p>
                             <button
                                 onClick={() => setNotificationModal({ ...notificationModal, isOpen: false })}
                                 className="w-full bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium hover:bg-primary/90 transition-colors"

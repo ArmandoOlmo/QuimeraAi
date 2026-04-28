@@ -94,7 +94,7 @@ const PortalDashboard: React.FC = () => {
                 <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
                     {t('portal.welcome', 'Bienvenido a')} {portalConfig?.branding.companyName || portalConfig?.tenant.name}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('portal.welcomeSubtitle', 'Aquí tienes un resumen de tu workspace')}
                 </p>
             </div>
@@ -107,7 +107,7 @@ const PortalDashboard: React.FC = () => {
                         <button
                             key={stat.id}
                             onClick={() => navigate(stat.path)}
-                            className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-lg hover:border-primary/30 transition-all group"
+                            className="bg-q-surface border border-q-border rounded-xl p-5 text-left hover:shadow-lg hover:border-primary/30 transition-all group"
                         >
                             <div className="flex items-start justify-between mb-3">
                                 <div
@@ -118,7 +118,7 @@ const PortalDashboard: React.FC = () => {
                                 </div>
                                 <ArrowUpRight 
                                     size={16} 
-                                    className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" 
+                                    className="text-q-text-muted opacity-0 group-hover:opacity-100 transition-opacity" 
                                 />
                             </div>
                             <p className="text-2xl font-bold text-foreground mb-1">
@@ -128,7 +128,7 @@ const PortalDashboard: React.FC = () => {
                                     stat.value
                                 )}
                             </p>
-                            <p className="text-sm text-muted-foreground">{stat.label}</p>
+                            <p className="text-sm text-q-text-muted">{stat.label}</p>
                             {stat.subValue && (
                                 <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
                                     <TrendingUp size={12} />
@@ -144,8 +144,8 @@ const PortalDashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent projects */}
                 {hasFeature('projects') && (
-                    <div className="bg-card border border-border rounded-xl overflow-hidden">
-                        <div className="flex items-center justify-between p-4 border-b border-border">
+                    <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between p-4 border-b border-q-border">
                             <h2 className="font-semibold text-foreground">
                                 {t('portal.recentProjects', 'Proyectos Recientes')}
                             </h2>
@@ -173,8 +173,8 @@ const PortalDashboard: React.FC = () => {
                                 </div>
                             ) : projects.length === 0 ? (
                                 <div className="p-8 text-center">
-                                    <Globe size={32} className="mx-auto text-muted-foreground mb-2" />
-                                    <p className="text-muted-foreground">
+                                    <Globe size={32} className="mx-auto text-q-text-muted mb-2" />
+                                    <p className="text-q-text-muted">
                                         {t('portal.noProjects', 'No hay proyectos aún')}
                                     </p>
                                     <button
@@ -199,7 +199,7 @@ const PortalDashboard: React.FC = () => {
                                             <p className="font-medium text-foreground truncate">
                                                 {project.name}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-q-text-muted">
                                                 {project.pages?.length || 0} páginas
                                             </p>
                                         </div>
@@ -212,8 +212,8 @@ const PortalDashboard: React.FC = () => {
 
                 {/* Recent leads */}
                 {hasFeature('leads') && (
-                    <div className="bg-card border border-border rounded-xl overflow-hidden">
-                        <div className="flex items-center justify-between p-4 border-b border-border">
+                    <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between p-4 border-b border-q-border">
                             <h2 className="font-semibold text-foreground">
                                 {t('portal.recentLeads', 'Leads Recientes')}
                             </h2>
@@ -240,8 +240,8 @@ const PortalDashboard: React.FC = () => {
                                 </div>
                             ) : leads.length === 0 ? (
                                 <div className="p-8 text-center">
-                                    <Users size={32} className="mx-auto text-muted-foreground mb-2" />
-                                    <p className="text-muted-foreground">
+                                    <Users size={32} className="mx-auto text-q-text-muted mb-2" />
+                                    <p className="text-q-text-muted">
                                         {t('portal.noLeads', 'No hay leads aún')}
                                     </p>
                                 </div>
@@ -259,7 +259,7 @@ const PortalDashboard: React.FC = () => {
                                             <p className="font-medium text-foreground truncate">
                                                 {lead.name || lead.email}
                                             </p>
-                                            <p className="text-xs text-muted-foreground truncate">
+                                            <p className="text-xs text-q-text-muted truncate">
                                                 {lead.email}
                                             </p>
                                         </div>
@@ -281,14 +281,14 @@ const PortalDashboard: React.FC = () => {
             </div>
 
             {/* Activity feed placeholder */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <Activity size={20} className="text-muted-foreground" />
+                    <Activity size={20} className="text-q-text-muted" />
                     <h2 className="font-semibold text-foreground">
                         {t('portal.recentActivity', 'Actividad Reciente')}
                     </h2>
                 </div>
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-q-text-muted">
                     <p>{t('portal.noActivity', 'No hay actividad reciente')}</p>
                 </div>
             </div>

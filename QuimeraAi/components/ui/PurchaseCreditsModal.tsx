@@ -67,11 +67,11 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div
-                className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+                className="relative w-full max-w-2xl bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="relative px-6 py-5 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 border-b border-border">
+                <div className="relative px-6 py-5 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 border-b border-q-border">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/20">
@@ -79,7 +79,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-foreground">{t('credits.purchaseTitle')}</h2>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-q-text-muted">
                                     {isAgency
                                         ? t('credits.agencyPoolDescription')
                                         : t('credits.personalDescription')
@@ -89,7 +89,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                         </div>
                         <button
                             onClick={onClose}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -122,7 +122,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                             className={`relative rounded-xl border p-4 transition-all cursor-pointer hover:shadow-lg ${
                                 pkg.isPopular
                                     ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                                    : 'border-border bg-card hover:border-primary/40'
+                                    : 'border-q-border bg-q-surface hover:border-primary/40'
                             }`}
                             onClick={() => !loading && handlePurchase(pkg)}
                         >
@@ -139,17 +139,17 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                                 <span className="font-bold text-foreground text-lg">
                                     {pkg.credits.toLocaleString()}
                                 </span>
-                                <span className="text-xs text-muted-foreground">{t('credits.creditsLabel')}</span>
+                                <span className="text-xs text-q-text-muted">{t('credits.creditsLabel')}</span>
                             </div>
 
                             {/* Price */}
                             <div className="flex items-baseline gap-1 mb-1">
                                 <span className="text-2xl font-extrabold text-foreground">${pkg.price}</span>
-                                <span className="text-xs text-muted-foreground">USD</span>
+                                <span className="text-xs text-q-text-muted">USD</span>
                             </div>
 
                             {/* Price per credit */}
-                            <div className="text-xs text-muted-foreground mb-3">
+                            <div className="text-xs text-q-text-muted mb-3">
                                 ${pkg.pricePerCredit.toFixed(3)} {t('credits.perCredit')}
                                 {pkg.discount > 0 && (
                                     <span className="ml-1.5 text-green-400 font-semibold">
@@ -188,8 +188,8 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-3 bg-secondary/30 border-t border-border text-center">
-                    <p className="text-xs text-muted-foreground">
+                <div className="px-6 py-3 bg-secondary/30 border-t border-q-border text-center">
+                    <p className="text-xs text-q-text-muted">
                         {t('credits.securePayment')}
                     </p>
                 </div>

@@ -145,7 +145,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                 onMouseLeave={handleMouseLeave}
             >
                 <div
-                    className="bg-card rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+                    className="bg-q-surface rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
                     style={{
                         boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.25)',
                     }}
@@ -163,11 +163,11 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                     </div>
 
                     {/* Header */}
-                    <div className="flex-shrink-0 px-4 pb-3 border-b border-border flex items-center justify-between">
+                    <div className="flex-shrink-0 px-4 pb-3 border-b border-q-border flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={onClose}
-                                className="p-1.5 -ml-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                                className="p-1.5 -ml-1.5 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                                 aria-label="Cerrar"
                             >
                                 <ChevronLeft size={20} />
@@ -175,13 +175,13 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                             <div>
                                 <h2 className="font-semibold text-base text-foreground">{title}</h2>
                                 {subtitle && (
-                                    <p className="text-xs text-muted-foreground">{subtitle}</p>
+                                    <p className="text-xs text-q-text-muted">{subtitle}</p>
                                 )}
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="p-1.5 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                             aria-label="Cerrar"
                         >
                             <X size={18} />

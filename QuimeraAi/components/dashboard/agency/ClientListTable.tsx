@@ -90,7 +90,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
 
     if (clients.length === 0) {
         return (
-            <div className="bg-card rounded-lg border border-border p-12">
+            <div className="bg-q-surface rounded-lg border border-q-border p-12">
                 <div className="text-center">
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
                         <svg
@@ -110,7 +110,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                         No hay clientes todavía
                     </h3>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-q-text-muted mt-1">
                         Comienza agregando tu primer sub-cliente
                     </p>
                     <button
@@ -125,7 +125,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
     }
 
     return (
-        <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="bg-q-surface rounded-lg border border-q-border overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-3xl font-bold text-foreground">
                     Clientes ({clients.length})
@@ -136,7 +136,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                 <table className="w-full">
                     <thead className="bg-muted">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                 Cliente
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -179,7 +179,7 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                                                 <div className="font-medium text-foreground">
                                                     {client.name}
                                                 </div>
-                                                <div className="text-sm text-muted-foreground">
+                                                <div className="text-sm text-q-text-muted">
                                                     {client.slug}
                                                 </div>
                                             </div>

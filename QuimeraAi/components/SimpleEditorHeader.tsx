@@ -85,13 +85,13 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
   };
 
   return (
-    <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+    <header className="h-14 px-3 md:px-6 border-b border-q-border bg-q-bg flex items-center justify-between z-20 sticky top-0 relative" role="banner">
       <div className="flex items-center gap-2 md:gap-4 min-w-0">
         {/* Mobile Menu Button - Opens DashboardSidebar */}
         {onOpenMobileMenu && (
           <button
             onClick={onOpenMobileMenu}
-            className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation lg:hidden"
+            className="h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation lg:hidden"
             title={t('common.menu')}
             aria-label={t('common.menu')}
           >
@@ -102,7 +102,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Dashboard Button - More prominent on mobile */}
         <button
           title={t('editor.goToDashboard')}
-          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
+          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation"
           onClick={handleGoToDashboard}
         >
           <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
@@ -111,7 +111,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         {/* Mobile Controls Button - Editor Controls Panel */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-q-accent' : 'text-q-text-muted hover:text-q-text'
             }`}
           title={t('editor.toggleControls')}
           aria-label={t('editor.toggleControls')}
@@ -122,7 +122,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
 
         {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
         <div className="hidden md:flex items-center gap-2">
-          <Globe className="text-primary" size={24} aria-hidden="true" />
+          <Globe className="text-q-accent" size={24} aria-hidden="true" />
 
           {/* Project Name */}
           {isEditingName ? (
@@ -132,12 +132,12 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
               onChange={handleNameChange}
               onBlur={handleNameBlur}
               onKeyDown={handleNameKeyDown}
-              className="bg-transparent text-xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary rounded px-2 py-1 min-w-[120px]"
+              className="bg-transparent text-xl font-bold text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent rounded px-2 py-1 min-w-[120px]"
             />
           ) : (
             <button
               onClick={() => setIsEditingName(true)}
-              className="text-xl font-bold text-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-border/40"
+              className="text-xl font-bold text-q-text hover:text-q-accent transition-colors px-2 py-1 rounded hover:bg-q-surface-elevated"
               title={t('editor.renameProject')}
             >
               {projectName}
@@ -147,7 +147,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
       </div>
 
       {/* CENTER SECTION - Device Preview Controls */}
-      <div className="hidden md:flex items-center gap-2 bg-secondary/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
+      <div className="hidden md:flex items-center gap-2 bg-q-surface-overlay/50 rounded-lg p-1 absolute left-1/2 -translate-x-1/2">
         {([
           { name: 'desktop' as PreviewDevice, icon: <Monitor className="w-4 h-4" />, label: t('editor.desktop') },
           { name: 'mobile' as PreviewDevice, icon: <Smartphone className="w-4 h-4" />, label: t('editor.mobile') },
@@ -159,8 +159,8 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             className={`
               flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
               ${previewDevice === name
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                ? 'bg-q-accent text-q-text-on-accent'
+                : 'text-q-text-muted hover:text-q-text hover:bg-q-bg/50'
               }
             `}
           >
@@ -180,7 +180,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
               saveState === 'saved'
                 ? 'bg-green-500/20 text-green-500'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                : 'text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay/50'
             }`}
           >
             {saveState === 'idle' ? (
@@ -224,7 +224,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
                 ? 'bg-green-500/20 text-green-500'
                 : publishState === 'error'
                   ? 'bg-red-500/20 text-red-500'
-                  : 'bg-primary text-primary-foreground hover:opacity-90'
+                  : 'bg-q-accent text-q-text-on-accent hover:opacity-90'
             } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
           >
             {publishState === 'publishing' ? (

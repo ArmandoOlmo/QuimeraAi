@@ -53,11 +53,11 @@ const money = (value: number) =>
 
 const statusClass = (status: PropertyStatus) => {
     const classes: Record<PropertyStatus, string> = {
-        draft: 'bg-muted text-muted-foreground',
+        draft: 'bg-muted text-q-text-muted',
         active: 'bg-green-500/15 text-green-400',
         pending: 'bg-amber-500/15 text-amber-400',
         sold: 'bg-primary/15 text-primary',
-        archived: 'bg-secondary text-muted-foreground',
+        archived: 'bg-secondary text-q-text-muted',
     };
     return classes[status];
 };
@@ -303,7 +303,7 @@ const RealEstateDashboard: React.FC = () => {
 
     if (!activeProjectId) {
         return (
-            <div className="flex h-screen bg-background text-foreground overflow-hidden">
+            <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                     <RealEstateHeader
@@ -314,10 +314,10 @@ const RealEstateDashboard: React.FC = () => {
                         t={t}
                     />
                     <main className="flex-1 min-w-0 overflow-y-auto p-6 md:p-8">
-                        <div className="max-w-3xl mx-auto bg-card/60 border border-border rounded-xl p-8 text-center">
-                            <Home className="mx-auto text-muted-foreground mb-4" size={44} />
+                        <div className="max-w-3xl mx-auto bg-q-surface/60 border border-q-border rounded-xl p-8 text-center">
+                            <Home className="mx-auto text-q-text-muted mb-4" size={44} />
                             <h1 className="text-2xl font-bold text-foreground">{t('realEstate.title')}</h1>
-                            <p className="text-muted-foreground mt-2">{t('realEstate.selectProject')}</p>
+                            <p className="text-q-text-muted mt-2">{t('realEstate.selectProject')}</p>
                         </div>
                     </main>
                 </div>
@@ -326,12 +326,12 @@ const RealEstateDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             {/* Section Navigation Panel — Desktop only */}
-            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-border bg-card/50 flex-shrink-0 overflow-hidden z-10">
-                <div className="h-14 px-4 border-b border-border flex items-center gap-2 flex-shrink-0">
+            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden z-10">
+                <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
                     <Home size={20} className="text-primary" />
                     <h2 className="text-sm font-bold text-foreground truncate">
                         {t('realEstate.title')}
@@ -354,7 +354,7 @@ const RealEstateDashboard: React.FC = () => {
                                         w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                         ${isActive
                                             ? 'bg-primary/10 text-primary shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                         }
                                     `}
                                 >
@@ -381,7 +381,7 @@ const RealEstateDashboard: React.FC = () => {
                 />
                 
                 {/* Mobile Tabs */}
-                <div className="md:hidden border-b border-border bg-background px-2 py-2 z-10">
+                <div className="md:hidden border-b border-q-border bg-q-bg px-2 py-2 z-10">
                     <div className="grid grid-cols-3 gap-1">
                         {[
                             ['overview', BarChart3, t('realEstate.tabs.dashboard')],
@@ -396,7 +396,7 @@ const RealEstateDashboard: React.FC = () => {
                                     onClick={() => setActiveTab(id as Tab)}
                                     className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
                                         ? 'bg-primary/10 text-primary'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                         }`}
                                 >
                                     <TabIcon className="w-4 h-4 shrink-0" />
@@ -427,9 +427,9 @@ const RealEstateDashboard: React.FC = () => {
                                         ].map(([label, value, Icon]) => {
                                             const MetricIcon = Icon as typeof Home;
                                             return (
-                                                <div key={label as string} className="bg-card/60 border border-border rounded-xl p-4">
+                                                <div key={label as string} className="bg-q-surface/60 border border-q-border rounded-xl p-4">
                                                     <div className="flex items-center justify-between">
-                                                        <p className="text-sm text-muted-foreground">{label as string}</p>
+                                                        <p className="text-sm text-q-text-muted">{label as string}</p>
                                                         <MetricIcon className="text-primary" size={18} />
                                                     </div>
                                                     <p className="text-3xl font-bold text-foreground mt-3">{value as number}</p>
@@ -438,7 +438,7 @@ const RealEstateDashboard: React.FC = () => {
                                         })}
                                     </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                        <div className="lg:col-span-2 bg-card/60 border border-border rounded-xl p-5">
+                                        <div className="lg:col-span-2 bg-q-surface/60 border border-q-border rounded-xl p-5">
                                             <h2 className="font-bold text-lg mb-4">{t('realEstate.featuredProperties')}</h2>
                                             <div className="space-y-3">
                                                 {properties.slice(0, 4).map(property => (
@@ -454,7 +454,7 @@ const RealEstateDashboard: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="bg-card/60 border border-border rounded-xl p-5">
+                                        <div className="bg-q-surface/60 border border-q-border rounded-xl p-5">
                                             <h2 className="font-bold text-lg mb-4">{t('realEstate.quickActions')}</h2>
                                             <div className="space-y-2">
                                                 <Button className="w-full justify-start" variant="secondary" onClick={() => openPropertyForm()}><Plus size={16} />{t('realEstate.actions.createProperty')}</Button>
@@ -468,20 +468,20 @@ const RealEstateDashboard: React.FC = () => {
                             {activeTab === 'properties' && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                     {properties.map(property => (
-                                        <div key={property.id} className="bg-card/60 border border-border rounded-xl overflow-hidden">
+                                        <div key={property.id} className="bg-q-surface/60 border border-q-border rounded-xl overflow-hidden">
                                             <div className="aspect-video bg-muted">
-                                                {property.images[0]?.url ? <img src={property.images[0].url} alt={property.title} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-muted-foreground"><Home size={40} /></div>}
+                                                {property.images[0]?.url ? <img src={property.images[0].url} alt={property.title} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-q-text-muted"><Home size={40} /></div>}
                                             </div>
                                             <div className="p-4 space-y-3">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div>
                                                         <h3 className="font-bold line-clamp-1">{property.title}</h3>
-                                                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin size={14} />{property.city}</p>
+                                                        <p className="text-sm text-q-text-muted flex items-center gap-1 mt-1"><MapPin size={14} />{property.city}</p>
                                                     </div>
                                                     <span className={`text-xs px-2 py-1 rounded-full font-semibold ${statusClass(property.status)}`}>{statusLabels[property.status]}</span>
                                                 </div>
                                                 <p className="text-xl font-bold text-primary">{money(property.price)}</p>
-                                                <p className="text-sm text-muted-foreground">{t('realEstate.propertyStats', { bedrooms: property.bedrooms, bathrooms: property.bathrooms, squareFeet: property.squareFeet.toLocaleString() })}</p>
+                                                <p className="text-sm text-q-text-muted">{t('realEstate.propertyStats', { bedrooms: property.bedrooms, bathrooms: property.bathrooms, squareFeet: property.squareFeet.toLocaleString() })}</p>
                                                 <div className="flex gap-2">
                                                     <Button variant="secondary" size="sm" onClick={() => openPropertyForm(property)}><Edit size={14} />{t('common.edit')}</Button>
                                                     <Button variant="secondary" size="sm" onClick={() => { setSelectedPropertyId(property.id); setActiveTab('preview'); }}><Eye size={14} />{t('realEstate.actions.preview')}</Button>
@@ -516,7 +516,7 @@ const RealEstateDashboard: React.FC = () => {
 
             <Modal isOpen={propertyModalOpen} onClose={() => setPropertyModalOpen(false)} maxWidth="max-w-5xl" fullScreenMobile>
                 <form onSubmit={saveProperty} className="flex flex-col h-full flex-1 min-h-0">
-                    <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
+                    <div className="p-5 border-b border-q-border flex items-center justify-between shrink-0">
                         <h2 className="text-xl font-bold">{editingProperty ? t('realEstate.form.editProperty') : t('realEstate.form.createProperty')}</h2>
                         <Button type="button" variant="ghost" size="icon" onClick={() => setPropertyModalOpen(false)} aria-label={t('common.close')}><X size={16} /></Button>
                     </div>
@@ -527,7 +527,7 @@ const RealEstateDashboard: React.FC = () => {
                                     <ImagePicker label="" value={propertyForm.images[0]?.url || ''} onChange={addImageUrl} destination="user" />
                                 </div>
                                 <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 gap-2">
-                                    {propertyForm.images.map(image => <img key={image.id} src={image.url} alt={image.altText || ''} className="h-16 sm:h-20 w-full rounded-lg object-cover border border-border" />)}
+                                    {propertyForm.images.map(image => <img key={image.id} src={image.url} alt={image.altText || ''} className="h-16 sm:h-20 w-full rounded-lg object-cover border border-q-border" />)}
                                 </div>
                             </div>
                         </Field>
@@ -546,7 +546,7 @@ const RealEstateDashboard: React.FC = () => {
                             {t('realEstate.form.featuredProperty')}
                         </label>
                         <Field label={t('realEstate.form.description')} className="lg:col-span-2">
-                            <textarea value={propertyForm.description} onChange={event => setPropertyForm(prev => ({ ...prev, description: event.target.value }))} className="w-full min-h-32 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                            <textarea value={propertyForm.description} onChange={event => setPropertyForm(prev => ({ ...prev, description: event.target.value }))} className="w-full min-h-32 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
                         <Field label={t('realEstate.form.amenities')} className="lg:col-span-2">
                             <div className="flex gap-2">
@@ -558,7 +558,7 @@ const RealEstateDashboard: React.FC = () => {
                             </div>
                         </Field>
                     </div>
-                    <div className="p-5 border-t border-border flex justify-end gap-2 shrink-0">
+                    <div className="p-5 border-t border-q-border flex justify-end gap-2 shrink-0">
                         <Button type="button" variant="secondary" onClick={() => setPropertyModalOpen(false)}>{t('common.cancel')}</Button>
                         <Button type="submit">{t('realEstate.form.saveProperty')}</Button>
                     </div>
@@ -588,11 +588,11 @@ const RealEstateHeader = ({
     isSeedingDemo?: boolean;
     t: (key: string, options?: Record<string, unknown>) => string;
 }) => (
-    <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+    <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
         <div className="flex items-center gap-1 sm:gap-4 min-w-0">
             <button
                 onClick={onOpenMenu}
-                className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
+                className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
                 aria-label={t('common.openMenu')}
             >
                 <Menu className="w-5 h-5" />
@@ -601,7 +601,7 @@ const RealEstateHeader = ({
                 <Home className="text-primary w-5 h-5 flex-shrink-0" />
                 <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">{title}</h1>
                 {projectName && (
-                    <span className="hidden md:inline text-sm text-muted-foreground truncate max-w-[220px]">
+                    <span className="hidden md:inline text-sm text-q-text-muted truncate max-w-[220px]">
                         {projectName}
                     </span>
                 )}
@@ -627,13 +627,13 @@ const RealEstateHeader = ({
 
 const Field = ({ label, children, className = '' }: { label: string; children: React.ReactNode; className?: string }) => (
     <label className={`block space-y-2 ${className}`}>
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-bold text-q-text-muted uppercase tracking-wider">{label}</span>
         {children}
     </label>
 );
 
 const EmptyState = ({ label, actionLabel, onAction, isActionLoading }: { label: string; actionLabel?: string; onAction?: () => void; isActionLoading?: boolean }) => (
-    <div className="border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
+    <div className="border border-dashed border-q-border rounded-xl p-8 text-center text-q-text-muted">
         <p>{label}</p>
         {actionLabel && onAction && (
             <Button className="mt-4" variant="secondary" onClick={onAction} disabled={isActionLoading}>
@@ -659,10 +659,10 @@ const PropertyRow = ({
     onPreview: () => void;
     t: (key: string) => string;
 }) => (
-    <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-background/60 border border-border">
+    <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-q-bg/60 border border-q-border">
         <div className="min-w-0">
             <p className="font-semibold truncate">{property.title}</p>
-            <p className="text-sm text-muted-foreground">{money(property.price)} · {property.city}</p>
+            <p className="text-sm text-q-text-muted">{money(property.price)} · {property.city}</p>
         </div>
         <div className="flex items-center gap-2">
             <span className={`hidden sm:inline text-xs px-2 py-1 rounded-full font-semibold ${statusClass(property.status)}`}>{statusLabels[property.status]}</span>
@@ -679,30 +679,30 @@ const ListingPreview = ({ property, properties, onSelect, onPublish, onUnpublish
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-            <div className="bg-card/60 border border-border rounded-xl p-4 space-y-4">
+            <div className="bg-q-surface/60 border border-q-border rounded-xl p-4 space-y-4">
                 <DashboardSelect value={property.id} onChange={onSelect} options={properties.map(item => ({ value: item.id, label: item.title }))} />
                 <div className="flex gap-2">
                     <Button className="flex-1" onClick={() => onPublish(property.id)}>{t('realEstate.actions.publish')}</Button>
                     <Button className="flex-1" variant="secondary" onClick={() => onUnpublish(property.id)}>{t('realEstate.actions.unpublish')}</Button>
                 </div>
-                <p className="text-sm text-muted-foreground">{t('realEstate.preview.publicSync')}</p>
+                <p className="text-sm text-q-text-muted">{t('realEstate.preview.publicSync')}</p>
             </div>
-            <article className="bg-card border border-border rounded-xl overflow-hidden">
+            <article className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
                 <div className="aspect-[16/7] bg-muted">
-                    {property.images[0]?.url ? <img src={property.images[0].url} alt={property.title} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-muted-foreground"><Home size={56} /></div>}
+                    {property.images[0]?.url ? <img src={property.images[0].url} alt={property.title} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center text-q-text-muted"><Home size={56} /></div>}
                 </div>
                 <div className="p-6 md:p-8 space-y-6">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div>
                             <h2 className="text-3xl font-bold">{property.title}</h2>
-                            <p className="text-muted-foreground flex items-center gap-2 mt-2"><MapPin size={16} />{property.address}, {property.city}</p>
+                            <p className="text-q-text-muted flex items-center gap-2 mt-2"><MapPin size={16} />{property.address}, {property.city}</p>
                         </div>
                         <p className="text-3xl font-bold text-primary">{money(property.price)}</p>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-background/70 rounded-lg p-3 text-center"><p className="font-bold">{property.bedrooms}</p><p className="text-xs text-muted-foreground">{t('realEstate.units.beds')}</p></div>
-                        <div className="bg-background/70 rounded-lg p-3 text-center"><p className="font-bold">{property.bathrooms}</p><p className="text-xs text-muted-foreground">{t('realEstate.units.baths')}</p></div>
-                        <div className="bg-background/70 rounded-lg p-3 text-center"><p className="font-bold">{property.squareFeet.toLocaleString()}</p><p className="text-xs text-muted-foreground">{t('realEstate.units.sqft')}</p></div>
+                        <div className="bg-q-bg/70 rounded-lg p-3 text-center"><p className="font-bold">{property.bedrooms}</p><p className="text-xs text-q-text-muted">{t('realEstate.units.beds')}</p></div>
+                        <div className="bg-q-bg/70 rounded-lg p-3 text-center"><p className="font-bold">{property.bathrooms}</p><p className="text-xs text-q-text-muted">{t('realEstate.units.baths')}</p></div>
+                        <div className="bg-q-bg/70 rounded-lg p-3 text-center"><p className="font-bold">{property.squareFeet.toLocaleString()}</p><p className="text-xs text-q-text-muted">{t('realEstate.units.sqft')}</p></div>
                     </div>
                     <p className="leading-7 text-foreground/90 whitespace-pre-wrap">{property.description || t('realEstate.preview.noDescription')}</p>
                     <div className="flex flex-wrap gap-2">{property.amenities.map(amenity => <span key={amenity} className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm">{amenity}</span>)}</div>

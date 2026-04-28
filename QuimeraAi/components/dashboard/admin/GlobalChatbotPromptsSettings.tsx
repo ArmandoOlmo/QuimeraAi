@@ -273,15 +273,15 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
     };
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <Bot className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-semibold text-editor-text-primary">
+                        <Bot className="text-q-accent w-5 h-5" />
+                        <h1 className="text-lg font-semibold text-q-text">
                             Prompts Globales del Chatbot
                         </h1>
                         {hasChanges && (
@@ -291,10 +291,10 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onBack} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                         <button
                             onClick={handleResetAll}
-                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium text-q-text-secondary hover:text-q-text transition-colors"
                         >
                             <RotateCcw className="w-4 h-4" />
                             <span className="hidden sm:inline">Restablecer Todo</span>
@@ -307,8 +307,8 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                                 : saveStatus === 'error'
                                     ? 'bg-red-500/20 text-red-400'
                                     : hasChanges
-                                        ? 'bg-editor-accent text-editor-bg hover:bg-editor-accent-hover'
-                                        : 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
+                                        ? 'bg-q-accent text-q-bg hover:bg-q-accent'
+                                        : 'bg-q-surface-overlay text-q-text-secondary cursor-not-allowed'
                                 }`}
                         >
                             {isSaving ? (
@@ -328,14 +328,14 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                 <main className="flex-1 overflow-y-auto">
                     <div className="max-w-6xl mx-auto p-6 sm:p-8">
                         {/* Description */}
-                        <div className="mb-6 p-4 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                        <div className="mb-6 p-4 bg-q-accent/10 border border-q-accent/30 rounded-lg">
                             <div className="flex items-start gap-3">
-                                <Info className="w-5 h-5 text-editor-accent flex-shrink-0 mt-0.5" />
+                                <Info className="w-5 h-5 text-q-accent flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <h3 className="font-semibold text-editor-text-primary mb-1">
+                                    <h3 className="font-semibold text-q-text mb-1">
                                         Configuración Global de Prompts
                                     </h3>
-                                    <p className="text-sm text-editor-text-secondary">
+                                    <p className="text-sm text-q-text-secondary">
                                         Estos prompts se aplican a <strong>todos los chatbots</strong> de los proyectos en la plataforma.
                                         Los cambios aquí afectan el comportamiento base de la IA.
                                         Usa los placeholders (ej: {'{{agentName}}'}) que serán reemplazados dinámicamente con los datos de cada proyecto.
@@ -346,20 +346,20 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
 
                         {isLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <div className="w-8 h-8 border-3 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                                <div className="w-8 h-8 border-3 border-q-accent border-t-transparent rounded-full animate-spin" />
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                                 {/* Tabs Sidebar */}
                                 <div className="lg:col-span-1">
-                                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-2 space-y-1">
+                                    <div className="bg-q-surface border border-q-border rounded-lg p-2 space-y-1">
                                         {TABS.map(tab => (
                                             <button
                                                 key={tab.id}
                                                 onClick={() => setActiveTab(tab.id)}
                                                 className={`w-full text-left p-3 rounded-lg transition-all ${activeTab === tab.id
-                                                    ? 'bg-editor-accent/15 text-editor-accent border border-editor-accent/30'
-                                                    : 'text-editor-text-secondary hover:bg-editor-border/50 hover:text-editor-text-primary'
+                                                    ? 'bg-q-accent/15 text-q-accent border border-q-accent/30'
+                                                    : 'text-q-text-secondary hover:bg-q-surface-overlay/50 hover:text-q-text'
                                                     }`}
                                             >
                                                 <div className="font-medium text-sm">{tab.label}</div>
@@ -371,19 +371,19 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
 
                                 {/* Editor */}
                                 <div className="lg:col-span-3">
-                                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg">
-                                        <div className="p-4 border-b border-editor-border flex items-center justify-between">
+                                    <div className="bg-q-surface border border-q-border rounded-lg">
+                                        <div className="p-4 border-b border-q-border flex items-center justify-between">
                                             <div>
-                                                <h2 className="font-semibold text-editor-text-primary">
+                                                <h2 className="font-semibold text-q-text">
                                                     {TABS.find(t => t.id === activeTab)?.label}
                                                 </h2>
-                                                <p className="text-sm text-editor-text-secondary mt-0.5">
+                                                <p className="text-sm text-q-text-secondary mt-0.5">
                                                     {TABS.find(t => t.id === activeTab)?.description}
                                                 </p>
                                             </div>
                                             <button
                                                 onClick={() => handleReset(getCurrentPromptField())}
-                                                className="text-sm text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center gap-1"
+                                                className="text-sm text-q-text-secondary hover:text-q-accent transition-colors flex items-center gap-1"
                                             >
                                                 <RotateCcw className="w-3.5 h-3.5" />
                                                 Restablecer
@@ -392,11 +392,11 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
 
                                         {/* Placeholders Info */}
                                         {getPlaceholders().length > 0 && (
-                                            <div className="px-4 py-2 border-b border-editor-border bg-editor-bg/50">
-                                                <span className="text-xs text-editor-text-secondary">
+                                            <div className="px-4 py-2 border-b border-q-border bg-q-bg/50">
+                                                <span className="text-xs text-q-text-secondary">
                                                     Placeholders disponibles:{' '}
                                                     {getPlaceholders().map((p, i) => (
-                                                        <code key={p} className="bg-editor-border px-1.5 py-0.5 rounded text-editor-accent mx-0.5">
+                                                        <code key={p} className="bg-q-surface-overlay px-1.5 py-0.5 rounded text-q-accent mx-0.5">
                                                             {p}
                                                         </code>
                                                     ))}
@@ -408,14 +408,14 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
                                             <textarea
                                                 value={prompts[getCurrentPromptField()] || ''}
                                                 onChange={(e) => handlePromptChange(getCurrentPromptField(), e.target.value)}
-                                                className="w-full h-96 bg-editor-bg text-editor-text-primary p-4 rounded-lg border border-editor-border font-mono text-sm resize-none focus:ring-2 focus:ring-editor-accent focus:border-transparent outline-none"
+                                                className="w-full h-96 bg-q-bg text-q-text p-4 rounded-lg border border-q-border font-mono text-sm resize-none focus:ring-2 focus:ring-q-accent focus:border-transparent outline-none"
                                                 placeholder="Escribe el prompt aquí..."
                                             />
                                         </div>
 
                                         {/* Character count */}
                                         <div className="px-4 pb-4">
-                                            <span className="text-xs text-editor-text-secondary">
+                                            <span className="text-xs text-q-text-secondary">
                                                 {(prompts[getCurrentPromptField()] || '').length} caracteres
                                             </span>
                                         </div>

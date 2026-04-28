@@ -15,33 +15,33 @@ import ColorControl from '../../../../ui/ColorControl';
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, ...props }) => (
     <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <input
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
 
 const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }> = ({ label, ...props }) => (
     <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <textarea
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent resize-y min-h-[60px] transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent resize-y min-h-[60px] transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
 
 const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
     <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
         <button
             type="button"
             role="switch"
             aria-checked={checked}
             onClick={() => onChange(!checked)}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
             <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
         </button>
@@ -52,13 +52,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['sm', 'md', 'lg', 'xl'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size.toUpperCase()}
                     </button>
@@ -76,13 +76,13 @@ const AlignmentSelector: React.FC<{ label: string; value: string; onChange: (val
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt.v}
                         onClick={() => onChange(opt.v)}
-                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {opt.l}
                     </button>
@@ -96,13 +96,13 @@ const FontSizeSelector: React.FC<{ label: string; value: string; onChange: (valu
     const options = ['xs', 'sm', 'md'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size.toUpperCase()}
                     </button>
@@ -168,7 +168,7 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                     placeholder="© 2024 All rights reserved"
                 />
                 
-                <hr className="border-editor-border" />
+                <hr className="border-q-border" />
                 
                 <ToggleControl
                     label={t('email.showUnsubscribe', 'Mostrar enlace para cancelar suscripción')}
@@ -209,7 +209,7 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
                 onChange={(color) => updateStyles({ textColor: color })}
             />
             
-            <hr className="border-editor-border" />
+            <hr className="border-q-border" />
             
             <FontSizeSelector
                 label={t('email.fontSize', 'Tamaño de fuente')}

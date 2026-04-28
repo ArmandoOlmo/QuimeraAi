@@ -262,47 +262,47 @@ export function InvoiceHistory() {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <DollarSign className="h-5 w-5 text-green-600" />
-                        <span className="text-sm font-medium text-muted-foreground">
+                        <span className="text-sm font-medium text-q-text-muted">
                             Ingresos Totales
                         </span>
                     </div>
                     <p className="text-3xl font-bold text-foreground">
                         {formatCurrency(calculateTotalRevenue())}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-q-text-muted mt-1">
                         {dateRange === 'all'
                             ? 'Todo el tiempo'
                             : `Últimos ${dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90'} días`}
                     </p>
                 </div>
 
-                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <TrendingUp className="h-5 w-5 text-blue-600" />
-                        <span className="text-sm font-medium text-muted-foreground">
+                        <span className="text-sm font-medium text-q-text-muted">
                             Pago Promedio
                         </span>
                     </div>
                     <p className="text-3xl font-bold text-foreground">
                         {formatCurrency(calculateAveragePayment())}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">Por transacción</p>
+                    <p className="text-sm text-q-text-muted mt-1">Por transacción</p>
                 </div>
 
-                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <CheckCircle className="h-5 w-5 text-purple-600" />
-                        <span className="text-sm font-medium text-muted-foreground">
+                        <span className="text-sm font-medium text-q-text-muted">
                             Transacciones
                         </span>
                     </div>
                     <p className="text-3xl font-bold text-foreground">
                         {payments.filter((p) => p.status === 'succeeded').length}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-q-text-muted mt-1">
                         Exitosas de {payments.length} totales
                     </p>
                 </div>
@@ -337,7 +337,7 @@ export function InvoiceHistory() {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-card text-foreground text-sm focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="all">Todos los estados</option>
                         <option value="succeeded">Exitoso</option>
@@ -353,7 +353,7 @@ export function InvoiceHistory() {
                     <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value as any)}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-card text-foreground text-sm focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-q-surface text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="7d">Últimos 7 días</option>
                         <option value="30d">Últimos 30 días</option>
@@ -365,24 +365,24 @@ export function InvoiceHistory() {
 
             {/* Content */}
             {activeView === 'payments' ? (
-                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Monto
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         ID Transacción
                                     </th>
                                 </tr>
@@ -405,7 +405,7 @@ export function InvoiceHistory() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {getStatusBadge(payment.status)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-muted-foreground font-mono">
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-q-text-muted font-mono">
                                             {payment.stripePaymentIntentId?.substring(0, 20)}...
                                         </td>
                                     </tr>
@@ -417,37 +417,37 @@ export function InvoiceHistory() {
                     {filteredPayments.length === 0 && (
                         <div className="text-center py-12">
                             <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-muted-foreground">
+                            <p className="text-q-text-muted">
                                 No hay pagos para mostrar
                             </p>
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="bg-card rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-q-surface rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Período
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Cliente
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Base
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Overages
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Total
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase">
                                         Acciones
                                     </th>
                                 </tr>
@@ -497,7 +497,7 @@ export function InvoiceHistory() {
                     {filteredInvoices.length === 0 && (
                         <div className="text-center py-12">
                             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-muted-foreground">
+                            <p className="text-q-text-muted">
                                 No hay invoices para mostrar
                             </p>
                         </div>

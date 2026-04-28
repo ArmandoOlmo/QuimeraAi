@@ -536,8 +536,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Búsqueda */}
-        <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-          <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+        <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+          <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
           <input
             type="text"
             placeholder="Buscar por nombre, industria o tags..."

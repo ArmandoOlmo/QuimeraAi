@@ -16,23 +16,23 @@ import ColorControl from '../../../../ui/ColorControl';
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, ...props }) => (
     <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <input
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
 
 const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
     <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
         <button
             type="button"
             role="switch"
             aria-checked={checked}
             onClick={() => onChange(!checked)}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
             <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
         </button>
@@ -43,13 +43,13 @@ const ColumnSelector: React.FC<{ label: string; value: number; onChange: (value:
     const options = [1, 2, 3];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt}
                         onClick={() => onChange(opt)}
-                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {opt}
                     </button>
@@ -63,13 +63,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size.toUpperCase()}
                     </button>
@@ -130,8 +130,8 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-editor-text-secondary flex items-center gap-2">
+                <div className="bg-q-surface/50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-q-text-secondary flex items-center gap-2">
                         <Package size={14} />
                         {t('email.productsHint', 'Agrega IDs de productos de tu tienda para mostrarlos en el email')}
                     </p>
@@ -139,7 +139,7 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                 
                 {/* Product IDs */}
                 <div>
-                    <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">
                         {t('email.productIds', 'IDs de Productos')}
                     </label>
                     
@@ -151,11 +151,11 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                                     value={productId}
                                     onChange={(e) => updateProductId(index, e.target.value)}
                                     placeholder={t('email.productIdPlaceholder', 'ID del producto...')}
-                                    className="flex-1 bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                    className="flex-1 bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                 />
                                 <button
                                     onClick={() => removeProductId(index)}
-                                    className="p-2 text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                                    className="p-2 text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
                                 >
                                     <X size={16} />
                                 </button>
@@ -165,14 +165,14 @@ const ProductsBlockControls: React.FC<ProductsBlockControlsProps> = ({ block, ac
                     
                     <button
                         onClick={addProductId}
-                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-editor-border rounded-md text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-colors"
+                        className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-q-border rounded-md text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-colors"
                     >
                         <Plus size={14} />
                         <span className="text-sm">{t('email.addProduct', 'Agregar producto')}</span>
                     </button>
                 </div>
                 
-                <hr className="border-editor-border" />
+                <hr className="border-q-border" />
                 
                 <ColumnSelector
                     label={t('email.productColumns', 'Productos por fila')}

@@ -40,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         : 0;
 
     return (
-        <div className="bg-card/50 rounded-xl border border-border overflow-hidden hover:border-primary/50 transition-colors group">
+        <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden hover:border-primary/50 transition-colors group">
             {/* Image */}
             <div className="relative aspect-square">
                 {product.images && product.images.length > 0 ? (
@@ -51,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     />
                 ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <ImageIcon className="text-muted-foreground" size={48} />
+                        <ImageIcon className="text-q-text-muted" size={48} />
                     </div>
                 )}
 
@@ -61,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             product.status === 'draft'
                                 ? 'bg-yellow-500/20 text-yellow-400'
-                                : 'bg-muted text-muted-foreground'
+                                : 'bg-muted text-q-text-muted'
                         }`}>
                             {product.status === 'draft' ? 'Borrador' : 'Archivado'}
                         </span>
@@ -116,7 +116,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     {product.name}
                 </h3>
 
-                <p className="text-muted-foreground text-sm mb-2">{categoryName}</p>
+                <p className="text-q-text-muted text-sm mb-2">{categoryName}</p>
 
                 <div className="flex items-center justify-between">
                     <div>
@@ -124,21 +124,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
                             ${product.price.toFixed(2)}
                         </span>
                         {hasDiscount && (
-                            <span className="text-muted-foreground text-sm line-through ml-2">
+                            <span className="text-q-text-muted text-sm line-through ml-2">
                                 ${product.compareAtPrice!.toFixed(2)}
                             </span>
                         )}
                     </div>
 
                     {product.trackInventory && (
-                        <span className={`text-sm ${isLowStock ? 'text-orange-400' : 'text-muted-foreground'}`}>
+                        <span className={`text-sm ${isLowStock ? 'text-orange-400' : 'text-q-text-muted'}`}>
                             {product.quantity} uds
                         </span>
                     )}
                 </div>
 
                 {product.sku && (
-                    <p className="text-muted-foreground text-xs mt-2">SKU: {product.sku}</p>
+                    <p className="text-q-text-muted text-xs mt-2">SKU: {product.sku}</p>
                 )}
             </div>
         </div>

@@ -866,19 +866,19 @@ Name:`;
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
             {/* Compact Header */}
-            <div className="px-5 py-4 border-b border-editor-border flex justify-between items-center bg-editor-bg">
+            <div className="px-5 py-4 border-b border-q-border flex justify-between items-center bg-q-bg">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-editor-accent/10 border border-editor-accent/20 flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-editor-accent" />
+                    <div className="w-10 h-10 rounded-md bg-q-accent/10 border border-q-accent/20 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-q-accent" />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-editor-text-primary">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
-                        <p className="text-xs text-editor-text-secondary">{template?.name === 'New Template' ? '' : template?.name}</p>
+                        <h2 className="text-base font-semibold text-q-text">{t('superadmin.templateEditor.title', 'Template Editor')}</h2>
+                        <p className="text-xs text-q-text-secondary">{template?.name === 'New Template' ? '' : template?.name}</p>
                     </div>
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-1.5 rounded-lg hover:bg-editor-border transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-q-surface-overlay transition-colors"
                 >
                     <X className="w-4 h-4" />
                 </button>
@@ -898,11 +898,11 @@ Name:`;
                         {/* LEFT COLUMN - Basic Info & Colors */}
                         <div className="space-y-4">
                             {/* Name & Category Row */}
-                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border/50">
                                 <div className="space-y-3">
                                     {/* Name with AI Button */}
                                     <div>
-                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">{t('superadmin.templateEditor.nameLabel', 'Name')}</label>
+                                        <label className="text-xs font-medium text-q-text-secondary mb-1.5 block">{t('superadmin.templateEditor.nameLabel', 'Name')}</label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
@@ -910,7 +910,7 @@ Name:`;
                                                 value={formData.name}
                                                 onChange={handleChange}
                                                 placeholder={t('superadmin.templateEditor.namePlaceholder', 'Template name')}
-                                                className="flex-1 bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                                className="flex-1 bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
                                             />
                                             <button
                                                 type="button"
@@ -926,25 +926,25 @@ Name:`;
 
                                     {/* Category */}
                                     <div>
-                                        <label className="text-xs font-medium text-editor-text-secondary mb-1.5 block">{t('superadmin.templateEditor.categoryLabel', 'Category')}</label>
+                                        <label className="text-xs font-medium text-q-text-secondary mb-1.5 block">{t('superadmin.templateEditor.categoryLabel', 'Category')}</label>
                                         <input
                                             type="text"
                                             name="category"
                                             value={formData.category}
                                             onChange={handleChange}
                                             placeholder={t('superadmin.templateEditor.categoryPlaceholder', 'e.g., Hospitality & Dining')}
-                                            className="w-full bg-editor-bg text-white text-sm p-2 rounded-lg border border-editor-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                            className="w-full bg-q-bg text-white text-sm p-2 rounded-lg border border-q-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Colors Section - Compact */}
-                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border/50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <Palette className="w-4 h-4 text-purple-400" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">{t('superadmin.templateEditor.colorsLabel', 'Colors')}</span>
+                                        <span className="text-xs font-medium text-q-text-secondary">{t('superadmin.templateEditor.colorsLabel', 'Colors')}</span>
                                     </div>
                                     <button
                                         type="button"
@@ -967,7 +967,7 @@ Name:`;
                                         />
                                     ))}
                                     {displayColors.length === 0 && (
-                                        <p className="text-xs text-editor-text-secondary/50">{t('superadmin.templateEditor.noColors', 'No colors')}</p>
+                                        <p className="text-xs text-q-text-secondary/50">{t('superadmin.templateEditor.noColors', 'No colors')}</p>
                                     )}
                                 </div>
 
@@ -983,7 +983,7 @@ Name:`;
 
                                 {/* Coolors Importer - Inline */}
                                 {showCoolorsImporter && (
-                                    <div className="pt-3 border-t border-editor-border/50">
+                                    <div className="pt-3 border-t border-q-border/50">
                                         <CoolorsImporter
                                             onPaletteGenerated={handleCoolorsPaletteGenerated}
                                             projectId={template?.id || 'template-editor'}
@@ -994,11 +994,11 @@ Name:`;
                             </div>
 
                             {/* Industries Section */}
-                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border/50">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <Building2 className="w-4 h-4 text-editor-accent" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">{t('industries.title')}</span>
+                                        <Building2 className="w-4 h-4 text-q-accent" />
+                                        <span className="text-xs font-medium text-q-text-secondary">{t('industries.title')}</span>
                                     </div>
                                     <button
                                         type="button"
@@ -1039,18 +1039,18 @@ Name:`;
 
                         {/* RIGHT COLUMN - Thumbnail */}
                         <div className="space-y-4">
-                            <div className="bg-editor-surface/50 rounded-xl p-4 border border-editor-border/50">
+                            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border/50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
-                                        <ImageIcon className="w-4 h-4 text-editor-accent" />
-                                        <span className="text-xs font-medium text-editor-text-secondary">{t('superadmin.templateEditor.thumbnailLabel', 'Thumbnail')}</span>
+                                        <ImageIcon className="w-4 h-4 text-q-accent" />
+                                        <span className="text-xs font-medium text-q-text-secondary">{t('superadmin.templateEditor.thumbnailLabel', 'Thumbnail')}</span>
                                     </div>
                                     <div className="flex gap-1.5">
                                         <input type="file" ref={fileInputRef} accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
                                         <button
                                             type="button"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="p-1.5 text-xs bg-editor-border text-editor-text-secondary hover:text-white rounded-lg transition-colors"
+                                            className="p-1.5 text-xs bg-q-surface-overlay text-q-text-secondary hover:text-white rounded-lg transition-colors"
                                             title={t('superadmin.templateEditor.uploadImageTitle', 'Upload image')}
                                         >
                                             <Upload className="w-3.5 h-3.5" />
@@ -1070,11 +1070,11 @@ Name:`;
                                 </div>
 
                                 {/* Thumbnail Preview */}
-                                <div className="relative aspect-video w-full bg-editor-bg rounded-lg overflow-hidden border border-editor-border/50">
+                                <div className="relative aspect-video w-full bg-q-bg rounded-lg overflow-hidden border border-q-border/50">
                                     {formData.thumbnailUrl ? (
                                         <img src={formData.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-editor-text-secondary/50">
+                                        <div className="flex items-center justify-center h-full text-q-text-secondary/50">
                                             <div className="text-center">
                                                 <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-30" />
                                                 <p className="text-xs">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
@@ -1101,7 +1101,7 @@ Name:`;
                                                     type="button"
                                                     onClick={handleEnhancePrompt}
                                                     disabled={isEnhancingPrompt || !thumbnailPrompt}
-                                                    className="text-[10px] px-1.5 py-0.5 text-editor-accent hover:text-white disabled:opacity-50"
+                                                    className="text-[10px] px-1.5 py-0.5 text-q-accent hover:text-white disabled:opacity-50"
                                                 >
                                                     {t('superadmin.templateEditor.enhance', 'Enhance')}
                                                 </button>
@@ -1112,7 +1112,7 @@ Name:`;
                                             value={thumbnailPrompt}
                                             onChange={(e) => setThumbnailPrompt(e.target.value)}
                                             placeholder={t('superadmin.templateEditor.describePlaceholder', 'Describe the image...')}
-                                            className="w-full bg-editor-bg border border-editor-border rounded-lg p-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none resize-none h-16"
+                                            className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none resize-none h-16"
                                         />
 
                                         {/* Style Pills - Horizontal Scroll */}
@@ -1124,7 +1124,7 @@ Name:`;
                                                     onClick={() => setThumbnailStyle(s.value)}
                                                     className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors ${thumbnailStyle === s.value
                                                         ? 'bg-purple-600 text-white'
-                                                        : 'bg-editor-border text-editor-text-secondary'
+                                                        : 'bg-q-surface-overlay text-q-text-secondary'
                                                         }`}
                                                 >
                                                     {s.label}
@@ -1148,7 +1148,7 @@ Name:`;
                                         {/* Generated Preview */}
                                         {generatedThumbnail && (
                                             <div className="mt-3">
-                                                <div className="relative aspect-video w-full bg-editor-border rounded-lg overflow-hidden mb-2">
+                                                <div className="relative aspect-video w-full bg-q-surface-overlay rounded-lg overflow-hidden mb-2">
                                                     <img src={generatedThumbnail} alt="Generated" className="w-full h-full object-cover" />
                                                     <button
                                                         type="button"
@@ -1162,7 +1162,7 @@ Name:`;
                                                 <button
                                                     type="button"
                                                     onClick={applyGeneratedThumbnail}
-                                                    className="w-full py-1.5 bg-editor-accent text-editor-bg text-xs font-medium rounded-lg flex items-center justify-center gap-1"
+                                                    className="w-full py-1.5 bg-q-accent text-q-bg text-xs font-medium rounded-lg flex items-center justify-center gap-1"
                                                 >
                                                     <Save size={12} /> {t('superadmin.templateEditor.useImage', 'Use this image')}
                                                 </button>
@@ -1176,18 +1176,18 @@ Name:`;
                 </div>
 
                 {/* Compact Footer */}
-                <div className="px-5 py-3 border-t border-editor-border flex justify-end gap-2 bg-editor-surface/30">
+                <div className="px-5 py-3 border-t border-q-border flex justify-end gap-2 bg-q-surface/30">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-1.5 text-sm text-editor-text-secondary hover:text-white transition-colors"
+                        className="px-4 py-1.5 text-sm text-q-text-secondary hover:text-white transition-colors"
                     >
                         {t('superadmin.templateEditor.cancel', 'Cancel')}
                     </button>
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex items-center gap-1.5 px-4 py-1.5 bg-editor-accent text-white text-sm font-medium rounded-lg hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-q-accent text-white text-sm font-medium rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
                     >
                         <Save className="w-3.5 h-3.5" />
                         {isLoading ? t('superadmin.templateEditor.saving', 'Saving...') : t('superadmin.templateEditor.save', 'Save')}

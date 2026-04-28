@@ -166,7 +166,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                     onClick={() => setSelectedImageForDetail(null)}
                 >
                     <div
-                        className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
+                        className="bg-q-bg border border-q-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col lg:flex-row animate-scale-in"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Image Preview */}
@@ -179,18 +179,18 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                         </div>
 
                         {/* Details Panel */}
-                        <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-editor-border bg-editor-panel-bg/50 overflow-y-auto">
+                        <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-q-border bg-q-surface/50 overflow-y-auto">
                             {/* Header */}
-                            <div className="p-4 border-b border-editor-border flex items-center justify-between">
+                            <div className="p-4 border-b border-q-border flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Image size={18} className="text-editor-accent" />
-                                    <h3 className="font-bold text-editor-text-primary">
+                                    <Image size={18} className="text-q-accent" />
+                                    <h3 className="font-bold text-q-text">
                                         {t('superadmin.imageLibraryManagement.imageDetails', 'Image Details')}
                                     </h3>
                                 </div>
                                 <button
                                     onClick={() => setSelectedImageForDetail(null)}
-                                    className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                    className="p-1.5 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                                 >
                                     <X size={18} />
                                 </button>
@@ -200,12 +200,12 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             <div className="p-4 space-y-5">
                                 {/* File Name */}
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
+                                    <label className="flex items-center gap-2 text-xs font-bold text-q-text-secondary uppercase tracking-wide mb-2">
                                         <FileType size={12} />
                                         {t('common.fileName', 'File Name')}
                                     </label>
-                                    <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                        <p className="text-sm text-editor-text-primary break-all">
+                                    <div className="bg-q-bg border border-q-border rounded-xl p-3">
+                                        <p className="text-sm text-q-text break-all">
                                             {selectedImageForDetail.name}
                                         </p>
                                     </div>
@@ -214,7 +214,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                             navigator.clipboard.writeText(selectedImageForDetail.name);
                                             success(t('common.copied', 'Copied to clipboard'));
                                         }}
-                                        className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                        className="mt-2 flex items-center gap-1 text-xs text-q-accent hover:text-q-accent transition-colors"
                                     >
                                         <Copy size={12} />
                                         {t('common.copyName', 'Copy name')}
@@ -223,11 +223,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                 {/* URL */}
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-2">
+                                    <label className="flex items-center gap-2 text-xs font-bold text-q-text-secondary uppercase tracking-wide mb-2">
                                         URL
                                     </label>
-                                    <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
-                                        <p className="text-xs text-editor-text-secondary break-all font-mono">
+                                    <div className="bg-q-bg border border-q-border rounded-xl p-3">
+                                        <p className="text-xs text-q-text-secondary break-all font-mono">
                                             {selectedImageForDetail.downloadURL.substring(0, 80)}...
                                         </p>
                                     </div>
@@ -236,7 +236,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                             navigator.clipboard.writeText(selectedImageForDetail.downloadURL);
                                             success(t('common.copied', 'Copied to clipboard'));
                                         }}
-                                        className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                        className="mt-2 flex items-center gap-1 text-xs text-q-accent hover:text-q-accent transition-colors"
                                     >
                                         <Copy size={12} />
                                         {t('common.copyUrl', 'Copy URL')}
@@ -245,45 +245,45 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                 {/* File Info */}
                                 <div>
-                                    <label className="flex items-center gap-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wide mb-3">
+                                    <label className="flex items-center gap-2 text-xs font-bold text-q-text-secondary uppercase tracking-wide mb-3">
                                         {t('common.fileInfo', 'File Information')}
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
                                         {/* Size */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                        <div className="bg-q-bg border border-q-border rounded-xl p-3">
                                             <div className="flex items-center gap-1.5 mb-1">
-                                                <HardDrive size={12} className="text-editor-text-secondary" />
-                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                <HardDrive size={12} className="text-q-text-secondary" />
+                                                <span className="text-[10px] text-q-text-secondary uppercase tracking-wide">
                                                     {t('common.size', 'Size')}
                                                 </span>
                                             </div>
-                                            <p className="text-sm font-medium text-editor-text-primary">
+                                            <p className="text-sm font-medium text-q-text">
                                                 {formatBytes(selectedImageForDetail.size)}
                                             </p>
                                         </div>
 
                                         {/* Type */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3">
+                                        <div className="bg-q-bg border border-q-border rounded-xl p-3">
                                             <div className="flex items-center gap-1.5 mb-1">
-                                                <FileType size={12} className="text-editor-text-secondary" />
-                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                <FileType size={12} className="text-q-text-secondary" />
+                                                <span className="text-[10px] text-q-text-secondary uppercase tracking-wide">
                                                     {t('common.type', 'Type')}
                                                 </span>
                                             </div>
-                                            <p className="text-sm font-medium text-editor-text-primary">
+                                            <p className="text-sm font-medium text-q-text">
                                                 {selectedImageForDetail.type.split('/')[1]?.toUpperCase() || 'Unknown'}
                                             </p>
                                         </div>
 
                                         {/* Created Date */}
-                                        <div className="bg-editor-bg border border-editor-border rounded-xl p-3 col-span-2">
+                                        <div className="bg-q-bg border border-q-border rounded-xl p-3 col-span-2">
                                             <div className="flex items-center gap-1.5 mb-1">
-                                                <Calendar size={12} className="text-editor-text-secondary" />
-                                                <span className="text-[10px] text-editor-text-secondary uppercase tracking-wide">
+                                                <Calendar size={12} className="text-q-text-secondary" />
+                                                <span className="text-[10px] text-q-text-secondary uppercase tracking-wide">
                                                     {t('common.created', 'Created')}
                                                 </span>
                                             </div>
-                                            <p className="text-sm font-medium text-editor-text-primary">
+                                            <p className="text-sm font-medium text-q-text">
                                                 {selectedImageForDetail.createdAt
                                                     ? new Date(selectedImageForDetail.createdAt).toLocaleString()
                                                     : 'Unknown'
@@ -296,12 +296,12 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 {/* AI Generated Info (if available) */}
                                 {(selectedImageForDetail as any).aiPrompt && (
                                     <div>
-                                        <label className="flex items-center gap-2 text-xs font-bold text-editor-accent uppercase tracking-wide mb-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-q-accent uppercase tracking-wide mb-2">
                                             <Sparkles size={12} />
                                             {t('common.aiPrompt', 'AI Prompt')}
                                         </label>
-                                        <div className="bg-editor-bg border border-editor-accent/30 rounded-xl p-3">
-                                            <p className="text-sm text-editor-text-primary leading-relaxed">
+                                        <div className="bg-q-bg border border-q-accent/30 rounded-xl p-3">
+                                            <p className="text-sm text-q-text leading-relaxed">
                                                 {(selectedImageForDetail as any).aiPrompt}
                                             </p>
                                         </div>
@@ -310,7 +310,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                 navigator.clipboard.writeText((selectedImageForDetail as any).aiPrompt);
                                                 success(t('common.copied', 'Copied to clipboard'));
                                             }}
-                                            className="mt-2 flex items-center gap-1 text-xs text-editor-accent hover:text-editor-accent-hover transition-colors"
+                                            className="mt-2 flex items-center gap-1 text-xs text-q-accent hover:text-q-accent transition-colors"
                                         >
                                             <Copy size={12} />
                                             {t('common.copyPrompt', 'Copy prompt')}
@@ -319,13 +319,13 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 )}
 
                                 {/* Actions */}
-                                <div className="pt-3 border-t border-editor-border space-y-2">
+                                <div className="pt-3 border-t border-q-border space-y-2">
                                     <a
                                         href={selectedImageForDetail.downloadURL}
                                         download={selectedImageForDetail.name}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-editor-accent text-editor-bg rounded-xl text-sm font-bold hover:bg-editor-accent-hover transition-colors"
+                                        className="flex items-center justify-center gap-2 w-full py-2.5 bg-q-accent text-q-bg rounded-xl text-sm font-bold hover:bg-q-accent transition-colors"
                                     >
                                         <Download size={16} />
                                         {t('common.downloadImage', 'Download Image')}
@@ -347,15 +347,15 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                 </div>
             )}
 
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <div className="flex h-screen bg-q-bg text-q-text">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 {/* Folder Sidebar */}
                 {isFolderPanelOpen && (
-                    <aside className="w-56 flex-shrink-0 bg-editor-panel-bg border-r border-editor-border hidden md:flex flex-col overflow-y-auto">
-                        <div className="p-4 border-b border-editor-border">
+                    <aside className="w-56 flex-shrink-0 bg-q-surface border-r border-q-border hidden md:flex flex-col overflow-y-auto">
+                        <div className="p-4 border-b border-q-border">
                             <div className="flex items-center gap-2">
-                                <FolderOpen size={18} className="text-editor-accent" />
+                                <FolderOpen size={18} className="text-q-accent" />
                                 <h2 className="font-semibold text-sm">{t('superadmin.imageLibraryManagement.folders', 'Carpetas')}</h2>
                             </div>
                         </div>
@@ -365,25 +365,25 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                     key={folder.id}
                                     onClick={() => setSelectedFolder(folder.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${selectedFolder === folder.id
-                                        ? 'bg-editor-accent text-editor-bg font-semibold'
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40'
+                                        ? 'bg-q-accent text-q-bg font-semibold'
+                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40'
                                         }`}
                                 >
-                                    <span className={`flex-shrink-0 ${selectedFolder === folder.id ? 'text-editor-bg' : 'text-editor-text-secondary'}`}>
+                                    <span className={`flex-shrink-0 ${selectedFolder === folder.id ? 'text-q-bg' : 'text-q-text-secondary'}`}>
                                         {FOLDER_ICONS[folder.icon] || <FolderOpen size={18} />}
                                     </span>
                                     <span className="truncate">{folder.name}</span>
                                     {folder.isSystemFolder && (
                                         <span className="ml-auto flex-shrink-0">
-                                            <Star size={12} className={selectedFolder === folder.id ? 'text-editor-bg' : 'text-yellow-500'} />
+                                            <Star size={12} className={selectedFolder === folder.id ? 'text-q-bg' : 'text-yellow-500'} />
                                         </span>
                                     )}
                                 </button>
                             ))}
                         </nav>
                         {/* Folder stats */}
-                        <div className="p-4 border-t border-editor-border">
-                            <p className="text-xs text-editor-text-secondary">
+                        <div className="p-4 border-t border-q-border">
+                            <p className="text-xs text-q-text-secondary">
                                 {allFiles.length} {t('superadmin.imageLibraryManagement.totalImages', 'imágenes totales')}
                             </p>
                         </div>
@@ -393,27 +393,27 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                     <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
                     {/* Header */}
-                    <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                    <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden mr-2 transition-colors"
+                                className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-full lg:hidden mr-2 transition-colors"
                                 title={t('common.openMenu', 'Open menu')}
                             >
                                 <Menu className="w-4 h-4" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <Image className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.imageLibraryManagement.title', 'Global Image Library')}</h1>
+                                <Image className="text-q-accent w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-q-text">{t('superadmin.imageLibraryManagement.title', 'Global Image Library')}</h1>
                             </div>
                             {library.stats.filtered < library.stats.total && (
-                                <span className="ml-3 text-xs text-editor-text-secondary bg-editor-border px-2 py-1 rounded-md">
+                                <span className="ml-3 text-xs text-q-text-secondary bg-q-surface-overlay px-2 py-1 rounded-md">
                                     {library.stats.filtered} of {library.stats.total}
                                 </span>
                             )}
                         </div>
                         <div className="flex items-center gap-1">
-                            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                             <button
                                 onClick={() => setIsGeneratorOpen(true)}
                                 className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-purple-500 hover:text-purple-400"
@@ -427,7 +427,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 maxSizeMB={10}
                                 variant="compact"
                             >
-                                <button className="flex items-center text-sm font-semibold py-2 px-3 text-editor-accent hover:text-editor-accent-hover transition-colors">
+                                <button className="flex items-center text-sm font-semibold py-2 px-3 text-q-accent hover:text-q-accent transition-colors">
                                     <Upload size={16} className="mr-1.5" />
                                     {t('superadmin.imageLibraryManagement.uploadImage', 'Upload Image')}
                                 </button>
@@ -437,14 +437,14 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                     <main className="flex-1 p-6 sm:p-8 overflow-y-auto relative z-[2]">
                         <div className="max-w-7xl mx-auto">
-                            <div className="bg-card/80 border border-border rounded-2xl p-6 sm:p-8">
-                                <p className="text-editor-text-secondary mb-6">{t('superadmin.imageLibraryManagement.manageDesc', 'Manage the global stock images available to all users in their Asset Library.')}</p>
+                            <div className="bg-q-surface/80 border border-q-border rounded-2xl p-6 sm:p-8">
+                                <p className="text-q-text-secondary mb-6">{t('superadmin.imageLibraryManagement.manageDesc', 'Manage the global stock images available to all users in their Asset Library.')}</p>
 
                                 {/* Search & Filters Bar */}
                                 <div className="mb-6 flex flex-wrap gap-3">
                                     {/* Search */}
-                                    <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-editor-border/40 rounded-lg px-3 py-2">
-                                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                                    <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                                        <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             value={library.searchQuery}
@@ -453,7 +453,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
                                         {library.searchQuery && (
-                                            <button onClick={() => library.setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <button onClick={() => library.setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                                 <X size={16} />
                                             </button>
                                         )}
@@ -462,7 +462,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                     {/* Filter Toggle */}
                                     <button
                                         onClick={() => setShowFilters(!showFilters)}
-                                        className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${showFilters ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                        className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${showFilters ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                     >
                                         <Filter size={16} />
                                         {t('superadmin.imageLibraryManagement.filters', 'Filters')}
@@ -471,7 +471,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                     {/* Selection Mode Toggle */}
                                     <button
                                         onClick={library.toggleSelectionMode}
-                                        className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${library.isSelectionMode ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                        className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors ${library.isSelectionMode ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                     >
                                         <CheckSquare size={16} />
                                         {t('superadmin.imageLibraryManagement.select', 'Select')}
@@ -485,15 +485,15 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                 {/* Filters Panel */}
                                 {showFilters && (
-                                    <div className="mb-6 p-4 bg-editor-panel-bg rounded-lg border border-editor-border animate-fade-in-up">
+                                    <div className="mb-6 p-4 bg-q-surface rounded-lg border border-q-border animate-fade-in-up">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             {/* Type Filter */}
                                             <div>
-                                                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.type', 'Type')}</label>
+                                                <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.type', 'Type')}</label>
                                                 <select
                                                     value={library.typeFilter}
                                                     onChange={(e) => library.setTypeFilter(e.target.value as any)}
-                                                    className="w-full px-3 py-2 text-sm bg-editor-bg border border-editor-border rounded-lg focus:ring-2 focus:ring-editor-accent focus:outline-none"
+                                                    className="w-full px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent focus:outline-none"
                                                 >
                                                     <option value="all">{t('superadmin.imageLibraryManagement.allFiles', 'All Files')}</option>
                                                     <option value="image">{t('superadmin.imageLibraryManagement.imagesOnly', 'Images Only')}</option>
@@ -504,11 +504,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                             {/* Sort By */}
                                             <div>
-                                                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.sortBy', 'Sort By')}</label>
+                                                <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.sortBy', 'Sort By')}</label>
                                                 <select
                                                     value={library.sortBy}
                                                     onChange={(e) => library.setSortBy(e.target.value as any)}
-                                                    className="w-full px-3 py-2 text-sm bg-editor-bg border border-editor-border rounded-lg focus:ring-2 focus:ring-editor-accent focus:outline-none"
+                                                    className="w-full px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-q-accent focus:outline-none"
                                                 >
                                                     <option value="date">{t('superadmin.imageLibraryManagement.date', 'Date')}</option>
                                                     <option value="name">{t('superadmin.imageLibraryManagement.name', 'Name')}</option>
@@ -519,10 +519,10 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                             {/* Sort Order */}
                                             <div>
-                                                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.order', 'Order')}</label>
+                                                <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('superadmin.imageLibraryManagement.order', 'Order')}</label>
                                                 <button
                                                     onClick={library.toggleSortOrder}
-                                                    className="w-full flex items-center justify-between px-3 py-2 text-sm bg-editor-bg border border-editor-border rounded-lg hover:bg-editor-panel-bg transition-colors"
+                                                    className="w-full flex items-center justify-between px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg hover:bg-q-surface transition-colors"
                                                 >
                                                     <span>{library.sortOrder === 'asc' ? t('superadmin.imageLibraryManagement.ascending', 'Ascending') : t('superadmin.imageLibraryManagement.descending', 'Descending')}</span>
                                                     <ArrowUpDown size={16} />
@@ -534,14 +534,14 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                 {/* Bulk Actions */}
                                 {library.isSelectionMode && library.selectedIds.size > 0 && (
-                                    <div className="mb-6 p-4 bg-editor-accent/10 rounded-lg border border-editor-accent/30 flex items-center justify-between animate-fade-in-up">
-                                        <span className="text-sm font-medium text-editor-text-primary">
+                                    <div className="mb-6 p-4 bg-q-accent/10 rounded-lg border border-q-accent/30 flex items-center justify-between animate-fade-in-up">
+                                        <span className="text-sm font-medium text-q-text">
                                             {t('superadmin.imageLibraryManagement.selectedAssets', { count: library.selectedIds.size, defaultValue: `${library.selectedIds.size} asset(s) selected` })}
                                         </span>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={library.selectAll}
-                                                className="px-4 py-2 text-sm font-semibold bg-editor-accent/20 hover:bg-editor-accent/30 rounded-lg transition-colors"
+                                                className="px-4 py-2 text-sm font-semibold bg-q-accent/20 hover:bg-q-accent/30 rounded-lg transition-colors"
                                             >
                                                 {t('superadmin.imageLibraryManagement.selectAll', 'Select All')}
                                             </button>
@@ -564,20 +564,20 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                 {/* Content */}
                                 {isGlobalFilesLoading ? (
                                     <div className="flex justify-center py-12">
-                                        <div className="w-8 h-8 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-8 h-8 border-4 border-q-accent border-t-transparent rounded-full animate-spin"></div>
                                     </div>
                                 ) : library.files.length === 0 ? (
                                     library.searchQuery || library.typeFilter !== 'all' ? (
-                                        <div className="text-center py-16 border-2 border-dashed border-editor-border rounded-xl">
-                                            <Search size={48} className="mx-auto text-editor-text-secondary opacity-50 mb-4" />
-                                            <p className="text-editor-text-primary font-medium mb-2">{t('common.noResults', 'No results found')}</p>
-                                            <p className="text-editor-text-secondary text-sm mb-4">{t('superadmin.tenant.noTenantsDesc', 'Try adjusting your filters')}</p>
+                                        <div className="text-center py-16 border-2 border-dashed border-q-border rounded-xl">
+                                            <Search size={48} className="mx-auto text-q-text-secondary opacity-50 mb-4" />
+                                            <p className="text-q-text font-medium mb-2">{t('common.noResults', 'No results found')}</p>
+                                            <p className="text-q-text-secondary text-sm mb-4">{t('superadmin.tenant.noTenantsDesc', 'Try adjusting your filters')}</p>
                                             <button
                                                 onClick={() => {
                                                     library.setSearchQuery('');
                                                     library.setTypeFilter('all');
                                                 }}
-                                                className="text-sm text-editor-accent hover:underline"
+                                                className="text-sm text-q-accent hover:underline"
                                             >
                                                 {t('superadmin.imageLibraryManagement.clearFilters', 'Clear filters')}
                                             </button>
@@ -593,11 +593,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                         <Zap className="w-10 h-10 text-white animate-pulse" />
                                                     </div>
 
-                                                    <h3 className="text-2xl font-bold text-editor-text-primary mb-3">
+                                                    <h3 className="text-2xl font-bold text-q-text mb-3">
                                                         {t('superadmin.imageLibraryManagement.generator.title', 'Generate AI Images for Global Library')}
                                                     </h3>
 
-                                                    <p className="text-base text-editor-text-secondary mb-8 max-w-2xl mx-auto">
+                                                    <p className="text-base text-q-text-secondary mb-8 max-w-2xl mx-auto">
                                                         {t('superadmin.imageLibraryManagement.generator.description', 'Create stunning 4K images with Quimera AI. Perfect for reusing across multiple projects. Features advanced controls for lighting, camera angles, and style customization.')}
                                                     </p>
 
@@ -609,7 +609,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                         {t('superadmin.imageLibraryManagement.generator.open', 'Open Image Generator')}
                                                     </button>
 
-                                                    <div className="mt-8 flex items-center justify-center gap-8 text-sm text-editor-text-secondary">
+                                                    <div className="mt-8 flex items-center justify-center gap-8 text-sm text-q-text-secondary">
                                                         <div className="flex items-center gap-2">
                                                             <Sparkles size={16} className="text-purple-400" />
                                                             <span>{t('superadmin.imageLibraryManagement.generator.resolution', 'Up to 4K Resolution')}</span>
@@ -628,7 +628,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                             {/* Upload Zone */}
                                             <div className="text-center py-3">
-                                                <p className="text-sm text-editor-text-secondary mb-4">{t('superadmin.imageLibraryManagement.generator.orUpload', 'Or upload existing images to the global library')}</p>
+                                                <p className="text-sm text-q-text-secondary mb-4">{t('superadmin.imageLibraryManagement.generator.orUpload', 'Or upload existing images to the global library')}</p>
                                                 <DragDropZone
                                                     onFileSelect={handleFileUpload}
                                                     accept="image/*"
@@ -644,10 +644,10 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                             {library.files.map((file) => (
                                                 <div
                                                     key={file.id}
-                                                    className={`group relative rounded-lg border overflow-hidden hover:border-editor-accent transition-all ${library.isSelected(file.id) ? 'border-editor-accent ring-2 ring-editor-accent' : 'border-editor-border'}`}
+                                                    className={`group relative rounded-lg border overflow-hidden hover:border-q-accent transition-all ${library.isSelected(file.id) ? 'border-q-accent ring-2 ring-q-accent' : 'border-q-border'}`}
                                                 >
                                                     <div
-                                                        className="aspect-square bg-editor-bg overflow-hidden cursor-pointer relative"
+                                                        className="aspect-square bg-q-bg overflow-hidden cursor-pointer relative"
                                                         onClick={() => {
                                                             if (library.isSelectionMode) {
                                                                 library.toggleSelection(file.id);
@@ -682,7 +682,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                                     e.stopPropagation();
                                                                     setSelectedImageForDetail(file);
                                                                 }}
-                                                                className="absolute top-2 left-2 p-1.5 bg-black/60 text-white rounded-md hover:bg-editor-accent transition-colors opacity-0 group-hover:opacity-100 z-10"
+                                                                className="absolute top-2 left-2 p-1.5 bg-black/60 text-white rounded-md hover:bg-q-accent transition-colors opacity-0 group-hover:opacity-100 z-10"
                                                                 title={t('common.viewDetails', 'View details')}
                                                             >
                                                                 <Eye size={14} />
@@ -698,9 +698,9 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                                 className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg"
                                                             >
                                                                 {library.isSelected(file.id) ? (
-                                                                    <CheckSquare size={18} className="text-editor-accent" />
+                                                                    <CheckSquare size={18} className="text-q-accent" />
                                                                 ) : (
-                                                                    <Square size={18} className="text-editor-text-secondary" />
+                                                                    <Square size={18} className="text-q-text-secondary" />
                                                                 )}
                                                             </button>
                                                         </div>
@@ -714,7 +714,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                                 download={file.name}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-editor-accent transition-colors"
+                                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-q-accent transition-colors"
                                                                 title="Download/View"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
@@ -738,15 +738,15 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
 
                                         {/* Pagination */}
                                         {library.totalPages > 1 && (
-                                            <div className="mt-8 flex items-center justify-between border-t border-editor-border pt-6">
-                                                <span className="text-sm text-editor-text-secondary">
+                                            <div className="mt-8 flex items-center justify-between border-t border-q-border pt-6">
+                                                <span className="text-sm text-q-text-secondary">
                                                     {t('superadmin.imageLibraryManagement.pagination', { current: library.currentPage, total: library.totalPages, count: library.stats.filtered })}
                                                 </span>
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={library.prevPage}
                                                         disabled={!library.hasPrevPage}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-editor-panel-bg hover:bg-editor-border disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-surface hover:bg-q-surface-overlay disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                     >
                                                         <ChevronLeft size={16} />
                                                         {t('superadmin.imageLibraryManagement.previous', 'Previous')}
@@ -754,7 +754,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                                                     <button
                                                         onClick={library.nextPage}
                                                         disabled={!library.hasNextPage}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-editor-panel-bg hover:bg-editor-border disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-surface hover:bg-q-surface-overlay disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                     >
                                                         {t('superadmin.imageLibraryManagement.next', 'Next')}
                                                         <ChevronRight size={16} />

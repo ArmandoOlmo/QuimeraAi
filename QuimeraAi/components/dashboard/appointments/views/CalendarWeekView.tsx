@@ -167,7 +167,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     }, []);
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 bg-background">
+        <div className="flex-1 flex flex-col min-h-0 bg-q-bg">
             {/* Scrollable container wrapping header + body so columns share the same grid */}
             <div
                 ref={scrollContainerRef}
@@ -176,11 +176,11 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                 <div className="min-w-[500px] sm:min-w-[700px] lg:min-w-full">
                     {/* ── Header row ── */}
                     <div
-                        className="grid border-b border-border sticky top-0 z-30 bg-background shadow-xs"
+                        className="grid border-b border-q-border sticky top-0 z-30 bg-q-bg shadow-xs"
                         style={{ gridTemplateColumns: GRID_COLS }}
                     >
                         {/* Time gutter header */}
-                        <div className="border-r border-border bg-background" />
+                        <div className="border-r border-q-border bg-q-bg" />
 
                         {/* Day headers */}
                         {weekDays.map((day) => {
@@ -191,12 +191,12 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 <div
                                     key={dayKey}
                                     className={`
-                                        py-2 sm:py-3 text-center border-r border-border last:border-r-0
+                                        py-2 sm:py-3 text-center border-r border-q-border last:border-r-0
                                         flex flex-col items-center justify-center gap-0.5 sm:gap-1
-                                        ${isCurrentDay ? 'bg-primary/5' : 'bg-background'}
+                                        ${isCurrentDay ? 'bg-primary/5' : 'bg-q-bg'}
                                     `}
                                 >
-                                    <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                                    <span className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide ${isCurrentDay ? 'text-primary' : 'text-q-text-muted'}`}>
                                         <span className="sm:hidden">{t(`appointments.calendar.daysShort.${DAY_KEYS[day.getDay()]}`)}</span>
                                         <span className="hidden sm:inline">{t(`appointments.calendar.days.${DAY_KEYS[day.getDay()]}`)}</span>
                                     </span>
@@ -223,7 +223,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                 style={{ top: `${currentTimeTop}px` }}
                             >
                                 <div className="w-12 sm:w-16 flex justify-end pr-1 sm:pr-2">
-                                    <span className="text-[8px] sm:text-[10px] font-bold text-red-500 bg-background px-0.5 sm:px-1 rounded">
+                                    <span className="text-[8px] sm:text-[10px] font-bold text-red-500 bg-q-bg px-0.5 sm:px-1 rounded">
                                         {new Date().toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
@@ -236,13 +236,13 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                             style={{ gridTemplateColumns: GRID_COLS }}
                         >
                             {/* Time column */}
-                            <div className="border-r border-border bg-background z-10">
+                            <div className="border-r border-q-border bg-q-bg z-10">
                                 {HOURS.map(hour => (
                                     <div
                                         key={hour}
                                         className="h-[64px] relative"
                                     >
-                                        <span className="absolute -top-2 sm:-top-2.5 right-1 sm:right-2 text-[10px] sm:text-xs text-muted-foreground font-medium bg-background px-0.5 sm:px-1">
+                                        <span className="absolute -top-2 sm:-top-2.5 right-1 sm:right-2 text-[10px] sm:text-xs text-q-text-muted font-medium bg-q-bg px-0.5 sm:px-1">
                                             {hour}:00
                                         </span>
                                     </div>
@@ -261,7 +261,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                     <div
                                         key={dayKey}
                                         className={`
-                                            border-r border-border/40 last:border-r-0 relative
+                                            border-r border-q-border/40 last:border-r-0 relative
                                             ${isCurrentDay ? 'bg-primary/[0.02]' : ''}
                                         `}
                                     >
@@ -295,7 +295,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                                                         }
                                                     }}
                                                     className={`
-                                                        h-[64px] border-b border-border/20 cursor-pointer transition-colors relative
+                                                        h-[64px] border-b border-q-border/20 cursor-pointer transition-colors relative
                                                         ${blocked
                                                             ? 'cursor-not-allowed'
                                                             : 'hover:bg-black/[0.02]'

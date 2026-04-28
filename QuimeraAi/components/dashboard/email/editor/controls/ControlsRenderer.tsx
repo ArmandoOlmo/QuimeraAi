@@ -47,7 +47,7 @@ export const renderBlockControls = (block: EmailBlock, activeTab: TabType): Reac
             return <ColumnsBlockControls {...props} />;
         default:
             return (
-                <div className="text-center py-8 text-editor-text-secondary">
+                <div className="text-center py-8 text-q-text-secondary">
                     <p className="text-sm">No controls available for this block type</p>
                 </div>
             );

@@ -276,7 +276,7 @@ const DesignTokensEditor: React.FC = () => {
 
   const ColorInput: React.FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
     <div className="flex items-center gap-3">
-      <label className="flex-1 text-sm text-editor-text-secondary">{label}</label>
+      <label className="flex-1 text-sm text-q-text-secondary">{label}</label>
       <div className="flex items-center gap-2">
         <input
           type="color"
@@ -288,7 +288,7 @@ const DesignTokensEditor: React.FC = () => {
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-24 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-sm font-mono"
+          className="w-24 px-2 py-1 bg-q-surface border border-q-border rounded text-q-text text-sm font-mono"
         />
       </div>
     </div>
@@ -300,11 +300,11 @@ const DesignTokensEditor: React.FC = () => {
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-editor-text-primary mb-2 flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-q-text mb-2 flex items-center gap-3">
               <Palette className="w-7 h-7" />
               Design Tokens
             </h2>
-            <p className="text-editor-text-secondary">
+            <p className="text-q-text-secondary">
               Configure global design tokens that apply across the entire platform
             </p>
           </div>
@@ -359,8 +359,8 @@ const DesignTokensEditor: React.FC = () => {
           <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-editor-text-primary font-medium">Unsaved Changes</p>
-              <p className="text-editor-text-secondary text-sm mt-1">
+              <p className="text-q-text font-medium">Unsaved Changes</p>
+              <p className="text-q-text-secondary text-sm mt-1">
                 Remember to save your changes before leaving this page
               </p>
             </div>
@@ -369,20 +369,20 @@ const DesignTokensEditor: React.FC = () => {
 
         <div className="space-y-6">
           {/* Colors Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Palette className="w-5 h-5" />
                 Colors
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Brand colors and semantic color palette
               </p>
             </div>
             <div className="p-6 space-y-6">
               {/* Primary Colors */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-3">Primary</h4>
+                <h4 className="font-semibold text-q-text mb-3">Primary</h4>
                 <div className="space-y-2">
                   <ColorInput
                     label="Main"
@@ -404,7 +404,7 @@ const DesignTokensEditor: React.FC = () => {
 
               {/* Secondary Colors */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-3">Secondary</h4>
+                <h4 className="font-semibold text-q-text mb-3">Secondary</h4>
                 <div className="space-y-2">
                   <ColorInput
                     label="Main"
@@ -428,7 +428,7 @@ const DesignTokensEditor: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Success */}
                 <div>
-                  <h4 className="font-semibold text-editor-text-primary mb-3 text-green-600">Success</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-green-600">Success</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -440,7 +440,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Warning */}
                 <div>
-                  <h4 className="font-semibold text-editor-text-primary mb-3 text-amber-600">Warning</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-amber-600">Warning</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -452,7 +452,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Error */}
                 <div>
-                  <h4 className="font-semibold text-editor-text-primary mb-3 text-red-600">Error</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-red-600">Error</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -464,7 +464,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Info */}
                 <div>
-                  <h4 className="font-semibold text-editor-text-primary mb-3 text-blue-600">Info</h4>
+                  <h4 className="font-semibold text-q-text mb-3 text-blue-600">Info</h4>
                   <div className="space-y-2">
                     <ColorInput
                       label="Main"
@@ -478,24 +478,24 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* Typography Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Type className="w-5 h-5" />
                 Typography
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Font families, sizes, weights, and line heights
               </p>
             </div>
             <div className="p-6 space-y-6">
               {/* Font Families */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-3">Font Families</h4>
+                <h4 className="font-semibold text-q-text mb-3">Font Families</h4>
                 <div className="space-y-3">
                   {Object.entries(localTokens.typography.fontFamilies).map(([key, value]) => (
                     <div key={key} className="flex items-center gap-3">
-                      <label className="w-24 text-sm text-editor-text-secondary capitalize">{key}</label>
+                      <label className="w-24 text-sm text-q-text-secondary capitalize">{key}</label>
                       <input
                         type="text"
                         value={value}
@@ -509,7 +509,7 @@ const DesignTokensEditor: React.FC = () => {
                             },
                           },
                         }))}
-                        className="flex-1 px-3 py-2 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-sm font-mono"
+                        className="flex-1 px-3 py-2 bg-q-surface border border-q-border rounded text-q-text text-sm font-mono"
                       />
                     </div>
                   ))}
@@ -518,15 +518,15 @@ const DesignTokensEditor: React.FC = () => {
 
               {/* Font Sizes Preview */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-3">Font Sizes</h4>
-                <div className="bg-editor-bg rounded-lg p-4 space-y-2">
+                <h4 className="font-semibold text-q-text mb-3">Font Sizes</h4>
+                <div className="bg-q-bg rounded-lg p-4 space-y-2">
                   {Object.entries(localTokens.typography.fontSizes).map(([key, value]) => (
                     <div key={key} className="flex items-center gap-4">
-                      <span className="w-16 text-xs text-editor-text-secondary font-mono">{key}</span>
-                      <span className="text-editor-text-primary" style={{ fontSize: value }}>
+                      <span className="w-16 text-xs text-q-text-secondary font-mono">{key}</span>
+                      <span className="text-q-text" style={{ fontSize: value }}>
                         The quick brown fox
                       </span>
-                      <span className="ml-auto text-xs text-editor-text-secondary font-mono">{value}</span>
+                      <span className="ml-auto text-xs text-q-text-secondary font-mono">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -535,13 +535,13 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* Spacing Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Maximize2 className="w-5 h-5" />
                 Spacing
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Consistent spacing scale for margins and padding
               </p>
             </div>
@@ -549,10 +549,10 @@ const DesignTokensEditor: React.FC = () => {
               <div className="space-y-3">
                 {Object.entries(localTokens.spacing).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-4">
-                    <span className="w-16 text-sm text-editor-text-secondary font-mono">{key}</span>
+                    <span className="w-16 text-sm text-q-text-secondary font-mono">{key}</span>
                     <div className="flex-1 flex items-center gap-3">
                       <div className="h-8 bg-purple-600 rounded" style={{ width: value }} />
-                      <span className="text-sm text-editor-text-secondary font-mono">{value}</span>
+                      <span className="text-sm text-q-text-secondary font-mono">{value}</span>
                     </div>
                   </div>
                 ))}
@@ -561,13 +561,13 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* Shadows Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Cloud className="w-5 h-5" />
                 Shadows
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Elevation and depth through box shadows
               </p>
             </div>
@@ -588,13 +588,13 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* Breakpoints Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Monitor className="w-5 h-5" />
                 Breakpoints
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Responsive design breakpoints for different screen sizes
               </p>
             </div>
@@ -602,7 +602,7 @@ const DesignTokensEditor: React.FC = () => {
               <div className="space-y-3">
                 {Object.entries(localTokens.breakpoints).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-4">
-                    <span className="w-16 text-sm text-editor-text-secondary font-mono">{key}</span>
+                    <span className="w-16 text-sm text-q-text-secondary font-mono">{key}</span>
                     <input
                       type="text"
                       value={value}
@@ -613,7 +613,7 @@ const DesignTokensEditor: React.FC = () => {
                           [key]: e.target.value,
                         },
                       }))}
-                      className="flex-1 max-w-xs px-3 py-2 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-sm font-mono"
+                      className="flex-1 max-w-xs px-3 py-2 bg-q-surface border border-q-border rounded text-q-text text-sm font-mono"
                     />
                   </div>
                 ))}
@@ -625,26 +625,26 @@ const DesignTokensEditor: React.FC = () => {
           {/* APP TOKENS SECTION - Dashboard/Admin Theming */}
           {/* ============================================ */}
 
-          <div className="mt-12 pt-8 border-t-2 border-editor-accent/30">
+          <div className="mt-12 pt-8 border-t-2 border-q-accent/30">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-editor-text-primary mb-2 flex items-center gap-3">
-                <Layers className="w-7 h-7 text-editor-accent" />
+              <h2 className="text-2xl font-bold text-q-text mb-2 flex items-center gap-3">
+                <Layers className="w-7 h-7 text-q-accent" />
                 App Tokens
               </h2>
-              <p className="text-editor-text-secondary">
+              <p className="text-q-text-secondary">
                 Customize the appearance of the Dashboard and Admin areas
               </p>
             </div>
           </div>
 
           {/* App Tokens - Colors Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Palette className="w-5 h-5" />
                 App Colors
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Colors for each theme mode (Light, Dark, Black)
               </p>
             </div>
@@ -654,8 +654,8 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('light')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'light'
-                    ? 'bg-editor-accent text-white'
-                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    ? 'bg-q-accent text-white'
+                    : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >
                   <Sun size={16} />
@@ -664,8 +664,8 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('dark')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'dark'
-                    ? 'bg-editor-accent text-white'
-                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    ? 'bg-q-accent text-white'
+                    : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >
                   <Moon size={16} />
@@ -674,8 +674,8 @@ const DesignTokensEditor: React.FC = () => {
                 <button
                   onClick={() => setActiveColorTab('black')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeColorTab === 'black'
-                    ? 'bg-editor-accent text-white'
-                    : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                    ? 'bg-q-accent text-white'
+                    : 'bg-q-bg text-q-text-secondary hover:text-q-text'
                     }`}
                 >
                   <Circle size={16} fill="currentColor" />
@@ -687,7 +687,7 @@ const DesignTokensEditor: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Core Colors */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-editor-text-primary text-sm uppercase tracking-wider">Core Colors</h4>
+                  <h4 className="font-semibold text-q-text text-sm uppercase tracking-wider">Core Colors</h4>
                   <ColorInput
                     label="Background"
                     value={localAppTokens.colors[activeColorTab].background}
@@ -722,7 +722,7 @@ const DesignTokensEditor: React.FC = () => {
 
                 {/* Semantic Colors */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-editor-text-primary text-sm uppercase tracking-wider">Semantic Colors</h4>
+                  <h4 className="font-semibold text-q-text text-sm uppercase tracking-wider">Semantic Colors</h4>
                   <ColorInput
                     label="Success"
                     value={localAppTokens.colors[activeColorTab].success}
@@ -749,20 +749,20 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* App Tokens - Typography Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Type className="w-5 h-5" />
                 App Typography
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Google Fonts for the Dashboard and Admin areas
               </p>
             </div>
             <div className="p-6 space-y-8">
               {/* Font Families */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-4 text-sm uppercase tracking-wider">Font Families</h4>
+                <h4 className="font-semibold text-q-text mb-4 text-sm uppercase tracking-wider">Font Families</h4>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Sans (Body) */}
                   <div className="space-y-2">
@@ -772,9 +772,9 @@ const DesignTokensEditor: React.FC = () => {
                       onChange={(val) => updateAppTypography('fontFamily', 'sans', val)}
                       showPreview={false}
                     />
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.sans] }}>
-                      <p className="text-editor-text-primary">Dashboard text</p>
-                      <p className="text-editor-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
+                    <div className="p-3 bg-q-bg rounded-lg border border-q-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.sans] }}>
+                      <p className="text-q-text">Dashboard text</p>
+                      <p className="text-q-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
                     </div>
                   </div>
 
@@ -786,9 +786,9 @@ const DesignTokensEditor: React.FC = () => {
                       onChange={(val) => updateAppTypography('fontFamily', 'header', val)}
                       showPreview={false}
                     />
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.header] }}>
-                      <p className="text-editor-text-primary font-bold">Section Title</p>
-                      <p className="text-editor-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
+                    <div className="p-3 bg-q-bg rounded-lg border border-q-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.header] }}>
+                      <p className="text-q-text font-bold">Section Title</p>
+                      <p className="text-q-text-secondary text-sm">ABCDEFGHIJ abcdefghij 0123456789</p>
                     </div>
                   </div>
 
@@ -800,9 +800,9 @@ const DesignTokensEditor: React.FC = () => {
                       onChange={(val) => updateAppTypography('fontFamily', 'mono', val)}
                       showPreview={false}
                     />
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}>
-                      <p className="text-editor-text-primary">const code = 'example'</p>
-                      <p className="text-editor-text-secondary text-sm">0123456789 { }[]();:</p>
+                    <div className="p-3 bg-q-bg rounded-lg border border-q-border mt-2" style={{ fontFamily: fontStacks[localAppTokens.typography.fontFamily.mono] }}>
+                      <p className="text-q-text">const code = 'example'</p>
+                      <p className="text-q-text-secondary text-sm">0123456789 { }[]();:</p>
                     </div>
                   </div>
                 </div>
@@ -810,18 +810,18 @@ const DesignTokensEditor: React.FC = () => {
 
               {/* Font Sizes */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-4 text-sm uppercase tracking-wider">Font Sizes</h4>
-                <div className="bg-editor-bg rounded-lg p-4 space-y-3">
+                <h4 className="font-semibold text-q-text mb-4 text-sm uppercase tracking-wider">Font Sizes</h4>
+                <div className="bg-q-bg rounded-lg p-4 space-y-3">
                   {Object.entries(localAppTokens.typography.fontSize).map(([key, value]) => (
                     <div key={key} className="flex items-center gap-4">
-                      <span className="w-12 text-xs text-editor-text-secondary font-mono uppercase">{key}</span>
+                      <span className="w-12 text-xs text-q-text-secondary font-mono uppercase">{key}</span>
                       <input
                         type="text"
                         value={value}
                         onChange={(e) => updateAppTypography('fontSize', key, e.target.value)}
-                        className="w-24 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-sm font-mono text-editor-text-primary"
+                        className="w-24 px-2 py-1 bg-q-surface border border-q-border rounded text-sm font-mono text-q-text"
                       />
-                      <span className="flex-1 text-editor-text-primary truncate" style={{ fontSize: value }}>
+                      <span className="flex-1 text-q-text truncate" style={{ fontSize: value }}>
                         The quick brown fox
                       </span>
                     </div>
@@ -831,18 +831,18 @@ const DesignTokensEditor: React.FC = () => {
 
               {/* Font Weights */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-4 text-sm uppercase tracking-wider">Font Weights</h4>
+                <h4 className="font-semibold text-q-text mb-4 text-sm uppercase tracking-wider">Font Weights</h4>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {Object.entries(localAppTokens.typography.fontWeight).map(([key, value]) => (
-                    <div key={key} className="bg-editor-bg rounded-lg p-4 text-center">
-                      <p className="text-editor-text-primary text-lg capitalize" style={{ fontWeight: value }}>
+                    <div key={key} className="bg-q-bg rounded-lg p-4 text-center">
+                      <p className="text-q-text text-lg capitalize" style={{ fontWeight: value }}>
                         {key}
                       </p>
                       <input
                         type="number"
                         value={value}
                         onChange={(e) => updateAppTypography('fontWeight', key, parseInt(e.target.value))}
-                        className="mt-2 w-20 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-xs font-mono text-editor-text-secondary text-center"
+                        className="mt-2 w-20 px-2 py-1 bg-q-surface border border-q-border rounded text-xs font-mono text-q-text-secondary text-center"
                       />
                     </div>
                   ))}
@@ -852,34 +852,34 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* App Tokens - Borders Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Square className="w-5 h-5" />
                 App Borders
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Border radius and width for cards, buttons, and inputs
               </p>
             </div>
             <div className="p-6 space-y-8">
               {/* Border Radius */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-4 text-sm uppercase tracking-wider">Border Radius</h4>
+                <h4 className="font-semibold text-q-text mb-4 text-sm uppercase tracking-wider">Border Radius</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                   {Object.entries(localAppTokens.borders.radius).map(([key, value]) => (
                     <div key={key} className="text-center">
                       <div
-                        className="w-full aspect-square bg-editor-accent/20 border-2 border-editor-accent mb-2 flex items-center justify-center"
+                        className="w-full aspect-square bg-q-accent/20 border-2 border-q-accent mb-2 flex items-center justify-center"
                         style={{ borderRadius: value }}
                       >
-                        <span className="text-xs font-mono text-editor-text-secondary">{key}</span>
+                        <span className="text-xs font-mono text-q-text-secondary">{key}</span>
                       </div>
                       <input
                         type="text"
                         value={value}
                         onChange={(e) => updateAppBorder('radius', key, e.target.value)}
-                        className="w-full px-2 py-1 bg-editor-bg border border-editor-border rounded text-xs font-mono text-editor-text-primary text-center"
+                        className="w-full px-2 py-1 bg-q-bg border border-q-border rounded text-xs font-mono text-q-text text-center"
                       />
                     </div>
                   ))}
@@ -888,14 +888,14 @@ const DesignTokensEditor: React.FC = () => {
 
               {/* Border Width */}
               <div>
-                <h4 className="font-semibold text-editor-text-primary mb-4 text-sm uppercase tracking-wider">Border Width</h4>
+                <h4 className="font-semibold text-q-text mb-4 text-sm uppercase tracking-wider">Border Width</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(localAppTokens.borders.width).map(([key, value]) => (
                     <div key={key} className="flex items-center gap-3">
                       <div className="flex-1">
-                        <label className="text-sm text-editor-text-secondary capitalize">{key}</label>
+                        <label className="text-sm text-q-text-secondary capitalize">{key}</label>
                         <div
-                          className="mt-2 w-full bg-editor-accent rounded"
+                          className="mt-2 w-full bg-q-accent rounded"
                           style={{ height: value === '0' ? '1px' : value }}
                         />
                       </div>
@@ -903,7 +903,7 @@ const DesignTokensEditor: React.FC = () => {
                         type="text"
                         value={value}
                         onChange={(e) => updateAppBorder('width', key, e.target.value)}
-                        className="w-16 px-2 py-1 bg-editor-bg border border-editor-border rounded text-xs font-mono text-editor-text-primary"
+                        className="w-16 px-2 py-1 bg-q-bg border border-q-border rounded text-xs font-mono text-q-text"
                       />
                     </div>
                   ))}
@@ -913,13 +913,13 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* App Tokens - Spacing Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Maximize2 className="w-5 h-5" />
                 App Spacing
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Spacing scale for gaps, padding, and margins
               </p>
             </div>
@@ -927,19 +927,19 @@ const DesignTokensEditor: React.FC = () => {
               <div className="space-y-3">
                 {Object.entries(localAppTokens.spacing).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-4">
-                    <span className="w-12 text-sm text-editor-text-secondary font-mono">{key}</span>
+                    <span className="w-12 text-sm text-q-text-secondary font-mono">{key}</span>
                     <input
                       type="text"
                       value={value}
                       onChange={(e) => updateAppSpacing(key, e.target.value)}
-                      className="w-24 px-2 py-1 bg-editor-bg border border-editor-border rounded text-sm font-mono text-editor-text-primary"
+                      className="w-24 px-2 py-1 bg-q-bg border border-q-border rounded text-sm font-mono text-q-text"
                     />
                     <div className="flex-1 flex items-center gap-3">
                       <div
-                        className="h-6 bg-editor-accent rounded"
+                        className="h-6 bg-q-accent rounded"
                         style={{ width: value }}
                       />
-                      <span className="text-xs text-editor-text-secondary font-mono">{value}</span>
+                      <span className="text-xs text-q-text-secondary font-mono">{value}</span>
                     </div>
                   </div>
                 ))}
@@ -948,13 +948,13 @@ const DesignTokensEditor: React.FC = () => {
           </div>
 
           {/* App Tokens - Shadows Section */}
-          <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-editor-border">
-              <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-q-border">
+              <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
                 <Layers className="w-5 h-5" />
                 App Shadows
               </h3>
-              <p className="text-sm text-editor-text-secondary mt-1">
+              <p className="text-sm text-q-text-secondary mt-1">
                 Elevation and depth for cards and modals
               </p>
             </div>
@@ -963,16 +963,16 @@ const DesignTokensEditor: React.FC = () => {
                 {Object.entries(localAppTokens.shadows).map(([key, value]) => (
                   <div key={key} className="text-center space-y-2">
                     <div
-                      className="w-full h-20 bg-editor-panel-bg rounded-lg flex items-center justify-center border border-editor-border"
+                      className="w-full h-20 bg-q-surface rounded-lg flex items-center justify-center border border-q-border"
                       style={{ boxShadow: value }}
                     >
-                      <span className="text-sm font-medium text-editor-text-primary">{key}</span>
+                      <span className="text-sm font-medium text-q-text">{key}</span>
                     </div>
                     <textarea
                       value={value}
                       onChange={(e) => updateAppShadow(key, e.target.value)}
                       rows={2}
-                      className="w-full px-2 py-1 bg-editor-bg border border-editor-border rounded text-xs font-mono text-editor-text-primary resize-none"
+                      className="w-full px-2 py-1 bg-q-bg border border-q-border rounded text-xs font-mono text-q-text resize-none"
                     />
                   </div>
                 ))}

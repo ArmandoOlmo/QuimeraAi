@@ -116,9 +116,9 @@ export function ProjectTransferModal({
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-lg mx-4 bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center justify-between p-6 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <FolderOutput className="h-5 w-5 text-primary" />
@@ -127,14 +127,14 @@ export function ProjectTransferModal({
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('agency.transferProject', 'Transferir Proyecto')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {project.name}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary/50 transition-colors"
                     >
                         <X size={18} />
                     </button>
@@ -162,22 +162,22 @@ export function ProjectTransferModal({
                     )}
 
                     {/* Project Preview */}
-                    <div className="mb-6 p-4 rounded-xl bg-secondary/30 border border-border/50">
+                    <div className="mb-6 p-4 rounded-xl bg-secondary/30 border border-q-border/50">
                         <div className="flex items-center gap-3">
                             {project.thumbnailUrl ? (
                                 <img
                                     src={project.thumbnailUrl}
                                     alt={project.name}
-                                    className="h-12 w-16 rounded-lg object-cover border border-border/50"
+                                    className="h-12 w-16 rounded-lg object-cover border border-q-border/50"
                                 />
                             ) : (
-                                <div className="h-12 w-16 rounded-lg bg-secondary flex items-center justify-center border border-border/50">
-                                    <Globe size={20} className="text-muted-foreground" />
+                                <div className="h-12 w-16 rounded-lg bg-secondary flex items-center justify-center border border-q-border/50">
+                                    <Globe size={20} className="text-q-text-muted" />
                                 </div>
                             )}
                             <div>
                                 <p className="font-medium text-foreground">{project.name}</p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-q-text-muted">
                                     {project.status === 'Published' ? '🟢 Publicado' : '📝 Borrador'}
                                     {' · '}
                                     {project.pages && project.pages.length > 0
@@ -207,12 +207,12 @@ export function ProjectTransferModal({
                                         disabled={isTransferring || transferResult?.success}
                                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${selectedClientId === client.id
                                                 ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                                                : 'border-border/50 hover:border-border hover:bg-secondary/30'
+                                                : 'border-q-border/50 hover:border-q-border hover:bg-secondary/30'
                                             } ${(isTransferring || transferResult?.success) ? 'opacity-60 cursor-not-allowed' : ''}`}
                                     >
                                         <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${selectedClientId === client.id
                                                 ? 'bg-primary/20 text-primary'
-                                                : 'bg-secondary text-muted-foreground'
+                                                : 'bg-secondary text-q-text-muted'
                                             }`}>
                                             <Building2 size={16} />
                                         </div>
@@ -220,7 +220,7 @@ export function ProjectTransferModal({
                                             <p className="font-medium text-foreground text-sm truncate">
                                                 {client.name}
                                             </p>
-                                            <p className="text-xs text-muted-foreground truncate">
+                                            <p className="text-xs text-q-text-muted truncate">
                                                 {client.branding?.companyName || client.slug}
                                             </p>
                                         </div>
@@ -231,7 +231,7 @@ export function ProjectTransferModal({
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-8 text-muted-foreground">
+                            <div className="text-center py-8 text-q-text-muted">
                                 <Building2 size={24} className="mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">
                                     {t('agency.noClients', 'No tienes clientes registrados')}
@@ -245,10 +245,10 @@ export function ProjectTransferModal({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-secondary/20">
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-q-border bg-secondary/20">
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl hover:bg-secondary/50"
+                        className="px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground transition-colors rounded-xl hover:bg-secondary/50"
                     >
                         {transferResult?.success
                             ? t('common.close', 'Cerrar')

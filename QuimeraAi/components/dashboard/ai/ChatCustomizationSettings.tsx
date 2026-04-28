@@ -32,19 +32,19 @@ const AccordionSectionStable: React.FC<{
     onToggle: (section: string) => void;
     children: React.ReactNode;
 }> = ({ title, icon: Icon, section, isExpanded, onToggle, children }) => (
-    <div className="border-b border-border/30 last:border-0">
+    <div className="border-b border-q-border/30 last:border-0">
         <button
             onClick={() => onToggle(section)}
             className="w-full py-6 flex items-center justify-between hover:text-primary transition-colors group"
         >
             <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-lg transition-all ${isExpanded ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/30 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                <div className={`p-2.5 rounded-lg transition-all ${isExpanded ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/30 text-q-text-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
                     <Icon size={18} />
                 </div>
-                <h3 className={`font-semibold text-base transition-colors ${isExpanded ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>{title}</h3>
+                <h3 className={`font-semibold text-base transition-colors ${isExpanded ? 'text-foreground' : 'text-q-text-muted group-hover:text-foreground'}`}>{title}</h3>
             </div>
             <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                <ChevronDown size={18} className="text-muted-foreground" />
+                <ChevronDown size={18} className="text-q-text-muted" />
             </div>
         </button>
 
@@ -243,7 +243,7 @@ const ChatCustomizationSettings: React.FC = () => {
                         <Palette className="text-primary shrink-0" size={20} />
                         <span className="truncate">{t('chatCustomization.title')}</span>
                     </h2>
-                    <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
+                    <p className="text-q-text-muted text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
                         {t('chatCustomization.autoSaveNote')}
                     </p>
                 </div>
@@ -289,14 +289,14 @@ const ChatCustomizationSettings: React.FC = () => {
                                         backgroundColor: THEME_PRESETS[presetName as keyof typeof THEME_PRESETS].colors?.primaryColor
                                     }}
                                 />
-                                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground group-hover:text-foreground capitalize truncate w-full text-center">{presetName}</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-q-text-muted group-hover:text-foreground capitalize truncate w-full text-center">{presetName}</span>
                             </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Main Settings Container - Clean & Light */}
-                <div className="bg-card/50 border border-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
+                <div className="bg-q-surface/50 border border-q-border/30 rounded-2xl px-8 py-2 space-y-0 shadow-sm">
                     {/* Color Palette */}
                     <AccordionSectionStable title={t('chatCustomization.colorPalette')} icon={Palette} section="colors" isExpanded={!!expandedSections['colors']} onToggle={toggleSection}>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
@@ -329,7 +329,7 @@ const ChatCustomizationSettings: React.FC = () => {
                     <AccordionSectionStable title={t('chatCustomization.brandingAndLogo')} icon={ImageIcon} section="branding" isExpanded={!!expandedSections['branding']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.logoType')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.logoType')}</label>
                                 <div className="flex gap-2">
                                     {['none', 'emoji', 'image'].map((type) => (
                                         <button
@@ -337,7 +337,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateBranding('logoType', type)}
                                             className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.branding.logoType === type
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {t(`chatCustomization.logoTypes.${type}`)}
@@ -348,16 +348,16 @@ const ChatCustomizationSettings: React.FC = () => {
 
                             {config.branding.logoType === 'emoji' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.logoEmoji')}</label>
+                                    <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.logoEmoji')}</label>
                                     <div className="relative">
                                         <button
                                             onClick={() => setShowEmojiPicker(showEmojiPicker === 'logo' ? null : 'logo')}
-                                            className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
+                                            className="w-full px-4 py-5 bg-q-surface border border-q-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
                                         >
                                             {config.branding.logoEmoji || '💬'}
                                         </button>
                                         {showEmojiPicker === 'logo' && (
-                                            <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+                                            <div className="mt-2 bg-q-surface border border-q-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
                                                 {COMMON_EMOJIS.map((emoji) => (
                                                     <button
                                                         key={emoji}
@@ -378,12 +378,12 @@ const ChatCustomizationSettings: React.FC = () => {
 
                             {config.branding.logoType === 'image' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.logoImage')}</label>
+                                    <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.logoImage')}</label>
 
-                                    <div className="border border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-3 bg-card/30">
+                                    <div className="border border-dashed border-q-border rounded-xl p-4 flex flex-col items-center gap-3 bg-q-surface/30">
                                         {config.branding.logoUrl ? (
                                             <div className="relative group">
-                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-border shadow-sm bg-white/5">
+                                                <div className="w-20 h-20 rounded-xl overflow-hidden border border-q-border shadow-sm bg-white/5">
                                                     <img
                                                         src={config.branding.logoUrl}
                                                         alt={t('chatCustomization.chatLogoAlt')}
@@ -399,7 +399,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="w-20 h-20 rounded-xl border border-border bg-secondary/20 flex items-center justify-center text-muted-foreground">
+                                            <div className="w-20 h-20 rounded-xl border border-q-border bg-secondary/20 flex items-center justify-center text-q-text-muted">
                                                 <ImageIcon size={24} className="opacity-50" />
                                             </div>
                                         )}
@@ -412,7 +412,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                                 <ImageIcon size={14} />
                                                 {config.branding.logoUrl ? t('chatCustomization.changeImage') : t('chatCustomization.selectImage')}
                                             </button>
-                                            <p className="text-[10px] text-muted-foreground">
+                                            <p className="text-[10px] text-q-text-muted">
                                                 {t('chatCustomization.selectFromLibrary')}
                                             </p>
                                         </div>
@@ -432,16 +432,16 @@ const ChatCustomizationSettings: React.FC = () => {
                             )}
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.botAvatarEmoji')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.botAvatarEmoji')}</label>
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowEmojiPicker(showEmojiPicker === 'bot' ? null : 'bot')}
-                                        className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
+                                        className="w-full px-4 py-5 bg-q-surface border border-q-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
                                     >
                                         {config.branding.botAvatarEmoji || '🤖'}
                                     </button>
                                     {showEmojiPicker === 'bot' && (
-                                        <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+                                        <div className="mt-2 bg-q-surface border border-q-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
                                             {COMMON_EMOJIS.map((emoji) => (
                                                 <button
                                                     key={emoji}
@@ -479,7 +479,7 @@ const ChatCustomizationSettings: React.FC = () => {
                     <AccordionSectionStable title={t('chatCustomization.positionAndBehavior')} icon={SettingsIcon} section="behavior" isExpanded={!!expandedSections['behavior']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.position')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.position')}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {['bottom-right', 'bottom-left', 'top-right', 'top-left'].map((pos) => (
                                         <button
@@ -487,7 +487,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateBehavior('position', pos)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.behavior.position === pos
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {pos.replace('-', ' ')}
@@ -497,7 +497,7 @@ const ChatCustomizationSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.size')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.size')}</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {['sm', 'md', 'lg', 'xl'].map((size) => (
                                         <button
@@ -505,7 +505,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateBehavior('width', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.behavior.width === size
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {size}
@@ -528,8 +528,8 @@ const ChatCustomizationSettings: React.FC = () => {
                             </div>
 
                             {config.behavior.autoOpen && (
-                                <div className="p-4 bg-card border border-border/50 rounded-lg">
-                                    <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                                <div className="p-4 bg-q-surface border border-q-border/50 rounded-lg">
+                                    <label className="block text-xs font-medium text-q-text-muted mb-3 uppercase tracking-wide">
                                         {t('chatCustomization.autoOpenDelay', { seconds: config.behavior.autoOpenDelay })}
                                     </label>
                                     <input
@@ -549,27 +549,27 @@ const ChatCustomizationSettings: React.FC = () => {
                     <AccordionSectionStable title={t('chatCustomization.customMessages')} icon={MessageSquare} section="messages" isExpanded={!!expandedSections['messages']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.welcomeMessage')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.welcomeMessage')}</label>
                                 <textarea
                                     value={config.messages.welcomeMessage}
                                     onChange={(e) => updateMessages('welcomeMessage', e.target.value)}
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-card border border-border/50 rounded-lg text-foreground resize-none focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                    className="w-full px-4 py-3 bg-q-surface border border-q-border/50 rounded-lg text-foreground resize-none focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.inputPlaceholder')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.inputPlaceholder')}</label>
                                 <input
                                     type="text"
                                     value={config.messages.inputPlaceholder}
                                     onChange={(e) => updateMessages('inputPlaceholder', e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                    className="w-full px-4 py-2.5 bg-q-surface border border-q-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.quickReplies')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.quickReplies')}</label>
                                 <div className="space-y-2">
                                     {config.messages.quickReplies.map((qr) => (
                                         <div key={qr.id} className="flex items-center gap-3 p-3 bg-secondary/10 hover:bg-secondary/20 rounded-lg transition-colors">
@@ -589,7 +589,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             value={newQuickReply.text}
                                             onChange={(e) => setNewQuickReply({ ...newQuickReply, text: e.target.value })}
                                             placeholder={t('chatCustomization.addQuickReplyPlaceholder')}
-                                            className="flex-1 px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground text-sm focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                            className="flex-1 px-4 py-2.5 bg-q-surface border border-q-border/50 rounded-lg text-foreground text-sm focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                         />
                                         <button
                                             onClick={addQuickReply}
@@ -607,7 +607,7 @@ const ChatCustomizationSettings: React.FC = () => {
                     <AccordionSectionStable title={t('chatCustomization.chatButton')} icon={Smile} section="button" isExpanded={!!expandedSections['button']} onToggle={toggleSection}>
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.buttonStyle')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.buttonStyle')}</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {['circle', 'rounded', 'square'].map((style) => (
                                         <button
@@ -615,7 +615,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateButton('buttonStyle', style)}
                                             className={`py-2.5 px-4 rounded-lg font-medium transition-all capitalize text-sm ${config.button.buttonStyle === style
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {style}
@@ -625,7 +625,7 @@ const ChatCustomizationSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.buttonSize')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.buttonSize')}</label>
                                 <div className="grid grid-cols-4 gap-2">
                                     {['sm', 'md', 'lg', 'xl'].map((size) => (
                                         <button
@@ -633,7 +633,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateButton('buttonSize', size)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all uppercase text-sm ${config.button.buttonSize === size
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             {size}
@@ -642,8 +642,8 @@ const ChatCustomizationSettings: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="border border-border/50 rounded-xl p-4 bg-secondary/5">
-                                <label className="block text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">🎨 {t('chatCustomization.buttonIcon', 'Ícono del Botón')}</label>
+                            <div className="border border-q-border/50 rounded-xl p-4 bg-secondary/5">
+                                <label className="block text-xs font-medium text-q-text-muted mb-3 uppercase tracking-wide">🎨 {t('chatCustomization.buttonIcon', 'Ícono del Botón')}</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {([
                                         { value: 'chat', label: t('chatCustomization.buttonIcons.chat', 'Chat'), icon: '💬' },
@@ -656,7 +656,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                             onClick={() => updateButton('buttonIcon', value)}
                                             className={`py-2.5 px-3 rounded-lg font-medium transition-all text-sm flex flex-col items-center gap-1 ${config.button.buttonIcon === value
                                                 ? 'bg-primary text-primary-foreground shadow-md'
-                                                : 'bg-card border border-border/50 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                : 'bg-q-surface border border-q-border/50 text-q-text-muted hover:border-primary/50 hover:text-foreground'
                                                 }`}
                                         >
                                             <span className="text-lg">{icon}</span>
@@ -668,16 +668,16 @@ const ChatCustomizationSettings: React.FC = () => {
 
                             {config.button.buttonIcon === 'custom-emoji' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonEmoji', 'Custom Emoji')}</label>
+                                    <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonEmoji', 'Custom Emoji')}</label>
                                     <div className="relative">
                                         <button
                                             onClick={() => setShowEmojiPicker(showEmojiPicker === 'button' ? null : 'button')}
-                                            className="w-full px-4 py-5 bg-card border border-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
+                                            className="w-full px-4 py-5 bg-q-surface border border-q-border/50 rounded-lg text-3xl text-center hover:border-primary hover:shadow-md transition-all"
                                         >
                                             {config.button.customEmoji || '💬'}
                                         </button>
                                         {showEmojiPicker === 'button' && (
-                                            <div className="mt-2 bg-card border border-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+                                            <div className="mt-2 bg-q-surface border border-q-border rounded-xl shadow-2xl p-4 grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
                                                 {COMMON_EMOJIS.map((emoji) => (
                                                     <button
                                                         key={emoji}
@@ -698,11 +698,11 @@ const ChatCustomizationSettings: React.FC = () => {
 
                             {config.button.buttonIcon === 'custom-image' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonImage', 'Custom Icon Image')}</label>
-                                    <div className="border border-dashed border-border rounded-xl p-4 flex flex-col items-center gap-3 bg-card/30">
+                                    <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.customButtonImage', 'Custom Icon Image')}</label>
+                                    <div className="border border-dashed border-q-border rounded-xl p-4 flex flex-col items-center gap-3 bg-q-surface/30">
                                         {config.button.customIconUrl ? (
                                             <div className="relative group">
-                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-border shadow-sm bg-white/5">
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-q-border shadow-sm bg-white/5">
                                                     <img
                                                         src={config.button.customIconUrl}
                                                         alt={t('chatCustomization.customButtonImageAlt', 'Button icon')}
@@ -718,7 +718,7 @@ const ChatCustomizationSettings: React.FC = () => {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="w-16 h-16 rounded-xl border border-border bg-secondary/20 flex items-center justify-center text-muted-foreground">
+                                            <div className="w-16 h-16 rounded-xl border border-q-border bg-secondary/20 flex items-center justify-center text-q-text-muted">
                                                 <ImageIcon size={24} className="opacity-50" />
                                             </div>
                                         )}
@@ -747,12 +747,12 @@ const ChatCustomizationSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('chatCustomization.tooltipText')}</label>
+                                <label className="block text-xs font-medium text-q-text-muted mb-2 uppercase tracking-wide">{t('chatCustomization.tooltipText')}</label>
                                 <input
                                     type="text"
                                     value={config.button.tooltipText}
                                     onChange={(e) => updateButton('tooltipText', e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-card border border-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+                                    className="w-full px-4 py-2.5 bg-q-surface border border-q-border/50 rounded-lg text-foreground focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none transition-all"
                                 />
                             </div>
                         </div>

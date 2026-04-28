@@ -61,7 +61,7 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal Content */}
       <div 
         className={`
-          relative bg-editor-bg border border-editor-border shadow-2xl w-full 
+          relative bg-q-surface border border-q-border shadow-2xl w-full 
           flex flex-col overflow-hidden animate-slide-up
           ${fullScreenMobile 
             ? 'h-[100dvh] sm:h-auto sm:max-h-[90dvh] rounded-none sm:rounded-xl' 
@@ -74,7 +74,7 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Mobile drag indicator */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 bg-editor-border rounded-full" />
+          <div className="w-10 h-1 bg-q-border rounded-full" />
         </div>
         {children}
       </div>

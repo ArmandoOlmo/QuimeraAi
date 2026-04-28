@@ -268,28 +268,28 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     const mostUsedTemplate = getMostUsedTemplate();
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                         {/* Botón hamburguesa para abrir sidebar en móvil */}
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-10 w-10 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors flex-shrink-0"
+                            className="h-10 w-10 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden transition-colors flex-shrink-0"
                             title="Open menu"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <LayoutTemplate className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-base sm:text-lg font-semibold text-editor-text-primary truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
+                            <LayoutTemplate className="text-q-accent w-5 h-5" />
+                            <h1 className="text-base sm:text-lg font-semibold text-q-text truncate">{t('superadmin.templateManagement.title', 'Templates')}</h1>
                         </div>
 
                         {/* Search Bar - Desktop */}
-                        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                        <div className="hidden md:flex items-center gap-2 flex-1 max-w-md bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                            <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
@@ -298,7 +298,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                     <X className="w-4 h-4" />
                                 </button>
                             )}
@@ -307,20 +307,20 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                     <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         {/* Back Button - First */}
-                        <HeaderBackButton onClick={onBack} label={t('superadmin.templateManagement.back', 'Back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onBack} label={t('superadmin.templateManagement.back', 'Back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
 
                         {/* View Mode Toggle - Mobile */}
-                        <div className="flex sm:hidden items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
+                        <div className="flex sm:hidden items-center gap-0.5 bg-q-surface-overlay/40 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 transition-all rounded ${viewMode === 'grid' ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary'}`}
+                                className={`p-2 transition-all rounded ${viewMode === 'grid' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary'}`}
                                 title="Grid View"
                             >
                                 <Grid size={18} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-2 transition-all rounded ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary'}`}
+                                className={`p-2 transition-all rounded ${viewMode === 'list' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary'}`}
                                 title="List View"
                             >
                                 <List size={18} />
@@ -328,17 +328,17 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                         </div>
 
                         {/* View Mode Toggle - Desktop */}
-                        <div className="hidden sm:flex items-center gap-0.5 bg-editor-border/40 rounded-lg p-1">
+                        <div className="hidden sm:flex items-center gap-0.5 bg-q-surface-overlay/40 rounded-lg p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-1.5 transition-all ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`p-1.5 transition-all ${viewMode === 'grid' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                 title="Grid View"
                             >
                                 <Grid size={16} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-1.5 transition-all ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`p-1.5 transition-all ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                 title="List View"
                             >
                                 <List size={16} />
@@ -347,7 +347,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-editor-accent bg-editor-accent/10' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                            className={`flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all ${showFilters ? 'text-q-accent bg-q-accent/10' : 'text-q-text-secondary hover:text-q-text'}`}
                         >
                             <Filter className="w-5 h-5 sm:w-4 sm:h-4" />
                             <span className="hidden lg:inline ml-1.5">{t('superadmin.templateManagement.filters', 'Filters')}</span>
@@ -362,7 +362,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <span className="hidden sm:inline ml-1.5">AI Generate</span>
                         </button>
 
-                        <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-editor-accent hover:bg-editor-accent/10">
+                        <button onClick={createNewTemplate} className="flex items-center justify-center h-10 w-10 sm:h-9 sm:w-auto sm:px-3 rounded-lg text-sm font-medium transition-all text-q-accent hover:bg-q-accent/10">
                             <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
                             <span className="hidden sm:inline ml-1.5">{t('superadmin.templateManagement.new', 'New')}</span>
                         </button>
@@ -370,9 +370,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                 </header>
 
                 {/* Mobile Search */}
-                <div className="md:hidden px-3 py-3 border-b border-editor-border bg-editor-bg/50">
-                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-xl px-4 py-2.5">
-                        <Search className="w-5 h-5 text-editor-text-secondary flex-shrink-0" />
+                <div className="md:hidden px-3 py-3 border-b border-q-border bg-q-bg/50">
+                    <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-xl px-4 py-2.5">
+                        <Search className="w-5 h-5 text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder={t('superadmin.templateManagement.searchPlaceholder', 'Search templates...')}
@@ -381,7 +381,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary p-1 flex-shrink-0">
+                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text p-1 flex-shrink-0">
                                 <X className="w-5 h-5" />
                             </button>
                         )}
@@ -390,14 +390,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="px-3 sm:px-6 py-4 border-b border-editor-border bg-editor-panel-bg/50">
+                    <div className="px-3 sm:px-6 py-4 border-b border-q-border bg-q-surface/50">
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-editor-text-secondary">{t('superadmin.sortByCategory')}</label>
+                                <label className="text-xs text-q-text-secondary">{t('superadmin.sortByCategory')}</label>
                                 <select
                                     value={filterCategory}
                                     onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
+                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
                                 >
                                     <option value="all">{t('superadmin.allCategories')}</option>
                                     {categories.map(cat => (
@@ -408,14 +408,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Industry Filter */}
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                <label className="text-xs text-q-text-secondary flex items-center gap-1">
                                     <Building2 className="w-3 h-3" />
                                     {t('industries.title')}
                                 </label>
                                 <select
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
-                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full sm:min-w-[160px]"
+                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full sm:min-w-[160px]"
                                 >
                                     <option value="all">{t('superadmin.allCategories')}</option>
                                     {usedIndustries.map(ind => (
@@ -425,11 +425,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-editor-text-secondary">{t('leads.status')}</label>
+                                <label className="text-xs text-q-text-secondary">{t('leads.status')}</label>
                                 <select
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value as any)}
-                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
+                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
                                 >
                                     <option value="all">{t('superadmin.allTemplates')}</option>
                                     <option value="active">{t('superadmin.activeTemplates')}</option>
@@ -438,11 +438,11 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-editor-text-secondary">{t('leads.sort')}</label>
+                                <label className="text-xs text-q-text-secondary">{t('leads.sort')}</label>
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="bg-editor-border/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-editor-accent w-full"
+                                    className="bg-q-surface-overlay/40 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm outline-none border border-transparent focus:border-q-accent w-full"
                                 >
                                     <option value="recent">{t('superadmin.sortByRecent')}</option>
                                     <option value="name">{t('superadmin.sortByName')}</option>
@@ -460,7 +460,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             setFilterIndustry('all');
                                             setFilterStatus('all');
                                         }}
-                                        className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg text-sm text-editor-text-secondary hover:text-editor-text-primary bg-editor-border/30 hover:bg-editor-border/50 transition-colors"
+                                        className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg text-sm text-q-text-secondary hover:text-q-text bg-q-surface-overlay/30 hover:bg-q-surface-overlay/50 transition-colors"
                                     >
                                         {t('superadmin.clearFilters')}
                                     </button>
@@ -474,24 +474,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     {/* Statistics Cards - Responsive Grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                         {/* Total Templates Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-editor-accent/40 transition-all duration-300 overflow-hidden">
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-q-accent/40 transition-all duration-300 overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-editor-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
-                                    <div className="p-2 sm:p-2.5 bg-editor-accent/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <LayoutTemplate size={18} className="sm:w-5 sm:h-5 text-editor-accent" />
+                                    <div className="p-2 sm:p-2.5 bg-q-accent/15 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <LayoutTemplate size={18} className="sm:w-5 sm:h-5 text-q-accent" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-editor-accent/10 text-editor-accent rounded-full">
+                                    <span className="text-[10px] sm:text-xs font-medium px-2 py-0.5 bg-q-accent/10 text-q-accent rounded-full">
                                         {activeTemplates} {t('superadmin.templateManagement.active', 'active')}
                                     </span>
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-editor-accent transition-colors">{templates.length}</div>
-                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.totalTemplates', 'Total Templates')}</p>
+                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-q-accent transition-colors">{templates.length}</div>
+                                <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.totalTemplates', 'Total Templates')}</p>
                             </div>
                         </div>
 
                         {/* Sites Created Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-blue-500/40 transition-all duration-300 overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
@@ -502,13 +502,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         {t('superadmin.templateManagement.fromTemplates', 'from templates')}
                                     </span>
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-blue-400 transition-colors">{totalSitesUsingTemplates}</div>
-                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</p>
+                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-blue-400 transition-colors">{totalSitesUsingTemplates}</div>
+                                <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.sitesCreated', 'Sites Created')}</p>
                             </div>
                         </div>
 
                         {/* Most Popular Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-green-500/40 transition-all duration-300 overflow-hidden">
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-green-500/40 transition-all duration-300 overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
@@ -521,15 +521,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-base sm:text-xl font-bold text-editor-text-primary mb-0.5 group-hover:text-green-400 transition-colors truncate" title={mostUsedTemplate?.name}>
+                                <div className="text-base sm:text-xl font-bold text-q-text mb-0.5 group-hover:text-green-400 transition-colors truncate" title={mostUsedTemplate?.name}>
                                     {mostUsedTemplate?.name || 'N/A'}
                                 </div>
-                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</p>
+                                <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</p>
                             </div>
                         </div>
 
                         {/* Archived Card */}
-                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-editor-border/50 hover:border-orange-500/40 transition-all duration-300 overflow-hidden">
+                        <div className="group relative bg-gradient-to-br from-editor-panel-bg to-editor-panel-bg/80 rounded-2xl p-4 sm:p-5 border border-q-border/50 hover:border-orange-500/40 transition-all duration-300 overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
@@ -540,15 +540,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         {t('superadmin.templateManagement.title', 'Templates')}
                                     </span>
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-bold text-editor-text-primary mb-0.5 group-hover:text-orange-400 transition-colors">{archivedTemplates}</div>
-                                <p className="text-xs sm:text-sm text-editor-text-secondary font-medium">{t('superadmin.templateManagement.archived', 'Archived')}</p>
+                                <div className="text-2xl sm:text-3xl font-bold text-q-text mb-0.5 group-hover:text-orange-400 transition-colors">{archivedTemplates}</div>
+                                <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.archived', 'Archived')}</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Results Header */}
                     <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm text-editor-text-secondary">
+                        <p className="text-sm text-q-text-secondary">
                             {filteredAndSortedTemplates.length} {filteredAndSortedTemplates.length === 1 ? t('superadmin.templateManagement.title', 'template').toLowerCase().slice(0, -1) : t('superadmin.templateManagement.title', 'Templates').toLowerCase()}
                         </p>
                     </div>
@@ -581,8 +581,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         ) : null}
                                         {/* Placeholder when no thumbnail */}
                                         <div className={`absolute inset-0 bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex flex-col items-center justify-center ${template.thumbnailUrl ? 'hidden' : ''}`}>
-                                            <LayoutTemplate className="w-16 h-16 text-editor-accent/40 mb-3" />
-                                            <span className="text-editor-text-secondary text-sm font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
+                                            <LayoutTemplate className="w-16 h-16 text-q-accent/40 mb-3" />
+                                            <span className="text-q-text-secondary text-sm font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
                                         </div>
 
                                         {/* Dark Gradient Overlay */}
@@ -708,7 +708,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {filteredAndSortedTemplates.map(template => (
                                 <div
                                     key={template.id}
-                                    className={`bg-editor-panel-bg p-3 sm:p-4 rounded-xl border border-editor-border hover:border-editor-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
+                                    className={`bg-q-surface p-3 sm:p-4 rounded-xl border border-q-border hover:border-q-accent transition-all ${template.isArchived ? 'opacity-50' : ''}`}
                                 >
                                     {/* Mobile: Stacked layout */}
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
@@ -734,7 +734,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ${template.thumbnailUrl ? 'hidden' : ''}`}
                                                     onClick={() => setPreviewTemplate(template)}
                                                 >
-                                                    <LayoutTemplate className="w-6 h-6 text-editor-accent/40" />
+                                                    <LayoutTemplate className="w-6 h-6 text-q-accent/40" />
                                                 </div>
                                                 {/* Color Swatches */}
                                                 {getThemeColors(template).length > 0 && (
@@ -757,12 +757,12 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-editor-text-primary truncate text-sm sm:text-base mb-1">{template.name}</h3>
+                                                <h3 className="font-semibold text-q-text truncate text-sm sm:text-base mb-1">{template.name}</h3>
                                                 {/* Industry tags in list view */}
                                                 {template.industries && template.industries.length > 0 && (
                                                     <div className="flex items-center gap-1">
-                                                        <Building2 className="w-3 h-3 text-editor-accent flex-shrink-0" />
-                                                        <span className="text-xs text-editor-accent truncate">
+                                                        <Building2 className="w-3 h-3 text-q-accent flex-shrink-0" />
+                                                        <span className="text-xs text-q-accent truncate">
                                                             {template.industries.length} {t('industries.title').toLowerCase()}
                                                         </span>
                                                     </div>
@@ -774,14 +774,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-shrink-0">
                                             <button
                                                 onClick={() => setPreviewTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-accent transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-q-accent transition-colors flex-shrink-0"
                                                 title={t('common.view')}
                                             >
                                                 <Eye size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
                                             <button
                                                 onClick={() => loadProject(template.id, true)}
-                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-editor-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-editor-accent/90 transition-colors flex-shrink-0"
+                                                className="flex items-center gap-1.5 px-3 sm:px-3 py-2.5 sm:py-2 bg-q-accent text-white rounded-lg sm:rounded-md text-sm font-medium hover:bg-q-accent/90 transition-colors flex-shrink-0"
                                                 title={t('common.edit')}
                                             >
                                                 <Edit size={16} className="sm:w-[14px] sm:h-[14px]" />
@@ -789,21 +789,21 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                             </button>
                                             <button
                                                 onClick={() => setEditingTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-purple-400 transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-purple-400 transition-colors flex-shrink-0"
                                                 title={t('industries.title')}
                                             >
                                                 <Settings2 size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
                                             <button
                                                 onClick={() => setThumbnailEditTemplate(template)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-blue-400 transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-blue-400 transition-colors flex-shrink-0"
                                                 title="Change Thumbnail"
                                             >
                                                 <ImageIcon size={20} className="sm:w-[18px] sm:h-[18px]" />
                                             </button>
                                             <button
                                                 onClick={() => duplicateTemplate(template.id)}
-                                                className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-editor-border hover:text-editor-text-primary transition-colors flex-shrink-0"
+                                                className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-q-surface-overlay hover:text-q-text transition-colors flex-shrink-0"
                                                 title="Duplicate"
                                             >
                                                 <Copy size={20} className="sm:w-[18px] sm:h-[18px]" />
@@ -813,7 +813,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                                     onClick={() => {
                                                         setDeleteConfirmTemplate({ id: template.id, name: template.name });
                                                     }}
-                                                    className="p-2.5 sm:p-2 text-editor-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
+                                                    className="p-2.5 sm:p-2 text-q-text-secondary rounded-lg sm:rounded-md hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={20} className="sm:w-[18px] sm:h-[18px]" />
@@ -829,9 +829,9 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     {/* Empty State */}
                     {filteredAndSortedTemplates.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <LayoutTemplate className="w-16 h-16 text-editor-text-secondary/40 mb-4" />
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-2">{t('superadmin.templateManagement.noTemplates', 'No templates found')}</h3>
-                            <p className="text-sm text-editor-text-secondary mb-6 max-w-md">
+                            <LayoutTemplate className="w-16 h-16 text-q-text-secondary/40 mb-4" />
+                            <h3 className="text-lg font-semibold text-q-text mb-2">{t('superadmin.templateManagement.noTemplates', 'No templates found')}</h3>
+                            <p className="text-sm text-q-text-secondary mb-6 max-w-md">
                                 {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
                                     ? t('superadmin.templateManagement.noTemplatesDesc', 'Try adjusting your search or filter criteria')
                                     : t('superadmin.createFirstTemplate', 'Get started by creating your first template')
@@ -840,7 +840,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {!(searchTerm || filterCategory !== 'all' || filterStatus !== 'all') && (
                                 <button
                                     onClick={createNewTemplate}
-                                    className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
                                 >
                                     <Plus size={18} />
                                     {t('superadmin.templateManagement.createTemplate', 'Create Template')}
@@ -876,15 +876,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             {previewTemplate && (
                 <div className="fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewTemplate(null)}>
                     <div
-                        className="bg-editor-panel-bg rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
+                        className="bg-q-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Mobile drag indicator */}
                         <div className="sm:hidden flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 bg-editor-border/60 rounded-full" />
+                            <div className="w-10 h-1 bg-q-surface-overlay/60 rounded-full" />
                         </div>
 
-                        <div className="sticky top-0 bg-editor-panel-bg border-b border-editor-border p-4 sm:p-6 z-10">
+                        <div className="sticky top-0 bg-q-surface border-b border-q-border p-4 sm:p-6 z-10">
                             <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -896,7 +896,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 </div>
                                 <button
                                     onClick={() => setPreviewTemplate(null)}
-                                    className="p-2.5 sm:p-2 rounded-full hover:bg-editor-border transition-colors flex-shrink-0 -mt-1 -mr-1"
+                                    className="p-2.5 sm:p-2 rounded-full hover:bg-q-surface-overlay transition-colors flex-shrink-0 -mt-1 -mr-1"
                                 >
                                     <X size={22} className="sm:w-6 sm:h-6" />
                                 </button>
@@ -920,8 +920,8 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 ) : null}
                                 {/* Placeholder for preview modal */}
                                 <div className={`w-full aspect-video bg-gradient-to-br from-editor-accent/20 via-editor-panel-bg to-editor-bg flex flex-col items-center justify-center ${previewTemplate.thumbnailUrl ? 'hidden' : ''}`}>
-                                    <LayoutTemplate className="w-20 h-20 text-editor-accent/40 mb-4" />
-                                    <span className="text-editor-text-secondary text-base font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
+                                    <LayoutTemplate className="w-20 h-20 text-q-accent/40 mb-4" />
+                                    <span className="text-q-text-secondary text-base font-medium">{t('superadmin.templateManagement.noThumbnail', 'No thumbnail')}</span>
                                 </div>
                                 {/* Color Swatches */}
                                 {getThemeColors(previewTemplate).length > 0 && (
@@ -939,31 +939,31 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                             {/* Template Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                                <div className="bg-editor-bg/50 rounded-xl p-4">
+                                <div className="bg-q-bg/50 rounded-xl p-4">
                                     <h3 className="font-semibold mb-3 text-sm sm:text-base">{t('superadmin.templateInformation', 'Template Information')}</h3>
                                     <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.sitesUsing', 'Sites Using')}:</span>
+                                            <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.sitesUsing', 'Sites Using')}:</span>
                                             <span className="font-medium">{getTemplateUsage(previewTemplate.id)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.lastUpdated', 'Last Updated')}:</span>
+                                            <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.lastUpdated', 'Last Updated')}:</span>
                                             <span className="font-medium text-xs sm:text-sm truncate ml-2">{previewTemplate.lastUpdated}</span>
                                         </div>
                                         {previewTemplate.author && (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.author', 'Author')}:</span>
+                                                <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.author', 'Author')}:</span>
                                                 <span className="font-medium">{previewTemplate.author}</span>
                                             </div>
                                         )}
                                         {previewTemplate.version && (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.version', 'Version')}:</span>
+                                                <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.version', 'Version')}:</span>
                                                 <span className="font-medium">{previewTemplate.version}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between items-center">
-                                            <span className="text-editor-text-secondary">{t('superadmin.templateManagement.metadata.status', 'Status')}:</span>
+                                            <span className="text-q-text-secondary">{t('superadmin.templateManagement.metadata.status', 'Status')}:</span>
                                             <span className={`font-medium ${previewTemplate.isArchived ? 'text-orange-500' : 'text-green-500'}`}>
                                                 {previewTemplate.isArchived ? t('superadmin.templateManagement.archivedLabel', 'Archived') : t('superadmin.templateManagement.active', 'Active')}
                                             </span>
@@ -971,19 +971,19 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     </div>
                                 </div>
 
-                                <div className="bg-editor-bg/50 rounded-xl p-4">
+                                <div className="bg-q-bg/50 rounded-xl p-4">
                                     <h3 className="font-semibold mb-3 text-sm sm:text-base">{t('superadmin.brandIdentity', 'Brand Identity')}</h3>
                                     <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.business', 'Business')}:</span>
+                                            <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.business', 'Business')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.name || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.targetAudience', 'Target Audience')}:</span>
+                                            <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.targetAudience', 'Target Audience')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.targetAudience || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-editor-text-secondary text-xs">{t('superadmin.templateManagement.metadata.tone', 'Tone')}:</span>
+                                            <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.tone', 'Tone')}:</span>
                                             <p className="font-medium">{previewTemplate.brandIdentity?.toneOfVoice || 'N/A'}</p>
                                         </div>
                                     </div>
@@ -994,7 +994,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {previewTemplate.description && (
                                 <div className="mb-4 sm:mb-6">
                                     <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.description', 'Description')}</h3>
-                                    <p className="text-sm text-editor-text-secondary leading-relaxed">{previewTemplate.description}</p>
+                                    <p className="text-sm text-q-text-secondary leading-relaxed">{previewTemplate.description}</p>
                                 </div>
                             )}
 
@@ -1007,7 +1007,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.industries.map(ind => (
-                                            <span key={ind} className="bg-editor-accent/20 text-editor-accent px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm flex items-center gap-1">
+                                            <span key={ind} className="bg-q-accent/20 text-q-accent px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm flex items-center gap-1">
                                                 <Building2 className="w-3 h-3" />
                                                 {getIndustryLabel(ind)}
                                             </span>
@@ -1022,7 +1022,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('cms.tags', 'Tags')}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.tags.map(tag => (
-                                            <span key={tag} className="bg-editor-border px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm">
+                                            <span key={tag} className="bg-q-surface-overlay px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm">
                                                 {tag}
                                             </span>
                                         ))}
@@ -1035,7 +1035,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                 <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.includedSections', 'Included Sections')}</h3>
                                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                     {previewTemplate.componentOrder.map(section => (
-                                        <span key={section} className="bg-editor-accent/10 text-editor-accent px-2.5 sm:px-3 py-1 rounded-lg sm:rounded text-xs sm:text-sm">
+                                        <span key={section} className="bg-q-accent/10 text-q-accent px-2.5 sm:px-3 py-1 rounded-lg sm:rounded text-xs sm:text-sm">
                                             {section}
                                         </span>
                                     ))}
@@ -1043,13 +1043,13 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-editor-border">
+                            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-q-border">
                                 <button
                                     onClick={() => {
                                         loadProject(previewTemplate.id, true);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-accent text-white rounded-xl sm:rounded-lg hover:bg-editor-accent/90 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-accent text-white rounded-xl sm:rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
                                 >
                                     <Edit size={18} />
                                     <span className="hidden xs:inline">{t('superadmin.templateManagement.edit', 'Edit')}</span>
@@ -1079,7 +1079,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         duplicateTemplate(previewTemplate.id);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-surface-overlay text-q-text rounded-xl sm:rounded-lg hover:bg-q-surface-overlay/80 transition-colors text-sm font-medium"
                                 >
                                     <Copy size={18} />
                                     <span className="hidden xs:inline">{t('superadmin.duplicateTemplate')}</span>
@@ -1089,7 +1089,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                         archiveTemplate(previewTemplate.id, !previewTemplate.isArchived);
                                         setPreviewTemplate(null);
                                     }}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-editor-border text-editor-text-primary rounded-xl sm:rounded-lg hover:bg-editor-border/80 transition-colors text-sm font-medium"
+                                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-q-surface-overlay text-q-text rounded-xl sm:rounded-lg hover:bg-q-surface-overlay/80 transition-colors text-sm font-medium"
                                 >
                                     {previewTemplate.isArchived ? <Eye size={18} /> : <EyeOff size={18} />}
                                     {previewTemplate.isArchived ? t('superadmin.templateManagement.activate', 'Activate') : t('superadmin.templateManagement.archive', 'Archive')}

@@ -10,7 +10,7 @@ interface ComponentPermissionsEditorProps {
 }
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
 );
 
 const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({ component, onUpdate }) => {
@@ -92,22 +92,22 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-                <Shield className="text-editor-accent" size={20} />
-                <h4 className="font-semibold text-editor-text-primary">Component Permissions</h4>
+                <Shield className="text-q-accent" size={20} />
+                <h4 className="font-semibold text-q-text">Component Permissions</h4>
             </div>
 
             {/* Public Component Toggle */}
-            <div className="border border-editor-border rounded-lg p-4 bg-editor-panel-bg">
+            <div className="border border-q-border rounded-lg p-4 bg-q-surface">
                 <div className="flex items-center justify-between">
                     <div>
                         <Label>Public Component</Label>
-                        <p className="text-xs text-editor-text-secondary">
+                        <p className="text-xs text-q-text-secondary">
                             Anyone can view and use this component
                         </p>
                     </div>
                     <button
                         onClick={togglePublic}
-                        className={`${isPublic ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+                        className={`${isPublic ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
                     >
                         <span
                             className={`${isPublic ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
@@ -123,7 +123,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                         <Label>User Permissions</Label>
                         <button
                             onClick={() => setShowUserSearch(!showUserSearch)}
-                            className="px-3 py-1.5 bg-editor-accent text-editor-bg text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
+                            className="px-3 py-1.5 bg-q-accent text-q-bg text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
                         >
                             Add User
                         </button>
@@ -131,9 +131,9 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
 
                     {/* User Search */}
                     {showUserSearch && (
-                        <div className="border border-editor-border rounded-lg p-4 bg-editor-bg">
-                            <div className="flex items-center gap-2 mb-3 bg-editor-border/40 rounded-lg px-3 py-2">
-                                <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                        <div className="border border-q-border rounded-lg p-4 bg-q-bg">
+                            <div className="flex items-center gap-2 mb-3 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                                <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -142,36 +142,36 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                     className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 />
                                 {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                         <X size={16} />
                                     </button>
                                 )}
                             </div>
                             <div className="max-h-48 overflow-y-auto space-y-2">
                                 {filteredUsers.length === 0 ? (
-                                    <p className="text-sm text-editor-text-secondary text-center py-4">
+                                    <p className="text-sm text-q-text-secondary text-center py-4">
                                         No users found
                                     </p>
                                 ) : (
                                     filteredUsers.map(user => (
-                                        <div key={user.uid} className="flex items-center justify-between p-2 rounded hover:bg-editor-panel-bg">
+                                        <div key={user.uid} className="flex items-center justify-between p-2 rounded hover:bg-q-surface">
                                             <div className="flex items-center gap-2">
-                                                <User size={16} className="text-editor-text-secondary" />
+                                                <User size={16} className="text-q-text-secondary" />
                                                 <div>
-                                                    <p className="text-sm text-editor-text-primary">{user.email}</p>
-                                                    {user.name && <p className="text-xs text-editor-text-secondary">{user.name}</p>}
+                                                    <p className="text-sm text-q-text">{user.email}</p>
+                                                    {user.name && <p className="text-xs text-q-text-secondary">{user.name}</p>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => addUserPermission(user.uid, 'view')}
-                                                    className="px-2 py-1 text-xs bg-editor-border text-editor-text-primary rounded hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                                                    className="px-2 py-1 text-xs bg-q-surface-overlay text-q-text rounded hover:bg-q-accent hover:text-q-bg transition-colors"
                                                 >
                                                     View
                                                 </button>
                                                 <button
                                                     onClick={() => addUserPermission(user.uid, 'edit')}
-                                                    className="px-2 py-1 text-xs bg-editor-accent text-editor-bg rounded hover:opacity-90 transition-opacity"
+                                                    className="px-2 py-1 text-xs bg-q-accent text-q-bg rounded hover:opacity-90 transition-opacity"
                                                 >
                                                     Edit
                                                 </button>
@@ -184,9 +184,9 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                     )}
 
                     {/* Current Permissions */}
-                    <div className="border border-editor-border rounded-lg bg-editor-panel-bg divide-y divide-editor-border">
+                    <div className="border border-q-border rounded-lg bg-q-surface divide-y divide-editor-border">
                         {canView.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-editor-text-secondary">
+                            <div className="p-4 text-center text-sm text-q-text-secondary">
                                 No users have been granted permissions yet
                             </div>
                         ) : (
@@ -196,12 +196,12 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                 return (
                                     <div key={userId} className="p-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <User size={16} className="text-editor-text-secondary" />
+                                            <User size={16} className="text-q-text-secondary" />
                                             <div>
-                                                <p className="text-sm text-editor-text-primary">
+                                                <p className="text-sm text-q-text">
                                                     {user?.email || 'Unknown user'}
                                                 </p>
-                                                <p className="text-xs text-editor-text-secondary">
+                                                <p className="text-xs text-q-text-secondary">
                                                     {hasEdit ? 'Can edit' : 'Can view'}
                                                 </p>
                                             </div>
@@ -210,7 +210,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                             {!hasEdit && (
                                                 <button
                                                     onClick={() => upgradeToEdit(userId)}
-                                                    className="px-2 py-1 text-xs bg-editor-border text-editor-text-primary rounded hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                                                    className="px-2 py-1 text-xs bg-q-surface-overlay text-q-text rounded hover:bg-q-accent hover:text-q-bg transition-colors"
                                                 >
                                                     Upgrade to Edit
                                                 </button>
@@ -228,15 +228,15 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                         )}
                     </div>
 
-                    <div className="p-3 bg-editor-bg border border-editor-border rounded-lg">
-                        <p className="text-xs text-editor-text-secondary">
+                    <div className="p-3 bg-q-bg border border-q-border rounded-lg">
+                        <p className="text-xs text-q-text-secondary">
                             <strong>Permission Levels:</strong>
                             <br />
-                            <span className="text-editor-accent">View</span>: Can see and use the component in projects
+                            <span className="text-q-accent">View</span>: Can see and use the component in projects
                             <br />
-                            <span className="text-editor-accent">Edit</span>: Can modify component styles and settings
+                            <span className="text-q-accent">Edit</span>: Can modify component styles and settings
                             <br />
-                            <span className="text-editor-accent">Admin</span>: Component creator (you) - full control
+                            <span className="text-q-accent">Admin</span>: Component creator (you) - full control
                         </p>
                     </div>
                 </div>

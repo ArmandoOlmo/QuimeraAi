@@ -213,11 +213,11 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
             {/* Modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
-                    className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col animate-scale-in"
+                    className="bg-q-bg border border-q-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col animate-scale-in"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-q-border">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary/10 rounded-xl">
                                 <Mail size={20} className="text-primary" />
@@ -225,20 +225,20 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                             <div>
                                 <h3 className="font-bold text-foreground">{title}</h3>
                                 {description && (
-                                    <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                                    <p className="text-xs text-q-text-muted mt-0.5">{description}</p>
                                 )}
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
                         >
                             <X size={18} />
                         </button>
                     </div>
 
                     {/* Contact summary */}
-                    <div className="px-6 py-3 bg-secondary/30 border-b border-border">
+                    <div className="px-6 py-3 bg-secondary/30 border-b border-q-border">
                         <div className="flex items-center gap-2 text-sm">
                             <UserPlus size={14} className="text-primary" />
                             <span className="font-medium text-foreground">
@@ -256,7 +256,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                 </span>
                             ))}
                             {validContacts.length > 5 && (
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-q-text-muted">
                                     +{validContacts.length - 5} más
                                 </span>
                             )}
@@ -293,32 +293,32 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                     <div className="space-y-4">
                                         <button
                                             onClick={() => setShowCreateNew(false)}
-                                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                            className="text-sm text-q-text-muted hover:text-foreground transition-colors"
                                         >
                                             ← Volver a la lista
                                         </button>
                                         <div>
-                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                                            <label className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-1.5 block">
                                                 Nombre de la audiencia
                                             </label>
                                             <input
                                                 type="text"
                                                 value={newName}
                                                 onChange={e => setNewName(e.target.value)}
-                                                className="w-full px-3 py-2.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                className="w-full px-3 py-2.5 bg-secondary border border-q-border rounded-xl text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                 placeholder="Ej: Leads calificados Q2"
                                                 autoFocus
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                                            <label className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-1.5 block">
                                                 Descripción (opcional)
                                             </label>
                                             <input
                                                 type="text"
                                                 value={newDescription}
                                                 onChange={e => setNewDescription(e.target.value)}
-                                                className="w-full px-3 py-2.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                className="w-full px-3 py-2.5 bg-secondary border border-q-border rounded-xl text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                 placeholder="Descripción breve..."
                                             />
                                         </div>
@@ -328,12 +328,12 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                     <div className="space-y-3">
                                         {/* Search */}
                                         <div className="relative">
-                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                             <input
                                                 type="text"
                                                 value={search}
                                                 onChange={e => setSearch(e.target.value)}
-                                                className="w-full pl-9 pr-3 py-2.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                className="w-full pl-9 pr-3 py-2.5 bg-secondary border border-q-border rounded-xl text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                 placeholder="Buscar audiencia..."
                                             />
                                         </div>
@@ -341,14 +341,14 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                         {/* Create new button */}
                                         <button
                                             onClick={() => setShowCreateNew(true)}
-                                            className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-q-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
                                         >
                                             <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                                                 <Plus size={16} className="text-primary" />
                                             </div>
                                             <div className="text-left">
                                                 <p className="text-sm font-medium text-foreground">Crear nueva audiencia</p>
-                                                <p className="text-xs text-muted-foreground">Con los contactos seleccionados</p>
+                                                <p className="text-xs text-q-text-muted">Con los contactos seleccionados</p>
                                             </div>
                                         </button>
 
@@ -363,7 +363,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                                                         selectedAudienceId === audience.id
                                                             ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                                                            : 'border-border hover:border-muted-foreground/30 hover:bg-secondary/50'
+                                                            : 'border-q-border hover:border-muted-foreground/30 hover:bg-secondary/50'
                                                     }`}
                                                 >
                                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -380,12 +380,12 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                                                             {audience.name}
                                                         </p>
                                                         {audience.description && (
-                                                            <p className="text-xs text-muted-foreground truncate">
+                                                            <p className="text-xs text-q-text-muted truncate">
                                                                 {audience.description}
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full flex-shrink-0">
+                                                    <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full flex-shrink-0">
                                                         <Users size={10} className="inline mr-1" />
                                                         {audience.memberCount}
                                                     </span>
@@ -394,8 +394,8 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
                                             {filteredAudiences.length === 0 && !isLoading && (
                                                 <div className="text-center py-8">
-                                                    <Users className="mx-auto h-10 w-10 text-muted-foreground/30 mb-2" />
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <Users className="mx-auto h-10 w-10 text-q-text-muted/30 mb-2" />
+                                                    <p className="text-sm text-q-text-muted">
                                                         {search ? 'Sin resultados' : 'No hay audiencias. Crea una nueva.'}
                                                     </p>
                                                 </div>
@@ -409,7 +409,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
 
                     {/* Footer */}
                     {!result && (
-                        <div className="px-6 py-4 border-t border-border flex gap-2">
+                        <div className="px-6 py-4 border-t border-q-border flex gap-2">
                             <button
                                 onClick={onClose}
                                 className="flex-1 py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl text-sm font-medium transition-colors"

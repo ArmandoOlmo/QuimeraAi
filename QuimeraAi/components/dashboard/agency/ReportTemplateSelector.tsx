@@ -72,30 +72,30 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
     const getColorClasses = (color: string, isSelected: boolean) => {
         const colors: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
             purple: {
-                bg: isSelected ? 'bg-purple-500/10' : 'bg-card',
+                bg: isSelected ? 'bg-purple-500/10' : 'bg-q-surface',
                 text: isSelected ? 'text-purple-600 dark:text-purple-400' : 'text-foreground',
-                border: isSelected ? 'border-purple-500' : 'border-border/50',
-                iconBg: isSelected ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-muted text-muted-foreground',
+                border: isSelected ? 'border-purple-500' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400' : 'bg-muted text-q-text-muted',
             },
             blue: {
-                bg: isSelected ? 'bg-blue-500/10' : 'bg-card',
+                bg: isSelected ? 'bg-blue-500/10' : 'bg-q-surface',
                 text: isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-foreground',
-                border: isSelected ? 'border-blue-500' : 'border-border/50',
-                iconBg: isSelected ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-muted text-muted-foreground',
+                border: isSelected ? 'border-blue-500' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-muted text-q-text-muted',
             },
             green: {
-                bg: isSelected ? 'bg-green-500/10' : 'bg-card',
+                bg: isSelected ? 'bg-green-500/10' : 'bg-q-surface',
                 text: isSelected ? 'text-green-600 dark:text-green-400' : 'text-foreground',
-                border: isSelected ? 'border-green-500' : 'border-border/50',
-                iconBg: isSelected ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-muted text-muted-foreground',
+                border: isSelected ? 'border-green-500' : 'border-q-border/50',
+                iconBg: isSelected ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-muted text-q-text-muted',
             },
         };
         return colors[color] || colors.blue;
     };
 
     return (
-        <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-            <div className="p-5 border-b border-border/50 bg-muted/30">
+        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+            <div className="p-5 border-b border-q-border/50 bg-muted/30">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                         <FileText className="h-5 w-5 text-purple-500" />
@@ -104,7 +104,7 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                         <h4 className="font-semibold text-foreground">
                             {t('dashboard.agency.reports.templates.title', 'Plantilla de Reporte')}
                         </h4>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-q-text-muted">
                             Selecciona el formato del reporte
                         </p>
                     </div>
@@ -163,7 +163,7 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                 </h4>
 
                                 {/* Description */}
-                                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                <p className="text-sm text-q-text-muted mb-4 line-clamp-2">
                                     {template.description}
                                 </p>
 
@@ -172,12 +172,12 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                     {template.features.map((feature, index) => (
                                         <li
                                             key={index}
-                                            className="text-xs text-muted-foreground flex items-center gap-2"
+                                            className="text-xs text-q-text-muted flex items-center gap-2"
                                         >
                                             <CheckCircle className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected
                                                     ? template.color === 'purple' ? 'text-purple-500' :
                                                         template.color === 'blue' ? 'text-blue-500' : 'text-green-500'
-                                                    : 'text-muted-foreground/50'
+                                                    : 'text-q-text-muted/50'
                                                 }`} />
                                             <span className="line-clamp-1">{feature}</span>
                                         </li>

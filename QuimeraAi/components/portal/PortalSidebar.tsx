@@ -126,14 +126,14 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
             {/* Sidebar */}
             <aside
                 className={`
-                    fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border
+                    fixed inset-y-0 left-0 z-50 w-64 bg-q-surface border-r border-q-border
                     transform transition-transform duration-300 ease-in-out
                     lg:translate-x-0
                     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}
             >
                 {/* Header */}
-                <div className="h-16 flex items-center justify-between px-4 border-b border-border">
+                <div className="h-16 flex items-center justify-between px-4 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         {theme.logoUrl ? (
                             <img
@@ -157,7 +157,7 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
                     {/* Mobile close button */}
                     <button
                         onClick={onClose}
-                        className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                        className="lg:hidden p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -178,7 +178,7 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
                                     transition-all duration-200
                                     ${active
                                         ? 'text-white font-medium shadow-lg'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                                     }
                                 `}
                                 style={active ? { backgroundColor: theme.primaryColor } : undefined}
@@ -191,7 +191,7 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
                 </nav>
 
                 {/* Settings at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-q-border">
                     <button
                         onClick={() => handleNavClick('/portal/settings')}
                         className={`
@@ -199,7 +199,7 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
                             transition-all duration-200
                             ${isActive('/portal/settings')
                                 ? 'text-white font-medium shadow-lg'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                             }
                         `}
                         style={isActive('/portal/settings') ? { backgroundColor: theme.primaryColor } : undefined}
@@ -210,13 +210,13 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
 
                     {/* Tenant info */}
                     <div className="mt-4 px-3 py-2 bg-secondary/50 rounded-lg">
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-q-text-muted">
                             {t('portal.workspace', 'Workspace')}
                         </p>
                         <p className="text-sm font-medium text-foreground truncate">
                             {portalConfig?.tenant.name}
                         </p>
-                        <p className="text-xs text-muted-foreground capitalize">
+                        <p className="text-xs text-q-text-muted capitalize">
                             {portalConfig?.tenant.subscriptionPlan} plan
                         </p>
                     </div>

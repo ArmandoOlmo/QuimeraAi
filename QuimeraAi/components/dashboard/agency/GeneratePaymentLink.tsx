@@ -138,9 +138,9 @@ export function GeneratePaymentLink({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-q-surface rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card rounded-t-xl z-10">
+                <div className="px-6 py-4 border-b border-q-border flex items-center justify-between sticky top-0 bg-q-surface rounded-t-xl z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
                             <Link2 className="h-4.5 w-4.5 text-primary" />
@@ -149,14 +149,14 @@ export function GeneratePaymentLink({
                             <h3 className="text-lg font-semibold text-foreground">
                                 Generar Link de Pago
                             </h3>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-q-text-muted">
                                 Para: <span className="font-medium text-foreground">{clientName}</span>
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -193,13 +193,13 @@ export function GeneratePaymentLink({
 
                             {/* Custom Price Override */}
                             {selectedPlan && (
-                                <div className="border border-border rounded-lg p-4 space-y-3">
+                                <div className="border border-q-border rounded-lg p-4 space-y-3">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={useCustomPrice}
                                             onChange={(e) => setUseCustomPrice(e.target.checked)}
-                                            className="rounded border-border text-primary focus:ring-primary"
+                                            className="rounded border-q-border text-primary focus:ring-primary"
                                         />
                                         <span className="text-sm text-foreground">
                                             Usar precio personalizado
@@ -208,21 +208,21 @@ export function GeneratePaymentLink({
 
                                     {useCustomPrice && (
                                         <div className="flex items-center gap-2">
-                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                            <DollarSign className="h-4 w-4 text-q-text-muted" />
                                             <input
                                                 type="number"
                                                 value={customPrice}
                                                 onChange={(e) => setCustomPrice(e.target.value)}
-                                                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:ring-2 focus:ring-primary"
+                                                className="flex-1 px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground text-sm focus:ring-2 focus:ring-primary"
                                                 placeholder="0.00"
                                                 step="0.01"
                                                 min="0"
                                             />
-                                            <span className="text-sm text-muted-foreground">/mes</span>
+                                            <span className="text-sm text-q-text-muted">/mes</span>
                                         </div>
                                     )}
 
-                                    <div className="text-xs text-muted-foreground">
+                                    <div className="text-xs text-q-text-muted">
                                         {useCustomPrice ? (
                                             <>
                                                 Precio del plan: <span className="line-through">${selectedPlan.price.toFixed(2)}</span>
@@ -243,19 +243,19 @@ export function GeneratePaymentLink({
                                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                                     <h4 className="text-sm font-semibold text-foreground">Resumen</h4>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Cliente</span>
+                                        <span className="text-q-text-muted">Cliente</span>
                                         <span className="text-foreground font-medium">{clientName}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Plan</span>
+                                        <span className="text-q-text-muted">Plan</span>
                                         <span className="text-foreground font-medium">{selectedPlan.name}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Cobro mensual</span>
+                                        <span className="text-q-text-muted">Cobro mensual</span>
                                         <span className="text-foreground font-semibold">${effectivePrice.toFixed(2)} USD</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Validez del link</span>
+                                        <span className="text-q-text-muted">Validez del link</span>
                                         <span className="text-foreground">48 horas</span>
                                     </div>
                                 </div>
@@ -297,9 +297,9 @@ export function GeneratePaymentLink({
                             </div>
 
                             {/* Link Copy Box */}
-                            <div className="border border-border rounded-lg overflow-hidden">
-                                <div className="px-4 py-3 bg-muted/30 border-b border-border">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            <div className="border border-q-border rounded-lg overflow-hidden">
+                                <div className="px-4 py-3 bg-muted/30 border-b border-q-border">
+                                    <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wide">
                                         Link de Pago
                                     </p>
                                 </div>
@@ -309,7 +309,7 @@ export function GeneratePaymentLink({
                                             type="text"
                                             value={generatedLink}
                                             readOnly
-                                            className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-lg text-sm text-foreground font-mono truncate"
+                                            className="flex-1 px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-sm text-foreground font-mono truncate"
                                         />
                                         <button
                                             onClick={handleCopy}
@@ -337,7 +337,7 @@ export function GeneratePaymentLink({
 
                             {/* Link Details */}
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2 text-sm text-q-text-muted">
                                     <Clock className="h-4 w-4" />
                                     <span>
                                         Válido hasta:{' '}
@@ -349,7 +349,7 @@ export function GeneratePaymentLink({
                                         </span>
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2 text-sm text-q-text-muted">
                                     <DollarSign className="h-4 w-4" />
                                     <span>
                                         Cobro: <span className="font-medium text-foreground">${effectivePrice.toFixed(2)} USD/mes</span>
@@ -365,7 +365,7 @@ export function GeneratePaymentLink({
                                             window.open(generatedLink, '_blank');
                                         }
                                     }}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-border text-foreground rounded-lg text-sm font-medium hover:bg-muted transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-q-border text-foreground rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                                 >
                                     <ExternalLink className="h-4 w-4" />
                                     Vista previa

@@ -95,7 +95,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                     {/* Close button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
+                        className="absolute top-3 right-3 p-1.5 rounded-full text-q-text-muted hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
                         aria-label={t('common.close')}
                     >
                         <X size={16} />
@@ -113,7 +113,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                 <h2 className="text-2xl font-bold text-foreground">
                                     {t('dashboard.helpGuide.title', 'Configura tu cuenta')}
                                 </h2>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-sm text-q-text-muted mt-1">
                                     {t('dashboard.helpGuide.subtitle', 'Completa estos pasos para lanzar tu negocio online.')}
                                 </p>
                             </div>
@@ -133,8 +133,8 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                             ${step.isCompleted
                                                 ? 'bg-primary/5 border-primary/20'
                                                 : isNext
-                                                    ? 'bg-card border-primary shadow-sm ring-1 ring-primary/20'
-                                                    : 'bg-card/40 border-border/50 opacity-60'
+                                                    ? 'bg-q-surface border-primary shadow-sm ring-1 ring-primary/20'
+                                                    : 'bg-q-surface/40 border-q-border/50 opacity-60'
                                             }
                                         `}
                                     >
@@ -158,7 +158,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                             {/* Icon */}
                                             <div className={`
                                                 w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                                                ${step.isCompleted ? 'bg-primary/10 text-primary' : isNext ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}
+                                                ${step.isCompleted ? 'bg-primary/10 text-primary' : isNext ? 'bg-primary/10 text-primary' : 'bg-muted text-q-text-muted'}
                                             `}>
                                                 <StepIcon size={20} />
                                             </div>
@@ -175,7 +175,7 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-muted-foreground truncate">
+                                                <p className="text-xs text-q-text-muted truncate">
                                                     {step.description}
                                                 </p>
                                             </div>
@@ -197,8 +197,8 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
                         </div>
 
                         {/* Footer */}
-                        <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
+                        <div className="mt-6 pt-4 border-t border-q-border/50 flex items-center justify-between">
+                            <p className="text-xs text-q-text-muted">
                                 {t('dashboard.helpGuide.proTip', 'Tip: Sigue esta guía para completar tu configuración.')}
                             </p>
                             <button

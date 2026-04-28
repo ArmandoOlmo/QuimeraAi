@@ -31,7 +31,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="80" cy="80" r="40" stroke="currentColor" strokeWidth="4" className="text-yellow-400/30" />
         <path d="M110 110L140 140" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="text-yellow-400/50" />
-        <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-muted-foreground/20" />
+        <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-q-text-muted/20" />
       </svg>
     ),
     website: (
@@ -41,29 +41,29 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         <circle cx="55" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
         <circle cx="70" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
         <circle cx="85" cy="60" r="3" fill="currentColor" className="text-yellow-400/50" />
-        <rect x="60" y="90" width="80" height="8" rx="4" fill="currentColor" className="text-muted-foreground/20" />
-        <rect x="60" y="110" width="60" height="6" rx="3" fill="currentColor" className="text-muted-foreground/10" />
-        <rect x="60" y="125" width="70" height="6" rx="3" fill="currentColor" className="text-muted-foreground/10" />
+        <rect x="60" y="90" width="80" height="8" rx="4" fill="currentColor" className="text-q-text-muted/20" />
+        <rect x="60" y="110" width="60" height="6" rx="3" fill="currentColor" className="text-q-text-muted/10" />
+        <rect x="60" y="125" width="70" height="6" rx="3" fill="currentColor" className="text-q-text-muted/10" />
       </svg>
     ),
     folder: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M50 70L70 50H130L150 70V150H50V70Z" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
         <path d="M50 70H150" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
-        <circle cx="100" cy="110" r="20" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-muted-foreground/20" />
+        <circle cx="100" cy="110" r="20" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" className="text-q-text-muted/20" />
       </svg>
     ),
     default: (
       <svg className="w-48 h-48 mx-auto mb-6" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="3" className="text-yellow-400/30" />
         <path d="M80 90L90 100L120 70" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-400/50" />
-        <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" className="text-muted-foreground/10" />
+        <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" className="text-q-text-muted/10" />
       </svg>
     )
   };
 
   return (
-    <div className="text-center py-20 bg-gradient-to-br from-card/30 to-secondary/20 rounded-3xl border border-dashed border-border/50">
+    <div className="text-center py-20 bg-gradient-to-br from-card/30 to-secondary/20 rounded-3xl border border-dashed border-q-border/50">
       {/* Illustration */}
       <div className="mb-6">
         {illustrations[illustration]}
@@ -80,7 +80,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       </h3>
 
       {/* Description */}
-      <p className="text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+      <p className="text-q-text-muted mb-8 max-w-md mx-auto leading-relaxed">
         {description}
       </p>
 

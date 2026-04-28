@@ -69,11 +69,11 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
         : 'degraded';
 
     return (
-        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
+        <div className="bg-q-surface border border-q-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-editor-accent" />
-                    <h2 className="text-lg font-bold text-editor-text-primary">Estado del Sistema</h2>
+                    <Activity className="w-5 h-5 text-q-accent" />
+                    <h2 className="text-lg font-bold text-q-text">Estado del Sistema</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className={`flex items-center gap-1 ${getStatusColor(overallStatus)}`}>
@@ -83,10 +83,10 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
-                            className="ml-2 p-1.5 rounded hover:bg-editor-border transition-colors"
+                            className="ml-2 p-1.5 rounded hover:bg-q-surface-overlay transition-colors"
                             title="Actualizar estado"
                         >
-                            <Activity className="w-4 h-4 text-editor-text-secondary" />
+                            <Activity className="w-4 h-4 text-q-text-secondary" />
                         </button>
                     )}
                 </div>
@@ -94,14 +94,14 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
 
             <div className="space-y-3">
                 {/* API Status */}
-                <div className="flex items-center justify-between p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <div className="flex items-center justify-between p-3 bg-q-bg rounded-lg border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded ${getStatusColor(health.apiStatus)} bg-current/10`}>
                             <Wifi className="w-4 h-4" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-editor-text-primary">API</p>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-sm font-medium text-q-text">API</p>
+                            <p className="text-xs text-q-text-secondary">
                                 {health.requestsPerMinute ? `${health.requestsPerMinute} req/min` : 'Monitoreo activo'}
                             </p>
                         </div>
@@ -113,14 +113,14 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
                 </div>
 
                 {/* Database Status */}
-                <div className="flex items-center justify-between p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <div className="flex items-center justify-between p-3 bg-q-bg rounded-lg border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded ${getStatusColor(health.databaseStatus)} bg-current/10`}>
                             <Database className="w-4 h-4" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-editor-text-primary">Base de Datos</p>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-sm font-medium text-q-text">Base de Datos</p>
+                            <p className="text-xs text-q-text-secondary">
                                 {health.activeConnections ? `${health.activeConnections} conexiones` : 'Conexión estable'}
                             </p>
                         </div>
@@ -132,15 +132,15 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
                 </div>
 
                 {/* Server Load */}
-                <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <div className="p-3 bg-q-bg rounded-lg border border-q-border">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                            <Cpu className="w-4 h-4 text-editor-text-secondary" />
-                            <span className="text-sm font-medium text-editor-text-primary">Carga del Servidor</span>
+                            <Cpu className="w-4 h-4 text-q-text-secondary" />
+                            <span className="text-sm font-medium text-q-text">Carga del Servidor</span>
                         </div>
-                        <span className="text-sm font-bold text-editor-text-primary">{health.serverLoad}%</span>
+                        <span className="text-sm font-bold text-q-text">{health.serverLoad}%</span>
                     </div>
-                    <div className="h-2 bg-editor-border rounded-full overflow-hidden">
+                    <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                         <div
                             className={`h-full ${getLoadColor(health.serverLoad)} transition-all duration-300`}
                             style={{ width: `${health.serverLoad}%` }}
@@ -149,15 +149,15 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
                 </div>
 
                 {/* Storage */}
-                <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                <div className="p-3 bg-q-bg rounded-lg border border-q-border">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                            <HardDrive className="w-4 h-4 text-editor-text-secondary" />
-                            <span className="text-sm font-medium text-editor-text-primary">Almacenamiento</span>
+                            <HardDrive className="w-4 h-4 text-q-text-secondary" />
+                            <span className="text-sm font-medium text-q-text">Almacenamiento</span>
                         </div>
-                        <span className="text-sm font-bold text-editor-text-primary">{health.storageUsed}%</span>
+                        <span className="text-sm font-bold text-q-text">{health.storageUsed}%</span>
                     </div>
-                    <div className="h-2 bg-editor-border rounded-full overflow-hidden">
+                    <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                         <div
                             className={`h-full ${getLoadColor(health.storageUsed)} transition-all duration-300`}
                             style={{ width: `${health.storageUsed}%` }}
@@ -167,19 +167,19 @@ const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({ health, onRefre
 
                 {/* Uptime & Last Check */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                    <div className="p-3 bg-q-bg rounded-lg border border-q-border">
                         <div className="flex items-center gap-2 mb-1">
-                            <Server className="w-3.5 h-3.5 text-editor-text-secondary" />
-                            <span className="text-xs text-editor-text-secondary">Uptime</span>
+                            <Server className="w-3.5 h-3.5 text-q-text-secondary" />
+                            <span className="text-xs text-q-text-secondary">Uptime</span>
                         </div>
-                        <p className="text-sm font-bold text-editor-text-primary">{health.uptime}</p>
+                        <p className="text-sm font-bold text-q-text">{health.uptime}</p>
                     </div>
-                    <div className="p-3 bg-editor-bg rounded-lg border border-editor-border">
+                    <div className="p-3 bg-q-bg rounded-lg border border-q-border">
                         <div className="flex items-center gap-2 mb-1">
-                            <Clock className="w-3.5 h-3.5 text-editor-text-secondary" />
-                            <span className="text-xs text-editor-text-secondary">Última revisión</span>
+                            <Clock className="w-3.5 h-3.5 text-q-text-secondary" />
+                            <span className="text-xs text-q-text-secondary">Última revisión</span>
                         </div>
-                        <p className="text-sm font-bold text-editor-text-primary">{health.lastCheck}</p>
+                        <p className="text-sm font-bold text-q-text">{health.lastCheck}</p>
                     </div>
                 </div>
             </div>

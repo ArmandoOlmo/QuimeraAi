@@ -78,7 +78,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
     return (
         <div className={`mb-6 sm:mb-8 ${isPast ? 'opacity-60' : ''}`}>
             {/* Date header */}
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-2 z-10">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 sticky top-0 bg-q-bg/80 backdrop-blur-sm py-2 z-10">
                 <div className={`
                     flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full
                     ${isCurrentDay
@@ -93,7 +93,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
                 </div>
 
                 {!isCurrentDay && (
-                    <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
+                    <span className="text-[10px] sm:text-xs text-q-text-muted hidden sm:inline">
                         {dateObj.toLocaleDateString(i18n.language, {
                             day: 'numeric',
                             month: 'short'
@@ -101,7 +101,7 @@ const DayGroup: React.FC<DayGroupProps> = ({
                     </span>
                 )}
 
-                <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto">
+                <span className="text-[10px] sm:text-xs text-q-text-muted ml-auto">
                     {appointments.length}
                 </span>
             </div>
@@ -129,12 +129,12 @@ const EmptyState: React.FC<{ message?: string }> = ({ message }) => {
     return (
         <div className="flex flex-col items-center justify-center py-16 px-4">
             <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
-                <Calendar className="w-10 h-10 text-muted-foreground/50" />
+                <Calendar className="w-10 h-10 text-q-text-muted/50" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
                 {t('appointments.noAppointments')}
             </h3>
-            <p className="text-sm text-muted-foreground text-center max-w-md">
+            <p className="text-sm text-q-text-muted text-center max-w-md">
                 {message || t('appointments.listView.emptyMessage')}
             </p>
         </div>
@@ -203,7 +203,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 <section className="mb-8 sm:mb-12">
                     <div className="flex items-center gap-2 mb-4 sm:mb-6">
                         <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('appointments.upcoming')}</h2>
-                        <ChevronRight size={18} className="sm:w-5 sm:h-5 text-muted-foreground" />
+                        <ChevronRight size={18} className="sm:w-5 sm:h-5 text-q-text-muted" />
                     </div>
 
                     {upcoming.map((group) => {
@@ -229,7 +229,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 <section>
                     <div className="flex items-center gap-2 mb-4 sm:mb-6">
                         <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('appointments.past')}</h2>
-                        <span className="text-[10px] sm:text-xs bg-muted px-1.5 sm:px-2 py-0.5 rounded-full text-muted-foreground">
+                        <span className="text-[10px] sm:text-xs bg-muted px-1.5 sm:px-2 py-0.5 rounded-full text-q-text-muted">
                             {past.reduce((sum, g) => sum + g.appointments.length, 0)}
                         </span>
                     </div>

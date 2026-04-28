@@ -188,7 +188,7 @@ const DashboardStatusCards: React.FC = () => {
             <button
                 onClick={toggleCollapsed}
                 className="flex items-center gap-2 mb-3 group/toggle cursor-pointer
-                           text-muted-foreground hover:text-foreground transition-colors duration-200"
+                           text-q-text-muted hover:text-foreground transition-colors duration-200"
                 aria-expanded={!isCollapsed}
                 aria-label={isCollapsed ? t('dashboard.statusCards.expand', 'Expandir') : t('dashboard.statusCards.collapse', 'Minimizar')}
             >
@@ -217,12 +217,12 @@ const DashboardStatusCards: React.FC = () => {
                             <button
                                 key={card.id}
                                 onClick={() => navigate(card.route)}
-                                className="group relative overflow-hidden rounded-2xl border border-border/60
-                                   bg-card/80 dark:bg-card/40 backdrop-blur-xl
+                                className="group relative overflow-hidden rounded-2xl border border-q-border/60
+                                   bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
                                    p-5 text-left min-h-[140px]
                                    shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
                                    hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10
-                                   hover:border-border transition-all duration-300 ease-out
+                                   hover:border-q-border transition-all duration-300 ease-out
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                                 style={{ animationDelay: `${idx * 60}ms` }}
                                 aria-label={t(card.titleKey)}
@@ -239,7 +239,7 @@ const DashboardStatusCards: React.FC = () => {
 
                                 {/* ── Big number + label (right side, bottom-aligned) ──────── */}
                                 <div className="absolute right-4 bottom-3 flex items-end gap-1.5 select-none pointer-events-none">
-                                    <span className="text-xs font-semibold text-muted-foreground/80 dark:text-muted-foreground/50 mb-1">
+                                    <span className="text-xs font-semibold text-q-text-muted/80 dark:text-q-text-muted/50 mb-1">
                                         {metric.label}
                                     </span>
                                     <span
@@ -264,7 +264,7 @@ const DashboardStatusCards: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col min-w-0">
                                             <span className="text-sm font-bold text-foreground truncate">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
-                                            <span className="text-[11px] text-muted-foreground truncate">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
+                                            <span className="text-[11px] text-q-text-muted truncate">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
                                         </div>
                                     </div>
 

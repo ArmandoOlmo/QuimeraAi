@@ -33,9 +33,9 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
                     />
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">AI is Building Your Website...</h2>
-                <p className="text-editor-text-secondary max-w-sm">This may take a moment. Please don't close this window.</p>
-                <div className="mt-6 bg-editor-panel-bg px-4 py-2 rounded-lg w-full max-w-md">
-                    <p className="text-editor-text-primary animate-pulse">{statusText}</p>
+                <p className="text-q-text-secondary max-w-sm">This may take a moment. Please don't close this window.</p>
+                <div className="mt-6 bg-q-surface px-4 py-2 rounded-lg w-full max-w-md">
+                    <p className="text-q-text animate-pulse">{statusText}</p>
                 </div>
             </div>
         );
@@ -60,7 +60,7 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
             <h2 className="text-2xl font-bold text-white mb-2">
                 {t('imageGeneration.generatingImages')}
             </h2>
-            <p className="text-editor-text-secondary max-w-sm mb-6">
+            <p className="text-q-text-secondary max-w-sm mb-6">
                 {t('imageGeneration.generatingImagesDesc')}
             </p>
 
@@ -82,8 +82,8 @@ const GeneratingState: React.FC<GeneratingStateProps> = ({
 
             {/* Current Section */}
             {progress.currentSection && (
-                <div className="bg-editor-panel-bg px-4 py-2 rounded-lg mb-6">
-                    <p className="text-editor-text-primary animate-pulse flex items-center gap-2">
+                <div className="bg-q-surface px-4 py-2 rounded-lg mb-6">
+                    <p className="text-q-text animate-pulse flex items-center gap-2">
                         <img src={QUIMERA_LOGO} alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                         {t('imageGeneration.generatingSection', { section: progress.currentSection })}
                     </p>

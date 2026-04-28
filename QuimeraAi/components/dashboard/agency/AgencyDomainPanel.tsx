@@ -230,7 +230,7 @@ const AgencyDomainPanel: React.FC = () => {
                         <Globe className="h-4 w-4 text-primary" />
                         Dominio Personalizado
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-q-text-muted mt-1">
                         Conecta un dominio propio para tu landing page de agencia
                     </p>
                 </div>
@@ -249,7 +249,7 @@ const AgencyDomainPanel: React.FC = () => {
             {agencyDomains.map(domain => (
                 <div
                     key={domain.id}
-                    className="border border-border rounded-xl overflow-hidden bg-card/80 backdrop-blur-sm"
+                    className="border border-q-border rounded-xl overflow-hidden bg-q-surface/80 backdrop-blur-sm"
                 >
                     {/* Domain Header */}
                     <div className="p-4 flex items-center justify-between">
@@ -278,7 +278,7 @@ const AgencyDomainPanel: React.FC = () => {
                             <button
                                 onClick={() => handleVerify(domain)}
                                 disabled={verifyingDomainId === domain.id}
-                                className="p-2 text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
+                                className="p-2 text-q-text-muted hover:text-primary hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                                 title="Verificar DNS"
                             >
                                 <RefreshCw size={16} className={verifyingDomainId === domain.id ? 'animate-spin' : ''} />
@@ -286,7 +286,7 @@ const AgencyDomainPanel: React.FC = () => {
                             <button
                                 onClick={() => setDeleteConfirmDomain(domain)}
                                 disabled={isDeletingId === domain.id}
-                                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                                className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                                 title="Eliminar dominio"
                             >
                                 {isDeletingId === domain.id ? (
@@ -313,34 +313,34 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* DNS Instructions — only show when domain is pending */}
                     {(domain.status === 'pending' || domain.status === 'error') && (
-                        <div className="border-t border-border p-4 bg-gradient-to-b from-blue-500/5 to-transparent">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-blue-500/5 to-transparent">
                             <div className="flex items-center gap-2 mb-3">
                                 <Zap size={14} className="text-blue-500" />
                                 <h5 className="text-sm font-bold text-foreground">Configura tu DNS</h5>
                             </div>
-                            <p className="text-xs text-muted-foreground mb-4">
+                            <p className="text-xs text-q-text-muted mb-4">
                                 Ve a tu proveedor de dominios y agrega estos registros DNS:
                             </p>
 
                             <div className="space-y-2">
                                 {/* A Record */}
-                                <div className="bg-card rounded-lg p-3 border border-border">
+                                <div className="bg-q-surface rounded-lg p-3 border border-q-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
-                                        <span className="text-xs text-muted-foreground">Dominio raíz</span>
+                                        <span className="text-xs text-q-text-muted">Dominio raíz</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-sm">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Host</span>
+                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block">Host</span>
                                             <code className="font-mono font-bold text-foreground">@</code>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Valor</span>
+                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block">Valor</span>
                                             <div className="flex items-center gap-1">
                                                 <code className="font-mono font-bold text-primary">{QUIMERA_DNS_IP}</code>
                                                 <button
                                                     onClick={() => copyToClipboard(QUIMERA_DNS_IP, 'IP')}
-                                                    className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary transition-colors"
+                                                    className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary transition-colors"
                                                     title="Copiar IP"
                                                 >
                                                     <Copy size={12} />
@@ -352,23 +352,23 @@ const AgencyDomainPanel: React.FC = () => {
                                 </div>
 
                                 {/* CNAME Record */}
-                                <div className="bg-card rounded-lg p-3 border border-border">
+                                <div className="bg-q-surface rounded-lg p-3 border border-q-border">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
-                                        <span className="text-xs text-muted-foreground">Para www.{domain.name}</span>
+                                        <span className="text-xs text-q-text-muted">Para www.{domain.name}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-sm">
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Host</span>
+                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block">Host</span>
                                             <code className="font-mono font-bold text-foreground">www</code>
                                         </div>
                                         <div>
-                                            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Valor</span>
+                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block">Valor</span>
                                             <div className="flex items-center gap-1">
                                                 <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
                                                 <button
                                                     onClick={() => copyToClipboard(domain.name, 'CNAME')}
-                                                    className="p-1 hover:bg-secondary rounded text-muted-foreground hover:text-primary transition-colors"
+                                                    className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary transition-colors"
                                                     title="Copiar CNAME"
                                                 >
                                                     <Copy size={12} />
@@ -393,7 +393,7 @@ const AgencyDomainPanel: React.FC = () => {
                                 )}
                             </button>
 
-                            <p className="text-[10px] text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                            <p className="text-[10px] text-center text-q-text-muted mt-2 flex items-center justify-center gap-1">
                                 <Clock size={10} />
                                 Los cambios de DNS pueden tardar entre 5 min y 48 horas en propagarse.
                             </p>
@@ -402,7 +402,7 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* SSL Provisioning notice */}
                     {domain.status === 'ssl_pending' && (
-                        <div className="border-t border-border p-4 bg-gradient-to-b from-purple-500/5 to-transparent">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-purple-500/5 to-transparent">
                             <div className="flex items-center gap-2">
                                 <Loader2 size={14} className="text-purple-500 animate-spin" />
                                 <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
@@ -414,7 +414,7 @@ const AgencyDomainPanel: React.FC = () => {
 
                     {/* Active status message */}
                     {domain.status === 'active' && (
-                        <div className="border-t border-border p-4 bg-gradient-to-b from-green-500/5 to-transparent">
+                        <div className="border-t border-q-border p-4 bg-gradient-to-b from-green-500/5 to-transparent">
                             <p className="text-sm text-green-600 flex items-center gap-2">
                                 <CheckCircle size={14} />
                                 Tu landing page de agencia está disponible en{' '}
@@ -444,7 +444,7 @@ const AgencyDomainPanel: React.FC = () => {
                         )}
 
                         <div className="mb-4">
-                            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2">
                                 Nombre del dominio
                             </label>
                             <input
@@ -457,27 +457,27 @@ const AgencyDomainPanel: React.FC = () => {
                                     setAddError(null);
                                 }}
                                 placeholder="miagencia.com"
-                                className="w-full bg-background border border-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium disabled:opacity-50 text-foreground placeholder:text-muted-foreground"
+                                className="w-full bg-q-bg border border-q-border rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium disabled:opacity-50 text-foreground placeholder:text-q-text-muted"
                             />
-                            <p className="text-xs text-muted-foreground mt-1.5">
+                            <p className="text-xs text-q-text-muted mt-1.5">
                                 Ingresa el dominio sin www ni https. Ejemplo: <code className="font-mono text-primary">miagencia.com</code>
                             </p>
                         </div>
 
                         {/* DNS Preview */}
-                        <div className="mb-4 bg-card rounded-lg p-4 border border-border">
-                            <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                        <div className="mb-4 bg-q-surface rounded-lg p-4 border border-q-border">
+                            <h5 className="text-xs font-bold text-q-text-muted uppercase tracking-wider mb-3">
                                 Registros DNS que necesitarás configurar:
                             </h5>
                             <div className="space-y-2 text-xs">
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded text-[10px]">A</span>
-                                    <span className="text-muted-foreground">@ →</span>
+                                    <span className="text-q-text-muted">@ →</span>
                                     <code className="font-mono font-bold text-primary">{QUIMERA_DNS_IP}</code>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded text-[10px]">CNAME</span>
-                                    <span className="text-muted-foreground">www →</span>
+                                    <span className="text-q-text-muted">www →</span>
                                     <code className="font-mono font-bold text-primary">{newDomainName || 'miagencia.com'}</code>
                                 </div>
                             </div>
@@ -491,7 +491,7 @@ const AgencyDomainPanel: React.FC = () => {
                                     setAddError(null);
                                     setNewDomainName('');
                                 }}
-                                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground transition-colors"
                                 disabled={isAdding}
                             >
                                 Cancelar
@@ -514,12 +514,12 @@ const AgencyDomainPanel: React.FC = () => {
 
             {/* Empty state */}
             {agencyDomains.length === 0 && !showAddForm && (
-                <div className="text-center py-8 rounded-xl border border-dashed border-border bg-muted/10">
+                <div className="text-center py-8 rounded-xl border border-dashed border-q-border bg-muted/10">
                     <div className="w-12 h-12 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Globe size={24} className="text-muted-foreground opacity-50" />
+                        <Globe size={24} className="text-q-text-muted opacity-50" />
                     </div>
                     <h4 className="font-semibold text-foreground mb-1">Sin dominio personalizado</h4>
-                    <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4">
+                    <p className="text-xs text-q-text-muted max-w-xs mx-auto mb-4">
                         Conecta tu propio dominio para que tu landing page de agencia sea accesible desde una URL profesional.
                     </p>
                     <button
@@ -536,7 +536,7 @@ const AgencyDomainPanel: React.FC = () => {
             {(agencyDomains.length > 0 || showAddForm) && (
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
                     <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">💡 Tips:</p>
-                    <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
+                    <ul className="text-xs text-q-text-muted space-y-0.5 list-disc list-inside">
                         <li><strong>GoDaddy:</strong> DNS → Registros DNS. Si ya existe un registro A con @, edítalo.</li>
                         <li><strong>Namecheap:</strong> Advanced DNS → Host Records. Usa @ como Host.</li>
                         <li><strong>Google Domains:</strong> DNS → Registros personalizados.</li>

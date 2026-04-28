@@ -718,7 +718,7 @@ Text to format:
 
     return (
         <>
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* General App Sidebar - Collapsed by default */}
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
@@ -729,11 +729,11 @@ Text to format:
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Admin-specific header - NO project name, shows "Contenido App" */}
-                <header className="h-14 px-3 md:px-6 border-b border-border bg-background flex items-center justify-between z-20 sticky top-0 relative" role="banner">
+                <header className="h-14 px-3 md:px-6 border-b border-q-border bg-q-bg flex items-center justify-between z-20 sticky top-0 relative" role="banner">
                     <div className="flex items-center gap-2 md:gap-4 min-w-0">
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
+                            className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors touch-manipulation"
                             title={t('editor.goToDashboard')}
                         >
                             <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
@@ -758,7 +758,7 @@ Text to format:
                                     flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                     ${previewDevice === name
                                         ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/50'
                                     }
                                 `}
                             >
@@ -784,9 +784,9 @@ Text to format:
                 {/* Content Image Picker Modal */}
                 {showContentImagePicker && (
                     <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setShowContentImagePicker(false)}>
-                        <div className="bg-card w-full max-w-3xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-q-surface w-full max-w-3xl max-h-[80vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-q-border" onClick={(e) => e.stopPropagation()}>
                             {/* Header */}
-                            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/50">
+                            <div className="p-4 border-b border-q-border flex justify-between items-center bg-muted/50">
                                 <div className="flex items-center gap-3">
                                     <div className="bg-primary/10 p-2 rounded-lg">
                                         <ImageIcon className="w-5 h-5 text-primary" />
@@ -795,20 +795,20 @@ Text to format:
                                         <h3 className="font-bold text-foreground">
                                             {contentImagePickerMode === 'replace' ? 'Reemplazar Imagen' : 'Insertar Imagen'}
                                         </h3>
-                                        <p className="text-xs text-muted-foreground">Sube una nueva imagen o selecciona de la librería</p>
+                                        <p className="text-xs text-q-text-muted">Sube una nueva imagen o selecciona de la librería</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowContentImagePicker(false)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                                <button onClick={() => setShowContentImagePicker(false)} className="p-2 rounded-lg hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors">
                                     <XIcon size={18} />
                                 </button>
                             </div>
 
                             {/* Upload Zone + AI Generate */}
-                            <div className="p-4 border-b border-border">
+                            <div className="p-4 border-b border-q-border">
                                 <div className="flex gap-3">
                                     {/* Upload Area */}
                                     <div
-                                        className="flex-1 border-2 border-dashed border-border rounded-xl p-5 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                                        className="flex-1 border-2 border-dashed border-q-border rounded-xl p-5 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
                                         onClick={() => contentFileInputRef.current?.click()}
                                         onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                         onDrop={(e) => {
@@ -821,13 +821,13 @@ Text to format:
                                         {isUploadingContentImage ? (
                                             <div className="flex items-center justify-center gap-2">
                                                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                                <span className="text-sm text-muted-foreground">Subiendo imagen...</span>
+                                                <span className="text-sm text-q-text-muted">Subiendo imagen...</span>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center gap-2">
-                                                <Upload className="w-7 h-7 text-muted-foreground/50" />
+                                                <Upload className="w-7 h-7 text-q-text-muted/50" />
                                                 <p className="text-sm font-medium text-foreground">Arrastra o haz clic para subir</p>
-                                                <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WebP</p>
+                                                <p className="text-xs text-q-text-muted">PNG, JPG, GIF, WebP</p>
                                             </div>
                                         )}
                                     </div>
@@ -845,7 +845,7 @@ Text to format:
                                                 <Zap className="w-5 h-5 text-white" />
                                             </div>
                                             <p className="text-sm font-bold text-purple-400">Generar con IA</p>
-                                            <p className="text-[10px] text-muted-foreground">Crea imágenes únicas</p>
+                                            <p className="text-[10px] text-q-text-muted">Crea imágenes únicas</p>
                                         </div>
                                     </button>
                                 </div>
@@ -862,7 +862,7 @@ Text to format:
                                         </span>
                                     </h4>
                                     <div className="flex items-center gap-1.5 bg-secondary rounded-lg px-2.5 py-1.5 w-48">
-                                        <Search size={12} className="text-muted-foreground flex-shrink-0" />
+                                        <Search size={12} className="text-q-text-muted flex-shrink-0" />
                                         <input
                                             type="text"
                                             value={contentImageSearch}
@@ -871,7 +871,7 @@ Text to format:
                                             className="flex-1 bg-transparent outline-none text-xs text-foreground min-w-0"
                                         />
                                         {contentImageSearch && (
-                                            <button onClick={() => setContentImageSearch('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                            <button onClick={() => setContentImageSearch('')} className="text-q-text-muted hover:text-foreground flex-shrink-0">
                                                 <XIcon size={10} />
                                             </button>
                                         )}
@@ -903,7 +903,7 @@ Text to format:
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center py-12 text-q-text-muted">
                                             <ImageIcon size={40} className="mb-3 opacity-30" />
                                             <p className="text-sm font-medium">
                                                 {contentImageSearch ? 'No se encontraron imágenes' : 'No hay imágenes en la librería'}
@@ -984,7 +984,7 @@ Text to format:
                 )}
 
                 {/* Editor Toolbar - Just below the main header */}
-                <div className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 shadow-sm">
+                <div className="h-14 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 shadow-sm">
                     <div className="flex items-center gap-4 flex-1">
                         <HeaderBackButton onClick={onClose} label={t('common.back')} />
                         <div className="h-6 w-px bg-border"></div>
@@ -992,24 +992,24 @@ Text to format:
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Título del artículo..."
-                            className="bg-transparent text-xl font-bold placeholder:text-muted-foreground/50 focus:outline-none flex-1 text-foreground"
+                            className="bg-transparent text-xl font-bold placeholder:text-q-text-muted/50 focus:outline-none flex-1 text-foreground"
                         />
                     </div>
                     <div className="flex items-center gap-3">
                         {lastSaved && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span className="text-xs text-q-text-muted flex items-center gap-1">
                                 <Check size={12} className="text-green-500" />
                                 Guardado {lastSaved.toLocaleTimeString()}
                             </span>
                         )}
                         <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('contentManagement.status.draft', 'Borrador')}</button>
-                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('contentManagement.status.published', 'Publicado')}</button>
+                            <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>{t('contentManagement.status.draft', 'Borrador')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>{t('contentManagement.status.published', 'Publicado')}</button>
                         </div>
                         <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
                             {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} {t('common.save', 'Guardar')}
                         </button>
-                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>
+                        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-q-text-muted hover:bg-secondary'}`}>
                             <MoreVertical size={20} />
                         </button>
                     </div>
@@ -1025,7 +1025,7 @@ Text to format:
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-background">
+                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-q-bg">
                             <div className="w-full max-w-[900px] min-h-[800px] relative">
                                 <EditorContent editor={editor} />
                                 <EditorBubbleMenu
@@ -1041,8 +1041,8 @@ Text to format:
 
                                 {/* Image Action Toolbar — appears when an image node is selected */}
                                 {editor && editor.isActive('image') && (
-                                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-2xl animate-fade-in-up">
-                                        <span className="text-xs text-muted-foreground font-medium mr-2">Imagen seleccionada</span>
+                                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-q-surface border border-q-border rounded-xl px-4 py-2.5 shadow-2xl animate-fade-in-up">
+                                        <span className="text-xs text-q-text-muted font-medium mr-2">Imagen seleccionada</span>
                                         <button
                                             onClick={handleReplaceSelectedImage}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold"
@@ -1065,26 +1065,26 @@ Text to format:
 
                     {/* Settings Sidebar (Right) */}
                     {isSidebarOpen && (
-                        <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 shadow-xl">
+                        <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto p-6 shrink-0 shadow-xl">
                             <div className="mb-6">
                                 <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('common.configuration', 'Configuración')}</h3>
-                                <p className="text-xs text-muted-foreground">{t('contentManagement.editor.configDescription', 'Configura metadata y apariencia del artículo.')}</p>
+                                <p className="text-xs text-q-text-muted">{t('contentManagement.editor.configDescription', 'Configura metadata y apariencia del artículo.')}</p>
                             </div>
 
                             <div className="space-y-6">
                                 {/* Language */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.filters.language', 'Idioma')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.filters.language', 'Idioma')}</label>
                                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
                                         <button 
                                             onClick={() => setLanguage('es')} 
-                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'es' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'es' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             Español
                                         </button>
                                         <button 
                                             onClick={() => setLanguage('en')} 
-                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'en' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex-1 py-1.5 rounded-md transition-all ${language === 'en' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             English
                                         </button>
@@ -1092,17 +1092,17 @@ Text to format:
                                 </div>
                                 {/* URL Slug */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.urlSlug', 'URL Slug')}</label>
-                                    <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.urlSlug', 'URL Slug')}</label>
+                                    <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                                 </div>
 
                                 {/* Category */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.category', 'Categoría')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.category', 'Categoría')}</label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AppArticleCategory)}
-                                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                        className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                     >
                                         {CATEGORIES.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -1113,20 +1113,20 @@ Text to format:
                                 {/* Help Center Category — only visible for help/guide/tutorial */}
                                 {['help', 'guide', 'tutorial'].includes(category) && (
                                     <div>
-                                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">
+                                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">
                                             Sección del Help Center
                                         </label>
                                         <select
                                             value={helpCenterCategory || ''}
                                             onChange={(e) => setHelpCenterCategory((e.target.value as HelpCenterCategory) || undefined)}
-                                            className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                            className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                         >
                                             <option value="">— Sin asignar —</option>
                                             {HELP_CENTER_CATEGORIES.map(hc => (
                                                 <option key={hc.value} value={hc.value}>{hc.label}</option>
                                             ))}
                                         </select>
-                                        <p className="text-[10px] text-muted-foreground mt-1">
+                                        <p className="text-[10px] text-q-text-muted mt-1">
                                             Define en qué sección aparece este artículo en /help-center
                                         </p>
                                     </div>
@@ -1134,19 +1134,19 @@ Text to format:
 
                                 {/* Featured Image */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
                                     <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} destination="admin" adminCategory="article" onRemove={() => setFeaturedImage('')} />
                                 </div>
 
                                 {/* Excerpt */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.excerpt', 'Extracto')}</label>
-                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('contentManagement.editor.excerptPlaceholder', 'Resumen corto para listados...')} />
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.excerpt', 'Extracto')}</label>
+                                    <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('contentManagement.editor.excerptPlaceholder', 'Resumen corto para listados...')} />
                                 </div>
 
                                 {/* Author */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
                                     {/* Author avatar circle — opens admin image library */}
                                     <div className="flex items-center gap-3 mb-3">
                                         <button
@@ -1177,7 +1177,7 @@ Text to format:
                                             <input
                                                 value={author}
                                                 onChange={(e) => setAuthor(e.target.value)}
-                                                className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                                className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                             />
                                             {authorImage && (
                                                 <button
@@ -1213,19 +1213,19 @@ Text to format:
 
                                 {/* Publication Date */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.publicationDate', 'Fecha de Publicación')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.publicationDate', 'Fecha de Publicación')}</label>
                                     <input
                                         type="datetime-local"
                                         value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
                                         onChange={(e) => setPublishedAt(e.target.value ? new Date(e.target.value).toISOString() : '')}
-                                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                        className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                     />
                                 </div>
 
                                 {/* Show Author Toggle */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                                     <div className="flex items-center gap-2">
-                                        <User size={14} className="text-muted-foreground" />
+                                        <User size={14} className="text-q-text-muted" />
                                         <span className="text-sm font-medium">{t('contentManagement.editor.showAuthor', 'Mostrar Autor')}</span>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1240,9 +1240,9 @@ Text to format:
                                 </div>
 
                                 {/* Show Date Toggle */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                                     <div className="flex items-center gap-2">
-                                        <Calendar size={14} className="text-muted-foreground" />
+                                        <Calendar size={14} className="text-q-text-muted" />
                                         <span className="text-sm font-medium">{t('contentManagement.editor.showDate', 'Mostrar Fecha')}</span>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1258,7 +1258,7 @@ Text to format:
 
                                 {/* Tags */}
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('contentManagement.editor.tags', 'Etiquetas')}</label>
+                                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.tags', 'Etiquetas')}</label>
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {tags.map(tag => (
                                             <span
@@ -1283,7 +1283,7 @@ Text to format:
                                             onChange={(e) => setTagInput(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                             placeholder="Agregar tag..."
-                                            className="flex-1 bg-secondary/50 border border-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                            className="flex-1 bg-secondary/50 border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                         />
                                         <button
                                             onClick={handleAddTag}
@@ -1300,7 +1300,7 @@ Text to format:
                                         <Star className="text-yellow-500" size={18} />
                                         <div>
                                             <p className="text-sm font-medium">{t('contentManagement.editor.featuredArticle', 'Artículo Destacado')}</p>
-                                            <p className="text-xs text-muted-foreground">{t('contentManagement.editor.featuredArticleDescription', 'Mostrar en homepage')}</p>
+                                            <p className="text-xs text-q-text-muted">{t('contentManagement.editor.featuredArticleDescription', 'Mostrar en homepage')}</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1315,7 +1315,7 @@ Text to format:
                                 </div>
 
                                 {/* SEO Section */}
-                                <div className="pt-6 border-t border-border">
+                                <div className="pt-6 border-t border-q-border">
                                     <div className="flex justify-between items-center mb-4">
                                         <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
                                         <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('contentManagement.editor.autoGen', 'Auto-Gen')}</button>
@@ -1323,13 +1323,13 @@ Text to format:
 
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">Meta Title</label>
-                                            <input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Máx 60 caracteres" />
+                                            <label className="block text-xs font-medium text-q-text-muted mb-1">Meta Title</label>
+                                            <input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Máx 60 caracteres" />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-muted-foreground mb-1">Meta Description</label>
-                                            <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Máx 160 caracteres" />
-                                            <p className="text-xs text-muted-foreground mt-1">
+                                            <label className="block text-xs font-medium text-q-text-muted mb-1">Meta Description</label>
+                                            <textarea value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Máx 160 caracteres" />
+                                            <p className="text-xs text-q-text-muted mt-1">
                                                 {metaDescription.length}/160 caracteres
                                             </p>
                                         </div>
@@ -1337,7 +1337,7 @@ Text to format:
                                 </div>
 
                                 {/* Translation Section */}
-                                <div className="pt-6 border-t border-border">
+                                <div className="pt-6 border-t border-q-border">
                                     <h4 className="font-bold text-sm flex items-center mb-4">
                                         <Languages size={16} className="mr-2 text-blue-400" />
                                         {language === 'es' ? 'Traducción' : 'Translation'}
@@ -1382,11 +1382,11 @@ Text to format:
                                     {/* Existing translations */}
                                     {existingTranslations.length > 0 && (
                                         <div className="mb-3 space-y-2">
-                                            <p className="text-xs text-muted-foreground font-medium">
+                                            <p className="text-xs text-q-text-muted font-medium">
                                                 {language === 'es' ? 'Traducciones vinculadas:' : 'Linked translations:'}
                                             </p>
                                             {existingTranslations.map(tr => (
-                                                <div key={tr.id} className="flex items-center justify-between p-2.5 bg-secondary/30 border border-border rounded-lg">
+                                                <div key={tr.id} className="flex items-center justify-between p-2.5 bg-secondary/30 border border-q-border rounded-lg">
                                                     <div className="flex items-center gap-2 min-w-0">
                                                         <span className="text-base">{tr.language === 'es' ? '🇪🇸' : '🇺🇸'}</span>
                                                         <span className="text-xs font-medium truncate">{tr.title}</span>
@@ -1397,7 +1397,7 @@ Text to format:
                                                             tr.translationStatus === 'auto-translated' ? 'bg-amber-400' : 'bg-blue-400'
                                                         }`} />
                                                         <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
-                                                            tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-secondary text-muted-foreground'
+                                                            tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-secondary text-q-text-muted'
                                                         }`}>{tr.status === 'published' ? '●' : '○'}</span>
                                                     </div>
                                                 </div>
@@ -1433,7 +1433,7 @@ Text to format:
                                             )}
                                         </button>
                                     ) : (
-                                        <p className="text-xs text-center text-muted-foreground">
+                                        <p className="text-xs text-center text-q-text-muted">
                                             {language === 'es'
                                                 ? `✅ Ya existe traducción en ${getLanguageName(targetLang)}`
                                                 : `✅ Translation in ${getLanguageName(targetLang)} already exists`}

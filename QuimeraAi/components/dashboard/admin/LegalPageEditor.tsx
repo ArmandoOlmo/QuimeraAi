@@ -158,14 +158,14 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     };
 
     return (
-        <div className="flex flex-col h-screen bg-background">
+        <div className="flex flex-col h-screen bg-q-bg">
             {/* Header */}
-            <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+            <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                 <div className="flex items-center gap-4">
-                    <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     <div className="flex items-center gap-2">
-                        <Shield className="text-editor-accent" size={20} />
-                        <h1 className="text-lg font-semibold text-editor-text-primary">
+                        <Shield className="text-q-accent" size={20} />
+                        <h1 className="text-lg font-semibold text-q-text">
                             {t(`contentManagement.legal.${pageType}`, LEGAL_PAGE_LABELS[pageType])}
                         </h1>
                     </div>
@@ -178,13 +178,13 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
                         <button 
                             onClick={() => setFormData(prev => ({ ...prev, language: 'es' }))} 
-                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'es' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'es' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                         >
                             Español
                         </button>
                         <button 
                             onClick={() => setFormData(prev => ({ ...prev, language: 'en' }))} 
-                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'en' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'en' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                         >
                             English
                         </button>
@@ -202,55 +202,55 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
             </header>
 
             {/* Content */}
-            <main className="flex-1 overflow-y-auto p-6 bg-[#f6f6f7] dark:bg-background">
+            <main className="flex-1 overflow-y-auto p-6 bg-[#f6f6f7] dark:bg-q-bg">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Basic Info */}
-                    <div className="bg-card border border-border rounded-xl p-6">
+                    <div className="bg-q-surface border border-q-border rounded-xl p-6">
                         <h2 className="font-semibold mb-4">{t('contentManagement.editor.generalInfo', 'Información General')}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('contentManagement.editor.title', 'Título')}
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.title}
                                     onChange={(e) => updateForm('title', e.target.value)}
-                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('contentManagement.editor.contactEmail', 'Email de Contacto')}
                                 </label>
                                 <input
                                     type="email"
                                     value={formData.contactEmail || ''}
                                     onChange={(e) => updateForm('contactEmail', e.target.value)}
-                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                     placeholder="privacy@example.com"
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('contentManagement.editor.subtitleDescription', 'Subtítulo / Descripción')}
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.subtitle || ''}
                                     onChange={(e) => updateForm('subtitle', e.target.value)}
-                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                     placeholder={t('contentManagement.editor.subtitlePlaceholder', 'Breve descripción de la página')}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('contentManagement.editor.status', 'Estado')}
                                 </label>
                                 <select
                                     value={formData.status}
                                     onChange={(e) => updateForm('status', e.target.value as 'published' | 'draft')}
-                                    className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                 >
                                     <option value="draft">{t('contentManagement.status.draft', 'Borrador')}</option>
                                     <option value="published">{t('contentManagement.status.published', 'Publicado')}</option>
@@ -260,7 +260,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                     </div>
 
                     {/* Sections */}
-                    <div className="bg-card border border-border rounded-xl p-6">
+                    <div className="bg-q-surface border border-q-border rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-semibold">{t('contentManagement.legal.sections', 'Secciones del Documento')}</h2>
                             <button
@@ -274,9 +274,9 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 
                         {formData.sections.length === 0 ? (
                             <div className="text-center py-12 bg-secondary/20 rounded-lg">
-                                <FileText className="w-12 h-12 mx-auto text-muted-foreground opacity-30 mb-3" />
-                                <p className="text-muted-foreground mb-2">{t('contentManagement.legal.noSections', 'No hay secciones')}</p>
-                                <p className="text-sm text-muted-foreground">
+                                <FileText className="w-12 h-12 mx-auto text-q-text-muted opacity-30 mb-3" />
+                                <p className="text-q-text-muted mb-2">{t('contentManagement.legal.noSections', 'No hay secciones')}</p>
+                                <p className="text-sm text-q-text-muted">
                                     {t('contentManagement.legal.noSectionsDescription', 'Añade secciones para estructurar el contenido de esta página legal.')}
                                 </p>
                             </div>
@@ -296,7 +296,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                 className="flex items-center gap-3 p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
                                                 onClick={() => setExpandedSection(isExpanded ? null : section.id)}
                                             >
-                                                <GripVertical size={16} className="text-muted-foreground" />
+                                                <GripVertical size={16} className="text-q-text-muted" />
                                                 <div className="p-2 bg-primary/10 rounded-lg">
                                                     <IconComponent size={16} className="text-primary" />
                                                 </div>
@@ -305,20 +305,20 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                     <button
                                                         onClick={() => moveSection(index, 'up')}
                                                         disabled={index === 0}
-                                                        className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                                        className="p-1.5 text-q-text-muted hover:text-foreground disabled:opacity-30 transition-colors"
                                                     >
                                                         <ChevronUp size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => moveSection(index, 'down')}
                                                         disabled={index === formData.sections.length - 1}
-                                                        className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                                        className="p-1.5 text-q-text-muted hover:text-foreground disabled:opacity-30 transition-colors"
                                                     >
                                                         <ChevronDown size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => deleteSection(section.id)}
-                                                        className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors"
+                                                        className="p-1.5 text-q-text-muted hover:text-red-500 transition-colors"
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
@@ -328,27 +328,27 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 
                                             {/* Section Content */}
                                             {isExpanded && (
-                                                <div className="p-4 pt-0 space-y-4 border-t border-border/50">
+                                                <div className="p-4 pt-0 space-y-4 border-t border-q-border/50">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div>
-                                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 {t('contentManagement.legal.sectionTitle', 'Título de la Sección')}
                                                             </label>
                                                             <input
                                                                 type="text"
                                                                 value={section.title}
                                                                 onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 {t('contentManagement.legal.icon', 'Icono')}
                                                             </label>
                                                             <select
                                                                 value={section.icon || 'FileText'}
                                                                 onChange={(e) => updateSection(section.id, { icon: e.target.value })}
-                                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                                             >
                                                                 {AVAILABLE_ICONS.map(icon => (
                                                                     <option key={icon.id} value={icon.id}>{icon.label}</option>
@@ -357,17 +357,17 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                             {t('contentManagement.legal.contentMarkdown', 'Contenido (Markdown soportado)')}
                                                         </label>
                                                         <textarea
                                                             value={section.content}
                                                             onChange={(e) => updateSection(section.id, { content: e.target.value })}
                                                             rows={8}
-                                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary font-mono text-sm resize-y"
+                                                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary font-mono text-sm resize-y"
                                                             placeholder={t('contentManagement.legal.contentPlaceholder', 'Escribe el contenido de esta sección. Puedes usar markdown para formatear.')}
                                                         />
-                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                        <p className="text-xs text-q-text-muted mt-1">
                                                             {t('contentManagement.legal.markdownHint', 'Usa **texto** para negrita, - para listas, \\n para saltos de línea')}
                                                         </p>
                                                     </div>
@@ -381,7 +381,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                     </div>
 
                     {/* Preview Link */}
-                    <div className="bg-card border border-border rounded-xl p-6">
+                    <div className="bg-q-surface border border-q-border rounded-xl p-6">
                         <h2 className="font-semibold mb-4">{t('common.preview', 'Vista Previa')}</h2>
                         <div className="flex items-center gap-4">
                             <a
@@ -393,7 +393,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
                                 <Eye size={16} />
                                 {t('contentManagement.legal.viewPublicPage', 'Ver página pública')}
                             </a>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-q-text-muted">
                                 URL: /{pageType}
                             </span>
                         </div>

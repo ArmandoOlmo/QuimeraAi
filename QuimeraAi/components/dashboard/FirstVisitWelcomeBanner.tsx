@@ -79,7 +79,7 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
             {/* Close button */}
             <button
                 onClick={handleDismiss}
-                className="absolute top-4 right-4 p-1.5 rounded-lg bg-background/50 hover:bg-background/80 text-muted-foreground hover:text-foreground transition-colors z-10"
+                className="absolute top-4 right-4 p-1.5 rounded-lg bg-q-bg/50 hover:bg-q-bg/80 text-q-text-muted hover:text-foreground transition-colors z-10"
                 aria-label={isSpanish ? 'Cerrar' : 'Close'}
             >
                 <X size={16} />
@@ -97,7 +97,7 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
                                 ? '🎉 ¡Tu website está listo!'
                                 : '🎉 Your website is ready!'}
                         </h2>
-                        <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                        <p className="text-q-text-muted text-sm md:text-base leading-relaxed">
                             {isSpanish
                                 ? 'Este es tu sitio web de inicio generado con IA. Puedes personalizar absolutamente todo — colores, textos, imágenes, secciones y más. ¡Hazlo tuyo!'
                                 : 'This is your AI-generated starter website. You can customize absolutely everything — colors, texts, images, sections, and more. Make it yours!'}
@@ -110,7 +110,7 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
                     {tips.map((tip, i) => (
                         <div
                             key={i}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/30 hover:bg-background/80 transition-all duration-200"
+                            className="flex items-center gap-3 p-3 rounded-xl bg-q-bg/50 border border-q-border/50 hover:border-primary/30 hover:bg-q-bg/80 transition-all duration-200"
                             style={{ animationDelay: `${i * 100}ms` }}
                         >
                             <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
@@ -129,7 +129,7 @@ const FirstVisitWelcomeBanner: React.FC<FirstVisitWelcomeBannerProps> = ({ hasPr
                     >
                         {isSpanish ? '¡Entendido, vamos!' : 'Got it, let\'s go!'}
                     </button>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-q-text-muted">
                         {isSpanish
                             ? 'Selecciona tu proyecto para empezar a editar'
                             : 'Select your project to start editing'}

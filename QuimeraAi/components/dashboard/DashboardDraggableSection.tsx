@@ -48,7 +48,7 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             tabIndex={0}
         >
             <div className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-secondary/80 transition-colors">
-                <GripVertical size={14} className="text-muted-foreground/60" />
+                <GripVertical size={14} className="text-q-text-muted/60" />
             </div>
         </div>
     );
@@ -72,7 +72,7 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
                             {title}
                             <ChevronDown
                                 size={20}
-                                className={`text-muted-foreground transition-transform duration-300 ${
+                                className={`text-q-text-muted transition-transform duration-300 ${
                                     isCollapsed ? '-rotate-90' : 'rotate-0'
                                 }`}
                             />

@@ -36,7 +36,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <TextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(e) => setNestedData('testimonials.description', e.target.value)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
 
       <div className="mb-4">
         <Select
@@ -79,12 +79,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <BorderRadiusSelector label={t('editor.controls.testimonials.cardCorners')} value={data.testimonials.borderRadius || 'xl'} onChange={(v) => setNestedData('testimonials.borderRadius', v)} />
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.testimonials.cardShadow')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.testimonials.cardShadow')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
           {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
             <button type="button"               key={shadow}
               onClick={() => setNestedData('testimonials.cardShadow', shadow)}
-              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
             >
               {shadow}
             </button>
@@ -93,7 +93,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.testimonials.borderStyle')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.testimonials.borderStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'none', label: t('editor.controls.testimonials.none') },
@@ -103,7 +103,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           ].map(style => (
             <button type="button"               key={style.value}
               onClick={() => setNestedData('testimonials.borderStyle', style.value)}
-              className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+              className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-q-accent text-q-bg' : 'bg-q-bg text-q-text-secondary hover:bg-q-surface-overlay border border-q-border'}`}
             >
               {style.label}
             </button>
@@ -125,15 +125,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data.testimonials.paddingY || 'md'} onChange={(v) => setNestedData('testimonials.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.testimonials.paddingX || 'md'} onChange={(v) => setNestedData('testimonials.paddingX', v)} />
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.sectionColors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.sectionColors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.testimonials.colors?.background || '#000000'} onChange={(v) => setNestedData('testimonials.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.title')} value={data.testimonials.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('testimonials.colors.heading', v)} />
       <ColorControl label={t('editor.controls.common.description')} value={data.testimonials.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('testimonials.colors.description', v)} />
@@ -156,20 +156,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onSizeChange={(v) => setNestedData('testimonials.cornerGradient.size', v)}
       />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.testimonials')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.testimonials')}</label>
       {(data.testimonials.items || []).map((item: any, index: number) => (
         <div
           key={index}
           data-section-item={`testimonials:${index}`}
-          className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group"
+          className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group"
         >
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold text-editor-text-secondary">Testimonial #{index + 1}</span>
+            <span className="text-xs font-bold text-q-text-secondary">Testimonial #{index + 1}</span>
             <button type="button"               onClick={() => {
                 const newItems = (data.testimonials.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData('testimonials.items', newItems);
               }}
-              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+              className="text-q-text-secondary hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>
@@ -185,19 +185,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             value={item.quote}
             onChange={(e) => setNestedData(`testimonials.items.${index}.quote`, e.target.value)}
             rows={2}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
           <input
             placeholder="Name"
             value={item.name}
             onChange={(e) => setNestedData(`testimonials.items.${index}.name`, e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
           <input
             placeholder="Role"
             value={item.title}
             onChange={(e) => setNestedData(`testimonials.items.${index}.title`, e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
         </div>
       ))}
@@ -205,7 +205,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           const newItem = { quote: '', name: '', title: '', imageUrl: '' };
           setNestedData('testimonials.items', [...(data.testimonials.items || []), newItem]);
         }}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> Add Testimonial
       </button>
@@ -222,8 +222,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Title and Description */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <FileText size={14} />
           Section Header
         </label>
@@ -234,20 +234,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Testimonials Items */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MessageSquare size={14} />
           Testimonials List
         </label>
         {(data.testimonials.items || []).map((item: any, index: number) => (
-          <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+          <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Testimonial #{index + 1}</span>
+              <span className="text-xs font-bold text-q-text-secondary">Testimonial #{index + 1}</span>
               <button type="button"                 onClick={() => {
                   const newItems = (data.testimonials.items || []).filter((_: any, i: number) => i !== index);
                   setNestedData('testimonials.items', newItems);
                 }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                className="text-q-text-secondary hover:text-red-400 transition-colors"
               >
                 <Trash2 size={14} />
               </button>
@@ -263,7 +263,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               value={item.quote}
               onChange={(e) => setNestedData(`testimonials.items.${index}.quote`, e.target.value)}
               rows={3}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+              className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
             />
             <Input placeholder="Name" value={item.name} onChange={(e) => setNestedData(`testimonials.items.${index}.name`, e.target.value)} className="mb-2" />
             <Input placeholder="Title/Role" value={item.title} onChange={(e) => setNestedData(`testimonials.items.${index}.title`, e.target.value)} className="mb-2" />
@@ -272,7 +272,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <button type="button"           onClick={() => {
             setNestedData('testimonials.items', [...(data.testimonials.items || []), { quote: '', name: '', title: '', imageUrl: '' }]);
           }}
-          className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
         >
           <Plus size={14} /> Add Testimonial
         </button>
@@ -283,8 +283,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="testimonials" data={data} setNestedData={setNestedData} />
       {/* Card Styling */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Card Styling
         </label>
@@ -309,7 +309,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Neon Glow Controls */}
         {(data.testimonials as any).testimonialsVariant === 'neon-glow' && (
-          <div className="mb-4 bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+          <div className="mb-4 bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
             <CardGlowControl
               enabled={data.testimonials.cardGlow?.enabled !== false}
               color={data.testimonials.cardGlow?.color || '#144CCD'}
@@ -332,12 +332,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <BorderRadiusSelector label={t('controls.cardCorners')} value={data.testimonials.borderRadius || 'xl'} onChange={(v) => setNestedData('testimonials.borderRadius', v)} />
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.cardShadow')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.cardShadow')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {['none', 'sm', 'md', 'lg', 'xl'].map((shadow) => (
               <button type="button"                 key={shadow}
                 onClick={() => setNestedData('testimonials.cardShadow', shadow)}
-                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors uppercase ${(data.testimonials.cardShadow || 'lg') === shadow ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
               >
                 {shadow}
               </button>
@@ -346,7 +346,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.borderStyle')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.borderStyle')}</label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'none', label: 'None' },
@@ -356,7 +356,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             ].map(style => (
               <button type="button"                 key={style.value}
                 onClick={() => setNestedData('testimonials.borderStyle', style.value)}
-                className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+                className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${(data.testimonials.borderStyle || 'solid') === style.value ? 'bg-q-accent text-q-bg' : 'bg-q-bg text-q-text-secondary hover:bg-q-surface-overlay border border-q-border'}`}
               >
                 {style.label}
               </button>
@@ -380,8 +380,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
           Spacing
         </label>
@@ -392,8 +392,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Section Colors
         </label>

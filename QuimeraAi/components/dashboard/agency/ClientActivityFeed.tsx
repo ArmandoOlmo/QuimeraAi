@@ -47,13 +47,13 @@ export function ClientActivityFeed({
 
     if (activities.length === 0) {
         return (
-            <div className="bg-card rounded-lg border border-border p-6">
+            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
                     Actividad Reciente
                 </h3>
                 <div className="text-center py-8">
                     <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         No hay actividad reciente
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
@@ -65,12 +65,12 @@ export function ClientActivityFeed({
     }
 
     return (
-        <div className="bg-card rounded-lg border border-border p-6">
+        <div className="bg-q-surface rounded-lg border border-q-border p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground">
                     Actividad Reciente
                 </h3>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-q-text-muted">
                     Últimas {activities.length} actividades
                 </span>
             </div>
@@ -106,14 +106,14 @@ export function ClientActivityFeed({
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                                 {activity.clientName && (
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="text-xs text-q-text-muted">
                                         {activity.clientName}
                                     </span>
                                 )}
                                 {activity.userName && (
                                     <>
                                         <span className="text-xs text-gray-400">•</span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             por {activity.userName}
                                         </span>
                                     </>
@@ -122,7 +122,7 @@ export function ClientActivityFeed({
                         </div>
 
                         {/* Timestamp */}
-                        <div className="flex-shrink-0 text-xs text-muted-foreground">
+                        <div className="flex-shrink-0 text-xs text-q-text-muted">
                             {formatTimeAgo(activity.timestamp)}
                         </div>
                     </div>
@@ -141,7 +141,7 @@ export function ClientActivityFeed({
             {showAll && (
                 <button
                     onClick={() => setShowAll(false)}
-                    className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground font-medium"
+                    className="w-full mt-4 text-sm text-q-text-muted hover:text-foreground font-medium"
                 >
                     Mostrar menos
                 </button>

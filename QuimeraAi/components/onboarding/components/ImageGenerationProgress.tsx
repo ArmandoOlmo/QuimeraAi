@@ -43,7 +43,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             case 'generating':
                 return <Loader2 size={14} className="text-yellow-400 animate-spin" />;
             default:
-                return <div className="w-3.5 h-3.5 rounded-full bg-editor-sidebar-hover" />;
+                return <div className="w-3.5 h-3.5 rounded-full bg-q-surface-hover" />;
         }
     };
 
@@ -53,11 +53,11 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Image size={20} className="text-purple-400" />
-                    <span className="font-medium text-editor-text-primary">
+                    <span className="font-medium text-q-text">
                         {t('onboarding.generatingImages', 'Generating Images')}
                     </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-editor-text-secondary">
+                <div className="flex items-center gap-2 text-sm text-q-text-secondary">
                     <Clock size={14} />
                     <span>{estimatedTimeRemaining}</span>
                 </div>
@@ -66,14 +66,14 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
             {/* Progress bar */}
             <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                    <span className="text-editor-text-secondary">
+                    <span className="text-q-text-secondary">
                         {t('onboarding.imageProgress', {
                             current: progress.imagesCompleted,
                             total: progress.imagesTotal,
                             defaultValue: `Image ${progress.imagesCompleted} of ${progress.imagesTotal}`,
                         })}
                     </span>
-                    <span className="text-editor-text-primary font-medium">{percentage}%</span>
+                    <span className="text-q-text font-medium">{percentage}%</span>
                 </div>
                 <ProgressBar3D
                     percentage={percentage}
@@ -84,14 +84,14 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
 
             {/* Current image being generated */}
             {progress.currentImage && progress.currentImage.status === 'generating' && (
-                <div className="p-3 bg-editor-sidebar-hover/50 rounded-xl border border-editor-border">
+                <div className="p-3 bg-q-surface-hover/50 rounded-xl border border-q-border">
                     <div className="flex items-center gap-2 mb-2">
                         <Loader2 size={16} className="text-yellow-400 animate-spin" />
-                        <span className="text-sm font-medium text-editor-text-primary">
+                        <span className="text-sm font-medium text-q-text">
                             {t('onboarding.currentlyGenerating', 'Currently generating...')}
                         </span>
                     </div>
-                    <p className="text-xs text-editor-text-secondary line-clamp-2">
+                    <p className="text-xs text-q-text-secondary line-clamp-2">
                         {progress.currentImage.prompt}
                     </p>
                 </div>
@@ -113,7 +113,7 @@ const ImageGenerationProgress: React.FC<ImageGenerationProgressProps> = ({ progr
                             {getStatusIcon(img.status)}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs text-editor-text-secondary truncate">
+                            <p className="text-xs text-q-text-secondary truncate">
                                 {img.promptKey}
                             </p>
                         </div>

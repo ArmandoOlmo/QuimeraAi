@@ -94,8 +94,8 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                     return (
                         <div
                             key={role}
-                            className={`bg-card rounded-xl border ${
-                                isEditing ? 'border-primary' : 'border-border'
+                            className={`bg-q-surface rounded-xl border ${
+                                isEditing ? 'border-primary' : 'border-q-border'
                             } overflow-hidden`}
                         >
                             {/* Header */}
@@ -112,7 +112,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-foreground">{config.name}</h4>
-                                        <p className="text-sm text-muted-foreground">{config.description}</p>
+                                        <p className="text-sm text-q-text-muted">{config.description}</p>
                                     </div>
                                 </div>
                                 {!readOnly && (
@@ -143,7 +143,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                             <div className="p-4 space-y-4">
                                 {/* Discount */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         <Percent size={14} className="inline mr-1" />
                                         {t('storeUsers.discount', 'Descuento')}
                                     </label>
@@ -162,11 +162,11 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                                         },
                                                     })
                                                 }
-                                                className="w-20 px-3 py-1.5 bg-muted border border-border rounded-lg text-foreground"
+                                                className="w-20 px-3 py-1.5 bg-muted border border-q-border rounded-lg text-foreground"
                                                 min={0}
                                                 max={100}
                                             />
-                                            <span className="text-muted-foreground">%</span>
+                                            <span className="text-q-text-muted">%</span>
                                         </div>
                                     ) : (
                                         <span className="text-foreground">
@@ -177,15 +177,15 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
 
                                 {/* Upgrade Thresholds (only for customer to VIP) */}
                                 {role === 'customer' && (
-                                    <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-border">
+                                    <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-q-border">
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                 <DollarSign size={14} className="inline mr-1" />
                                                 {t('storeUsers.vipSpentThreshold', 'Gasto para VIP')}
                                             </label>
                                             {isEditing ? (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-muted-foreground">$</span>
+                                                    <span className="text-q-text-muted">$</span>
                                                     <input
                                                         type="number"
                                                         value={configs.vip.minSpentForUpgrade || 0}
@@ -194,7 +194,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                                                 minSpentForUpgrade: Number(e.target.value),
                                                             })
                                                         }
-                                                        className="w-24 px-3 py-1.5 bg-muted border border-border rounded-lg text-foreground"
+                                                        className="w-24 px-3 py-1.5 bg-muted border border-q-border rounded-lg text-foreground"
                                                         min={0}
                                                     />
                                                 </div>
@@ -205,7 +205,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                 <ShoppingBag size={14} className="inline mr-1" />
                                                 {t('storeUsers.vipOrdersThreshold', 'Pedidos para VIP')}
                                             </label>
@@ -218,7 +218,7 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                                             minOrdersForUpgrade: Number(e.target.value),
                                                         })
                                                     }
-                                                    className="w-24 px-3 py-1.5 bg-muted border border-border rounded-lg text-foreground"
+                                                    className="w-24 px-3 py-1.5 bg-muted border border-q-border rounded-lg text-foreground"
                                                     min={0}
                                                 />
                                             ) : (
@@ -231,8 +231,8 @@ const UserRolesManager: React.FC<UserRolesManagerProps> = ({
                                 )}
 
                                 {/* Permissions */}
-                                <div className="pt-4 border-t border-border">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <div className="pt-4 border-t border-q-border">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         {t('storeUsers.permissions', 'Permisos')}
                                     </label>
                                     <div className="space-y-2">

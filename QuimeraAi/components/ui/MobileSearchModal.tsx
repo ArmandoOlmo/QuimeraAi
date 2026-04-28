@@ -52,32 +52,32 @@ const MobileSearchModal: React.FC<MobileSearchModalProps> = ({
             aria-label="Search"
         >
             <div
-                className="bg-card border border-border rounded-2xl shadow-2xl w-[90%] max-w-md p-4 animate-fade-in-up"
+                className="bg-q-surface border border-q-border rounded-2xl shadow-2xl w-[90%] max-w-md p-4 animate-fade-in-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-2 mb-2" role="search">
-                    <Search className="text-muted-foreground" size={20} aria-hidden="true" />
+                    <Search className="text-q-text-muted" size={20} aria-hidden="true" />
                     <input
                         ref={inputRef}
                         type="search"
                         placeholder={placeholder || t('common.search', 'Buscar...')}
                         value={searchQuery.trim() === '' ? '' : searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                        className="flex-1 bg-transparent outline-none text-foreground placeholder:text-q-text-muted"
                     />
                     <button
                         onClick={() => {
                             onSearchChange('');
                             onClose();
                         }}
-                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground transition-colors"
                         aria-label="Close search"
                     >
                         <X size={20} aria-hidden="true" />
                     </button>
                 </div>
                 {searchQuery && (
-                    <div className="text-xs text-muted-foreground" role="status" aria-live="polite">
+                    <div className="text-xs text-q-text-muted" role="status" aria-live="polite">
                         {t('common.searching', 'Buscando...')}
                     </div>
                 )}

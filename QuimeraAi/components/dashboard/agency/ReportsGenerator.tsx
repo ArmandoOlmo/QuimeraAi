@@ -82,7 +82,7 @@ const StepIndicator = ({ currentStep }: { currentStep: Step }) => {
                                 ? 'bg-primary/10 text-primary ring-2 ring-primary/20'
                                 : status === 'completed'
                                     ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                                    : 'bg-muted text-muted-foreground'
+                                    : 'bg-muted text-q-text-muted'
                             }
                         `}>
                             <Icon className={`h-4 w-4 ${status === 'current' ? 'animate-pulse' : ''}`} />
@@ -302,7 +302,7 @@ export function ReportsGenerator() {
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* Premium Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-border/50 p-6 sm:p-8">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-q-border/50 p-6 sm:p-8">
                 <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
                 <div className="relative">
                     <div className="flex items-start justify-between">
@@ -315,7 +315,7 @@ export function ReportsGenerator() {
                                     {t('dashboard.agency.reports.generatorTitle', 'Generador de Reportes')}
                                     <Sparkles className="h-6 w-6 text-amber-500" />
                                 </h1>
-                                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                                <p className="text-q-text-muted mt-1 text-sm sm:text-base">
                                     {t('dashboard.agency.reports.generatorSubtitle', 'Crea reportes consolidados para tus clientes')}
                                 </p>
                             </div>
@@ -323,7 +323,7 @@ export function ReportsGenerator() {
                         {step !== 'configure' && (
                             <button
                                 onClick={handleReset}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl hover:bg-background transition-all duration-200"
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground bg-q-bg/50 backdrop-blur-sm border border-q-border/50 rounded-xl hover:bg-q-bg transition-all duration-200"
                             >
                                 <RotateCcw className="h-4 w-4" />
                                 <span className="hidden sm:inline">{t('dashboard.agency.reports.createAnother', 'Nuevo Reporte')}</span>
@@ -354,8 +354,8 @@ export function ReportsGenerator() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Client Selection - Left Column */}
                     <div className="lg:col-span-4">
-                        <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-                            <div className="p-5 border-b border-border/50 bg-muted/30">
+                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                            <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                                         <Building2 className="h-5 w-5 text-blue-500" />
@@ -364,7 +364,7 @@ export function ReportsGenerator() {
                                         <h4 className="font-semibold text-foreground">
                                             {t('dashboard.agency.reports.clients', 'Clientes')}
                                         </h4>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-q-text-muted">
                                             {selectedClients.length} de {clients.length} seleccionados
                                         </p>
                                     </div>
@@ -381,7 +381,7 @@ export function ReportsGenerator() {
                                             onChange={(e) => handleSelectAllClients(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="h-5 w-5 rounded-md border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
+                                        <div className="h-5 w-5 rounded-md border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
                                             {selectedClients.length === clients.length && (
                                                 <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />
                                             )}
@@ -408,7 +408,7 @@ export function ReportsGenerator() {
                                                     onChange={() => handleClientToggle(client.id)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="h-4 w-4 rounded border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
+                                                <div className="h-4 w-4 rounded border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
                                                     {selectedClients.includes(client.id) && (
                                                         <CheckCircle className="h-3 w-3 text-primary-foreground" />
                                                     )}
@@ -427,8 +427,8 @@ export function ReportsGenerator() {
                     {/* Configuration Options - Right Column */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* Date Range */}
-                        <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-                            <div className="p-5 border-b border-border/50 bg-muted/30">
+                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                            <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                                         <Calendar className="h-5 w-5 text-amber-500" />
@@ -437,7 +437,7 @@ export function ReportsGenerator() {
                                         <h4 className="font-semibold text-foreground">
                                             {t('dashboard.agency.reports.period', 'Período')}
                                         </h4>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-q-text-muted">
                                             Selecciona el rango de fechas
                                         </p>
                                     </div>
@@ -466,7 +466,7 @@ export function ReportsGenerator() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                             {t('dashboard.agency.reports.startDate', 'Fecha Inicio')}
                                         </label>
                                         <input
@@ -478,11 +478,11 @@ export function ReportsGenerator() {
                                                     start: new Date(e.target.value),
                                                 })
                                             }
-                                            className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                            className="w-full px-4 py-2.5 border border-q-border rounded-xl bg-q-bg text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                             {t('dashboard.agency.reports.endDate', 'Fecha Fin')}
                                         </label>
                                         <input
@@ -494,7 +494,7 @@ export function ReportsGenerator() {
                                                     end: new Date(e.target.value),
                                                 })
                                             }
-                                            className="w-full px-4 py-2.5 border border-border rounded-xl bg-background text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                            className="w-full px-4 py-2.5 border border-q-border rounded-xl bg-q-bg text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                         />
                                     </div>
                                 </div>
@@ -502,8 +502,8 @@ export function ReportsGenerator() {
                         </div>
 
                         {/* Metrics Selection */}
-                        <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-                            <div className="p-5 border-b border-border/50 bg-muted/30">
+                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                            <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center">
                                         <TrendingUp className="h-5 w-5 text-green-500" />
@@ -512,7 +512,7 @@ export function ReportsGenerator() {
                                         <h4 className="font-semibold text-foreground">
                                             {t('dashboard.agency.reports.metricsTitle', 'Métricas')}
                                         </h4>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-q-text-muted">
                                             {selectedMetrics.length} métricas seleccionadas
                                         </p>
                                     </div>
@@ -533,20 +533,20 @@ export function ReportsGenerator() {
                                                     relative p-4 rounded-xl border-2 transition-all duration-200 text-left group
                                                     ${isSelected
                                                         ? 'border-primary bg-primary/5 shadow-sm'
-                                                        : 'border-border/50 hover:border-border hover:bg-muted/30'
+                                                        : 'border-q-border/50 hover:border-q-border hover:bg-muted/30'
                                                     }
                                                 `}
                                             >
                                                 <div className={`
                                                     h-9 w-9 rounded-lg flex items-center justify-center mb-2 transition-colors
-                                                    ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground group-hover:text-foreground'}
+                                                    ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-q-text-muted group-hover:text-foreground'}
                                                 `}>
                                                     <Icon className="h-5 w-5" />
                                                 </div>
                                                 <div className="font-medium text-sm text-foreground">
                                                     {metric.label}
                                                 </div>
-                                                <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                                <div className="text-xs text-q-text-muted mt-0.5 line-clamp-1">
                                                     {metric.description}
                                                 </div>
                                                 {isSelected && (
@@ -568,45 +568,45 @@ export function ReportsGenerator() {
                         />
 
                         {/* Additional Options */}
-                        <div className="bg-card rounded-2xl border border-border/50 p-5">
+                        <div className="bg-q-surface rounded-2xl border border-q-border/50 p-5">
                             <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Settings className="h-5 w-5 text-muted-foreground" />
+                                <Settings className="h-5 w-5 text-q-text-muted" />
                                 {t('dashboard.agency.reports.additionalOptions', 'Opciones adicionales')}
                             </h4>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-border cursor-pointer transition-colors">
+                                <label className="flex items-center gap-3 p-3 rounded-xl border border-q-border/50 hover:border-q-border cursor-pointer transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={includeTrends}
                                         onChange={(e) => setIncludeTrends(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="h-5 w-5 rounded-md border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
+                                    <div className="h-5 w-5 rounded-md border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
                                         {includeTrends && <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />}
                                     </div>
                                     <div>
                                         <div className="font-medium text-sm text-foreground">
                                             {t('dashboard.agency.reports.includeTrends', 'Incluir tendencias')}
                                         </div>
-                                        <div className="text-xs text-muted-foreground">Gráficos comparativos</div>
+                                        <div className="text-xs text-q-text-muted">Gráficos comparativos</div>
                                     </div>
                                 </label>
-                                <label className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:border-border cursor-pointer transition-colors">
+                                <label className="flex items-center gap-3 p-3 rounded-xl border border-q-border/50 hover:border-q-border cursor-pointer transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={includeRecommendations}
                                         onChange={(e) => setIncludeRecommendations(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="h-5 w-5 rounded-md border-2 border-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
+                                    <div className="h-5 w-5 rounded-md border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
                                         {includeRecommendations && <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />}
                                     </div>
                                     <div>
                                         <div className="font-medium text-sm text-foreground">
                                             {t('dashboard.agency.reports.includeRecommendations', 'Incluir recomendaciones')}
                                         </div>
-                                        <div className="text-xs text-muted-foreground">Sugerencias AI</div>
+                                        <div className="text-xs text-q-text-muted">Sugerencias AI</div>
                                     </div>
                                 </label>
                             </div>
@@ -628,7 +628,7 @@ export function ReportsGenerator() {
 
             {/* Generating Step */}
             {step === 'generating' && (
-                <div className="bg-card rounded-2xl border border-border/50 p-16">
+                <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16">
                     <div className="text-center">
                         <div className="relative inline-flex">
                             <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -639,7 +639,7 @@ export function ReportsGenerator() {
                         <h3 className="text-xl font-semibold text-foreground mt-6 mb-2">
                             {t('dashboard.agency.reports.generatingReport', 'Generando Reporte')}
                         </h3>
-                        <p className="text-muted-foreground max-w-md mx-auto">
+                        <p className="text-q-text-muted max-w-md mx-auto">
                             {t('dashboard.agency.reports.generatingDesc', 'Estamos recopilando y procesando los datos de tus clientes...')}
                         </p>
                     </div>
@@ -659,11 +659,11 @@ export function ReportsGenerator() {
                         ].map((stat, index) => {
                             const Icon = stat.icon;
                             return (
-                                <div key={index} className="bg-card rounded-2xl border border-border/50 p-5 hover:shadow-lg transition-shadow">
+                                <div key={index} className="bg-q-surface rounded-2xl border border-q-border/50 p-5 hover:shadow-lg transition-shadow">
                                     <div className={`h-10 w-10 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center mb-3`}>
                                         <Icon className={`h-5 w-5 text-${stat.color}-500`} />
                                     </div>
-                                    <div className="text-sm text-muted-foreground mb-1">{stat.label}</div>
+                                    <div className="text-sm text-q-text-muted mb-1">{stat.label}</div>
                                     <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                                 </div>
                             );
@@ -689,10 +689,10 @@ export function ReportsGenerator() {
                     </div>
 
                     {/* Preview Table */}
-                    <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-                        <div className="px-6 py-5 border-b border-border/50 bg-muted/30">
+                    <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-q-border/50 bg-muted/30">
                             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                <Eye className="h-5 w-5 text-muted-foreground" />
+                                <Eye className="h-5 w-5 text-q-text-muted" />
                                 {t('dashboard.agency.reports.previewTitle', 'Vista Previa del Reporte')}
                             </h3>
                         </div>
@@ -700,19 +700,19 @@ export function ReportsGenerator() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="bg-muted/50">
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.client', 'Cliente')}
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.leads', 'Leads')}
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.visits', 'Visitas')}
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.revenue', 'Ingresos')}
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.conversion', 'Conversión')}
                                         </th>
                                     </tr>
@@ -728,10 +728,10 @@ export function ReportsGenerator() {
                                                     <span className="font-medium text-foreground">{client.clientName}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
                                                 {client.totalLeads.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
                                                 {client.totalVisits.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 dark:text-green-400">
@@ -761,7 +761,7 @@ export function ReportsGenerator() {
 
             {/* Completed Step */}
             {step === 'completed' && (
-                <div className="bg-card rounded-2xl border border-border/50 p-16 animate-in fade-in zoom-in-95 duration-500">
+                <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16 animate-in fade-in zoom-in-95 duration-500">
                     <div className="text-center">
                         <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-500/10 mb-6">
                             <CheckCircle className="h-10 w-10 text-green-500" />
@@ -769,7 +769,7 @@ export function ReportsGenerator() {
                         <h3 className="text-2xl font-bold text-foreground mb-2">
                             {t('dashboard.agency.reports.successTitle', '¡Reporte Generado!')}
                         </h3>
-                        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                        <p className="text-q-text-muted mb-8 max-w-md mx-auto">
                             {t('dashboard.agency.reports.successDesc', 'Tu reporte ha sido generado exitosamente y está listo para descargar.')}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">

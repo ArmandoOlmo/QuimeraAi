@@ -114,7 +114,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step0Heading', 'Already have a website?')}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('onboarding.step0Subheading', 'Paste your URL and let AI extract your business information automatically.')}
                 </p>
             </div>
@@ -137,7 +137,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                                 onKeyDown={handleKeyPress}
                                 placeholder="www.your-business.com"
                                 disabled={isAnalyzing}
-                                className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50"
+                                className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50"
                                 autoFocus
                             />
                         </div>
@@ -167,7 +167,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                             className={`
                                 flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all
                                 ${isAnalyzing || !url.trim()
-                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    ? 'bg-muted text-q-text-muted cursor-not-allowed'
                                     : 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/25'
                                 }
                             `}
@@ -187,7 +187,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                         <button
                             onClick={onSkip}
                             disabled={isAnalyzing}
-                            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-q-text-muted hover:text-foreground hover:bg-muted transition-all disabled:opacity-50"
                         >
                             {t('onboarding.skipStep', 'Skip this step')}
                             <ArrowRight size={18} />
@@ -208,20 +208,20 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                         </div>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('onboarding.businessName', 'Business Name')}:</span>
+                                <span className="text-q-text-muted">{t('onboarding.businessName', 'Business Name')}:</span>
                                 <span className="font-medium text-foreground">{analysisResult.businessName || '-'}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('onboarding.industry', 'Industry')}:</span>
+                                <span className="text-q-text-muted">{t('onboarding.industry', 'Industry')}:</span>
                                 <span className="font-medium text-foreground">{analysisResult.industry || '-'}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('onboarding.servicesFound', 'Services Found')}:</span>
+                                <span className="text-q-text-muted">{t('onboarding.servicesFound', 'Services Found')}:</span>
                                 <span className="font-medium text-foreground">{analysisResult.services?.length || 0}</span>
                             </div>
                             {analysisResult.tagline && (
-                                <div className="mt-2 pt-2 border-t border-border">
-                                    <span className="text-muted-foreground italic">"{analysisResult.tagline}"</span>
+                                <div className="mt-2 pt-2 border-t border-q-border">
+                                    <span className="text-q-text-muted italic">"{analysisResult.tagline}"</span>
                                 </div>
                             )}
                         </div>
@@ -230,7 +230,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                     {/* Brand Analysis */}
                     {analysisResult.brandAnalysis && (
                         <div className="p-4 bg-muted/50 rounded-xl">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                 {t('onboarding.brandAnalysis', 'Brand Analysis')}
                             </span>
                             <div className="mt-2 flex flex-wrap gap-2">
@@ -262,7 +262,7 @@ const Step0WebsiteAnalyzer: React.FC<Step0WebsiteAnalyzerProps> = ({
                                 setAnalysisResult(null);
                                 setUrl('');
                             }}
-                            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-q-text-muted hover:text-foreground hover:bg-muted transition-all"
                         >
                             {t('onboarding.tryDifferentUrl', 'Try Different URL')}
                         </button>

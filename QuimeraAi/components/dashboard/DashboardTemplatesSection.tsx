@@ -52,8 +52,8 @@ export const TemplatesSizeToggle: React.FC = () => {
                 onClick={() => setCompactTemplates(false)}
                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                     !compactTemplates
-                        ? 'text-primary bg-background shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'text-primary bg-q-bg shadow-sm'
+                        : 'text-q-text-muted hover:text-foreground'
                 }`}
                 aria-label={t('dashboard.templateSizeLarge', 'Grande')}
                 aria-pressed={!compactTemplates}
@@ -65,8 +65,8 @@ export const TemplatesSizeToggle: React.FC = () => {
                 onClick={() => setCompactTemplates(true)}
                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                     compactTemplates
-                        ? 'text-primary bg-background shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'text-primary bg-q-bg shadow-sm'
+                        : 'text-q-text-muted hover:text-foreground'
                 }`}
                 aria-label={t('dashboard.templateSizeCompact', 'Compacto')}
                 aria-pressed={compactTemplates}

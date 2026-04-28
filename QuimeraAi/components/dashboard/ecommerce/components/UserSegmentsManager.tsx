@@ -147,14 +147,14 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
 
             {/* Create Form */}
             {showCreateForm && (
-                <div className="bg-card rounded-xl border border-primary p-4">
+                <div className="bg-q-surface rounded-xl border border-primary p-4">
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="font-medium text-foreground">
                             {t('storeUsers.newSegment', 'Nuevo Segmento')}
                         </h4>
                         <button
                             onClick={() => setShowCreateForm(false)}
-                            className="p-1 text-muted-foreground hover:text-foreground"
+                            className="p-1 text-q-text-muted hover:text-foreground"
                         >
                             <X size={18} />
                         </button>
@@ -162,7 +162,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                 {t('storeUsers.segmentName', 'Nombre')}
                             </label>
                             <input
@@ -170,13 +170,13 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder={t('storeUsers.segmentNamePlaceholder', 'Ej: Clientes frecuentes')}
-                                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent"
+                                className="w-full px-3 py-2 bg-muted border border-q-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent"
                                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                 {t('storeUsers.segmentDescription', 'Descripción')}
                             </label>
                             <input
@@ -184,13 +184,13 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 placeholder={t('storeUsers.segmentDescriptionPlaceholder', 'Descripción opcional')}
-                                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent"
+                                className="w-full px-3 py-2 bg-muted border border-q-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:border-transparent"
                                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                 {t('storeUsers.segmentColor', 'Color')}
                             </label>
                             <div className="flex flex-wrap gap-2">
@@ -210,7 +210,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                         <div className="flex justify-end gap-2 pt-2">
                             <button
                                 onClick={() => setShowCreateForm(false)}
-                                className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted rounded-lg hover:bg-muted/80"
+                                className="px-4 py-2 text-sm font-medium text-q-text-muted bg-muted rounded-lg hover:bg-muted/80"
                             >
                                 {t('common.cancel', 'Cancelar')}
                             </button>
@@ -230,12 +230,12 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
 
             {/* Segments List */}
             {segments.length === 0 && !showCreateForm ? (
-                <div className="text-center py-12 bg-card rounded-xl border border-border">
-                    <Tag className="mx-auto text-muted-foreground/50 mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface rounded-xl border border-q-border">
+                    <Tag className="mx-auto text-q-text-muted/50 mb-4" size={48} />
                     <h4 className="text-lg font-medium text-foreground mb-2">
                         {t('storeUsers.noSegments', 'No hay segmentos')}
                     </h4>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {t('storeUsers.createFirstSegment', 'Crea segmentos para organizar tus usuarios')}
                     </p>
                     <button
@@ -256,35 +256,35 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                             return (
                                 <div
                                     key={segment.id}
-                                    className="bg-card rounded-xl border border-primary p-4"
+                                    className="bg-q-surface rounded-xl border border-primary p-4"
                                 >
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                                 {t('storeUsers.segmentName', 'Nombre')}
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formData.name}
                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground"
+                                                className="w-full px-3 py-2 bg-muted border border-q-border rounded-lg text-foreground"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                                 {t('storeUsers.segmentDescription', 'Descripción')}
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground"
+                                                className="w-full px-3 py-2 bg-muted border border-q-border rounded-lg text-foreground"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                 {t('storeUsers.segmentColor', 'Color')}
                                             </label>
                                             <div className="flex flex-wrap gap-2">
@@ -307,7 +307,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                                     setEditingSegment(null);
                                                     resetForm();
                                                 }}
-                                                className="px-3 py-1.5 text-sm font-medium text-muted-foreground bg-muted rounded-lg"
+                                                className="px-3 py-1.5 text-sm font-medium text-q-text-muted bg-muted rounded-lg"
                                             >
                                                 {t('common.cancel', 'Cancelar')}
                                             </button>
@@ -330,7 +330,7 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                         return (
                             <div
                                 key={segment.id}
-                                className="bg-card rounded-xl border border-border p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                                className="bg-q-surface rounded-xl border border-q-border p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                             >
                                 <div className="flex items-center gap-3">
                                     <div
@@ -350,9 +350,9 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                             </span>
                                         </div>
                                         {segment.description && (
-                                            <p className="text-sm text-muted-foreground">{segment.description}</p>
+                                            <p className="text-sm text-q-text-muted">{segment.description}</p>
                                         )}
-                                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                        <p className="text-xs text-q-text-muted mt-1 flex items-center gap-1">
                                             <Users size={12} />
                                             {segment.userCount} {t('storeUsers.users', 'usuarios')}
                                         </p>
@@ -362,13 +362,13 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => startEditing(segment)}
-                                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                     >
                                         <Edit2 size={16} />
                                     </button>
                                     <button
                                         onClick={() => setDeleteConfirm(segment.id)}
-                                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -383,14 +383,14 @@ const UserSegmentsManager: React.FC<UserSegmentsManagerProps> = ({
             {deleteConfirm && (
                 <>
                     <div className="fixed inset-0 bg-black/60 z-50" onClick={() => setDeleteConfirm(null)} />
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-background rounded-xl border border-border shadow-2xl z-50 p-6">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-q-bg rounded-xl border border-q-border shadow-2xl z-50 p-6">
                         <div className="flex items-center gap-3 mb-4 text-red-500">
                             <AlertTriangle size={24} />
                             <h3 className="text-lg font-semibold">
                                 {t('storeUsers.deleteSegment', 'Eliminar Segmento')}
                             </h3>
                         </div>
-                        <p className="text-muted-foreground mb-6">
+                        <p className="text-q-text-muted mb-6">
                             {t('storeUsers.deleteSegmentWarning', '¿Estás seguro de que deseas eliminar este segmento? Los usuarios asignados perderán este segmento.')}
                         </p>
                         <div className="flex justify-end gap-3">

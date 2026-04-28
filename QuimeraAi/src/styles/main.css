@@ -56,6 +56,46 @@ html.light {
   --editor-text-primary: #161412;
   --editor-text-secondary: #4A4640;
 
+  /* Quimera Design System 2.0 Tokens (Phase 1) */
+  /* --q-* tokens mapping to existing color values for seamless multi-theme support */
+  --q-bg: #F2F0EB;
+  --q-bg-rgb: 242, 240, 235;
+  --q-bg-secondary: #E8E5DE;
+  --q-bg-secondary-rgb: 232, 229, 222;
+  --q-surface: hsl(40 20% 99%);
+  --q-surface-rgb: 252, 252, 248; /* calculated rgb for hsl(40 20% 99%) */
+  --q-surface-elevated: #FDFCFA;
+  --q-surface-elevated-rgb: 253, 252, 250;
+  --q-surface-overlay: #F5F4F0;
+  --q-surface-overlay-rgb: 245, 244, 240;
+  --q-border: hsl(36 10% 79%);
+  --q-border-rgb: 206, 202, 196; /* calculated rgb for hsl(36 10% 79%) */
+  --q-border-strong: #D1CEC5;
+  --q-border-strong-rgb: 209, 206, 197;
+  --q-accent: #FBB92B;
+  --q-accent-rgb: 251, 185, 43;
+  --q-accent-secondary: hsl(41 40% 94%);
+  --q-accent-secondary-rgb: 243, 240, 235; /* calculated rgb for hsl(41 40% 94%) */
+  --q-accent-tertiary: #7F22DD;
+  --q-accent-tertiary-rgb: 127, 34, 221;
+  --q-text: #1A1816;
+  --q-text-rgb: 26, 24, 22;
+  --q-text-secondary: #4A4640;
+  --q-text-secondary-rgb: 74, 70, 64;
+  --q-text-muted: hsl(30 10% 36%);
+  --q-text-muted-rgb: 101, 91, 82; /* calculated rgb for hsl(30 10% 36%) */
+  --q-text-on-accent: #1A1610;
+  --q-text-on-accent-rgb: 26, 22, 16;
+  
+  --q-success: #10b981;
+  --q-success-rgb: 16, 185, 129;
+  --q-warning: #f59e0b;
+  --q-warning-rgb: 245, 158, 11;
+  --q-error: #ef4444;
+  --q-error-rgb: 239, 68, 68;
+  --q-info: #3b82f6;
+  --q-info-rgb: 59, 130, 246;
+
   /* Site Content Colors */
   --site-heading-color: #1A1816;
   --site-body-color: #4A4640;
@@ -148,6 +188,45 @@ html.dark {
   --editor-text-primary: hsl(0, 0%, 97%);
   --editor-text-secondary: hsl(264, 14%, 68%);
 
+  /* Quimera Design System 2.0 Tokens (Phase 1) */
+  --q-bg: #1E1535;
+  --q-bg-rgb: 30, 21, 53;
+  --q-bg-secondary: #251B42;
+  --q-bg-secondary-rgb: 37, 27, 66;
+  --q-surface: hsl(268 38% 18%);
+  --q-surface-rgb: 41, 28, 63; /* calculated */
+  --q-surface-elevated: hsl(268 38% 20%);
+  --q-surface-elevated-rgb: 46, 31, 70; /* calculated */
+  --q-surface-overlay: hsl(268 42% 16%);
+  --q-surface-overlay-rgb: 35, 23, 58; /* calculated */
+  --q-border: hsl(266 24% 26%);
+  --q-border-rgb: 63, 50, 82; /* calculated */
+  --q-border-strong: hsl(268 32% 28%);
+  --q-border-strong-rgb: 68, 48, 94; /* calculated */
+  --q-accent: #FBB92B;
+  --q-accent-rgb: 251, 185, 43;
+  --q-accent-secondary: hsl(268 42% 40%);
+  --q-accent-secondary-rgb: 97, 59, 144; /* calculated */
+  --q-accent-tertiary: #A855F7;
+  --q-accent-tertiary-rgb: 168, 85, 247;
+  --q-text: #F7F7F7;
+  --q-text-rgb: 247, 247, 247;
+  --q-text-secondary: #A49EBD;
+  --q-text-secondary-rgb: 164, 158, 189;
+  --q-text-muted: hsl(264 14% 68%);
+  --q-text-muted-rgb: 177, 169, 186; /* calculated */
+  --q-text-on-accent: #150E28;
+  --q-text-on-accent-rgb: 21, 14, 40;
+  
+  --q-success: #34d399;
+  --q-success-rgb: 52, 211, 153;
+  --q-warning: #fbbf24;
+  --q-warning-rgb: 251, 191, 36;
+  --q-error: #f87171;
+  --q-error-rgb: 248, 113, 113;
+  --q-info: #60a5fa;
+  --q-info-rgb: 96, 165, 250;
+
   --site-heading-color: #F9FAFB;
   --site-body-color: #9CA3AF;
 }
@@ -180,6 +259,45 @@ html.black {
   --editor-accent: #FBB92B;
   --editor-text-primary: #FFFFFF;
   --editor-text-secondary: #B3B3B3;
+
+  /* Quimera Design System 2.0 Tokens (Phase 1) */
+  --q-bg: #000000;
+  --q-bg-rgb: 0, 0, 0;
+  --q-bg-secondary: #0A0A0A;
+  --q-bg-secondary-rgb: 10, 10, 10;
+  --q-surface: hsl(0 0% 6%);
+  --q-surface-rgb: 15, 15, 15; /* calculated */
+  --q-surface-elevated: #1A1A1A;
+  --q-surface-elevated-rgb: 26, 26, 26;
+  --q-surface-overlay: #0F0F0F;
+  --q-surface-overlay-rgb: 15, 15, 15;
+  --q-border: hsl(0 0% 20%);
+  --q-border-rgb: 51, 51, 51; /* calculated */
+  --q-border-strong: #333333;
+  --q-border-strong-rgb: 51, 51, 51;
+  --q-accent: #FBB92B;
+  --q-accent-rgb: 251, 185, 43;
+  --q-accent-secondary: #FBB92B;
+  --q-accent-secondary-rgb: 251, 185, 43;
+  --q-accent-tertiary: #A855F7;
+  --q-accent-tertiary-rgb: 168, 85, 247;
+  --q-text: #FFFFFF;
+  --q-text-rgb: 255, 255, 255;
+  --q-text-secondary: #B3B3B3;
+  --q-text-secondary-rgb: 179, 179, 179;
+  --q-text-muted: hsl(0 0% 70%);
+  --q-text-muted-rgb: 178, 178, 178; /* calculated */
+  --q-text-on-accent: #000000;
+  --q-text-on-accent-rgb: 0, 0, 0;
+  
+  --q-success: #34d399;
+  --q-success-rgb: 52, 211, 153;
+  --q-warning: #fbbf24;
+  --q-warning-rgb: 251, 191, 36;
+  --q-error: #f87171;
+  --q-error-rgb: 248, 113, 113;
+  --q-info: #60a5fa;
+  --q-info-rgb: 96, 165, 250;
 
   --site-heading-color: #FFFFFF;
   --site-body-color: #A1A1AA;
@@ -348,6 +466,26 @@ html.palette-rose-coral .theme-btn-active {
   --color-editor-accent: var(--editor-accent);
   --color-editor-text-primary: var(--editor-text-primary);
   --color-editor-text-secondary: var(--editor-text-secondary);
+
+  /* Quimera Design System 2.0 Colors */
+  --color-q-bg: var(--q-bg);
+  --color-q-bg-secondary: var(--q-bg-secondary);
+  --color-q-surface: var(--q-surface);
+  --color-q-surface-elevated: var(--q-surface-elevated);
+  --color-q-surface-overlay: var(--q-surface-overlay);
+  --color-q-border: var(--q-border);
+  --color-q-border-strong: var(--q-border-strong);
+  --color-q-accent: var(--q-accent);
+  --color-q-accent-secondary: var(--q-accent-secondary);
+  --color-q-accent-tertiary: var(--q-accent-tertiary);
+  --color-q-text: var(--q-text);
+  --color-q-text-secondary: var(--q-text-secondary);
+  --color-q-text-muted: var(--q-text-muted);
+  --color-q-text-on-accent: var(--q-text-on-accent);
+  --color-q-success: var(--q-success);
+  --color-q-warning: var(--q-warning);
+  --color-q-error: var(--q-error);
+  --color-q-info: var(--q-info);
 
   /* Blue Violet Palette */
   --color-blue-violet-50: var(--color-blue-violet-50);
@@ -535,30 +673,30 @@ body {
 }
 
 /* Editor controls: flatter control groups with less visual framing. */
-.quimera-clean-controls .bg-editor-panel-bg\/50.p-4.rounded-lg.border.border-editor-border {
+.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border {
   background: transparent;
   border-width: 0 0 1px;
-  border-color: color-mix(in srgb, var(--editor-border) 58%, transparent);
+  border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
   border-radius: 0;
   padding: 0 0 1.25rem;
   box-shadow: none;
 }
 
-.quimera-clean-controls .bg-editor-surface\/50.rounded-xl.p-4.border.border-editor-border\/50 {
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50 {
   background: transparent;
   border-width: 0 0 1px;
-  border-color: color-mix(in srgb, var(--editor-border) 58%, transparent);
+  border-color: color-mix(in srgb, var(--q-border) 58%, transparent);
   border-radius: 0;
   padding: 0 0 1.25rem;
   box-shadow: none;
 }
 
-.quimera-clean-controls .bg-editor-panel-bg\/50.p-4.rounded-lg.border.border-editor-border:last-child {
+.quimera-clean-controls .bg-q-surface\/50.p-4.rounded-lg.border.border-q-border:last-child {
   border-bottom-width: 0;
   padding-bottom: 0;
 }
 
-.quimera-clean-controls .bg-editor-surface\/50.rounded-xl.p-4.border.border-editor-border\/50:last-child {
+.quimera-clean-controls .bg-q-surface\/50.rounded-xl.p-4.border.border-q-border\/50:last-child {
   border-bottom-width: 0;
   padding-bottom: 0;
 }
@@ -2727,3 +2865,4 @@ button.rounded-full[class*="h-5"][class*="w-10"] > span.rounded-full[class*="lef
   right: auto !important;
   transform: none !important;
 }
+/* force tailwind rebuild */

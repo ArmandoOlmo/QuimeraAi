@@ -190,14 +190,14 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
     const dropdownContent = isDropdownOpen ? (
         <div 
             ref={dropdownRef}
-            className="bg-editor-panel-bg border border-editor-border rounded-lg shadow-2xl"
+            className="bg-q-surface border border-q-border rounded-lg shadow-2xl"
             style={dropdownStyle}
             onClick={(e) => e.stopPropagation()}
         >
             {/* Search and Actions */}
-            <div className="p-3 border-b border-editor-border space-y-2">
-                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+            <div className="p-3 border-b border-q-border space-y-2">
+                <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         value={searchTerm}
@@ -211,7 +211,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setSearchTerm(''); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary hover:text-editor-text-primary"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary hover:text-q-text"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -222,14 +222,14 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); selectAll(); }}
-                        className="text-xs text-editor-accent hover:underline"
+                        className="text-xs text-q-accent hover:underline"
                     >
                         {t('industries.selectAll')}
                     </button>
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); clearAll(); }}
-                        className="text-xs text-editor-text-secondary hover:text-red-400"
+                        className="text-xs text-q-text-secondary hover:text-red-400"
                     >
                         {t('industries.clearAll')}
                     </button>
@@ -242,23 +242,23 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                 style={{ maxHeight }}
             >
                 {Object.entries(groupedIndustries).map(([categoryKey, industries]) => (
-                    <div key={categoryKey} className="border-b border-editor-border last:border-b-0">
+                    <div key={categoryKey} className="border-b border-q-border last:border-b-0">
                         {/* Category Header */}
-                        <div className="flex items-center gap-2 px-3 py-2 bg-editor-bg/50 sticky top-0 z-10">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-q-bg/50 sticky top-0 z-10">
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); toggleCategory(categoryKey); }}
                                 className="flex items-center gap-2 flex-1 text-left"
                             >
                                 {expandedCategories.has(categoryKey) || searchTerm ? (
-                                    <ChevronDown className="w-4 h-4 text-editor-text-secondary" />
+                                    <ChevronDown className="w-4 h-4 text-q-text-secondary" />
                                 ) : (
-                                    <ChevronRight className="w-4 h-4 text-editor-text-secondary" />
+                                    <ChevronRight className="w-4 h-4 text-q-text-secondary" />
                                 )}
-                                <span className="text-sm font-medium text-editor-text-primary">
+                                <span className="text-sm font-medium text-q-text">
                                     {getCategoryLabel(categoryKey)}
                                 </span>
-                                <span className="text-xs text-editor-text-secondary">
+                                <span className="text-xs text-q-text-secondary">
                                     ({industries.length})
                                 </span>
                             </button>
@@ -268,10 +268,10 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                                 onClick={(e) => { e.stopPropagation(); selectAllInCategory(categoryKey); }}
                                 className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
                                     isCategoryFullySelected(categoryKey)
-                                        ? 'bg-editor-accent border-editor-accent'
+                                        ? 'bg-q-accent border-q-accent'
                                         : isCategoryPartiallySelected(categoryKey)
-                                        ? 'bg-editor-accent/50 border-editor-accent'
-                                        : 'border-editor-border hover:border-editor-accent'
+                                        ? 'bg-q-accent/50 border-q-accent'
+                                        : 'border-q-border hover:border-q-accent'
                                 }`}
                             >
                                 {(isCategoryFullySelected(categoryKey) || isCategoryPartiallySelected(categoryKey)) && (
@@ -288,18 +288,18 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                                         key={industry.id}
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); toggleIndustry(industry.id); }}
-                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-editor-border/40 transition-colors"
+                                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-q-surface-overlay/40 transition-colors"
                                     >
                                         <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
                                             selectedIndustries.includes(industry.id)
-                                                ? 'bg-editor-accent border-editor-accent'
-                                                : 'border-editor-border'
+                                                ? 'bg-q-accent border-q-accent'
+                                                : 'border-q-border'
                                         }`}>
                                             {selectedIndustries.includes(industry.id) && (
                                                 <Check className="w-3 h-3 text-white" />
                                             )}
                                         </div>
-                                        <span className="text-sm text-editor-text-primary text-left">
+                                        <span className="text-sm text-q-text text-left">
                                             {getIndustryLabel(industry)}
                                         </span>
                                     </button>
@@ -310,7 +310,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                 ))}
 
                 {Object.keys(groupedIndustries).length === 0 && (
-                    <div className="p-4 text-center text-editor-text-secondary text-sm">
+                    <div className="p-4 text-center text-q-text-secondary text-sm">
                         No industries found
                     </div>
                 )}
@@ -325,21 +325,21 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                 ref={triggerRef}
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-editor-bg border border-editor-border rounded-lg text-left hover:border-editor-accent transition-colors"
+                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-q-bg border border-q-border rounded-lg text-left hover:border-q-accent transition-colors"
             >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Building2 className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                    <Building2 className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     {selectedIndustries.length === 0 ? (
-                        <span className="text-editor-text-secondary text-sm">
+                        <span className="text-q-text-secondary text-sm">
                             {t('industries.selectIndustries')}
                         </span>
                     ) : (
-                        <span className="text-sm text-editor-text-primary truncate">
+                        <span className="text-sm text-q-text truncate">
                             {t('industries.selectedCount', { count: selectedIndustries.length })}
                         </span>
                     )}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-editor-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-q-text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Selected Tags */}
@@ -348,7 +348,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                     {selectedLabels.slice(0, 5).map((label, idx) => (
                         <span
                             key={selectedIndustries[idx]}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-editor-accent/20 text-editor-accent text-xs rounded-full"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-q-accent/20 text-q-accent text-xs rounded-full"
                         >
                             {label}
                             <button
@@ -357,14 +357,14 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({
                                     e.stopPropagation();
                                     toggleIndustry(selectedIndustries[idx]);
                                 }}
-                                className="hover:text-editor-accent/70"
+                                className="hover:text-q-accent/70"
                             >
                                 <X className="w-3 h-3" />
                             </button>
                         </span>
                     ))}
                     {selectedIndustries.length > 5 && (
-                        <span className="inline-flex items-center px-2 py-0.5 bg-editor-border text-editor-text-secondary text-xs rounded-full">
+                        <span className="inline-flex items-center px-2 py-0.5 bg-q-surface-overlay text-q-text-secondary text-xs rounded-full">
                             +{selectedIndustries.length - 5}
                         </span>
                     )}

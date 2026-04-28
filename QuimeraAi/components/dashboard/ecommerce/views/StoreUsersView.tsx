@@ -223,7 +223,7 @@ const StoreUsersView: React.FC = () => {
                         <UserCheck style={{ color: theme.primary }} />
                         {t('storeUsers.title', 'Usuarios Registrados')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {stats.totalUsers} {t('storeUsers.totalUsers', 'usuarios en tu tienda')}
                     </p>
                 </div>
@@ -231,7 +231,7 @@ const StoreUsersView: React.FC = () => {
                     <button
                         onClick={() => handleExport('csv')}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-q-surface border border-q-border rounded-lg hover:bg-muted transition-colors"
                     >
                         {isExporting ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} />}
                         {t('storeUsers.export', 'Exportar')}
@@ -241,55 +241,55 @@ const StoreUsersView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg" style={{ backgroundColor: `${theme.primary}20` }}>
                             <Users style={{ color: theme.primary }} size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.totalUsers}</p>
-                            <p className="text-sm text-muted-foreground">{t('storeUsers.total', 'Total')}</p>
+                            <p className="text-sm text-q-text-muted">{t('storeUsers.total', 'Total')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-500/20 rounded-lg">
                             <UserCheck className="text-green-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.activeUsers}</p>
-                            <p className="text-sm text-muted-foreground">{t('storeUsers.active', 'Activos')}</p>
+                            <p className="text-sm text-q-text-muted">{t('storeUsers.active', 'Activos')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-yellow-500/20 rounded-lg">
                             <Crown className="text-yellow-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.vip}</p>
-                            <p className="text-sm text-muted-foreground">VIP</p>
+                            <p className="text-sm text-q-text-muted">VIP</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-500/20 rounded-lg">
                             <Shield className="text-purple-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.usersByRole.wholesale}</p>
-                            <p className="text-sm text-muted-foreground">{t('storeUsers.wholesale', 'Mayoristas')}</p>
+                            <p className="text-sm text-q-text-muted">{t('storeUsers.wholesale', 'Mayoristas')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/20 rounded-lg">
                             {stats.newUsersThisMonth >= stats.newUsersLastMonth ? (
@@ -300,7 +300,7 @@ const StoreUsersView: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.newUsersThisMonth}</p>
-                            <p className="text-sm text-muted-foreground">{t('storeUsers.newThisMonth', 'Nuevos este mes')}</p>
+                            <p className="text-sm text-q-text-muted">{t('storeUsers.newThisMonth', 'Nuevos este mes')}</p>
                         </div>
                     </div>
                 </div>
@@ -308,8 +308,8 @@ const StoreUsersView: React.FC = () => {
 
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('storeUsers.searchPlaceholder', 'Buscar por nombre, email o teléfono...')}
@@ -318,7 +318,7 @@ const StoreUsersView: React.FC = () => {
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
                     {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                             <X size={16} />
                         </button>
                     )}
@@ -329,7 +329,7 @@ const StoreUsersView: React.FC = () => {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                         showFilters || selectedRoles.length > 0 || selectedStatuses.length > 0
                             ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border bg-card text-foreground hover:bg-muted'
+                            : 'border-q-border bg-q-surface text-foreground hover:bg-muted'
                     }`}
                 >
                     <Filter size={18} />
@@ -344,7 +344,7 @@ const StoreUsersView: React.FC = () => {
 
             {/* Filters Panel */}
             {showFilters && (
-                <div className="bg-card rounded-xl border border-border p-4">
+                <div className="bg-q-surface rounded-xl border border-q-border p-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                         {/* Role Filter */}
                         <div>
@@ -421,13 +421,13 @@ const StoreUsersView: React.FC = () => {
                     </div>
 
                     {(selectedRoles.length > 0 || selectedStatuses.length > 0) && (
-                        <div className="mt-4 pt-4 border-t border-border">
+                        <div className="mt-4 pt-4 border-t border-q-border">
                             <button
                                 onClick={() => {
                                     setSelectedRoles([]);
                                     setSelectedStatuses([]);
                                 }}
-                                className="text-sm text-muted-foreground hover:text-foreground"
+                                className="text-sm text-q-text-muted hover:text-foreground"
                             >
                                 {t('storeUsers.clearFilters', 'Limpiar filtros')}
                             </button>
@@ -438,52 +438,52 @@ const StoreUsersView: React.FC = () => {
 
             {/* Users Table */}
             {filteredUsers.length === 0 ? (
-                <div className="text-center py-16 bg-card rounded-xl border border-border">
-                    <Users className="mx-auto text-muted-foreground/50 mb-4" size={64} />
+                <div className="text-center py-16 bg-q-surface rounded-xl border border-q-border">
+                    <Users className="mx-auto text-q-text-muted/50 mb-4" size={64} />
                     <h3 className="text-xl font-semibold text-foreground mb-2">
                         {searchTerm || selectedRoles.length > 0 || selectedStatuses.length > 0
                             ? t('storeUsers.noUsersFound', 'No se encontraron usuarios')
                             : t('storeUsers.noUsers', 'No hay usuarios registrados')}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {searchTerm || selectedRoles.length > 0 || selectedStatuses.length > 0
                             ? t('storeUsers.tryDifferentFilters', 'Intenta con otros filtros')
                             : t('storeUsers.usersWillAppear', 'Los usuarios que se registren aparecerán aquí')}
                     </p>
                 </div>
             ) : (
-                <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="bg-q-surface rounded-xl border border-q-border overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border">
+                                <tr className="border-b border-q-border">
                                     <th className="px-4 py-3 text-left">
                                         <input
                                             type="checkbox"
                                             checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
                                             onChange={toggleAllSelection}
-                                            className="rounded border-border"
+                                            className="rounded border-q-border"
                                         />
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.user', 'Usuario')}
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.role', 'Rol')}
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.status', 'Estado')}
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.orders', 'Pedidos')}
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.spent', 'Gastado')}
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.lastLogin', 'Último acceso')}
                                     </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                    <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
                                         {t('storeUsers.actions', 'Acciones')}
                                     </th>
                                 </tr>
@@ -496,7 +496,7 @@ const StoreUsersView: React.FC = () => {
                                                 type="checkbox"
                                                 checked={selectedUsers.has(storeUser.id)}
                                                 onChange={() => toggleUserSelection(storeUser.id)}
-                                                className="rounded border-border"
+                                                className="rounded border-q-border"
                                             />
                                         </td>
                                         <td className="px-4 py-3">
@@ -517,7 +517,7 @@ const StoreUsersView: React.FC = () => {
                                                 )}
                                                 <div>
                                                     <p className="font-medium text-foreground">{storeUser.displayName}</p>
-                                                    <p className="text-sm text-muted-foreground">{storeUser.email}</p>
+                                                    <p className="text-sm text-q-text-muted">{storeUser.email}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -528,10 +528,10 @@ const StoreUsersView: React.FC = () => {
                                                     className="flex items-center gap-1"
                                                 >
                                                     <RoleBadge role={storeUser.role} />
-                                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                                    <ChevronDown size={14} className="text-q-text-muted" />
                                                 </button>
                                                 {showRoleDropdown === storeUser.id && (
-                                                    <div className="absolute z-10 mt-1 w-40 bg-popover border border-border rounded-lg shadow-lg py-1">
+                                                    <div className="absolute z-10 mt-1 w-40 bg-popover border border-q-border rounded-lg shadow-lg py-1">
                                                         {(['customer', 'vip', 'wholesale'] as StoreUserRole[]).map((role) => (
                                                             <button
                                                                 key={role}
@@ -555,10 +555,10 @@ const StoreUsersView: React.FC = () => {
                                                     className="flex items-center gap-1"
                                                 >
                                                     <StatusBadge status={storeUser.status} />
-                                                    <ChevronDown size={14} className="text-muted-foreground" />
+                                                    <ChevronDown size={14} className="text-q-text-muted" />
                                                 </button>
                                                 {showStatusDropdown === storeUser.id && (
-                                                    <div className="absolute z-10 mt-1 w-40 bg-popover border border-border rounded-lg shadow-lg py-1">
+                                                    <div className="absolute z-10 mt-1 w-40 bg-popover border border-q-border rounded-lg shadow-lg py-1">
                                                         {(['active', 'inactive', 'banned'] as StoreUserStatus[]).map((status) => {
                                                             const labels = {
                                                                 active: t('storeUsers.statusActive', 'Activo'),
@@ -589,14 +589,14 @@ const StoreUsersView: React.FC = () => {
                                             <span className="text-foreground font-medium">${storeUser.totalSpent.toFixed(2)}</span>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="text-muted-foreground text-sm">
+                                            <span className="text-q-text-muted text-sm">
                                                 {formatDateTime(storeUser.lastLoginAt)}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
                                                 onClick={() => handleViewUser(storeUser)}
-                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                             >
                                                 <Eye size={18} />
                                             </button>

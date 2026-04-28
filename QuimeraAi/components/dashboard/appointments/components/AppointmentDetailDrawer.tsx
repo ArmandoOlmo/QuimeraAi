@@ -99,7 +99,7 @@ const TabButton: React.FC<TabButtonProps> = ({ id, label, icon: Icon, isActive, 
             transition-all duration-200
             ${isActive
                 ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
             }
         `}
     >
@@ -108,7 +108,7 @@ const TabButton: React.FC<TabButtonProps> = ({ id, label, icon: Icon, isActive, 
         {badge !== undefined && badge > 0 && (
             <span className={`
                 ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold
-                ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}
+                ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-q-text-muted'}
             `}>
                 {badge}
             </span>
@@ -207,7 +207,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
             <div
                 className={`
                     fixed right-0 top-0 bottom-0 w-full sm:w-[500px] lg:w-[550px]
-                    bg-background border-l border-border shadow-2xl
+                    bg-q-bg border-l border-q-border shadow-2xl
                     z-50 flex flex-col
                     transition-transform duration-300 ease-out
                     ${isOpen ? 'translate-x-0' : 'translate-x-full'}
@@ -280,7 +280,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             href={appointment.location.meetingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2.5 sm:py-3 bg-card border border-border rounded-xl shadow-lg font-semibold text-xs sm:text-sm text-foreground flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
+                            className="flex-1 py-2.5 sm:py-3 bg-q-surface border border-q-border rounded-xl shadow-lg font-semibold text-xs sm:text-sm text-foreground flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
                             <Video size={16} className="sm:w-[18px] sm:h-[18px] text-primary" />
                             <span>{t('appointments.join')}</span>
@@ -291,7 +291,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     <div className="relative">
                         <button
                             onClick={() => setShowStatusMenu(!showStatusMenu)}
-                            className="h-full px-2.5 sm:px-4 bg-card border border-border rounded-xl shadow-lg text-xs sm:text-sm text-foreground flex items-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
+                            className="h-full px-2.5 sm:px-4 bg-q-surface border border-q-border rounded-xl shadow-lg text-xs sm:text-sm text-foreground flex items-center gap-1.5 sm:gap-2 hover:bg-secondary transition-colors"
                         >
                             {isChangingStatus ? (
                                 <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin" />
@@ -302,7 +302,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                         </button>
 
                         {showStatusMenu && (
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-popover border border-border rounded-xl shadow-xl py-1 z-50 animate-scale-in">
+                            <div className="absolute top-full left-0 mt-2 w-48 bg-popover border border-q-border rounded-xl shadow-xl py-1 z-50 animate-scale-in">
                                 {Object.entries(APPOINTMENT_STATUS_CONFIGS).map(([key, config]) => (
                                     <button
                                         key={key}
@@ -325,13 +325,13 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                     <div className="relative">
                         <button
                             onClick={() => setShowMoreMenu(!showMoreMenu)}
-                            className="px-3 h-full bg-card border border-border rounded-xl shadow-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="px-3 h-full bg-q-surface border border-q-border rounded-xl shadow-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <MoreVertical size={18} />
                         </button>
 
                         {showMoreMenu && (
-                            <div className="absolute top-full right-0 mt-2 w-56 bg-popover border border-border rounded-xl shadow-xl py-1 z-50 animate-scale-in">
+                            <div className="absolute top-full right-0 mt-2 w-56 bg-popover border border-q-border rounded-xl shadow-xl py-1 z-50 animate-scale-in">
                                 {/* Copy meeting link */}
                                 {appointment.location?.meetingUrl && (
                                     <button
@@ -341,7 +341,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         }}
                                         className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-foreground"
                                     >
-                                        <Copy size={16} className="text-muted-foreground" />
+                                        <Copy size={16} className="text-q-text-muted" />
                                         {t('appointments.copyMeetingLink')}
                                     </button>
                                 )}
@@ -354,7 +354,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     }}
                                     className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-foreground"
                                 >
-                                    <Download size={16} className="text-muted-foreground" />
+                                    <Download size={16} className="text-q-text-muted" />
                                     {t('appointments.downloadCalendar')}
                                 </button>
 
@@ -367,12 +367,12 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     }}
                                     className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-foreground"
                                 >
-                                    <Share2 size={16} className="text-muted-foreground" />
+                                    <Share2 size={16} className="text-q-text-muted" />
                                     {t('appointments.copyDetails')}
                                 </button>
 
                                 {/* Divider */}
-                                <div className="my-1 border-t border-border" />
+                                <div className="my-1 border-t border-q-border" />
 
                                 {/* Edit */}
                                 {onEdit && (
@@ -383,7 +383,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         }}
                                         className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-secondary transition-colors text-foreground"
                                     >
-                                        <Edit size={16} className="text-muted-foreground" />
+                                        <Edit size={16} className="text-q-text-muted" />
                                         {t('appointments.editAppointment')}
                                     </button>
                                 )}
@@ -448,7 +448,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             {/* Description */}
                             {appointment.description && (
                                 <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                         {t('common.description')}
                                     </h4>
                                     <p className="text-sm text-foreground leading-relaxed">
@@ -459,7 +459,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
                             {/* Location */}
                             <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     {t('appointments.location')}
                                 </h4>
                                 <div className="flex items-start gap-3 p-3 bg-secondary/30 rounded-xl">
@@ -474,7 +474,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             {appointment.location?.type === 'physical' && t('appointments.drawer.physicalMeeting')}
                                             {appointment.location?.type === 'phone' && t('appointments.drawer.phoneMeeting')}
                                         </p>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {appointment.location?.meetingUrl || appointment.location?.address || appointment.location?.phoneNumber || t('appointments.drawer.noDetails')}
                                         </p>
                                     </div>
@@ -483,7 +483,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             href={appointment.location.meetingUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                                            className="p-2 text-q-text-muted hover:text-primary transition-colors"
                                         >
                                             <ExternalLink size={16} />
                                         </a>
@@ -494,7 +494,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             {/* Priority & Tags */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                         {t('appointments.priority')}
                                     </h4>
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/50 ${priorityConfig.color} font-medium text-sm`}>
@@ -502,7 +502,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     </span>
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                         {t('appointments.type')}
                                     </h4>
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/50 text-foreground font-medium text-sm">
@@ -514,7 +514,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             {/* Tags */}
                             {appointment.tags && appointment.tags.length > 0 && (
                                 <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                         {t('leads.tags')}
                                     </h4>
                                     <div className="flex flex-wrap gap-2">
@@ -532,7 +532,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
                             {/* Reminders */}
                             <div>
-                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     {t('appointments.remindersLabel')}
                                 </h4>
                                 <div className="space-y-2">
@@ -541,7 +541,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                             key={reminder.id}
                                             className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg"
                                         >
-                                            <Bell size={14} className={reminder.sent ? 'text-green-500' : 'text-muted-foreground'} />
+                                            <Bell size={14} className={reminder.sent ? 'text-green-500' : 'text-q-text-muted'} />
                                             <span className="text-sm text-foreground flex-1">
                                                 {reminder.minutesBefore < 60
                                                     ? t('appointments.drawer.minutesBefore', { count: reminder.minutesBefore })
@@ -592,9 +592,9 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm text-muted-foreground truncate">{participant.email}</p>
+                                        <p className="text-sm text-q-text-muted truncate">{participant.email}</p>
                                         {participant.company && (
-                                            <p className="text-xs text-muted-foreground">{participant.company}</p>
+                                            <p className="text-xs text-q-text-muted">{participant.company}</p>
                                         )}
                                     </div>
                                     <div className={`
@@ -602,7 +602,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         ${participant.status === 'accepted' ? 'bg-green-500/10 text-green-500' :
                                             participant.status === 'declined' ? 'bg-red-500/10 text-red-500' :
                                                 participant.status === 'tentative' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                    'bg-muted text-muted-foreground'}
+                                                    'bg-muted text-q-text-muted'}
                                     `}>
                                         {participant.status === 'accepted' ? t('appointments.drawer.accepted') :
                                             participant.status === 'declined' ? t('appointments.drawer.declined') :
@@ -614,8 +614,8 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
                             {(!appointment.participants || appointment.participants.length === 0) && (
                                 <div className="text-center py-8">
-                                    <Users className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
-                                    <p className="text-sm text-muted-foreground">
+                                    <Users className="mx-auto h-12 w-12 text-q-text-muted/30 mb-3" />
+                                    <p className="text-sm text-q-text-muted">
                                         {t('appointments.drawer.noParticipants')}
                                     </p>
                                 </div>
@@ -623,8 +623,8 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
                             {/* Email Marketing Quick Action */}
                             {appointment.participants && appointment.participants.some(p => p.email) && (
-                                <div className="pt-4 border-t border-border">
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <div className="pt-4 border-t border-q-border">
+                                    <h4 className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                         <Megaphone size={12} className="text-purple-500" />
                                         Email Marketing
                                     </h4>
@@ -651,7 +651,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                         onChange={(e) => setNewNoteContent(e.target.value)}
                                         placeholder={t('appointments.drawer.writeNotePlaceholder')}
                                         rows={4}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-q-text-muted outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                         autoFocus
                                     />
                                     <div className="flex justify-end gap-2">
@@ -660,7 +660,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                                 setShowNoteInput(false);
                                                 setNewNoteContent('');
                                             }}
-                                            className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                            className="px-3 py-1.5 text-sm text-q-text-muted hover:text-foreground transition-colors"
                                         >
                                             {t('actions.cancel')}
                                         </button>
@@ -686,7 +686,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                             ) : (
                                 <button
                                     onClick={() => setShowNoteInput(true)}
-                                    className="w-full py-3 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-3 border-2 border-dashed border-q-border rounded-xl text-q-text-muted hover:text-foreground hover:border-muted-foreground/50 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Plus size={16} />
                                     {t('appointments.drawer.addNote')}
@@ -699,7 +699,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                                     className="p-4 bg-secondary/30 rounded-xl"
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             {timestampToDate(note.createdAt).toLocaleDateString(i18n.language)}
                                         </span>
                                         {note.aiGenerated && (
@@ -717,8 +717,8 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
 
                             {(!appointment.notes || appointment.notes.length === 0) && !showNoteInput && (
                                 <div className="text-center py-8">
-                                    <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/30 mb-3" />
-                                    <p className="text-sm text-muted-foreground">
+                                    <MessageSquare className="mx-auto h-12 w-12 text-q-text-muted/30 mb-3" />
+                                    <p className="text-sm text-q-text-muted">
                                         {t('appointments.drawer.noNotesYet')}
                                     </p>
                                 </div>
@@ -736,7 +736,7 @@ export const AppointmentDetailDrawer: React.FC<AppointmentDetailDrawerProps> = (
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-3 sm:p-4 border-t border-border bg-secondary/20 flex gap-1.5 sm:gap-2">
+                <div className="p-3 sm:p-4 border-t border-q-border bg-secondary/20 flex gap-1.5 sm:gap-2">
                     <button
                         onClick={() => downloadAsICS(appointment)}
                         className="flex-1 py-2 sm:py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-colors"

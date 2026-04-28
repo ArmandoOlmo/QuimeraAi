@@ -32,8 +32,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           Content
         </label>
@@ -58,8 +58,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Link Type Selector */}
             <div className="mb-3">
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
-              <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+              <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
+              <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {[
                   { value: 'manual', label: 'Manual URL' },
                   { value: 'product', label: 'Product' },
@@ -73,8 +73,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       setNestedData('banner.linkType', type.value);
                     }}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.banner?.linkType || 'manual') === type.value
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                      ? 'bg-q-accent text-q-bg'
+                      : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                       }`}
                   >
                     {type.label}
@@ -142,8 +142,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Background Image */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Image size={14} />
           Background Image
         </label>
@@ -160,8 +160,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="banner" data={data} setNestedData={setNestedData} />
       {/* Layout & Size */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Layout & Size
         </label>
@@ -176,8 +176,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mb-4">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.textAlignment')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+          <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">{t('controls.textAlignment')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {(['left', 'center', 'right'] as const).map((align) => (
               <button
                 type="button"
@@ -187,8 +187,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   setNestedData('banner.textAlignment', align);
                 }}
                 className={`flex-1 py-2 text-xs font-medium rounded-sm transition-colors capitalize ${(data?.banner?.textAlignment || 'center') === align
-                  ? 'bg-editor-accent text-editor-bg'
-                  : 'text-editor-text-secondary hover:text-editor-text-primary'
+                  ? 'bg-q-accent text-q-bg'
+                  : 'text-q-text-secondary hover:text-q-text-primary'
                   }`}
               >
                 {align}
@@ -204,15 +204,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>
 
         <ColorControl label={t('controls.backgroundColor')} value={data?.banner?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('banner.colors.background', v)} />
 
-        <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
+        <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Overlay</h5>
         <ToggleControl label={t('editor.controls.common.enableOverlay')} checked={data?.banner?.overlayEnabled !== false} onChange={(v) => setNestedData('banner.overlayEnabled', v)} />
 
         {data?.banner?.overlayEnabled !== false && (
@@ -237,13 +237,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         )}
 
-        <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Text</h5>
+        <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Text</h5>
         <ColorControl label={t('controls.headlineColor')} value={data?.banner?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('banner.colors.heading', v)} />
         <ColorControl label={t('controls.subheadlineColor')} value={data?.banner?.colors?.text || '#ffffff'} onChange={(v) => setNestedData('banner.colors.text', v)} />
 
         {data?.banner?.showButton !== false && (
           <>
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Button</h5>
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Button</h5>
             <ColorControl label={t('controls.fondoBotn')} value={data?.banner?.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('banner.colors.buttonBackground', v)} />
             <ColorControl label={t('editor.controls.common.buttonText')} value={data?.banner?.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('banner.colors.buttonText', v)} />
           </>

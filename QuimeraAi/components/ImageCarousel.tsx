@@ -155,7 +155,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
                     <Sparkles className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{t('landingEditor.emptyCarousel', 'Carrusel vacío')}</h3>
-                <p className="text-muted-foreground mb-6 max-w-md">
+                <p className="text-q-text-muted mb-6 max-w-md">
                     {t('landingEditor.addImages', 'Añade imágenes desde el panel de control.')}
                 </p>
             </div>
@@ -220,7 +220,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
                                     </h3>
                                 )}
                                 {image.subtitle && (
-                                    <p className={`text-sm truncate mt-1 ${variant === 'cards' ? 'text-muted-foreground' : 'text-gray-200'}`}>
+                                    <p className={`text-sm truncate mt-1 ${variant === 'cards' ? 'text-q-text-muted' : 'text-gray-200'}`}>
                                         {image.subtitle}
                                     </p>
                                 )}

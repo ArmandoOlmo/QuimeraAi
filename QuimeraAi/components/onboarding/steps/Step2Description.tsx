@@ -53,18 +53,18 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step2Heading', 'Describe your business')}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('onboarding.step2Subheading', 'Tell visitors what makes your business special.')}
                 </p>
             </div>
 
             {/* Business context */}
             <div className="flex items-center justify-center gap-4 text-sm">
-                <span className="px-3 py-1.5 bg-muted rounded-full text-muted-foreground">
+                <span className="px-3 py-1.5 bg-muted rounded-full text-q-text-muted">
                     {businessName}
                 </span>
-                <span className="text-muted-foreground/50">•</span>
-                <span className="px-3 py-1.5 bg-muted rounded-full text-muted-foreground">
+                <span className="text-q-text-muted/50">•</span>
+                <span className="px-3 py-1.5 bg-muted rounded-full text-q-text-muted">
                     {industry.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </span>
             </div>
@@ -98,9 +98,9 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
                     onChange={(e) => onUpdate(description, e.target.value)}
                     placeholder={t('onboarding.taglinePlaceholder', 'A short catchy phrase for your business')}
                     maxLength={100}
-                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
-                <p className="text-xs text-muted-foreground text-right">
+                <p className="text-xs text-q-text-muted text-right">
                     {(tagline?.length || 0)}/100
                 </p>
             </div>
@@ -123,9 +123,9 @@ const Step2Description: React.FC<Step2DescriptionProps> = ({
                     onChange={(e) => onUpdate(e.target.value, tagline)}
                     placeholder={t('onboarding.descriptionPlaceholder', 'Describe what your business does, your values, and what makes you unique...')}
                     rows={8}
-                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                    className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-q-text-muted">
                     {t('onboarding.descriptionHint', 'This will be used to generate content for your website. Be as detailed as possible.')}
                 </p>
             </div>

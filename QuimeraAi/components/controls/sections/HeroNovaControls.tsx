@@ -34,8 +34,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Display Text */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <Type size={14} />
           Display Text (centered)
         </label>
@@ -53,7 +53,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Slides */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <PlaySquare size={14} />
           Slides ({slides.length})
         </label>
@@ -61,9 +61,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {slides.map((slide: any, slideIndex: number) => {
           const mediaType = slide.mediaType || 'image';
           return (
-            <div key={slideIndex} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-4">
+            <div key={slideIndex} className="bg-q-bg p-4 rounded-lg border border-q-border mb-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
+                <span className="text-xs font-bold text-q-accent uppercase">Slide #{slideIndex + 1}</span>
                 {slides.length > 1 && (
                   <button type="button"                     onClick={() => {
                       const newSlides = slides.filter((_: any, i: number) => i !== slideIndex);
@@ -88,8 +88,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </AIFormControl>
 
               {/* CTA */}
-              <div className="bg-editor-panel-bg/50 p-3 rounded-md border border-editor-border mt-3">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <div className="bg-q-surface/50 p-3 rounded-md border border-q-border mt-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Link size={12} />
                   Call to Action
                 </label>
@@ -101,12 +101,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
               {/* Media Type Toggle */}
               <div className="mt-3">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.mediaType')}</label>
-                <div className="flex bg-editor-panel-bg p-1 rounded-md border border-editor-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.mediaType')}</label>
+                <div className="flex bg-q-surface p-1 rounded-md border border-q-border">
                   {(['image', 'video'] as const).map((type) => (
                     <button type="button"                       key={type}
                       onClick={() => setNestedData(`heroNova.slides.${slideIndex}.mediaType`, type)}
-                      className={`flex-1 py-1.5 text-xs font-semibold rounded-sm capitalize transition-colors ${mediaType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-sm capitalize transition-colors ${mediaType === type ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                     >
                       {type === 'image' ? '🖼️ Image' : '🎬 Video'}
                     </button>
@@ -118,7 +118,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <div className="mt-3">
                 {mediaType === 'image' ? (
                   <>
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                       <Image size={12} />
                       Background Image
                     </label>
@@ -131,7 +131,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   </>
                 ) : (
                   <>
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                       <MonitorPlay size={12} />
                       Video URL
                     </label>
@@ -140,7 +140,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       value={slide.backgroundVideo || ''}
                       onChange={(e) => setNestedData(`heroNova.slides.${slideIndex}.backgroundVideo`, e.target.value)}
                     />
-                    <p className="text-[10px] text-editor-text-secondary mt-1">Paste a direct video URL (MP4, WebM)</p>
+                    <p className="text-[10px] text-q-text-secondary mt-1">Paste a direct video URL (MP4, WebM)</p>
                   </>
                 )}
               </div>
@@ -171,7 +171,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             };
             setNestedData('heroNova.slides', [...slides, newSlide]);
           }}
-          className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
+          className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
         >
           <Plus size={16} /> Add Slide
         </button>
@@ -181,8 +181,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">      {/* Display Text Style */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           Display Text Style
         </label>
@@ -200,8 +200,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Overlay */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.overlay')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3">{t('controls.overlay')}</label>
 
         <div className="mb-4">
           <SliderControl
@@ -214,8 +214,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Layout */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">{t('controls.layout')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3">{t('controls.layout')}</label>
 
         <div className="mb-4">
           <SliderControl
@@ -228,36 +228,36 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Slideshow */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <PlaySquare size={14} />
           Slideshow
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number" min="2000" max="15000" step="500"
             value={data.heroNova.autoPlaySpeed || 6000}
             onChange={(e) => setNestedData('heroNova.autoPlaySpeed', parseInt(e.target.value))}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text-primary focus:outline-none focus:ring-1 focus:ring-q-accent"
           />
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number" min="300" max="2000" step="100"
             value={data.heroNova.transitionDuration || 700}
             onChange={(e) => setNestedData('heroNova.transitionDuration', parseInt(e.target.value))}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text-primary focus:outline-none focus:ring-1 focus:ring-q-accent"
           />
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
         <ToggleControl label={t('controls.showArrows')} checked={data.heroNova.showArrows ?? true} onChange={(v) => setNestedData('heroNova.showArrows', v)} />
         <ToggleControl label={t('controls.showDots')} checked={data.heroNova.showDots ?? true} onChange={(v) => setNestedData('heroNova.showDots', v)} />
 
@@ -276,8 +276,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>

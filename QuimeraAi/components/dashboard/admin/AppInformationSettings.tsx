@@ -314,28 +314,28 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     };
 
     const renderCharCounter = (current: number, limit: number) => (
-        <div className="flex justify-end text-xs text-editor-text-secondary mt-1">
+        <div className="flex justify-end text-xs text-q-text-secondary mt-1">
             {current}/{limit} {t('superadmin.appInfo.chars')}
         </div>
     );
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full lg:hidden transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-full lg:hidden transition-colors"
                             title={t('common.openMenu')}
                         >
                             <Menu className="w-4 h-4" />
                         </button>
                         <div className="flex flex-col">
                             <div className="flex items-center gap-2">
-                                <Globe className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">
+                                <Globe className="text-q-accent w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-q-text">
                                     {t('superadmin.appInformation')}
                                 </h1>
                                 {hasUnsavedChanges && (
@@ -344,14 +344,14 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs text-editor-text-secondary hidden sm:block">{statusMessage}</p>
+                            <p className="text-xs text-q-text-secondary hidden sm:block">{statusMessage}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleReset}
                             disabled={!savedConfig || isSaving}
-                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 disabled:opacity-50"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 disabled:opacity-50"
                         >
                             <RefreshCcw className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('superadmin.appInfo.reset')}</span>
@@ -359,30 +359,30 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                         <button
                             onClick={handleSave}
                             disabled={isSaving || !hasUnsavedChanges}
-                            className="h-9 px-3 text-editor-accent font-medium text-sm hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                            className="h-9 px-3 text-q-accent font-medium text-sm hover:text-q-accent transition-colors disabled:opacity-50 flex items-center gap-1.5"
                         >
                             <Save className="w-4 h-4" />
                             <span className="hidden sm:inline">{isSaving ? t('superadmin.saving') : t('superadmin.appInfo.saveChanges')}</span>
                         </button>
-                        <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     </div>
                 </header>
 
                 <main className="flex-1 overflow-auto p-6">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="w-12 h-12 border-4 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                            <div className="w-12 h-12 border-4 border-q-accent border-t-transparent rounded-full animate-spin" />
                         </div>
                     ) : (
                         <div className="max-w-6xl mx-auto space-y-6">
                             <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
                                 <section className="space-y-6">
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-6">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <Sparkles className="text-editor-accent w-5 h-5" />
+                                            <Sparkles className="text-q-accent w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandIdentity')}</h2>
-                                                <p className="text-sm text-editor-text-secondary">
+                                                <p className="text-sm text-q-text-secondary">
                                                     {t('superadmin.appInfo.brandIdentityDesc')}
                                                 </p>
                                             </div>
@@ -394,7 +394,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="text"
                                                     value={appName}
                                                     onChange={(e) => { setAppName(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="Quimera.ai"
                                                 />
                                             </div>
@@ -404,7 +404,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="text"
                                                     value={tagline}
                                                     onChange={(e) => { setTagline(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="Launch AI websites faster"
                                                 />
                                             </div>
@@ -414,7 +414,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="url"
                                                     value={primaryDomain}
                                                     onChange={(e) => { setPrimaryDomain(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="https://quimera.ai"
                                                 />
                                             </div>
@@ -424,7 +424,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="email"
                                                     value={supportEmail}
                                                     onChange={(e) => { setSupportEmail(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="support@quimera.ai"
                                                 />
                                             </div>
@@ -434,19 +434,19 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="url"
                                                     value={documentationUrl}
                                                     onChange={(e) => { setDocumentationUrl(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="https://docs.quimera.ai"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-6">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
                                             <Info className="text-blue-400 w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.siteDescription')}</h2>
-                                                <p className="text-sm text-editor-text-secondary">
+                                                <p className="text-sm text-q-text-secondary">
                                                     {t('superadmin.appInfo.siteDescriptionDesc')}
                                                 </p>
                                             </div>
@@ -458,7 +458,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     rows={3}
                                                     value={siteDescription}
                                                     onChange={(e) => { setSiteDescription(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     maxLength={SITE_DESCRIPTION_LIMIT}
                                                 />
                                                 {renderCharCounter(siteDescription.length, SITE_DESCRIPTION_LIMIT)}
@@ -469,7 +469,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     rows={5}
                                                     value={longDescription}
                                                     onChange={(e) => { setLongDescription(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     maxLength={LONG_DESCRIPTION_LIMIT}
                                                 />
                                                 {renderCharCounter(longDescription.length, LONG_DESCRIPTION_LIMIT)}
@@ -477,12 +477,12 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         </div>
                                     </div>
 
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-6">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
                                             <Globe className="text-green-400 w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.metadataDefaults')}</h2>
-                                                <p className="text-sm text-editor-text-secondary">
+                                                <p className="text-sm text-q-text-secondary">
                                                     {t('superadmin.appInfo.metadataDefaultsDesc')}
                                                 </p>
                                             </div>
@@ -494,7 +494,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="text"
                                                     value={metaTitle}
                                                     onChange={(e) => { setMetaTitle(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                 />
                                             </div>
                                             <div>
@@ -503,7 +503,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     rows={3}
                                                     value={metaDescription}
                                                     onChange={(e) => { setMetaDescription(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     maxLength={META_DESCRIPTION_LIMIT}
                                                 />
                                                 {renderCharCounter(metaDescription.length, META_DESCRIPTION_LIMIT)}
@@ -516,19 +516,19 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                                     type="text"
                                                     value={metaKeywordsInput}
                                                     onChange={(e) => { setMetaKeywordsInput(e.target.value); setHasUnsavedChanges(true); }}
-                                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     placeholder="AI, builder, SaaS"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-6">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-6">
                                         <div className="flex items-center gap-2 mb-4">
                                             <ImageIcon className="text-purple-400 w-5 h-5" />
                                             <div>
                                                 <h2 className="text-xl font-semibold">{t('superadmin.appInfo.brandAssets')}</h2>
-                                                <p className="text-sm text-editor-text-secondary">
+                                                <p className="text-sm text-q-text-secondary">
                                                     {t('superadmin.appInfo.brandAssetsDesc')}
                                                 </p>
                                             </div>
@@ -599,28 +599,28 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                 </section>
 
                                 <aside className="space-y-6">
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-5">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-5">
                                         <div className="flex items-center gap-2 mb-4">
-                                            <CheckCircle className="text-editor-accent w-5 h-5" />
+                                            <CheckCircle className="text-q-accent w-5 h-5" />
                                             <h3 className="text-lg font-semibold">{t('superadmin.appInfo.livePreview')}</h3>
                                         </div>
                                         <div className="space-y-3 text-sm">
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">{t('superadmin.appInfo.metaTitle')}</p>
-                                                <p className="text-editor-text-primary font-medium">{metaTitle || '—'}</p>
+                                                <p className="text-q-text-secondary text-xs uppercase">{t('superadmin.appInfo.metaTitle')}</p>
+                                                <p className="text-q-text font-medium">{metaTitle || '—'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">{t('superadmin.voiceDescription')}</p>
-                                                <p className="text-editor-text-secondary">{metaDescription || '—'}</p>
+                                                <p className="text-q-text-secondary text-xs uppercase">{t('superadmin.voiceDescription')}</p>
+                                                <p className="text-q-text-secondary">{metaDescription || '—'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-editor-text-secondary text-xs uppercase">{t('seo.keywords')}</p>
+                                                <p className="text-q-text-secondary text-xs uppercase">{t('seo.keywords')}</p>
                                                 <div className="flex flex-wrap gap-2 mt-1">
                                                     {keywordsArray.length === 0 ? (
-                                                        <span className="text-editor-text-secondary text-xs">{t('superadmin.appInfo.noKeywords')}</span>
+                                                        <span className="text-q-text-secondary text-xs">{t('superadmin.appInfo.noKeywords')}</span>
                                                     ) : (
                                                         keywordsArray.map(keyword => (
-                                                            <span key={keyword} className="text-xs px-2 py-1 rounded-full bg-editor-border/60 text-editor-text-secondary">
+                                                            <span key={keyword} className="text-xs px-2 py-1 rounded-full bg-q-surface-overlay/60 text-q-text-secondary">
                                                                 {keyword}
                                                             </span>
                                                         ))
@@ -630,7 +630,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         </div>
                                     </div>
 
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-5">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-5">
                                         <h3 className="text-lg font-semibold mb-3">{t('superadmin.appInfo.publishingChecklist')}</h3>
                                         <ul className="space-y-3 text-sm">
                                             <ChecklistItem checked={Boolean(logoUrl)} label={t('superadmin.appInfo.logoUploaded', 'Logo subido')} />
@@ -642,7 +642,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
                                         </ul>
                                     </div>
 
-                                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 space-y-3 text-sm text-editor-text-secondary">
+                                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-5 space-y-3 text-sm text-q-text-secondary">
                                         <h3 className="text-blue-400 font-semibold flex items-center gap-2">
                                             <Info className="w-4 h-4" />
                                             {t('superadmin.appInfo.recommendations')}
@@ -673,11 +673,11 @@ interface AssetUploaderProps {
 const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, imageUrl, isUploading, onUpload, onRemove }) => {
     const { t } = useTranslation();
     return (
-        <div className="p-4 border border-dashed border-editor-border rounded-lg bg-editor-bg">
+        <div className="p-4 border border-dashed border-q-border rounded-lg bg-q-bg">
             <div className="flex items-center justify-between mb-3">
                 <div>
-                    <p className="text-sm font-semibold text-editor-text-primary">{title}</p>
-                    <p className="text-xs text-editor-text-secondary">{description}</p>
+                    <p className="text-sm font-semibold text-q-text">{title}</p>
+                    <p className="text-xs text-q-text-secondary">{description}</p>
                 </div>
                 {imageUrl && (
                     <button
@@ -688,11 +688,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, image
                     </button>
                 )}
             </div>
-            <div className="aspect-video bg-editor-panel-bg flex items-center justify-center rounded-lg mb-3 border border-editor-border/60 overflow-hidden">
+            <div className="aspect-video bg-q-surface flex items-center justify-center rounded-lg mb-3 border border-q-border/60 overflow-hidden">
                 {imageUrl ? (
                     <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
                 ) : (
-                    <div className="text-center text-editor-text-secondary text-xs px-4">
+                    <div className="text-center text-q-text-secondary text-xs px-4">
                         {t('superadmin.appInfo.noFileUploaded')}
                     </div>
                 )}
@@ -700,7 +700,7 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, image
             <button
                 onClick={onUpload}
                 disabled={isUploading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-editor-border text-sm font-medium hover:bg-editor-border/40 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-q-border text-sm font-medium hover:bg-q-surface-overlay/40 transition-colors disabled:opacity-50"
             >
                 <Upload className="w-4 h-4" />
                 {isUploading ? t('superadmin.appInfo.uploading') : imageUrl ? t('superadmin.appInfo.updateFile') : t('superadmin.appInfo.uploadFile')}
@@ -712,11 +712,11 @@ const AssetUploader: React.FC<AssetUploaderProps> = ({ title, description, image
 const ChecklistItem: React.FC<{ checked: boolean; label: string }> = ({ checked, label }) => (
     <li className="flex items-center gap-2">
         <span
-            className={`w-4 h-4 rounded-full border flex items-center justify-center ${checked ? 'border-green-400 bg-green-400/20 text-green-400' : 'border-editor-border text-editor-text-secondary'}`}
+            className={`w-4 h-4 rounded-full border flex items-center justify-center ${checked ? 'border-green-400 bg-green-400/20 text-green-400' : 'border-q-border text-q-text-secondary'}`}
         >
             {checked ? '✓' : ''}
         </span>
-        <span className="text-editor-text-secondary">{label}</span>
+        <span className="text-q-text-secondary">{label}</span>
     </li>
 );
 

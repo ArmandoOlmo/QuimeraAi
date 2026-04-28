@@ -230,7 +230,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
@@ -238,9 +238,9 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
-                        <Newspaper className="text-editor-accent w-5 h-5" />
+                        <Newspaper className="text-q-accent w-5 h-5" />
                         <h1 className="text-lg font-semibold">
                             {t('superadmin.news.title', 'Noticias y Novedades')}
                         </h1>
@@ -257,14 +257,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                         </button>
                         <button
                             onClick={handleCreate}
-                            className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-medium hover:bg-editor-accent/90 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-bg rounded-lg font-medium hover:bg-q-accent/90 transition-colors"
                         >
                             <Plus size={18} />
                             <span className="hidden sm:inline">
                                 {t('superadmin.news.create', 'Nueva Noticia')}
                             </span>
                         </button>
-                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     </div>
                 </header>
 
@@ -272,54 +272,54 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                   <div className="max-w-7xl mx-auto">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.total', 'Total')}
                                 </span>
-                                <FileText size={16} className="text-editor-accent" />
+                                <FileText size={16} className="text-q-accent" />
                             </div>
                             <p className="text-2xl font-bold">{stats.total}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.published', 'Publicadas')}
                                 </span>
                                 <Send size={16} className="text-green-500" />
                             </div>
                             <p className="text-2xl font-bold text-green-500">{stats.published}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.draft', 'Borradores')}
                                 </span>
                                 <Edit size={16} className="text-gray-500" />
                             </div>
                             <p className="text-2xl font-bold text-gray-500">{stats.draft}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.scheduled', 'Programadas')}
                                 </span>
                                 <Clock size={16} className="text-blue-500" />
                             </div>
                             <p className="text-2xl font-bold text-blue-500">{stats.scheduled}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.archived', 'Archivadas')}
                                 </span>
                                 <Archive size={16} className="text-orange-500" />
                             </div>
                             <p className="text-2xl font-bold text-orange-500">{stats.archived}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs text-editor-text-secondary uppercase">
+                                <span className="text-xs text-q-text-secondary uppercase">
                                     {t('superadmin.news.stats.featured', 'Destacadas')}
                                 </span>
                                 <Star size={16} className="text-yellow-500" />
@@ -329,20 +329,20 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                     </div>
 
                     {/* Search & Filters */}
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4 mb-6">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4 mb-6">
                         <div className="flex flex-col sm:flex-row gap-4">
                             {/* Search */}
                             <div className="flex-1 relative">
                                 <Search
                                     size={18}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary"
                                 />
                                 <input
                                     type="text"
                                     placeholder={t('superadmin.news.searchPlaceholder', 'Buscar noticias...')}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    className="w-full pl-10 pr-4 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                                 />
                             </div>
 
@@ -350,14 +350,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters || hasFilters
-                                    ? 'bg-editor-accent/10 border-editor-accent text-editor-accent'
-                                    : 'bg-editor-bg border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                    ? 'bg-q-accent/10 border-q-accent text-q-accent'
+                                    : 'bg-q-bg border-q-border text-q-text-secondary hover:text-q-text'
                                     }`}
                             >
                                 <Filter size={18} />
                                 <span>{t('superadmin.news.filters', 'Filtros')}</span>
                                 {hasFilters && (
-                                    <span className="w-5 h-5 bg-editor-accent text-editor-bg rounded-full text-xs flex items-center justify-center">
+                                    <span className="w-5 h-5 bg-q-accent text-q-bg rounded-full text-xs flex items-center justify-center">
                                         !
                                     </span>
                                 )}
@@ -370,16 +370,16 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
                         {/* Filter Panel */}
                         {showFilters && (
-                            <div className="mt-4 pt-4 border-t border-editor-border grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="mt-4 pt-4 border-t border-q-border grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {/* Status Filter */}
                                 <div>
-                                    <label className="block text-xs text-editor-text-secondary mb-1">
+                                    <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterStatus', 'Estado')}
                                     </label>
                                     <select
                                         value={statusFilter}
                                         onChange={e => setStatusFilter(e.target.value as NewsStatus | '')}
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="">{t('common.all', 'Todos')}</option>
                                         {Object.entries(NEWS_STATUS_LABELS).map(([value, label]) => (
@@ -392,13 +392,13 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
                                 {/* Category Filter */}
                                 <div>
-                                    <label className="block text-xs text-editor-text-secondary mb-1">
+                                    <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterCategory', 'Categoría')}
                                     </label>
                                     <select
                                         value={categoryFilter}
                                         onChange={e => setCategoryFilter(e.target.value as NewsCategory | '')}
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="">{t('common.all', 'Todas')}</option>
                                         {Object.entries(NEWS_CATEGORY_LABELS).map(([value, label]) => (
@@ -411,7 +411,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
 
                                 {/* Featured Filter */}
                                 <div>
-                                    <label className="block text-xs text-editor-text-secondary mb-1">
+                                    <label className="block text-xs text-q-text-secondary mb-1">
                                         {t('superadmin.news.filterFeatured', 'Destacadas')}
                                     </label>
                                     <select
@@ -423,7 +423,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                     : e.target.value === 'true'
                                             )
                                         }
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="">{t('common.all', 'Todas')}</option>
                                         <option value="true">{t('superadmin.news.onlyFeatured', 'Solo destacadas')}</option>
@@ -436,7 +436,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                     <div className="sm:col-span-3">
                                         <button
                                             onClick={clearFilters}
-                                            className="text-sm text-editor-accent hover:underline"
+                                            className="text-sm text-q-accent hover:underline"
                                         >
                                             {t('superadmin.news.clearFilters', 'Limpiar filtros')}
                                         </button>
@@ -467,14 +467,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                         </div>
                     ) : filteredNews.length === 0 ? (
                         /* Empty State */
-                        <div className="text-center py-16 bg-editor-panel-bg border border-editor-border rounded-lg">
-                            <Newspaper size={48} className="mx-auto text-editor-text-secondary mb-4" />
+                        <div className="text-center py-16 bg-q-surface border border-q-border rounded-lg">
+                            <Newspaper size={48} className="mx-auto text-q-text-secondary mb-4" />
                             <h3 className="text-lg font-semibold mb-2">
                                 {hasFilters
                                     ? t('superadmin.news.noResultsFilters', 'No hay noticias que coincidan con los filtros')
                                     : t('superadmin.news.noNews', 'No hay noticias')}
                             </h3>
-                            <p className="text-editor-text-secondary mb-6">
+                            <p className="text-q-text-secondary mb-6">
                                 {hasFilters
                                     ? t('superadmin.news.tryOtherFilters', 'Prueba con otros filtros o limpia la búsqueda')
                                     : t('superadmin.news.createFirst', 'Crea la primera noticia para mantener a tus usuarios informados')}
@@ -482,14 +482,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             {hasFilters ? (
                                 <button
                                     onClick={clearFilters}
-                                    className="px-4 py-2 text-editor-accent border border-editor-accent rounded-lg hover:bg-editor-accent/10 transition-colors"
+                                    className="px-4 py-2 text-q-accent border border-q-accent rounded-lg hover:bg-q-accent/10 transition-colors"
                                 >
                                     {t('superadmin.news.clearFilters', 'Limpiar filtros')}
                                 </button>
                             ) : (
                                 <button
                                     onClick={handleCreate}
-                                    className="px-4 py-2 bg-editor-accent text-editor-bg rounded-lg font-medium hover:bg-editor-accent/90 transition-colors"
+                                    className="px-4 py-2 bg-q-accent text-q-bg rounded-lg font-medium hover:bg-q-accent/90 transition-colors"
                                 >
                                     <Plus size={18} className="inline mr-2" />
                                     {t('superadmin.news.create', 'Nueva Noticia')}
@@ -502,12 +502,12 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                             {filteredNews.map(news => (
                                 <div
                                     key={news.id}
-                                    className="bg-editor-panel-bg border border-editor-border rounded-lg hover:border-editor-accent/50 transition-colors group"
+                                    className="bg-q-surface border border-q-border rounded-lg hover:border-q-accent/50 transition-colors group"
                                 >
                                     <div className="p-4 flex items-start gap-4">
                                         {/* Thumbnail */}
                                         {news.imageUrl ? (
-                                            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-editor-bg">
+                                            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-q-bg">
                                                 <img
                                                     src={news.imageUrl}
                                                     alt={news.title}
@@ -515,8 +515,8 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="w-20 h-20 rounded-lg flex-shrink-0 bg-editor-bg flex items-center justify-center">
-                                                <Newspaper size={24} className="text-editor-text-secondary" />
+                                            <div className="w-20 h-20 rounded-lg flex-shrink-0 bg-q-bg flex items-center justify-center">
+                                                <Newspaper size={24} className="text-q-text-secondary" />
                                             </div>
                                         )}
 
@@ -531,7 +531,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                         />
                                                     )}
                                                     <h3
-                                                        className="font-semibold text-editor-text-primary truncate cursor-pointer hover:text-editor-accent"
+                                                        className="font-semibold text-q-text truncate cursor-pointer hover:text-q-accent"
                                                         onClick={() => handleEdit(news)}
                                                     >
                                                         {news.title}
@@ -546,30 +546,30 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                                 actionMenuId === news.id ? null : news.id
                                                             )
                                                         }
-                                                        className="p-1.5 rounded-lg hover:bg-editor-border transition-colors"
+                                                        className="p-1.5 rounded-lg hover:bg-q-surface-overlay transition-colors"
                                                     >
                                                         <MoreVertical size={18} />
                                                     </button>
 
                                                     {actionMenuId === news.id && (
-                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl z-20 py-1">
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-q-surface border border-q-border rounded-lg shadow-xl z-20 py-1">
                                                             <button
                                                                 onClick={() => handleEdit(news)}
-                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-editor-border transition-colors"
+                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors"
                                                             >
                                                                 <Edit size={16} />
                                                                 {t('common.edit', 'Editar')}
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDuplicate(news.id)}
-                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-editor-border transition-colors"
+                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors"
                                                             >
                                                                 <Copy size={16} />
                                                                 {t('common.duplicate', 'Duplicar')}
                                                             </button>
                                                             <button
                                                                 onClick={() => handleToggleFeatured(news)}
-                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-editor-border transition-colors"
+                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors"
                                                             >
                                                                 <Star
                                                                     size={16}
@@ -586,7 +586,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                             {news.status !== 'published' && (
                                                                 <button
                                                                     onClick={() => handlePublish(news)}
-                                                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-editor-border transition-colors text-green-500"
+                                                                    className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors text-green-500"
                                                                 >
                                                                     <Send size={16} />
                                                                     {t('superadmin.news.publish', 'Publicar')}
@@ -594,14 +594,14 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                             )}
                                                             <button
                                                                 onClick={() => handleArchive(news)}
-                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-editor-border transition-colors"
+                                                                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-q-surface-overlay transition-colors"
                                                             >
                                                                 <Archive size={16} />
                                                                 {news.status === 'archived'
                                                                     ? t('superadmin.news.restore', 'Restaurar')
                                                                     : t('superadmin.news.archive', 'Archivar')}
                                                             </button>
-                                                            <hr className="my-1 border-editor-border" />
+                                                            <hr className="my-1 border-q-border" />
                                                             <button
                                                                 onClick={() => setShowDeleteConfirm(news.id)}
                                                                 className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-500/10 transition-colors text-red-500"
@@ -615,7 +615,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                             </div>
 
                                             {/* Excerpt */}
-                                            <p className="text-sm text-editor-text-secondary line-clamp-2 mt-1">
+                                            <p className="text-sm text-q-text-secondary line-clamp-2 mt-1">
                                                 {news.excerpt || t('superadmin.news.noExcerpt', 'Sin resumen')}
                                             </p>
 
@@ -636,17 +636,17 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                                 </span>
 
                                                 {/* Date */}
-                                                <span className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                                <span className="text-xs text-q-text-secondary flex items-center gap-1">
                                                     <Calendar size={12} />
                                                     {formatDate(news.createdAt)}
                                                 </span>
 
                                                 {/* Stats */}
-                                                <span className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                                <span className="text-xs text-q-text-secondary flex items-center gap-1">
                                                     <Eye size={12} />
                                                     {news.views}
                                                 </span>
-                                                <span className="text-xs text-editor-text-secondary flex items-center gap-1">
+                                                <span className="text-xs text-q-text-secondary flex items-center gap-1">
                                                     <TrendingUp size={12} />
                                                     {news.clicks}
                                                 </span>
@@ -664,7 +664,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-xl max-w-md w-full p-6">
+                    <div className="bg-q-surface border border-q-border rounded-xl max-w-md w-full p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-red-500/10 rounded-lg">
                                 <Trash2 className="text-red-500" size={24} />
@@ -673,7 +673,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                                 {t('superadmin.news.deleteConfirmTitle', 'Eliminar noticia')}
                             </h3>
                         </div>
-                        <p className="text-editor-text-secondary mb-6">
+                        <p className="text-q-text-secondary mb-6">
                             {t(
                                 'superadmin.news.deleteConfirmMessage',
                                 'Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar esta noticia?'
@@ -682,7 +682,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ onBack }) => {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowDeleteConfirm(null)}
-                                className="px-4 py-2 border border-editor-border rounded-lg hover:bg-editor-border transition-colors"
+                                className="px-4 py-2 border border-q-border rounded-lg hover:bg-q-surface-overlay transition-colors"
                             >
                                 {t('common.cancel', 'Cancelar')}
                             </button>

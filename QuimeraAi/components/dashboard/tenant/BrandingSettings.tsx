@@ -175,7 +175,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         return (
             <div className={`p-8 text-center ${className}`}>
                 <Loader2 className="animate-spin mx-auto mb-2" size={24} />
-                <p className="text-muted-foreground">Cargando...</p>
+                <p className="text-q-text-muted">Cargando...</p>
             </div>
         );
     }
@@ -188,9 +188,9 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 1: Workspace Identity              */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
                 {/* Header with gradient accent */}
-                <div className="relative p-5 border-b border-border">
+                <div className="relative p-5 border-b border-q-border">
                     <div className="absolute inset-0 opacity-[0.03]" style={{
                         background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
                     }} />
@@ -204,7 +204,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('branding.title', 'Identidad del Workspace')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('branding.subtitle', 'Define los colores y nombre de tu marca')}
                             </p>
                         </div>
@@ -221,7 +221,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             type="text"
                             value={branding.companyName || ''}
                             onChange={(e) => setBranding({ ...branding, companyName: e.target.value })}
-                            className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                            className="w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                             placeholder={currentTenant.name}
                             disabled={!canManageSettings}
                         />
@@ -236,7 +236,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <div className="flex items-center gap-3">
                                 {/* Live swatch */}
                                 <div
-                                    className="w-10 h-10 rounded-xl border border-border shadow-inner flex-shrink-0 transition-colors"
+                                    className="w-10 h-10 rounded-xl border border-q-border shadow-inner flex-shrink-0 transition-colors"
                                     style={{ backgroundColor: primaryColor }}
                                 />
                                 <div className="flex-1">
@@ -257,7 +257,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             </label>
                             <div className="flex items-center gap-3">
                                 <div
-                                    className="w-10 h-10 rounded-xl border border-border shadow-inner flex-shrink-0 transition-colors"
+                                    className="w-10 h-10 rounded-xl border border-q-border shadow-inner flex-shrink-0 transition-colors"
                                     style={{ backgroundColor: secondaryColor }}
                                 />
                                 <div className="flex-1">
@@ -274,10 +274,10 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     </div>
 
                     {/* Live brand preview bar */}
-                    <div className="p-4 rounded-xl border border-border bg-background/50">
+                    <div className="p-4 rounded-xl border border-q-border bg-q-bg/50">
                         <div className="flex items-center gap-2 mb-2">
-                            <Eye size={14} className="text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Eye size={14} className="text-q-text-muted" />
+                            <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                 {t('branding.preview', 'Vista previa')}
                             </span>
                         </div>
@@ -316,7 +316,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             type="text"
                             value={branding.footerText || ''}
                             onChange={(e) => setBranding({ ...branding, footerText: e.target.value })}
-                            className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                            className="w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                             placeholder="© 2024 Mi Empresa. Todos los derechos reservados."
                             disabled={!canManageSettings}
                         />
@@ -324,7 +324,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
 
                     {/* Save Button */}
                     {canManageSettings && (
-                        <div className="flex items-center gap-4 pt-4 border-t border-border">
+                        <div className="flex items-center gap-4 pt-4 border-t border-q-border">
                             {saveError && (
                                 <p className="text-sm text-destructive flex items-center gap-1">
                                     <AlertCircle size={14} />
@@ -362,8 +362,8 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 2: Visual Assets (Logo + Favicon)   */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-border">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+                <div className="p-5 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
                             <Image size={20} className="text-violet-500" />
@@ -372,7 +372,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('branding.visualAssets', 'Assets Visuales')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('branding.visualAssetsDesc', 'Logo y favicon de tu marca')}
                             </p>
                         </div>
@@ -390,7 +390,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                 onChange={(url) => setBranding({ ...branding, logoUrl: url })}
                                 destination="user"
                             />
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-q-text-muted">
                                 {t('branding.logoHint', 'Se recomienda 200x200 o superior en formato PNG o SVG')}
                             </p>
                         </div>
@@ -403,7 +403,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                 onChange={(url) => setBranding({ ...branding, faviconUrl: url })}
                                 destination="user"
                             />
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-q-text-muted">
                                 {t('branding.faviconHint', 'Se recomienda 32x32 o 64x64 píxeles en formato PNG o ICO')}
                             </p>
                         </div>
@@ -414,8 +414,8 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
             {/* ═══════════════════════════════════════════ */}
             {/* CARD 3: Domain & Subdomain               */}
             {/* ═══════════════════════════════════════════ */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-border">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+                <div className="p-5 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                             <Globe size={20} className="text-emerald-500" />
@@ -424,7 +424,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('branding.domainTitle', 'Dominio & Subdominio')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('branding.domainDesc', 'Configura la URL de tu portal de clientes')}
                             </p>
                         </div>
@@ -460,7 +460,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                         onClick={() => {
                                             navigator.clipboard.writeText(`https://${currentTenant.branding?.quimeraSubdomain}.quimera.ai`);
                                         }}
-                                        className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors"
+                                        className="p-2 rounded-lg hover:bg-secondary text-q-text-muted transition-colors"
                                         title="Copiar URL"
                                     >
                                         <Copy size={14} />
@@ -469,21 +469,21 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                         href={`https://${currentTenant.branding?.quimeraSubdomain}.quimera.ai`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors"
+                                        className="p-2 rounded-lg hover:bg-secondary text-q-text-muted transition-colors"
                                     >
                                         <ExternalLink size={14} />
                                     </a>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('branding.noSubdomain', 'Aún no tienes un subdominio. Configura uno para que tu portal esté en tunombre.quimera.ai')}
                             </p>
                         )}
 
                         {canManageSettings && (
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                <label className="block text-xs font-medium text-q-text-muted mb-1.5">
                                     {currentTenant.branding?.quimeraSubdomain
                                         ? t('branding.changeSubdomain', 'Cambiar subdominio')
                                         : t('branding.setSubdomain', 'Elegir subdominio')}
@@ -499,13 +499,13 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                             })}
                                             placeholder={currentTenant.name?.toLowerCase().replace(/\s+/g, '-') || 'mi-empresa'}
                                             maxLength={30}
-                                            className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                         />
                                     </div>
-                                    <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">.quimera.ai</span>
+                                    <span className="text-sm text-q-text-muted font-medium whitespace-nowrap">.quimera.ai</span>
                                 </div>
                                 {branding.quimeraSubdomain && (
-                                    <p className="text-xs text-muted-foreground mt-1.5">
+                                    <p className="text-xs text-q-text-muted mt-1.5">
                                         Portal: <span className="text-primary font-medium">{branding.quimeraSubdomain}.quimera.ai</span>
                                         {' '}— {t('branding.saveToApply', 'guarda los cambios para aplicar')}
                                     </p>
@@ -515,7 +515,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-border" />
+                    <div className="border-t border-q-border" />
 
                     {/* ── Custom Domain ── */}
                     <div className="space-y-3">
@@ -525,13 +525,13 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                         </h3>
 
                         {!hasCustomDomainFeature ? (
-                            <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
-                                <Globe size={28} className="text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 border border-q-border">
+                                <Globe size={28} className="text-q-text-muted flex-shrink-0" />
                                 <div className="flex-1">
                                     <p className="text-sm font-medium text-foreground mb-0.5">
                                         {t('branding.agencyOnly', 'Disponible en planes Agency')}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-q-text-muted">
                                         {t('branding.upgradeForDomain', 'Actualiza tu plan para usar tu propio dominio')}
                                     </p>
                                 </div>
@@ -543,7 +543,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                             <div className="space-y-4">
                                 {/* Current domain status */}
                                 {currentTenant.branding?.customDomain && (
-                                    <div className="flex items-center justify-between p-3.5 bg-secondary/50 rounded-xl border border-border">
+                                    <div className="flex items-center justify-between p-3.5 bg-secondary/50 rounded-xl border border-q-border">
                                         <div>
                                             <p className="font-medium text-foreground text-sm">
                                                 {currentTenant.branding.customDomain}
@@ -601,7 +601,7 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                             value={customDomain}
                                             onChange={(e) => setCustomDomain(e.target.value)}
                                             placeholder="portal.tudominio.com"
-                                            className="flex-1 px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            className="flex-1 px-4 py-2.5 bg-q-bg border border-q-border rounded-xl text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                             disabled={!canManageSettings || isAddingDomain}
                                         />
                                         <button
@@ -621,50 +621,50 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
 
                                 {/* DNS Records */}
                                 {dnsRecords && (
-                                    <div className="space-y-3 p-4 bg-secondary/30 rounded-xl border border-border">
+                                    <div className="space-y-3 p-4 bg-secondary/30 rounded-xl border border-q-border">
                                         <h4 className="font-medium text-foreground text-sm">
                                             {t('branding.configureDNS', 'Configura estos registros DNS:')}
                                         </h4>
 
                                         {/* CNAME Record */}
-                                        <div className="bg-background p-3 rounded-lg border border-border">
+                                        <div className="bg-q-bg p-3 rounded-lg border border-q-border">
                                             <div className="flex items-center justify-between mb-1.5">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                <span className="text-[10px] font-bold text-q-text-muted uppercase tracking-wider">
                                                     CNAME
                                                 </span>
                                                 <button
                                                     onClick={() => copyToClipboard(dnsRecords.cname.value)}
                                                     className="p-1 hover:bg-secondary rounded"
                                                 >
-                                                    <Copy size={12} className="text-muted-foreground" />
+                                                    <Copy size={12} className="text-q-text-muted" />
                                                 </button>
                                             </div>
                                             <p className="text-xs text-foreground font-mono">
-                                                <span className="text-muted-foreground">Nombre:</span> {dnsRecords.cname.name}
+                                                <span className="text-q-text-muted">Nombre:</span> {dnsRecords.cname.name}
                                             </p>
                                             <p className="text-xs text-foreground font-mono">
-                                                <span className="text-muted-foreground">Valor:</span> {dnsRecords.cname.value}
+                                                <span className="text-q-text-muted">Valor:</span> {dnsRecords.cname.value}
                                             </p>
                                         </div>
 
                                         {/* TXT Record */}
-                                        <div className="bg-background p-3 rounded-lg border border-border">
+                                        <div className="bg-q-bg p-3 rounded-lg border border-q-border">
                                             <div className="flex items-center justify-between mb-1.5">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                <span className="text-[10px] font-bold text-q-text-muted uppercase tracking-wider">
                                                     TXT ({t('branding.verification', 'verificación')})
                                                 </span>
                                                 <button
                                                     onClick={() => copyToClipboard(dnsRecords.txt.value)}
                                                     className="p-1 hover:bg-secondary rounded"
                                                 >
-                                                    <Copy size={12} className="text-muted-foreground" />
+                                                    <Copy size={12} className="text-q-text-muted" />
                                                 </button>
                                             </div>
                                             <p className="text-xs text-foreground font-mono">
-                                                <span className="text-muted-foreground">Nombre:</span> {dnsRecords.txt.name}
+                                                <span className="text-q-text-muted">Nombre:</span> {dnsRecords.txt.name}
                                             </p>
                                             <p className="text-xs text-foreground font-mono break-all">
-                                                <span className="text-muted-foreground">Valor:</span> {dnsRecords.txt.value}
+                                                <span className="text-q-text-muted">Valor:</span> {dnsRecords.txt.value}
                                             </p>
                                         </div>
                                     </div>
@@ -683,12 +683,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
                                                 {verificationResult.verified ? t('branding.verificationSuccess', 'Verificación exitosa') : t('branding.verificationIncomplete', 'Verificación incompleta')}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-q-text-muted">
                                             CNAME: {verificationResult.cnameVerified ? '✓' : '✗'} |
                                             TXT: {verificationResult.txtVerified ? '✓' : '✗'}
                                         </p>
                                         {verificationResult.errors && (
-                                            <ul className="mt-1.5 text-xs text-muted-foreground">
+                                            <ul className="mt-1.5 text-xs text-q-text-muted">
                                                 {verificationResult.errors.map((err: string, i: number) => (
                                                     <li key={i}>• {err}</li>
                                                 ))}

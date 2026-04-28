@@ -248,9 +248,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center overflow-y-auto p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-3xl my-8">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl my-8">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center justify-between p-6 border-b border-q-border">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-bold text-foreground">
                             {product
@@ -270,7 +270,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -285,7 +285,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                             </h3>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.productName', 'Nombre del Producto')} *
                                 </label>
                                 <input
@@ -293,13 +293,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-sm font-medium text-muted-foreground">
+                                    <label className="text-sm font-medium text-q-text-muted">
                                         {t('ecommerce.description', 'Descripción')}
                                     </label>
                                     {formData.name.trim() && (
@@ -318,18 +318,18 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={4}
                                     placeholder={t('ecommerce.descriptionPlaceholder', 'Escribe una descripción o genera con AI...')}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.category', 'Categoría')}
                                 </label>
                                 <select
                                     value={formData.categoryId}
                                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 >
                                     <option value="">{t('ecommerce.selectCategory', 'Seleccionar categoría')}</option>
                                     {categories.map((cat) => (
@@ -416,9 +416,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                 ))}
 
                                 {/* Upload Button */}
-                                <label className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-primary">
-                                    <Upload className="text-muted-foreground mb-2" size={24} />
-                                    <span className="text-muted-foreground text-sm">{t('ecommerce.upload', 'Subir')}</span>
+                                <label className="aspect-square border-2 border-dashed border-q-border rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-primary">
+                                    <Upload className="text-q-text-muted mb-2" size={24} />
+                                    <span className="text-q-text-muted text-sm">{t('ecommerce.upload', 'Subir')}</span>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -447,11 +447,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('ecommerce.price', 'Precio')} *
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">$</span>
                                         <input
                                             type="number"
                                             value={formData.price}
@@ -461,17 +461,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                             min="0"
                                             step="0.01"
                                             required
-                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('ecommerce.compareAtPrice', 'Precio Anterior')}
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">$</span>
                                         <input
                                             type="number"
                                             value={formData.compareAtPrice}
@@ -483,17 +483,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                             }
                                             min="0"
                                             step="0.01"
-                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('ecommerce.cost', 'Costo')}
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">$</span>
                                         <input
                                             type="number"
                                             value={formData.cost}
@@ -502,7 +502,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                             }
                                             min="0"
                                             step="0.01"
-                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full pl-8 pr-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
@@ -522,9 +522,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     onChange={(e) =>
                                         setFormData({ ...formData, trackInventory: e.target.checked })
                                     }
-                                    className="w-4 h-4 rounded border-border bg-muted text-primary focus:ring-ring"
+                                    className="w-4 h-4 rounded border-q-border bg-muted text-primary focus:ring-ring"
                                 />
-                                <span className="text-muted-foreground">
+                                <span className="text-q-text-muted">
                                     {t('ecommerce.trackInventory', 'Controlar inventario')}
                                 </span>
                             </label>
@@ -532,7 +532,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                             {formData.trackInventory && (
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             {t('ecommerce.quantity', 'Cantidad')}
                                         </label>
                                         <input
@@ -542,12 +542,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                                 setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
                                             }
                                             min="0"
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             {t('ecommerce.lowStockThreshold', 'Alerta Stock Bajo')}
                                         </label>
                                         <input
@@ -560,19 +560,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                                 })
                                             }
                                             min="0"
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             SKU
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.sku}
                                             onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
@@ -592,9 +592,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                         name="status"
                                         checked={formData.status === 'active'}
                                         onChange={() => setFormData({ ...formData, status: 'active' })}
-                                        className="w-4 h-4 text-primary bg-muted border-border focus:ring-ring"
+                                        className="w-4 h-4 text-primary bg-muted border-q-border focus:ring-ring"
                                     />
-                                    <span className="text-muted-foreground">{t('ecommerce.active', 'Activo')}</span>
+                                    <span className="text-q-text-muted">{t('ecommerce.active', 'Activo')}</span>
                                 </label>
 
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -603,9 +603,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                         name="status"
                                         checked={formData.status === 'draft'}
                                         onChange={() => setFormData({ ...formData, status: 'draft' })}
-                                        className="w-4 h-4 text-primary bg-muted border-border focus:ring-ring"
+                                        className="w-4 h-4 text-primary bg-muted border-q-border focus:ring-ring"
                                     />
-                                    <span className="text-muted-foreground">{t('ecommerce.draft', 'Borrador')}</span>
+                                    <span className="text-q-text-muted">{t('ecommerce.draft', 'Borrador')}</span>
                                 </label>
 
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -614,9 +614,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                         name="status"
                                         checked={formData.status === 'archived'}
                                         onChange={() => setFormData({ ...formData, status: 'archived' })}
-                                        className="w-4 h-4 text-primary bg-muted border-border focus:ring-ring"
+                                        className="w-4 h-4 text-primary bg-muted border-q-border focus:ring-ring"
                                     />
-                                    <span className="text-muted-foreground">{t('ecommerce.archived', 'Archivado')}</span>
+                                    <span className="text-q-text-muted">{t('ecommerce.archived', 'Archivado')}</span>
                                 </label>
                             </div>
                         </div>
@@ -646,7 +646,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     onChange={(e) => setTagInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                     placeholder={t('ecommerce.addTag', 'Agregar etiqueta...')}
-                                    className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                                 <button
                                     type="button"
@@ -698,9 +698,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-sm font-medium text-muted-foreground">
+                                    <label className="text-sm font-medium text-q-text-muted">
                                         {t('ecommerce.seoTitle', 'Título SEO')}
-                                        <span className="text-xs text-muted-foreground/70 ml-2">
+                                        <span className="text-xs text-q-text-muted/70 ml-2">
                                             ({formData.metaTitle.length}/60)
                                         </span>
                                     </label>
@@ -721,15 +721,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value.substring(0, 60) })}
                                     maxLength={60}
                                     placeholder={t('ecommerce.seoTitlePlaceholder', 'Título optimizado para buscadores...')}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-sm font-medium text-muted-foreground">
+                                    <label className="text-sm font-medium text-q-text-muted">
                                         {t('ecommerce.seoDescription', 'Descripción SEO')}
-                                        <span className="text-xs text-muted-foreground/70 ml-2">
+                                        <span className="text-xs text-q-text-muted/70 ml-2">
                                             ({formData.metaDescription.length}/155)
                                         </span>
                                     </label>
@@ -750,7 +750,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                                     maxLength={155}
                                     rows={2}
                                     placeholder={t('ecommerce.seoDescriptionPlaceholder', 'Descripción que aparecerá en resultados de búsqueda...')}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
                         </div>
@@ -764,7 +764,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
                     </div>
 
                     {/* Footer */}
-                    <div className="flex gap-4 p-6 border-t border-border">
+                    <div className="flex gap-4 p-6 border-t border-q-border">
                         <button
                             type="button"
                             onClick={onClose}

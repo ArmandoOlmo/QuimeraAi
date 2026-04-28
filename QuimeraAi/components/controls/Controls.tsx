@@ -507,8 +507,8 @@ const Controls: React.FC = () => {
 
   const saveButtonClass = `w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
     saveStatus === 'saved' ? 'bg-green-500 text-white'
-    : saveStatus === 'saving' ? 'bg-primary/70 text-primary-foreground cursor-wait'
-    : 'bg-primary text-primary-foreground hover:opacity-90'
+    : saveStatus === 'saving' ? 'bg-q-accent/70 text-q-text-on-accent cursor-wait'
+    : 'bg-q-accent text-q-text-on-accent hover:opacity-90'
   }`;
 
   const saveButtonText = saveStatus === 'saving'
@@ -534,7 +534,7 @@ const Controls: React.FC = () => {
       )}
 
       {/* Left Panel: Sections List - Desktop */}
-      <div className={`bg-card/50 border-r border-border/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
+      <div className={`bg-q-surface/50 border-r border-q-border/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
         fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full hidden md:flex`}>
         <div className="flex-1 min-h-0 overflow-hidden">
@@ -568,7 +568,7 @@ const Controls: React.FC = () => {
       {/* Controls Panel Toggle - Desktop */}
       {activeSection && isDesktop && (
         <button onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
-          className={`fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${
+          className={`fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-q-surface-elevated transition-all duration-300 overflow-hidden rounded-lg ${
             isControlsPanelOpen ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-0 rounded-l-lg rounded-r-none'
           }`}
           title={isControlsPanelOpen ? 'Ocultar controles' : 'Mostrar controles'}>
@@ -578,20 +578,20 @@ const Controls: React.FC = () => {
 
       {/* Right Panel: Properties - Desktop */}
       {activeSection && isDesktop && (
-        <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-border bg-card/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
-          <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-q-border bg-q-surface/50 flex flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
+          <div className="p-4 border-b border-q-border flex items-center justify-between">
             <h2 className="font-semibold text-sm flex items-center gap-2">
-              <Settings size={16} className="text-primary" />
+              <Settings size={16} className="text-q-accent" />
               {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{getSectionLabel(activeSection)}</span>
             </h2>
             <button onClick={() => { onSectionSelect(null as any); setIsSidebarOpen(false); }}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-md text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors"
               title={t('controls.closePropertiesPanel')}>
               <X size={18} />
             </button>
           </div>
           <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
-          <div className="p-4 border-t border-border flex-shrink-0">
+          <div className="p-4 border-t border-q-border flex-shrink-0">
             <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
               <Check size={16} /> {saveButtonText}
             </button>
@@ -605,7 +605,7 @@ const Controls: React.FC = () => {
         title={activeSection ? getSectionLabel(activeSection) : ''}
         subtitle={t('landingEditor.editSection', 'Editar sección')}>
         <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
-        <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
+        <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}
           </button>
@@ -630,7 +630,7 @@ const Controls: React.FC = () => {
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''} position="left">
         <div className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
-        <div className="sticky bottom-0 p-4 border-t border-border bg-card flex-shrink-0">
+        <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
           <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
             <Check size={16} /> {saveButtonText}
           </button>

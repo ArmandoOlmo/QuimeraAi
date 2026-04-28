@@ -15,7 +15,7 @@ const AdminViewLayout: React.FC<AdminViewLayoutProps> = ({ title, onBack, childr
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+    <div className="flex h-screen bg-q-bg text-q-text">
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">

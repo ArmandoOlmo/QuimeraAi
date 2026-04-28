@@ -3367,8 +3367,8 @@ Usuario: ${userMsg}`;
             <button
                 onClick={() => { setIsMinimized(false); setIsOpen(true); }}
                 className={`pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 ${isLiveActive
-                    ? 'bg-card border-2 border-red-500 animate-pulse'
-                    : 'bg-card border border-border hover:border-primary/50'
+                    ? 'bg-q-surface border-2 border-red-500 animate-pulse'
+                    : 'bg-q-surface border border-q-border hover:border-primary/50'
                     }`}
             >
                 {/* Logo with voice-active indicator */}
@@ -3386,7 +3386,7 @@ Usuario: ${userMsg}`;
     ) : (
         // MODE 2: DEFAULT CENTER BAR (Bottom-Center)
         <div id="global-ai-assistant-footer-bar" className="fixed bottom-6 inset-x-0 z-[1000] px-6 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 backdrop-blur-lg border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'bg-primary/20 border-primary/50 animate-pulse' : 'bg-card/95 border-border hover:shadow-2xl'}`}>
+            <div className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 backdrop-blur-lg border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'bg-primary/20 border-primary/50 animate-pulse' : 'bg-q-surface/95 border-q-border hover:shadow-2xl'}`}>
                 {/* Logo with voice-active indicator */}
                 <div className="relative shrink-0">
                     <img src={LOGO_URL} alt="Quimera" className={`w-9 h-9 object-contain transition-transform ${isLiveActive ? 'scale-110' : 'group-hover:scale-110'}`} />
@@ -3414,7 +3414,7 @@ Usuario: ${userMsg}`;
                         </div>
                     ) : (
                         <button onClick={() => setIsOpen(true)} className="flex-1 min-w-0 text-left group mx-2">
-                            <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                            <p className="text-sm text-q-text-muted group-hover:text-foreground transition-colors truncate">
                                 {i18n.language.startsWith('es') ? "Pregunta a Quibo..." : "Ask Quibo..."}
                             </p>
                         </button>
@@ -3433,7 +3433,7 @@ Usuario: ${userMsg}`;
                                     startLiveSession();
                                 }
                             }}
-                            className={`shrink-0 self-center flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'}`}
+                            className={`shrink-0 self-center flex items-center justify-center rounded-full transition-all ${isLiveActive ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' : 'hover:bg-primary/10 text-q-text-muted hover:text-primary'}`}
                             style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
                         >
                             {isLiveActive ? <PhoneOff size={18} /> : <Mic size={18} />}
@@ -3442,7 +3442,7 @@ Usuario: ${userMsg}`;
                     {/* Minimize Bar to Bubble */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-                        className="shrink-0 self-center flex items-center justify-center rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                        className="shrink-0 self-center flex items-center justify-center rounded-full hover:bg-primary/10 text-q-text-muted hover:text-primary transition-colors"
                         style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxHeight: '36px' }}
                         title={t('aiAssistant.minimizeToBubble')}
                     >
@@ -3466,7 +3466,7 @@ Usuario: ${userMsg}`;
     // DRAWER CONTENT (Bottom sheet with chat)
     // =========================================================================
     const drawerContent = (
-        <div id="global-ai-assistant-drawer" className={`fixed z-[10000] bg-card border border-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
+        <div id="global-ai-assistant-drawer" className={`fixed z-[10000] bg-q-surface border border-q-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
             {/* Drawer Header */}
             <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0 select-none cursor-move" onMouseDown={(e) => {
                 // Determine if we should implement drag logic here or assume user handles it globally
@@ -3517,7 +3517,7 @@ Usuario: ${userMsg}`;
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-q-bg/50">
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.role === 'model' && !msg.isToolOutput && (
@@ -3528,8 +3528,8 @@ Usuario: ${userMsg}`;
                         <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
                             ? 'bg-primary text-primary-foreground rounded-tr-sm'
                             : msg.isToolOutput
-                                ? 'bg-secondary/50 text-muted-foreground text-xs font-mono border border-dashed border-border w-full'
-                                : 'bg-card text-foreground border border-border rounded-tl-sm'
+                                ? 'bg-secondary/50 text-q-text-muted text-xs font-mono border border-dashed border-q-border w-full'
+                                : 'bg-q-surface text-foreground border border-q-border rounded-tl-sm'
                             }`}>
                             {msg.role === 'model' && !msg.isToolOutput ? (
                                 <ReactMarkdown
@@ -3553,8 +3553,8 @@ Usuario: ${userMsg}`;
                             )}
                         </div>
                         {msg.role === 'user' && (
-                            <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">
-                                {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-muted-foreground" />}
+                            <div className="w-8 h-8 rounded-full bg-secondary/50 border border-q-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">
+                                {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-q-text-muted" />}
                             </div>
                         )}
                     </div>
@@ -3566,7 +3566,7 @@ Usuario: ${userMsg}`;
                         <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
                         </div>
-                        <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
                             <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Ejecutando acciones...</span>
                         </div>
@@ -3579,7 +3579,7 @@ Usuario: ${userMsg}`;
                         <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" />
                         </div>
-                        <div className="bg-card border border-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
                             <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Pensando...</span>
                         </div>
@@ -3590,9 +3590,9 @@ Usuario: ${userMsg}`;
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-card border-t border-border shrink-0 safe-area-inset-bottom">
-                <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                    <button onClick={() => setMessages([])} className="p-2 text-muted-foreground hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
+            <div className="p-4 bg-q-surface border-t border-q-border shrink-0 safe-area-inset-bottom">
+                <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-full border border-q-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+                    <button onClick={() => setMessages([])} className="p-2 text-q-text-muted hover:text-red-500 hover:bg-secondary rounded-full transition-colors" title="Clear Chat">
                         <Trash2 size={18} />
                     </button>
                     <input
@@ -3601,7 +3601,7 @@ Usuario: ${userMsg}`;
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleTextSend()}
                         placeholder={i18n.language.startsWith('es') ? "Pregunta a Quibo..." : "Ask Quibo..."}
-                        className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
+                        className="flex-1 bg-transparent px-2 text-sm outline-none text-foreground placeholder:text-q-text-muted/50"
                         disabled={isLiveActive}
                         autoFocus
                     />
@@ -3609,7 +3609,7 @@ Usuario: ${userMsg}`;
                         <button
                             onClick={startLiveSession}
                             disabled={isConnecting || isLiveActive || hasApiKey === false}
-                            className={`p-2 rounded-full transition-all ${isConnecting ? 'text-muted-foreground' : 'text-muted-foreground hover:text-primary hover:bg-primary/10'}`}
+                            className={`p-2 rounded-full transition-all ${isConnecting ? 'text-q-text-muted' : 'text-q-text-muted hover:text-primary hover:bg-primary/10'}`}
                             title={t('aiAssistant.startVoiceMode')}
                         >
                             {isConnecting ? <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" /> : <Mic size={20} />}
@@ -3627,13 +3627,13 @@ Usuario: ${userMsg}`;
 
                 {/* Status Bar */}
                 <div className="mt-2 flex justify-between items-center px-2">
-                    <p className="text-[10px] text-muted-foreground flex items-center">
+                    <p className="text-[10px] text-q-text-muted flex items-center">
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeProject ? 'bg-green-500' : 'bg-gray-400'}`} />
                         {activeProject ? `Activo: ${activeProject.name}` : 'Dashboard Mode'}
                     </p>
                     <div className="flex items-center gap-2">
                         {(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-yellow-500" />}
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-[10px] text-q-text-muted">
                             {userDocument?.role === 'owner' ? 'Owner' : userDocument?.role === 'superadmin' ? 'Admin' : 'Usuario'}
                         </p>
                     </div>

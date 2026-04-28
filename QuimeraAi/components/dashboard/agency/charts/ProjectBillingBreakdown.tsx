@@ -55,13 +55,13 @@ export function ProjectBillingBreakdown({
 
     if (isLoading) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="animate-pulse">
-                    <div className="h-6 w-48 bg-editor-border rounded mb-4" />
+                    <div className="h-6 w-48 bg-q-surface-overlay rounded mb-4" />
                     <div className="space-y-3">
-                        <div className="h-12 bg-editor-border rounded" />
-                        <div className="h-12 bg-editor-border rounded" />
-                        <div className="h-12 bg-editor-border rounded" />
+                        <div className="h-12 bg-q-surface-overlay rounded" />
+                        <div className="h-12 bg-q-surface-overlay rounded" />
+                        <div className="h-12 bg-q-surface-overlay rounded" />
                     </div>
                 </div>
             </div>
@@ -73,16 +73,16 @@ export function ProjectBillingBreakdown({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-editor-panel-bg border border-editor-border rounded-xl p-6"
+            className="bg-q-surface border border-q-border rounded-xl p-6"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-editor-text-primary flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
                         <Calculator className="w-5 h-5 text-blue-400" />
                         {t('dashboard.agency.charts.billingBreakdown.title', 'Desglose de Facturación')}
                     </h3>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         {t('dashboard.agency.charts.billingBreakdown.plan', 'Plan')}: {getPlanLabel(plan)}
                     </p>
                 </div>
@@ -95,18 +95,18 @@ export function ProjectBillingBreakdown({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="flex items-center justify-between p-4 bg-editor-bg rounded-lg border border-editor-border"
+                    className="flex items-center justify-between p-4 bg-q-bg rounded-lg border border-q-border"
                 >
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                             <Building2 className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
-                            <p className="font-medium text-editor-text-primary">{t('dashboard.agency.charts.billingBreakdown.monthlyBaseFee', 'Fee Base Mensual')}</p>
-                            <p className="text-xs text-editor-text-secondary">{t('dashboard.agency.charts.billingBreakdown.fixedCharge', 'Cargo fijo del plan')}</p>
+                            <p className="font-medium text-q-text">{t('dashboard.agency.charts.billingBreakdown.monthlyBaseFee', 'Fee Base Mensual')}</p>
+                            <p className="text-xs text-q-text-secondary">{t('dashboard.agency.charts.billingBreakdown.fixedCharge', 'Cargo fijo del plan')}</p>
                         </div>
                     </div>
-                    <span className="text-lg font-semibold text-editor-text-primary">
+                    <span className="text-lg font-semibold text-q-text">
                         {formatCurrency(baseFee)}
                     </span>
                 </motion.div>
@@ -116,7 +116,7 @@ export function ProjectBillingBreakdown({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="p-4 bg-editor-bg rounded-lg border border-editor-border"
+                    className="p-4 bg-q-bg rounded-lg border border-q-border"
                 >
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -124,22 +124,22 @@ export function ProjectBillingBreakdown({
                                 <FolderKanban className="w-5 h-5 text-emerald-400" />
                             </div>
                             <div>
-                                <p className="font-medium text-editor-text-primary">
+                                <p className="font-medium text-q-text">
                                     {t('dashboard.agency.charts.billingBreakdown.activeProjects', 'Proyectos Activos')}
                                 </p>
-                                <p className="text-xs text-editor-text-secondary">
+                                <p className="text-xs text-q-text-secondary">
                                     {totalProjects} {t('dashboard.agency.charts.billingBreakdown.projects', 'proy.')} × {formatCurrency(projectCost)}
                                 </p>
                             </div>
                         </div>
-                        <span className="text-lg font-semibold text-editor-text-primary">
+                        <span className="text-lg font-semibold text-q-text">
                             {formatCurrency(projectsTotal)}
                         </span>
                     </div>
 
                     {/* Client breakdown */}
                     {breakdown.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-editor-border space-y-2">
+                        <div className="mt-3 pt-3 border-t border-q-border space-y-2">
                             {breakdown
                                 .filter((client) => client.projectCount > 0)
                                 .slice(0, 5)
@@ -151,21 +151,21 @@ export function ProjectBillingBreakdown({
                                         transition={{ delay: 0.3 + index * 0.05 }}
                                         className="flex items-center justify-between text-sm"
                                     >
-                                        <span className="text-editor-text-secondary truncate max-w-[200px]">
+                                        <span className="text-q-text-secondary truncate max-w-[200px]">
                                             {client.clientName}
                                         </span>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-editor-text-secondary">
+                                            <span className="text-q-text-secondary">
                                                 {client.projectCount} {t('dashboard.agency.charts.billingBreakdown.projects', 'proy.')}
                                             </span>
-                                            <span className="text-editor-text-primary font-medium">
+                                            <span className="text-q-text font-medium">
                                                 {formatCurrency(client.projectCount * projectCost)}
                                             </span>
                                         </div>
                                     </motion.div>
                                 ))}
                             {breakdown.filter((c) => c.projectCount > 0).length > 5 && (
-                                <p className="text-xs text-editor-text-secondary text-center pt-2">
+                                <p className="text-xs text-q-text-secondary text-center pt-2">
                                     +{breakdown.filter((c) => c.projectCount > 0).length - 5} {t('dashboard.agency.charts.billingBreakdown.more', 'más...')}
                                 </p>
                             )}
@@ -174,7 +174,7 @@ export function ProjectBillingBreakdown({
                 </motion.div>
 
                 {/* Divider */}
-                <div className="border-t-2 border-dashed border-editor-border" />
+                <div className="border-t-2 border-dashed border-q-border" />
 
                 {/* Total */}
                 <motion.div
@@ -188,8 +188,8 @@ export function ProjectBillingBreakdown({
                             <DollarSign className="w-5 h-5 text-emerald-400" />
                         </div>
                         <div>
-                            <p className="font-semibold text-editor-text-primary">{t('dashboard.agency.charts.billingBreakdown.monthlyTotal', 'Total Mensual')}</p>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="font-semibold text-q-text">{t('dashboard.agency.charts.billingBreakdown.monthlyTotal', 'Total Mensual')}</p>
+                            <p className="text-xs text-q-text-secondary">
                                 {t('dashboard.agency.charts.billingBreakdown.nextAutomaticCharge', 'Próximo cobro automático')}
                             </p>
                         </div>
@@ -207,8 +207,8 @@ export function ProjectBillingBreakdown({
             </div>
 
             {/* Formula */}
-            <div className="mt-4 p-3 bg-editor-bg/50 rounded-lg">
-                <p className="text-xs text-editor-text-secondary text-center font-mono">
+            <div className="mt-4 p-3 bg-q-bg/50 rounded-lg">
+                <p className="text-xs text-q-text-secondary text-center font-mono">
                     {formatCurrency(baseFee)} (base) + {totalProjects} × {formatCurrency(projectCost)} (proyectos) = {formatCurrency(totalBill)}
                 </p>
             </div>

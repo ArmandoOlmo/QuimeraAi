@@ -66,13 +66,13 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
-            <div className="flex flex-col h-full max-h-[85vh] bg-editor-panel-bg rounded-xl overflow-hidden">
+            <div className="flex flex-col h-full max-h-[85vh] bg-q-surface rounded-xl overflow-hidden">
                 {/* Header */}
-                <div className="p-4 border-b border-editor-border flex justify-between items-center bg-editor-panel-bg z-10">
-                    <h3 className="font-bold text-lg text-editor-text-primary truncate max-w-[70%]">{file.name}</h3>
+                <div className="p-4 border-b border-q-border flex justify-between items-center bg-q-surface z-10">
+                    <h3 className="font-bold text-lg text-q-text truncate max-w-[70%]">{file.name}</h3>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="p-2 rounded-full hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -102,19 +102,19 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                 </div>
 
                 {/* Details Section */}
-                <div className="border-t border-editor-border bg-editor-panel-bg z-10">
+                <div className="border-t border-q-border bg-q-surface z-10">
                     {/* Basic Info */}
-                    <div className="p-4 border-b border-editor-border/50">
+                    <div className="p-4 border-b border-q-border/50">
                         <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
-                                <p className="text-sm font-bold text-editor-text-primary mb-1">{t('dashboard.assets.preview.title', 'Información')}</p>
-                                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-editor-text-secondary">
+                                <p className="text-sm font-bold text-q-text mb-1">{t('dashboard.assets.preview.title', 'Información')}</p>
+                                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-q-text-secondary">
                                     <span className="flex items-center">
-                                        <HardDrive size={14} className="mr-2 text-editor-accent" />
+                                        <HardDrive size={14} className="mr-2 text-q-accent" />
                                         {formatBytes(file.size)}
                                     </span>
                                     <span className="flex items-center">
-                                        <Calendar size={14} className="mr-2 text-editor-accent" />
+                                        <Calendar size={14} className="mr-2 text-q-accent" />
                                         {formatFileDate(file.createdAt)}
                                     </span>
                                 </div>
@@ -123,33 +123,33 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
 
                         {/* Notes */}
                         <div className="mb-3">
-                            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase">{t('dashboard.assets.preview.notes', 'Notas')}</label>
+                            <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase">{t('dashboard.assets.preview.notes', 'Notas')}</label>
                             <textarea
                                 value={notes}
                                 onChange={handleNotesChange}
                                 rows={2}
                                 placeholder={t('dashboard.assets.preview.notes', 'Añadir notas...')}
-                                className="w-full bg-editor-bg text-sm text-editor-text-primary p-3 rounded-lg border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none resize-none"
+                                className="w-full bg-q-bg text-sm text-q-text p-3 rounded-lg border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none resize-none"
                             />
                         </div>
 
                         {/* AI Summary */}
                         {file.aiSummary && (
-                            <div className="bg-editor-bg/50 p-3 rounded-lg border border-editor-border/50">
+                            <div className="bg-q-bg/50 p-3 rounded-lg border border-q-border/50">
                                 <div className="flex items-center mb-2">
-                                    <Sparkles size={14} className="text-editor-accent mr-2" />
-                                    <span className="text-xs font-bold text-editor-accent uppercase">{t('dashboard.assets.preview.aiSummary', 'Resumen AI')}</span>
+                                    <Sparkles size={14} className="text-q-accent mr-2" />
+                                    <span className="text-xs font-bold text-q-accent uppercase">{t('dashboard.assets.preview.aiSummary', 'Resumen AI')}</span>
                                 </div>
-                                <p className="text-sm text-editor-text-primary leading-relaxed">{file.aiSummary}</p>
+                                <p className="text-sm text-q-text leading-relaxed">{file.aiSummary}</p>
                             </div>
                         )}
                         {file.summary && !file.aiSummary && (
-                            <div className="bg-editor-bg/50 p-3 rounded-lg border border-editor-border/50">
+                            <div className="bg-q-bg/50 p-3 rounded-lg border border-q-border/50">
                                 <div className="flex items-center mb-2">
-                                    <Sparkles size={14} className="text-editor-accent mr-2" />
-                                    <span className="text-xs font-bold text-editor-accent uppercase">{t('dashboard.assets.preview.aiSummary', 'Resumen')}</span>
+                                    <Sparkles size={14} className="text-q-accent mr-2" />
+                                    <span className="text-xs font-bold text-q-accent uppercase">{t('dashboard.assets.preview.aiSummary', 'Resumen')}</span>
                                 </div>
-                                <p className="text-sm text-editor-text-primary leading-relaxed">{file.summary}</p>
+                                <p className="text-sm text-q-text leading-relaxed">{file.summary}</p>
                             </div>
                         )}
                     </div>
@@ -160,7 +160,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                             {isSummarizable && (
                                 <button
                                     onClick={handleSummarize}
-                                    className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-editor-accent/10 text-editor-accent hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                                    className="flex items-center text-xs font-bold py-2 px-4 rounded-lg bg-q-accent/10 text-q-accent hover:bg-q-accent hover:text-q-bg transition-colors"
                                 >
                                     <Sparkles size={14} className="mr-1.5" /> {t('dashboard.assets.preview.generateSummary', 'Generar Resumen')}
                                 </button>
@@ -176,7 +176,7 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
                             href={file.downloadURL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center bg-editor-accent text-editor-bg px-6 py-2.5 rounded-lg font-bold shadow-lg hover:bg-editor-accent-hover transition-transform hover:scale-105 text-sm"
+                            className="flex items-center bg-q-accent text-q-bg px-6 py-2.5 rounded-lg font-bold shadow-lg hover:bg-q-accent transition-transform hover:scale-105 text-sm"
                         >
                             <Download size={16} className="mr-2" /> {t('dashboard.assets.actions.download', 'Descargar')}
                         </a>

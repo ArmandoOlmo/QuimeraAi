@@ -155,14 +155,14 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                 {/* Modal */}
                 <div
                     className="
-                        w-full max-w-lg bg-card rounded-2xl shadow-2xl
-                        border border-border overflow-hidden
+                        w-full max-w-lg bg-q-surface rounded-2xl shadow-2xl
+                        border border-q-border overflow-hidden
                         animate-in fade-in zoom-in-95 duration-200
                     "
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-destructive/5">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-q-border bg-destructive/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
                                 <Ban className="w-5 h-5 text-destructive" />
@@ -178,7 +178,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                            className="p-2 rounded-lg hover:bg-muted transition-colors text-q-text-muted hover:text-foreground"
                         >
                             <X size={20} />
                         </button>
@@ -197,8 +197,8 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder={t('appointments.blockedDates.titlePlaceholder')}
                                 className="
-                                    w-full px-4 py-2.5 bg-background border border-border rounded-xl
-                                    text-foreground placeholder:text-muted-foreground
+                                    w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-xl
+                                    text-foreground placeholder:text-q-text-muted
                                     focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                     transition-all text-sm
                                 "
@@ -209,7 +209,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                         {/* All Day Toggle */}
                         <div className="flex items-center justify-between py-2 px-4 bg-muted/30 rounded-xl">
                             <div className="flex items-center gap-2">
-                                <Calendar size={16} className="text-muted-foreground" />
+                                <Calendar size={16} className="text-q-text-muted" />
                                 <span className="text-sm font-medium text-foreground">
                                     {t('appointments.blockedDates.allDay')}
                                 </span>
@@ -231,7 +231,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                         {/* Date Fields */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                <label className="block text-xs font-medium text-q-text-muted mb-1">
                                     {t('appointments.blockedDates.startDate')}
                                 </label>
                                 <input
@@ -239,7 +239,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                     className="
-                                        w-full px-3 py-2 bg-background border border-border rounded-lg
+                                        w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg
                                         text-foreground text-sm
                                         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                         transition-all
@@ -247,7 +247,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                <label className="block text-xs font-medium text-q-text-muted mb-1">
                                     {t('appointments.blockedDates.endDate')}
                                 </label>
                                 <input
@@ -256,7 +256,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                     onChange={(e) => setEndDate(e.target.value)}
                                     min={startDate}
                                     className="
-                                        w-full px-3 py-2 bg-background border border-border rounded-lg
+                                        w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg
                                         text-foreground text-sm
                                         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                         transition-all
@@ -269,7 +269,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                         {!allDay && (
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted mb-1">
                                         <Clock size={12} className="inline mr-1" />
                                         {t('appointments.blockedDates.startTime')}
                                     </label>
@@ -278,7 +278,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                         value={startTime}
                                         onChange={(e) => setStartTime(e.target.value)}
                                         className="
-                                            w-full px-3 py-2 bg-background border border-border rounded-lg
+                                            w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg
                                             text-foreground text-sm
                                             focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                             transition-all
@@ -286,7 +286,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted mb-1">
                                         <Clock size={12} className="inline mr-1" />
                                         {t('appointments.blockedDates.endTime')}
                                     </label>
@@ -295,7 +295,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                         value={endTime}
                                         onChange={(e) => setEndTime(e.target.value)}
                                         className="
-                                            w-full px-3 py-2 bg-background border border-border rounded-lg
+                                            w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg
                                             text-foreground text-sm
                                             focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                             transition-all
@@ -307,7 +307,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
 
                         {/* Reason */}
                         <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">
+                            <label className="block text-xs font-medium text-q-text-muted mb-1">
                                 {t('appointments.blockedDates.reason')}
                             </label>
                             <textarea
@@ -316,8 +316,8 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                                 placeholder={t('appointments.blockedDates.reasonPlaceholder')}
                                 rows={2}
                                 className="
-                                    w-full px-4 py-2.5 bg-background border border-border rounded-xl
-                                    text-foreground placeholder:text-muted-foreground
+                                    w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-xl
+                                    text-foreground placeholder:text-q-text-muted
                                     focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
                                     transition-all text-sm resize-none
                                 "
@@ -326,7 +326,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-q-border bg-muted/20">
                         {isEditing && onDelete ? (
                             <button
                                 onClick={() => setShowDeleteConfirm(true)}
@@ -342,7 +342,7 @@ export const BlockDateModal: React.FC<BlockDateModalProps> = ({
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
                                 {t('appointments.actions.cancel')}
                             </button>

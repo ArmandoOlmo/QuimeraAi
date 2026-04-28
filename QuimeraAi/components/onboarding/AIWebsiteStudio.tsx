@@ -88,40 +88,40 @@ const AIWebsiteStudio: React.FC = () => {
 
             {/* Modal Container */}
             <div
-                className="relative z-10 w-[96vw] max-w-[1200px] bg-editor-panel-bg border border-editor-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+                className="relative z-10 w-[96vw] max-w-[1200px] bg-q-surface border border-q-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
                 style={{ height: 'min(88vh, 840px)', animation: 'aws-slideUp 0.3s ease' }}
             >
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-editor-border bg-primary/5">
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-q-border bg-primary/5">
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="bg-editor-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
+                            <div className="bg-q-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
                                 <Sparkles className="text-primary-foreground w-5 h-5" />
                             </div>
                             {studio.isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-editor-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
                                 {t('aiWebsiteStudio.title')}
-                                <span className="text-[10px] font-mono bg-primary/15 text-editor-accent px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-mono bg-primary/15 text-q-accent px-2 py-0.5 rounded-full">
                                     Quimera AI
                                 </span>
                             </h2>
-                            <p className="text-xs text-editor-text-secondary">{t('aiWebsiteStudio.poweredBy')}</p>
+                            <p className="text-xs text-q-text-secondary">{t('aiWebsiteStudio.poweredBy')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Mobile brief toggle */}
                         <button
                             onClick={() => setIsMobileBriefOpen(!isMobileBriefOpen)}
-                            className="lg:hidden h-8 px-3 rounded-lg bg-editor-border/40 text-editor-text-secondary text-xs hover:bg-editor-border/60 transition-colors flex items-center gap-1.5"
+                            className="lg:hidden h-8 px-3 rounded-lg bg-q-surface-overlay/40 text-q-text-secondary text-xs hover:bg-q-surface-overlay/60 transition-colors flex items-center gap-1.5"
                         >
                             <LayoutTemplate size={14} />
                             {t('aiWebsiteStudio.brief')}
                             {studio.businessBrief.readinessScore > 0 && (
-                                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-editor-accent text-[10px] font-bold">
+                                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-q-accent text-[10px] font-bold">
                                     {studio.businessBrief.readinessScore}%
                                 </span>
                             )}
@@ -130,7 +130,7 @@ const AIWebsiteStudio: React.FC = () => {
                         <button
                             onClick={() => studio.setShowUrlModal(true)}
                             disabled={studio.isExtracting || studio.isGenerating}
-                            className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-primary/10 text-editor-accent text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
+                            className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-primary/10 text-q-accent text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
                             title={t('aiWebsiteStudio.extraction.buttonLabel')}
                         >
                             {studio.isExtracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
@@ -139,7 +139,7 @@ const AIWebsiteStudio: React.FC = () => {
                         {/* Reset */}
                         <button
                             onClick={() => { studio.stopVoiceSession(); studio.initStudio(); }}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 transition-colors"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"
                             title={t('aiWebsiteStudio.reset')}
                         >
                             <RefreshCcw className="w-4 h-4" />
@@ -148,7 +148,7 @@ const AIWebsiteStudio: React.FC = () => {
                         <button
                             onClick={handleClose}
                             disabled={studio.isGenerating}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 transition-colors disabled:opacity-30"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors disabled:opacity-30"
                         >
                             <X size={18} />
                         </button>
@@ -167,18 +167,18 @@ const AIWebsiteStudio: React.FC = () => {
                             {/* Live voice transcripts */}
                             {studio.liveUserTranscript && (
                                 <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-primary/15 border border-primary/30 text-editor-text-primary">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-editor-accent mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-primary/15 border border-primary/30 text-q-text">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Mic className="w-3 h-3" /> {t('aiWebsiteStudio.chat.stopVoice')}
                                         </span>
-                                        <p className="text-editor-text-primary">{studio.liveUserTranscript}</p>
+                                        <p className="text-q-text">{studio.liveUserTranscript}</p>
                                     </div>
                                 </div>
                             )}
                             {studio.liveModelTranscript && (
                                 <div className="flex justify-start">
-                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-editor-panel-bg border border-primary/20 text-editor-text-primary">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-editor-accent mb-1">
+                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-q-surface border border-primary/20 text-q-text">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
                                             <Volume2 className="w-3 h-3" />
                                         </span>
                                         <p>{studio.liveModelTranscript}</p>
@@ -188,23 +188,23 @@ const AIWebsiteStudio: React.FC = () => {
                             {/* Thinking indicator */}
                             {studio.isThinking && (
                                 <div className="flex justify-start">
-                                    <div className="bg-editor-panel-bg border border-editor-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-editor-text-secondary">
-                                        <Loader2 className="w-4 h-4 animate-spin text-editor-accent" />
+                                    <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
+                                        <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
                                         {t('aiWebsiteStudio.chat.thinking')}
                                     </div>
                                 </div>
                             )}
                             {/* Generation progress inline hint */}
                             {studio.generationPhase && studio.generationPhase.phase !== 'done' && (
-                                <div className="mx-auto max-w-md bg-primary/10 border border-primary/20 rounded-xl p-3 text-center text-xs text-editor-text-secondary">
-                                    <Loader2 size={14} className="animate-spin inline mr-1 text-editor-accent" />
+                                <div className="mx-auto max-w-md bg-primary/10 border border-primary/20 rounded-xl p-3 text-center text-xs text-q-text-secondary">
+                                    <Loader2 size={14} className="animate-spin inline mr-1 text-q-accent" />
                                     {t('aiWebsiteStudio.chat.generatingHint')}
                                 </div>
                             )}
                         </div>
 
                         {/* ── Input Bar — matches Email AI Studio pattern ── */}
-                        <div className="p-3 border-t border-editor-border bg-editor-panel-bg/50">
+                        <div className="p-3 border-t border-q-border bg-q-surface/50">
                             <div className="flex items-center gap-2 max-w-3xl mx-auto">
                                 {/* Voice button — fixed h-10 w-10 */}
                                 {studio.isVoiceActive ? (
@@ -219,7 +219,7 @@ const AIWebsiteStudio: React.FC = () => {
                                     <button
                                         onClick={studio.startVoiceSession}
                                         disabled={studio.isVoiceConnecting || studio.isGenerating}
-                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-editor-border/40 text-editor-text-secondary hover:text-editor-accent hover:bg-primary/10 transition-all disabled:opacity-50"
+                                        className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-accent hover:bg-primary/10 transition-all disabled:opacity-50"
                                         title={t('aiWebsiteStudio.chat.startVoice')}
                                     >
                                         {studio.isVoiceConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
@@ -233,13 +233,13 @@ const AIWebsiteStudio: React.FC = () => {
                                     placeholder={studio.isVoiceActive ? t('aiWebsiteStudio.chat.voicePlaceholder') : t('aiWebsiteStudio.chat.textPlaceholder')}
                                     disabled={studio.isVoiceActive || studio.isGenerating}
                                     rows={1}
-                                    className="flex-1 bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
+                                    className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text placeholder:text-q-text-secondary/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
                                 />
                                 {/* Send button — fixed h-10 w-10 */}
                                 <button
                                     onClick={() => studio.sendMessage(studio.input)}
                                     disabled={!studio.input.trim() || studio.isThinking || studio.isVoiceActive || studio.isGenerating}
-                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-editor-accent text-primary-foreground hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-accent text-primary-foreground hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                 >
                                     <Send className="w-4 h-4" />
                                 </button>
@@ -257,7 +257,7 @@ const AIWebsiteStudio: React.FC = () => {
                     </div>
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
-                    <div className="hidden lg:flex w-[300px] flex-col border-l border-editor-border bg-editor-panel-bg/30 overflow-y-auto custom-scrollbar">
+                    <div className="hidden lg:flex w-[300px] flex-col border-l border-q-border bg-q-surface/30 overflow-y-auto custom-scrollbar">
                         <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
                     </div>
 
@@ -265,10 +265,10 @@ const AIWebsiteStudio: React.FC = () => {
                     {isMobileBriefOpen && (
                         <div className="lg:hidden absolute inset-0 z-50 flex">
                             <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileBriefOpen(false)} />
-                            <div className="ml-auto relative w-[85%] max-w-[380px] bg-editor-panel-bg border-l border-editor-border flex flex-col overflow-y-auto" style={{ animation: 'aws-slideInRight 0.3s ease' }}>
-                                <div className="flex items-center justify-between px-4 py-3 border-b border-editor-border">
-                                    <span className="text-sm font-semibold text-editor-text-primary">{t('aiWebsiteStudio.briefPanel.title')}</span>
-                                    <button onClick={() => setIsMobileBriefOpen(false)} className="p-1 text-editor-text-secondary hover:text-editor-text-primary"><X size={16} /></button>
+                            <div className="ml-auto relative w-[85%] max-w-[380px] bg-q-surface border-l border-q-border flex flex-col overflow-y-auto" style={{ animation: 'aws-slideInRight 0.3s ease' }}>
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-q-border">
+                                    <span className="text-sm font-semibold text-q-text">{t('aiWebsiteStudio.briefPanel.title')}</span>
+                                    <button onClick={() => setIsMobileBriefOpen(false)} className="p-1 text-q-text-secondary hover:text-q-text"><X size={16} /></button>
                                 </div>
                                 <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
                             </div>
@@ -308,19 +308,19 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 isUser
-                    ? 'rounded-br-md bg-editor-accent text-primary-foreground'
-                    : 'rounded-bl-md bg-editor-panel-bg border border-editor-border text-editor-text-primary'
+                    ? 'rounded-br-md bg-q-accent text-primary-foreground'
+                    : 'rounded-bl-md bg-q-surface border border-q-border text-q-text'
             }`}>
                 {isUser ? (
                     <p>{message.text}</p>
                 ) : (
                     <ReactMarkdown
                         components={{
-                            p: ({ children }) => <p className="mb-2 last:mb-0 text-editor-text-primary">{children}</p>,
-                            strong: ({ children }) => <strong className="font-semibold text-editor-text-primary">{children}</strong>,
-                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-editor-text-secondary">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-editor-text-secondary">{children}</ol>,
-                            li: ({ children }) => <li className="leading-relaxed text-editor-text-secondary">{children}</li>,
+                            p: ({ children }) => <p className="mb-2 last:mb-0 text-q-text">{children}</p>,
+                            strong: ({ children }) => <strong className="font-semibold text-q-text">{children}</strong>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 text-q-text-secondary">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 text-q-text-secondary">{children}</ol>,
+                            li: ({ children }) => <li className="leading-relaxed text-q-text-secondary">{children}</li>,
                         }}
                     >
                         {message.text}
@@ -418,8 +418,8 @@ const BriefPanel: React.FC<{
         <div className="flex-1 flex flex-col p-4 space-y-4 text-xs">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-editor-text-primary flex items-center gap-2">
-                    <MessageSquare size={14} className="text-editor-accent" />
+                <h3 className="text-sm font-semibold text-q-text flex items-center gap-2">
+                    <MessageSquare size={14} className="text-q-accent" />
                     {t('aiWebsiteStudio.briefPanel.title')}
                 </h3>
             </div>
@@ -432,7 +432,7 @@ const BriefPanel: React.FC<{
                     className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                         canGenerate && !isGenerating
                             ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 cursor-pointer'
-                            : 'bg-editor-border/40 text-editor-text-secondary/40 cursor-not-allowed'
+                            : 'bg-q-surface-overlay/40 text-q-text-secondary/40 cursor-not-allowed'
                     }`}
                 >
                     {isGenerating ? (
@@ -448,26 +448,26 @@ const BriefPanel: React.FC<{
                     )}
                 </button>
                 {!canGenerate && !isGenerating && (
-                    <p className="text-center text-[10px] text-editor-text-secondary/50 mt-2">
+                    <p className="text-center text-[10px] text-q-text-secondary/50 mt-2">
                         {t('aiWebsiteStudio.briefPanel.keepChatting')}
                     </p>
                 )}
             </div>
 
             {/* Readiness Score */}
-            <div className="bg-editor-bg rounded-xl p-3 border border-editor-border">
+            <div className="bg-q-bg rounded-xl p-3 border border-q-border">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-editor-text-secondary">{t('aiWebsiteStudio.briefPanel.readiness')}</span>
+                    <span className="text-q-text-secondary">{t('aiWebsiteStudio.briefPanel.readiness')}</span>
                     <span className="font-bold" style={{ color: readinessColor }}>{readiness}%</span>
                 </div>
-                <div className="w-full h-2 bg-editor-border rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                     <div
                         className="h-full rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${readiness}%`, background: `linear-gradient(90deg, ${readinessColor}80, ${readinessColor})` }}
                     />
                 </div>
                 {brief.missingFields.length > 0 && readiness < 80 && (
-                    <p className="mt-2 text-[10px] text-editor-text-secondary/60">
+                    <p className="mt-2 text-[10px] text-q-text-secondary/60">
                         {t('aiWebsiteStudio.briefPanel.missing')} {brief.missingFields.join(', ')}
                     </p>
                 )}
@@ -479,7 +479,7 @@ const BriefPanel: React.FC<{
                 <BriefField label={t('aiWebsiteStudio.briefPanel.industry')} value={brief.industry} />
                 <BriefField label={t('aiWebsiteStudio.briefPanel.tagline')} value={brief.tagline} />
                 {brief.description && (
-                    <p className="text-editor-text-secondary/60 line-clamp-2 mt-1">{brief.description}</p>
+                    <p className="text-q-text-secondary/60 line-clamp-2 mt-1">{brief.description}</p>
                 )}
             </BriefSection>
 
@@ -487,7 +487,7 @@ const BriefPanel: React.FC<{
             {brief.services.length > 0 && (
                 <BriefSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
                     {brief.services.map((s, i) => (
-                        <div key={i} className="flex items-start gap-1.5 text-editor-text-secondary">
+                        <div key={i} className="flex items-start gap-1.5 text-q-text-secondary">
                             <CheckCircle2 size={11} className="text-green-400/60 mt-0.5 flex-shrink-0" />
                             <span>{s.name}</span>
                         </div>
@@ -525,7 +525,7 @@ const BriefPanel: React.FC<{
                 <div className="space-y-2">
                     {(['header', 'body', 'button'] as const).map(key => (
                         <div key={key} className="flex flex-col gap-1">
-                            <span className="text-[10px] text-editor-text-secondary uppercase">{key}</span>
+                            <span className="text-[10px] text-q-text-secondary uppercase">{key}</span>
                             <FontFamilyPicker
                                 value={brief.fontPairing[key]}
                                 onChange={(val) => onUpdateFont(key, val as any)}
@@ -542,7 +542,7 @@ const BriefPanel: React.FC<{
                         <button
                             key={comp}
                             onClick={() => onToggleComponent(comp as PageSection)}
-                            className="group/chip inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded bg-editor-accent/10 text-editor-accent text-[9px] font-medium border border-editor-accent/15 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-400 transition-all cursor-pointer leading-none"
+                            className="group/chip inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded bg-q-accent/10 text-q-accent text-[9px] font-medium border border-q-accent/15 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-400 transition-all cursor-pointer leading-none"
                             title={`Remove ${comp}`}
                         >
                             <span>{comp}</span>
@@ -553,17 +553,17 @@ const BriefPanel: React.FC<{
                     <div className="relative">
                         <button
                             onClick={() => setShowComponentPicker(!showComponentPicker)}
-                            className="inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded border border-dashed border-editor-border text-editor-text-secondary/60 hover:border-editor-accent/40 hover:text-editor-accent text-[9px] font-medium transition-all cursor-pointer leading-none"
+                            className="inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded border border-dashed border-q-border text-q-text-secondary/60 hover:border-q-accent/40 hover:text-q-accent text-[9px] font-medium transition-all cursor-pointer leading-none"
                         >
                             <Plus size={9} />
                         </button>
                         {showComponentPicker && availableToAdd.length > 0 && (
-                            <div className="absolute left-0 top-full mt-1 z-50 bg-editor-panel-bg border border-editor-border rounded-lg shadow-2xl shadow-black/40 max-h-52 overflow-y-auto w-44 custom-scrollbar py-1">
+                            <div className="absolute left-0 top-full mt-1 z-50 bg-q-surface border border-q-border rounded-lg shadow-2xl shadow-black/40 max-h-52 overflow-y-auto w-44 custom-scrollbar py-1">
                                 {availableToAdd.map(comp => (
                                     <button
                                         key={comp.key}
                                         onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
-                                        className="w-full text-left px-2.5 py-1 text-[10px] text-editor-text-secondary hover:bg-editor-accent/10 hover:text-editor-accent transition-colors cursor-pointer"
+                                        className="w-full text-left px-2.5 py-1 text-[10px] text-q-text-secondary hover:bg-q-accent/10 hover:text-q-accent transition-colors cursor-pointer"
                                     >
                                         {comp.label}
                                     </button>
@@ -586,20 +586,20 @@ const BriefPanel: React.FC<{
                 />
                 <div
                     className={`w-full border-2 border-dashed rounded-xl transition-colors cursor-pointer group p-4 flex flex-col items-center justify-center gap-2 ${
-                        isDragging ? 'border-editor-accent bg-editor-accent/10' : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg/30'
+                        isDragging ? 'border-q-accent bg-q-accent/10' : 'border-q-border hover:border-q-accent/50 bg-q-bg/30'
                     }`}
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
                     onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files) handleFiles(e.dataTransfer.files); }}
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    <div className="size-8 rounded-full bg-editor-border/20 group-hover:bg-editor-accent/10 flex items-center justify-center transition-colors">
-                        <Upload size={16} className="text-editor-text-secondary group-hover:text-editor-accent transition-colors" />
+                    <div className="size-8 rounded-full bg-q-surface-overlay/20 group-hover:bg-q-accent/10 flex items-center justify-center transition-colors">
+                        <Upload size={16} className="text-q-text-secondary group-hover:text-q-accent transition-colors" />
                     </div>
-                    <span className="text-[10px] font-medium text-editor-text-secondary group-hover:text-editor-accent transition-colors text-center">
+                    <span className="text-[10px] font-medium text-q-text-secondary group-hover:text-q-accent transition-colors text-center">
                         {t('aiWebsiteStudio.briefPanel.uploadReference', { defaultValue: 'Upload reference images' })}
                     </span>
-                    <span className="text-[9px] text-editor-text-secondary/50">
+                    <span className="text-[9px] text-q-text-secondary/50">
                         {t('aiWebsiteStudio.briefPanel.uploadReferenceHint', { defaultValue: 'People, places, products, or style inspiration' })}
                     </span>
                 </div>
@@ -607,13 +607,13 @@ const BriefPanel: React.FC<{
                 <div className="flex gap-2 w-full mt-2">
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 py-1.5 rounded-lg border border-editor-border hover:border-editor-accent text-[10px] text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center justify-center gap-1.5"
+                        className="flex-1 py-1.5 rounded-lg border border-q-border hover:border-q-accent text-[10px] text-q-text-secondary hover:text-q-accent transition-colors flex items-center justify-center gap-1.5"
                     >
                         <Upload size={12} /> Local
                     </button>
                     <button
                         onClick={() => setShowLibraryPicker(true)}
-                        className="flex-1 py-1.5 rounded-lg border border-editor-border hover:border-editor-accent text-[10px] text-editor-text-secondary hover:text-editor-accent transition-colors flex items-center justify-center gap-1.5 bg-editor-accent/10 text-editor-accent border-editor-accent/20"
+                        className="flex-1 py-1.5 rounded-lg border border-q-border hover:border-q-accent text-[10px] text-q-text-secondary hover:text-q-accent transition-colors flex items-center justify-center gap-1.5 bg-q-accent/10 text-q-accent border-q-accent/20"
                     >
                         <Image size={12} /> Librería Admin
                     </button>
@@ -637,7 +637,7 @@ const BriefPanel: React.FC<{
                 {referenceImages.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 pt-2">
                         {referenceImages.map((img, idx) => (
-                            <div key={idx} className="relative w-11 h-11 rounded-lg overflow-hidden group/thumb border border-editor-border">
+                            <div key={idx} className="relative w-11 h-11 rounded-lg overflow-hidden group/thumb border border-q-border">
                                 <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onRemoveReferenceImage(idx); }}
@@ -658,7 +658,7 @@ const BriefPanel: React.FC<{
 
 const BriefSection: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
     <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-editor-text-secondary font-medium">
+        <div className="flex items-center gap-1.5 text-q-text-secondary font-medium">
             {icon}
             <span>{title}</span>
         </div>
@@ -668,9 +668,9 @@ const BriefSection: React.FC<{ title: string; icon: React.ReactNode; children: R
 
 const BriefField: React.FC<{ label: string; value?: string }> = ({ label, value }) => (
     <div className="flex items-center gap-1.5">
-        {value ? <CheckCircle2 size={10} className="text-green-400/60 flex-shrink-0" /> : <Circle size={10} className="text-editor-text-secondary/30 flex-shrink-0" />}
-        <span className="text-editor-text-secondary/60">{label}:</span>
-        <span className={`truncate ${value ? 'text-editor-text-primary' : 'text-editor-text-secondary/30 italic'}`}>{value || '...'}</span>
+        {value ? <CheckCircle2 size={10} className="text-green-400/60 flex-shrink-0" /> : <Circle size={10} className="text-q-text-secondary/30 flex-shrink-0" />}
+        <span className="text-q-text-secondary/60">{label}:</span>
+        <span className={`truncate ${value ? 'text-q-text' : 'text-q-text-secondary/30 italic'}`}>{value || '...'}</span>
     </div>
 );
 
@@ -701,15 +701,15 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 
     return (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md" style={{ animation: 'aws-fadeIn 0.4s ease' }}>
-            <div className="w-full max-w-3xl h-[600px] max-h-[calc(100%-2rem)] mx-4 flex flex-col rounded-2xl border border-editor-border bg-editor-panel-bg shadow-2xl overflow-hidden">
+            <div className="w-full max-w-3xl h-[600px] max-h-[calc(100%-2rem)] mx-4 flex flex-col rounded-2xl border border-q-border bg-q-surface shadow-2xl overflow-hidden">
 
                 {/* ── Header ── */}
-                <div className="px-6 pt-6 pb-4 border-b border-editor-border">
+                <div className="px-6 pt-6 pb-4 border-b border-q-border">
                     <div className="flex items-center gap-4">
                         {/* Progress Ring */}
                         <div className="relative w-[72px] h-[72px] flex-shrink-0">
                             <svg className="transform -rotate-90" width="72" height="72" viewBox="0 0 120 120">
-                                <circle cx="60" cy="60" r="52" fill="none" className="stroke-editor-border" strokeWidth="8" />
+                                <circle cx="60" cy="60" r="52" fill="none" className="stroke-q-border" strokeWidth="8" />
                                 <circle cx="60" cy="60" r="52" fill="none" stroke={progressColor} strokeWidth="8" strokeLinecap="round"
                                     strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                                     style={{ transition: 'stroke-dashoffset 0.8s ease-out' }} />
@@ -718,15 +718,15 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                                 {isDone ? (
                                     <span className="text-xl">🎉</span>
                                 ) : (
-                                    <span className="text-base font-bold text-editor-text-primary font-mono">{Math.round(phase.progress)}%</span>
+                                    <span className="text-base font-bold text-q-text font-mono">{Math.round(phase.progress)}%</span>
                                 )}
                             </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h2 className="text-lg font-bold text-editor-text-primary truncate">
+                            <h2 className="text-lg font-bold text-q-text truncate">
                                 {isDone ? t('aiWebsiteStudio.generation.websiteCreated') : t('aiWebsiteStudio.generation.creating', { name: businessName || t('aiWebsiteStudio.generation.yourWebsite') })}
                             </h2>
-                            <p className="text-sm text-editor-text-secondary mt-0.5">{phase.currentStep}</p>
+                            <p className="text-sm text-q-text-secondary mt-0.5">{phase.currentStep}</p>
                              {/* Phase steps indicator */}
                             <div className="flex items-center gap-1 mt-2">
                                 {(['content', 'images', 'finalizing', 'done'] as const).map((p, idx) => {
@@ -737,14 +737,14 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                                     return (
                                         <React.Fragment key={p}>
                                             <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${
-                                                isActive ? 'bg-primary/15 text-editor-accent ring-1 ring-primary/30' :
+                                                isActive ? 'bg-primary/15 text-q-accent ring-1 ring-primary/30' :
                                                 isCompleted ? 'bg-green-500/10 text-green-400/60' :
-                                                'bg-editor-border/40 text-editor-text-secondary/40'
+                                                'bg-q-surface-overlay/40 text-q-text-secondary/40'
                                             }`}>
                                                 {isCompleted ? <CheckCircle2 size={10} /> : isActive ? <Loader2 size={10} className="animate-spin" /> : <Circle size={10} />}
                                                 <span className="hidden sm:inline">{t(PHASE_LABELS_KEY[p])}</span>
                                             </div>
-                                            {idx < 3 && <ChevronRight size={10} className="text-editor-text-secondary/20 flex-shrink-0" />}
+                                            {idx < 3 && <ChevronRight size={10} className="text-q-text-secondary/20 flex-shrink-0" />}
                                         </React.Fragment>
                                     );
                                 })}
@@ -755,12 +755,12 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 
                 {/* ── Stats Bar ── */}
                 {phase.imagesTotal > 0 && (
-                    <div className="px-6 py-3 bg-editor-bg border-b border-editor-border flex items-center gap-6 text-xs">
+                    <div className="px-6 py-3 bg-q-bg border-b border-q-border flex items-center gap-6 text-xs">
                         <div className="flex items-center gap-1.5">
-                            <Image size={13} className="text-editor-accent" />
-                            <span className="text-editor-text-secondary">{t('aiWebsiteStudio.generation.stats.images')}</span>
-                            <span className="font-mono font-bold text-editor-text-primary">{phase.imagesCompleted}</span>
-                            <span className="text-editor-text-secondary/50">/ {phase.imagesTotal}</span>
+                            <Image size={13} className="text-q-accent" />
+                            <span className="text-q-text-secondary">{t('aiWebsiteStudio.generation.stats.images')}</span>
+                            <span className="font-mono font-bold text-q-text">{phase.imagesCompleted}</span>
+                            <span className="text-q-text-secondary/50">/ {phase.imagesTotal}</span>
                         </div>
                         {phase.imagesFailed > 0 && (
                             <div className="flex items-center gap-1.5">
@@ -769,8 +769,8 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
                             </div>
                         )}
                         <div className="ml-auto flex items-center gap-1.5">
-                            <span className="text-editor-text-secondary/50">{t('aiWebsiteStudio.generation.stats.progress')}</span>
-                            <div className="w-24 h-1.5 bg-editor-border rounded-full overflow-hidden">
+                            <span className="text-q-text-secondary/50">{t('aiWebsiteStudio.generation.stats.progress')}</span>
+                            <div className="w-24 h-1.5 bg-q-surface-overlay rounded-full overflow-hidden">
                                 <div className="h-full rounded-full bg-gradient-to-r from-editor-accent to-primary transition-all duration-500"
                                     style={{ width: `${phase.progress}%` }} />
                             </div>
@@ -792,13 +792,13 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 
                     {/* Right: Image Gallery */}
                     {phase.generatedImages.length > 0 && (
-                        <div className="hidden sm:flex w-[200px] flex-col border-l border-editor-border bg-editor-bg overflow-y-auto p-3 gap-2 custom-scrollbar">
-                            <span className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider">{t('aiWebsiteStudio.generation.generatedImages')}</span>
+                        <div className="hidden sm:flex w-[200px] flex-col border-l border-q-border bg-q-bg overflow-y-auto p-3 gap-2 custom-scrollbar">
+                            <span className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider">{t('aiWebsiteStudio.generation.generatedImages')}</span>
                             {phase.generatedImages.map((img, i) => (
-                                <div key={i} className="rounded-lg overflow-hidden border border-editor-border bg-editor-panel-bg" style={{ animation: 'aws-fadeIn 0.5s ease' }}>
+                                <div key={i} className="rounded-lg overflow-hidden border border-q-border bg-q-surface" style={{ animation: 'aws-fadeIn 0.5s ease' }}>
                                     <img src={img.url} alt={img.key} className="w-full h-24 object-cover" loading="lazy" />
                                     <div className="px-2 py-1">
-                                        <span className="text-[9px] text-editor-text-secondary truncate block">{img.key}</span>
+                                        <span className="text-[9px] text-q-text-secondary truncate block">{img.key}</span>
                                     </div>
                                 </div>
                             ))}
@@ -823,11 +823,11 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 
 const EVENT_ICONS: Record<GenerationEvent['type'], React.ReactNode> = {
     start: <Sparkles size={12} className="text-yellow-400" />,
-    content: <FileText size={12} className="text-editor-accent" />,
-    image_start: <Image size={12} className="text-editor-accent" />,
+    content: <FileText size={12} className="text-q-accent" />,
+    image_start: <Image size={12} className="text-q-accent" />,
     image_done: <CheckCircle2 size={12} className="text-green-400" />,
     image_fail: <X size={12} className="text-red-400" />,
-    assemble: <Package size={12} className="text-editor-accent" />,
+    assemble: <Package size={12} className="text-q-accent" />,
     save: <Save size={12} className="text-cyan-400" />,
     done: <PartyPopper size={12} className="text-emerald-400" />,
     error: <X size={12} className="text-red-500" />,
@@ -839,21 +839,21 @@ const EventRow: React.FC<{ event: GenerationEvent; isLatest: boolean }> = ({ eve
 
     return (
         <div className={`flex items-start gap-2.5 py-1.5 px-2 rounded-lg transition-colors ${
-            isLatest ? 'bg-editor-border/20' : '' }`}
+            isLatest ? 'bg-q-surface-overlay/20' : '' }`}
             style={isLatest ? { animation: 'aws-fadeIn 0.3s ease' } : undefined}
         >
             <div className="mt-0.5 flex-shrink-0">{EVENT_ICONS[event.type]}</div>
             <div className="flex-1 min-w-0">
-                <p className={`text-xs leading-relaxed ${event.type === 'error' || event.type === 'image_fail' ? 'text-red-400/80' : 'text-editor-text-secondary'}`}>
+                <p className={`text-xs leading-relaxed ${event.type === 'error' || event.type === 'image_fail' ? 'text-red-400/80' : 'text-q-text-secondary'}`}>
                     {event.message}
                 </p>
                 {isImage && (
                     <img src={event.imageUrl} alt={event.imageKey || 'generated'}
-                        className="mt-1.5 h-16 w-auto rounded-md border border-editor-border object-cover sm:hidden"
+                        className="mt-1.5 h-16 w-auto rounded-md border border-q-border object-cover sm:hidden"
                         loading="lazy" />
                 )}
             </div>
-            <span className="text-[9px] text-editor-text-secondary/40 flex-shrink-0 font-mono mt-0.5">{time}</span>
+            <span className="text-[9px] text-q-text-secondary/40 flex-shrink-0 font-mono mt-0.5">{time}</span>
         </div>
     );
 };
@@ -893,16 +893,16 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
 
     return (
         <div className="absolute inset-0 z-[101] flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.2s ease' }}>
-            <div className="w-full max-w-md mx-4 bg-editor-panel-bg border border-editor-border rounded-2xl shadow-2xl overflow-hidden" style={{ animation: 'aws-slideUp 0.25s ease' }}>
+            <div className="w-full max-w-md mx-4 bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden" style={{ animation: 'aws-slideUp 0.25s ease' }}>
                 {/* Header */}
-                <div className="px-6 pt-6 pb-4 border-b border-editor-border bg-primary/5">
+                <div className="px-6 pt-6 pb-4 border-b border-q-border bg-primary/5">
                     <div className="flex items-center gap-3">
-                        <div className="bg-editor-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
+                        <div className="bg-q-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
                             <Globe className="text-primary-foreground w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="text-base font-bold text-editor-text-primary">{t('aiWebsiteStudio.extraction.modalTitle')}</h3>
-                            <p className="text-xs text-editor-text-secondary mt-0.5">{t('aiWebsiteStudio.extraction.modalDescription')}</p>
+                            <h3 className="text-base font-bold text-q-text">{t('aiWebsiteStudio.extraction.modalTitle')}</h3>
+                            <p className="text-xs text-q-text-secondary mt-0.5">{t('aiWebsiteStudio.extraction.modalDescription')}</p>
                         </div>
                     </div>
                 </div>
@@ -911,7 +911,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                 <div className="px-6 py-5 space-y-4">
                     <div className="space-y-2">
                         <div className="relative">
-                            <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary/50" />
+                            <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary/50" />
                             <input
                                 ref={inputRef}
                                 type="url"
@@ -919,11 +919,11 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                                 onChange={e => { setUrl(e.target.value); setError(''); }}
                                 onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
                                 placeholder={t('aiWebsiteStudio.extraction.urlPlaceholder')}
-                                className="w-full bg-editor-bg border border-editor-border rounded-xl pl-10 pr-4 py-3 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="w-full bg-q-bg border border-q-border rounded-xl pl-10 pr-4 py-3 text-sm text-q-text placeholder:text-q-text-secondary/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                             />
                         </div>
                         {error && <p className="text-xs text-red-400 px-1">{error}</p>}
-                        <p className="text-[10px] text-editor-text-secondary/50 px-1">{t('aiWebsiteStudio.extraction.urlFormatHint')}</p>
+                        <p className="text-[10px] text-q-text-secondary/50 px-1">{t('aiWebsiteStudio.extraction.urlFormatHint')}</p>
                     </div>
                 </div>
 
@@ -931,7 +931,7 @@ const UrlInputModal: React.FC<{ onSubmit: (url: string) => void; onClose: () => 
                 <div className="px-6 pb-6 flex items-center gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-2.5 rounded-xl border border-editor-border text-editor-text-secondary text-sm font-medium hover:bg-editor-border/30 transition-colors"
+                        className="flex-1 py-2.5 rounded-xl border border-q-border text-q-text-secondary text-sm font-medium hover:bg-q-surface-overlay/30 transition-colors"
                     >
                         {t('aiWebsiteStudio.extraction.cancel')}
                     </button>

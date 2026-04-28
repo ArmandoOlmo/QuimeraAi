@@ -111,13 +111,13 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
         trend?: string;
         icon: React.ReactNode;
     }> = ({ title, value, subtitle, trend, icon }) => (
-        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+        <div className="bg-q-surface border border-q-border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-editor-text-secondary">{title}</span>
-                <div className="text-editor-accent">{icon}</div>
+                <span className="text-sm text-q-text-secondary">{title}</span>
+                <div className="text-q-accent">{icon}</div>
             </div>
-            <div className="text-2xl font-bold text-editor-text-primary mb-1">{value}</div>
-            {subtitle && <div className="text-xs text-editor-text-secondary">{subtitle}</div>}
+            <div className="text-2xl font-bold text-q-text mb-1">{value}</div>
+            {subtitle && <div className="text-xs text-q-text-secondary">{subtitle}</div>}
             {trend && <div className="text-xs text-green-500 mt-1">{trend}</div>}
         </div>
     );
@@ -130,15 +130,15 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
             : [];
 
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg overflow-hidden mb-3">
+            <div className="bg-q-surface border border-q-border rounded-lg overflow-hidden mb-3">
                 {/* Fila principal */}
-                <div className="flex items-center justify-between p-4 hover:bg-editor-bg/50 transition-colors">
+                <div className="flex items-center justify-between p-4 hover:bg-q-bg/50 transition-colors">
                     <div className="flex items-center gap-4 flex-1">
                         {/* Botón expandir para agencias */}
                         {tenant.type === 'agency' && (
                             <button
                                 onClick={() => toggleExpanded(tenant.id)}
-                                className="text-editor-text-secondary hover:text-editor-text-primary"
+                                className="text-q-text-secondary hover:text-q-text"
                             >
                                 {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                             </button>
@@ -155,14 +155,14 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         {/* Info principal */}
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-editor-text-primary">{tenant.name}</h3>
+                                <h3 className="font-semibold text-q-text">{tenant.name}</h3>
                                 <span className={`px - 2 py - 0.5 text - xs rounded - full border ${getStatusColor(tenant.status)} `}>
                                     {tenant.status}
                                 </span>
                             </div>
-                            <p className="text-sm text-editor-text-secondary">{tenant.email}</p>
+                            <p className="text-sm text-q-text-secondary">{tenant.email}</p>
                             {tenant.companyName && (
-                                <p className="text-xs text-editor-text-secondary mt-1">{tenant.companyName}</p>
+                                <p className="text-xs text-q-text-secondary mt-1">{tenant.companyName}</p>
                             )}
                         </div>
                     </div>
@@ -170,30 +170,30 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     {/* Métricas */}
                     <div className="flex items-center gap-6 mr-6">
                         <div className="text-center">
-                            <div className="flex items-center gap-1 text-editor-text-secondary">
+                            <div className="flex items-center gap-1 text-q-text-secondary">
                                 <Folder size={14} />
                                 <span className="text-sm">{tenant.usage.projectCount} / {tenant.limits.maxProjects}</span>
                             </div>
                         </div>
-                        <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.projects', 'Proyectos')}</span>
+                        <span className="text-xs text-q-text-secondary">{t('superadmin.tenant.metrics.projects', 'Proyectos')}</span>
                     </div>
 
                     {tenant.type === 'agency' && (
                         <div className="text-center">
-                            <div className="flex items-center gap-1 text-editor-text-secondary">
+                            <div className="flex items-center gap-1 text-q-text-secondary">
                                 <Users size={14} />
                                 <span className="text-sm">{tenant.usage.userCount} / {tenant.limits.maxUsers}</span>
                             </div>
-                            <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.users', 'Usuarios')}</span>
+                            <span className="text-xs text-q-text-secondary">{t('superadmin.tenant.metrics.users', 'Usuarios')}</span>
                         </div>
                     )}
 
                     <div className="text-center">
-                        <div className="flex items-center gap-1 text-editor-text-secondary">
+                        <div className="flex items-center gap-1 text-q-text-secondary">
                             <HardDrive size={14} />
                             <span className="text-sm">{(tenant.usage.storageUsedGB ?? 0).toFixed(1)} GB</span>
                         </div>
-                        <span className="text-xs text-editor-text-secondary">{t('superadmin.tenant.metrics.storage', 'Almacenamiento')}</span>
+                        <span className="text-xs text-q-text-secondary">{t('superadmin.tenant.metrics.storage', 'Almacenamiento')}</span>
                     </div>
 
                     <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-md text-sm font-medium">
@@ -205,7 +205,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setSelectedTenant(tenant)}
-                        className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-bg rounded-lg transition-colors"
+                        className="p-2 text-q-text-secondary hover:text-q-accent hover:bg-q-bg rounded-lg transition-colors"
                         title={t('superadmin.viewDetails')}
                     >
                         <Edit2 size={18} />
@@ -213,7 +213,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     {canPerform('canDeleteTenants') && (
                         <button
                             onClick={() => handleDeleteTenant(tenant.id)}
-                            className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-q-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                             title={t('superadmin.delete')}
                         >
                             <Trash2 size={18} />
@@ -223,13 +223,13 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                 {/* Vista expandida para agencias */}
                 {
                     isExpanded && tenant.type === 'agency' && (
-                        <div className="border-t border-editor-border p-4 bg-editor-bg/50">
+                        <div className="border-t border-q-border p-4 bg-q-bg/50">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-semibold text-editor-text-primary flex items-center gap-2">
+                                <h4 className="font-semibold text-q-text flex items-center gap-2">
                                     <Users size={16} />
                                     {t('superadmin.tenant.agency.members', 'Miembros del equipo')} ({tenantMembers.length})
                                 </h4>
-                                <button className="flex items-center gap-1 text-sm text-editor-accent hover:text-editor-accent/80 transition-colors">
+                                <button className="flex items-center gap-1 text-sm text-q-accent hover:text-q-accent/80 transition-colors">
                                     <UserPlus size={14} />
                                     {t('superadmin.tenant.agency.invite', 'Invitar usuario')}
                                 </button>
@@ -238,7 +238,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             <div className="space-y-2">
                                 {tenantMembers.length > 0 ? (
                                     tenantMembers.map(member => (
-                                        <div key={member.id} className="flex items-center justify-between p-3 bg-editor-panel-bg rounded-lg border border-editor-border">
+                                        <div key={member.id} className="flex items-center justify-between p-3 bg-q-surface rounded-lg border border-q-border">
                                             <div className="flex items-center gap-3">
                                                 <img
                                                     src={member.photoURL || `https://ui-avatars.com/api/?name=${member.name}&background=3f3f46&color=e4e4e7`}
@@ -246,17 +246,17 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />
                                                 <div>
-                                                    <p className="text-sm font-medium text-editor-text-primary">{member.name}</p>
-                                                    <p className="text-xs text-editor-text-secondary">{member.email}</p>
+                                                    <p className="text-sm font-medium text-q-text">{member.name}</p>
+                                                    <p className="text-xs text-q-text-secondary">{member.email}</p>
                                                 </div>
                                             </div >
-                                            <span className="px-2 py-1 text-xs bg-editor-border text-editor-text-secondary rounded-md">
+                                            <span className="px-2 py-1 text-xs bg-q-surface-overlay text-q-text-secondary rounded-md">
                                                 {member.tenantRole || 'member'}
                                             </span>
                                         </div >
                                     ))
                                 ) : (
-                                    <p className="text-sm text-editor-text-secondary text-center py-4">
+                                    <p className="text-sm text-q-text-secondary text-center py-4">
                                         {t('superadmin.tenant.agency.noMembers', 'No hay miembros en este equipo')}
                                     </p>
                                 )}
@@ -273,19 +273,19 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     const individualCount = tenants.filter(t => t.type === 'individual').length;
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                         <div className="flex items-center gap-2">
-                            <Users className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.tenant.title', 'Gestión de Tenants')}</h1>
+                            <Users className="text-q-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-q-text">{t('superadmin.tenant.title', 'Gestión de Tenants')}</h1>
                         </div>
                     </div>
-                    <HeaderBackButton onClick={onBack} label={t('superadmin.tenant.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onBack} label={t('superadmin.tenant.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
@@ -318,15 +318,15 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                     </div>
 
                     {/* Tabs y controles */}
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4 mb-6">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4 mb-6">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                             {/* Tabs */}
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setActiveTab('all')}
                                     className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'all'
-                                        ? 'text-editor-accent'
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        ? 'text-q-accent'
+                                        : 'text-q-text-secondary hover:text-q-text'
                                         }`}
                                 >
                                     {t('superadmin.tenant.allTenants', 'Todos')} ({tenants.length})
@@ -334,8 +334,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <button
                                     onClick={() => setActiveTab('individual')}
                                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'individual'
-                                        ? 'text-editor-accent'
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        ? 'text-q-accent'
+                                        : 'text-q-text-secondary hover:text-q-text'
                                         }`}
                                 >
                                     <User size={16} />
@@ -344,8 +344,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <button
                                     onClick={() => setActiveTab('agency')}
                                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'agency'
-                                        ? 'text-editor-accent'
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                        ? 'text-q-accent'
+                                        : 'text-q-text-secondary hover:text-q-text'
                                         }`}
                                 >
                                     <Building2 size={16} />
@@ -355,8 +355,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                             {/* Búsqueda y filtros */}
                             <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 min-w-[200px]">
-                                    <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                                <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2 min-w-[200px]">
+                                    <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                                     <input
                                         type="text"
                                         placeholder="Buscar tenants..."
@@ -365,7 +365,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                     />
                                     {searchQuery && (
-                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                             <X size={16} />
                                         </button>
                                     )}
@@ -374,7 +374,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as TenantStatus | 'all')}
-                                    className="px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                    className="px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                 >
                                     <option value="all">{t('superadmin.allStatuses')}</option>
                                     <option value="active">{t('superadmin.active')}</option>
@@ -386,7 +386,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 {canPerform('canEditTenants') && (
                                     <button
                                         onClick={() => setShowCreateModal(true)}
-                                        className="flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
+                                        className="flex items-center gap-2 px-3 py-2 text-q-accent text-sm font-semibold hover:text-q-accent/80 transition-colors"
                                     >
                                         <Plus size={16} />
                                         Nuevo Tenant
@@ -408,17 +408,17 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg">
-                            <Users size={48} className="mx-auto text-editor-text-secondary mb-4" />
-                            <p className="text-lg font-semibold text-editor-text-primary mb-2">
+                        <div className="text-center py-12 bg-q-surface border border-q-border rounded-lg">
+                            <Users size={48} className="mx-auto text-q-text-secondary mb-4" />
+                            <p className="text-lg font-semibold text-q-text mb-2">
                                 No se encontraron tenants
                             </p>
-                            <p className="text-editor-text-secondary mb-4">
+                            <p className="text-q-text-secondary mb-4">
                                 Intenta ajustar tus filtros o crea un nuevo tenant
                             </p>
                             <button
                                 onClick={() => setShowCreateModal(true)}
-                                className="inline-flex items-center gap-2 px-3 py-2 text-editor-accent text-sm font-semibold hover:text-editor-accent/80 transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-2 text-q-accent text-sm font-semibold hover:text-q-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
                                 Crear Primer Tenant
@@ -431,8 +431,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
             {/* Modal de creación */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
-                        <h2 className="text-xl font-bold text-editor-text-primary mb-4">Crear Nuevo Tenant</h2>
+                    <div className="bg-q-surface border border-q-border rounded-lg p-6 max-w-md w-full">
+                        <h2 className="text-xl font-bold text-q-text mb-4">Crear Nuevo Tenant</h2>
                         <form onSubmit={async (e) => {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
@@ -459,39 +459,39 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                         }}>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Nombre</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">Nombre</label>
                                     <input
                                         name="name"
                                         required
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                         placeholder={t('superadmin.tenantName')}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">Email</label>
                                     <input
                                         name="email"
                                         type="email"
                                         required
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                         placeholder="admin@ejemplo.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Tipo</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">Tipo</label>
                                     <select
                                         name="type"
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="individual">{t('superadmin.individual')}</option>
                                         <option value="agency">{t('superadmin.agency')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Plan</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">Plan</label>
                                     <select
                                         name="plan"
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="free">{t('superadmin.free')}</option>
                                         <option value="pro">Pro</option>
@@ -499,10 +499,10 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">Empresa (Opcional)</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">Empresa (Opcional)</label>
                                     <input
                                         name="companyName"
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                         placeholder={t('superadmin.companyName')}
                                     />
                                 </div>
@@ -511,14 +511,14 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateModal(false)}
-                                    className="flex-1 px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                    className="flex-1 px-4 py-2 text-q-text-secondary hover:text-q-text transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors disabled:opacity-50"
+                                    className="flex-1 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors disabled:opacity-50"
                                 >
                                     {loading ? 'Creando...' : 'Crear Tenant'}
                                 </button>
@@ -705,14 +705,14 @@ const TenantDetailsModal: React.FC<{
         return '—';
     };
 
-    const inputClass = "w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent transition-colors";
-    const selectClass = "w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent transition-colors";
-    const labelClass = "text-sm text-editor-text-secondary block mb-1.5 font-medium";
-    const readOnlyValueClass = "text-editor-text-primary font-medium";
+    const inputClass = "w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent transition-colors";
+    const selectClass = "w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent transition-colors";
+    const labelClass = "text-sm text-q-text-secondary block mb-1.5 font-medium";
+    const readOnlyValueClass = "text-q-text font-medium";
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-4xl w-full max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-lg ${tenant.type === 'agency' ? 'bg-blue-500/20' : 'bg-purple-500/20'}`}>
@@ -722,10 +722,10 @@ const TenantDetailsModal: React.FC<{
                             }
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-editor-text-primary">
+                            <h2 className="text-xl font-bold text-q-text">
                                 {isEditing ? editData.name : tenant.name}
                             </h2>
-                            <p className="text-sm text-editor-text-secondary">{tenant.email || 'Sin email'}</p>
+                            <p className="text-sm text-q-text-secondary">{tenant.email || 'Sin email'}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -755,25 +755,25 @@ const TenantDetailsModal: React.FC<{
                                 }}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isEditing
                                     ? 'text-yellow-400 hover:text-yellow-300 bg-yellow-500/10 border border-yellow-500/30'
-                                    : 'text-editor-accent hover:text-editor-accent/80 bg-editor-accent/10 border border-editor-accent/30'
+                                    : 'text-q-accent hover:text-q-accent/80 bg-q-accent/10 border border-q-accent/30'
                                     }`}
                             >
                                 <Edit2 size={14} />
                                 {isEditing ? 'Cancelar' : 'Editar'}
                             </button>
                         )}
-                        <button onClick={onClose} className="p-2 text-editor-text-secondary hover:text-editor-text-primary rounded-lg hover:bg-editor-bg transition-colors">
+                        <button onClick={onClose} className="p-2 text-q-text-secondary hover:text-q-text rounded-lg hover:bg-q-bg transition-colors">
                             <X size={20} />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex border-b border-editor-border mb-6 flex-shrink-0 overflow-x-auto">
+                <div className="flex border-b border-q-border mb-6 flex-shrink-0 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('general')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'general'
-                            ? 'border-editor-accent text-editor-accent'
-                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            ? 'border-q-accent text-q-accent'
+                            : 'border-transparent text-q-text-secondary hover:text-q-text'
                             }`}
                     >
                         {t('superadmin.tenant.detailsModal.tabs.general', 'Información General')}
@@ -781,8 +781,8 @@ const TenantDetailsModal: React.FC<{
                     <button
                         onClick={() => setActiveTab('subscription')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'subscription'
-                            ? 'border-editor-accent text-editor-accent'
-                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            ? 'border-q-accent text-q-accent'
+                            : 'border-transparent text-q-text-secondary hover:text-q-text'
                             }`}
                     >
                         {t('superadmin.tenant.detailsModal.tabs.subscription', 'Suscripción y Pagos')}
@@ -790,8 +790,8 @@ const TenantDetailsModal: React.FC<{
                     <button
                         onClick={() => setActiveTab('credits')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'credits'
-                            ? 'border-editor-accent text-editor-accent'
-                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                            ? 'border-q-accent text-q-accent'
+                            : 'border-transparent text-q-text-secondary hover:text-q-text'
                             }`}
                     >
                         {t('superadmin.tenant.detailsModal.tabs.credits', 'Créditos IA')}
@@ -800,8 +800,8 @@ const TenantDetailsModal: React.FC<{
                         <button
                             onClick={() => setActiveTab('clients')}
                             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'clients'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             {t('superadmin.tenant.detailsModal.tabs.clients', 'Clientes')} ({agencyClients.length})
@@ -814,11 +814,11 @@ const TenantDetailsModal: React.FC<{
                         <div className="space-y-6">
                             {/* Información Principal */}
                             <div>
-                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
-                                    <User className="w-4 h-4 text-editor-accent" />
+                                <h3 className="font-semibold text-q-text mb-4 flex items-center gap-2 text-base">
+                                    <User className="w-4 h-4 text-q-accent" />
                                     Información del Cliente
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-q-bg/50 p-4 rounded-lg border border-q-border/50">
                                     <div>
                                         <label className={labelClass}>Nombre</label>
                                         {isEditing ? (
@@ -873,7 +873,7 @@ const TenantDetailsModal: React.FC<{
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 {tenant.type === 'agency' ? <Building2 size={16} className="text-blue-400" /> : <User size={16} className="text-purple-400" />}
-                                                <p className="text-editor-text-primary capitalize font-medium">{tenant.type === 'agency_client' ? 'Cliente de Agencia' : tenant.type}</p>
+                                                <p className="text-q-text capitalize font-medium">{tenant.type === 'agency_client' ? 'Cliente de Agencia' : tenant.type}</p>
                                             </div>
                                         )}
                                     </div>
@@ -893,7 +893,7 @@ const TenantDetailsModal: React.FC<{
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 {getStatusIcon(tenant.status)}
-                                                <span className="capitalize text-editor-text-primary font-medium">{tenant.status}</span>
+                                                <span className="capitalize text-q-text font-medium">{tenant.status}</span>
                                             </div>
                                         )}
                                     </div>
@@ -928,23 +928,23 @@ const TenantDetailsModal: React.FC<{
 
                             {/* Identificadores y Metadata */}
                             <div>
-                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
-                                    <HardDrive className="w-4 h-4 text-editor-accent" />
+                                <h3 className="font-semibold text-q-text mb-4 flex items-center gap-2 text-base">
+                                    <HardDrive className="w-4 h-4 text-q-accent" />
                                     Identificadores y Metadata
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-q-bg/50 p-4 rounded-lg border border-q-border/50">
                                     <div>
                                         <label className={labelClass}>Tenant ID</label>
-                                        <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.id}</p>
+                                        <p className="text-q-text font-mono text-xs bg-q-bg px-2 py-1.5 rounded border border-q-border select-all">{tenant.id}</p>
                                     </div>
                                     <div>
                                         <label className={labelClass}>Owner User ID</label>
-                                        <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.ownerUserId || '—'}</p>
+                                        <p className="text-q-text font-mono text-xs bg-q-bg px-2 py-1.5 rounded border border-q-border select-all">{tenant.ownerUserId || '—'}</p>
                                     </div>
                                     {tenant.ownerTenantId && (
                                         <div>
                                             <label className={labelClass}>Owner Tenant ID (Agencia)</label>
-                                            <p className="text-editor-text-primary font-mono text-xs bg-editor-bg px-2 py-1.5 rounded border border-editor-border select-all">{tenant.ownerTenantId}</p>
+                                            <p className="text-q-text font-mono text-xs bg-q-bg px-2 py-1.5 rounded border border-q-border select-all">{tenant.ownerTenantId}</p>
                                         </div>
                                     )}
                                     <div>
@@ -976,45 +976,45 @@ const TenantDetailsModal: React.FC<{
 
                             {/* Métricas de Uso */}
                             <div>
-                                <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
-                                    <Zap className="w-4 h-4 text-editor-accent" />
+                                <h3 className="font-semibold text-q-text mb-4 flex items-center gap-2 text-base">
+                                    <Zap className="w-4 h-4 text-q-accent" />
                                     Métricas de Uso
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                    <div className="bg-q-bg p-3 rounded-lg border border-q-border">
+                                        <div className="flex items-center gap-1.5 mb-1 text-q-text-secondary">
                                             <Folder size={14} />
                                             <span className="text-xs font-medium">Proyectos</span>
                                         </div>
-                                        <div className="font-bold text-editor-text-primary text-lg">
-                                            {tenant.usage?.projectCount ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
+                                        <div className="font-bold text-q-text text-lg">
+                                            {tenant.usage?.projectCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
                                         </div>
                                     </div>
-                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                    <div className="bg-q-bg p-3 rounded-lg border border-q-border">
+                                        <div className="flex items-center gap-1.5 mb-1 text-q-text-secondary">
                                             <Users size={14} />
                                             <span className="text-xs font-medium">Usuarios</span>
                                         </div>
-                                        <div className="font-bold text-editor-text-primary text-lg">
-                                            {tenant.usage?.userCount ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
+                                        <div className="font-bold text-q-text text-lg">
+                                            {tenant.usage?.userCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
                                         </div>
                                     </div>
-                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                    <div className="bg-q-bg p-3 rounded-lg border border-q-border">
+                                        <div className="flex items-center gap-1.5 mb-1 text-q-text-secondary">
                                             <HardDrive size={14} />
                                             <span className="text-xs font-medium">Almacenamiento</span>
                                         </div>
-                                        <div className="font-bold text-editor-text-primary text-lg">
-                                            {(tenant.usage?.storageUsedGB ?? 0).toFixed(1)} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxStorageGB ?? '?'} GB</span>
+                                        <div className="font-bold text-q-text text-lg">
+                                            {(tenant.usage?.storageUsedGB ?? 0).toFixed(1)} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxStorageGB ?? '?'} GB</span>
                                         </div>
                                     </div>
-                                    <div className="bg-editor-bg p-3 rounded-lg border border-editor-border">
-                                        <div className="flex items-center gap-1.5 mb-1 text-editor-text-secondary">
+                                    <div className="bg-q-bg p-3 rounded-lg border border-q-border">
+                                        <div className="flex items-center gap-1.5 mb-1 text-q-text-secondary">
                                             <Zap size={14} />
                                             <span className="text-xs font-medium">Créditos IA</span>
                                         </div>
-                                        <div className="font-bold text-editor-text-primary text-lg">
-                                            {tenant.usage?.aiCreditsUsed ?? 0} <span className="text-editor-text-secondary font-normal text-sm">/ {tenant.limits?.maxAiCredits ?? '?'}</span>
+                                        <div className="font-bold text-q-text text-lg">
+                                            {tenant.usage?.aiCreditsUsed ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxAiCredits ?? '?'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1023,11 +1023,11 @@ const TenantDetailsModal: React.FC<{
                             {/* Límites del Plan (editable) */}
                             {isEditing && (
                                 <div>
-                                    <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
-                                        <Zap className="w-4 h-4 text-editor-accent" />
+                                    <h3 className="font-semibold text-q-text mb-4 flex items-center gap-2 text-base">
+                                        <Zap className="w-4 h-4 text-q-accent" />
                                         Límites del Plan
                                     </h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-q-bg/50 p-4 rounded-lg border border-q-border/50">
                                         <div>
                                             <label className={labelClass}>Máx. Proyectos</label>
                                             <input
@@ -1036,7 +1036,7 @@ const TenantDetailsModal: React.FC<{
                                                 onChange={(e) => setEditLimits(prev => ({ ...prev, maxProjects: parseInt(e.target.value) || 0 }))}
                                                 className={inputClass}
                                             />
-                                            <p className="text-xs text-editor-text-secondary mt-1">-1 = ilimitado</p>
+                                            <p className="text-xs text-q-text-secondary mt-1">-1 = ilimitado</p>
                                         </div>
                                         <div>
                                             <label className={labelClass}>Máx. Usuarios</label>
@@ -1072,11 +1072,11 @@ const TenantDetailsModal: React.FC<{
                             {/* Branding Info */}
                             {tenant.branding && (tenant.branding.customDomain || tenant.branding.quimeraSubdomain || tenant.branding.primaryColor) && (
                                 <div>
-                                    <h3 className="font-semibold text-editor-text-primary mb-4 flex items-center gap-2 text-base">
-                                        <Building2 className="w-4 h-4 text-editor-accent" />
+                                    <h3 className="font-semibold text-q-text mb-4 flex items-center gap-2 text-base">
+                                        <Building2 className="w-4 h-4 text-q-accent" />
                                         Branding
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-editor-bg/50 p-4 rounded-lg border border-editor-border/50">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-q-bg/50 p-4 rounded-lg border border-q-border/50">
                                         {tenant.branding.customDomain && (
                                             <div>
                                                 <label className={labelClass}>Dominio Personalizado</label>
@@ -1093,7 +1093,7 @@ const TenantDetailsModal: React.FC<{
                                             <div>
                                                 <label className={labelClass}>Color Primario</label>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-5 h-5 rounded border border-editor-border" style={{ backgroundColor: tenant.branding.primaryColor }} />
+                                                    <div className="w-5 h-5 rounded border border-q-border" style={{ backgroundColor: tenant.branding.primaryColor }} />
                                                     <p className={readOnlyValueClass}>{tenant.branding.primaryColor}</p>
                                                 </div>
                                             </div>
@@ -1113,45 +1113,45 @@ const TenantDetailsModal: React.FC<{
                     {activeTab === 'subscription' && (
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                    <CreditCard className="w-5 h-5 text-editor-accent" />
+                                <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                    <CreditCard className="w-5 h-5 text-q-accent" />
                                     {t('superadmin.tenant.detailsModal.subscriptionInfo', 'Información del Plan')}
                                 </h3>
-                                <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-5 grid grid-cols-2 gap-6">
+                                <div className="bg-q-surface border border-q-border rounded-lg p-5 grid grid-cols-2 gap-6">
                                     <div>
-                                        <p className="text-sm text-editor-text-secondary mb-1">Plan Actual</p>
+                                        <p className="text-sm text-q-text-secondary mb-1">Plan Actual</p>
                                         <span className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-md text-sm border border-purple-500/20 font-medium capitalize inline-block mt-1">
                                             {tenant.subscriptionPlan}
                                         </span>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-editor-text-secondary mb-1">Estado</p>
+                                        <p className="text-sm text-q-text-secondary mb-1">Estado</p>
                                         <div className="flex items-center gap-2 mt-1.5">
                                             {getStatusIcon(tenant.status)}
-                                            <span className="capitalize font-medium text-editor-text-primary">{tenant.status}</span>
+                                            <span className="capitalize font-medium text-q-text">{tenant.status}</span>
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-editor-text-secondary mb-1">{t('superadmin.tenant.detailsModal.mrr', 'Ingreso Recurrente (MRR)')}</p>
-                                        <p className="text-editor-text-primary font-bold text-2xl mt-1">${tenant.billing?.mrr || tenant.billingInfo?.mrr || 0} <span className="text-sm font-normal text-editor-text-secondary">/mes</span></p>
+                                        <p className="text-sm text-q-text-secondary mb-1">{t('superadmin.tenant.detailsModal.mrr', 'Ingreso Recurrente (MRR)')}</p>
+                                        <p className="text-q-text font-bold text-2xl mt-1">${tenant.billing?.mrr || tenant.billingInfo?.mrr || 0} <span className="text-sm font-normal text-q-text-secondary">/mes</span></p>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-editor-text-secondary mb-2">{t('superadmin.tenant.detailsModal.limits', 'Límites del Plan')}</p>
-                                        <ul className="text-sm text-editor-text-primary space-y-1">
-                                            <li className="flex justify-between border-b border-editor-border/50 pb-1">
-                                                <span className="text-editor-text-secondary">Proyectos:</span>
+                                        <p className="text-sm text-q-text-secondary mb-2">{t('superadmin.tenant.detailsModal.limits', 'Límites del Plan')}</p>
+                                        <ul className="text-sm text-q-text space-y-1">
+                                            <li className="flex justify-between border-b border-q-border/50 pb-1">
+                                                <span className="text-q-text-secondary">Proyectos:</span>
                                                 <span className="font-medium">{tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
                                             </li>
-                                            <li className="flex justify-between border-b border-editor-border/50 pb-1 pt-1">
-                                                <span className="text-editor-text-secondary">Usuarios:</span>
+                                            <li className="flex justify-between border-b border-q-border/50 pb-1 pt-1">
+                                                <span className="text-q-text-secondary">Usuarios:</span>
                                                 <span className="font-medium">{tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
                                             </li>
-                                            <li className="flex justify-between border-b border-editor-border/50 pb-1 pt-1">
-                                                <span className="text-editor-text-secondary">Almacenamiento:</span>
+                                            <li className="flex justify-between border-b border-q-border/50 pb-1 pt-1">
+                                                <span className="text-q-text-secondary">Almacenamiento:</span>
                                                 <span className="font-medium">{tenant.limits?.maxStorageGB ?? '?'} GB</span>
                                             </li>
                                             <li className="flex justify-between pt-1">
-                                                <span className="text-editor-text-secondary">Créditos IA:</span>
+                                                <span className="text-q-text-secondary">Créditos IA:</span>
                                                 <span className="font-medium">{tenant.limits?.maxAiCredits ?? '?'}</span>
                                             </li>
                                         </ul>
@@ -1162,32 +1162,32 @@ const TenantDetailsModal: React.FC<{
                             {/* Billing details */}
                             {(tenant.billing || tenant.billingInfo) && (
                                 <div>
-                                    <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                        <DollarSign className="w-5 h-5 text-editor-accent" />
+                                    <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                        <DollarSign className="w-5 h-5 text-q-accent" />
                                         Detalles de Facturación
                                     </h3>
-                                    <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-5 grid grid-cols-2 gap-4">
+                                    <div className="bg-q-surface border border-q-border rounded-lg p-5 grid grid-cols-2 gap-4">
                                         {tenant.billing?.stripeCustomerId && (
                                             <div>
-                                                <p className="text-sm text-editor-text-secondary mb-1">Stripe Customer ID</p>
-                                                <p className="text-editor-text-primary font-mono text-xs">{tenant.billing.stripeCustomerId}</p>
+                                                <p className="text-sm text-q-text-secondary mb-1">Stripe Customer ID</p>
+                                                <p className="text-q-text font-mono text-xs">{tenant.billing.stripeCustomerId}</p>
                                             </div>
                                         )}
                                         {tenant.billing?.stripeSubscriptionId && (
                                             <div>
-                                                <p className="text-sm text-editor-text-secondary mb-1">Stripe Subscription ID</p>
-                                                <p className="text-editor-text-primary font-mono text-xs">{tenant.billing.stripeSubscriptionId}</p>
+                                                <p className="text-sm text-q-text-secondary mb-1">Stripe Subscription ID</p>
+                                                <p className="text-q-text font-mono text-xs">{tenant.billing.stripeSubscriptionId}</p>
                                             </div>
                                         )}
                                         {(tenant.billing?.nextBillingDate || tenant.billingInfo?.nextBillingDate) && (
                                             <div>
-                                                <p className="text-sm text-editor-text-secondary mb-1">Próx. Fecha de Cobro</p>
+                                                <p className="text-sm text-q-text-secondary mb-1">Próx. Fecha de Cobro</p>
                                                 <p className={readOnlyValueClass}>{tenant.billing?.nextBillingDate || tenant.billingInfo?.nextBillingDate}</p>
                                             </div>
                                         )}
                                         {(tenant.billing?.paymentMethod || tenant.billingInfo?.paymentMethod) && (
                                             <div>
-                                                <p className="text-sm text-editor-text-secondary mb-1">Método de Pago</p>
+                                                <p className="text-sm text-q-text-secondary mb-1">Método de Pago</p>
                                                 <p className={readOnlyValueClass}>{tenant.billing?.paymentMethod || tenant.billingInfo?.paymentMethod}</p>
                                             </div>
                                         )}
@@ -1207,29 +1207,29 @@ const TenantDetailsModal: React.FC<{
                                 <>
                                     {/* Usage Bar */}
                                     <div>
-                                        <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                            <Zap className="w-5 h-5 text-editor-accent" />
+                                        <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                            <Zap className="w-5 h-5 text-q-accent" />
                                             {t('superadmin.tenant.detailsModal.aiCreditsUsage', 'Uso de Créditos IA')}
                                         </h3>
 
-                                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-lg p-6">
                                             <div className="flex justify-between items-end mb-2">
                                                 <div>
-                                                    <p className="text-3xl font-bold text-editor-text-primary tracking-tight">
+                                                    <p className="text-3xl font-bold text-q-text tracking-tight">
                                                         {(creditUsage?.creditsRemaining || 0).toLocaleString()}
                                                     </p>
-                                                    <p className="text-sm text-editor-text-secondary font-medium">
+                                                    <p className="text-sm text-q-text-secondary font-medium">
                                                         {t('superadmin.tenant.detailsModal.creditsRemaining', 'Créditos Restantes')}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-sm text-editor-text-primary font-medium">
+                                                    <p className="text-sm text-q-text font-medium">
                                                         {((creditUsage?.creditsUsed || 0)).toLocaleString()} / {(creditUsage?.creditsIncluded || 0).toLocaleString()} usados
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="h-3 bg-editor-bg rounded-full overflow-hidden mb-6 border border-editor-border/50">
+                                            <div className="h-3 bg-q-bg rounded-full overflow-hidden mb-6 border border-q-border/50">
                                                 <div
                                                     className="h-full rounded-full transition-all"
                                                     style={{
@@ -1240,9 +1240,9 @@ const TenantDetailsModal: React.FC<{
                                             </div>
 
                                             {/* Add Credits Inline Form */}
-                                            <div className="mt-6 pt-6 border-t border-editor-border">
-                                                <h4 className="text-sm font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                                    <Gift className="w-4 h-4 text-editor-accent" />
+                                            <div className="mt-6 pt-6 border-t border-q-border">
+                                                <h4 className="text-sm font-semibold text-q-text mb-4 flex items-center gap-2">
+                                                    <Gift className="w-4 h-4 text-q-accent" />
                                                     {t('superadmin.tenant.detailsModal.addCredits', 'Añadir Créditos')}
                                                 </h4>
                                                 <div className="flex gap-3">
@@ -1250,20 +1250,20 @@ const TenantDetailsModal: React.FC<{
                                                         type="number"
                                                         value={addCreditAmount}
                                                         onChange={(e) => setAddCreditAmount(parseInt(e.target.value) || 0)}
-                                                        className="w-32 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                        className="w-32 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                                         placeholder="Cant."
                                                     />
                                                     <input
                                                         type="text"
                                                         value={addCreditReason}
                                                         onChange={(e) => setAddCreditReason(e.target.value)}
-                                                        className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                        className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                                         placeholder={t('superadmin.rechargeReason')}
                                                     />
                                                     <button
                                                         onClick={handleAddCredits}
                                                         disabled={isAddingCredits || addCreditAmount <= 0}
-                                                        className="px-4 py-2 bg-editor-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
+                                                        className="px-4 py-2 bg-q-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 whitespace-nowrap"
                                                     >
                                                         {isAddingCredits ? '...' : t('common.add', 'Añadir')}
                                                     </button>
@@ -1274,38 +1274,38 @@ const TenantDetailsModal: React.FC<{
 
                                     {/* Transaction History */}
                                     <div>
-                                        <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                            <History className="w-5 h-5 text-editor-accent" />
+                                        <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                            <History className="w-5 h-5 text-q-accent" />
                                             {t('superadmin.tenant.detailsModal.transactionHistory', 'Historial de Transacciones')}
                                         </h3>
 
                                         {creditTransactions.length > 0 ? (
                                             <div className="space-y-2">
                                                 {creditTransactions.map(tx => (
-                                                    <div key={tx.id} className="flex items-center justify-between p-3 bg-editor-panel-bg border border-editor-border rounded-lg hover:border-editor-accent/30 transition-colors">
+                                                    <div key={tx.id} className="flex items-center justify-between p-3 bg-q-surface border border-q-border rounded-lg hover:border-q-accent/30 transition-colors">
                                                         <div className="flex items-center gap-4">
                                                             <div className={`p-2 rounded-lg ${tx.type === 'deposit' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                                                 {tx.type === 'deposit' ? <Plus size={16} /> : <Zap size={16} />}
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-medium text-editor-text-primary">
+                                                                <p className="text-sm font-medium text-q-text">
                                                                     {tx.description}
                                                                 </p>
-                                                                <p className="text-xs text-editor-text-secondary mt-0.5">
+                                                                <p className="text-xs text-q-text-secondary mt-0.5">
                                                                     {new Date(tx.timestamp.seconds * 1000).toLocaleString()}
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className={`font-semibold ${tx.type === 'deposit' ? 'text-green-500' : 'text-editor-text-primary'}`}>
+                                                        <div className={`font-semibold ${tx.type === 'deposit' ? 'text-green-500' : 'text-q-text'}`}>
                                                             {tx.type === 'deposit' ? '+' : ''}{tx.amount.toLocaleString()}
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-6 bg-editor-panel-bg border border-editor-border rounded-lg border-dashed">
-                                                <History size={24} className="mx-auto text-editor-text-secondary mb-2 opacity-50" />
-                                                <p className="text-editor-text-secondary text-sm">
+                                            <div className="text-center py-6 bg-q-surface border border-q-border rounded-lg border-dashed">
+                                                <History size={24} className="mx-auto text-q-text-secondary mb-2 opacity-50" />
+                                                <p className="text-q-text-secondary text-sm">
                                                     {t('superadmin.tenant.detailsModal.noTransactions', 'No hay transacciones recientes')}
                                                 </p>
                                             </div>
@@ -1323,46 +1323,46 @@ const TenantDetailsModal: React.FC<{
                                     <div
                                         key={client.id}
                                         onClick={() => onSelectTenant(client)}
-                                        className="flex items-center justify-between p-3 bg-editor-panel-bg border border-editor-border rounded-lg hover:border-editor-accent/50 cursor-pointer transition-colors group"
+                                        className="flex items-center justify-between p-3 bg-q-surface border border-q-border rounded-lg hover:border-q-accent/50 cursor-pointer transition-colors group"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-editor-bg rounded text-purple-400">
+                                            <div className="p-2 bg-q-bg rounded text-purple-400">
                                                 <User size={18} />
                                             </div>
                                             <div>
-                                                <h4 className="font-medium text-editor-text-primary group-hover:text-editor-accent transition-colors">
+                                                <h4 className="font-medium text-q-text group-hover:text-q-accent transition-colors">
                                                     {client.name}
                                                 </h4>
-                                                <p className="text-xs text-editor-text-secondary">{client.email}</p>
+                                                <p className="text-xs text-q-text-secondary">{client.email}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
-                                                <div className="text-xs text-editor-text-secondary">Plan</div>
-                                                <div className="text-sm font-medium text-editor-text-primary capitalize">{client.subscriptionPlan}</div>
+                                                <div className="text-xs text-q-text-secondary">Plan</div>
+                                                <div className="text-sm font-medium text-q-text capitalize">{client.subscriptionPlan}</div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-xs text-editor-text-secondary">Estado</div>
+                                                <div className="text-xs text-q-text-secondary">Estado</div>
                                                 <div className="flex items-center justify-end gap-1">
                                                     {getStatusIcon(client.status)}
-                                                    <span className="text-sm text-editor-text-primary capitalize">{client.status}</span>
+                                                    <span className="text-sm text-q-text capitalize">{client.status}</span>
                                                 </div>
                                             </div>
-                                            <ChevronRight size={16} className="text-editor-text-secondary" />
+                                            <ChevronRight size={16} className="text-q-text-secondary" />
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 bg-editor-panel-bg border border-editor-border rounded-lg border-dashed">
-                                    <Users size={32} className="mx-auto text-editor-text-secondary mb-2 opacity-50" />
-                                    <p className="text-editor-text-secondary">Esta agencia no tiene clientes registrados aún.</p>
+                                <div className="text-center py-8 bg-q-surface border border-q-border rounded-lg border-dashed">
+                                    <Users size={32} className="mx-auto text-q-text-secondary mb-2 opacity-50" />
+                                    <p className="text-q-text-secondary">Esta agencia no tiene clientes registrados aún.</p>
                                 </div>
                             )}
                         </div>
                     )}
                 </div>
 
-                <div className="mt-6 flex justify-between items-center pt-4 border-t border-editor-border flex-shrink-0">
+                <div className="mt-6 flex justify-between items-center pt-4 border-t border-q-border flex-shrink-0">
                     <div>
                         {isEditing && (
                             <p className="text-xs text-yellow-400 flex items-center gap-1">
@@ -1376,14 +1376,14 @@ const TenantDetailsModal: React.FC<{
                             <>
                                 <button
                                     onClick={() => setIsEditing(false)}
-                                    className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
+                                    className="px-4 py-2 bg-q-bg border border-q-border text-q-text rounded-lg hover:bg-q-surface-overlay transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={isSaving}
-                                    className="px-5 py-2 bg-editor-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                                    className="px-5 py-2 bg-q-accent text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                                 >
                                     {isSaving ? (
                                         <>
@@ -1398,7 +1398,7 @@ const TenantDetailsModal: React.FC<{
                         ) : (
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 bg-editor-bg border border-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border transition-colors"
+                                className="px-4 py-2 bg-q-bg border border-q-border text-q-text rounded-lg hover:bg-q-surface-overlay transition-colors"
                             >
                                 Cerrar
                             </button>

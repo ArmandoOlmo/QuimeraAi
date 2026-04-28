@@ -73,7 +73,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
             <div className="flex flex-col justify-center py-6">
                 {/* Greeting Header with CTA */}
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-4">
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground flex items-center flex-wrap">
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
                         {/* Logo - conditional: tenant logo > generic agency icon > Quimera logo */}
                         {tenantContext?.currentTenant?.branding?.logoUrl ? (
                             <img
@@ -141,7 +141,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 /* Minimized pill */
                                 <button
                                     onClick={toggleUpgradeMinimized}
-                                    className="group relative flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600/80 via-primary/60 to-purple-600/80 bg-[length:200%_100%] text-white/90 font-semibold rounded-2xl border border-purple-400/20 hover:border-purple-400/40 shadow-md shadow-purple-500/15 hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                    className="group relative flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600/80 via-q-accent/60 to-purple-600/80 bg-[length:200%_100%] text-white/90 font-semibold rounded-2xl border border-purple-400/20 hover:border-purple-400/40 shadow-md shadow-purple-500/15 hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:bg-right"
                                     aria-label={t('dashboard.upgradeNow')}
                                 >
                                     <Crown className="w-4 h-4" aria-hidden="true" />
@@ -153,7 +153,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 <div className="relative">
                                     <button
                                         onClick={handleUpgradeClick}
-                                        className="group relative flex items-center gap-3 px-6 py-4 w-full bg-gradient-to-r from-purple-600 via-primary to-purple-600 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                                        className="group relative flex items-center gap-3 px-6 py-4 w-full bg-gradient-to-r from-purple-600 via-q-accent to-purple-600 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
                                         aria-label={t('dashboard.upgradeNow')}
                                     >
                                         <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors">
@@ -173,7 +173,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                             e.stopPropagation();
                                             toggleUpgradeMinimized();
                                         }}
-                                        className="absolute -top-1.5 -right-1.5 w-6 h-6 flex items-center justify-center bg-secondary/90 border border-border rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shadow-sm z-10"
+                                        className="absolute -top-1.5 -right-1.5 w-6 h-6 flex items-center justify-center bg-q-surface-overlay/90 border border-q-border rounded-full text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors shadow-sm z-10"
                                         aria-label="Minimize"
                                     >
                                         <ChevronUp className="w-3.5 h-3.5" />
@@ -183,9 +183,9 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </div>
                 </div>
 
-                <p className="text-lg text-muted-foreground max-w-3xl mb-8 leading-relaxed">
+                <p className="text-lg text-q-text-muted max-w-3xl mb-8 leading-relaxed">
                     {t('dashboard.heroSubtitlePart1')}{' '}
-                    <span className="text-foreground font-semibold">
+                    <span className="text-q-text font-semibold">
                         {allUserProjectsCount} {t('dashboard.heroSubtitlePart2')}
                     </span>{' '}
                     {t('dashboard.heroSubtitlePart3')}

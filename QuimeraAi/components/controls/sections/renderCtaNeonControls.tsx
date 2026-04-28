@@ -20,8 +20,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
       ) => {
         const linkType = sectionData[typeKey] || 'section';
         return (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
               <Link size={14} />
               {label}
             </label>
@@ -35,7 +35,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             </div>
     
             {/* Link Type Selector */}
-            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+            <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
               {[
                 { value: 'section', label: 'Sección' },
                 { value: 'product', label: 'Producto' },
@@ -54,8 +54,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                     }
                   }}
                   className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${linkType === type.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                     }`}
                 >
                   {type.label}
@@ -138,8 +138,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
 
     const contentTab = (
         <div className="space-y-6">
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                     <Type size={14} /> {t('editor.controls.typography', 'Textos Principales')}
                 </label>
                 
@@ -184,8 +184,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             {/* Background Image Setup */}
             <BackgroundImageControl sectionKey="ctaNeon" data={data} setNestedData={setNestedData} />
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2 flex items-center gap-2">
                     <Maximize2 size={14} /> Layout
                 </label>
                 <SliderControl
@@ -212,8 +212,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Effect Settings */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase">
                     {t('editor.controls.effects', 'Efectos Neon')}
                 </label>
                 <ToggleControl
@@ -223,7 +223,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                 />
                 <TopDotsControl sectionKey="ctaNeon" data={data} setNestedData={setNestedData} />
                 <div>
-                    <label className="block text-xs text-editor-text-secondary mb-1">
+                    <label className="block text-xs text-q-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
                     </label>
                     <input
@@ -238,9 +238,9 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Colors */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-3">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-3">
                 <div className="flex items-center justify-between mb-4">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                         <Settings size={14} /> {t('editor.controls.colors', 'Colores')}
                     </label>
                     <button
@@ -249,7 +249,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                             setNestedData('ctaNeon.colors', undefined);
                             setNestedData('ctaNeon.glassEffect', undefined);
                         }}
-                        className="text-xs text-editor-text-secondary hover:text-editor-accent flex items-center gap-1 transition-colors"
+                        className="text-xs text-q-text-secondary hover:text-q-accent flex items-center gap-1 transition-colors"
                         title={t('editor.controls.restoreOriginalColors', 'Restaurar colores por defecto')}
                     >
                         <RotateCcw size={12} /> Restaurar
@@ -281,8 +281,8 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                     value={sectionData.colors?.neonGlow || '#FBB92B'}
                     onChange={(color) => setNestedData('ctaNeon.colors.neonGlow', color)}
                 />
-                <div className="space-y-2 pt-2 border-t border-editor-border/50">
-                    <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botón Primario')}</p>
+                <div className="space-y-2 pt-2 border-t border-q-border/50">
+                    <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Botón Primario')}</p>
                     <ColorControl label={t('editor.controls.common.background', 'Fondo del Botón')} value={sectionData.colors?.buttonBackground} onChange={(v) => setNestedData('ctaNeon.colors.buttonBackground', v)} />
                     <ColorControl label={t('editor.controls.common.text', 'Texto del Botón')} value={sectionData.colors?.buttonText} onChange={(v) => setNestedData('ctaNeon.colors.buttonText', v)} />
                 </div>

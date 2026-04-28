@@ -83,8 +83,8 @@ const TabButton: React.FC<{
         className={`
             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
             ${active
-                ? 'bg-editor-accent text-white'
-                : 'bg-editor-bg text-editor-text-secondary hover:text-editor-text-primary'
+                ? 'bg-q-accent text-white'
+                : 'bg-q-bg text-q-text-secondary hover:text-q-text'
             }
         `}
     >
@@ -100,12 +100,12 @@ const FeatureToggle: React.FC<{
     onChange: (checked: boolean) => void;
     icon?: React.ReactNode;
 }> = ({ label, description, checked, onChange, icon }) => (
-    <label className="flex items-start gap-3 p-3 rounded-lg hover:bg-editor-bg cursor-pointer transition-colors">
+    <label className="flex items-start gap-3 p-3 rounded-lg hover:bg-q-bg cursor-pointer transition-colors">
         <div className="pt-0.5">
             <div
                 className={`
                     w-5 h-5 rounded flex items-center justify-center transition-colors
-                    ${checked ? 'bg-editor-accent' : 'bg-editor-border'}
+                    ${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'}
                 `}
                 onClick={(e) => {
                     e.preventDefault();
@@ -118,10 +118,10 @@ const FeatureToggle: React.FC<{
         <div className="flex-1">
             <div className="flex items-center gap-2">
                 {icon}
-                <span className="text-editor-text-primary font-medium">{label}</span>
+                <span className="text-q-text font-medium">{label}</span>
             </div>
             {description && (
-                <p className="text-sm text-editor-text-secondary mt-0.5">{description}</p>
+                <p className="text-sm text-q-text-secondary mt-0.5">{description}</p>
             )}
         </div>
     </label>
@@ -138,7 +138,7 @@ const NumberInput: React.FC<{
     allowUnlimited?: boolean;
 }> = ({ label, value, onChange, min = 0, max, step = 1, suffix, allowUnlimited }) => (
     <div>
-        <label className="block text-sm text-editor-text-secondary mb-1.5">{label}</label>
+        <label className="block text-sm text-q-text-secondary mb-1.5">{label}</label>
         <div className="flex items-center gap-2">
             <input
                 type="number"
@@ -151,9 +151,9 @@ const NumberInput: React.FC<{
                 max={max}
                 step={step}
                 placeholder={allowUnlimited ? 'Ilimitado' : undefined}
-                className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
             />
-            {suffix && <span className="text-sm text-editor-text-secondary">{suffix}</span>}
+            {suffix && <span className="text-sm text-q-text-secondary">{suffix}</span>}
             {allowUnlimited && (
                 <button
                     type="button"
@@ -161,8 +161,8 @@ const NumberInput: React.FC<{
                     className={`
                         px-3 py-2 rounded-lg text-sm font-medium transition-colors
                         ${value === -1
-                            ? 'bg-editor-accent text-white'
-                            : 'bg-editor-border text-editor-text-secondary hover:bg-editor-border/80'
+                            ? 'bg-q-accent text-white'
+                            : 'bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/80'
                         }
                     `}
                 >
@@ -272,9 +272,9 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
     const SectionHeader: React.FC<{ id: string; title: string; icon: React.ReactNode }> = ({ id, title, icon }) => (
         <button
             onClick={() => toggleSection(id)}
-            className="w-full flex items-center justify-between p-3 bg-editor-bg rounded-lg hover:bg-editor-border/50 transition-colors"
+            className="w-full flex items-center justify-between p-3 bg-q-bg rounded-lg hover:bg-q-surface-overlay/50 transition-colors"
         >
-            <div className="flex items-center gap-2 text-editor-text-primary font-medium">
+            <div className="flex items-center gap-2 text-q-text font-medium">
                 {icon}
                 {title}
             </div>
@@ -284,9 +284,9 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
     
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-editor-panel-bg rounded-xl border border-editor-border w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-editor-border">
+                <div className="flex items-center justify-between p-6 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div
                             className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -295,24 +295,24 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <Crown className="w-5 h-5" style={{ color: formData.color }} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-editor-text-primary">
+                            <h2 className="text-xl font-semibold text-q-text">
                                 {isNewPlan ? 'Crear Nuevo Plan' : `Editar: ${plan.name}`}
                             </h2>
-                            <p className="text-sm text-editor-text-secondary">
+                            <p className="text-sm text-q-text-secondary">
                                 {isNewPlan ? 'Configura un nuevo plan de suscripción' : 'Modifica la configuración del plan'}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
                 
                 {/* Tabs */}
-                <div className="flex gap-2 p-4 border-b border-editor-border overflow-x-auto">
+                <div className="flex gap-2 p-4 border-b border-q-border overflow-x-auto">
                     <TabButton
                         active={activeTab === 'general'}
                         onClick={() => setActiveTab('general')}
@@ -362,7 +362,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Plan ID */}
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">
                                         ID del Plan *
                                     </label>
                                     <input
@@ -371,16 +371,16 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         onChange={(e) => updateField('id', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') as SubscriptionPlanId)}
                                         disabled={!isNewPlan}
                                         placeholder="ej: pro_plus"
-                                        className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent disabled:opacity-50"
+                                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent disabled:opacity-50"
                                     />
-                                    <p className="text-xs text-editor-text-secondary mt-1">
+                                    <p className="text-xs text-q-text-secondary mt-1">
                                         Solo letras minúsculas, números y guiones bajos
                                     </p>
                                 </div>
                                 
                                 {/* Name */}
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">
                                         Nombre del Plan *
                                     </label>
                                     <input
@@ -388,14 +388,14 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         value={formData.name || ''}
                                         onChange={(e) => updateField('name', e.target.value)}
                                         placeholder="ej: Pro Plus"
-                                        className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                     />
                                 </div>
                             </div>
                             
                             {/* Description */}
                             <div>
-                                <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Descripción *
                                 </label>
                                 <textarea
@@ -403,41 +403,41 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     onChange={(e) => updateField('description', e.target.value)}
                                     rows={2}
                                     placeholder="Descripción breve del plan..."
-                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent resize-none"
+                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent resize-none"
                                 />
                             </div>
                             
                             {/* Pricing */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">
                                         Precio Mensual (USD) *
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary">$</span>
                                         <input
                                             type="number"
                                             value={formData.price?.monthly || 0}
                                             onChange={(e) => updatePrice('monthly', parseFloat(e.target.value) || 0)}
                                             min={0}
                                             step={1}
-                                            className="w-full pl-8 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                            className="w-full pl-8 pr-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">
                                         Precio Anual (USD/mes) *
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary">$</span>
                                         <input
                                             type="number"
                                             value={formData.price?.annually || 0}
                                             onChange={(e) => updatePrice('annually', parseFloat(e.target.value) || 0)}
                                             min={0}
                                             step={1}
-                                            className="w-full pl-8 pr-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                            className="w-full pl-8 pr-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                         />
                                     </div>
                                     {formData.price?.monthly && formData.price.monthly > 0 && formData.price?.annually && formData.price.annually > 0 && (
@@ -449,10 +449,10 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             </div>
                             
                             {/* Landing Page Visibility */}
-                            <div className="p-4 bg-editor-bg rounded-lg border border-editor-border">
+                            <div className="p-4 bg-q-bg rounded-lg border border-q-border">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Globe className="w-4 h-4 text-green-400" />
-                                    <h4 className="text-sm font-medium text-editor-text-primary">Visibilidad en Landing Page</h4>
+                                    <h4 className="text-sm font-medium text-q-text">Visibilidad en Landing Page</h4>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-6">
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -462,27 +462,27 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                             onChange={(e) => updateField('showInLanding', e.target.checked)}
                                             className="sr-only"
                                         />
-                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${formData.showInLanding ? 'bg-green-500' : 'bg-editor-border'}`}>
+                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${formData.showInLanding ? 'bg-green-500' : 'bg-q-surface-overlay'}`}>
                                             {formData.showInLanding && <Check className="w-4 h-4 text-white" />}
                                         </div>
-                                        <span className="text-editor-text-primary font-medium">Mostrar en Landing Page</span>
+                                        <span className="text-q-text font-medium">Mostrar en Landing Page</span>
                                     </label>
                                     {formData.showInLanding && (
                                         <div className="flex items-center gap-2">
-                                            <label className="text-sm text-editor-text-secondary">Orden:</label>
+                                            <label className="text-sm text-q-text-secondary">Orden:</label>
                                             <input
                                                 type="number"
                                                 value={formData.landingOrder ?? 1}
                                                 onChange={(e) => updateField('landingOrder', parseInt(e.target.value) || 1)}
                                                 min={1}
                                                 max={10}
-                                                className="w-16 px-2 py-1.5 bg-editor-panel-bg border border-editor-border rounded text-editor-text-primary text-center focus:outline-none focus:border-green-500"
+                                                className="w-16 px-2 py-1.5 bg-q-surface border border-q-border rounded text-q-text text-center focus:outline-none focus:border-green-500"
                                             />
-                                            <span className="text-xs text-editor-text-secondary">(1 = primero)</span>
+                                            <span className="text-xs text-q-text-secondary">(1 = primero)</span>
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-xs text-editor-text-secondary mt-2">
+                                <p className="text-xs text-q-text-secondary mt-2">
                                     Los planes activados aparecerán en el landing page público
                                 </p>
                             </div>
@@ -490,7 +490,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             {/* Color & Icon */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">Color</label>
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">Color</label>
                                     <div className="flex flex-wrap gap-2">
                                         {PLAN_COLORS.map((color) => (
                                             <button
@@ -499,7 +499,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                                 onClick={() => updateField('color', color.value)}
                                                 className={`
                                                     w-8 h-8 rounded-lg transition-all
-                                                    ${formData.color === color.value ? 'ring-2 ring-editor-accent ring-offset-2 ring-offset-editor-panel-bg' : ''}
+                                                    ${formData.color === color.value ? 'ring-2 ring-q-accent ring-offset-2 ring-offset-editor-panel-bg' : ''}
                                                 `}
                                                 style={{ backgroundColor: color.value }}
                                                 title={color.name}
@@ -508,11 +508,11 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-editor-text-secondary mb-1.5">Icono</label>
+                                    <label className="block text-sm text-q-text-secondary mb-1.5">Icono</label>
                                     <select
                                         value={formData.icon || 'Sparkles'}
                                         onChange={(e) => updateField('icon', e.target.value)}
-                                        className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                     >
                                         {PLAN_ICONS.map((icon) => (
                                             <option key={icon} value={icon}>{icon}</option>
@@ -530,10 +530,10 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         onChange={(e) => updateField('isFeatured', e.target.checked)}
                                         className="sr-only"
                                     />
-                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${formData.isFeatured ? 'bg-editor-accent' : 'bg-editor-border'}`}>
+                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${formData.isFeatured ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}>
                                         {formData.isFeatured && <Check className="w-3 h-3 text-white" />}
                                     </div>
-                                    <span className="text-editor-text-primary">Destacado</span>
+                                    <span className="text-q-text">Destacado</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
@@ -542,10 +542,10 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                         onChange={(e) => updateField('isPopular', e.target.checked)}
                                         className="sr-only"
                                     />
-                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${formData.isPopular ? 'bg-editor-accent' : 'bg-editor-border'}`}>
+                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${formData.isPopular ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}>
                                         {formData.isPopular && <Check className="w-3 h-3 text-white" />}
                                     </div>
-                                    <span className="text-editor-text-primary">Popular</span>
+                                    <span className="text-q-text">Popular</span>
                                 </label>
                             </div>
                         </div>
@@ -619,7 +619,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="core" title="Core" icon={<Sparkles className="w-4 h-4" />} />
                                 {expandedSections.core && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="AI Website Builder"
                                             description="Generación de sitios web con IA"
@@ -646,7 +646,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="cms" title="CMS" icon={<Database className="w-4 h-4" />} />
                                 {expandedSections.cms && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="CMS Habilitado"
                                             description="Sistema de gestión de contenido"
@@ -667,7 +667,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="crm" title="CRM" icon={<Users className="w-4 h-4" />} />
                                 {expandedSections.crm && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="CRM Habilitado"
                                             description="Gestión de contactos y leads"
@@ -694,7 +694,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="ecommerce" title="E-Commerce" icon={<ShoppingCart className="w-4 h-4" />} />
                                 {expandedSections.ecommerce && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="E-Commerce Habilitado"
                                             description="Tienda online con Stripe"
@@ -702,7 +702,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                             onChange={(v) => updateFeature('ecommerceEnabled', v)}
                                         />
                                         <div className="p-3">
-                                            <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                            <label className="block text-sm text-q-text-secondary mb-1.5">
                                                 Fee por Transacción (%)
                                             </label>
                                             <input
@@ -712,7 +712,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                                 min={0}
                                                 max={10}
                                                 step={0.5}
-                                                className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                             />
                                         </div>
                                     </div>
@@ -723,7 +723,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="ai" title="IA & Chatbot" icon={<MessageSquare className="w-4 h-4" />} />
                                 {expandedSections.ai && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="Chatbot"
                                             description="Widget de chat con IA"
@@ -756,7 +756,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="communication" title="Comunicación" icon={<Mail className="w-4 h-4" />} />
                                 {expandedSections.communication && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="Email Marketing"
                                             description="Campañas de email"
@@ -777,7 +777,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="branding" title="Branding" icon={<Palette className="w-4 h-4" />} />
                                 {expandedSections.branding && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="Dominios Personalizados"
                                             description="Conectar dominio propio"
@@ -804,7 +804,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="analytics" title="Analytics" icon={<BarChart3 className="w-4 h-4" />} />
                                 {expandedSections.analytics && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="Analytics Básico"
                                             description="Métricas básicas de visitantes"
@@ -825,7 +825,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                             <div>
                                 <SectionHeader id="advanced" title="Avanzado" icon={<Code className="w-4 h-4" />} />
                                 {expandedSections.advanced && (
-                                    <div className="mt-2 border border-editor-border rounded-lg divide-y divide-editor-border">
+                                    <div className="mt-2 border border-q-border rounded-lg divide-y divide-editor-border">
                                         <FeatureToggle
                                             label="Acceso API"
                                             description="API REST para integraciones"
@@ -839,13 +839,13 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                             onChange={(v) => updateFeature('webhooks', v)}
                                         />
                                         <div className="p-3">
-                                            <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                            <label className="block text-sm text-q-text-secondary mb-1.5">
                                                 Nivel de Soporte
                                             </label>
                                             <select
                                                 value={formData.features?.supportLevel || 'community'}
                                                 onChange={(e) => updateFeature('supportLevel', e.target.value as any)}
-                                                className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                             >
                                                 {SUPPORT_LEVELS.map((level) => (
                                                     <option key={level.value} value={level.value}>{level.label}</option>
@@ -861,15 +861,15 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                     {/* Stripe Tab */}
                     {activeTab === 'stripe' && (
                         <div className="space-y-6">
-                            <div className="p-4 bg-editor-bg rounded-lg border border-editor-border">
-                                <p className="text-editor-text-secondary text-sm">
+                            <div className="p-4 bg-q-bg rounded-lg border border-q-border">
+                                <p className="text-q-text-secondary text-sm">
                                     Estos IDs se sincronizan automáticamente con Stripe cuando guardas el plan.
                                     Puedes editarlos manualmente si ya tienes productos/precios creados.
                                 </p>
                             </div>
                             
                             <div>
-                                <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Product ID
                                 </label>
                                 <input
@@ -877,12 +877,12 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     value={formData.stripeProductId || ''}
                                     onChange={(e) => updateField('stripeProductId', e.target.value)}
                                     placeholder="prod_XXXXXXXXXXXXX"
-                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent font-mono text-sm"
+                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent font-mono text-sm"
                                 />
                             </div>
                             
                             <div>
-                                <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Price ID (Mensual)
                                 </label>
                                 <input
@@ -890,12 +890,12 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     value={formData.stripePriceIdMonthly || ''}
                                     onChange={(e) => updateField('stripePriceIdMonthly', e.target.value)}
                                     placeholder="price_XXXXXXXXXXXXX"
-                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent font-mono text-sm"
+                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent font-mono text-sm"
                                 />
                             </div>
                             
                             <div>
-                                <label className="block text-sm text-editor-text-secondary mb-1.5">
+                                <label className="block text-sm text-q-text-secondary mb-1.5">
                                     Stripe Price ID (Anual)
                                 </label>
                                 <input
@@ -903,7 +903,7 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                     value={formData.stripePriceIdAnnually || ''}
                                     onChange={(e) => updateField('stripePriceIdAnnually', e.target.value)}
                                     placeholder="price_XXXXXXXXXXXXX"
-                                    className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent font-mono text-sm"
+                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent font-mono text-sm"
                                 />
                             </div>
                         </div>
@@ -911,17 +911,17 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                 </div>
                 
                 {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-6 border-t border-editor-border">
+                <div className="flex items-center justify-end gap-3 p-6 border-t border-q-border">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-editor-border text-editor-text-primary hover:bg-editor-border/80 transition-colors"
+                        className="px-4 py-2 rounded-lg bg-q-surface-overlay text-q-text hover:bg-q-surface-overlay/80 transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={isLoading}
-                        className="px-6 py-2 rounded-lg bg-editor-accent text-white hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-6 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         {isLoading ? (
                             <>

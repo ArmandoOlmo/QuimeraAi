@@ -63,7 +63,7 @@ const ExpandableSection: React.FC<ExpandableSectionProps> = ({
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
     return (
-        <div className="border border-border/50 rounded-xl overflow-hidden">
+        <div className="border border-q-border/50 rounded-xl overflow-hidden">
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="w-full flex items-center justify-between p-4 bg-secondary/20 hover:bg-secondary/30 transition-colors"
@@ -98,7 +98,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     return (
         <button
             onClick={handleCopy}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+            className="p-1.5 text-q-text-muted hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
         >
             {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
         </button>
@@ -338,7 +338,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     </div>
                     <div>
                         <h3 className="font-bold text-foreground">{t('appointments.ai.title')}</h3>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-q-text-muted">
                             {t('appointments.ai.subtitle')}
                         </p>
                     </div>
@@ -369,7 +369,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                     <div className="p-4 bg-secondary/30 rounded-xl">
                         <div className="flex items-center gap-2 mb-2">
                             <TrendingUp size={16} className="text-green-500" />
-                            <span className="text-xs font-semibold text-muted-foreground uppercase">
+                            <span className="text-xs font-semibold text-q-text-muted uppercase">
                                 {t('appointments.ai.successProbability')}
                             </span>
                         </div>
@@ -398,13 +398,13 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         <div className="p-4 bg-secondary/30 rounded-xl">
                             <div className="flex items-center gap-2 mb-2">
                                 <Clock size={16} className="text-blue-500" />
-                                <span className="text-xs font-semibold text-muted-foreground uppercase">
+                                <span className="text-xs font-semibold text-q-text-muted uppercase">
                                     {t('appointments.ai.recommendedDuration')}
                                 </span>
                             </div>
                             <span className="text-3xl font-bold text-foreground">
                                 {insights.recommendedDuration}
-                                <span className="text-lg text-muted-foreground ml-1">min</span>
+                                <span className="text-lg text-q-text-muted ml-1">min</span>
                             </span>
                         </div>
                     )}
@@ -447,7 +447,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-sm text-muted-foreground italic">
+                        <p className="text-sm text-q-text-muted italic">
                             {t('appointments.ai.talkingPointsEmpty')}
                         </p>
                     )}
@@ -472,7 +472,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             ))
                         ) : (
                             <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground italic">
+                                <p className="text-sm text-q-text-muted italic">
                                     {t('appointments.ai.noQuestionsYet')}
                                 </p>
                                 <button
@@ -513,7 +513,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                             ))
                         ) : (
                             <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground italic">
+                                <p className="text-sm text-q-text-muted italic">
                                     {t('appointments.ai.noObjectionsYet')}
                                 </p>
                                 <button
@@ -550,7 +550,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
                         </div>
                     ) : (
                         <div className="flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground italic">
+                            <p className="text-sm text-q-text-muted italic">
                                 {t('appointments.ai.noStrategyYet')}
                             </p>
                             <button
@@ -572,7 +572,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             {/* Footer */}
             {insights?.generatedAt && (
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-q-text-muted text-center">
                     {t('appointments.ai.generatedAt', { date: new Date(insights.generatedAt.seconds * 1000).toLocaleString(i18n.language) })}
                     {insights.model && ` ${t('appointments.ai.withModel', { model: insights.model })}`}
                 </p>

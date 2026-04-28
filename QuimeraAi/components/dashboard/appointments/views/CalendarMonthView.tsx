@@ -134,7 +134,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
     }, [monthDays]);
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 bg-background p-4">
+        <div className="flex-1 flex flex-col min-h-0 bg-q-bg p-4">
             {/* Day headers */}
             <div className="grid grid-cols-7 mb-2">
                 {orderedDays.map((day, index) => (
@@ -142,7 +142,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                         key={day}
                         className={`
                             py-2 text-center text-xs font-semibold uppercase tracking-wider
-                            ${index === 5 || index === 6 ? 'text-muted-foreground/60' : 'text-muted-foreground'}
+                            ${index === 5 || index === 6 ? 'text-q-text-muted/60' : 'text-q-text-muted'}
                         `}
                     >
                         {day}
@@ -173,7 +173,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                         ${isCurrentDay
                                             ? 'border-primary bg-primary/5'
                                             : isCurrentMonth
-                                                ? 'border-border/50 bg-card/50 hover:bg-card'
+                                                ? 'border-q-border/50 bg-q-surface/50 hover:bg-q-surface'
                                                 : 'border-transparent bg-muted/20 opacity-50'
                                         }
                                     `}
@@ -183,14 +183,14 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                         <span className={`
                                             ${isCurrentDay
                                                 ? 'w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm'
-                                                : `text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'}`
+                                                : `text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-q-text-muted/50'}`
                                             }
                                         `}>
                                             {day.getDate()}
                                         </span>
 
                                         {dayAppointments.length > 0 && !isCurrentDay && (
-                                            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                                            <span className="text-xs text-q-text-muted bg-muted px-1.5 py-0.5 rounded-full">
                                                 {dayAppointments.length}
                                             </span>
                                         )}
@@ -231,7 +231,7 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
                                                     onClick={(e) => { e.stopPropagation(); onDayClick(day); }}
                                                     className="
                                                         w-full text-xs text-center py-1 rounded-md
-                                                        text-muted-foreground hover:text-foreground
+                                                        text-q-text-muted hover:text-foreground
                                                         hover:bg-muted/50 transition-colors
                                                         flex items-center justify-center gap-1
                                                     "

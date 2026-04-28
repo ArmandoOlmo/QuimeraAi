@@ -179,7 +179,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
 
     const LEAD_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const CARD_COLORS = [
-        { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-border', indicator: 'bg-slate-500' },
+        { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-q-border', indicator: 'bg-slate-500' },
         { id: 'blue', bg: 'bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
         { id: 'green', bg: 'bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
         { id: 'purple', bg: 'bg-gradient-to-r from-purple-500/40 via-purple-500/20 to-transparent', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
@@ -349,7 +349,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
             >
                 <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteLead(lead.id); }}
-                    className="absolute top-2 right-2 z-10 p-1 rounded-full bg-card/80 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute top-2 right-2 z-10 p-1 rounded-full bg-q-surface/80 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
                 >
                     <Trash2 size={14} />
                 </button>
@@ -359,16 +359,16 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm text-foreground truncate">{lead.name || 'Sin nombre'}</h4>
-                        {lead.company && <p className="text-xs text-muted-foreground truncate">{lead.company}</p>}
+                        {lead.company && <p className="text-xs text-q-text-muted truncate">{lead.company}</p>}
                     </div>
                 </div>
                 {lead.email && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                    <p className="text-xs text-q-text-muted flex items-center gap-1 mb-1">
                         <Mail size={10} />{lead.email}
                     </p>
                 )}
                 {lead.source && (
-                    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-secondary text-q-text-muted">
                         {lead.source}
                     </span>
                 )}
@@ -380,7 +380,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                 style={{ width: `${lead.aiScore || lead.leadScore || 0}%` }}
                             />
                         </div>
-                        <span className="text-[10px] text-muted-foreground">{lead.aiScore || lead.leadScore}</span>
+                        <span className="text-[10px] text-q-text-muted">{lead.aiScore || lead.leadScore}</span>
                     </div>
                 )}
                 {lead.value && lead.value > 0 && (
@@ -388,8 +388,8 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                         <DollarSign size={10} />${lead.value.toLocaleString()}
                     </div>
                 )}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                    <span className="text-[10px] text-muted-foreground flex items-center">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-q-border/50">
+                    <span className="text-[10px] text-q-text-muted flex items-center">
                         <Clock size={10} className="mr-1" />
                         {lead.createdAt?.seconds ? new Date(lead.createdAt.seconds * 1000).toLocaleDateString() : 'Reciente'}
                     </span>
@@ -403,24 +403,24 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-14 h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 bg-background/95 border-b border-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
+                <header className="h-14 bg-q-bg/95 border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
                     <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 text-primary" />
                         <h1 className="text-lg font-bold">{t('superadmin.platformLeads', 'Leads de Plataforma')}</h1>
-                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{leads.length}</span>
+                        <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full">{leads.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <HeaderBackButton onClick={onBack} />
                         {/* View Mode */}
                         <div className="hidden sm:flex items-center gap-1 bg-secondary rounded-lg p-0.5">
-                            <button onClick={() => setViewMode('kanban')} className={`p-1.5 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}><Columns size={16} /></button>
-                            <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}><Table size={16} /></button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}><List size={16} /></button>
+                            <button onClick={() => setViewMode('kanban')} className={`p-1.5 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}><Columns size={16} /></button>
+                            <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}><Table size={16} /></button>
+                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}><List size={16} /></button>
                         </div>
-                        <button onClick={() => setIsMobileSearchOpen(true)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"><Search size={18} /></button>
-                        <button onClick={() => setIsFiltersOpen(!isFiltersOpen)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"><Filter size={18} /></button>
-                        <button onClick={handleExportCSV} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Exportar CSV"><Download size={18} /></button>
-                        <button onClick={() => setShowImport(true)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Importar"><Upload size={18} /></button>
+                        <button onClick={() => setIsMobileSearchOpen(true)} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"><Search size={18} /></button>
+                        <button onClick={() => setIsFiltersOpen(!isFiltersOpen)} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"><Filter size={18} /></button>
+                        <button onClick={handleExportCSV} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors" title="Exportar CSV"><Download size={18} /></button>
+                        <button onClick={() => setShowImport(true)} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors" title="Importar"><Upload size={18} /></button>
                         {/* Bulk add to audience */}
                         {selectedLeadIds.size > 0 && (
                             <button
@@ -451,8 +451,8 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                 </header>
 
                 {/* Stats Bar */}
-                <div className="px-4 sm:px-6 py-3 border-b border-border/50 bg-card/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
-                    <span className="text-muted-foreground">{t('leads.total')}: <b className="text-foreground">{stats.total}</b></span>
+                <div className="px-4 sm:px-6 py-3 border-b border-q-border/50 bg-q-surface/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
+                    <span className="text-q-text-muted">{t('leads.total')}: <b className="text-foreground">{stats.total}</b></span>
                     <span className="text-blue-500">{t('leads.stages.new')}: <b>{stats.new}</b></span>
                     <span className="text-yellow-500">{t('leads.stages.contacted')}: <b>{stats.contacted}</b></span>
                     <span className="text-purple-500">{t('leads.stages.qualified')}: <b>{stats.qualified}</b></span>
@@ -470,13 +470,13 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                             <Sparkles size={16} className="text-primary" />
                             <h3 className="text-sm font-bold text-primary">{t('leads.aiAnalysis', 'Análisis AI')}</h3>
                         </div>
-                        <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-60 overflow-y-auto">{aiAnalysis}</div>
+                        <div className="text-sm text-q-text-muted whitespace-pre-wrap max-h-60 overflow-y-auto">{aiAnalysis}</div>
                     </div>
                 )}
 
                 {/* Filters Panel */}
                 {isFiltersOpen && (
-                    <div className="px-4 sm:px-6 py-3 border-b border-border bg-card/50">
+                    <div className="px-4 sm:px-6 py-3 border-b border-q-border bg-q-surface/50">
                         <LeadsFilters
                             filters={activeFilters}
                             onFiltersChange={setActiveFilters}
@@ -493,9 +493,9 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                         </div>
                     ) : leads.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64 text-center">
-                            <Users className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                            <Users className="w-16 h-16 text-q-text-muted/30 mb-4" />
                             <h3 className="text-lg font-semibold mb-2">{t('leads.emptyState.title', 'Sin leads de plataforma')}</h3>
-                            <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                            <p className="text-sm text-q-text-muted mb-4 max-w-md">
                                 {t('leads.emptyState.adminDesc', 'Los leads de la landing page, formulario de contacto y chatbot aparecerán aquí.')}
                             </p>
                             <button onClick={() => setShowAddLead(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
@@ -515,11 +515,11 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                     <div className="flex items-center gap-2 mb-3 px-1">
                                         <div className={`w-3 h-3 rounded-full ${stage.color}`} />
                                         <h3 className="text-sm font-bold text-foreground">{stage.label}</h3>
-                                        <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-full">
+                                        <span className="text-xs text-q-text-muted bg-secondary px-1.5 py-0.5 rounded-full">
                                             {leadsByStage[stage.id]?.length || 0}
                                         </span>
                                     </div>
-                                    <div className="min-h-[200px] p-1 rounded-lg border border-dashed border-border/50">
+                                    <div className="min-h-[200px] p-1 rounded-lg border border-dashed border-q-border/50">
                                         {leadsByStage[stage.id]?.map(lead => (
                                             <LeadCard key={lead.id} lead={lead} />
                                         ))}
@@ -568,7 +568,7 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
 
             {/* Lead Detail Panel */}
             {selectedLead && (
-                <div className="w-full sm:w-96 lg:w-[420px] border-l border-border bg-card overflow-y-auto flex-shrink-0">
+                <div className="w-full sm:w-96 lg:w-[420px] border-l border-q-border bg-q-surface overflow-y-auto flex-shrink-0">
                     <div className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold truncate">{selectedLead.name}</h2>
@@ -576,22 +576,22 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                         </div>
                         <div className="space-y-4">
                             {selectedLead.email && (
-                                <div className="flex items-center gap-2 text-sm"><Mail size={14} className="text-muted-foreground" /><span>{selectedLead.email}</span></div>
+                                <div className="flex items-center gap-2 text-sm"><Mail size={14} className="text-q-text-muted" /><span>{selectedLead.email}</span></div>
                             )}
                             {selectedLead.phone && (
-                                <div className="flex items-center gap-2 text-sm"><Phone size={14} className="text-muted-foreground" /><span>{selectedLead.phone}</span></div>
+                                <div className="flex items-center gap-2 text-sm"><Phone size={14} className="text-q-text-muted" /><span>{selectedLead.phone}</span></div>
                             )}
                             {selectedLead.company && (
-                                <div className="flex items-center gap-2 text-sm"><Building2 size={14} className="text-muted-foreground" /><span>{selectedLead.company}</span></div>
+                                <div className="flex items-center gap-2 text-sm"><Building2 size={14} className="text-q-text-muted" /><span>{selectedLead.company}</span></div>
                             )}
-                            <div className="border-t border-border pt-4">
+                            <div className="border-t border-q-border pt-4">
                                 <h3 className="text-sm font-semibold mb-2">{t('leads.status')}</h3>
                                 <div className="flex flex-wrap gap-1.5">
                                     {LEAD_STAGES.map(stage => (
                                         <button
                                             key={stage.id}
                                             onClick={() => updateLeadStatus(selectedLead.id, stage.id)}
-                                            className={`text-xs px-2 py-1 rounded-full border transition-all ${selectedLead.status === stage.id ? `${stage.color} text-white border-transparent` : 'border-border text-muted-foreground hover:text-foreground'}`}
+                                            className={`text-xs px-2 py-1 rounded-full border transition-all ${selectedLead.status === stage.id ? `${stage.color} text-white border-transparent` : 'border-q-border text-q-text-muted hover:text-foreground'}`}
                                         >
                                             {stage.label}
                                         </button>
@@ -599,13 +599,13 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                 </div>
                             </div>
                             {selectedLead.notes && (
-                                <div className="border-t border-border pt-4">
+                                <div className="border-t border-q-border pt-4">
                                     <h3 className="text-sm font-semibold mb-2">{t('leads.notes')}</h3>
-                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedLead.notes}</p>
+                                    <p className="text-sm text-q-text-muted whitespace-pre-wrap">{selectedLead.notes}</p>
                                 </div>
                             )}
                             {selectedLead.tags && selectedLead.tags.length > 0 && (
-                                <div className="border-t border-border pt-4">
+                                <div className="border-t border-q-border pt-4">
                                     <h3 className="text-sm font-semibold mb-2">Tags</h3>
                                     <div className="flex flex-wrap gap-1">
                                         {selectedLead.tags.map(tag => (
@@ -615,13 +615,13 @@ const AdminLeadsDashboardInner: React.FC<{ onBack: () => void }> = ({ onBack }) 
                                 </div>
                             )}
                             {selectedLead.conversationTranscript && (
-                                <div className="border-t border-border pt-4">
+                                <div className="border-t border-q-border pt-4">
                                     <h3 className="text-sm font-semibold mb-2">{t('leads.conversation', 'Conversación')}</h3>
-                                    <div className="text-xs text-muted-foreground whitespace-pre-wrap max-h-40 overflow-y-auto bg-secondary/50 p-3 rounded-lg">{selectedLead.conversationTranscript}</div>
+                                    <div className="text-xs text-q-text-muted whitespace-pre-wrap max-h-40 overflow-y-auto bg-secondary/50 p-3 rounded-lg">{selectedLead.conversationTranscript}</div>
                                 </div>
                             )}
                             {/* Email Marketing Integration */}
-                            <div className="border-t border-border pt-4">
+                            <div className="border-t border-q-border pt-4">
                                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                                     <Megaphone size={14} className="text-purple-500" />
                                     Email Marketing

@@ -306,7 +306,7 @@ const SubscriptionSettings: React.FC = () => {
             {/* ═══════════════════════════════════════════════ */}
             {/* HERO: Current Plan + Usage                     */}
             {/* ═══════════════════════════════════════════════ */}
-            <div className="relative bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="relative bg-q-surface border border-q-border rounded-2xl overflow-hidden">
                 {/* Gradient accent strip */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${currentGradient}`} />
 
@@ -327,7 +327,7 @@ const SubscriptionSettings: React.FC = () => {
                                             {t('settings.subscription.activePlan', 'Activo')}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mt-0.5">
+                                    <p className="text-sm text-q-text-muted mt-0.5">
                                         {currentPlan.description}
                                     </p>
                                 </div>
@@ -335,26 +335,26 @@ const SubscriptionSettings: React.FC = () => {
 
                             {/* Plan features mini grid */}
                             <div className="grid grid-cols-3 gap-3">
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
                                     <Sparkles size={14} className="text-primary mb-1" />
                                     <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxAiCredits.toLocaleString()}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
                                         {t('settings.subscription.aiCredits', 'Créditos IA')}
                                     </p>
                                 </div>
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
                                     <Rocket size={14} className="text-primary mb-1" />
                                     <p className="text-lg font-bold text-foreground">
                                         {currentPlan.limits.maxProjects === -1 ? '∞' : currentPlan.limits.maxProjects}
                                     </p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
                                         {t('settings.subscription.projects', 'Proyectos')}
                                     </p>
                                 </div>
-                                <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+                                <div className="p-3 rounded-xl bg-secondary/30 border border-q-border">
                                     <Gift size={14} className="text-primary mb-1" />
                                     <p className="text-lg font-bold text-foreground">{currentPlan.limits.maxStorageGB} GB</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-[10px] text-q-text-muted uppercase tracking-wider">
                                         {t('settings.subscription.storage', 'Almacenamiento')}
                                     </p>
                                 </div>
@@ -362,7 +362,7 @@ const SubscriptionSettings: React.FC = () => {
                         </div>
 
                         {/* Usage card */}
-                        <div className="lg:w-80 bg-background rounded-2xl border border-border p-5">
+                        <div className="lg:w-80 bg-q-bg rounded-2xl border border-q-border p-5">
                             <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                                     <Zap size={14} className="text-amber-500" />
@@ -371,7 +371,7 @@ const SubscriptionSettings: React.FC = () => {
                                 <button
                                     onClick={handleRefresh}
                                     disabled={isLoadingUsage}
-                                    className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 rounded-lg hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
                                 >
                                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsage ? 'animate-spin' : ''}`} />
                                 </button>
@@ -410,17 +410,17 @@ const SubscriptionSettings: React.FC = () => {
 
                                     {/* Stats row */}
                                     <div className="flex items-center justify-between text-xs mb-3">
-                                        <span className="text-muted-foreground">
+                                        <span className="text-q-text-muted">
                                             {t('settings.subscription.used', 'Usado')}: <span className="font-semibold text-foreground">{usage?.used || 0}</span>
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className="text-q-text-muted">
                                             {t('settings.subscription.limit', 'Límite')}: <span className="font-semibold text-foreground">{usage?.limit || 0}</span>
                                         </span>
                                     </div>
 
                                     {/* Remaining highlight */}
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border">
-                                        <span className="text-sm text-muted-foreground">
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-q-border">
+                                        <span className="text-sm text-q-text-muted">
                                             {t('settings.subscription.remaining', 'Restante')}
                                         </span>
                                         <span
@@ -493,8 +493,8 @@ const SubscriptionSettings: React.FC = () => {
                                 className={`relative flex flex-col rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isCurrentPlan
                                     ? 'bg-primary/5 border-primary/50 shadow-md shadow-primary/10'
                                     : isRecommended
-                                        ? 'bg-card border-amber-500/50 shadow-md shadow-amber-500/10'
-                                        : 'bg-card border-border hover:border-primary/30'
+                                        ? 'bg-q-surface border-amber-500/50 shadow-md shadow-amber-500/10'
+                                        : 'bg-q-surface border-q-border hover:border-primary/30'
                                     }`}
                             >
                                 {/* Recommended badge */}
@@ -534,16 +534,16 @@ const SubscriptionSettings: React.FC = () => {
                                     <div className="mb-4">
                                         <div className="flex items-baseline gap-1">
                                             <span className="text-3xl font-extrabold text-foreground">${plan.price.monthly}</span>
-                                            <span className="text-sm text-muted-foreground">/mes</span>
+                                            <span className="text-sm text-q-text-muted">/mes</span>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
+                                        <p className="text-xs text-q-text-muted mt-1 line-clamp-2 min-h-[2.5em]">
                                             {plan.description}
                                         </p>
                                     </div>
 
                                     {/* Features */}
                                     <ul className="space-y-2.5 mb-6 flex-grow">
-                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
                                             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <Sparkles className="w-3 h-3 text-primary" />
                                             </div>
@@ -551,7 +551,7 @@ const SubscriptionSettings: React.FC = () => {
                                                 <strong className="text-foreground">{plan.limits.maxAiCredits.toLocaleString()}</strong> créditos IA
                                             </span>
                                         </li>
-                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
                                             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <Rocket className="w-3 h-3 text-primary" />
                                             </div>
@@ -561,7 +561,7 @@ const SubscriptionSettings: React.FC = () => {
                                                 </strong> proyectos
                                             </span>
                                         </li>
-                                        <li className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
                                             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <Gift className="w-3 h-3 text-primary" />
                                             </div>
@@ -618,8 +618,8 @@ const SubscriptionSettings: React.FC = () => {
             {/* BILLING & MANAGEMENT                           */}
             {/* ═══════════════════════════════════════════════ */}
             {currentPlanId !== 'free' && subscriptionDetails?.stripe && (
-                <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                    <div className="p-5 border-b border-border flex items-center gap-3">
+                <div className="bg-q-surface rounded-2xl border border-q-border overflow-hidden">
+                    <div className="p-5 border-b border-q-border flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <Calendar className="w-5 h-5 text-primary" />
                         </div>
@@ -627,7 +627,7 @@ const SubscriptionSettings: React.FC = () => {
                             <h4 className="font-semibold text-foreground">
                                 {t('settings.subscription.billingPeriod', 'Período de Facturación')}
                             </h4>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('settings.subscription.billingDesc', 'Detalles de tu ciclo de facturación actual')}
                             </p>
                         </div>
@@ -637,16 +637,16 @@ const SubscriptionSettings: React.FC = () => {
                         {/* Timeline */}
                         <div className="relative">
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                                    <span className="text-xs text-muted-foreground block mb-1">
+                                <div className="p-4 rounded-xl bg-secondary/30 border border-q-border">
+                                    <span className="text-xs text-q-text-muted block mb-1">
                                         {t('settings.subscription.periodStart', 'Inicio del período')}
                                     </span>
                                     <span className="text-sm font-semibold text-foreground">
                                         {new Date(subscriptionDetails.stripe.currentPeriodStart).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <div className="p-4 rounded-xl bg-secondary/30 border border-border">
-                                    <span className="text-xs text-muted-foreground block mb-1">
+                                <div className="p-4 rounded-xl bg-secondary/30 border border-q-border">
+                                    <span className="text-xs text-q-text-muted block mb-1">
                                         {t('settings.subscription.periodEnd', 'Próxima renovación')}
                                     </span>
                                     <span className="text-sm font-semibold text-foreground">
@@ -700,7 +700,7 @@ const SubscriptionSettings: React.FC = () => {
 
                         {/* Cancel Subscription Button */}
                         {!subscriptionDetails.stripe.cancelAtPeriodEnd && (
-                            <div className="pt-4 border-t border-border">
+                            <div className="pt-4 border-t border-q-border">
                                 <button
                                     onClick={() => handleCancelSubscription(false)}
                                     disabled={isCancelling}

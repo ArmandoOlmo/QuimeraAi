@@ -67,7 +67,7 @@ const TabButton: React.FC<{
             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
             ${active
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
+                : 'bg-muted text-q-text-muted hover:text-foreground'
             }
         `}
     >
@@ -101,9 +101,9 @@ const NumberInput: React.FC<{
                 max={max}
                 step={step}
                 placeholder={allowUnlimited ? 'Ilimitado' : undefined}
-                className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
             />
-            {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
+            {suffix && <span className="text-sm text-q-text-muted">{suffix}</span>}
             {allowUnlimited && (
                 <button
                     type="button"
@@ -112,7 +112,7 @@ const NumberInput: React.FC<{
                         px-3 py-2 rounded-lg text-sm font-medium transition-colors
                         ${value === -1
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            : 'bg-muted text-q-text-muted hover:bg-muted/80'
                         }
                     `}
                     title="Ilimitado"
@@ -122,7 +122,7 @@ const NumberInput: React.FC<{
             )}
         </div>
         {description && (
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+            <p className="text-xs text-q-text-muted mt-1">{description}</p>
         )}
     </div>
 );
@@ -151,7 +151,7 @@ const FeatureToggle: React.FC<{
         <div className="flex-1">
             <span className="text-foreground font-medium">{label}</span>
             {description && (
-                <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+                <p className="text-sm text-q-text-muted mt-0.5">{description}</p>
             )}
         </div>
     </label>
@@ -239,9 +239,9 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
+                <div className="flex items-center justify-between p-6 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div
                             className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -253,21 +253,21 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                             <h2 className="text-xl font-semibold text-foreground">
                                 {isNewPlan ? 'Crear Nuevo Plan' : `Editar: ${plan?.name}`}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {isNewPlan ? 'Define un plan de servicio para tus clientes' : 'Modifica la configuración del plan'}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2 rounded-lg hover:bg-muted text-q-text-muted hover:text-foreground transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-2 p-4 border-b border-border overflow-x-auto">
+                <div className="flex gap-2 p-4 border-b border-q-border overflow-x-auto">
                     <TabButton
                         active={activeTab === 'general'}
                         onClick={() => setActiveTab('general')}
@@ -319,7 +319,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                         value={formData.name || ''}
                                         onChange={(e) => updateField('name', e.target.value)}
                                         placeholder="ej: Plan Básico"
-                                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                     />
                                 </div>
                                 <div>
@@ -353,12 +353,12 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                     onChange={(e) => updateField('description', e.target.value)}
                                     rows={2}
                                     placeholder="Descripción breve del plan..."
-                                    className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+                                    className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
                                 />
                             </div>
 
                             {/* Pricing with Markup Preview */}
-                            <div className="bg-muted/30 rounded-xl p-5 border border-border">
+                            <div className="bg-muted/30 rounded-xl p-5 border border-q-border">
                                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                                     <DollarSign className="w-5 h-5 text-green-600" />
                                     Precio y Ganancia
@@ -370,21 +370,21 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                             Precio al Cliente *
                                         </label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">$</span>
                                             <input
                                                 type="number"
                                                 value={formData.price || ''}
                                                 onChange={(e) => updateField('price', parseFloat(e.target.value) || 0)}
                                                 min={0}
                                                 step={1}
-                                                className="w-full pl-8 pr-16 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                                className="w-full pl-8 pr-16 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                             />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mes</span>
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-muted text-sm">/mes</span>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1.5">
                                             Tu Costo (Quimera)
                                         </label>
                                         <div className="px-4 py-2 bg-muted rounded-lg text-foreground font-medium">
@@ -417,7 +417,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                             </div>
 
                             {/* Default Plan Toggle */}
-                            <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+                            <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-lg border border-q-border">
                                 <label className="flex items-center gap-2 cursor-pointer flex-1">
                                     <input
                                         type="checkbox"
@@ -434,7 +434,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                     </div>
                                     <div>
                                         <span className="text-foreground font-medium">Plan por Defecto</span>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             Asignar automáticamente a nuevos clientes
                                         </p>
                                     </div>
@@ -511,10 +511,10 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                         <div className="space-y-4">
                             {/* Core Features */}
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h3 className="text-sm font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     Core
                                 </h3>
-                                <div className="border border-border rounded-lg divide-y divide-border">
+                                <div className="border border-q-border rounded-lg divide-y divide-border">
                                     <FeatureToggle
                                         label="Website Builder"
                                         description="Generación y edición de sitios web"
@@ -538,10 +538,10 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
 
                             {/* CMS & CRM */}
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h3 className="text-sm font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     CMS & CRM
                                 </h3>
-                                <div className="border border-border rounded-lg divide-y divide-border">
+                                <div className="border border-q-border rounded-lg divide-y divide-border">
                                     <FeatureToggle
                                         label="CMS (Blog)"
                                         description="Sistema de gestión de contenido"
@@ -559,10 +559,10 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
 
                             {/* E-commerce & Communication */}
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h3 className="text-sm font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     E-commerce & Marketing
                                 </h3>
-                                <div className="border border-border rounded-lg divide-y divide-border">
+                                <div className="border border-q-border rounded-lg divide-y divide-border">
                                     <FeatureToggle
                                         label="E-Commerce"
                                         description="Tienda online con pagos"
@@ -586,10 +586,10 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
 
                             {/* Branding & Analytics */}
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                <h3 className="text-sm font-semibold text-q-text-muted uppercase tracking-wider mb-2">
                                     Branding & Analytics
                                 </h3>
-                                <div className="border border-border rounded-lg divide-y divide-border">
+                                <div className="border border-q-border rounded-lg divide-y divide-border">
                                     <FeatureToggle
                                         label="Dominio Personalizado"
                                         description="Conectar dominio propio"
@@ -615,12 +615,12 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between p-6 border-t border-border bg-muted/30">
+                <div className="flex items-center justify-between p-6 border-t border-q-border bg-muted/30">
                     {/* Markup Preview in Footer */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 text-sm">
                             <TrendingUp className="w-4 h-4 text-green-600" />
-                            <span className="text-muted-foreground">Ganancia:</span>
+                            <span className="text-q-text-muted">Ganancia:</span>
                             <span className="font-bold text-green-600">
                                 ${markup.markup}/mes ({Math.round(markup.markupPercentage)}%)
                             </span>

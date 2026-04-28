@@ -12,24 +12,46 @@ import { fontStacks, loadGoogleFonts } from './fontLoader';
 export const defaultAppTokens: AppTokens = {
     colors: {
         light: {
-            background: '#F3F4F6',
+            background: '#F5F4F0',
             panelBackground: '#FFFFFF',
-            border: '#E5E7EB',
+            border: '#E0DCD3',
             accent: '#FBB92B',
-            textPrimary: '#111827',
-            textSecondary: '#6B7280',
+            textPrimary: '#1F1C18',
+            textSecondary: '#615A4F',
+            
+            // Quimera Design System 2.0 (Light / Warm Parchment)
+            surface: '#FFFFFF',
+            surfaceElevated: '#FDFBF7',
+            surfaceOverlay: '#EBEAE5',
+            borderStrong: '#C2BDB1',
+            accentSecondary: '#FFECC2',
+            accentTertiary: '#7F22DD',
+            textMuted: '#8A8275',
+            textOnAccent: '#1F1C18',
+            
             success: '#10b981',
             warning: '#f59e0b',
             error: '#ef4444',
             info: '#3b82f6',
         },
         dark: {
-            background: '#251535',
-            panelBackground: '#3A2951',
-            border: '#584275',
+            background: '#1C0D28',
+            panelBackground: '#251535',
+            border: '#4A3563',
             accent: '#FBB92B',
-            textPrimary: '#FAFAFA',
-            textSecondary: '#C4BBD0',
+            textPrimary: '#F8F7FA',
+            textSecondary: '#CBBEE0',
+            
+            // Quimera Design System 2.0 (Dark / Night Violet)
+            surface: '#251535',
+            surfaceElevated: '#332047',
+            surfaceOverlay: '#3A2951',
+            borderStrong: '#6B5187',
+            accentSecondary: '#8B6A26',
+            accentTertiary: '#A855F7',
+            textMuted: '#9688AF',
+            textOnAccent: '#150E28',
+            
             success: '#34d399',
             warning: '#fbbf24',
             error: '#f87171',
@@ -37,11 +59,22 @@ export const defaultAppTokens: AppTokens = {
         },
         black: {
             background: '#000000',
-            panelBackground: '#0F0F0F',
-            border: '#333333',
+            panelBackground: '#0A0A0A',
+            border: '#262626',
             accent: '#FBB92B',
             textPrimary: '#FFFFFF',
-            textSecondary: '#B3B3B3',
+            textSecondary: '#A3A3A3',
+            
+            // Quimera Design System 2.0 (Black / OLED Black)
+            surface: '#0A0A0A',
+            surfaceElevated: '#141414',
+            surfaceOverlay: '#1F1F1F',
+            borderStrong: '#404040',
+            accentSecondary: '#805B09',
+            accentTertiary: '#A855F7',
+            textMuted: '#737373',
+            textOnAccent: '#000000',
+            
             success: '#34d399',
             warning: '#fbbf24',
             error: '#f87171',
@@ -124,11 +157,32 @@ const applyColorTokens = (tokens: AppTokens, mode: ThemeMode): void => {
     root.style.setProperty('--editor-text-primary', colors.textPrimary);
     root.style.setProperty('--editor-text-secondary', colors.textSecondary);
     
-    // Colores semánticos para la app
+    // Quimera Design System 2.0 Tokens
+    root.style.setProperty('--q-bg', colors.background);
+    root.style.setProperty('--q-bg-secondary', colors.panelBackground); // Using panel as secondary bg
+    root.style.setProperty('--q-surface', colors.surface);
+    root.style.setProperty('--q-surface-elevated', colors.surfaceElevated);
+    root.style.setProperty('--q-surface-overlay', colors.surfaceOverlay);
+    root.style.setProperty('--q-border', colors.border);
+    root.style.setProperty('--q-border-strong', colors.borderStrong);
+    root.style.setProperty('--q-accent', colors.accent);
+    root.style.setProperty('--q-accent-secondary', colors.accentSecondary);
+    root.style.setProperty('--q-accent-tertiary', colors.accentTertiary);
+    root.style.setProperty('--q-text', colors.textPrimary);
+    root.style.setProperty('--q-text-secondary', colors.textSecondary);
+    root.style.setProperty('--q-text-muted', colors.textMuted);
+    root.style.setProperty('--q-text-on-accent', colors.textOnAccent);
+    
+    // Semantic colors (app & q-tokens)
     root.style.setProperty('--app-success', colors.success);
     root.style.setProperty('--app-warning', colors.warning);
     root.style.setProperty('--app-error', colors.error);
     root.style.setProperty('--app-info', colors.info);
+    
+    root.style.setProperty('--q-success', colors.success);
+    root.style.setProperty('--q-warning', colors.warning);
+    root.style.setProperty('--q-error', colors.error);
+    root.style.setProperty('--q-info', colors.info);
 };
 
 /**

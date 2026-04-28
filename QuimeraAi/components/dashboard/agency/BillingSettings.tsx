@@ -140,7 +140,7 @@ export function BillingSettings() {
             )}
 
             {/* Collapsible Instructions Section */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
                 <button
                     onClick={() => setShowInstructions(!showInstructions)}
                     className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
@@ -155,7 +155,7 @@ export function BillingSettings() {
                                     ? '¿Cómo configuro mi cuenta de pagos?'
                                     : '¿Cómo completo la verificación de Stripe?'}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 Guía paso a paso con instrucciones detalladas
                             </p>
                         </div>
@@ -175,19 +175,19 @@ export function BillingSettings() {
                 {showInstructions && (
                     <div className="px-6 pb-6 space-y-6">
                         {/* Divider */}
-                        <div className="border-t border-border" />
+                        <div className="border-t border-q-border" />
 
                         {/* What is Stripe Connect */}
-                        <div className="bg-muted/30 rounded-xl p-5 border border-border">
+                        <div className="bg-muted/30 rounded-xl p-5 border border-q-border">
                             <div className="flex items-start gap-4">
-                                <div className="p-3 bg-background rounded-xl flex-shrink-0 border border-border">
+                                <div className="p-3 bg-q-bg rounded-xl flex-shrink-0 border border-q-border">
                                     <Info className="h-6 w-6 text-primary" />
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-foreground text-lg mb-2">
                                         ¿Qué es Stripe Connect?
                                     </h4>
-                                    <p className="text-muted-foreground leading-relaxed">
+                                    <p className="text-q-text-muted leading-relaxed">
                                         Stripe Connect es un sistema de pagos seguro que te permite <strong>cobrar a tus clientes directamente</strong>.
                                         Es como tener tu propia cuenta bancaria digital para recibir pagos de forma automática.
                                         Los pagos van directo a tu cuenta, y tú controlas cuánto cobras.
@@ -207,18 +207,18 @@ export function BillingSettings() {
 
                             <div className="space-y-4">
                                 {/* Step 1 */}
-                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                <div className="relative pl-8 pb-4 border-l-2 border-q-border ml-4">
                                     <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
                                         1
                                     </div>
-                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-q-border ml-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <CreditCard className="h-5 w-5 text-primary" />
                                             <h5 className="font-semibold text-foreground">
                                                 Haz clic en "Conectar con Stripe"
                                             </h5>
                                         </div>
-                                        <p className="text-muted-foreground text-sm">
+                                        <p className="text-q-text-muted text-sm">
                                             Busca el botón azul que dice <span className="bg-primary/10 px-2 py-0.5 rounded text-primary font-medium">"Conectar con Stripe"</span> y haz clic.
                                             Serás redirigido a la página oficial de Stripe.
                                         </p>
@@ -226,34 +226,34 @@ export function BillingSettings() {
                                 </div>
 
                                 {/* Step 2 */}
-                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                <div className="relative pl-8 pb-4 border-l-2 border-q-border ml-4">
                                     <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
                                         2
                                     </div>
-                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-q-border ml-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <Building2 className="h-5 w-5 text-primary" />
                                             <h5 className="font-semibold text-foreground">
                                                 Ingresa información de tu negocio
                                             </h5>
                                         </div>
-                                        <p className="text-muted-foreground text-sm mb-3">
+                                        <p className="text-q-text-muted text-sm mb-3">
                                             Stripe te pedirá datos básicos de tu empresa o agencia:
                                         </p>
                                         <ul className="space-y-2 text-sm">
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                                                 <span>Nombre legal de tu negocio</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                                                 <span>Dirección comercial</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                                                 <span>Número de identificación fiscal (EIN o equivalente)</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                                                 <span>Tipo de negocio (individual, LLC, corporación, etc.)</span>
                                             </li>
@@ -262,36 +262,36 @@ export function BillingSettings() {
                                 </div>
 
                                 {/* Step 3 */}
-                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                <div className="relative pl-8 pb-4 border-l-2 border-q-border ml-4">
                                     <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
                                         3
                                     </div>
-                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-q-border ml-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <User className="h-5 w-5 text-primary" />
                                             <h5 className="font-semibold text-foreground">
                                                 Verifica tu identidad
                                             </h5>
                                         </div>
-                                        <p className="text-muted-foreground text-sm mb-3">
+                                        <p className="text-q-text-muted text-sm mb-3">
                                             Por seguridad, Stripe necesita verificar quién eres. Necesitarás:
                                         </p>
                                         <ul className="space-y-2 text-sm">
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <Shield className="h-4 w-4 text-primary flex-shrink-0" />
                                                 <span>Documento de identidad (pasaporte, licencia de conducir o ID nacional)</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <Shield className="h-4 w-4 text-primary flex-shrink-0" />
                                                 <span>Una selfie o foto tuya (para comparar con tu documento)</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <Shield className="h-4 w-4 text-primary flex-shrink-0" />
                                                 <span>Fecha de nacimiento y últimos 4 dígitos de tu SSN (en EE.UU.)</span>
                                             </li>
                                         </ul>
-                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
-                                            <p className="text-xs text-muted-foreground flex items-start gap-2">
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-q-border">
+                                            <p className="text-xs text-q-text-muted flex items-start gap-2">
                                                 <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
                                                 <span>
                                                     <strong>Consejo:</strong> Ten tu documento listo antes de comenzar.
@@ -303,32 +303,32 @@ export function BillingSettings() {
                                 </div>
 
                                 {/* Step 4 */}
-                                <div className="relative pl-8 pb-4 border-l-2 border-border ml-4">
+                                <div className="relative pl-8 pb-4 border-l-2 border-q-border ml-4">
                                     <div className="absolute -left-4 top-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm shadow-lg">
                                         4
                                     </div>
-                                    <div className="bg-muted/30 rounded-xl p-4 border border-border ml-4">
+                                    <div className="bg-muted/30 rounded-xl p-4 border border-q-border ml-4">
                                         <div className="flex items-center gap-3 mb-2">
                                             <Landmark className="h-5 w-5 text-primary" />
                                             <h5 className="font-semibold text-foreground">
                                                 Agrega tu cuenta bancaria
                                             </h5>
                                         </div>
-                                        <p className="text-muted-foreground text-sm mb-3">
+                                        <p className="text-q-text-muted text-sm mb-3">
                                             Para recibir tus pagos, necesitas conectar una cuenta bancaria:
                                         </p>
                                         <ul className="space-y-2 text-sm">
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
                                                 <span>Número de cuenta y número de ruta (routing number)</span>
                                             </li>
-                                            <li className="flex items-center gap-2 text-muted-foreground">
+                                            <li className="flex items-center gap-2 text-q-text-muted">
                                                 <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
                                                 <span>La cuenta debe estar a nombre del negocio o del dueño</span>
                                             </li>
                                         </ul>
-                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border">
-                                            <p className="text-xs text-muted-foreground flex items-start gap-2">
+                                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-q-border">
+                                            <p className="text-xs text-q-text-muted flex items-start gap-2">
                                                 <CheckCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                                                 <span>
                                                     <strong>Tranquilo:</strong> Stripe es una plataforma segura usada por millones de negocios.
@@ -351,7 +351,7 @@ export function BillingSettings() {
                                                 ¡Espera la activación!
                                             </h5>
                                         </div>
-                                        <p className="text-muted-foreground text-sm">
+                                        <p className="text-q-text-muted text-sm">
                                             Una vez completados todos los pasos, Stripe verificará tu información.
                                             Esto puede tomar desde <strong>unos minutos hasta 24-48 horas</strong>.
                                             Te notificaremos cuando tu cuenta esté lista para recibir pagos.
@@ -362,7 +362,7 @@ export function BillingSettings() {
                         </div>
 
                         {/* FAQ Section */}
-                        <div className="bg-muted/30 rounded-xl p-5 border border-border">
+                        <div className="bg-muted/30 rounded-xl p-5 border border-q-border">
                             <h4 className="font-bold text-foreground text-lg mb-4">
                                 Preguntas frecuentes
                             </h4>
@@ -371,7 +371,7 @@ export function BillingSettings() {
                                     <h5 className="font-semibold text-foreground text-sm mb-1">
                                         ¿Stripe cobra comisiones?
                                     </h5>
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-q-text-muted text-sm">
                                         Sí, Stripe cobra una pequeña comisión por cada transacción (generalmente 2.9% + $0.30 por cobro).
                                         Esto se descuenta automáticamente antes de depositar en tu cuenta.
                                     </p>
@@ -380,7 +380,7 @@ export function BillingSettings() {
                                     <h5 className="font-semibold text-foreground text-sm mb-1">
                                         ¿Cuándo recibo mis pagos?
                                     </h5>
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-q-text-muted text-sm">
                                         Los pagos se depositan automáticamente en tu cuenta bancaria.
                                         El tiempo estándar es de 2 días hábiles después de recibir un pago de un cliente.
                                     </p>
@@ -389,7 +389,7 @@ export function BillingSettings() {
                                     <h5 className="font-semibold text-foreground text-sm mb-1">
                                         ¿Puedo usar mi cuenta personal?
                                     </h5>
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-q-text-muted text-sm">
                                         Sí, si eres un profesional independiente puedes usar tu cuenta personal.
                                         Si tienes una empresa registrada, es mejor usar la cuenta bancaria empresarial.
                                     </p>
@@ -398,7 +398,7 @@ export function BillingSettings() {
                                     <h5 className="font-semibold text-foreground text-sm mb-1">
                                         ¿Qué pasa si Stripe rechaza mi verificación?
                                     </h5>
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-q-text-muted text-sm">
                                         Stripe te indicará qué información falta o es incorrecta.
                                         Podrás corregirla haciendo clic en "Ir a Stripe" y completando los datos pendientes.
                                     </p>
@@ -419,7 +419,7 @@ export function BillingSettings() {
 
             {/* Stripe Connect Setup */}
             {connectStatus.status === 'not_configured' ? (
-                <div className="bg-card rounded-lg border border-border p-8">
+                <div className="bg-q-surface rounded-lg border border-q-border p-8">
                     <div className="max-w-2xl mx-auto text-center">
                         <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
                             <CreditCard className="h-8 w-8 text-blue-600 dark:text-blue-400" />
@@ -427,7 +427,7 @@ export function BillingSettings() {
                         <h2 className="text-2xl font-bold text-foreground mb-2">
                             {t('dashboard.agency.billingPage.stripeConnectTitle')}
                         </h2>
-                        <p className="text-muted-foreground mb-6">
+                        <p className="text-q-text-muted mb-6">
                             {t('dashboard.agency.billingPage.stripeConnectSubtitle')}
                         </p>
 
@@ -435,7 +435,7 @@ export function BillingSettings() {
                             <h3 className="font-semibold text-foreground mb-3">
                                 {t('dashboard.agency.billingPage.benefits')}
                             </h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
+                            <ul className="space-y-2 text-sm text-q-text-muted">
                                 <li className="flex items-start gap-2">
                                     <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                                     <span>{t('dashboard.agency.billingPage.benefit1')}</span>
@@ -473,7 +473,7 @@ export function BillingSettings() {
                             )}
                         </button>
 
-                        <p className="text-xs text-muted-foreground mt-4">
+                        <p className="text-xs text-q-text-muted mt-4">
                             {t('dashboard.agency.billingPage.redirectNotice')}
                         </p>
                     </div>
@@ -481,7 +481,7 @@ export function BillingSettings() {
             ) : (
                 <>
                     {/* Stripe Connect Status Card */}
-                    <div className="bg-card rounded-lg border border-border p-6">
+                    <div className="bg-q-surface rounded-lg border border-q-border p-6">
                         <div className="flex items-start justify-between">
                             <div className="flex items-start gap-4">
                                 <div
@@ -500,7 +500,7 @@ export function BillingSettings() {
                                     <h3 className="text-lg font-semibold text-foreground">
                                         {t('dashboard.agency.billingPage.stripeConnect')}
                                     </h3>
-                                    <p className="text-sm text-muted-foreground mt-1">
+                                    <p className="text-sm text-q-text-muted mt-1">
                                         {connectStatus.charges_enabled
                                             ? t('dashboard.agency.billingPage.accountActive')
                                             : t('dashboard.agency.billingPage.pendingSetup')}
@@ -522,7 +522,7 @@ export function BillingSettings() {
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <span className="text-muted-foreground">
+                                            <span className="text-q-text-muted">
                                                 {t('dashboard.agency.billingPage.payouts')}
                                             </span>
                                             <span
@@ -572,7 +572,7 @@ export function BillingSettings() {
                     </div>
 
                     {/* Tabs */}
-                    <div className="border-b border-border">
+                    <div className="border-b border-q-border">
                         <nav className="flex gap-8">
                             <button
                                 onClick={() => setActiveTab('overview')}
@@ -587,7 +587,7 @@ export function BillingSettings() {
                                 onClick={() => setActiveTab('clients')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'clients'
                                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 {t('dashboard.agency.billingPage.tabClients')}
@@ -596,7 +596,7 @@ export function BillingSettings() {
                                 onClick={() => setActiveTab('history')}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
                                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 {t('dashboard.agency.billingPage.tabHistory')}
@@ -608,7 +608,7 @@ export function BillingSettings() {
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* MRR Card */}
-                            <div className="bg-card rounded-lg border border-border p-6">
+                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <DollarSign className="h-5 w-5 text-green-600" />
                                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -624,33 +624,33 @@ export function BillingSettings() {
                             </div>
 
                             {/* Active Subscriptions */}
-                            <div className="bg-card rounded-lg border border-border p-6">
+                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <TrendingUp className="h-5 w-5 text-blue-600" />
-                                    <span className="text-sm font-medium text-muted-foreground">
+                                    <span className="text-sm font-medium text-q-text-muted">
                                         {t('dashboard.agency.billingPage.activeSubscriptions')}
                                     </span>
                                 </div>
                                 <p className="text-3xl font-bold text-foreground">
                                     0
                                 </p>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-sm text-q-text-muted mt-1">
                                     {t('dashboard.agency.billingPage.activeSubsDescription')}
                                 </p>
                             </div>
 
                             {/* Next Payout */}
-                            <div className="bg-card rounded-lg border border-border p-6">
+                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <CreditCard className="h-5 w-5 text-purple-600" />
-                                    <span className="text-sm font-medium text-muted-foreground">
+                                    <span className="text-sm font-medium text-q-text-muted">
                                         {t('dashboard.agency.billingPage.nextPayout')}
                                     </span>
                                 </div>
                                 <p className="text-3xl font-bold text-foreground">
                                     $0
                                 </p>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-sm text-q-text-muted mt-1">
                                     {t('dashboard.agency.billingPage.availableInStripe')}
                                 </p>
                             </div>

@@ -49,8 +49,8 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             return (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-3 shadow-lg">
-                    <p className="text-sm font-medium text-editor-text-primary mb-1">{label}</p>
+                <div className="bg-q-surface border border-q-border rounded-lg p-3 shadow-lg">
+                    <p className="text-sm font-medium text-q-text mb-1">{label}</p>
                     <p className="text-sm text-emerald-400">
                         {t('dashboard.agency.charts.revenueByClient.revenue', 'Ingresos')}: {formatCurrency(data.revenue)}
                     </p>
@@ -72,10 +72,10 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
 
     if (isLoading) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="animate-pulse">
-                    <div className="h-6 w-40 bg-editor-border rounded mb-4" />
-                    <div className="h-64 bg-editor-border rounded" />
+                    <div className="h-6 w-40 bg-q-surface-overlay rounded mb-4" />
+                    <div className="h-64 bg-q-surface-overlay rounded" />
                 </div>
             </div>
         );
@@ -86,17 +86,17 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-editor-panel-bg border border-editor-border rounded-xl p-6"
+            className="bg-q-surface border border-q-border rounded-xl p-6"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-editor-text-primary">
+                    <h3 className="text-lg font-semibold text-q-text">
                         {t('dashboard.agency.charts.revenueByClient.title', 'Ingresos por Cliente')}
                     </h3>
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.charts.revenueByClient.subtitle', 'Top 10 clientes por ingresos')}</p>
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.charts.revenueByClient.subtitle', 'Top 10 clientes por ingresos')}</p>
                 </div>
-                <div className="flex items-center gap-2 text-editor-text-secondary">
+                <div className="flex items-center gap-2 text-q-text-secondary">
                     <Users className="w-5 h-5" />
                     <span className="text-sm">{data.length} {t('dashboard.agency.charts.revenueByClient.clients', 'clientes')}</span>
                 </div>
@@ -140,15 +140,15 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
                     </ResponsiveContainer>
                 </div>
             ) : (
-                <div className="h-64 flex items-center justify-center text-editor-text-secondary">
+                <div className="h-64 flex items-center justify-center text-q-text-secondary">
                     <p>{t('dashboard.agency.charts.revenueByClient.noData', 'No hay datos de ingresos disponibles')}</p>
                 </div>
             )}
 
             {/* Total */}
-            <div className="mt-4 pt-4 border-t border-editor-border flex justify-between items-center">
-                <span className="text-sm text-editor-text-secondary">{t('dashboard.agency.charts.revenueByClient.totalMrr', 'Total MRR')}</span>
-                <span className="text-lg font-semibold text-editor-text-primary">
+            <div className="mt-4 pt-4 border-t border-q-border flex justify-between items-center">
+                <span className="text-sm text-q-text-secondary">{t('dashboard.agency.charts.revenueByClient.totalMrr', 'Total MRR')}</span>
+                <span className="text-lg font-semibold text-q-text">
                     {formatCurrency(totalRevenue)}
                 </span>
             </div>

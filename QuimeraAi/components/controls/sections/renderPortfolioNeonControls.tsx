@@ -22,8 +22,8 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
 
     const contentTab = (
         <div className="space-y-6">
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                     <Type size={14} /> {t('editor.controls.typography', 'Textos Principales')}
                 </label>
                 
@@ -58,15 +58,15 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                 </AIFormControl>
             </div>
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2 mb-4">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-4">
                     <ImageIcon size={14} /> {t('editor.controls.gallery', 'Galería de Imágenes')}
                 </label>
                 
                 {images.map((item: any, index: number) => (
-                    <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-4 space-y-3 relative">
+                    <div key={index} className="bg-q-bg p-4 rounded-lg border border-q-border mb-4 space-y-3 relative">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-editor-accent uppercase">Imagen {index + 1}</span>
+                            <span className="text-xs font-bold text-q-accent uppercase">Imagen {index + 1}</span>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -124,7 +124,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                         const newImg = { url: '', title: 'Nuevo Proyecto', description: 'Descripción del proyecto.' };
                         setNestedData('portfolioNeon.images', [...images!, newImg]);
                     }}
-                    className="w-full py-2 mt-2 bg-editor-panel-bg border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                    className="w-full py-2 mt-2 bg-q-surface border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
                 >
                     <Plus size={14} /> {t('editor.controls.addImage', 'Añadir Imagen')}
                 </button>
@@ -137,8 +137,8 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
             {/* Background Image Setup */}
             <BackgroundImageControl sectionKey="portfolioNeon" data={data} setNestedData={setNestedData} />
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2 flex items-center gap-2">
                     <Maximize2 size={14} /> Layout
                 </label>
                 <SliderControl
@@ -165,8 +165,8 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Effect Settings */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase">
                     {t('editor.controls.effects', 'Efectos Neon')}
                 </label>
                 <ToggleControl
@@ -176,7 +176,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                 />
                 <TopDotsControl sectionKey="portfolioNeon" data={data} setNestedData={setNestedData} />
                 <div>
-                    <label className="block text-xs text-editor-text-secondary mb-1">
+                    <label className="block text-xs text-q-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
                     </label>
                     <input
@@ -191,9 +191,9 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Colors */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-3">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-3">
                 <div className="flex items-center justify-between mb-4">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
                         <Settings size={14} /> {t('editor.controls.colors', 'Colores')}
                     </label>
                     <button
@@ -202,7 +202,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                             setNestedData('portfolioNeon.colors', undefined);
                             setNestedData('portfolioNeon.glassEffect', undefined);
                         }}
-                        className="text-xs text-editor-text-secondary hover:text-editor-accent flex items-center gap-1 transition-colors"
+                        className="text-xs text-q-text-secondary hover:text-q-accent flex items-center gap-1 transition-colors"
                         title={t('editor.controls.restoreOriginalColors', 'Restaurar colores por defecto')}
                     >
                         <RotateCcw size={12} /> Restaurar

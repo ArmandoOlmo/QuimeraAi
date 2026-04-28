@@ -161,7 +161,7 @@ const StockAlertsView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.stockAlerts', 'Alertas de Stock')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('ecommerce.stockAlertsDesc', 'Gestiona productos con bajo stock y notificaciones de clientes')}
                     </p>
                 </div>
@@ -169,35 +169,35 @@ const StockAlertsView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-yellow-500/20 rounded-lg">
                             <AlertTriangle className="text-yellow-400" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Bajo Stock</p>
+                            <p className="text-q-text-muted text-sm">Bajo Stock</p>
                             <p className="text-2xl font-bold text-foreground">{lowStockProducts.length}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-red-500/20 rounded-lg">
                             <Package className="text-red-400" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Agotados</p>
+                            <p className="text-q-text-muted text-sm">Agotados</p>
                             <p className="text-2xl font-bold text-foreground">{outOfStockProducts.length}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/20 rounded-lg">
                             <Bell className="text-primary" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Suscriptores</p>
+                            <p className="text-q-text-muted text-sm">Suscriptores</p>
                             <p className="text-2xl font-bold text-foreground">{subscribers.length}</p>
                         </div>
                     </div>
@@ -206,8 +206,8 @@ const StockAlertsView: React.FC = () => {
 
             {/* Low Stock Products */}
             {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
-                <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
-                    <div className="p-4 border-b border-border">
+                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
+                    <div className="p-4 border-b border-q-border">
                         <h3 className="font-semibold text-foreground flex items-center gap-2">
                             <AlertTriangle className="text-yellow-400" size={18} />
                             {t('ecommerce.stockWarnings', 'Productos con Stock Bajo')}
@@ -221,7 +221,7 @@ const StockAlertsView: React.FC = () => {
                                         <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <Package className="text-muted-foreground" size={20} />
+                                            <Package className="text-q-text-muted" size={20} />
                                         </div>
                                     )}
                                 </div>
@@ -241,7 +241,7 @@ const StockAlertsView: React.FC = () => {
                                         <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <Package className="text-muted-foreground" size={20} />
+                                            <Package className="text-q-text-muted" size={20} />
                                         </div>
                                     )}
                                 </div>
@@ -259,16 +259,16 @@ const StockAlertsView: React.FC = () => {
             )}
 
             {/* Notification Subscribers */}
-            <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
-                <div className="p-4 border-b border-border">
+            <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
+                <div className="p-4 border-b border-q-border">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <h3 className="font-semibold text-foreground flex items-center gap-2">
                             <Bell className="text-primary" size={18} />
                             {t('ecommerce.notificationSubscribers', 'Suscriptores de Notificaciones')}
                         </h3>
                         <div className="flex gap-2">
-                            <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-1.5">
-                                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                            <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-1.5">
+                                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                                 <input
                                     type="text"
                                     value={searchTerm}
@@ -277,7 +277,7 @@ const StockAlertsView: React.FC = () => {
                                     className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                 />
                                 {searchTerm && (
-                                    <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                         <X size={16} />
                                     </button>
                                 )}
@@ -288,11 +288,11 @@ const StockAlertsView: React.FC = () => {
 
                 {subscribers.length === 0 ? (
                     <div className="p-8 text-center">
-                        <BellOff className="mx-auto text-muted-foreground mb-4" size={48} />
+                        <BellOff className="mx-auto text-q-text-muted mb-4" size={48} />
                         <h4 className="text-lg font-medium text-foreground mb-2">
                             {t('ecommerce.noSubscribers', 'Sin suscriptores')}
                         </h4>
-                        <p className="text-muted-foreground">
+                        <p className="text-q-text-muted">
                             {t('ecommerce.noSubscribersDesc', 'Cuando los clientes se suscriban a notificaciones de stock, aparecerán aquí')}
                         </p>
                     </div>
@@ -306,13 +306,13 @@ const StockAlertsView: React.FC = () => {
                                             <img src={data.productImage} alt={data.productName} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
-                                                <Package className="text-muted-foreground" size={16} />
+                                                <Package className="text-q-text-muted" size={16} />
                                             </div>
                                         )}
                                     </div>
                                     <div>
                                         <p className="font-medium text-foreground">{data.productName}</p>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {data.subscribers.length} suscriptor{data.subscribers.length !== 1 ? 'es' : ''}
                                         </p>
                                     </div>
@@ -324,9 +324,9 @@ const StockAlertsView: React.FC = () => {
                                             className="flex items-center justify-between p-2 bg-muted/30 rounded-lg"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <Mail className="text-muted-foreground" size={14} />
+                                                <Mail className="text-q-text-muted" size={14} />
                                                 <span className="text-sm text-foreground">{sub.email}</span>
-                                                <span className="text-xs text-muted-foreground">
+                                                <span className="text-xs text-q-text-muted">
                                                     · {formatDate(sub.createdAt)}
                                                 </span>
                                                 {sub.notified && (
@@ -338,7 +338,7 @@ const StockAlertsView: React.FC = () => {
                                             <button
                                                 onClick={() => handleDelete(sub.id)}
                                                 disabled={processingId === sub.id}
-                                                className="p-1.5 text-muted-foreground hover:text-destructive rounded transition-colors disabled:opacity-50"
+                                                className="p-1.5 text-q-text-muted hover:text-destructive rounded transition-colors disabled:opacity-50"
                                             >
                                                 {processingId === sub.id ? (
                                                     <Loader2 size={14} className="animate-spin" />

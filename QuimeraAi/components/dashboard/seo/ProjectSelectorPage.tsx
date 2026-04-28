@@ -84,7 +84,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-background flex">
+        <div className="min-h-screen bg-q-bg flex">
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -94,12 +94,12 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="h-14 w-full px-4 sm:px-6 border-b border-border flex items-center bg-card/50 backdrop-blur-md sticky top-0 z-40">
+                <header className="h-14 w-full px-4 sm:px-6 border-b border-q-border flex items-center bg-q-surface/50 backdrop-blur-md sticky top-0 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             aria-label={t('common.openMenu', 'Abrir menú')}
                         >
                             <Menu className="w-5 h-5" />
@@ -116,7 +116,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
                         <button
                             onClick={() => setIsSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-foreground transition-colors"
                             aria-label={t('common.search', 'Buscar')}
                         >
                             <Search size={20} />
@@ -144,7 +144,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                                         {t('seo.yourProjects', 'Tus Proyectos')}
                                     </h2>
-                                    <p className="text-muted-foreground">
+                                    <p className="text-q-text-muted">
                                         {t('seo.selectProjectDescription', 'Cada proyecto tiene su propia configuración SEO. Selecciona uno para optimizarlo.')}
                                     </p>
                                 </div>
@@ -159,7 +159,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
@@ -167,11 +167,11 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{userProjects.length}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('seo.totalProjects', 'Total de Proyectos')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('seo.totalProjects', 'Total de Proyectos')}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
@@ -179,11 +179,11 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('dashboard.published', 'Publicados')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.published', 'Publicados')}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-slate-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-3 sm:p-4 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-slate-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-slate-500 to-slate-400 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="relative z-10 flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
@@ -191,7 +191,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('dashboard.draft', 'Borrador')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.draft', 'Borrador')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -203,21 +203,21 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <button
                                     onClick={() => setFilterStatus('all')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     {t('common.all', 'Todos')} ({userProjects.length})
                                 </button>
-                                <span className="text-muted-foreground/60 text-xs">·</span>
+                                <span className="text-q-text-muted/60 text-xs">·</span>
                                 <button
                                     onClick={() => setFilterStatus('Published')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Published' ? 'text-green-600 dark:text-green-400' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     {t('dashboard.published', 'Publicados')} ({publishedCount})
                                 </button>
-                                <span className="text-muted-foreground/60 text-xs">·</span>
+                                <span className="text-q-text-muted/60 text-xs">·</span>
                                 <button
                                     onClick={() => setFilterStatus('Draft')}
-                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`text-xs font-medium transition-colors py-0.5 ${filterStatus === 'Draft' ? 'text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     {t('dashboard.draft', 'Borrador')} ({draftCount})
                                 </button>
@@ -226,23 +226,23 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
-                                    className="text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-muted-foreground hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0"
+                                    className="text-xs text-foreground bg-transparent border-none outline-none cursor-pointer text-q-text-muted hover:text-foreground focus:ring-0 py-0.5 w-auto max-w-[7.5rem] sm:max-w-[8rem] min-w-0"
                                     aria-label={t('common.sortBy', 'Ordenar por')}
                                 >
                                     <option value="recent">{t('common.mostRecent', 'Más recientes')}</option>
                                     <option value="name">{t('common.alphabetical', 'Alfabético')}</option>
                                 </select>
-                                <div className="hidden sm:flex items-center gap-0.5 border-l border-border/50 pl-2">
+                                <div className="hidden sm:flex items-center gap-0.5 border-l border-q-border/50 pl-2">
                                     <button
                                         onClick={() => setViewMode('grid')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                         aria-label={t('common.gridView', 'Vista cuadrícula')}
                                     >
                                         <LayoutGrid size={16} />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`p-1.5 sm:p-2 transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                         aria-label={t('common.listView', 'Vista lista')}
                                     >
                                         <List size={16} />
@@ -253,7 +253,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
 
                         {/* Results Count */}
                         {searchQuery && (
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-sm text-q-text-muted mb-4">
                                 {filteredProjects.length} {t('common.resultsFound', 'resultados encontrados')}
                             </p>
                         )}
@@ -267,9 +267,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <div className="text-center py-16">
                                 <div className="p-4 bg-muted/30 rounded-full w-fit mx-auto mb-6">
                                     {searchQuery ? (
-                                        <Search className="text-muted-foreground" size={48} />
+                                        <Search className="text-q-text-muted" size={48} />
                                     ) : (
-                                        <Search className="text-muted-foreground" size={48} />
+                                        <Search className="text-q-text-muted" size={48} />
                                     )}
                                 </div>
                                 <h3 className="text-xl font-bold text-foreground mb-2">
@@ -277,7 +277,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         ? t('seo.noProjectsFound', 'No se encontraron proyectos')
                                         : t('seo.noProjectsYet', 'No tienes proyectos aún')}
                                 </h3>
-                                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                                <p className="text-q-text-muted mb-6 max-w-md mx-auto">
                                     {searchQuery
                                         ? t('seo.tryDifferentSearch', 'Intenta con otros términos de búsqueda')
                                         : t('seo.createFirstProject', 'Crea tu primer proyecto para configurar SEO')}
@@ -335,7 +335,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     return (
         <button
             onClick={onSelect}
-            className="group relative bg-card/80 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 w-full"
+            className="group relative bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 w-full"
         >
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500 z-0" aria-hidden="true" />
@@ -349,7 +349,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                        <Layers size={40} className="text-muted-foreground/30" />
+                        <Layers size={40} className="text-q-text-muted/30" />
                     </div>
                 )}
 
@@ -377,7 +377,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
                     {project.name}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-q-text-muted">
                     <Clock size={12} />
                     <span>{formatDate(project.lastUpdated)}</span>
                 </div>
@@ -399,7 +399,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     return (
         <button
             onClick={onSelect}
-            className="w-full flex items-center gap-4 p-4 bg-card/80 dark:bg-card/40 backdrop-blur-xl hover:bg-card border border-border/60 hover:border-primary/30 rounded-2xl transition-all duration-300 text-left group relative overflow-hidden shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10"
+            className="w-full flex items-center gap-4 p-4 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 hover:border-primary/30 rounded-2xl transition-all duration-300 text-left group relative overflow-hidden shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10"
         >
             {/* Gradient blob decoration */}
             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
@@ -413,7 +413,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                        <Layers size={18} className="text-muted-foreground/30" />
+                        <Layers size={18} className="text-q-text-muted/30" />
                     </div>
                 )}
             </div>
@@ -423,7 +423,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                 <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                     {project.name}
                 </h3>
-                <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
+                <div className="flex items-center gap-3 sm:gap-4 text-xs text-q-text-muted mt-1">
                     <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''
                         }`}>
                         {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
@@ -440,7 +440,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
             </div>
 
             {/* Action */}
-            <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+            <div className="flex items-center gap-2 text-q-text-muted group-hover:text-primary transition-colors">
                 <span className="text-sm font-medium hidden md:block">
                     {t('seo.configureSEO', 'Configurar SEO')}
                 </span>

@@ -140,7 +140,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             }}
         >
             <div
-                className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl overflow-hidden animate-scale-in"
+                className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
@@ -150,12 +150,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-xl font-bold text-center text-foreground mb-2">
+                    <h3 className="text-xl font-bold text-center text-q-text mb-2">
                         {title || defaultTitle}
                     </h3>
 
                     {/* Message */}
-                    <p className="text-center text-muted-foreground mb-6">
+                    <p className="text-center text-q-text-muted mb-6">
                         {message || defaultMessage}
                     </p>
 
@@ -164,7 +164,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         <button
                             onClick={onCancel}
                             disabled={isLoading}
-                            className="px-5 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm disabled:opacity-50"
+                            className="px-5 py-2.5 rounded-lg border border-q-border bg-q-bg hover:bg-q-surface-elevated hover:text-q-text transition-colors font-medium text-sm disabled:opacity-50"
                         >
                             {cancelText || t('common.cancel', 'Cancelar')}
                         </button>

@@ -165,10 +165,10 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
                     <Layout size={32} className="text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-editor-text-primary mb-2">
+                <h3 className="text-2xl font-bold text-q-text mb-2">
                     {t('onboarding.step4Heading', 'Choose Your Template')}
                 </h3>
-                <p className="text-editor-text-secondary max-w-lg mx-auto">
+                <p className="text-q-text-secondary max-w-lg mx-auto">
                     {t('onboarding.step4Subheading2', 'Browse the templates below and pick the one you like. Each template has its own unique color palette and style.')}
                 </p>
             </div>
@@ -179,10 +179,10 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                     <Palette size={18} className="text-indigo-400" />
                 </div>
                 <div className="flex-1">
-                    <h4 className="font-medium text-editor-text-primary text-sm mb-1">
+                    <h4 className="font-medium text-q-text text-sm mb-1">
                         {t('onboarding.templateColorHint', 'Templates organized by color')}
                     </h4>
-                    <p className="text-xs text-editor-text-secondary leading-relaxed">
+                    <p className="text-xs text-q-text-secondary leading-relaxed">
                         {t('onboarding.templateCustomizeHint', 'Each template comes with a pre-designed color scheme. Choose the one that best matches your brand — but don\'t worry, you can edit absolutely everything later: colors, texts, images, and components. Make it 100% yours!')}
                     </p>
                 </div>
@@ -190,7 +190,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
 
             {/* Template Gallery */}
             <div>
-                <h4 className="text-sm font-medium text-editor-text-secondary mb-4">
+                <h4 className="text-sm font-medium text-q-text-secondary mb-4">
                     {t('onboarding.allTemplates', 'All Templates')} ({templates.length})
                 </h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-80 overflow-y-auto pr-2">
@@ -248,7 +248,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                         background: `linear-gradient(135deg, ${colors?.background}ee 0%, ${colors?.primary}20 100%)`,
                                     }}
                                 >
-                                    <p className="text-sm font-medium text-editor-text-primary truncate mb-1.5">
+                                    <p className="text-sm font-medium text-q-text truncate mb-1.5">
                                         {template.name}
                                     </p>
                                     {/* Color swatches */}
@@ -278,7 +278,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                 </div>
 
                 {templates.length === 0 && (
-                    <div className="text-center py-8 text-editor-text-secondary">
+                    <div className="text-center py-8 text-q-text-secondary">
                         <Layout size={48} className="mx-auto mb-4 opacity-30" />
                         <p>{t('onboarding.noTemplatesAvailable', 'No templates available')}</p>
                     </div>
@@ -287,30 +287,30 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
 
             {/* Component Settings — open by default */}
             {selectedTemplate && (
-                <div className="border border-editor-border rounded-xl overflow-hidden">
+                <div className="border border-q-border rounded-xl overflow-hidden">
                     <button
                         onClick={() => setShowComponentSettings(!showComponentSettings)}
-                        className="w-full flex items-center justify-between p-4 bg-editor-sidebar hover:bg-editor-sidebar-hover transition-colors"
+                        className="w-full flex items-center justify-between p-4 bg-q-surface hover:bg-q-surface-hover transition-colors"
                     >
                         <div className="flex items-center gap-3">
-                            <Eye size={18} className="text-editor-text-secondary" />
-                            <span className="font-medium text-editor-text-primary">
+                            <Eye size={18} className="text-q-text-secondary" />
+                            <span className="font-medium text-q-text">
                                 {t('onboarding.componentSettings', 'Component Settings')}
                             </span>
-                            <span className="text-xs text-editor-text-secondary">
+                            <span className="text-xs text-q-text-secondary">
                                 ({localEnabledComponents.length} {t('onboarding.active', 'active')})
                             </span>
                         </div>
                         {showComponentSettings ? (
-                            <ChevronUp size={18} className="text-editor-text-secondary" />
+                            <ChevronUp size={18} className="text-q-text-secondary" />
                         ) : (
-                            <ChevronDown size={18} className="text-editor-text-secondary" />
+                            <ChevronDown size={18} className="text-q-text-secondary" />
                         )}
                     </button>
 
                     {showComponentSettings && (
-                        <div className="p-4 border-t border-editor-border">
-                            <p className="text-sm text-editor-text-secondary mb-4">
+                        <div className="p-4 border-t border-q-border">
+                            <p className="text-sm text-q-text-secondary mb-4">
                                 {t('onboarding.componentSettingsHintManual', 'Toggle components on/off based on your needs. Components marked with ⭐ are recommended for your industry.')}
                             </p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -326,7 +326,7 @@ const Step4TemplateSelect: React.FC<Step4TemplateSelectProps> = ({
                                                 flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all
                                                 ${isEnabled
                                                     ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                                    : 'bg-editor-sidebar-hover text-editor-text-secondary border border-transparent'
+                                                    : 'bg-q-surface-hover text-q-text-secondary border border-transparent'
                                                 }
                                             `}
                                         >

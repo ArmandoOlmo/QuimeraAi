@@ -21,8 +21,8 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
   ) => {
     const linkType = data.ctaLumina[typeKey] || 'section';
     return (
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Link size={14} />
           {label}
         </label>
@@ -36,7 +36,7 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
         </div>
 
         {/* Link Type Selector */}
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {[
             { value: 'section', label: 'Sección' },
             { value: 'product', label: 'Producto' },
@@ -54,8 +54,8 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
                 }
               }}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${linkType === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -139,8 +139,8 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* Text Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.ctaLumina.content', 'Text Content')}
         </label>
@@ -181,8 +181,8 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -196,9 +196,9 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
       
       {renderLuminaAnimationControls(data.ctaLumina, (key, value) => setNestedData(`ctaLumina.${key}`, value))}
       
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -207,7 +207,7 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
               setNestedData('ctaLumina.colors', {});
               setNestedData('ctaLumina.glassEffect', true);
             }}
-            className="flex items-center gap-1.5 px-2 py-1 bg-editor-bg border border-editor-border rounded text-[10px] text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-q-bg border border-q-border rounded text-[10px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/30 transition-colors"
             title="Restaurar a los colores originales de Lumina"
           >
             <RotateCcw size={10} />
@@ -217,20 +217,20 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.ctaLumina.colors?.panelBackground} onChange={(v) => setNestedData('ctaLumina.colors.panelBackground', v)} />
             <ColorControl label={t('editor.controls.colors.border', 'Border')} value={data.ctaLumina.colors?.panelBorder} onChange={(v) => setNestedData('ctaLumina.colors.panelBorder', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">Textos</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Textos</p>
             <ColorControl label="Fondo de Sección" value={data.ctaLumina.colors?.background} onChange={(v) => setNestedData('ctaLumina.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title', 'Heading')} value={data.ctaLumina.colors?.heading} onChange={(v) => setNestedData('ctaLumina.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.ctaLumina.colors?.text} onChange={(v) => setNestedData('ctaLumina.colors.text', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">Botones</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Botones</p>
             <ColorControl label="Fondo Primario" value={data.ctaLumina.colors?.primaryButtonBackground} onChange={(v) => setNestedData('ctaLumina.colors.primaryButtonBackground', v)} />
             <ColorControl label="Texto Primario" value={data.ctaLumina.colors?.primaryButtonText} onChange={(v) => setNestedData('ctaLumina.colors.primaryButtonText', v)} />
             <ColorControl label="Fondo Secundario" value={data.ctaLumina.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('ctaLumina.colors.secondaryButtonBackground', v)} />

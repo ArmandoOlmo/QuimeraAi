@@ -7,11 +7,11 @@ import { ControlsDeps } from '../ControlsShared';
 
 const SectionHeader = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) => (
   <div className="mb-4">
-    <label className="flex items-center gap-2 text-[11px] font-semibold text-editor-text-secondary uppercase tracking-wider">
+    <label className="flex items-center gap-2 text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
       <Icon size={14} strokeWidth={1.8} />
       {title}
     </label>
-    {description && <p className="mt-2 text-xs leading-5 text-editor-text-secondary/80">{description}</p>}
+    {description && <p className="mt-2 text-xs leading-5 text-q-text-secondary/80">{description}</p>}
   </div>
 );
 
@@ -22,8 +22,8 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
   const contentTab = (
     <div className="space-y-6">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -33,7 +33,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
         />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Type} title={t('controls.content')} />
         <Input
           label={t('editor.controls.common.title')}
@@ -56,7 +56,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
         />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader
           icon={Building2}
           title={t('realEstate.websiteListings.controls.source')}
@@ -72,7 +72,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
   );
 
   const styleTab = (
-    <div className="space-y-6">      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+    <div className="space-y-6">      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Layout} title={t('controls.layout')} />
         <Select
           label={t('realEstate.websiteListings.controls.maxItems')}
@@ -87,7 +87,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
         />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Eye} title={t('realEstate.websiteListings.controls.cardContent')} />
         <ToggleControl label={t('realEstate.websiteListings.controls.showPrice')} checked={sectionData.showPrice !== false} onChange={(v) => setNestedData('realEstateListings.showPrice', v)} />
         <ToggleControl label={t('realEstate.websiteListings.controls.showLocation')} checked={sectionData.showLocation !== false} onChange={(v) => setNestedData('realEstateListings.showLocation', v)} />
@@ -95,7 +95,7 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
         <ToggleControl label={t('realEstate.websiteListings.controls.showDescription')} checked={sectionData.showDescription !== false} onChange={(v) => setNestedData('realEstateListings.showDescription', v)} />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Palette} title={t('controls.colors')} />
         <ColorControl label={t('editor.controls.common.background')} value={sectionData.colors?.background || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.background', v)} />
         <ColorControl label={t('controls.heading')} value={sectionData.colors?.heading || '#111827'} onChange={(v) => setNestedData('realEstateListings.colors.heading', v)} />

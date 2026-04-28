@@ -633,16 +633,16 @@ const AppointmentsDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
-                <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                <header className="h-14 sm:h-16 px-3 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -659,15 +659,15 @@ const AppointmentsDashboard: React.FC = () => {
 
                     <div className="flex items-center gap-3">
                         {/* Quick Stats */}
-                        <div className="hidden lg:flex items-center gap-6 mr-4 pr-4 border-r border-border">
+                        <div className="hidden lg:flex items-center gap-6 mr-4 pr-4 border-r border-q-border">
                             <div className="text-right">
-                                <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+                                <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
                                     {t('appointments.completedLabel')}
                                 </p>
                                 <p className="text-lg font-bold text-green-500">{analytics.completedAppointments}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">
+                                <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
                                     {t('appointments.successRate')}
                                 </p>
                                 <p className="text-lg font-bold text-foreground">{analytics.completionRate.toFixed(0)}%</p>
@@ -681,7 +681,7 @@ const AppointmentsDashboard: React.FC = () => {
                                 hidden md:flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors
                                 ${isGoogleConnected
                                     ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                                    : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80'
+                                    : 'bg-secondary text-q-text-muted hover:text-foreground hover:bg-secondary/80'
                                 }
                             `}
                         >
@@ -722,11 +722,11 @@ const AppointmentsDashboard: React.FC = () => {
 
                 {/* Filters Panel */}
                 {showFilters && (
-                    <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-secondary/20 animate-slide-down overflow-x-auto">
+                    <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-q-border bg-secondary/20 animate-slide-down overflow-x-auto">
                         <div className="flex flex-wrap gap-4">
                             {/* Status filters */}
                             <div>
-                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                                <label className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2 block">
                                     {t('appointments.statusFilter')}
                                 </label>
                                 <div className="flex flex-wrap gap-1">
@@ -748,7 +748,7 @@ const AppointmentsDashboard: React.FC = () => {
                                                     px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
                                                     ${isActive
                                                         ? `${config.bgColor} ${config.color}`
-                                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
+                                                        : 'bg-secondary/50 text-q-text-muted hover:text-foreground'
                                                     }
                                                 `}
                                             >
@@ -761,7 +761,7 @@ const AppointmentsDashboard: React.FC = () => {
 
                             {/* Type filters */}
                             <div>
-                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
+                                <label className="text-xs font-semibold text-q-text-muted uppercase tracking-wider mb-2 block">
                                     {t('appointments.typeFilter')}
                                 </label>
                                 <div className="flex flex-wrap gap-1">
@@ -783,7 +783,7 @@ const AppointmentsDashboard: React.FC = () => {
                                                     px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
                                                     ${isActive
                                                         ? 'bg-primary text-primary-foreground'
-                                                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
+                                                        : 'bg-secondary/50 text-q-text-muted hover:text-foreground'
                                                     }
                                                 `}
                                             >
@@ -798,7 +798,7 @@ const AppointmentsDashboard: React.FC = () => {
                             <div className="flex items-end">
                                 <button
                                     onClick={clearFilters}
-                                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                                    className="text-xs text-q-text-muted hover:text-foreground hover:underline"
                                 >
                                     {t('appointments.clearFilters')}
                                 </button>
@@ -815,7 +815,7 @@ const AppointmentsDashboard: React.FC = () => {
                             <div className="h-full flex items-center justify-center">
                                 <div className="text-center">
                                     <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-                                    <p className="text-sm text-muted-foreground">{t('appointments.loadingAppointments')}</p>
+                                    <p className="text-sm text-q-text-muted">{t('appointments.loadingAppointments')}</p>
                                 </div>
                             </div>
                         ) : (
@@ -882,7 +882,7 @@ const AppointmentsDashboard: React.FC = () => {
 
                     {/* Google Calendar Sidebar */}
                     {showGoogleCalendar && (
-                        <div className="w-80 border-l border-border p-4 overflow-y-auto bg-background animate-slide-in-right hidden lg:block">
+                        <div className="w-80 border-l border-q-border p-4 overflow-y-auto bg-q-bg animate-slide-in-right hidden lg:block">
                             <GoogleCalendarConnect
                                 isConnected={isGoogleConnected}
                                 onConnect={handleGoogleConnect}

@@ -23,8 +23,8 @@ const SliderControl: React.FC<{
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
     <div className="mb-3">
         <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
-            <span className="text-xs text-editor-text-primary">{value}{unit}</span>
+            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+            <span className="text-xs text-q-text">{value}{unit}</span>
         </div>
         <input
             type="range"
@@ -33,7 +33,7 @@ const SliderControl: React.FC<{
             step={step}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
     </div>
 );
@@ -45,13 +45,13 @@ const QuickSizeSelector: React.FC<{
     onChange: (value: number) => void;
 }> = ({ label, value, options, onChange }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <div className="flex bg-q-surface rounded-md border border-q-border p-1">
             {options.map((opt) => (
                 <button
                     key={opt.value}
                     onClick={() => onChange(opt.value)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                 >
                     {opt.label}
                 </button>
@@ -88,7 +88,7 @@ const SpacerBlockControls: React.FC<SpacerBlockControlsProps> = ({ block, active
     // Spacer only has content controls, no style
     if (activeTab === 'style') {
         return (
-            <div className="text-center py-8 text-editor-text-secondary">
+            <div className="text-center py-8 text-q-text-secondary">
                 <p className="text-sm">{t('email.noStylesForSpacer', 'El espaciador no tiene opciones de estilo')}</p>
             </div>
         );
@@ -121,17 +121,17 @@ const SpacerBlockControls: React.FC<SpacerBlockControlsProps> = ({ block, active
             
             {/* Visual Preview */}
             <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">
                     {t('email.preview', 'Vista previa')}
                 </label>
-                <div className="bg-editor-panel-bg border border-editor-border rounded-md p-3">
+                <div className="bg-q-surface border border-q-border rounded-md p-3">
                     <div className="flex items-center justify-center">
                         <div 
-                            className="w-full bg-editor-accent/20 border border-dashed border-editor-accent/50 rounded"
+                            className="w-full bg-q-accent/20 border border-dashed border-q-accent/50 rounded"
                             style={{ height: `${Math.min(content.height || 32, 80)}px` }}
                         />
                     </div>
-                    <p className="text-center text-xs text-editor-text-secondary mt-2">
+                    <p className="text-center text-xs text-q-text-secondary mt-2">
                         {content.height || 32}px
                     </p>
                 </div>

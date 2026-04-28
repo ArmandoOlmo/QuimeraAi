@@ -17,7 +17,7 @@ interface AdminPageHeaderProps {
 }
 
 const adminBackButtonClassName =
-  'border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25';
+  'border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25';
 
 const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
   title,
@@ -34,14 +34,14 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
 }) => {
   return (
     <header
-      className={`relative h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 ${sticky ? `sticky top-0 ${zIndexClassName}` : ''} ${className}`}
+      className={`relative h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 ${sticky ? `sticky top-0 ${zIndexClassName}` : ''} ${className}`}
     >
       <div className="min-w-0 flex items-center gap-3">
         {onMenuClick && !hideMenuButton && (
           <button
             type="button"
             onClick={onMenuClick}
-            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
+            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden transition-colors"
             title={menuTitle}
             aria-label={menuTitle}
           >
@@ -51,11 +51,11 @@ const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
 
         <div className="min-w-0 flex items-center gap-2">
           {icon && (
-            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-editor-accent">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-q-accent">
               {icon}
             </span>
           )}
-          <h1 className="truncate text-lg font-semibold text-editor-text-primary">{title}</h1>
+          <h1 className="truncate text-lg font-semibold text-q-text">{title}</h1>
         </div>
       </div>
 

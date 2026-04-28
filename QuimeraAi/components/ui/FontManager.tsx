@@ -39,23 +39,23 @@ const FontManager: React.FC = () => {
         defaultWeight: number
     ) => (
         <div className="mb-5 last:mb-0">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
             
             {/* Font Family Select */}
             <div className="relative mb-2">
                 <select
                     value={theme[familyKey] as string}
                     onChange={(e) => handleChange(familyKey, e.target.value as FontFamily)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all appearance-none cursor-pointer hover:border-editor-accent/50"
+                    className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all appearance-none cursor-pointer hover:border-q-accent/50"
                     style={{ fontFamily: formatFontName(theme[familyKey] as string) }}
                 >
                     {fontOptions.map(font => (
-                        <option key={font} value={font} className="bg-editor-panel-bg text-editor-text-primary py-1" style={{ fontFamily: formatFontName(font) }}>
+                        <option key={font} value={font} className="bg-q-surface text-q-text py-1" style={{ fontFamily: formatFontName(font) }}>
                             {formatFontName(font)}
                         </option>
                     ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-editor-text-secondary">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-q-text-secondary">
                     <ChevronDown className="h-4 w-4" />
                 </div>
             </div>
@@ -73,8 +73,8 @@ const FontManager: React.FC = () => {
                     onClick={() => handleStyleToggle(styleKey)}
                     className={`flex items-center justify-center w-8 self-stretch rounded-md border transition-all cursor-pointer ${
                         (theme as any)[styleKey] === 'italic'
-                            ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
-                            : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                            ? 'bg-q-accent/20 border-q-accent text-q-accent'
+                            : 'bg-q-surface border-q-border text-q-text-secondary hover:border-q-accent/50'
                     }`}
                     title={t('editor.italic')}
                 >
@@ -87,8 +87,8 @@ const FontManager: React.FC = () => {
     return (
         <div className="space-y-4">
             {/* Page Background - Most prominent control */}
-            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border-2 border-editor-accent/50 shadow-lg">
-                <label className="block text-sm font-bold text-editor-accent mb-3 uppercase tracking-wider flex items-center gap-2">
+            <div className="bg-q-surface/50 p-4 rounded-lg border-2 border-q-accent/50 shadow-lg">
+                <label className="block text-sm font-bold text-q-accent mb-3 uppercase tracking-wider flex items-center gap-2">
                     <Image size={16} />
                     {t('editor.siteBackground')}
                 </label>
@@ -97,21 +97,21 @@ const FontManager: React.FC = () => {
                     value={theme.pageBackground || '#ffffff'} 
                     onChange={handleColorChange}
                 />
-                <div className="mt-3 p-2 bg-editor-bg/50 rounded border border-editor-border">
-                    <p className="text-xs text-editor-text-primary font-medium mb-1">
+                <div className="mt-3 p-2 bg-q-bg/50 rounded border border-q-border">
+                    <p className="text-xs text-q-text font-medium mb-1">
                         {t('editor.backgroundColorLabel')}
                     </p>
-                    <p className="text-xs text-editor-text-secondary italic">
+                    <p className="text-xs text-q-text-secondary italic">
                         {t('editor.backgroundColorDescription')}
                     </p>
                 </div>
             </div>
             
-            <hr className="border-editor-border/50 my-4" />
+            <hr className="border-q-border/50 my-4" />
             
             {/* Typography Controls */}
             <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-q-text-secondary mb-3 uppercase tracking-wider">
                     {t('editor.fonts')}
                 </label>
                 {renderFontGroup(t('editor.headingsFont'), 'fontFamilyHeader', 'fontWeightHeader', 'fontStyleHeader', 700)}

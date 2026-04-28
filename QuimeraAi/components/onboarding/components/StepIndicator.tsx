@@ -73,7 +73,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                                             ? 'bg-green-500 text-white' 
                                             : isCurrent 
                                                 ? 'bg-primary text-primary-foreground ring-4 ring-primary/30' 
-                                                : 'bg-muted text-muted-foreground'
+                                                : 'bg-muted text-q-text-muted'
                                         }
                                     `}
                                 >
@@ -88,7 +88,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                                 <span 
                                     className={`
                                         mt-2 text-xs font-medium text-center max-w-[80px]
-                                        ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}
+                                        ${isCurrent ? 'text-foreground' : 'text-q-text-muted'}
                                     `}
                                 >
                                     {step.label}
@@ -120,7 +120,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
                     <span className="text-xs font-medium text-foreground">
                         {getCurrentStepLabel()}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-q-text-muted">
                         {currentStep} / {totalSteps}
                     </span>
                 </div>

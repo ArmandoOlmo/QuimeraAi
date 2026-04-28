@@ -101,11 +101,11 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-bold text-editor-text-primary text-sm uppercase tracking-wider flex items-center gap-2">
-          <Share2 size={14} className="text-editor-accent" />
+        <h4 className="font-bold text-q-text text-sm uppercase tracking-wider flex items-center gap-2">
+          <Share2 size={14} className="text-q-accent" />
           {t('editor.socialLinks')}
         </h4>
-        <span className="text-[10px] text-editor-text-secondary">{links.length} links</span>
+        <span className="text-[10px] text-q-text-secondary">{links.length} links</span>
       </div>
 
       {/* Existing social links */}
@@ -119,13 +119,13 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
             return (
               <div
                 key={`${link.platform}-${index}`}
-                className="bg-editor-bg rounded-lg border border-editor-border p-2.5 group hover:border-editor-accent/30 transition-colors"
+                className="bg-q-bg rounded-lg border border-q-border p-2.5 group hover:border-q-accent/30 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   {/* Platform icon + label */}
                   <div className="flex items-center gap-1.5 flex-shrink-0 w-[100px]">
-                    <IconComponent size={14} className="text-editor-accent" />
-                    <span className="text-xs font-medium text-editor-text-primary truncate">{label}</span>
+                    <IconComponent size={14} className="text-q-accent" />
+                    <span className="text-xs font-medium text-q-text truncate">{label}</span>
                   </div>
 
                   {/* URL input */}
@@ -134,13 +134,13 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
                     value={link.href || ''}
                     onChange={(e) => onUpdateHref(index, e.target.value)}
                     placeholder={placeholder}
-                    className="flex-1 bg-editor-panel-bg border border-editor-border rounded-md px-2.5 py-1.5 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/40 min-w-0"
+                    className="flex-1 bg-q-surface border border-q-border rounded-md px-2.5 py-1.5 text-xs text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/40 min-w-0"
                   />
 
                   {/* Delete button */}
                   <button
                     onClick={() => handleRemove(index)}
-                    className="text-editor-text-secondary hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/10"
+                    className="text-q-text-secondary hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-500/10"
                     title={`Remove ${label}`}
                   >
                     <Trash2 size={13} />
@@ -151,10 +151,10 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
           })}
         </div>
       ) : (
-        <div className="bg-editor-bg/50 rounded-lg border border-dashed border-editor-border p-4 text-center">
-          <Share2 size={20} className="mx-auto mb-2 text-editor-text-secondary/50" />
-          <p className="text-xs text-editor-text-secondary">{t('editor.noSocialLinks')}</p>
-          <p className="text-[10px] text-editor-text-secondary/60 mt-0.5">{t('editor.addSocialBelow')}</p>
+        <div className="bg-q-bg/50 rounded-lg border border-dashed border-q-border p-4 text-center">
+          <Share2 size={20} className="mx-auto mb-2 text-q-text-secondary/50" />
+          <p className="text-xs text-q-text-secondary">{t('editor.noSocialLinks')}</p>
+          <p className="text-[10px] text-q-text-secondary/60 mt-0.5">{t('editor.addSocialBelow')}</p>
         </div>
       )}
 
@@ -163,7 +163,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowAddMenu(!showAddMenu)}
-            className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/50 transition-all flex items-center justify-center gap-2 text-xs font-medium"
+            className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent/50 transition-all flex items-center justify-center gap-2 text-xs font-medium"
           >
             <Plus size={14} />
             {t('editor.addSocialLink')}
@@ -171,7 +171,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
           </button>
 
           {showAddMenu && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl max-h-[240px] overflow-y-auto">
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-q-surface border border-q-border rounded-lg shadow-xl max-h-[240px] overflow-y-auto">
               {availablePlatforms.map(platform => {
                 const IconComponent = socialPlatformIcons[platform];
                 const label = socialPlatformLabels[platform];
@@ -179,9 +179,9 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({
                   <button
                     key={platform}
                     onClick={() => handleAdd(platform)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-editor-text-primary hover:bg-editor-accent/10 hover:text-editor-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-q-text hover:bg-q-accent/10 hover:text-q-accent transition-colors first:rounded-t-lg last:rounded-b-lg"
                   >
-                    <IconComponent size={14} className="text-editor-text-secondary" />
+                    <IconComponent size={14} className="text-q-text-secondary" />
                     <span>{label}</span>
                   </button>
                 );

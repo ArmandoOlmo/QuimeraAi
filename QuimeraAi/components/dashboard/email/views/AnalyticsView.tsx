@@ -187,17 +187,17 @@ const AnalyticsView: React.FC = () => {
                     <h2 className="text-xl font-bold text-foreground">
                         {t('email.analytics', 'Analíticas')}
                     </h2>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         {t('email.analyticsSubtitle', 'Métricas de rendimiento de tus emails')}
                     </p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Calendar className="text-muted-foreground" size={18} />
+                    <Calendar className="text-q-text-muted" size={18} />
                     <select
                         value={timeRange}
                         onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                        className="px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         {timeRanges.map((range) => (
                             <option key={range.value} value={range.value}>
@@ -209,12 +209,12 @@ const AnalyticsView: React.FC = () => {
             </div>
 
             {hasNoData ? (
-                <div className="text-center py-12 bg-card/50 border border-border rounded-xl">
-                    <BarChart3 className="mx-auto text-muted-foreground mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface/50 border border-q-border rounded-xl">
+                    <BarChart3 className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('email.noAnalyticsData', 'Sin datos de analíticas')}
                     </h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {t('email.noAnalyticsDataDesc', 'Envía tu primera campaña para ver métricas aquí')}
                     </p>
                 </div>
@@ -223,7 +223,7 @@ const AnalyticsView: React.FC = () => {
                     {/* Main Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Emails Sent */}
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="p-2 bg-blue-500/10 rounded-lg">
                                     <Send className="text-blue-500" size={20} />
@@ -232,13 +232,13 @@ const AnalyticsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">
                                 {analytics.totalSent.toLocaleString()}
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('email.emailsSent', 'Emails enviados')}
                             </p>
                         </div>
 
                         {/* Open Rate */}
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="p-2 bg-purple-500/10 rounded-lg">
                                     <Eye className="text-purple-500" size={20} />
@@ -247,16 +247,16 @@ const AnalyticsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">
                                 {analytics.openRate}%
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('email.openRate', 'Tasa de apertura')}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-q-text-muted mt-1">
                                 {analytics.opened.toLocaleString()} {t('email.opened', 'abiertos')}
                             </p>
                         </div>
 
                         {/* Click Rate */}
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="p-2 bg-amber-500/10 rounded-lg">
                                     <MousePointer className="text-amber-500" size={20} />
@@ -265,16 +265,16 @@ const AnalyticsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">
                                 {analytics.clickRate}%
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('email.clickRate', 'Tasa de clicks')}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-q-text-muted mt-1">
                                 {analytics.clicked.toLocaleString()} clicks
                             </p>
                         </div>
 
                         {/* Bounce Rate */}
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="p-2 bg-red-500/10 rounded-lg">
                                     <AlertCircle className="text-red-500" size={20} />
@@ -283,10 +283,10 @@ const AnalyticsView: React.FC = () => {
                             <p className="text-2xl font-bold text-foreground">
                                 {analytics.bounceRate}%
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('email.bounceRate', 'Tasa de rebote')}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-q-text-muted mt-1">
                                 {analytics.bounced.toLocaleString()} {t('email.bounced', 'rebotados')}
                             </p>
                         </div>
@@ -295,7 +295,7 @@ const AnalyticsView: React.FC = () => {
                     {/* Charts & Details */}
                     <div className="grid lg:grid-cols-3 gap-6">
                         {/* Chart */}
-                        <div className="lg:col-span-2 bg-card/50 border border-border rounded-xl p-6">
+                        <div className="lg:col-span-2 bg-q-surface/50 border border-q-border rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-foreground mb-4">
                                 {t('email.performanceOverTime', 'Rendimiento en el Tiempo')}
                             </h3>
@@ -320,7 +320,7 @@ const AnalyticsView: React.FC = () => {
                                                             style={{ height: `${Math.max(openedHeight * 2, data.opened > 0 ? 2 : 0)}px` }}
                                                         />
                                                     </div>
-                                                    <span className="text-xs text-muted-foreground">{data.month}</span>
+                                                    <span className="text-xs text-q-text-muted">{data.month}</span>
                                                     <span className="text-xs font-medium text-foreground">{data.sent}</span>
                                                 </div>
                                             );
@@ -330,16 +330,16 @@ const AnalyticsView: React.FC = () => {
                                     <div className="flex items-center justify-center gap-6 mt-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 bg-primary/80 rounded" />
-                                            <span className="text-sm text-muted-foreground">{t('email.sent', 'Enviados')}</span>
+                                            <span className="text-sm text-q-text-muted">{t('email.sent', 'Enviados')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="w-3 h-3 bg-purple-500/60 rounded" />
-                                            <span className="text-sm text-muted-foreground">{t('email.opened', 'Abiertos')}</span>
+                                            <span className="text-sm text-q-text-muted">{t('email.opened', 'Abiertos')}</span>
                                         </div>
                                     </div>
                                 </>
                             ) : (
-                                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                                <div className="h-64 flex items-center justify-center text-q-text-muted">
                                     <div className="text-center">
                                         <Mail size={32} className="mx-auto mb-2 opacity-50" />
                                         <p>{t('email.noChartData', 'Sin datos para mostrar')}</p>
@@ -349,7 +349,7 @@ const AnalyticsView: React.FC = () => {
                         </div>
 
                         {/* Top Campaigns */}
-                        <div className="bg-card/50 border border-border rounded-xl p-6">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-6">
                             <h3 className="text-lg font-semibold text-foreground mb-4">
                                 {t('email.topCampaigns', 'Mejores Campañas')}
                             </h3>
@@ -363,11 +363,11 @@ const AnalyticsView: React.FC = () => {
                                             </p>
                                             <div className="grid grid-cols-2 gap-4 text-sm">
                                                 <div>
-                                                    <p className="text-muted-foreground">{t('email.openRate', 'Apertura')}</p>
+                                                    <p className="text-q-text-muted">{t('email.openRate', 'Apertura')}</p>
                                                     <p className="text-foreground font-semibold">{campaign.openRate}%</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-muted-foreground">{t('email.clickRate', 'Clicks')}</p>
+                                                    <p className="text-q-text-muted">{t('email.clickRate', 'Clicks')}</p>
                                                     <p className="text-foreground font-semibold">{campaign.clickRate}%</p>
                                                 </div>
                                             </div>
@@ -375,7 +375,7 @@ const AnalyticsView: React.FC = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-8 text-muted-foreground">
+                                <div className="text-center py-8 text-q-text-muted">
                                     <Mail size={32} className="mx-auto mb-2 opacity-50" />
                                     <p className="text-sm">{t('email.noCampaignsSent', 'No hay campañas enviadas')}</p>
                                 </div>
@@ -385,41 +385,41 @@ const AnalyticsView: React.FC = () => {
 
                     {/* Additional Stats */}
                     <div className="grid md:grid-cols-3 gap-4">
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
                                 <TrendingUp className="text-green-500" size={20} />
-                                <span className="text-muted-foreground text-sm">
+                                <span className="text-q-text-muted text-sm">
                                     {t('email.deliveryRate', 'Tasa de Entrega')}
                                 </span>
                             </div>
                             <p className="text-2xl font-bold text-foreground">{analytics.deliveryRate}%</p>
-                            <p className="text-muted-foreground text-xs mt-1">
+                            <p className="text-q-text-muted text-xs mt-1">
                                 {analytics.delivered.toLocaleString()} de {analytics.totalSent.toLocaleString()} enviados
                             </p>
                         </div>
 
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
                                 <AlertCircle className="text-amber-500" size={20} />
-                                <span className="text-muted-foreground text-sm">
+                                <span className="text-q-text-muted text-sm">
                                     {t('email.bounces', 'Rebotes')}
                                 </span>
                             </div>
                             <p className="text-2xl font-bold text-foreground">{analytics.bounced.toLocaleString()}</p>
-                            <p className="text-muted-foreground text-xs mt-1">
+                            <p className="text-q-text-muted text-xs mt-1">
                                 {analytics.bounceRate}% del total
                             </p>
                         </div>
 
-                        <div className="bg-card/50 border border-border rounded-xl p-5">
+                        <div className="bg-q-surface/50 border border-q-border rounded-xl p-5">
                             <div className="flex items-center gap-3 mb-2">
                                 <TrendingDown className="text-red-500" size={20} />
-                                <span className="text-muted-foreground text-sm">
+                                <span className="text-q-text-muted text-sm">
                                     {t('email.complaints', 'Quejas')}
                                 </span>
                             </div>
                             <p className="text-2xl font-bold text-foreground">{analytics.complained}</p>
-                            <p className="text-muted-foreground text-xs mt-1">
+                            <p className="text-q-text-muted text-xs mt-1">
                                 {analytics.unsubscribeRate}% del total
                             </p>
                         </div>

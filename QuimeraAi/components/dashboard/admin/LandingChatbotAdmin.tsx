@@ -385,7 +385,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         <h3 className="text-lg font-bold">
                                             {formData.isActive ? t('landingChatbot.status.active', 'Chatbot Activo') : t('landingChatbot.status.inactive', 'Chatbot Inactivo')}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {formData.isActive
                                                 ? t('landingChatbot.status.activeDesc', 'El chatbot está visible en la landing page pública')
                                                 : t('landingChatbot.status.inactiveDesc', 'El chatbot no se muestra a los visitantes')
@@ -404,42 +404,42 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-card border border-border rounded-xl p-4">
-                                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                            <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
                                     <MessageCircle size={14} />
                                     {t('landingChatbot.stats.conversations', 'Conversaciones')}
                                 </div>
                                 <div className="text-2xl font-bold text-primary">0</div>
-                                <div className="text-xs text-muted-foreground">Últimos 30 días</div>
+                                <div className="text-xs text-q-text-muted">Últimos 30 días</div>
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-4">
-                                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                            <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
                                     <Users size={14} />
                                     {t('landingChatbot.stats.leads', 'Leads')}
                                 </div>
                                 <div className="text-2xl font-bold text-green-500">0</div>
-                                <div className="text-xs text-muted-foreground">Capturados por chat</div>
+                                <div className="text-xs text-q-text-muted">Capturados por chat</div>
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-4">
-                                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                            <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
                                     <Target size={14} />
                                     {t('landingChatbot.stats.conversion', 'Conversión')}
                                 </div>
                                 <div className="text-2xl font-bold text-amber-500">0%</div>
-                                <div className="text-xs text-muted-foreground">Tasa de conversión</div>
+                                <div className="text-xs text-q-text-muted">Tasa de conversión</div>
                             </div>
-                            <div className="bg-card border border-border rounded-xl p-4">
-                                <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                            <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-q-text-muted text-sm mb-1">
                                     <Clock size={14} />
                                     {t('landingChatbot.stats.responseTime', 'Tiempo Respuesta')}
                                 </div>
                                 <div className="text-2xl font-bold text-blue-500">--</div>
-                                <div className="text-xs text-muted-foreground">Promedio</div>
+                                <div className="text-xs text-q-text-muted">Promedio</div>
                             </div>
                         </div>
 
                         {/* Quick Config Status */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                                 <Settings size={20} className="text-primary" />
                                 {t('landingChatbot.configStatus', 'Estado de Configuración')}
@@ -503,44 +503,44 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Identity Preview */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                                 <Bot size={20} className="text-primary" />
                                 {t('landingChatbot.identity', 'Identidad del Chatbot')}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('landingChatbot.agentName', 'Nombre del Agente')}
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.agentName}
                                         onChange={(e) => updateForm('agentName', e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                         placeholder="Quimera Assistant"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('landingChatbot.agentRole', 'Rol del Agente')}
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.agentRole}
                                         onChange={(e) => updateForm('agentRole', e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                         placeholder="Sales & Support"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                                         {t('landingChatbot.welcomeMessage', 'Mensaje de Bienvenida')}
                                     </label>
                                     <textarea
                                         value={formData.welcomeMessage}
                                         onChange={(e) => updateForm('welcomeMessage', e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none min-h-[80px] resize-y"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none min-h-[80px] resize-y"
                                         placeholder="¡Hola! 👋 Soy el asistente de Quimera.ai..."
                                     />
                                 </div>
@@ -553,13 +553,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-8 animate-fade-in-up">
                         {/* Company Info */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                                 <Building2 size={18} className="text-primary" />
                                 {t('landingChatbot.knowledge.companyInfo', 'Información de Quimera.ai')}
                             </label>
                             <textarea
-                                className="w-full bg-secondary/30 border border-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-secondary/30 border border-q-border rounded-xl p-4 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder="Describe tu empresa, misión, visión, valores..."
                                 value={formData.knowledgeBase.companyInfo}
                                 onChange={(e) => updateNestedForm('knowledgeBase', 'companyInfo', e.target.value)}
@@ -567,7 +567,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Product Features */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
                                     <Package size={18} className="text-primary" />
@@ -583,7 +583,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             </div>
                             <div className="space-y-3">
                                 {formData.knowledgeBase.productFeatures.map((feature, index) => (
-                                    <div key={feature.id} className="p-4 bg-secondary/20 rounded-lg border border-border/50">
+                                    <div key={feature.id} className="p-4 bg-secondary/20 rounded-lg border border-q-border/50">
                                         <div className="flex items-start gap-3">
                                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 <input
@@ -591,14 +591,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     placeholder="Nombre de la funcionalidad"
                                                     value={feature.name}
                                                     onChange={(e) => updateFeature(index, 'name', e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                    className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                 />
                                                 <input
                                                     type="text"
                                                     placeholder="Descripción breve"
                                                     value={feature.description}
                                                     onChange={(e) => updateFeature(index, 'description', e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                    className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                 />
                                             </div>
                                             <button
@@ -611,7 +611,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
                                 ))}
                                 {formData.knowledgeBase.productFeatures.length === 0 && (
-                                    <div className="text-center py-8 text-muted-foreground">
+                                    <div className="text-center py-8 text-q-text-muted">
                                         <Package size={32} className="mx-auto mb-2 opacity-40" />
                                         <p className="text-sm">No hay funcionalidades configuradas</p>
                                     </div>
@@ -620,7 +620,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Pricing Plans */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
                                     <DollarSign size={18} className="text-primary" />
@@ -636,7 +636,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             </div>
                             <div className="space-y-4">
                                 {formData.knowledgeBase.pricingPlans.map((plan, index) => (
-                                    <div key={plan.id} className="p-4 bg-secondary/20 rounded-lg border border-border/50">
+                                    <div key={plan.id} className="p-4 bg-secondary/20 rounded-lg border border-q-border/50">
                                         <div className="flex items-start gap-3">
                                             <div className="flex-1 space-y-3">
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -645,19 +645,19 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         placeholder="Nombre del plan"
                                                         value={plan.name}
                                                         onChange={(e) => updatePricingPlan(index, 'name', e.target.value)}
-                                                        className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     />
                                                     <input
                                                         type="number"
                                                         placeholder="Precio"
                                                         value={plan.price}
                                                         onChange={(e) => updatePricingPlan(index, 'price', parseFloat(e.target.value))}
-                                                        className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     />
                                                     <select
                                                         value={plan.currency}
                                                         onChange={(e) => updatePricingPlan(index, 'currency', e.target.value)}
-                                                        className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     >
                                                         <option value="USD">USD</option>
                                                         <option value="EUR">EUR</option>
@@ -666,7 +666,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     <select
                                                         value={plan.billingCycle}
                                                         onChange={(e) => updatePricingPlan(index, 'billingCycle', e.target.value)}
-                                                        className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     >
                                                         <option value="monthly">Mensual</option>
                                                         <option value="yearly">Anual</option>
@@ -676,16 +676,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     placeholder="Descripción del plan y características (una por línea)"
                                                     value={plan.features.join('\n')}
                                                     onChange={(e) => updatePricingPlan(index, 'features', e.target.value.split('\n'))}
-                                                    className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none min-h-[60px] resize-y"
+                                                    className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none min-h-[60px] resize-y"
                                                 />
                                                 <label className="flex items-center gap-2">
                                                     <input
                                                         type="checkbox"
                                                         checked={plan.isPopular || false}
                                                         onChange={(e) => updatePricingPlan(index, 'isPopular', e.target.checked)}
-                                                        className="rounded border-border"
+                                                        className="rounded border-q-border"
                                                     />
-                                                    <span className="text-sm text-muted-foreground">Marcar como popular</span>
+                                                    <span className="text-sm text-q-text-muted">Marcar como popular</span>
                                                 </label>
                                             </div>
                                             <button
@@ -698,7 +698,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
                                 ))}
                                 {formData.knowledgeBase.pricingPlans.length === 0 && (
-                                    <div className="text-center py-8 text-muted-foreground">
+                                    <div className="text-center py-8 text-q-text-muted">
                                         <DollarSign size={32} className="mx-auto mb-2 opacity-40" />
                                         <p className="text-sm">No hay planes de precios configurados</p>
                                     </div>
@@ -707,7 +707,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* FAQs */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <BookOpen size={20} className="text-primary" />
                                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -721,7 +721,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Knowledge Documents */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <FileText size={20} className="text-primary" />
                                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -735,13 +735,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Additional Context */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                                 <Sparkles size={18} className="text-primary" />
                                 {t('landingChatbot.knowledge.additionalContext', 'Contexto Adicional')}
                             </label>
                             <textarea
-                                className="w-full bg-secondary/30 border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-secondary/30 border border-q-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 placeholder="Instrucciones adicionales o contexto específico que el chatbot debe conocer..."
                                 value={formData.knowledgeBase.additionalContext || ''}
                                 onChange={(e) => updateNestedForm('knowledgeBase', 'additionalContext', e.target.value)}
@@ -754,7 +754,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Tone Selection */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-4">
                                 <MessageSquare size={18} className="text-primary" />
                                 {t('landingChatbot.personality.tone', 'Tono de Comunicación')}
@@ -764,7 +764,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <button
                                         key={tone}
                                         onClick={() => updateNestedForm('personality', 'tone', tone)}
-                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all capitalize ${formData.personality.tone === tone ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
+                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all capitalize ${formData.personality.tone === tone ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                     >
                                         {tone === 'professional' && '💼 Profesional'}
                                         {tone === 'friendly' && '😊 Amigable'}
@@ -776,7 +776,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Response Style */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-4">
                                 <Sliders size={18} className="text-primary" />
                                 {t('landingChatbot.personality.responseStyle', 'Estilo de Respuesta')}
@@ -786,7 +786,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <button
                                         key={style}
                                         onClick={() => updateNestedForm('personality', 'responseStyle', style)}
-                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.personality.responseStyle === style ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
+                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.personality.responseStyle === style ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                     >
                                         {style === 'concise' && '📝 Conciso'}
                                         {style === 'detailed' && '📖 Detallado'}
@@ -796,7 +796,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Sales Mode */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-4">
                                 <Target size={18} className="text-primary" />
                                 {t('landingChatbot.personality.salesMode', 'Modo de Ventas')}
@@ -806,7 +806,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <button
                                         key={mode}
                                         onClick={() => updateNestedForm('personality', 'salesMode', mode)}
-                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.personality.salesMode === mode ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
+                                        className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.personality.salesMode === mode ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                     >
                                         {mode === 'soft' && '🤝 Suave - Informativo'}
                                         {mode === 'proactive' && '💪 Proactivo - Orientado a conversión'}
@@ -816,7 +816,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Languages */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                                 <Globe size={18} className="text-primary" />
                                 {t('landingChatbot.personality.languages', 'Idiomas')}
@@ -825,22 +825,22 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 type="text"
                                 value={formData.personality.languages.join(', ')}
                                 onChange={(e) => updateNestedForm('personality', 'languages', e.target.value.split(',').map(l => l.trim()))}
-                                className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                 placeholder="es, en, fr"
                             />
-                            <p className="text-xs text-muted-foreground mt-2">
+                            <p className="text-xs text-q-text-muted mt-2">
                                 Separa los códigos de idioma con comas (ej: es, en, fr)
                             </p>
                         </div>
 
                         {/* System Prompt */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                                 <Bot size={18} className="text-primary" />
                                 {t('landingChatbot.personality.systemPrompt', 'Instrucciones del Sistema')}
                             </label>
                             <textarea
-                                className="w-full bg-secondary/30 border border-border rounded-xl p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-sm leading-relaxed"
+                                className="w-full bg-secondary/30 border border-q-border rounded-xl p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-sm leading-relaxed"
                                 value={formData.personality.systemPrompt}
                                 onChange={(e) => updateNestedForm('personality', 'systemPrompt', e.target.value)}
                                 placeholder="Eres el asistente virtual de Quimera.ai..."
@@ -848,13 +848,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Custom Instructions */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider mb-3">
                                 <Sparkles size={18} className="text-primary" />
                                 {t('landingChatbot.personality.customInstructions', 'Instrucciones Adicionales')}
                             </label>
                             <textarea
-                                className="w-full bg-secondary/30 border border-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
+                                className="w-full bg-secondary/30 border border-q-border rounded-xl p-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y text-sm leading-relaxed"
                                 value={formData.personality.customInstructions || ''}
                                 onChange={(e) => updateNestedForm('personality', 'customInstructions', e.target.value)}
                                 placeholder="Reglas adicionales o comportamientos específicos..."
@@ -871,13 +871,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Enable Voice Toggle */}
-                        <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                     <Mic className="text-primary" />
                                     {t('landingChatbot.voice.enable', 'Habilitar Voz')}
                                 </h3>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     Permite a los visitantes interactuar con voz
                                 </p>
                             </div>
@@ -892,7 +892,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         {formData.voice.enabled && (
                             <>
                                 {/* Voice Selection */}
-                                <div className="bg-card border border-border p-6 rounded-xl">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl">
                                     <div className="flex items-center justify-between mb-4">
                                         <label className="block text-sm font-bold text-foreground flex items-center gap-2">
                                             <Radio className="text-primary" />
@@ -905,7 +905,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     onClick={() => setVoiceGenderFilter(filter)}
                                                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${voiceGenderFilter === filter
                                                         ? 'bg-primary text-primary-foreground shadow-sm'
-                                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                                        : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                                         }`}
                                                 >
                                                     {filter === 'all' ? 'Todos' : filter === 'Male' ? '♂ Masculino' : '♀ Femenino'}
@@ -918,14 +918,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             <button
                                                 key={v.name}
                                                 onClick={() => updateNestedForm('voice', 'voiceName', v.name)}
-                                                className={`p-4 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voice.voiceName === v.name ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-secondary/10 hover:border-primary/50'}`}
+                                                className={`p-4 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voice.voiceName === v.name ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-q-border bg-secondary/10 hover:border-primary/50'}`}
                                             >
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voice.voiceName === v.name ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'}`}>
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${formData.voice.voiceName === v.name ? 'bg-primary text-white' : 'bg-secondary text-q-text-muted'}`}>
                                                     {v.gender === 'Male' ? '♂' : '♀'}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold text-foreground">{v.name}</h4>
-                                                    <p className="text-xs text-muted-foreground">{v.description}</p>
+                                                    <p className="text-xs text-q-text-muted">{v.description}</p>
                                                 </div>
                                             </button>
                                         ))}
@@ -933,12 +933,12 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 {/* Auto-play Greeting */}
-                                <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl flex items-center justify-between">
                                     <div>
                                         <h3 className="font-bold text-lg">
                                             {t('landingChatbot.voice.autoPlay', 'Saludo Automático con Voz')}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             Reproduce el mensaje de bienvenida con voz automáticamente
                                         </p>
                                     </div>
@@ -958,13 +958,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Enable Lead Capture */}
-                        <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                     <Users className="text-primary" />
                                     {t('landingChatbot.leadCapture.enable', 'Captura de Leads')}
                                 </h3>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     Recopila información de contacto de visitantes interesados
                                 </p>
                             </div>
@@ -979,11 +979,11 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         {formData.leadCapture.enabled && (
                             <>
                                 {/* Trigger Settings */}
-                                <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                                     <h3 className="font-bold text-lg">Configuración de Triggers</h3>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                             Solicitar datos después de X mensajes
                                         </label>
                                         <input
@@ -992,14 +992,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             max="10"
                                             value={formData.leadCapture.triggerAfterMessages}
                                             onChange={(e) => updateNestedForm('leadCapture', 'triggerAfterMessages', parseInt(e.target.value))}
-                                            className="w-24 bg-secondary/30 border border-border rounded-lg p-2 focus:ring-2 focus:ring-primary/50 outline-none"
+                                            className="w-24 bg-secondary/30 border border-q-border rounded-lg p-2 focus:ring-2 focus:ring-primary/50 outline-none"
                                         />
                                     </div>
 
-                                    <div className="flex items-center justify-between py-3 border-t border-border">
+                                    <div className="flex items-center justify-between py-3 border-t border-q-border">
                                         <div>
                                             <h4 className="font-medium">Formulario Pre-Chat</h4>
-                                            <p className="text-sm text-muted-foreground">Solicitar datos antes de iniciar el chat</p>
+                                            <p className="text-sm text-q-text-muted">Solicitar datos antes de iniciar el chat</p>
                                         </div>
                                         <button
                                             onClick={() => updateNestedForm('leadCapture', 'preChatForm', !formData.leadCapture.preChatForm)}
@@ -1009,10 +1009,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center justify-between py-3 border-t border-border">
+                                    <div className="flex items-center justify-between py-3 border-t border-q-border">
                                         <div>
                                             <h4 className="font-medium">Progressive Profiling</h4>
-                                            <p className="text-sm text-muted-foreground">Solicitar datos gradualmente durante la conversación</p>
+                                            <p className="text-sm text-q-text-muted">Solicitar datos gradualmente durante la conversación</p>
                                         </div>
                                         <button
                                             onClick={() => updateNestedForm('leadCapture', 'progressiveProfilingEnabled', !formData.leadCapture.progressiveProfilingEnabled)}
@@ -1024,13 +1024,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 {/* Content Gates */}
-                                <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                                     <h3 className="font-bold text-lg">Gates de Contenido</h3>
 
                                     <div className="flex items-center justify-between py-3">
                                         <div>
                                             <h4 className="font-medium">Requerir email para ver precios</h4>
-                                            <p className="text-sm text-muted-foreground">Gate de pricing</p>
+                                            <p className="text-sm text-q-text-muted">Gate de pricing</p>
                                         </div>
                                         <button
                                             onClick={() => updateNestedForm('leadCapture', 'requireEmailForPricing', !formData.leadCapture.requireEmailForPricing)}
@@ -1040,10 +1040,10 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </button>
                                     </div>
 
-                                    <div className="flex items-center justify-between py-3 border-t border-border">
+                                    <div className="flex items-center justify-between py-3 border-t border-q-border">
                                         <div>
                                             <h4 className="font-medium">Requerir email para solicitar demo</h4>
-                                            <p className="text-sm text-muted-foreground">Gate para demos</p>
+                                            <p className="text-sm text-q-text-muted">Gate para demos</p>
                                         </div>
                                         <button
                                             onClick={() => updateNestedForm('leadCapture', 'requireEmailForDemo', !formData.leadCapture.requireEmailForDemo)}
@@ -1055,11 +1055,11 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 {/* Exit Intent */}
-                                <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h3 className="font-bold text-lg">Exit Intent</h3>
-                                            <p className="text-sm text-muted-foreground">Mostrar oferta cuando el usuario intente salir</p>
+                                            <p className="text-sm text-q-text-muted">Mostrar oferta cuando el usuario intente salir</p>
                                         </div>
                                         <button
                                             onClick={() => updateNestedForm('leadCapture', 'exitIntentEnabled', !formData.leadCapture.exitIntentEnabled)}
@@ -1071,13 +1071,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                                     {formData.leadCapture.exitIntentEnabled && (
                                         <div>
-                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                 Mensaje de Exit Intent
                                             </label>
                                             <textarea
                                                 value={formData.leadCapture.exitIntentOffer}
                                                 onChange={(e) => updateNestedForm('leadCapture', 'exitIntentOffer', e.target.value)}
-                                                className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none min-h-[80px] resize-y"
+                                                className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none min-h-[80px] resize-y"
                                                 placeholder="🎁 ¡Espera! Déjame tu email y te envío información exclusiva..."
                                             />
                                         </div>
@@ -1085,16 +1085,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 {/* High Intent Keywords */}
-                                <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                                <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                                     <h3 className="font-bold text-lg">Palabras Clave de Alta Intención</h3>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-q-text-muted">
                                         El chatbot priorizará la captura de leads cuando detecte estas palabras
                                     </p>
                                     <input
                                         type="text"
                                         value={formData.leadCapture.highIntentKeywords.join(', ')}
                                         onChange={(e) => updateHighIntentKeywords(e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                         placeholder="precio, demo, comprar, contratar, plan..."
                                     />
                                 </div>
@@ -1158,7 +1158,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Color Source */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                             <h3 className="font-bold text-lg flex items-center gap-2">
                                 <Palette className="text-primary" />
                                 Fuente de Colores
@@ -1167,7 +1167,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => updateNestedForm('appearance', 'colorSource', 'app')}
-                                    className={`p-4 rounded-xl border text-left transition-all ${colorSource === 'app' ? 'bg-primary/10 border-primary ring-2 ring-primary/30' : 'bg-secondary/20 border-border hover:border-primary/50'}`}
+                                    className={`p-4 rounded-xl border text-left transition-all ${colorSource === 'app' ? 'bg-primary/10 border-primary ring-2 ring-primary/30' : 'bg-secondary/20 border-q-border hover:border-primary/50'}`}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
@@ -1175,12 +1175,12 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </div>
                                         <span className="font-medium">Design Tokens</span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">Usar colores globales de la app</p>
+                                    <p className="text-xs text-q-text-muted">Usar colores globales de la app</p>
                                 </button>
 
                                 <button
                                     onClick={() => updateNestedForm('appearance', 'colorSource', 'custom')}
-                                    className={`p-4 rounded-xl border text-left transition-all ${colorSource === 'custom' ? 'bg-primary/10 border-primary ring-2 ring-primary/30' : 'bg-secondary/20 border-border hover:border-primary/50'}`}
+                                    className={`p-4 rounded-xl border text-left transition-all ${colorSource === 'custom' ? 'bg-primary/10 border-primary ring-2 ring-primary/30' : 'bg-secondary/20 border-q-border hover:border-primary/50'}`}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
@@ -1188,25 +1188,25 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </div>
                                         <span className="font-medium">Personalizados</span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">Definir colores específicos</p>
+                                    <p className="text-xs text-q-text-muted">Definir colores específicos</p>
                                 </button>
                             </div>
                         </div>
 
                         {/* Custom Colors - Only show when colorSource is 'custom' */}
                         {colorSource === 'custom' && (
-                            <div className="bg-card border border-border p-6 rounded-xl space-y-5">
+                            <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-5">
                                 <h3 className="font-bold text-lg">Personalizar Colores</h3>
 
                                 {/* Quick Presets */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-3">Presets Rápidos</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-3">Presets Rápidos</label>
                                     <div className="flex flex-wrap gap-2">
                                         {colorPresets.map(preset => (
                                             <button
                                                 key={preset.name}
                                                 onClick={() => applyColorPreset(preset)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:border-primary/50 bg-secondary/20 transition-all text-xs"
+                                                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-q-border hover:border-primary/50 bg-secondary/20 transition-all text-xs"
                                                 title={preset.name}
                                             >
                                                 <div
@@ -1222,8 +1222,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 {/* Color Groups */}
                                 <div className="space-y-4 pt-2">
                                     {/* Header Colors */}
-                                    <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                        <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Header</h4>
+                                    <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                        <h4 className="font-medium text-sm mb-3 text-q-text-muted uppercase tracking-wider">Header</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <ColorControl
                                                 label="Fondo"
@@ -1239,8 +1239,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
 
                                     {/* Message Bubbles */}
-                                    <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                        <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Mensajes</h4>
+                                    <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                        <h4 className="font-medium text-sm mb-3 text-q-text-muted uppercase tracking-wider">Mensajes</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <ColorControl
                                                 label="Burbuja Bot"
@@ -1256,8 +1256,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
 
                                     {/* Button & Accent */}
-                                    <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                        <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Botón Flotante</h4>
+                                    <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                        <h4 className="font-medium text-sm mb-3 text-q-text-muted uppercase tracking-wider">Botón Flotante</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <ColorControl
                                                 label="Fondo del Botón"
@@ -1273,8 +1273,8 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
 
                                     {/* Background Colors */}
-                                    <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                        <h4 className="font-medium text-sm mb-3 text-muted-foreground uppercase tracking-wider">Fondos</h4>
+                                    <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                        <h4 className="font-medium text-sm mb-3 text-q-text-muted uppercase tracking-wider">Fondos</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <ColorControl
                                                 label="Chat Background"
@@ -1292,7 +1292,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     {/* Reset Button */}
                                     <button
                                         onClick={() => updateNestedForm('appearance', 'customColors', { ...defaultChatbotColors })}
-                                        className="w-full py-2 px-4 rounded-lg border border-border text-sm text-muted-foreground hover:bg-secondary/30 transition-colors"
+                                        className="w-full py-2 px-4 rounded-lg border border-q-border text-sm text-q-text-muted hover:bg-secondary/30 transition-colors"
                                     >
                                         <RefreshCw size={14} className="inline mr-2" />
                                         Restaurar colores por defecto
@@ -1302,16 +1302,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         )}
 
                         {/* Position & Size */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                             <h3 className="font-bold text-lg">Posición y Tamaño</h3>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Posición</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">Posición</label>
                                     <select
                                         value={formData.appearance.position}
                                         onChange={(e) => updateNestedForm('appearance', 'position', e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     >
                                         <option value="bottom-right">Abajo Derecha</option>
                                         <option value="bottom-left">Abajo Izquierda</option>
@@ -1319,11 +1319,11 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Tamaño</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">Tamaño</label>
                                     <select
                                         value={formData.appearance.size}
                                         onChange={(e) => updateNestedForm('appearance', 'size', e.target.value)}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     >
                                         <option value="sm">Pequeño</option>
                                         <option value="md">Mediano</option>
@@ -1332,29 +1332,29 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Offset X (px)</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">Offset X (px)</label>
                                     <input
                                         type="number"
                                         value={formData.appearance.offsetX}
                                         onChange={(e) => updateNestedForm('appearance', 'offsetX', parseInt(e.target.value))}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Offset Y (px)</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">Offset Y (px)</label>
                                     <input
                                         type="number"
                                         value={formData.appearance.offsetY}
                                         onChange={(e) => updateNestedForm('appearance', 'offsetY', parseInt(e.target.value))}
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Avatar / Logo */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-5">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-5">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                     {formData.appearance.avatarUrl ? (
@@ -1365,19 +1365,19 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg">Logo / Avatar del Bot</h3>
-                                    <p className="text-sm text-muted-foreground">Aparece en el header y junto a los mensajes</p>
+                                    <p className="text-sm text-q-text-muted">Aparece en el header y junto a los mensajes</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">URL del Logo</label>
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">URL del Logo</label>
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="url"
                                             value={formData.appearance.avatarUrl || ''}
                                             onChange={(e) => updateNestedForm('appearance', 'avatarUrl', e.target.value)}
-                                            className="flex-1 bg-background border border-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                            className="flex-1 bg-q-bg border border-q-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                             placeholder="https://ejemplo.com/mi-logo.png"
                                         />
                                         {formData.appearance.avatarUrl && (
@@ -1390,15 +1390,15 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </button>
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
+                                    <p className="text-xs text-q-text-muted mt-2">
                                         Recomendado: PNG, SVG o JPG cuadrado (mínimo 64x64px). Se mostrará en círculo.
                                     </p>
                                 </div>
 
                                 {/* Preview */}
                                 {formData.appearance.avatarUrl && (
-                                    <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                        <p className="text-xs font-medium text-muted-foreground mb-3">Vista previa:</p>
+                                    <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                        <p className="text-xs font-medium text-q-text-muted mb-3">Vista previa:</p>
                                         <div className="flex items-center gap-6">
                                             {/* Header preview */}
                                             <div className="flex items-center gap-2">
@@ -1410,11 +1410,11 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
                                                 </div>
-                                                <span className="text-xs text-muted-foreground">Header</span>
+                                                <span className="text-xs text-q-text-muted">Header</span>
                                             </div>
                                             {/* Message preview */}
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-secondary/50 border border-border overflow-hidden flex items-center justify-center shrink-0">
+                                                <div className="w-8 h-8 rounded-full bg-secondary/50 border border-q-border overflow-hidden flex items-center justify-center shrink-0">
                                                     <img
                                                         src={formData.appearance.avatarUrl}
                                                         alt="Message preview"
@@ -1422,7 +1422,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
                                                 </div>
-                                                <span className="text-xs text-muted-foreground">Mensajes</span>
+                                                <span className="text-xs text-q-text-muted">Mensajes</span>
                                             </div>
                                             {/* Button preview (if using custom-image) */}
                                             <div className="flex items-center gap-2">
@@ -1434,7 +1434,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
                                                 </div>
-                                                <span className="text-xs text-muted-foreground">Botón</span>
+                                                <span className="text-xs text-q-text-muted">Botón</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1442,7 +1442,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                                 {/* Quick logos */}
                                 <div>
-                                    <p className="text-xs font-medium text-muted-foreground mb-2">Logos rápidos:</p>
+                                    <p className="text-xs font-medium text-q-text-muted mb-2">Logos rápidos:</p>
                                     <div className="flex flex-wrap gap-2">
                                         <button
                                             onClick={() => updateNestedForm('appearance', 'avatarUrl', '/quimera-logo.svg')}
@@ -1464,18 +1464,18 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Button Style & Icon */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-5">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-5">
                             <h3 className="font-bold text-lg">Estilo del Botón</h3>
 
                             {/* Button Shape */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-3">Forma</label>
+                                <label className="block text-sm font-medium text-q-text-muted mb-3">Forma</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {(['circle', 'rounded', 'square'] as const).map(style => (
                                         <button
                                             key={style}
                                             onClick={() => updateNestedForm('appearance', 'buttonStyle', style)}
-                                            className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.appearance.buttonStyle === style ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
+                                            className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${formData.appearance.buttonStyle === style ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                         >
                                             {style === 'circle' && '⬤ Círculo'}
                                             {style === 'rounded' && '▢ Redondeado'}
@@ -1487,13 +1487,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                             {/* Button Icon */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-3">Ícono del Botón</label>
+                                <label className="block text-sm font-medium text-q-text-muted mb-3">Ícono del Botón</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {buttonIconOptions.map(option => (
                                         <button
                                             key={option.id}
                                             onClick={() => updateNestedForm('appearance', 'buttonIcon', option.id)}
-                                            className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${formData.appearance.buttonIcon === option.id ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-card border-border hover:border-primary/50'}`}
+                                            className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${formData.appearance.buttonIcon === option.id ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                         >
                                             <span className="text-lg">{option.icon}</span>
                                             <span>{option.label}</span>
@@ -1504,14 +1504,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                             {/* Custom Emoji Input */}
                             {formData.appearance.buttonIcon === 'custom-emoji' && (
-                                <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">Emoji personalizado</label>
+                                <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">Emoji personalizado</label>
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="text"
                                             value={formData.appearance.customEmoji || ''}
                                             onChange={(e) => updateNestedForm('appearance', 'customEmoji', e.target.value)}
-                                            className="w-20 bg-background border border-border rounded-lg p-3 text-3xl text-center focus:ring-2 focus:ring-primary/50 outline-none"
+                                            className="w-20 bg-q-bg border border-q-border rounded-lg p-3 text-3xl text-center focus:ring-2 focus:ring-primary/50 outline-none"
                                             placeholder="🦋"
                                             maxLength={2}
                                         />
@@ -1520,7 +1520,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                 <button
                                                     key={emoji}
                                                     onClick={() => updateNestedForm('appearance', 'customEmoji', emoji)}
-                                                    className={`w-10 h-10 rounded-lg border text-xl flex items-center justify-center transition-all ${formData.appearance.customEmoji === emoji ? 'bg-primary/20 border-primary' : 'bg-secondary/20 border-border hover:border-primary/50'}`}
+                                                    className={`w-10 h-10 rounded-lg border text-xl flex items-center justify-center transition-all ${formData.appearance.customEmoji === emoji ? 'bg-primary/20 border-primary' : 'bg-secondary/20 border-q-border hover:border-primary/50'}`}
                                                 >
                                                     {emoji}
                                                 </button>
@@ -1532,18 +1532,18 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                             {/* Custom Image Input */}
                             {formData.appearance.buttonIcon === 'custom-image' && (
-                                <div className="p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">URL de imagen personalizada</label>
+                                <div className="p-4 bg-secondary/10 rounded-lg border border-q-border/50">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">URL de imagen personalizada</label>
                                     <div className="flex items-center gap-3">
                                         <input
                                             type="url"
                                             value={formData.appearance.customIconUrl || ''}
                                             onChange={(e) => updateNestedForm('appearance', 'customIconUrl', e.target.value)}
-                                            className="flex-1 bg-background border border-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                            className="flex-1 bg-q-bg border border-q-border rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                             placeholder="https://ejemplo.com/icono.png"
                                         />
                                         {formData.appearance.customIconUrl && (
-                                            <div className="w-12 h-12 rounded-lg border border-border overflow-hidden bg-secondary/30 flex items-center justify-center">
+                                            <div className="w-12 h-12 rounded-lg border border-q-border overflow-hidden bg-secondary/30 flex items-center justify-center">
                                                 <img
                                                     src={formData.appearance.customIconUrl}
                                                     alt="Custom icon"
@@ -1553,17 +1553,17 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
+                                    <p className="text-xs text-q-text-muted mt-2">
                                         Recomendado: PNG o SVG de 64x64px con fondo transparente
                                     </p>
                                 </div>
                             )}
 
                             {/* Pulse Effect */}
-                            <div className="flex items-center justify-between py-3 border-t border-border">
+                            <div className="flex items-center justify-between py-3 border-t border-q-border">
                                 <div>
                                     <h4 className="font-medium">Efecto de Pulso</h4>
-                                    <p className="text-sm text-muted-foreground">Animar el botón para atraer atención</p>
+                                    <p className="text-sm text-q-text-muted">Animar el botón para atraer atención</p>
                                 </div>
                                 <button
                                     onClick={() => updateNestedForm('appearance', 'pulseEffect', !formData.appearance.pulseEffect)}
@@ -1575,13 +1575,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Page Visibility */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                             <h3 className="font-bold text-lg">Visibilidad por Página</h3>
 
                             <div className="flex items-center justify-between py-3">
                                 <div>
                                     <h4 className="font-medium">Mostrar en todas las páginas</h4>
-                                    <p className="text-sm text-muted-foreground">Excepto las rutas excluidas</p>
+                                    <p className="text-sm text-q-text-muted">Excepto las rutas excluidas</p>
                                 </div>
                                 <button
                                     onClick={() => updateNestedForm('appearance', 'showOnAllPages', !formData.appearance.showOnAllPages)}
@@ -1592,17 +1592,17 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     Rutas Excluidas
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.appearance.excludedPaths.join(', ')}
                                     onChange={(e) => updateExcludedPaths(e.target.value)}
-                                    className="w-full bg-secondary/30 border border-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                                    className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-primary/50 outline-none"
                                     placeholder="/login, /register, /dashboard"
                                 />
-                                <p className="text-xs text-muted-foreground mt-2">
+                                <p className="text-xs text-q-text-muted mt-2">
                                     Separa las rutas con comas
                                 </p>
                             </div>
@@ -1613,17 +1613,17 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
             case 'social':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
-                        <div className="bg-card border border-border p-6 rounded-xl">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl">
                             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                                 <Share2 className="text-primary" />
                                 Canales Sociales
                             </h3>
-                            <p className="text-muted-foreground mb-6">
+                            <p className="text-q-text-muted mb-6">
                                 Conecta el chatbot con las redes sociales de Quimera.ai
                             </p>
 
                             {/* WhatsApp */}
-                            <div className="p-4 bg-secondary/20 rounded-lg border border-border/50 mb-4">
+                            <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shrink-0">
@@ -1631,7 +1631,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </div>
                                         <div>
                                             <h4 className="font-medium">WhatsApp Business</h4>
-                                            <p className="text-sm text-muted-foreground">Conectar con WhatsApp</p>
+                                            <p className="text-sm text-q-text-muted">Conectar con WhatsApp</p>
                                         </div>
                                     </div>
                                     <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
@@ -1641,7 +1641,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             </div>
 
                             {/* Facebook */}
-                            <div className="p-4 bg-secondary/20 rounded-lg border border-border/50 mb-4">
+                            <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50 mb-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
@@ -1649,7 +1649,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </div>
                                         <div>
                                             <h4 className="font-medium">Facebook Messenger</h4>
-                                            <p className="text-sm text-muted-foreground">Conectar con Messenger</p>
+                                            <p className="text-sm text-q-text-muted">Conectar con Messenger</p>
                                         </div>
                                     </div>
                                     <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
@@ -1659,7 +1659,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                             </div>
 
                             {/* Instagram */}
-                            <div className="p-4 bg-secondary/20 rounded-lg border border-border/50">
+                            <div className="p-4 bg-secondary/20 rounded-lg border border-q-border/50">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center shrink-0">
@@ -1667,7 +1667,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         </div>
                                         <div>
                                             <h4 className="font-medium">Instagram DMs</h4>
-                                            <p className="text-sm text-muted-foreground">Conectar con Instagram</p>
+                                            <p className="text-sm text-q-text-muted">Conectar con Instagram</p>
                                         </div>
                                     </div>
                                     <span className="px-3 py-1 bg-amber-500/20 text-amber-500 text-xs font-medium rounded-full">
@@ -1683,13 +1683,13 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                 return (
                     <div className="space-y-6 animate-fade-in-up">
                         {/* Active/Inactive Toggle */}
-                        <div className="bg-card border border-border p-6 rounded-xl flex items-center justify-between">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                     <Power className="text-primary" />
                                     {t('landingChatbot.settings.activate', 'Activar Chatbot')}
                                 </h3>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     Mostrar el chatbot en la landing page pública
                                 </p>
                             </div>
@@ -1702,7 +1702,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Model Parameters */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-6">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
                             <h3 className="font-bold text-lg flex items-center gap-2">
                                 <Sliders className="text-primary" />
                                 {t('landingChatbot.settings.modelParams', 'Parámetros del Modelo')}
@@ -1722,7 +1722,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     onChange={(e) => updateNestedForm('behavior', 'temperature', parseFloat(e.target.value))}
                                     className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
                                 />
-                                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                                <div className="flex justify-between text-xs text-q-text-muted mt-1">
                                     <span>Preciso</span>
                                     <span>Equilibrado</span>
                                     <span>Creativo</span>
@@ -1747,11 +1747,11 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         </div>
 
                         {/* Auto Open */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h3 className="font-bold text-lg">Abrir Automáticamente</h3>
-                                    <p className="text-sm text-muted-foreground">Abrir el chat automáticamente después de X segundos</p>
+                                    <p className="text-sm text-q-text-muted">Abrir el chat automáticamente después de X segundos</p>
                                 </div>
                                 <button
                                     onClick={() => updateNestedForm('behavior', 'autoOpen', !formData.behavior.autoOpen)}
@@ -1763,7 +1763,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                             {formData.behavior.autoOpen && (
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Delay (segundos)
                                     </label>
                                     <input
@@ -1772,14 +1772,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         max="120"
                                         value={formData.behavior.autoOpenDelay}
                                         onChange={(e) => updateNestedForm('behavior', 'autoOpenDelay', parseInt(e.target.value))}
-                                        className="w-24 bg-secondary/30 border border-border rounded-lg p-2 focus:ring-2 focus:ring-primary/50 outline-none"
+                                        className="w-24 bg-secondary/30 border border-q-border rounded-lg p-2 focus:ring-2 focus:ring-primary/50 outline-none"
                                     />
                                 </div>
                             )}
                         </div>
 
                         {/* Proactive Messages */}
-                        <div className="bg-card border border-border p-6 rounded-xl space-y-4">
+                        <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-lg">Mensajes Proactivos</h3>
                                 <button
@@ -1793,7 +1793,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                             <div className="space-y-3">
                                 {formData.behavior.proactiveMessages.map((msg, index) => (
-                                    <div key={msg.id} className="p-4 bg-secondary/20 rounded-lg border border-border/50">
+                                    <div key={msg.id} className="p-4 bg-secondary/20 rounded-lg border border-q-border/50">
                                         <div className="flex items-start gap-3">
                                             <button
                                                 onClick={() => updateProactiveMessage(index, 'enabled', !msg.enabled)}
@@ -1806,7 +1806,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                     <select
                                                         value={msg.trigger}
                                                         onChange={(e) => updateProactiveMessage(index, 'trigger', e.target.value)}
-                                                        className="bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     >
                                                         <option value="time">Tiempo (segundos)</option>
                                                         <option value="scroll">Scroll (%)</option>
@@ -1818,14 +1818,14 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                                         placeholder={msg.trigger === 'page' ? '/pricing' : '30'}
                                                         value={msg.triggerValue}
                                                         onChange={(e) => updateProactiveMessage(index, 'triggerValue', msg.trigger === 'page' ? e.target.value : parseInt(e.target.value))}
-                                                        className="bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                                                        className="bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                                                     />
                                                 </div>
                                                 <textarea
                                                     placeholder="Mensaje proactivo..."
                                                     value={msg.message}
                                                     onChange={(e) => updateProactiveMessage(index, 'message', e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none min-h-[60px] resize-y"
+                                                    className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none min-h-[60px] resize-y"
                                                 />
                                             </div>
                                             <button
@@ -1838,7 +1838,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     </div>
                                 ))}
                                 {formData.behavior.proactiveMessages.length === 0 && (
-                                    <div className="text-center py-8 text-muted-foreground">
+                                    <div className="text-center py-8 text-q-text-muted">
                                         <MessageSquare size={32} className="mx-auto mb-2 opacity-40" />
                                         <p className="text-sm">No hay mensajes proactivos configurados</p>
                                     </div>
@@ -1854,16 +1854,16 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
                         >
                             <Menu className="w-4 h-4" />
                         </button>
@@ -1905,7 +1905,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         <button
                             onClick={handleRestoreDefaults}
                             disabled={isSaving}
-                            className="flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:border sm:border-border text-sm font-medium transition-all sm:hover:bg-secondary/50 text-muted-foreground hover:text-foreground disabled:opacity-50"
+                            className="flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto sm:px-3 rounded-lg sm:border sm:border-q-border text-sm font-medium transition-all sm:hover:bg-secondary/50 text-q-text-muted hover:text-foreground disabled:opacity-50"
                             title="Restaurar valores por defecto"
                         >
                             <RefreshCw size={14} />
@@ -1917,7 +1917,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
 
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
                     {/* LEFT: Configuration Area (Scrollable) */}
-                    <div className="lg:col-span-7 xl:col-span-5 flex flex-col border-r border-border bg-background overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]">
+                    <div className="lg:col-span-7 xl:col-span-5 flex flex-col border-r border-q-border bg-q-bg overflow-hidden relative z-10 shadow-[5px_0_30px_-10px_rgba(0,0,0,0.1)]">
                         {/* Tabs Header */}
                         <div className="px-8 pt-8 pb-4">
                             <div className="flex space-x-1 bg-secondary/30 p-1 rounded-xl overflow-x-auto">
@@ -1934,7 +1934,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as Tab)}
-                                        className={`flex items-center gap-1.5 py-2.5 px-3 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`flex items-center gap-1.5 py-2.5 px-3 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-q-surface text-primary shadow-sm' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {tab.icon}
                                         <span className="hidden xl:inline">{tab.label}</span>
@@ -1955,7 +1955,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
                         <div className="relative z-10 flex flex-col items-center">
-                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">
+                            <h3 className="text-sm font-bold text-q-text-muted uppercase tracking-widest mb-8">
                                 {t('landingChatbot.liveSimulator', 'Simulador en Vivo')}
                             </h3>
 
@@ -1967,7 +1967,7 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                     <div className="absolute inset-[2px] rounded-[48px] bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 pointer-events-none"></div>
 
                                     {/* Screen */}
-                                    <div className="relative w-full h-full bg-card rounded-[40px] overflow-hidden flex flex-col">
+                                    <div className="relative w-full h-full bg-q-surface rounded-[40px] overflow-hidden flex flex-col">
                                         {/* Dynamic Island */}
                                         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-full z-30 flex items-center justify-center gap-2">
                                             <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
@@ -2003,12 +2003,12 @@ const LandingChatbotAdmin: React.FC<LandingChatbotAdminProps> = ({ onBack }) => 
                                         <div className="px-3 pb-2">
                                             <div className="h-8 bg-muted/60 rounded-full flex items-center justify-center gap-2 px-3">
                                                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                <span className="text-[10px] text-muted-foreground truncate">quimera.ai</span>
+                                                <span className="text-[10px] text-q-text-muted truncate">quimera.ai</span>
                                             </div>
                                         </div>
 
                                         {/* Website Content (Landing Page Preview) */}
-                                        <div className="flex-1 overflow-hidden bg-background relative">
+                                        <div className="flex-1 overflow-hidden bg-q-bg relative">
                                             {/* Hero Section */}
                                             <div className="h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent relative overflow-hidden">
                                                 <div className="absolute inset-0 flex items-center justify-center">

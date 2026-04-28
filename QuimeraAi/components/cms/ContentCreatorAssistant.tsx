@@ -394,19 +394,19 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
-            <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
+                <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
                     <div className="flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">{t('cms_assistant.title')}</h2>
-                            <p className="text-xs text-muted-foreground">{t('cms_assistant.subtitle')}</p>
+                            <p className="text-xs text-q-text-muted">{t('cms_assistant.subtitle')}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="text-q-text-muted hover:text-foreground transition-colors">
                         <X size={24} />
                     </button>
                 </div>
@@ -417,30 +417,30 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="text-center space-y-2 mb-8">
                                 <h3 className="text-2xl font-bold">{t('cms_assistant.stepTopic')}</h3>
-                                <p className="text-muted-foreground">{t('cms_assistant.stepTopicDesc')}</p>
+                                <p className="text-q-text-muted">{t('cms_assistant.stepTopicDesc')}</p>
                             </div>
                             <textarea
                                 autoFocus
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                                 placeholder={t('cms_assistant.topicPlaceholder')}
-                                className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                                className="w-full h-32 bg-secondary/30 border border-q-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-muted-foreground">URL de Referencia (Opcional)</label>
+                                <label className="block text-sm font-medium text-q-text-muted">URL de Referencia (Opcional)</label>
                                 <input
                                     type="url"
                                     value={sourceUrl}
                                     onChange={(e) => setSourceUrl(e.target.value)}
                                     placeholder="https://ejemplo.com/noticia (La IA leerá esta página)"
-                                    className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
                                 />
                             </div>
 
                             {/* Media Upload Zone */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2 flex items-center gap-2">
                                     <ImageIcon size={16} />
                                     {t('cms_assistant.mediaUploadLabel', { defaultValue: 'Visual reference (optional)' })}
                                 </label>
@@ -459,19 +459,19 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                         onClick={() => mediaInputRef.current?.click()}
                                         className={`w-full border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isDragging
                                             ? 'border-primary bg-primary/10 scale-[1.02]'
-                                            : 'border-border hover:border-primary/50 hover:bg-secondary/20'
+                                            : 'border-q-border hover:border-primary/50 hover:bg-secondary/20'
                                             }`}
                                     >
-                                        <Upload size={24} className="text-muted-foreground" />
-                                        <p className="text-sm text-muted-foreground text-center">
+                                        <Upload size={24} className="text-q-text-muted" />
+                                        <p className="text-sm text-q-text-muted text-center">
                                             {t('cms_assistant.mediaUploadHint', { defaultValue: 'Drop an image or video here, or click to upload' })}
                                         </p>
-                                        <p className="text-xs text-muted-foreground/60">
+                                        <p className="text-xs text-q-text-muted/60">
                                             {t('cms_assistant.mediaUploadFormats', { defaultValue: 'JPG, PNG, GIF, WebP, MP4, WebM' })}
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="relative group rounded-xl overflow-hidden border border-border">
+                                    <div className="relative group rounded-xl overflow-hidden border border-q-border">
                                         {mediaType === 'video' ? (
                                             <video
                                                 src={mediaPreview}
@@ -524,7 +524,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
                                     placeholder={t('cms_assistant.audiencePlaceholder')}
-                                    className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
                                 />
                             </div>
 
@@ -538,7 +538,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                             onClick={() => setTone(t.id)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t.id
                                                 ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card border-border hover:border-primary/50'
+                                                : 'bg-q-surface border-q-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {t.label}
@@ -557,7 +557,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                             onClick={() => setContentType(c.id)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${contentType === c.id
                                                 ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card border-border hover:border-primary/50'
+                                                : 'bg-q-surface border-q-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {c.label}
@@ -576,7 +576,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                             onClick={() => setOutputLanguage(l.id)}
                                             className={`p-2 rounded-lg border text-xs font-medium transition-all flex flex-col items-center gap-1 ${outputLanguage === l.id
                                                 ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card border-border hover:border-primary/50'
+                                                : 'bg-q-surface border-q-border hover:border-primary/50'
                                                 }`}
                                         >
                                             <span className="text-lg">{l.flag}</span>
@@ -587,7 +587,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                             </div>
 
                             <div className="flex justify-between pt-4">
-                                <button onClick={() => setStep('topic')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
+                                <button onClick={() => setStep('topic')} className="text-q-text-muted hover:text-foreground font-medium px-4 transition-colors">
                                     {t('cms_assistant.back')}
                                 </button>
                                 <button
@@ -608,7 +608,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold mb-2">{t('cms_assistant.generating')}</h3>
-                                <p className="text-muted-foreground max-w-xs mx-auto">{t('cms_assistant.generatingDesc')}</p>
+                                <p className="text-q-text-muted max-w-xs mx-auto">{t('cms_assistant.generatingDesc')}</p>
                             </div>
                         </div>
                     )}
@@ -625,17 +625,17 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewTitle')}</span>
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('cms_assistant.previewTitle')}</span>
                                     <h3 className="text-xl font-bold">{generatedPost.title || 'Untitled'}</h3>
                                 </div>
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewExcerpt')}</span>
-                                    <p className="text-muted-foreground">{generatedPost.excerpt || 'Sin resumen'}</p>
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('cms_assistant.previewExcerpt')}</span>
+                                    <p className="text-q-text-muted">{generatedPost.excerpt || 'Sin resumen'}</p>
                                 </div>
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('cms_assistant.previewContent')}</span>
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('cms_assistant.previewContent')}</span>
                                     <div
-                                        className="max-w-none line-clamp-6 bg-background/50 p-4 rounded-lg border border-border overflow-hidden text-foreground"
+                                        className="max-w-none line-clamp-6 bg-q-bg/50 p-4 rounded-lg border border-q-border overflow-hidden text-foreground"
                                         style={{
                                             // Ensure prose elements inherit proper colors
                                             '--tw-prose-body': 'var(--foreground)',
@@ -651,13 +651,13 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedPost.content) }}
                                             />
                                         ) : (
-                                            <p className="text-muted-foreground italic">{t('cms_assistant.noContent')}</p>
+                                            <p className="text-q-text-muted italic">{t('cms_assistant.noContent')}</p>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Debug info - remove later */}
-                                <details className="text-xs text-muted-foreground">
+                                <details className="text-xs text-q-text-muted">
                                     <summary className="cursor-pointer">Debug Info (click para ver)</summary>
                                     <pre className="mt-2 p-2 bg-secondary/30 rounded overflow-auto max-h-40">
                                         {JSON.stringify(generatedPost, null, 2)}
@@ -665,8 +665,8 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                                 </details>
                             </div>
 
-                            <div className="flex justify-between pt-4 border-t border-border mt-auto">
-                                <button onClick={() => setStep('details')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
+                            <div className="flex justify-between pt-4 border-t border-q-border mt-auto">
+                                <button onClick={() => setStep('details')} className="text-q-text-muted hover:text-foreground font-medium px-4 transition-colors">
                                     {t('cms_assistant.retry')}
                                 </button>
                                 <button

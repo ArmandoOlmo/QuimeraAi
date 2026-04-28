@@ -40,46 +40,46 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <TextArea label={t('editor.controls.common.description')} value={data.features.description} onChange={(e) => setNestedData('features.description', e.target.value)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
       <div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'classic')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             {t('editor.controls.hero.classic')}
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'modern')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             {t('editor.controls.features.bento')}
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-premium')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-premium' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-premium' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             {t('editor.controls.features.premium')}
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-overlay')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-overlay' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             B. Overlay
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             {t('editor.controls.features.overlay')}
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'neon-glow')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'neon-glow' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'neon-glow' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             Neon Glow
           </button>
           <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'press-release')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'press-release' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'press-release' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >
             Press Release
           </button>
         </div>
-        <p className="text-xs text-editor-text-secondary mt-2">
+        <p className="text-xs text-q-text-secondary mt-2">
           {currentVariant === 'classic'
             ? t('editor.controls.features.descClassic')
             : currentVariant === 'modern'
@@ -95,14 +95,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Overlay-specific controls */}
       {currentVariant === 'image-overlay' && (
         <>
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.overlaySettings')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.overlaySettings')}</label>
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.textAlignment')}</label>
-            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.textAlignment')}</label>
+            <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
               {(['left', 'center', 'right'] as const).map(align => (
                 <button type="button"                   key={align}
                   onClick={() => setNestedData('features.overlayTextAlignment', align)}
-                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                 >
                   {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
                 </button>
@@ -110,9 +110,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
+            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
             <button type="button"               onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
-              className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+              className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
             >
               <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
             </button>
@@ -123,9 +123,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Bento Overlay numbering toggle */}
       {currentVariant === 'bento-overlay' && (
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
+          <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
           <button type="button"             onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
-            className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+            className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
           >
             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
           </button>
@@ -150,14 +150,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.gridLayout')}</label>
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.columnsDesktop')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.features.columnsDesktop')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
           {[2, 3, 4].map(cols => (
             <button type="button"               key={cols}
               onClick={() => setNestedData('features.gridColumns', cols)}
-              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
             >
               {cols}
             </button>
@@ -165,7 +165,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardImage')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.cardImage')}</label>
       <div className="mb-3">
         <SliderControl
           label={t('editor.controls.features.imageHeight')}
@@ -176,12 +176,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
-        <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
+        <div className="grid grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
           {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
             <button type="button"               key={fit}
               onClick={() => setNestedData('features.imageObjectFit', fit)}
-              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+              className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
             >
               {fit === 'scale-down' ? 'Scale' : fit}
             </button>
@@ -189,21 +189,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('editor.controls.common.vertical')} value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
           <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.features.colors?.background || '#000000'} onChange={(v) => setNestedData('features.colors.background', v)} />
       <ColorControl label={t('editor.controls.features.showSectionHeader')} value={data.features.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('features.colors.heading', v)} />
       <ColorControl label={t('editor.controls.common.description')} value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
       <ColorControl label={t('editor.controls.common.accent')} value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
 
-      <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">{t('editor.controls.features.cardColors')}</p>
+      <p className="text-[10px] text-q-text-secondary uppercase tracking-wider font-bold">{t('editor.controls.features.cardColors')}</p>
 
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.background')}`} value={data.features.colors?.cardBackground || '#1a1a2e'} onChange={(v) => setNestedData('features.colors.cardBackground', v)} />
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.title')}`} value={(data.features.colors as any)?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
@@ -226,9 +226,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
       {(data.features.items || []).map((item, index) => (
-        <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+        <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
           <ImagePicker
             label={`${t('editor.controls.features.feature')} #${index + 1}`}
             value={item.imageUrl}
@@ -249,14 +249,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             value={item.description}
             onChange={(e) => setNestedData(`features.items.${index}.description`, e.target.value)}
             rows={2}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
         </div>
       ))}
       <button type="button"         onClick={() => {
           setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
         }}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> {t('editor.controls.features.addFeature')}
       </button>
@@ -275,8 +275,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Title and Description */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <FileText size={14} />
           {t('editor.controls.features.sectionHeader', 'Section Header')}
         </label>
@@ -287,8 +287,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Features Items */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <List size={14} />
           {t('editor.controls.features.featuresList', 'Features List')}
         </label>
@@ -296,15 +296,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div
             key={index}
             data-section-item={`features:${index}`}
-            className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group"
+            className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group"
           >
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Feature #{index + 1}</span>
+              <span className="text-xs font-bold text-q-text-secondary">Feature #{index + 1}</span>
               <button type="button"                 onClick={() => {
                   const newItems = data.features.items.filter((_, i) => i !== index);
                   setNestedData('features.items', newItems);
                 }}
-                className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                className="text-q-text-secondary hover:text-red-400 transition-colors"
               >
                 <Trash2 size={14} />
               </button>
@@ -315,7 +315,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               value={item.description}
               onChange={(e) => setNestedData(`features.items.${index}.description`, e.target.value)}
               rows={2}
-              className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+              className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
             />
             <ImagePicker
               label={t('editor.controls.common.image')}
@@ -324,15 +324,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             />
 
             {/* Link Controls */}
-            <div className="mt-3 pt-3 border-t border-editor-border/50">
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.link')}</label>
+            <div className="mt-3 pt-3 border-t border-q-border/50">
+              <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.link')}</label>
               <input
                 placeholder="Link Text (e.g. Learn more)"
                 value={item.linkText || ''}
                 onChange={(e) => setNestedData(`features.items.${index}.linkText`, e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+                className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
               />
-              <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+              <div className="flex bg-q-surface rounded-md border border-q-border p-1 mb-2">
                 {[
                   { value: 'manual', label: 'URL' },
                   { value: 'product', label: 'Product' },
@@ -342,8 +342,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   <button type="button"                     key={type.value}
                     onClick={() => setNestedData(`features.items.${index}.linkType`, type.value)}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(item.linkType || 'manual') === type.value
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                      ? 'bg-q-accent text-q-bg'
+                      : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                       }`}
                   >
                     {type.label}
@@ -356,9 +356,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     placeholder="https://example.com or #section"
                     value={item.linkUrl || ''}
                     onChange={(e) => setNestedData(`features.items.${index}.linkUrl`, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                    className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                   />
-                  <p className="text-xs text-editor-text-secondary mt-1">
+                  <p className="text-xs text-q-text-secondary mt-1">
                     Use URLs for external links or # for page sections
                   </p>
                 </>
@@ -406,7 +406,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <button type="button"           onClick={() => {
             setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
           }}
-          className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
         >
           <Plus size={14} /> Add Feature
         </button>
@@ -417,8 +417,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="features" data={data} setNestedData={setNestedData} />
       {/* Section Style */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           {t('editor.controls.features.sectionStyle')}
         </label>
@@ -442,7 +442,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               { value: 'press-release', label: 'Press Release (Curvas Dinámicas)' }
             ]}
           />
-          <p className="text-xs text-editor-text-secondary mt-2">
+          <p className="text-xs text-q-text-secondary mt-2">
             {currentVariant === 'classic'
               ? t('editor.controls.features.descClassic', '📦 Layout de cuadrícula tradicional')
               : currentVariant === 'modern'
@@ -473,7 +473,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Neon Glow Controls */}
         {currentVariant === 'neon-glow' && (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
             <CardGlowControl
               enabled={data.features.cardGlow?.enabled !== false}
               color={data.features.cardGlow?.color || '#144CCD'}
@@ -493,18 +493,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Overlay Settings - only shown when image-overlay variant is selected */}
         {currentVariant === 'image-overlay' && (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
               <Image size={14} />
               Overlay Settings
             </label>
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.textAlignment')}</label>
-              <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.textAlignment')}</label>
+              <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
                 {(['left', 'center', 'right'] as const).map(align => (
                   <button type="button"                     key={align}
                     onClick={() => setNestedData('features.overlayTextAlignment', align)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${(data.features as any).overlayTextAlignment === align || (!((data.features as any).overlayTextAlignment) && align === 'left') ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                   >
                     {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
                   </button>
@@ -512,9 +512,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
+              <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.showSectionHeader')}</label>
               <button type="button"                 onClick={() => setNestedData('features.showSectionHeader', !((data.features as any).showSectionHeader !== false))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showSectionHeader !== false ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showSectionHeader !== false ? 'left-5' : 'left-0.5'}`} />
               </button>
@@ -524,15 +524,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Bento Overlay Settings */}
         {currentVariant === 'bento-overlay' && (
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
               <Layers size={14} />
               Bento Overlay Settings
             </label>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
+              <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.showNumbering')}</label>
               <button type="button"                 onClick={() => setNestedData('features.showNumbering', !((data.features as any).showNumbering !== false))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-editor-accent' : 'bg-editor-border'}`}
+                className={`relative w-10 h-5 rounded-full transition-colors ${(data.features as any).showNumbering !== false ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
               >
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${(data.features as any).showNumbering !== false ? 'left-5' : 'left-0.5'}`} />
               </button>
@@ -543,17 +543,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Grid Layout */}
       {currentVariant !== 'cinematic-gym' && (
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
             <Grid size={14} />
             Grid Layout
           </label>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.columnsDesktop')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.columnsDesktop')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {[2, 3, 4].map(cols => (
               <button type="button"                 key={cols}
                 onClick={() => setNestedData('features.gridColumns', cols)}
-                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.features.gridColumns === cols ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
               >
                 {cols}
               </button>
@@ -564,8 +564,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Card Image */}
       {currentVariant !== 'modern' && currentVariant !== 'bento-premium' && currentVariant !== 'cinematic-gym' && (
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
             <Image size={14} />
             {t('editor.controls.features.cardImage', 'Card Image')}
           </label>
@@ -579,12 +579,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         {currentVariant !== 'cinematic-gym' && (
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.objectFit')}</label>
+            <div className="grid grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
               {['cover', 'contain', 'fill', 'none', 'scale-down'].map(fit => (
                 <button type="button"                   key={fit}
                   onClick={() => setNestedData('features.imageObjectFit', fit)}
-                  className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  className={`py-1 px-2 text-xs font-semibold rounded-sm transition-colors capitalize ${data.features.imageObjectFit === fit ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                 >
                   {fit === 'scale-down' ? 'Scale' : fit}
                 </button>
@@ -596,8 +596,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
      )}
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
           Spacing
         </label>
@@ -608,8 +608,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>
@@ -618,7 +618,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.sectionDescription')} value={data.features.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('features.colors.description', v)} />
         <ColorControl label={t('controls.accent')} value={data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.accent', v)} />
 
-        <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
+        <p className="text-[10px] text-q-text-secondary uppercase tracking-wider font-bold">Card Colors</p>
 
         <ColorControl label={t('controls.cardBackground')} value={data.features.colors?.cardBackground || '#1a1a2e'} onChange={(v) => setNestedData('features.colors.cardBackground', v)} />
         <ColorControl label={t('controls.cardTitle')} value={data.features.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />

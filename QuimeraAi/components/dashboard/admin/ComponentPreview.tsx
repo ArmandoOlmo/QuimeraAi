@@ -89,7 +89,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         : { baseComponent: selectedComponentId as EditableComponentID, styles: componentStyles[selectedComponentId as EditableComponentID] };
 
     if (!componentData) {
-        return <div className="text-editor-text-secondary p-8 text-center">Component not found.</div>;
+        return <div className="text-q-text-secondary p-8 text-center">Component not found.</div>;
     }
 
     const { baseComponent, styles } = componentData;
@@ -127,11 +127,11 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
         if (!config) return null;
 
         return (
-            <div className="absolute inset-0 bg-editor-bg/90 backdrop-blur-sm flex items-center justify-center z-10">
+            <div className="absolute inset-0 bg-q-bg/90 backdrop-blur-sm flex items-center justify-center z-10">
                 <div className="text-center p-8">
                     {config.icon}
-                    <h3 className="text-xl font-bold text-editor-text-primary mt-4">{config.title}</h3>
-                    <p className="text-sm text-editor-text-secondary mt-2">{config.description}</p>
+                    <h3 className="text-xl font-bold text-q-text mt-4">{config.title}</h3>
+                    <p className="text-sm text-q-text-secondary mt-2">{config.description}</p>
                 </div>
             </div>
         );
@@ -139,7 +139,7 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
 
     const renderComponent = () => {
         if (!styles || !mockContent) {
-            return <div className="text-editor-text-secondary">Preview not available.</div>;
+            return <div className="text-q-text-secondary">Preview not available.</div>;
         }
 
         const heroVariant = (styles as any).heroVariant;
@@ -240,23 +240,23 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return (
                     <div className="p-8 text-center">
                         <div className="max-w-2xl mx-auto space-y-6">
-                            <div className="text-editor-text-secondary mb-4">
-                                <Type size={48} className="mx-auto mb-4 text-editor-accent" />
-                                <h3 className="text-xl font-bold text-editor-text-primary mb-2">Global Typography Settings</h3>
+                            <div className="text-q-text-secondary mb-4">
+                                <Type size={48} className="mx-auto mb-4 text-q-accent" />
+                                <h3 className="text-xl font-bold text-q-text mb-2">Global Typography Settings</h3>
                                 <p className="text-sm">Typography is configured globally through Theme Settings, not as an individual component.</p>
                             </div>
-                            <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border text-left space-y-4">
+                            <div className="bg-q-surface p-6 rounded-lg border border-q-border text-left space-y-4">
                                 <div>
                                     <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'var(--font-header)' }}>Header Font Preview</h1>
-                                    <p className="text-sm text-editor-text-secondary">Using: {theme.fontFamilyHeader}</p>
+                                    <p className="text-sm text-q-text-secondary">Using: {theme.fontFamilyHeader}</p>
                                 </div>
                                 <div>
                                     <p className="text-lg mb-2" style={{ fontFamily: 'var(--font-body)' }}>Body font preview with some sample text to show how it looks in paragraphs and longer content sections.</p>
-                                    <p className="text-sm text-editor-text-secondary">Using: {theme.fontFamilyBody}</p>
+                                    <p className="text-sm text-q-text-secondary">Using: {theme.fontFamilyBody}</p>
                                 </div>
                                 <div>
-                                    <button className="px-6 py-3 bg-editor-accent text-editor-bg rounded-md font-semibold" style={{ fontFamily: 'var(--font-button)' }}>Button Font Preview</button>
-                                    <p className="text-sm text-editor-text-secondary mt-2">Using: {theme.fontFamilyButton}</p>
+                                    <button className="px-6 py-3 bg-q-accent text-q-bg rounded-md font-semibold" style={{ fontFamily: 'var(--font-button)' }}>Button Font Preview</button>
+                                    <p className="text-sm text-q-text-secondary mt-2">Using: {theme.fontFamilyButton}</p>
                                 </div>
                             </div>
                         </div>
@@ -267,12 +267,12 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return (
                     <div className="p-8 text-center">
                         <div className="max-w-2xl mx-auto space-y-6">
-                            <div className="text-editor-text-secondary mb-4">
-                                <Palette size={48} className="mx-auto mb-4 text-editor-accent" />
-                                <h3 className="text-xl font-bold text-editor-text-primary mb-2">Global Color Settings</h3>
+                            <div className="text-q-text-secondary mb-4">
+                                <Palette size={48} className="mx-auto mb-4 text-q-accent" />
+                                <h3 className="text-xl font-bold text-q-text mb-2">Global Color Settings</h3>
                                 <p className="text-sm">Colors are configured globally through Theme Settings and applied to all components.</p>
                             </div>
-                            <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
+                            <div className="bg-q-surface p-6 rounded-lg border border-q-border">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {[
                                         { name: 'Primary', color: globalColors.primary || '#4f46e5' },
@@ -286,11 +286,11 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                                     ].map(({ name, color }) => (
                                         <div key={name} className="text-center">
                                             <div
-                                                className="w-16 h-16 mx-auto rounded-lg border border-editor-border shadow-md mb-2"
+                                                className="w-16 h-16 mx-auto rounded-lg border border-q-border shadow-md mb-2"
                                                 style={{ backgroundColor: color }}
                                             />
-                                            <p className="text-xs font-semibold text-editor-text-primary">{name}</p>
-                                            <p className="text-xs text-editor-text-secondary font-mono">{color}</p>
+                                            <p className="text-xs font-semibold text-q-text">{name}</p>
+                                            <p className="text-xs text-q-text-secondary font-mono">{color}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -299,15 +299,15 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                     </div>
                 );
             default:
-                return <div className="text-editor-text-secondary p-8 text-center">Preview not available for this component.</div>;
+                return <div className="text-q-text-secondary p-8 text-center">Preview not available for this component.</div>;
         }
     };
 
     return (
         <div className={`w-full h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>
-            <div className="bg-dark-900 rounded-lg p-4 border border-editor-border">
+            <div className="bg-dark-900 rounded-lg p-4 border border-q-border">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary pl-2">Live Preview</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-q-text-secondary pl-2">Live Preview</h3>
                     <PreviewStatesSelector currentState={previewState} onStateChange={setPreviewState} />
                 </div>
                 <div className="bg-white dark:bg-transparent rounded-md overflow-hidden relative min-h-[300px]">

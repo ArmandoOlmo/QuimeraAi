@@ -317,7 +317,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* AI Content Studio Modal */}
             {isAiAssistantOpen && (
                 <AIContentStudio
@@ -330,10 +330,10 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Standardized Header - Same as user CMS */}
-                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     {/* Left Section */}
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
@@ -350,16 +350,16 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                     {/* Center Section - Search */}
                     <div className="hidden md:flex flex-1 justify-center mx-4">
                         <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('common.search', 'Buscar...')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
+                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-q-text-muted"
                             />
                             {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground flex-shrink-0">
                                     <XIcon size={16} />
                                 </button>
                             )}
@@ -371,9 +371,9 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                         {/* Mobile Search - Expandable */}
                         <div className="md:hidden">
                             {isMobileSearchOpen ? (
-                                <div className="absolute left-0 right-0 top-full bg-background border-b border-border p-3 flex items-center gap-2 animate-slide-down z-30">
+                                <div className="absolute left-0 right-0 top-full bg-q-bg border-b border-q-border p-3 flex items-center gap-2 animate-slide-down z-30">
                                     <div className="flex items-center gap-2 flex-1 bg-muted/50 rounded-lg px-3 py-2">
-                                        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                        <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('contentManagement.searchArticles', 'Buscar artículos...')}
@@ -388,7 +388,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             setIsMobileSearchOpen(false);
                                             setSearchQuery('');
                                         }}
-                                        className="p-2 text-muted-foreground hover:text-foreground rounded-lg"
+                                        className="p-2 text-q-text-muted hover:text-foreground rounded-lg"
                                     >
                                         <XIcon size={18} />
                                     </button>
@@ -396,7 +396,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                             ) : (
                                 <button
                                     onClick={() => setIsMobileSearchOpen(true)}
-                                    className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                                    className="h-8 w-8 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-md transition-colors"
                                 >
                                     <Search className="w-4 h-4" />
                                 </button>
@@ -407,7 +407,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                         {articles.length > 0 && (
                             <button
                                 onClick={handleExport}
-                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-q-text-muted hover:text-foreground hover:bg-muted"
                                 title={t('common.export', 'Exportar')}
                             >
                                 <Download className="w-4 h-4" />
@@ -440,12 +440,12 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                     <div className="max-w-7xl mx-auto h-full space-y-4 sm:space-y-6">
 
                         {/* Tabs */}
-                        <div className="flex gap-2 border-b border-border">
+                        <div className="flex gap-2 border-b border-q-border">
                             <button
                                 onClick={() => setActiveTab('articles')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'articles'
                                     ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 <FileText size={14} className="inline mr-2" />
@@ -455,7 +455,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 onClick={() => setActiveTab('legal')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'legal'
                                     ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    : 'border-transparent text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 <Shield size={14} className="inline mr-2" />
@@ -474,7 +474,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             <h4 className="text-sm font-semibold text-foreground mb-1">
                                                 {t('contentManagement.legal.metaUrls', 'Páginas Legales para Meta OAuth')}
                                             </h4>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-q-text-muted">
                                                 {t('contentManagement.legal.subtitle', 'Estas páginas son requeridas para la integración con Facebook, Instagram y WhatsApp. Asegúrate de publicarlas antes de enviar tu app para revisión en Meta.')}
                                             </p>
                                         </div>
@@ -490,18 +490,18 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         return (
                                             <div
                                                 key={pageType}
-                                                className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors"
+                                                className="bg-q-surface border border-q-border rounded-xl p-5 hover:border-primary/30 transition-colors"
                                             >
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`p-2 rounded-lg ${isPublished ? 'bg-green-500/10' : 'bg-secondary'}`}>
-                                                            {pageType === 'privacy-policy' ? <Lock size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} /> :
-                                                                pageType === 'data-deletion' ? <Trash2 size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} /> :
-                                                                    <FileText size={20} className={isPublished ? 'text-green-500' : 'text-muted-foreground'} />}
+                                                            {pageType === 'privacy-policy' ? <Lock size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} /> :
+                                                                pageType === 'data-deletion' ? <Trash2 size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} /> :
+                                                                    <FileText size={20} className={isPublished ? 'text-green-500' : 'text-q-text-muted'} />}
                                                         </div>
                                                         <div>
                                                             <h3 className="font-semibold">{t('contentManagement.legal.' + pageType)}</h3>
-                                                            <p className="text-xs text-muted-foreground">/{pageType}</p>
+                                                            <p className="text-xs text-q-text-muted">/{pageType}</p>
                                                         </div>
                                                     </div>
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${isPublished
@@ -513,7 +513,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 </div>
 
                                                 {page && (
-                                                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                                    <p className="text-sm text-q-text-muted mb-4 line-clamp-2">
                                                         {page.subtitle || t('contentManagement.legal.sectionsCount', { count: page.sections.length })}
                                                     </p>
                                                 )}
@@ -541,7 +541,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 </div>
 
                                 {/* Meta URLs Info */}
-                                <div className="bg-card border border-border rounded-xl p-6">
+                                <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                     <h3 className="font-semibold mb-4 flex items-center gap-2">
                                         <Globe size={18} className="text-primary" />
                                         {t('contentManagement.legal.metaUrls', 'URLs para Meta Developer Console')}
@@ -550,7 +550,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                             <div>
                                                 <span className="text-sm font-medium">{t('contentManagement.legal.privacy-policy')} URL</span>
-                                                <p className="text-xs text-muted-foreground">{t('contentManagement.legal.privacyPolicyDesc')}</p>
+                                                <p className="text-xs text-q-text-muted">{t('contentManagement.legal.privacyPolicyDesc')}</p>
                                             </div>
                                             <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
                                                 https://quimera.ai/privacy-policy
@@ -559,7 +559,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                             <div>
                                                 <span className="text-sm font-medium">{t('contentManagement.legal.data-deletion')} URL</span>
-                                                <p className="text-xs text-muted-foreground">{t('contentManagement.legal.dataDeletionDesc')}</p>
+                                                <p className="text-xs text-q-text-muted">{t('contentManagement.legal.dataDeletionDesc')}</p>
                                             </div>
                                             <code className="px-2 py-1 bg-secondary/50 rounded text-xs">
                                                 https://quimera.ai/data-deletion
@@ -585,7 +585,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 </div>
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{metrics.total}</p>
-                                                    <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('contentManagement.totalArticles', 'Total Artículos')}</p>
+                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.totalArticles', 'Total Artículos')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -599,7 +599,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 </div>
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-emerald-500 tracking-tight">{metrics.published}</p>
-                                                    <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('contentManagement.published', 'Publicados')}</p>
+                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.published', 'Publicados')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -613,7 +613,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                 </div>
                                                 <div className="text-center sm:text-left">
                                                     <p className="text-xl sm:text-2xl font-bold text-amber-500 tracking-tight">{metrics.drafts}</p>
-                                                    <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">{t('contentManagement.drafts', 'Borradores')}</p>
+                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.drafts', 'Borradores')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -625,7 +625,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     {/* Top row - Count and view toggles */}
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-muted-foreground font-medium">
+                                            <span className="px-3 py-1.5 bg-secondary/50 text-xs rounded-full text-q-text-muted font-medium">
                                                 {filteredAndSortedArticles.length} de {articles.length}
                                             </span>
 
@@ -638,7 +638,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         setDateRange('all');
                                                         setLanguageFilter('all');
                                                     }}
-                                                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                                                    className="text-xs text-q-text-muted hover:text-foreground flex items-center gap-1 transition-colors"
                                                 >
                                                     <XIcon size={12} /> {t('common.clear', 'Limpiar')}
                                                 </button>
@@ -649,7 +649,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             {/* Sort order asc/desc */}
                                             <button
                                                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                                className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-border/40"
+                                                className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors text-q-text-muted hover:text-foreground hover:bg-border/40"
                                                 title={sortOrder === 'asc' ? t('contentManagement.filters.ascending', 'Ascendente') : t('contentManagement.filters.descending', 'Descendente')}
                                             >
                                                 {sortOrder === 'desc' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
@@ -659,14 +659,14 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             <div className="flex gap-0.5 sm:gap-1">
                                                 <button
                                                     onClick={() => setViewMode('grid')}
-                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'text-primary bg-primary/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                                     title={t('common.gridView', 'Vista en cuadrícula')}
                                                 >
                                                     <Grid size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => setViewMode('list')}
-                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                                    className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-primary bg-primary/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                                     title={t('common.listView', 'Vista en lista')}
                                                 >
                                                     <List size={14} />
@@ -680,7 +680,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                         >
                                             <option value="all">{t('contentManagement.filters.allStatus', 'Todos los estados')}</option>
                                             <option value="published">{t('contentManagement.filters.published', 'Publicados')}</option>
@@ -691,7 +691,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <select
                                             value={categoryFilter}
                                             onChange={(e) => setCategoryFilter(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                         >
                                             <option value="all">{t('contentManagement.filters.allCategories', 'Todas las categorías')}</option>
                                             {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
@@ -703,7 +703,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <select
                                             value={dateRange}
                                             onChange={(e) => setDateRange(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                         >
                                             <option value="all">{t('contentManagement.filters.allTime', 'Todo el tiempo')}</option>
                                             <option value="today">{t('contentManagement.filters.today', 'Hoy')}</option>
@@ -715,7 +715,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <select
                                             value={sortBy}
                                             onChange={(e) => setSortBy(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                         >
                                             <option value="date">{t('contentManagement.filters.sortByDate', 'Ordenar por fecha')}</option>
                                             <option value="title">{t('contentManagement.filters.sortByTitle', 'Ordenar por título')}</option>
@@ -726,7 +726,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <select
                                             value={languageFilter}
                                             onChange={(e) => setLanguageFilter(e.target.value as any)}
-                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
+                                            className="px-3 py-1.5 text-xs bg-secondary/30 border border-q-border rounded-lg focus:ring-2 focus:ring-primary/50 outline-none flex-shrink-0"
                                         >
                                             <option value="all">{t('contentManagement.filters.language', 'Idioma')}: {t('common.all', 'Todos')}</option>
                                             <option value="es">Español</option>
@@ -739,16 +739,16 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                         <Loader2 className="animate-spin w-10 h-10 text-primary" />
                                     </div>
                                 ) : filteredAndSortedArticles.length === 0 ? (
-                                    <div className="text-center py-16 bg-card/30 rounded-3xl border border-dashed border-border/50">
+                                    <div className="text-center py-16 bg-q-surface/30 rounded-3xl border border-dashed border-q-border/50">
                                         <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <FileText size={32} className="text-muted-foreground opacity-50" />
+                                            <FileText size={32} className="text-q-text-muted opacity-50" />
                                         </div>
                                         <h3 className="text-xl font-bold text-foreground mb-2">
                                             {searchQuery || statusFilter !== 'all' || categoryFilter !== 'all' || dateRange !== 'all'
                                                 ? t('contentManagement.noArticlesMatchFilters', 'No hay artículos que coincidan con los filtros')
                                                 : t('contentManagement.noContentYet', 'Aún no hay contenido')}
                                         </h3>
-                                        <p className="text-muted-foreground mb-6">
+                                        <p className="text-q-text-muted mb-6">
                                             {searchQuery || statusFilter !== 'all' || categoryFilter !== 'all' || dateRange !== 'all'
                                                 ? t('contentManagement.tryAdjustingFilters', 'Intenta ajustar los filtros para ver más resultados.')
                                                 : t('contentManagement.startBuildingContent', 'Comienza a crear contenido para la landing de Quimera.')}
@@ -764,23 +764,23 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                     /* List View - Mobile optimized */
                                     <>
                                         {/* Desktop Table View */}
-                                        <div className="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
+                                        <div className="hidden sm:block bg-q-surface border border-q-border rounded-xl overflow-hidden">
                                             <table className="w-full">
-                                                <thead className="bg-secondary/20 border-b border-border">
+                                                <thead className="bg-secondary/20 border-b border-q-border">
                                                     <tr>
                                                         <th className="p-4 text-left w-12">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={selectedArticles.length === filteredAndSortedArticles.length && filteredAndSortedArticles.length > 0}
                                                                 onChange={handleSelectAll}
-                                                                className="rounded border-border"
+                                                                className="rounded border-q-border"
                                                             />
                                                         </th>
-                                                        <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('contentManagement.table.title', 'Título')}</th>
-                                                        <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('contentManagement.table.category', 'Categoría')}</th>
-                                                        <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('contentManagement.table.status', 'Estado')}</th>
-                                                        <th className="p-4 text-left text-xs font-medium text-muted-foreground">{t('contentManagement.table.date', 'Fecha')}</th>
-                                                        <th className="p-4 text-left text-xs font-medium text-muted-foreground w-32">{t('contentManagement.table.actions', 'Acciones')}</th>
+                                                        <th className="p-4 text-left text-xs font-medium text-q-text-muted">{t('contentManagement.table.title', 'Título')}</th>
+                                                        <th className="p-4 text-left text-xs font-medium text-q-text-muted">{t('contentManagement.table.category', 'Categoría')}</th>
+                                                        <th className="p-4 text-left text-xs font-medium text-q-text-muted">{t('contentManagement.table.status', 'Estado')}</th>
+                                                        <th className="p-4 text-left text-xs font-medium text-q-text-muted">{t('contentManagement.table.date', 'Fecha')}</th>
+                                                        <th className="p-4 text-left text-xs font-medium text-q-text-muted w-32">{t('contentManagement.table.actions', 'Acciones')}</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-border">
@@ -791,7 +791,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     type="checkbox"
                                                                     checked={selectedArticles.includes(article.id)}
                                                                     onChange={() => handleSelectArticle(article.id)}
-                                                                    className="rounded border-border"
+                                                                    className="rounded border-q-border"
                                                                 />
                                                             </td>
                                                             <td className="p-4">
@@ -801,7 +801,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                             <img src={article.featuredImage} alt="" className="w-full h-full object-cover" />
                                                                         ) : (
                                                                             <div className="w-full h-full flex items-center justify-center">
-                                                                                <FileText size={20} className="text-muted-foreground opacity-30" />
+                                                                                <FileText size={20} className="text-q-text-muted opacity-30" />
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -812,7 +812,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                                 <Star size={12} className="text-yellow-500 fill-yellow-500 flex-shrink-0" />
                                                                             )}
                                                                         </div>
-                                                                        <p className="text-xs text-muted-foreground line-clamp-1">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
+                                                                        <p className="text-xs text-q-text-muted line-clamp-1">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -841,7 +841,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="p-4 text-sm text-muted-foreground">
+                                                            <td className="p-4 text-sm text-q-text-muted">
                                                                 <div>{new Date(article.updatedAt).toLocaleDateString()}</div>
                                                                 {article.readTime && (
                                                                     <div className="text-xs flex items-center gap-1 mt-0.5">
@@ -854,35 +854,35 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                     <button
                                                                         onClick={() => handleToggleFeatured(article)}
-                                                                        className={`p-2 rounded-md transition-all ${article.featured ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10' : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'}`}
+                                                                        className={`p-2 rounded-md transition-all ${article.featured ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-500/10' : 'text-q-text-muted hover:text-yellow-500 hover:bg-yellow-500/10'}`}
                                                                         title={article.featured ? t('contentManagement.actions.removeFeatured', 'Quitar destacado') : t('contentManagement.actions.setFeatured', 'Destacar')}
                                                                     >
                                                                         <Star size={14} className={article.featured ? 'fill-yellow-500' : ''} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleQuickPreview(article)}
-                                                                        className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-all"
                                                                         title={t('contentManagement.actions.quickPreview', 'Vista rápida')}
                                                                     >
                                                                         <Eye size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleEdit(article)}
-                                                                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-primary hover:bg-primary/10 rounded-md transition-all"
                                                                         title={t('common.edit', 'Editar')}
                                                                     >
                                                                         <Edit2 size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDuplicate(article)}
-                                                                        className="p-2 text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-green-500 hover:bg-green-500/10 rounded-md transition-all"
                                                                         title={t('common.duplicate', 'Duplicar')}
                                                                     >
                                                                         <Copy size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDelete(article.id)}
-                                                                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
                                                                         title={t('common.delete', 'Eliminar')}
                                                                     >
                                                                         <Trash2 size={14} />
@@ -900,7 +900,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                             {filteredAndSortedArticles.map(article => (
                                                 <div
                                                     key={article.id}
-                                                    className="bg-card border border-border rounded-xl p-3 active:bg-secondary/30 transition-colors"
+                                                    className="bg-q-surface border border-q-border rounded-xl p-3 active:bg-secondary/30 transition-colors"
                                                     onClick={() => handleEdit(article)}
                                                 >
                                                     <div className="flex gap-3">
@@ -910,7 +910,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 <img src={article.featuredImage} alt="" className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center">
-                                                                    <FileText size={24} className="text-muted-foreground opacity-30" />
+                                                                    <FileText size={24} className="text-q-text-muted opacity-30" />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -926,9 +926,9 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                     {article.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')}
                                                                 </span>
                                                             </div>
-                                                            <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
+                                                            <p className="text-xs text-q-text-muted line-clamp-1 mb-2">{article.excerpt || t('contentManagement.noExcerpt', 'Sin extracto')}</p>
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                                <span className="text-[10px] text-q-text-muted flex items-center gap-1">
                                                                     <Calendar size={10} />
                                                                     {new Date(article.updatedAt).toLocaleDateString()}
                                                                 </span>
@@ -937,26 +937,26 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                                 <div className="flex items-center gap-0.5">
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleToggleFeatured(article); }}
-                                                                        className={`p-1.5 rounded transition-colors ${article.featured ? 'text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`}
+                                                                        className={`p-1.5 rounded transition-colors ${article.featured ? 'text-yellow-500' : 'text-q-text-muted hover:text-yellow-500'}`}
                                                                         title={article.featured ? t('contentManagement.actions.removeFeatured', 'Quitar destacado') : t('contentManagement.actions.setFeatured', 'Destacar')}
                                                                     >
                                                                         <Star size={14} className={article.featured ? 'fill-yellow-500' : ''} />
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleQuickPreview(article); }}
-                                                                        className="p-1.5 text-muted-foreground hover:text-blue-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-blue-500 rounded transition-colors"
                                                                     >
                                                                         <Eye size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleDuplicate(article); }}
-                                                                        className="p-1.5 text-muted-foreground hover:text-green-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-green-500 rounded transition-colors"
                                                                     >
                                                                         <Copy size={14} />
                                                                     </button>
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleDelete(article.id); }}
-                                                                        className="p-1.5 text-muted-foreground hover:text-red-500 rounded transition-colors"
+                                                                        className="p-1.5 text-q-text-muted hover:text-red-500 rounded transition-colors"
                                                                     >
                                                                         <Trash2 size={14} />
                                                                     </button>
@@ -987,8 +987,8 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-secondary">
-                                                            <FileText size={40} className="sm:hidden text-muted-foreground opacity-20" />
-                                                            <FileText size={60} className="hidden sm:block text-muted-foreground opacity-20" />
+                                                            <FileText size={40} className="sm:hidden text-q-text-muted opacity-20" />
+                                                            <FileText size={60} className="hidden sm:block text-q-text-muted opacity-20" />
                                                         </div>
                                                     )}
                                                     {/* Dark Gradient Overlay */}
@@ -1101,17 +1101,17 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                 {previewArticle && (
                                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setPreviewArticle(null)}>
                                         <div
-                                            className="bg-card w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
+                                            className="bg-q-surface w-full sm:max-w-3xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-fade-in"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             {/* Header */}
-                                            <div className="sticky top-0 bg-card border-b border-border px-4 py-3 sm:p-4 flex items-center justify-between z-10 shrink-0">
+                                            <div className="sticky top-0 bg-q-surface border-b border-q-border px-4 py-3 sm:p-4 flex items-center justify-between z-10 shrink-0">
                                                 {/* Mobile drag indicator */}
                                                 <div className="sm:hidden absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-border rounded-full" />
 
                                                 <div className="flex-1 min-w-0 pr-2">
                                                     <h3 className="font-bold text-base sm:text-lg line-clamp-1">{previewArticle.title}</h3>
-                                                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                                                    <p className="text-[10px] sm:text-xs text-q-text-muted mt-0.5 sm:mt-1">
                                                         {new Date(previewArticle.updatedAt).toLocaleDateString()} • {previewArticle.status === 'published' ? t('contentManagement.status.published', 'Publicado') : t('contentManagement.status.draft', 'Borrador')} • {CATEGORY_LABELS[previewArticle.category]}
                                                     </p>
                                                 </div>
@@ -1145,7 +1145,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
                                                     />
                                                 )}
                                                 {previewArticle.excerpt && (
-                                                    <p className="text-sm sm:text-base text-muted-foreground italic mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-border">
+                                                    <p className="text-sm sm:text-base text-q-text-muted italic mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-q-border">
                                                         {previewArticle.excerpt}
                                                     </p>
                                                 )}
@@ -1169,7 +1169,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
 
                                 {/* Bulk Actions Bar - Mobile optimized */}
                                 {selectedArticles.length > 0 && (
-                                    <div className="fixed bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto bg-card border border-border rounded-xl shadow-2xl p-3 sm:p-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 z-50 animate-fade-in-up">
+                                    <div className="fixed bottom-4 sm:bottom-6 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-auto bg-q-surface border border-q-border rounded-xl shadow-2xl p-3 sm:p-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 z-50 animate-fade-in-up">
                                         <span className="text-xs sm:text-sm font-medium text-foreground">
                                             {selectedArticles.length} {t('common.selected', 'seleccionados')}
                                         </span>

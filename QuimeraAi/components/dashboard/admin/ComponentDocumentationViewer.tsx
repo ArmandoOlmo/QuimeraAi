@@ -81,28 +81,28 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="bg-q-surface border border-q-border rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl">
                 {/* Header */}
-                <div className="p-4 border-b border-editor-border flex items-center justify-between flex-shrink-0">
+                <div className="p-4 border-b border-q-border flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-2">
-                        <BookOpen className="text-editor-accent" size={24} />
+                        <BookOpen className="text-q-accent" size={24} />
                         <div>
-                            <h3 className="text-lg font-semibold text-editor-text-primary">{componentName} Documentation</h3>
-                            <p className="text-xs text-editor-text-secondary">Component documentation and usage guide</p>
+                            <h3 className="text-lg font-semibold text-q-text">{componentName} Documentation</h3>
+                            <p className="text-xs text-q-text-secondary">Component documentation and usage guide</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border rounded-md transition-colors"
+                        className="p-2 text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay rounded-md transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-4 border-b border-editor-border flex-shrink-0">
-                    <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                <div className="p-4 border-b border-q-border flex-shrink-0">
+                    <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                        <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -111,7 +111,7 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -121,8 +121,8 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                 {hasContent ? (
                     <div className="flex-1 overflow-hidden flex">
                         {/* TOC Sidebar */}
-                        <aside className="w-56 border-r border-editor-border overflow-y-auto p-4 hidden md:block flex-shrink-0">
-                            <h4 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">
+                        <aside className="w-56 border-r border-q-border overflow-y-auto p-4 hidden md:block flex-shrink-0">
+                            <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">
                                 Table of Contents
                             </h4>
                             <nav className="space-y-1">
@@ -132,8 +132,8 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                                         onClick={() => scrollToSection(item.id)}
                                         className={`w-full text-left text-sm px-2 py-1 rounded transition-colors ${
                                             activeTocItem === item.id
-                                                ? 'bg-editor-accent/10 text-editor-accent'
-                                                : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                                ? 'bg-q-accent/10 text-q-accent'
+                                                : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'
                                         }`}
                                         style={{ paddingLeft: `${item.level * 12}px` }}
                                     >
@@ -148,8 +148,8 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                             {/* Description */}
                             {documentation.description && (
                                 <section id="description">
-                                    <h4 className="text-xl font-bold text-editor-text-primary mb-3">Description</h4>
-                                    <div className="prose prose-invert max-w-none text-editor-text-primary">
+                                    <h4 className="text-xl font-bold text-q-text mb-3">Description</h4>
+                                    <div className="prose prose-invert max-w-none text-q-text">
                                         <ReactMarkdown>{documentation.description}</ReactMarkdown>
                                     </div>
                                 </section>
@@ -158,12 +158,12 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                             {/* Usage Examples */}
                             {documentation.usageExamples && documentation.usageExamples.length > 0 && (
                                 <section id="usage">
-                                    <h4 className="text-xl font-bold text-editor-text-primary mb-3">Usage Examples</h4>
+                                    <h4 className="text-xl font-bold text-q-text mb-3">Usage Examples</h4>
                                     <div className="space-y-3">
                                         {documentation.usageExamples.map((example, index) => (
-                                            <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border">
-                                                <p className="text-xs text-editor-text-secondary mb-2 font-semibold">Example {index + 1}</p>
-                                                <pre className="text-sm text-editor-text-primary font-mono overflow-x-auto whitespace-pre-wrap">
+                                            <div key={index} className="bg-q-bg p-4 rounded-lg border border-q-border">
+                                                <p className="text-xs text-q-text-secondary mb-2 font-semibold">Example {index + 1}</p>
+                                                <pre className="text-sm text-q-text font-mono overflow-x-auto whitespace-pre-wrap">
                                                     {example}
                                                 </pre>
                                             </div>
@@ -175,46 +175,46 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                             {/* Properties */}
                             {documentation.properties && documentation.properties.length > 0 && (
                                 <section id="properties">
-                                    <h4 className="text-xl font-bold text-editor-text-primary mb-3">Properties</h4>
+                                    <h4 className="text-xl font-bold text-q-text mb-3">Properties</h4>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm border-collapse">
                                             <thead>
-                                                <tr className="bg-editor-bg border-b-2 border-editor-border">
-                                                    <th className="px-4 py-3 text-left text-editor-text-secondary font-semibold">Name</th>
-                                                    <th className="px-4 py-3 text-left text-editor-text-secondary font-semibold">Type</th>
-                                                    <th className="px-4 py-3 text-left text-editor-text-secondary font-semibold">Required</th>
-                                                    <th className="px-4 py-3 text-left text-editor-text-secondary font-semibold">Default</th>
-                                                    <th className="px-4 py-3 text-left text-editor-text-secondary font-semibold">Description</th>
+                                                <tr className="bg-q-bg border-b-2 border-q-border">
+                                                    <th className="px-4 py-3 text-left text-q-text-secondary font-semibold">Name</th>
+                                                    <th className="px-4 py-3 text-left text-q-text-secondary font-semibold">Type</th>
+                                                    <th className="px-4 py-3 text-left text-q-text-secondary font-semibold">Required</th>
+                                                    <th className="px-4 py-3 text-left text-q-text-secondary font-semibold">Default</th>
+                                                    <th className="px-4 py-3 text-left text-q-text-secondary font-semibold">Description</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {documentation.properties.map((prop, index) => (
-                                                    <tr key={index} className="border-b border-editor-border hover:bg-editor-bg/50">
-                                                        <td className="px-4 py-3 font-mono text-editor-accent font-medium">
+                                                    <tr key={index} className="border-b border-q-border hover:bg-q-bg/50">
+                                                        <td className="px-4 py-3 font-mono text-q-accent font-medium">
                                                             {prop.name}
                                                         </td>
-                                                        <td className="px-4 py-3 font-mono text-editor-text-primary">
-                                                            <code className="bg-editor-bg px-2 py-0.5 rounded text-xs">
+                                                        <td className="px-4 py-3 font-mono text-q-text">
+                                                            <code className="bg-q-bg px-2 py-0.5 rounded text-xs">
                                                                 {prop.type}
                                                             </code>
                                                         </td>
-                                                        <td className="px-4 py-3 text-editor-text-primary">
+                                                        <td className="px-4 py-3 text-q-text">
                                                             {prop.required ? (
                                                                 <span className="text-red-500 font-semibold">✓ Required</span>
                                                             ) : (
-                                                                <span className="text-editor-text-secondary">Optional</span>
+                                                                <span className="text-q-text-secondary">Optional</span>
                                                             )}
                                                         </td>
-                                                        <td className="px-4 py-3 font-mono text-editor-text-secondary text-xs">
+                                                        <td className="px-4 py-3 font-mono text-q-text-secondary text-xs">
                                                             {prop.defaultValue ? (
-                                                                <code className="bg-editor-bg px-2 py-0.5 rounded">
+                                                                <code className="bg-q-bg px-2 py-0.5 rounded">
                                                                     {String(prop.defaultValue)}
                                                                 </code>
                                                             ) : (
                                                                 '—'
                                                             )}
                                                         </td>
-                                                        <td className="px-4 py-3 text-editor-text-primary">
+                                                        <td className="px-4 py-3 text-q-text">
                                                             {prop.description}
                                                         </td>
                                                     </tr>
@@ -228,8 +228,8 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                             {/* Changelog */}
                             {documentation.changelog && (
                                 <section id="changelog">
-                                    <h4 className="text-xl font-bold text-editor-text-primary mb-3">Changelog</h4>
-                                    <div className="prose prose-invert max-w-none text-editor-text-primary">
+                                    <h4 className="text-xl font-bold text-q-text mb-3">Changelog</h4>
+                                    <div className="prose prose-invert max-w-none text-q-text">
                                         <ReactMarkdown>{documentation.changelog}</ReactMarkdown>
                                     </div>
                                 </section>
@@ -239,9 +239,9 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                 ) : (
                     <div className="flex-1 flex items-center justify-center p-8">
                         <div className="text-center">
-                            <BookOpen size={48} className="mx-auto text-editor-text-secondary mb-4" />
-                            <h4 className="text-lg font-semibold text-editor-text-primary mb-2">No Documentation Available</h4>
-                            <p className="text-sm text-editor-text-secondary">
+                            <BookOpen size={48} className="mx-auto text-q-text-secondary mb-4" />
+                            <h4 className="text-lg font-semibold text-q-text mb-2">No Documentation Available</h4>
+                            <p className="text-sm text-q-text-secondary">
                                 This component doesn't have documentation yet.
                             </p>
                         </div>
@@ -249,10 +249,10 @@ const ComponentDocumentationViewer: React.FC<ComponentDocumentationViewerProps> 
                 )}
 
                 {/* Footer */}
-                <div className="p-4 border-t border-editor-border flex justify-end flex-shrink-0">
+                <div className="p-4 border-t border-q-border flex justify-end flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-editor-accent text-editor-bg font-medium rounded-md hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 bg-q-accent text-q-bg font-medium rounded-md hover:opacity-90 transition-opacity"
                     >
                         Close
                     </button>

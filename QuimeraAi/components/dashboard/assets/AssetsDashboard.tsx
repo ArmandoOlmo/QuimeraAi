@@ -82,7 +82,7 @@ const AssetsDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
@@ -91,11 +91,11 @@ const AssetsDashboard: React.FC = () => {
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+                <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             title={t('common.openMenu', { defaultValue: 'Open menu' })}
                         >
                             <Menu className="w-5 h-5" />
@@ -111,7 +111,7 @@ const AssetsDashboard: React.FC = () => {
                     {/* Back Button */}
                     <button
                         onClick={() => setView('dashboard')}
-                        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-muted-foreground hover:text-foreground"
+                        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-q-text-muted hover:text-foreground"
                         aria-label={t('common.back', 'Volver')}
                     >
                         <ArrowLeft size={16} />
@@ -122,10 +122,10 @@ const AssetsDashboard: React.FC = () => {
                 {/* Main Content - Single Card Container */}
                 <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
-                        <div className="bg-card/80 border border-border rounded-2xl overflow-hidden">
+                        <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
                             {/* Generator Toggle Bar - same format open & closed */}
                             <div
-                                className="border-b border-border flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group"
+                                className="border-b border-q-border flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group"
                                 onClick={() => setIsGeneratorCollapsed(prev => !prev)}
                             >
                                 <div className="flex items-center gap-3">
@@ -138,12 +138,12 @@ const AssetsDashboard: React.FC = () => {
                                 </div>
                                 <ChevronDown
                                     size={18}
-                                    className={`text-muted-foreground group-hover:text-foreground transition-transform duration-200 ${!isGeneratorCollapsed ? 'rotate-180' : ''}`}
+                                    className={`text-q-text-muted group-hover:text-foreground transition-transform duration-200 ${!isGeneratorCollapsed ? 'rotate-180' : ''}`}
                                 />
                             </div>
 
                             {/* Generator Panel Content (collapsible) */}
-                            <div className={`border-b border-border ${isGeneratorCollapsed ? 'hidden' : 'block'}`}>
+                            <div className={`border-b border-q-border ${isGeneratorCollapsed ? 'hidden' : 'block'}`}>
                                     <ImageGeneratorPanel
                                         destination="user"
                                         className=""

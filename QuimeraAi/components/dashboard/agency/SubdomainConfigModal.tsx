@@ -154,7 +154,7 @@ export function SubdomainConfigModal({
                         <h2 className="text-lg font-bold text-foreground">
                             {t('agency.configureSubdomain', 'Configurar Subdominio')}
                         </h2>
-                        <p className="text-sm text-muted-foreground truncate max-w-[250px]">
+                        <p className="text-sm text-q-text-muted truncate max-w-[250px]">
                             {project.name}
                         </p>
                     </div>
@@ -177,11 +177,11 @@ export function SubdomainConfigModal({
                                     ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/30'
                                     : isValid && subdomain
                                         ? 'border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/30'
-                                        : 'border-border focus:ring-2 focus:ring-primary/50'
+                                        : 'border-q-border focus:ring-2 focus:ring-primary/50'
                             }`}
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {isChecking && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
+                            {isChecking && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
                             {!isChecking && isValid && subdomain && <CheckCircle size={16} className="text-emerald-500" />}
                             {!isChecking && error && <XCircle size={16} className="text-red-500" />}
                         </div>
@@ -207,7 +207,7 @@ export function SubdomainConfigModal({
                                         href={`https://${subdomain}.quimera.ai`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-muted-foreground hover:text-foreground"
+                                        className="text-q-text-muted hover:text-foreground"
                                     >
                                         <ExternalLink size={12} />
                                     </a>
@@ -225,7 +225,7 @@ export function SubdomainConfigModal({
                 <div className="flex gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-border text-foreground bg-background hover:bg-secondary transition-colors"
+                        className="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-q-border text-foreground bg-q-bg hover:bg-secondary transition-colors"
                     >
                         {t('common.cancel', 'Cancelar')}
                     </button>

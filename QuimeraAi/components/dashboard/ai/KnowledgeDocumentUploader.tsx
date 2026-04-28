@@ -203,7 +203,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
     return (
         <div className="space-y-4">
             {/* Upload Area */}
-            <div className="border-2 border-dashed border-border rounded-xl p-6 hover:border-primary/50 transition-colors bg-card">
+            <div className="border-2 border-dashed border-q-border rounded-xl p-6 hover:border-primary/50 transition-colors bg-q-surface">
                 <label className="cursor-pointer block">
                     <input
                         type="file"
@@ -216,12 +216,12 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
                         {isUploading ? (
                             <Loader2 className="w-10 h-10 mx-auto mb-3 text-primary animate-spin" />
                         ) : (
-                            <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+                            <Upload className="w-10 h-10 mx-auto mb-3 text-q-text-muted" />
                         )}
                         <p className="text-sm font-medium text-foreground mb-1">
                             {isUploading ? 'Processing document...' : 'Click to upload or drag and drop'}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-q-text-muted">
                             {SUPPORTED_TYPES.map(t => t.label).join(', ')} (Max 10MB)
                         </p>
                     </div>
@@ -253,20 +253,20 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
                         {documents.map((doc) => (
                             <div
                                 key={doc.id}
-                                className="flex items-start gap-3 p-3 bg-card border border-border rounded-lg hover:border-primary/50 transition-colors group"
+                                className="flex items-start gap-3 p-3 bg-q-surface border border-q-border rounded-lg hover:border-primary/50 transition-colors group"
                             >
                                 <FileText size={20} className="text-primary mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-foreground truncate">
                                         {doc.name}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-q-text-muted">
                                         {formatFileSize(doc.size)} • {formatDate(doc.extractedAt)} • {doc.content.length} characters
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteDocument(doc.id)}
-                                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-q-text-muted hover:text-red-600 dark:hover:text-red-400 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
                                     title="Remove document"
                                 >
                                     <X size={16} />

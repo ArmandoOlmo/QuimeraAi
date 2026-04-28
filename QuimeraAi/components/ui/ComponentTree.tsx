@@ -195,8 +195,8 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             style={style}
             className={`
                 group relative flex items-center gap-2 px-3 py-2 cursor-pointer transition-all rounded-md
-                ${isActive ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-primary hover:text-editor-accent hover:bg-editor-panel-bg/50'}
-                ${isDragging ? 'opacity-50 shadow-lg bg-editor-panel-bg' : ''}
+                ${isActive ? 'bg-q-accent/10 text-q-accent' : 'text-q-text hover:text-q-accent hover:bg-q-surface/50'}
+                ${isDragging ? 'opacity-50 shadow-lg bg-q-surface' : ''}
                 ${!isVisible ? 'opacity-50' : ''}
             `}
             onClick={onSelect}
@@ -211,7 +211,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                 >
                     <GripVertical
                         size={14}
-                        className="text-editor-text-secondary hover:text-editor-text-primary"
+                        className="text-q-text-secondary hover:text-q-text"
                     />
                 </div>
             )}
@@ -238,7 +238,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                     </button>
                     <button
                         onClick={() => setShowConfirm(false)}
-                        className="px-2 py-0.5 text-xs font-medium rounded bg-editor-border/50 text-editor-text-secondary hover:bg-editor-border transition-colors"
+                        className="px-2 py-0.5 text-xs font-medium rounded bg-q-surface-overlay/50 text-q-text-secondary hover:bg-q-surface-overlay transition-colors"
                     >
                         <X size={12} />
                     </button>
@@ -253,7 +253,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                             e.stopPropagation();
                             onToggleVisibility();
                         }}
-                        className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/50 transition-colors"
+                        className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/50 transition-colors"
                         title={isVisible ? hideLabel : showLabel}
                     >
                         {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -263,7 +263,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                             e.stopPropagation();
                             setShowConfirm(true);
                         }}
-                        className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                        className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                         title={deleteLabel}
                     >
                         <Trash2 size={14} />
@@ -279,10 +279,10 @@ const DragOverlayItem: React.FC<{ section: PageSection; sectionLabel: string }> 
     const Icon = sectionIcons[section] || Layout;
 
     return (
-        <div className="flex items-center gap-2 px-3 py-2 bg-editor-panel-bg border border-editor-accent rounded-md shadow-xl">
-            <GripVertical size={14} className="text-editor-accent" />
-            <Icon size={16} className="text-editor-accent" />
-            <span className="text-sm font-medium text-editor-text-primary">
+        <div className="flex items-center gap-2 px-3 py-2 bg-q-surface border border-q-accent rounded-md shadow-xl">
+            <GripVertical size={14} className="text-q-accent" />
+            <Icon size={16} className="text-q-accent" />
+            <span className="text-sm font-medium text-q-text">
                 {sectionLabel}
             </span>
         </div>
@@ -514,15 +514,15 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         e.stopPropagation();
                         setExpandedGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-editor-text-secondary uppercase tracking-wider hover:text-editor-text-primary transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-q-text-secondary uppercase tracking-wider hover:text-q-text transition-colors"
                     type="button"
                 >
                     <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
                         <ChevronDown size={14} />
                     </span>
-                    <GroupIcon size={14} className="text-editor-accent" />
+                    <GroupIcon size={14} className="text-q-accent" />
                     {title}
-                    <span className="text-editor-accent">({sections.length})</span>
+                    <span className="text-q-accent">({sections.length})</span>
                 </button>
 
                 <div
@@ -540,17 +540,17 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col bg-editor-bg border-r border-editor-border">
+        <div className="h-full flex flex-col bg-q-bg border-r border-q-border">
             {/* Header */}
-            <div className="p-4 border-b border-editor-border">
+            <div className="p-4 border-b border-q-border">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-editor-text-primary uppercase tracking-wider">
+                    <h3 className="text-sm font-bold text-q-text uppercase tracking-wider">
                         {t('editor.pageStructure')}
                     </h3>
                     {availableComponents.length > 0 && (
                         <button
                             onClick={() => setShowAddMenu(!showAddMenu)}
-                            className="p-1.5 text-editor-accent hover:text-editor-accent-hover transition-colors"
+                            className="p-1.5 text-q-accent hover:text-q-accent transition-colors"
                             title={t('editor.addComponent')}
                         >
                             {showAddMenu ? <X size={14} /> : <Plus size={14} />}
@@ -559,8 +559,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 </div>
 
                 {/* Search Bar - Desktop */}
-                <div className="hidden sm:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                <div className="hidden sm:flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('editor.searchSections')}
@@ -571,7 +571,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     {searchTerm && (
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary hover:text-editor-text-primary"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary hover:text-q-text"
                         >
                             <X size={14} />
                         </button>
@@ -581,7 +581,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                 {/* Mobile Search Button */}
                 <button
                     onClick={() => setIsMobileSearchOpen(true)}
-                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-editor-border/40 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                    className="sm:hidden flex items-center justify-center p-2 rounded-lg bg-q-surface-overlay/40 text-q-text-secondary hover:text-q-text transition-colors"
                 >
                     <Search size={14} />
                 </button>
@@ -597,8 +597,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
             {/* Add Component Menu */}
             {showAddMenu && availableComponents.length > 0 && (
-                <div className="p-3 border-b border-editor-border bg-editor-panel-bg/50">
-                    <div className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
+                <div className="p-3 border-b border-q-border bg-q-surface/50">
+                    <div className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
                         {t('editor.addComponent')}
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -607,7 +607,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                             <div className="mb-1">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-text-secondary hover:text-q-text hover:bg-q-bg rounded-md transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Legacy Suite
@@ -626,10 +626,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left"
                                                 >
-                                                    <Icon size={14} className="text-editor-accent" />
-                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                    <Icon size={14} className="text-q-accent" />
+                                                    <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
                                                 </button>
@@ -641,10 +641,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                         )}
                         {/* Lumina Group in Add Menu */}
                         {availableComponents.filter(s => s.toLowerCase().includes('lumina')).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-editor-border/50">
+                            <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, luminaAdd: !prev.luminaAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#10B981] hover:bg-editor-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#10B981] hover:bg-q-bg rounded-md transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Lumina Suite
@@ -663,10 +663,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left border-l border-transparent hover:border-[#10B981]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#10B981]/50"
                                                 >
                                                     <Icon size={14} className="text-[#10B981]" />
-                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                    <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
                                                 </button>
@@ -679,10 +679,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
                         {/* Neon Group in Add Menu */}
                         {availableComponents.filter(s => s.toLowerCase().includes('neon')).length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-editor-border/50">
+                            <div className="mt-2 pt-2 border-t border-q-border/50">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, neonAdd: !prev.neonAdd }))}
-                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#FBB92B] hover:bg-editor-bg rounded-md transition-colors"
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#FBB92B] hover:bg-q-bg rounded-md transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <Layers size={14} /> Neon Suite
@@ -701,10 +701,10 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         onAddComponent(section);
                                                         setShowAddMenu(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-editor-bg transition-colors text-left border-l border-transparent hover:border-[#FBB92B]/50"
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#FBB92B]/50"
                                                 >
                                                     <Icon size={14} className="text-[#FBB92B]" />
-                                                    <span className="text-sm text-editor-text-primary font-medium">
+                                                    <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>
                                                 </button>

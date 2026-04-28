@@ -252,7 +252,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
         <div className="absolute bottom-0 right-0 w-full h-full z-30 flex flex-col pointer-events-auto font-sans">
             {/* Chat Container - GlobalAiAssistant style */}
             <div 
-                className="w-full h-full flex flex-col overflow-hidden border border-border/50 rounded-t-xl shadow-inner"
+                className="w-full h-full flex flex-col overflow-hidden border border-q-border/50 rounded-t-xl shadow-inner"
                 style={{ backgroundColor: colors?.background }}
             >
                 {/* Header - Like GlobalAiAssistant */}

@@ -225,11 +225,11 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                 <DashboardWaveRibbons className="absolute inset-x-0 top-14 h-64 z-0 pointer-events-none overflow-hidden" />
 
                 {/* Header */}
-                <header className="h-14 bg-background/95 border-b border-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
+                <header className="h-14 bg-q-bg/95 border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 backdrop-blur-xl">
                     <div className="flex items-center gap-3">
                         <Calendar className="w-5 h-5 text-primary" />
                         <h1 className="text-lg font-bold">{t('superadmin.platformAppointments', 'Citas de Plataforma')}</h1>
-                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{appointments.length}</span>
+                        <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full">{appointments.length}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <HeaderBackButton onClick={onBack} />
@@ -241,7 +241,7 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                                     <button
                                         key={vm.id}
                                         onClick={() => setViewMode(vm.id)}
-                                        className={`p-1.5 rounded-md transition-all ${viewMode === vm.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`p-1.5 rounded-md transition-all ${viewMode === vm.id ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                         title={vm.label}
                                     >
                                         <Icon size={16} />
@@ -249,9 +249,9 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                                 );
                             })}
                         </div>
-                        <button onClick={() => setIsMobileSearchOpen(true)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"><Search size={18} /></button>
-                        <button onClick={handleExportCSV} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Exportar CSV"><Download size={18} /></button>
-                        <button onClick={() => refresh()} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Actualizar"><RefreshCw size={18} /></button>
+                        <button onClick={() => setIsMobileSearchOpen(true)} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"><Search size={18} /></button>
+                        <button onClick={handleExportCSV} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors" title="Exportar CSV"><Download size={18} /></button>
+                        <button onClick={() => refresh()} className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors" title="Actualizar"><RefreshCw size={18} /></button>
                         <button
                             onClick={() => { setEditingAppointment(null); setIsCreateModalOpen(true); }}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all text-sm font-medium"
@@ -262,8 +262,8 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                 </header>
 
                 {/* Stats Bar */}
-                <div className="px-4 sm:px-6 py-3 border-b border-border/50 bg-card/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
-                    <span className="text-muted-foreground">{t('appointments.total', 'Total')}: <b className="text-foreground">{analytics.totalAppointments}</b></span>
+                <div className="px-4 sm:px-6 py-3 border-b border-q-border/50 bg-q-surface/80 backdrop-blur-sm flex items-center gap-4 flex-wrap text-xs relative z-[1]">
+                    <span className="text-q-text-muted">{t('appointments.total', 'Total')}: <b className="text-foreground">{analytics.totalAppointments}</b></span>
                     <span className="text-blue-500 flex items-center gap-1"><Clock size={12} />{t('appointments.upcoming', 'Próximas')}: <b>{analytics.upcomingAppointments}</b></span>
                     <span className="text-green-500 flex items-center gap-1"><CheckCircle2 size={12} />{t('appointments.completed', 'Completadas')}: <b>{analytics.completedAppointments}</b></span>
                     <span className="text-red-500 flex items-center gap-1"><XCircle size={12} />{t('appointments.cancelled', 'Canceladas')}: <b>{analytics.cancelledAppointments}</b></span>
@@ -271,11 +271,11 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                 </div>
 
                 {/* Calendar Navigation */}
-                <div className="px-4 sm:px-6 py-2.5 border-b border-border/50 flex items-center justify-between bg-card/80 backdrop-blur-sm relative z-[1]">
+                <div className="px-4 sm:px-6 py-2.5 border-b border-q-border/50 flex items-center justify-between bg-q-surface/80 backdrop-blur-sm relative z-[1]">
                     <div className="flex items-center gap-2">
-                        <button onClick={() => navigateDate('prev')} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"><ChevronLeft size={18} /></button>
+                        <button onClick={() => navigateDate('prev')} className="p-1.5 rounded-md hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"><ChevronLeft size={18} /></button>
                         <button onClick={() => navigateDate('today')} className="px-3 py-1 rounded-md text-xs font-medium bg-secondary hover:bg-secondary/80 transition-colors">{t('appointments.today', 'Hoy')}</button>
-                        <button onClick={() => navigateDate('next')} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"><ChevronRight size={18} /></button>
+                        <button onClick={() => navigateDate('next')} className="p-1.5 rounded-md hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"><ChevronRight size={18} /></button>
                     </div>
                     <h2 className="text-sm font-bold capitalize">{dateLabel}</h2>
                     {/* Mobile view mode selector */}
@@ -286,7 +286,7 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                                 <button
                                     key={vm.id}
                                     onClick={() => setViewMode(vm.id)}
-                                    className={`p-1 rounded-md transition-all ${viewMode === vm.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                                    className={`p-1 rounded-md transition-all ${viewMode === vm.id ? 'bg-primary text-primary-foreground' : 'text-q-text-muted'}`}
                                 >
                                     <Icon size={14} />
                                 </button>
@@ -303,9 +303,9 @@ const AdminAppointmentsDashboard: React.FC<AdminAppointmentsDashboardProps> = ({
                         </div>
                     ) : appointments.length === 0 && viewMode === 'list' ? (
                         <div className="flex flex-col items-center justify-center h-64 text-center p-4">
-                            <Calendar className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                            <Calendar className="w-16 h-16 text-q-text-muted/30 mb-4" />
                             <h3 className="text-lg font-semibold mb-2">{t('appointments.emptyState.title', 'Sin citas de plataforma')}</h3>
-                            <p className="text-sm text-muted-foreground mb-4 max-w-md">
+                            <p className="text-sm text-q-text-muted mb-4 max-w-md">
                                 {t('appointments.emptyState.adminDesc', 'Las citas agendadas desde la plataforma aparecerán aquí.')}
                             </p>
                             <button

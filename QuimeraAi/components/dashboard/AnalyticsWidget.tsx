@@ -7,7 +7,7 @@ const AnalyticsWidget: React.FC = () => {
     const { t } = useTranslation();
     // Static robust visualization to prevent render crashes
     return (
-        <div className="h-full w-full flex flex-col bg-gradient-to-br from-card via-card to-background border border-border rounded-[1.5rem] relative overflow-hidden shadow-lg group">
+        <div className="h-full w-full flex flex-col bg-gradient-to-br from-card via-card to-background border border-q-border rounded-[1.5rem] relative overflow-hidden shadow-lg group">
 
             {/* Header */}
             <div className="p-6 pb-0 relative z-10 flex justify-between items-start">
@@ -18,7 +18,7 @@ const AnalyticsWidget: React.FC = () => {
                         </div>
                         <h3 className="text-foreground font-bold text-sm tracking-tight">{t('analytics.liveActivity')}</h3>
                     </div>
-                    <p className="text-muted-foreground text-[11px] font-medium pl-1">{t('analytics.last24Hours')}</p>
+                    <p className="text-q-text-muted text-[11px] font-medium pl-1">{t('analytics.last24Hours')}</p>
                 </div>
                 <div className="flex items-center gap-1 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-[10px] font-bold text-green-500">
                     <ArrowUpRight size={10} />
@@ -58,15 +58,15 @@ const AnalyticsWidget: React.FC = () => {
             </div>
 
             {/* Footer Stats */}
-            <div className="grid grid-cols-2 divide-x divide-border border-t border-border bg-secondary/20">
+            <div className="grid grid-cols-2 divide-x divide-border border-t border-q-border bg-secondary/20">
                 <div className="p-3 flex flex-col items-center justify-center hover:bg-secondary/40 transition-colors cursor-default">
-                    <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] uppercase font-bold mb-0.5">
+                    <div className="flex items-center gap-1.5 text-q-text-muted text-[10px] uppercase font-bold mb-0.5">
                         <Eye size={12} /> {t('analytics.views')}
                     </div>
                     <span className="text-lg font-black text-foreground">24.5k</span>
                 </div>
                 <div className="p-3 flex flex-col items-center justify-center hover:bg-secondary/40 transition-colors cursor-default">
-                    <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] uppercase font-bold mb-0.5">
+                    <div className="flex items-center gap-1.5 text-q-text-muted text-[10px] uppercase font-bold mb-0.5">
                         <MousePointer2 size={12} /> {t('analytics.clicks')}
                     </div>
                     <span className="text-lg font-black text-foreground">8.2k</span>

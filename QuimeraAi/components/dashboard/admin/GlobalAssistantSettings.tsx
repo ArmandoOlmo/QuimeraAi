@@ -176,27 +176,27 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                 promptToEdit={promptToEdit}
                 initialPrompt={initialPrompt}
             />
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <div className="flex h-screen bg-q-bg text-q-text">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Header */}
-                    <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                    <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2 transition-colors"
+                                className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden mr-2 transition-colors"
                                 title={t('common.openMenu')}
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <MessageSquare className="text-editor-accent w-5 h-5" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.globalAssistant.title')}</h1>
+                                <MessageSquare className="text-q-accent w-5 h-5" />
+                                <h1 className="text-lg font-semibold text-q-text">{t('superadmin.globalAssistant.title')}</h1>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                            <HeaderBackButton onClick={onBack} label={t('common.back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                             {showSuccess && (
                                 <span className="text-sm text-green-400 flex items-center animate-fade-in-up">
                                     <CheckCircle size={16} className="mr-1.5" /> {t('superadmin.globalAssistant.saved', 'Saved')}
@@ -205,7 +205,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary disabled:opacity-50"
+                                className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-q-text-secondary hover:text-q-text disabled:opacity-50"
                             >
                                 <Save className="w-4 h-4" />
                                 {isSaving ? t('superadmin.globalAssistant.saving', 'Saving...') : t('superadmin.globalAssistant.save', 'Save')}
@@ -221,15 +221,15 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 {/* Left Column: General & Scope */}
                                 <div className="space-y-8">
                                     {/* Status Section */}
-                                    <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl">
+                                    <div className="bg-q-surface border border-q-border p-6 rounded-xl">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <h3 className="font-bold text-lg mb-1">{t('superadmin.globalAssistant.status.title', 'Assistant Status')}</h3>
-                                                <p className="text-sm text-editor-text-secondary">{t('superadmin.globalAssistant.status.description', 'Enable or disable global chat assistant.')}</p>
+                                                <p className="text-sm text-q-text-secondary">{t('superadmin.globalAssistant.status.description', 'Enable or disable global chat assistant.')}</p>
                                             </div>
                                             <button
                                                 onClick={() => updateForm('isEnabled', !formData.isEnabled)}
-                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-editor-accent' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isEnabled ? 'bg-q-accent' : 'bg-q-surface-overlay'}`}
                                             >
                                                 <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
@@ -237,19 +237,19 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     </div>
 
                                     {/* Language Settings (NEW) */}
-                                    <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                        <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
-                                            <Languages className="mr-2 text-editor-accent" size={20} /> {t('superadmin.globalAssistant.language.title', 'Language & Intelligence')}
+                                    <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
+                                        <h3 className="font-bold text-lg border-b border-q-border pb-2 flex items-center">
+                                            <Languages className="mr-2 text-q-accent" size={20} /> {t('superadmin.globalAssistant.language.title', 'Language & Intelligence')}
                                         </h3>
 
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h4 className="text-sm font-bold text-editor-text-primary">{t('superadmin.globalAssistant.language.autoDetect', 'Auto-Detect Language')}</h4>
-                                                <p className="text-xs text-editor-text-secondary">{t('superadmin.globalAssistant.language.autoDetectDesc', "Automatically reply in the user's language.")}</p>
+                                                <h4 className="text-sm font-bold text-q-text">{t('superadmin.globalAssistant.language.autoDetect', 'Auto-Detect Language')}</h4>
+                                                <p className="text-xs text-q-text-secondary">{t('superadmin.globalAssistant.language.autoDetectDesc', "Automatically reply in the user's language.")}</p>
                                             </div>
                                             <button
                                                 onClick={() => updateForm('autoDetectLanguage', !formData.autoDetectLanguage)}
-                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.autoDetectLanguage ? 'bg-green-500' : 'bg-q-surface-overlay'}`}
                                             >
                                                 <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.autoDetectLanguage ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
@@ -257,12 +257,12 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                                         {!formData.autoDetectLanguage && (
                                             <div>
-                                                <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.language.primaryLanguage', 'Primary / Fallback Language')}</label>
+                                                <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.language.primaryLanguage', 'Primary / Fallback Language')}</label>
                                                 <input
                                                     type="text"
                                                     value={formData.supportedLanguages}
                                                     onChange={(e) => updateForm('supportedLanguages', e.target.value)}
-                                                    className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none"
+                                                    className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none"
                                                     placeholder={t('superadmin.globalAssistant.language.placeholder', 'e.g. English')}
                                                 />
                                             </div>
@@ -270,35 +270,35 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     </div>
 
                                     {/* Voice Settings */}
-                                    <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                        <div className="flex items-center justify-between border-b border-editor-border pb-6">
+                                    <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
+                                        <div className="flex items-center justify-between border-b border-q-border pb-6">
                                             <div>
-                                                <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-editor-accent" /> {t('superadmin.globalAssistant.voice.title', 'Voice Settings')}</h3>
-                                                <p className="text-sm text-editor-text-secondary">{t('superadmin.globalAssistant.voice.enable', 'Enable Live Voice')}</p>
+                                                <h3 className="font-bold text-lg mb-1 flex items-center"><Mic className="mr-2 text-q-accent" /> {t('superadmin.globalAssistant.voice.title', 'Voice Settings')}</h3>
+                                                <p className="text-sm text-q-text-secondary">{t('superadmin.globalAssistant.voice.enable', 'Enable Live Voice')}</p>
                                             </div>
                                             <button
                                                 onClick={() => updateForm('enableLiveVoice', !formData.enableLiveVoice)}
-                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-editor-border'}`}
+                                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.enableLiveVoice ? 'bg-green-500' : 'bg-q-surface-overlay'}`}
                                             >
                                                 <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-white transition ${formData.enableLiveVoice ? 'translate-x-6' : 'translate-x-1'}`} />
                                             </button>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-bold text-editor-text-primary mb-4 flex items-center"><Radio className="mr-2 text-editor-accent" /> {t('superadmin.globalAssistant.voice.select', 'Select Voice')}</label>
+                                            <label className="block text-sm font-bold text-q-text mb-4 flex items-center"><Radio className="mr-2 text-q-accent" /> {t('superadmin.globalAssistant.voice.select', 'Select Voice')}</label>
                                             <div className="grid grid-cols-1 gap-3">
                                                 {voices.map(v => (
                                                     <button
                                                         key={v.name}
                                                         onClick={() => updateForm('voiceName', v.name)}
-                                                        className={`p-3 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voiceName === v.name ? 'border-editor-accent bg-editor-accent/10 ring-1 ring-editor-accent' : 'border-editor-border bg-editor-bg hover:border-editor-accent/50'}`}
+                                                        className={`p-3 rounded-xl border text-left transition-all hover:shadow-md flex items-center ${formData.voiceName === v.name ? 'border-q-accent bg-q-accent/10 ring-1 ring-q-accent' : 'border-q-border bg-q-bg hover:border-q-accent/50'}`}
                                                     >
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 shrink-0 ${formData.voiceName === v.name ? 'bg-editor-accent text-editor-bg' : 'bg-editor-border text-editor-text-secondary'}`}>
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 shrink-0 ${formData.voiceName === v.name ? 'bg-q-accent text-q-bg' : 'bg-q-surface-overlay text-q-text-secondary'}`}>
                                                             {v.genderKey}
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-editor-text-primary text-sm">{v.name}</h4>
-                                                            <p className="text-xs text-editor-text-secondary line-clamp-1">{v.description} - {t('superadmin.voiceGender')}: {v.gender}</p>
+                                                            <h4 className="font-bold text-q-text text-sm">{v.name}</h4>
+                                                            <p className="text-xs text-q-text-secondary line-clamp-1">{v.description} - {t('superadmin.voiceGender')}: {v.gender}</p>
                                                         </div>
                                                     </button>
                                                 ))}
@@ -307,39 +307,39 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     </div>
 
                                     {/* Advanced Parameters */}
-                                    <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                        <h3 className="font-bold text-lg border-b border-editor-border pb-2 flex items-center">
-                                            <Sliders className="mr-2 text-editor-accent" size={20} /> {t('superadmin.globalAssistant.parameters.title', 'Model Parameters')}
+                                    <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
+                                        <h3 className="font-bold text-lg border-b border-q-border pb-2 flex items-center">
+                                            <Sliders className="mr-2 text-q-accent" size={20} /> {t('superadmin.globalAssistant.parameters.title', 'Model Parameters')}
                                         </h3>
 
                                         {/* Model Selection */}
                                         <div>
-                                            <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.parameters.model', 'AI Model')}</label>
+                                            <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.parameters.model', 'AI Model')}</label>
                                             <select
                                                 value={formData.model || 'gemini-3-flash-preview'}
                                                 onChange={(e) => updateForm('model', e.target.value)}
-                                                className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                             >
                                                 <option value="gemini-3-flash-preview">Gemini 3 Flash — {t('superadmin.globalAssistant.parameters.recommended', 'Recommended')}</option>
                                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash — {t('superadmin.globalAssistant.parameters.legacy', 'Legacy')}</option>
                                                 <option value="gemini-2.5-pro">Gemini 2.5 Pro — {t('superadmin.globalAssistant.parameters.highCost', 'Higher Cost')}</option>
                                             </select>
-                                            <p className="text-xs text-editor-text-secondary mt-1">{t('superadmin.globalAssistant.parameters.modelDescription', 'The model used for chat responses. Flash is fastest and most cost-effective.')}</p>
+                                            <p className="text-xs text-q-text-secondary mt-1">{t('superadmin.globalAssistant.parameters.modelDescription', 'The model used for chat responses. Flash is fastest and most cost-effective.')}</p>
                                         </div>
 
                                         <div>
                                             <div className="flex justify-between mb-2">
-                                                <label className="text-sm font-bold text-editor-text-primary">{t('superadmin.globalAssistant.parameters.temperature', 'Temperature (Creativity)')}</label>
-                                                <span className="text-xs font-mono bg-editor-bg px-2 py-0.5 rounded border border-editor-border">{formData.temperature}</span>
+                                                <label className="text-sm font-bold text-q-text">{t('superadmin.globalAssistant.parameters.temperature', 'Temperature (Creativity)')}</label>
+                                                <span className="text-xs font-mono bg-q-bg px-2 py-0.5 rounded border border-q-border">{formData.temperature}</span>
                                             </div>
                                             <input
                                                 type="range"
                                                 min="0" max="2" step="0.1"
                                                 value={formData.temperature}
                                                 onChange={(e) => updateForm('temperature', parseFloat(e.target.value))}
-                                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                                             />
-                                            <div className="flex justify-between text-xs text-editor-text-secondary mt-1">
+                                            <div className="flex justify-between text-xs text-q-text-secondary mt-1">
                                                 <span>{t('superadmin.globalAssistant.parameters.precise', 'Precise')}</span>
                                                 <span>{t('superadmin.globalAssistant.parameters.balanced', 'Balanced')}</span>
                                                 <span>{t('superadmin.globalAssistant.parameters.creative', 'Creative')}</span>
@@ -348,15 +348,15 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                                         <div>
                                             <div className="flex justify-between mb-2">
-                                                <label className="text-sm font-bold text-editor-text-primary">{t('superadmin.globalAssistant.parameters.maxTokens', 'Max Output Tokens')}</label>
-                                                <span className="text-xs font-mono bg-editor-bg px-2 py-0.5 rounded border border-editor-border">{formData.maxTokens}</span>
+                                                <label className="text-sm font-bold text-q-text">{t('superadmin.globalAssistant.parameters.maxTokens', 'Max Output Tokens')}</label>
+                                                <span className="text-xs font-mono bg-q-bg px-2 py-0.5 rounded border border-q-border">{formData.maxTokens}</span>
                                             </div>
                                             <input
                                                 type="range"
                                                 min="2048" max="8192" step="256"
                                                 value={formData.maxTokens}
                                                 onChange={(e) => updateForm('maxTokens', parseInt(e.target.value))}
-                                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                                             />
                                         </div>
                                     </div>
@@ -364,24 +364,24 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                                 {/* Right Column: Scope & Permissions */}
                                 <div className="space-y-8">
-                                    <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl flex flex-col">
-                                        <div className="flex items-center justify-between border-b border-editor-border pb-4 mb-4">
+                                    <div className="bg-q-surface border border-q-border p-6 rounded-xl flex flex-col">
+                                        <div className="flex items-center justify-between border-b border-q-border pb-4 mb-4">
                                             <div>
                                                 <h3 className="font-bold text-lg flex items-center">
-                                                    <Shield className="mr-2 text-editor-accent" /> {t('superadmin.globalAssistant.scope.title', 'Scope & Permissions')}
+                                                    <Shield className="mr-2 text-q-accent" /> {t('superadmin.globalAssistant.scope.title', 'Scope & Permissions')}
                                                 </h3>
-                                                <p className="text-sm text-editor-text-secondary">{t('superadmin.globalAssistant.scope.description', 'Configure where the assistant is active and what capabilities it has per scope.')}</p>
+                                                <p className="text-sm text-q-text-secondary">{t('superadmin.globalAssistant.scope.description', 'Configure where the assistant is active and what capabilities it has per scope.')}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-end space-x-4 mb-2 text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                        <div className="flex justify-end space-x-4 mb-2 text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             <div className="flex items-center space-x-2">
                                                 <span>{t('superadmin.globalAssistant.scope.chatEnabled', 'Chat Enabled')}</span>
                                                 <button onClick={() => toggleAll('chat', true)} className="text-green-400 hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
                                                 <span>/</span>
                                                 <button onClick={() => toggleAll('chat', false)} className="text-red-400 hover:underline">{t('superadmin.globalAssistant.scope.remove', 'Remove')}</button>
                                             </div>
-                                            <div className="w-px h-4 bg-editor-border mx-2"></div>
+                                            <div className="w-px h-4 bg-q-surface-overlay mx-2"></div>
                                             <div className="flex items-center space-x-2">
                                                 <span>{t('superadmin.globalAssistant.scope.voiceEnabled', 'Voice Enabled')}</span>
                                                 <button onClick={() => toggleAll('voice', true)} className="text-green-400 hover:underline">{t('superadmin.globalAssistant.scope.add', 'Add')}</button>
@@ -392,8 +392,8 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
 
                                         <div className="mt-2">
                                             <table className="w-full">
-                                                <thead className="bg-editor-panel-bg z-10">
-                                                    <tr className="text-left text-xs font-bold text-editor-text-secondary uppercase tracking-wider border-b border-editor-border">
+                                                <thead className="bg-q-surface z-10">
+                                                    <tr className="text-left text-xs font-bold text-q-text-secondary uppercase tracking-wider border-b border-q-border">
                                                         <th className="pb-3 pl-2">{t('superadmin.globalAssistant.scope.columnScope', 'Scope')}</th>
                                                         <th className="pb-3 text-center w-20">{t('superadmin.globalAssistant.scope.columnChat', 'Chat')}</th>
                                                         <th className="pb-3 text-center w-20">{t('superadmin.globalAssistant.scope.columnVoice', 'Voice')}</th>
@@ -403,12 +403,12 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                     {ALL_SCOPES.map((scope) => {
                                                         const perm = formData.permissions?.[scope.id] || { chat: true, voice: true };
                                                         return (
-                                                            <tr key={scope.id} className="hover:bg-editor-bg/50 transition-colors">
+                                                            <tr key={scope.id} className="hover:bg-q-bg/50 transition-colors">
                                                                 <td className="py-3 pl-2">
-                                                                    <span className={`text-sm font-medium ${scope.type === 'view' ? 'text-editor-accent' : 'text-editor-text-primary'}`}>
+                                                                    <span className={`text-sm font-medium ${scope.type === 'view' ? 'text-q-accent' : 'text-q-text'}`}>
                                                                         {t(scope.nameKey)}
                                                                     </span>
-                                                                    <span className="ml-2 text-[10px] text-editor-text-secondary border border-editor-border rounded px-1">
+                                                                    <span className="ml-2 text-[10px] text-q-text-secondary border border-q-border rounded px-1">
                                                                         {scope.type}
                                                                     </span>
                                                                 </td>
@@ -417,7 +417,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                                         type="checkbox"
                                                                         checked={perm.chat}
                                                                         onChange={(e) => handlePermissionChange(scope.id, 'chat', e.target.checked)}
-                                                                        className="w-4 h-4 rounded border-editor-border text-editor-accent focus:ring-editor-accent bg-editor-bg cursor-pointer"
+                                                                        className="w-4 h-4 rounded border-q-border text-q-accent focus:ring-q-accent bg-q-bg cursor-pointer"
                                                                     />
                                                                 </td>
                                                                 <td className="py-3 text-center">
@@ -425,7 +425,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                                         type="checkbox"
                                                                         checked={perm.voice}
                                                                         onChange={(e) => handlePermissionChange(scope.id, 'voice', e.target.checked)}
-                                                                        className="w-4 h-4 rounded border-editor-border text-editor-accent focus:ring-editor-accent bg-editor-bg cursor-pointer"
+                                                                        className="w-4 h-4 rounded border-q-border text-q-accent focus:ring-q-accent bg-q-bg cursor-pointer"
                                                                     />
                                                                 </td>
                                                             </tr>
@@ -439,22 +439,22 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
 
                             {/* Instruction Templates */}
-                            <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                <div className="flex items-center gap-2 border-b border-editor-border pb-2">
-                                    <Sparkles size={20} className="text-editor-accent" />
+                            <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
+                                <div className="flex items-center gap-2 border-b border-q-border pb-2">
+                                    <Sparkles size={20} className="text-q-accent" />
                                     <h3 className="font-bold text-lg">{t('superadmin.globalAssistant.templates.title', 'Instruction Templates')}</h3>
                                 </div>
-                                <p className="text-sm text-editor-text-secondary">
+                                <p className="text-sm text-q-text-secondary">
                                     {t('superadmin.globalAssistant.templates.description', 'Enable pre-defined instruction sets to shape the assistant\'s behavior.')}
                                 </p>
 
                                 <div className="space-y-3">
                                     {Object.values(PROMPT_TEMPLATES).map(template => (
-                                        <div key={template.id} className="border border-editor-border rounded-lg p-4 hover:border-editor-accent/50 transition-colors">
+                                        <div key={template.id} className="border border-q-border rounded-lg p-4 hover:border-q-accent/50 transition-colors">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <h4 className="font-medium text-editor-text-primary">{template.name}</h4>
+                                                        <h4 className="font-medium text-q-text">{template.name}</h4>
                                                         <span className={`text-[10px] px-2 py-0.5 rounded ${template.category === 'core' ? 'bg-blue-500/20 text-blue-400' :
                                                             template.category === 'multilingual' ? 'bg-green-500/20 text-green-400' :
                                                                 template.category === 'technical' ? 'bg-purple-500/20 text-purple-400' :
@@ -466,10 +466,10 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                                         t('superadmin.categoryOther', 'Other')}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-editor-text-secondary mb-2">{template.description}</p>
+                                                    <p className="text-xs text-q-text-secondary mb-2">{template.description}</p>
                                                     <button
                                                         onClick={() => setPreviewTemplate(template.id)}
-                                                        className="text-xs text-editor-accent hover:underline"
+                                                        className="text-xs text-q-accent hover:underline"
                                                     >
                                                         <Eye size={12} className="inline mr-1" />
                                                         {t('superadmin.globalAssistant.templates.preview', 'Preview Template')}
@@ -483,7 +483,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                                         onChange={(e) => toggleTemplate(template.id, e.target.checked)}
                                                         className="sr-only peer"
                                                     />
-                                                    <div className="w-11 h-6 bg-editor-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-editor-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-editor-accent"></div>
+                                                    <div className="w-11 h-6 bg-q-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-q-accent rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
                                                 </label>
                                             </div>
                                         </div>
@@ -491,27 +491,27 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                 </div>
 
                                 {/* Preview Final Instructions Button */}
-                                <div className="pt-4 border-t border-editor-border">
+                                <div className="pt-4 border-t border-q-border">
                                     <button
                                         onClick={() => setShowFinalPreview(true)}
-                                        className="w-full flex items-center justify-center gap-2 bg-editor-accent/10 hover:bg-editor-accent/20 text-editor-accent font-semibold py-3 px-4 rounded-lg transition-colors border border-editor-accent/30"
+                                        className="w-full flex items-center justify-center gap-2 bg-q-accent/10 hover:bg-q-accent/20 text-q-accent font-semibold py-3 px-4 rounded-lg transition-colors border border-q-accent/30"
                                     >
                                         <Eye size={18} />
                                         {t('superadmin.globalAssistant.templates.previewFinal', 'Preview Final Instructions')}
                                     </button>
-                                    <p className="text-xs text-editor-text-secondary mt-2 text-center">
+                                    <p className="text-xs text-q-text-secondary mt-2 text-center">
                                         {t('superadmin.globalAssistant.templates.selectToPreview', 'Select a template to preview its content')}
                                     </p>
                                 </div>
 
                                 {/* Custom Instructions */}
-                                <div className="pt-4 border-t border-editor-border">
-                                    <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</label>
-                                    <p className="text-xs text-editor-text-secondary mb-3">
+                                <div className="pt-4 border-t border-q-border">
+                                    <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</label>
+                                    <p className="text-xs text-q-text-secondary mb-3">
                                         {t('superadmin.globalAssistant.systemPrompt.description', 'Define the core personality and behavior rules...')}
                                     </p>
                                     <textarea
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-4 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-q-accent resize-y font-mono text-xs text-q-text leading-relaxed"
                                         value={formData.customInstructions || ''}
                                         onChange={(e) => updateForm('customInstructions', e.target.value)}
                                         placeholder={t('superadmin.globalAssistant.systemPrompt.placeholder', 'Example: Always respond with enthusiasm...')}
@@ -520,16 +520,16 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
 
                             {/* Global Assistant Prompts (editable) */}
-                            <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-4">
-                                <div className="flex items-center justify-between border-b border-editor-border pb-2">
+                            <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-4">
+                                <div className="flex items-center justify-between border-b border-q-border pb-2">
                                     <div className="flex items-center gap-2">
-                                        <Sparkles size={20} className="text-editor-accent" />
+                                        <Sparkles size={20} className="text-q-accent" />
                                         <h3 className="font-bold text-lg">{t('superadmin.globalAssistant.prompts.title', 'Global Assistant Prompts')}</h3>
                                     </div>
                                     <button
                                         onClick={handleSyncPrompts}
                                         disabled={isSyncingPrompts}
-                                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border border-editor-border hover:border-editor-accent/50 transition-colors disabled:opacity-50"
+                                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg border border-q-border hover:border-q-accent/50 transition-colors disabled:opacity-50"
                                         title={t('superadmin.globalAssistant.prompts.syncTitle', 'Sync prompts from database')}
                                     >
                                         <RefreshCw size={14} className={isSyncingPrompts ? 'animate-spin' : ''} />
@@ -537,7 +537,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                     </button>
                                 </div>
 
-                                <p className="text-sm text-editor-text-secondary">
+                                <p className="text-sm text-q-text-secondary">
                                     {t('superadmin.globalAssistant.prompts.description', 'Edit the prompts used by the Global Assistant. The assistant uses global-assistant-main as the base instruction.')}
                                 </p>
 
@@ -549,21 +549,21 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                                         const version = dbPrompt?.version || fallback?.version || '—';
                                         const source = dbPrompt ? 'DB' : 'Default';
                                         return (
-                                            <div key={name} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-editor-border bg-editor-bg/40">
+                                            <div key={name} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-q-border bg-q-bg/40">
                                                 <div className="min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-sm font-semibold text-editor-text-primary truncate">{name}</p>
-                                                        <span className="text-[10px] px-2 py-0.5 rounded border border-editor-border text-editor-text-secondary">
+                                                        <p className="text-sm font-semibold text-q-text truncate">{name}</p>
+                                                        <span className="text-[10px] px-2 py-0.5 rounded border border-q-border text-q-text-secondary">
                                                             {source}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-editor-text-secondary font-mono">
+                                                    <p className="text-xs text-q-text-secondary font-mono">
                                                         {model} · v{version}
                                                     </p>
                                                 </div>
                                                 <button
                                                     onClick={() => openPromptEditor(name)}
-                                                    className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg bg-editor-accent/10 hover:bg-editor-accent/20 text-editor-accent border border-editor-accent/30 transition-colors"
+                                                    className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg bg-q-accent/10 hover:bg-q-accent/20 text-q-accent border border-q-accent/30 transition-colors"
                                                 >
                                                     <Edit size={14} />
                                                     {t('superadmin.globalAssistant.prompts.edit', 'Edit')}
@@ -575,27 +575,27 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                             </div>
 
                             {/* Instructions & Personality */}
-                            <div className="bg-editor-panel-bg border border-editor-border p-6 rounded-xl space-y-6">
-                                <h3 className="font-bold text-lg border-b border-editor-border pb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</h3>
+                            <div className="bg-q-surface border border-q-border p-6 rounded-xl space-y-6">
+                                <h3 className="font-bold text-lg border-b border-q-border pb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</h3>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.systemPrompt.greeting', 'Initial Greeting')}</label>
+                                    <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.systemPrompt.greeting', 'Initial Greeting')}</label>
                                     <input
                                         type="text"
                                         value={formData.greeting}
                                         onChange={(e) => updateForm('greeting', e.target.value)}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-3 focus:ring-2 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-3 focus:ring-2 focus:ring-q-accent outline-none text-q-text"
                                         placeholder={t('superadmin.globalAssistant.systemPrompt.greetingPlaceholder', "Hi! I'm your Quimera Assistant...")}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-editor-text-primary mb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</label>
-                                    <p className="text-xs text-editor-text-secondary mb-3">
+                                    <label className="block text-sm font-bold text-q-text mb-2">{t('superadmin.globalAssistant.systemPrompt.title', 'Base System Instruction')}</label>
+                                    <p className="text-xs text-q-text-secondary mb-3">
                                         {t('superadmin.globalAssistant.systemPrompt.description', 'Define the core personality and behavior rules...')}
                                     </p>
                                     <textarea
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-editor-accent resize-y font-mono text-xs text-editor-text-primary leading-relaxed"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-4 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-q-accent resize-y font-mono text-xs text-q-text leading-relaxed"
                                         value={formData.systemInstruction}
                                         onChange={(e) => updateForm('systemInstruction', e.target.value)}
                                         placeholder={t('superadmin.globalAssistant.systemPrompt.placeholder', 'You are the Quimera.ai Global Assistant...')}
@@ -610,18 +610,18 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                 {/* Template Preview Modal */}
                 {previewTemplate && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPreviewTemplate(null)}>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between p-6 border-b border-editor-border">
+                        <div className="bg-q-surface border border-q-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between p-6 border-b border-q-border">
                                 <div>
-                                    <h3 className="text-xl font-bold text-editor-text-primary">{PROMPT_TEMPLATES[previewTemplate]?.name}</h3>
-                                    <p className="text-sm text-editor-text-secondary mt-1">{PROMPT_TEMPLATES[previewTemplate]?.description}</p>
+                                    <h3 className="text-xl font-bold text-q-text">{PROMPT_TEMPLATES[previewTemplate]?.name}</h3>
+                                    <p className="text-sm text-q-text-secondary mt-1">{PROMPT_TEMPLATES[previewTemplate]?.description}</p>
                                 </div>
-                                <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-editor-bg rounded-lg transition-colors">
-                                    <X size={20} className="text-editor-text-secondary" />
+                                <button onClick={() => setPreviewTemplate(null)} className="p-2 hover:bg-q-bg rounded-lg transition-colors">
+                                    <X size={20} className="text-q-text-secondary" />
                                 </button>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-                                <pre className="bg-editor-bg border border-editor-border rounded-lg p-4 text-xs text-editor-text-primary font-mono whitespace-pre-wrap leading-relaxed">
+                                <pre className="bg-q-bg border border-q-border rounded-lg p-4 text-xs text-q-text font-mono whitespace-pre-wrap leading-relaxed">
                                     {PROMPT_TEMPLATES[previewTemplate]?.content}
                                 </pre>
                             </div>
@@ -632,22 +632,22 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
                 {/* Final Instructions Preview Modal */}
                 {showFinalPreview && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFinalPreview(false)}>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between p-6 border-b border-editor-border">
+                        <div className="bg-q-surface border border-q-border rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between p-6 border-b border-q-border">
                                 <div>
-                                    <h3 className="text-xl font-bold text-editor-text-primary">{t('superadmin.globalAssistant.templates.finalTitle', 'Final Compiled Instructions')}</h3>
-                                    <p className="text-sm text-editor-text-secondary mt-1">{t('superadmin.globalAssistant.templates.finalDesc', 'This is exactly what will be sent to the AI model')}</p>
+                                    <h3 className="text-xl font-bold text-q-text">{t('superadmin.globalAssistant.templates.finalTitle', 'Final Compiled Instructions')}</h3>
+                                    <p className="text-sm text-q-text-secondary mt-1">{t('superadmin.globalAssistant.templates.finalDesc', 'This is exactly what will be sent to the AI model')}</p>
                                 </div>
-                                <button onClick={() => setShowFinalPreview(false)} className="p-2 hover:bg-editor-bg rounded-lg transition-colors">
-                                    <X size={20} className="text-editor-text-secondary" />
+                                <button onClick={() => setShowFinalPreview(false)} className="p-2 hover:bg-q-bg rounded-lg transition-colors">
+                                    <X size={20} className="text-q-text-secondary" />
                                 </button>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-                                <div className="mb-4 flex items-center gap-2 text-sm text-editor-text-secondary">
-                                    <Sparkles size={14} className="text-editor-accent" />
+                                <div className="mb-4 flex items-center gap-2 text-sm text-q-text-secondary">
+                                    <Sparkles size={14} className="text-q-accent" />
                                     <span>{t('superadmin.globalAssistant.templates.composition', 'Base Instruction + Enabled Templates + Custom Instructions')}</span>
                                 </div>
-                                <pre className="bg-editor-bg border border-editor-border rounded-lg p-4 text-xs text-editor-text-primary font-mono whitespace-pre-wrap leading-relaxed">
+                                <pre className="bg-q-bg border border-q-border rounded-lg p-4 text-xs text-q-text font-mono whitespace-pre-wrap leading-relaxed">
                                     {formData.systemInstruction}
                                     {'\n\n'}
                                     {'='.repeat(80)}

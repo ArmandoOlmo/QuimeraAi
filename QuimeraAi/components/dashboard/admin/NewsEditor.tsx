@@ -699,19 +699,19 @@ Text to format:
     ) => {
         const isExpanded = expandedSections[id] !== false;
         return (
-            <div className="border-b border-editor-border last:border-b-0">
+            <div className="border-b border-q-border last:border-b-0">
                 <button
                     onClick={() => toggleSection(id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-editor-bg/50 transition-colors"
+                    className="w-full flex items-center justify-between p-4 hover:bg-q-bg/50 transition-colors"
                 >
                     <div className="flex items-center gap-2">
-                        <span className={accentColor || 'text-editor-accent'}>{icon}</span>
-                        <span className="text-sm font-bold text-editor-text-primary">{sectionTitle}</span>
+                        <span className={accentColor || 'text-q-accent'}>{icon}</span>
+                        <span className="text-sm font-bold text-q-text">{sectionTitle}</span>
                     </div>
                     {isExpanded ? (
-                        <ChevronUp size={14} className="text-editor-text-secondary" />
+                        <ChevronUp size={14} className="text-q-text-secondary" />
                     ) : (
-                        <ChevronDown size={14} className="text-editor-text-secondary" />
+                        <ChevronDown size={14} className="text-q-text-secondary" />
                     )}
                 </button>
                 {isExpanded && <div className="px-4 pb-4 space-y-4">{children}</div>}
@@ -721,7 +721,7 @@ Text to format:
 
     return (
         <>
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
                 onClose={() => setIsMobileSidebarOpen(false)}
@@ -730,12 +730,12 @@ Text to format:
 
             <div className="flex flex-col flex-1 min-w-0">
                 {/* ── CMS-style Header (merged, no sub-header) ── */}
-                <header className="h-12 px-3 lg:px-4 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-12 px-3 lg:px-4 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     {/* Left Section - Back + Icon */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsMobileSidebarOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -751,19 +751,19 @@ Text to format:
                     {/* Center - Status Toggle */}
                     <div className="flex items-center gap-2 mx-auto">
                         {lastSaved && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 mr-2">
+                            <span className="text-xs text-q-text-muted flex items-center gap-1 mr-2">
                                 <Check size={12} className="text-green-500" />
                                 {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         )}
                         <div className="flex items-center gap-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>
                                 {t('superadmin.news.status.draft', 'Borrador')}
                             </button>
-                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>
                                 {t('superadmin.news.status.published', 'Publicado')}
                             </button>
-                            <button onClick={() => setStatus('scheduled')} className={`px-2 py-1 rounded-md transition-all ${status === 'scheduled' ? 'text-blue-400' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <button onClick={() => setStatus('scheduled')} className={`px-2 py-1 rounded-md transition-all ${status === 'scheduled' ? 'text-blue-400' : 'text-q-text-muted hover:text-foreground'}`}>
                                 {t('superadmin.news.status.scheduled', 'Programado')}
                             </button>
                         </div>
@@ -791,7 +791,7 @@ Text to format:
                         </button>
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'}`}
                             title={t('superadmin.news.toggleSidebar', 'Panel lateral')}
                         >
                             <MoreVertical size={16} />
@@ -818,7 +818,7 @@ Text to format:
                 {/* Link Modal */}
                 {showLinkModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-card border border-border rounded-xl max-w-md w-full p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl max-w-md w-full p-6">
                             <h3 className="text-lg font-semibold mb-4">
                                 {t('superadmin.news.editLink', 'Editar Enlace')}
                             </h3>
@@ -827,7 +827,7 @@ Text to format:
                                 value={linkUrl}
                                 onChange={e => setLinkUrl(e.target.value)}
                                 placeholder="https://..."
-                                className="w-full bg-secondary/50 border border-border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+                                className="w-full bg-secondary/50 border border-q-border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-4"
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
@@ -869,7 +869,7 @@ Text to format:
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto bg-background relative z-0">
+                        <div className="flex-1 overflow-y-auto bg-q-bg relative z-0">
                             {/* Content container - full width, no border */}
                             <div className="w-full">
                                 {/* Post Title Input — inside editor area like CMS */}
@@ -879,7 +879,7 @@ Text to format:
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={t('superadmin.news.titlePlaceholder', 'Título de la noticia...')}
-                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/50 leading-tight"
+                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-q-text-muted/50 leading-tight"
                                     />
                                     <div className="mt-3 h-px bg-border/50" />
                                 </div>
@@ -900,12 +900,12 @@ Text to format:
 
                     {/* ── Right Sidebar — CMS-style ── */}
                     {isSidebarOpen && (
-                        <aside className="w-80 bg-editor-panel-bg border-l border-editor-border overflow-y-auto shrink-0">
+                        <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto shrink-0">
                             {/* ── Configuration Section ── */}
                             {renderSidebarSection('config', t('superadmin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
                                 {/* Featured Image — uses ImagePicker like CMS */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <ImageIcon size={14} />
                                         {t('superadmin.news.featuredImage', 'Imagen Destacada')}
                                     </label>
@@ -913,8 +913,8 @@ Text to format:
                                 </div>
 
                                 {/* Excerpt */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Type size={14} />
                                         {t('superadmin.news.excerpt', 'Extracto')}
                                     </label>
@@ -922,17 +922,17 @@ Text to format:
                                         value={excerpt}
                                         onChange={e => setExcerpt(e.target.value.slice(0, 200))}
                                         rows={3}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none resize-none text-editor-text-primary"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none resize-none text-q-text"
                                         placeholder={t('superadmin.news.excerptPlaceholder', 'Resumen corto para listados...')}
                                     />
-                                    <p className="text-xs text-editor-text-secondary mt-1">
+                                    <p className="text-xs text-q-text-secondary mt-1">
                                         {excerpt.length}/200
                                     </p>
                                 </div>
 
                                 {/* Video del Artículo — CMS-style dropzone + URL */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <VideoIcon size={14} />
                                         Video del Artículo
                                     </label>
@@ -942,13 +942,13 @@ Text to format:
                                                 const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
                                                 if (ytMatch) {
                                                     return (
-                                                        <div className="relative rounded-lg overflow-hidden border border-editor-border" style={{ paddingBottom: '56.25%', height: 0 }}>
+                                                        <div className="relative rounded-lg overflow-hidden border border-q-border" style={{ paddingBottom: '56.25%', height: 0 }}>
                                                             <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="absolute top-0 left-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                                                         </div>
                                                     );
                                                 }
                                                 return (
-                                                    <video controls className="w-full rounded-lg border border-editor-border" style={{ maxHeight: '200px' }}>
+                                                    <video controls className="w-full rounded-lg border border-q-border" style={{ maxHeight: '200px' }}>
                                                         <source src={videoUrl} />
                                                     </video>
                                                 );
@@ -967,19 +967,19 @@ Text to format:
                                         <div className="space-y-3">
                                             <div
                                                 onClick={() => videoFileInputRef.current?.click()}
-                                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-editor-accent', 'bg-editor-accent/10'); }}
-                                                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-editor-accent', 'bg-editor-accent/10'); }}
-                                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-editor-accent', 'bg-editor-accent/10'); }}
-                                                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-editor-accent', 'bg-editor-accent/10'); if (e.dataTransfer.files?.length) handleVideoFileDrop(e.dataTransfer.files); }}
-                                                className={`w-full border-2 border-dashed border-editor-border rounded-xl p-5 flex flex-col items-center gap-2 text-editor-text-secondary hover:border-editor-accent/50 hover:bg-editor-bg transition-all cursor-pointer ${isUploadingVideo ? 'opacity-50 cursor-wait' : ''}`}
+                                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-q-accent', 'bg-q-accent/10'); }}
+                                                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-q-accent', 'bg-q-accent/10'); }}
+                                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-q-accent', 'bg-q-accent/10'); }}
+                                                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-q-accent', 'bg-q-accent/10'); if (e.dataTransfer.files?.length) handleVideoFileDrop(e.dataTransfer.files); }}
+                                                className={`w-full border-2 border-dashed border-q-border rounded-xl p-5 flex flex-col items-center gap-2 text-q-text-secondary hover:border-q-accent/50 hover:bg-q-bg transition-all cursor-pointer ${isUploadingVideo ? 'opacity-50 cursor-wait' : ''}`}
                                             >
                                                 {isUploadingVideo ? (
                                                     <>
-                                                        <Loader2 size={24} className="animate-spin text-editor-accent" />
+                                                        <Loader2 size={24} className="animate-spin text-q-accent" />
                                                         <span className="text-xs font-medium">Subiendo video... {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
                                                         {uploadProgress > 0 && (
-                                                            <div className="w-full bg-editor-border rounded-full h-2 mt-1">
-                                                                <div className="bg-editor-accent h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                                                            <div className="w-full bg-q-surface-overlay rounded-full h-2 mt-1">
+                                                                <div className="bg-q-accent h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                                                             </div>
                                                         )}
                                                     </>
@@ -987,7 +987,7 @@ Text to format:
                                                     <>
                                                         <VideoIcon size={24} />
                                                         <span className="text-xs font-medium">Subir o arrastrar video</span>
-                                                        <span className="text-[10px] text-editor-text-secondary/60">MP4, MOV, WEBM, AVI</span>
+                                                        <span className="text-[10px] text-q-text-secondary/60">MP4, MOV, WEBM, AVI</span>
                                                     </>
                                                 )}
                                             </div>
@@ -996,21 +996,21 @@ Text to format:
                                                 value={videoUrl}
                                                 onChange={(e) => setVideoUrl(e.target.value)}
                                                 placeholder="O pega una URL de video..."
-                                                className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary placeholder:text-editor-text-secondary/50"
+                                                className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text placeholder:text-q-text-secondary/50"
                                             />
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Category */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         {t('superadmin.news.category', 'Categoría')}
                                     </label>
                                     <select
                                         value={category}
                                         onChange={e => setCategory(e.target.value as NewsCategory)}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary cursor-pointer"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text cursor-pointer"
                                     >
                                         {(Object.keys(NEWS_CATEGORY_LABELS) as NewsCategory[]).map(c => (
                                             <option key={c} value={c}>
@@ -1021,8 +1021,8 @@ Text to format:
                                 </div>
 
                                 {/* Tags */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Tag size={14} />
                                         {t('superadmin.news.tags', 'Etiquetas')}
                                     </label>
@@ -1030,7 +1030,7 @@ Text to format:
                                         {tags.map(tag => (
                                             <span
                                                 key={tag}
-                                                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-editor-accent/10 text-editor-accent rounded-full"
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-q-accent/10 text-q-accent rounded-full"
                                             >
                                                 {tag}
                                                 <button
@@ -1049,11 +1049,11 @@ Text to format:
                                             onChange={e => setTagInput(e.target.value)}
                                             onKeyDown={handleTagKeyDown}
                                             placeholder={t('superadmin.news.addTag', 'Añadir etiqueta...')}
-                                            className="flex-1 bg-editor-bg border border-editor-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                            className="flex-1 bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                         />
                                         <button
                                             onClick={handleAddTag}
-                                            className="px-3 py-2 bg-editor-bg hover:bg-editor-border/80 border border-editor-border rounded-lg transition-colors text-sm"
+                                            className="px-3 py-2 bg-q-bg hover:bg-q-surface-overlay/80 border border-q-border rounded-lg transition-colors text-sm"
                                         >
                                             +
                                         </button>
@@ -1065,10 +1065,10 @@ Text to format:
                                     <div className="flex items-center gap-2">
                                         <Star size={14} className="text-yellow-500" />
                                         <div>
-                                            <p className="text-sm font-medium text-editor-text-primary">
+                                            <p className="text-sm font-medium text-q-text">
                                                 {t('superadmin.news.featured', 'Destacada')}
                                             </p>
-                                            <p className="text-xs text-editor-text-secondary">
+                                            <p className="text-xs text-q-text-secondary">
                                                 {t('superadmin.news.featuredDesc', 'Mostrar en sección destacada')}
                                             </p>
                                         </div>
@@ -1080,13 +1080,13 @@ Text to format:
                                             onChange={(e) => setFeatured(e.target.checked)}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-11 h-6 bg-editor-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                                        <div className="w-11 h-6 bg-q-surface-overlay peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
                                     </label>
                                 </div>
 
                                 {/* Priority */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3">
                                         {t('superadmin.news.priority', 'Prioridad (orden)')}
                                     </label>
                                     <input
@@ -1095,16 +1095,16 @@ Text to format:
                                         onChange={e => setPriority(parseInt(e.target.value) || 0)}
                                         min={0}
                                         max={100}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                     />
-                                    <p className="text-xs text-editor-text-secondary mt-1">
+                                    <p className="text-xs text-q-text-secondary mt-1">
                                         {t('superadmin.news.priorityHelp', 'Mayor número = aparece primero')}
                                     </p>
                                 </div>
 
                                 {/* CTA */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-1 flex items-center gap-2">
                                         <LinkIcon size={14} />
                                         {t('superadmin.news.cta', 'CTA')}
                                     </label>
@@ -1113,16 +1113,16 @@ Text to format:
                                         value={ctaLabel}
                                         onChange={e => setCtaLabel(e.target.value)}
                                         placeholder={t('superadmin.news.ctaLabel', 'Texto del botón')}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                     />
                                     <input
                                         type="url"
                                         value={ctaUrl}
                                         onChange={e => setCtaUrl(e.target.value)}
                                         placeholder={t('superadmin.news.ctaUrl', 'URL del enlace')}
-                                        className="w-full bg-editor-bg border border-editor-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                        className="w-full bg-q-bg border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                     />
-                                    <label className="flex items-center gap-2 text-xs text-editor-text-secondary">
+                                    <label className="flex items-center gap-2 text-xs text-q-text-secondary">
                                         <input
                                             type="checkbox"
                                             checked={ctaExternal}
@@ -1135,32 +1135,32 @@ Text to format:
                                 </div>
 
                                 {/* Scheduling */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-1 flex items-center gap-2">
                                         <Calendar size={14} />
                                         {t('superadmin.news.scheduling', 'Programación')}
                                     </label>
                                     <div className="grid grid-cols-1 gap-2">
                                         <div>
-                                            <label className="block text-xs text-editor-text-secondary mb-1">
+                                            <label className="block text-xs text-q-text-secondary mb-1">
                                                 {t('superadmin.news.publishAt', 'Publicar en')}
                                             </label>
                                             <input
                                                 type="datetime-local"
                                                 value={publishAt}
                                                 onChange={e => setPublishAt(e.target.value)}
-                                                className="w-full bg-editor-bg border border-editor-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-editor-text-secondary mb-1">
+                                            <label className="block text-xs text-q-text-secondary mb-1">
                                                 {t('superadmin.news.expireAt', 'Expira en')}
                                             </label>
                                             <input
                                                 type="datetime-local"
                                                 value={expireAt}
                                                 onChange={e => setExpireAt(e.target.value)}
-                                                className="w-full bg-editor-bg border border-editor-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-editor-accent outline-none text-editor-text-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-q-accent outline-none text-q-text"
                                             />
                                         </div>
                                     </div>
@@ -1170,8 +1170,8 @@ Text to format:
                             {/* ── Targeting Section ── */}
                             {renderSidebarSection('targeting', t('superadmin.news.tabTargeting', 'Audiencia'), <Target size={16} />, <>
                                 {/* Target Type */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         {t('superadmin.news.targetType', 'Mostrar a')}
                                     </label>
                                     <div className="grid grid-cols-2 gap-1.5">
@@ -1181,8 +1181,8 @@ Text to format:
                                                 onClick={() => setTargetType(type)}
                                                 className={`p-2 rounded-lg border text-xs font-medium transition-colors ${
                                                     targetType === type
-                                                        ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                                        : 'bg-editor-bg border-editor-border hover:border-editor-accent text-editor-text-secondary hover:text-editor-text-primary'
+                                                        ? 'bg-q-accent text-q-bg border-q-accent'
+                                                        : 'bg-q-bg border-q-border hover:border-q-accent text-q-text-secondary hover:text-q-text'
                                                 }`}
                                             >
                                                 {type === 'all' && t('superadmin.news.targetAll', 'Todos')}
@@ -1196,13 +1196,13 @@ Text to format:
 
                                 {/* Roles Selection */}
                                 {targetType === 'roles' && (
-                                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-1.5">
-                                        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
+                                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-1.5">
+                                        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-1 flex items-center gap-2">
                                             <Users size={14} />
                                             {t('superadmin.news.selectRoles', 'Seleccionar roles')}
                                         </label>
                                         {ROLES.map(role => (
-                                            <label key={role} className="flex items-center gap-2 p-2 rounded-lg hover:bg-editor-bg/50 transition-colors cursor-pointer">
+                                            <label key={role} className="flex items-center gap-2 p-2 rounded-lg hover:bg-q-bg/50 transition-colors cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     checked={targetRoles.includes(role)}
@@ -1213,9 +1213,9 @@ Text to format:
                                                             setTargetRoles(targetRoles.filter(r => r !== role));
                                                         }
                                                     }}
-                                                    className="rounded border-editor-border"
+                                                    className="rounded border-q-border"
                                                 />
-                                                <span className="capitalize text-sm text-editor-text-primary">{role}</span>
+                                                <span className="capitalize text-sm text-q-text">{role}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -1223,13 +1223,13 @@ Text to format:
 
                                 {/* Plans Selection */}
                                 {targetType === 'plans' && (
-                                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-1.5">
-                                        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-1 flex items-center gap-2">
+                                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-1.5">
+                                        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-1 flex items-center gap-2">
                                             <Globe size={14} />
                                             {t('superadmin.news.selectPlans', 'Seleccionar planes')}
                                         </label>
                                         {PLANS.map(plan => (
-                                            <label key={plan} className="flex items-center gap-2 p-2 rounded-lg hover:bg-editor-bg/50 transition-colors cursor-pointer">
+                                            <label key={plan} className="flex items-center gap-2 p-2 rounded-lg hover:bg-q-bg/50 transition-colors cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     checked={targetPlans.includes(plan)}
@@ -1240,9 +1240,9 @@ Text to format:
                                                             setTargetPlans(targetPlans.filter(p => p !== plan));
                                                         }
                                                     }}
-                                                    className="rounded border-editor-border"
+                                                    className="rounded border-q-border"
                                                 />
-                                                <span className="capitalize text-sm text-editor-text-primary">{plan}</span>
+                                                <span className="capitalize text-sm text-q-text">{plan}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -1251,7 +1251,7 @@ Text to format:
                                 {/* Info Box */}
                                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-start gap-2">
                                     <AlertCircle className="text-blue-500 flex-shrink-0 mt-0.5" size={14} />
-                                    <p className="text-xs text-editor-text-secondary">
+                                    <p className="text-xs text-q-text-secondary">
                                         {t(
                                             'superadmin.news.targetingInfoDesc',
                                             'La noticia solo se mostrará a los usuarios que cumplan con los criterios seleccionados.'
@@ -1263,8 +1263,8 @@ Text to format:
                             {/* ── Translation Section ── */}
                             {renderSidebarSection('translation', t('superadmin.news.translateNews'), <Languages size={16} />, <>
                                 {/* Language Selector */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                                         <Globe size={14} />
                                         {t('superadmin.news.contentLanguage')}
                                     </label>
@@ -1273,8 +1273,8 @@ Text to format:
                                             onClick={() => setLanguage('es')}
                                             className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                                                 language === 'es'
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                                    ? 'bg-q-accent text-q-bg'
+                                                    : 'bg-q-bg border border-q-border text-q-text-secondary hover:text-q-text'
                                             }`}
                                         >
                                             🇪🇸 Español
@@ -1283,8 +1283,8 @@ Text to format:
                                             onClick={() => setLanguage('en')}
                                             className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                                                 language === 'en'
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                                    ? 'bg-q-accent text-q-bg'
+                                                    : 'bg-q-bg border border-q-border text-q-text-secondary hover:text-q-text'
                                             }`}
                                         >
                                             🇺🇸 English
@@ -1332,14 +1332,14 @@ Text to format:
                                 {/* Existing translations */}
                                 {existingTranslations.length > 0 && (
                                     <div className="space-y-2">
-                                        <p className="text-xs text-editor-text-secondary font-medium">
+                                        <p className="text-xs text-q-text-secondary font-medium">
                                             {t('superadmin.news.linkedTranslations')}
                                         </p>
                                         {existingTranslations.map(tr => (
-                                            <div key={tr.id} className="flex items-center justify-between p-2.5 bg-editor-bg border border-editor-border rounded-lg">
+                                            <div key={tr.id} className="flex items-center justify-between p-2.5 bg-q-bg border border-q-border rounded-lg">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span className="text-base">{tr.language === 'es' ? '🇪🇸' : '🇺🇸'}</span>
-                                                    <span className="text-xs font-medium truncate text-editor-text-primary">{tr.title}</span>
+                                                    <span className="text-xs font-medium truncate text-q-text">{tr.title}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 flex-shrink-0">
                                                     <span className={`w-2 h-2 rounded-full ${
@@ -1347,7 +1347,7 @@ Text to format:
                                                         tr.translationStatus === 'auto-translated' ? 'bg-amber-400' : 'bg-blue-400'
                                                     }`} />
                                                     <span className={`px-1.5 py-0.5 text-[10px] rounded font-medium ${
-                                                        tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-editor-bg text-editor-text-secondary'
+                                                        tr.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-q-bg text-q-text-secondary'
                                                     }`}>{tr.status === 'published' ? '●' : '○'}</span>
                                                 </div>
                                             </div>
@@ -1381,7 +1381,7 @@ Text to format:
                                         )}
                                     </button>
                                 ) : (
-                                    <p className="text-xs text-center text-editor-text-secondary">
+                                    <p className="text-xs text-center text-q-text-secondary">
                                         {t('superadmin.news.translationExists', { lang: getNewsLanguageName(targetLang) })}
                                     </p>
                                 )}
@@ -1389,7 +1389,7 @@ Text to format:
 
                             {/* ── Preview Section ── */}
                             {renderSidebarSection('preview', t('superadmin.news.preview', 'Vista previa'), <Eye size={16} />, <>
-                                <div className="bg-editor-bg border border-editor-border rounded-lg overflow-hidden">
+                                <div className="bg-q-bg border border-q-border rounded-lg overflow-hidden">
                                     {imageUrl ? (
                                         <img
                                             src={imageUrl}
@@ -1397,8 +1397,8 @@ Text to format:
                                             className="w-full h-32 object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-32 bg-editor-border/30 flex items-center justify-center">
-                                            <ImageIcon size={32} className="text-editor-text-secondary/50" />
+                                        <div className="w-full h-32 bg-q-surface-overlay/30 flex items-center justify-center">
+                                            <ImageIcon size={32} className="text-q-text-secondary/50" />
                                         </div>
                                     )}
                                     <div className="p-3">
@@ -1408,14 +1408,14 @@ Text to format:
                                                 {t('superadmin.news.featuredBadge', 'Destacado')}
                                             </span>
                                         )}
-                                        <h4 className="font-semibold text-sm mb-1 line-clamp-2 text-editor-text-primary">
+                                        <h4 className="font-semibold text-sm mb-1 line-clamp-2 text-q-text">
                                             {title || t('superadmin.news.untitled', 'Sin título')}
                                         </h4>
-                                        <p className="text-xs text-editor-text-secondary line-clamp-3 mb-3">
+                                        <p className="text-xs text-q-text-secondary line-clamp-3 mb-3">
                                             {excerpt || t('superadmin.news.noExcerpt', 'Sin resumen')}
                                         </p>
                                         {ctaLabel && ctaUrl && (
-                                            <button className="w-full px-3 py-2 bg-editor-accent text-editor-bg rounded-lg text-xs font-medium">
+                                            <button className="w-full px-3 py-2 bg-q-accent text-q-bg rounded-lg text-xs font-medium">
                                                 {ctaLabel}
                                             </button>
                                         )}

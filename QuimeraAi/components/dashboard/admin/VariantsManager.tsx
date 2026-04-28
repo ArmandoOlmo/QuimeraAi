@@ -98,11 +98,11 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-editor-text-primary flex items-center gap-2">
+          <h3 className="text-lg font-bold text-q-text flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
             Variants
           </h3>
-          <p className="text-sm text-editor-text-secondary mt-1">
+          <p className="text-sm text-q-text-secondary mt-1">
             Create different style variations of this component
           </p>
         </div>
@@ -119,27 +119,27 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
 
       {/* Create New Variant Form */}
       {isCreating && (
-        <div className="bg-editor-panel-bg border-2 border-purple-600 rounded-lg p-4 space-y-3">
-          <h4 className="font-semibold text-editor-text-primary">Create New Variant</h4>
+        <div className="bg-q-surface border-2 border-purple-600 rounded-lg p-4 space-y-3">
+          <h4 className="font-semibold text-q-text">Create New Variant</h4>
           <div>
-            <label className="block text-sm text-editor-text-secondary mb-1">Name *</label>
+            <label className="block text-sm text-q-text-secondary mb-1">Name *</label>
             <input
               type="text"
               value={newVariantName}
               onChange={(e) => setNewVariantName(e.target.value)}
               placeholder="e.g., Primary, Outline, Ghost"
-              className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-600"
+              className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-purple-600"
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm text-editor-text-secondary mb-1">Description</label>
+            <label className="block text-sm text-q-text-secondary mb-1">Description</label>
             <textarea
               value={newVariantDescription}
               onChange={(e) => setNewVariantDescription(e.target.value)}
               placeholder="Optional description..."
               rows={2}
-              className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
+              className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -149,7 +149,7 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
                 setNewVariantName('');
                 setNewVariantDescription('');
               }}
-              className="px-3 py-1.5 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors text-sm"
+              className="px-3 py-1.5 bg-q-surface-overlay text-q-text rounded-lg hover:bg-q-surface-overlay/80 transition-colors text-sm"
             >
               Cancel
             </button>
@@ -165,20 +165,20 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
 
       {/* Default Variant */}
       <div
-        className={`bg - editor - panel - bg border rounded - lg p - 4 ${activeVariantId === 'default' ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
+        className={`bg - editor - panel - bg border rounded - lg p - 4 ${activeVariantId === 'default' ? 'border-purple-600 bg-purple-600/5' : 'border-q-border'
           } `}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-editor-text-primary">Default</h4>
+              <h4 className="font-semibold text-q-text">Default</h4>
               {activeVariantId === 'default' && (
                 <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-full">
                   Active
                 </span>
               )}
             </div>
-            <p className="text-sm text-editor-text-secondary mt-1">
+            <p className="text-sm text-q-text-secondary mt-1">
               Base component styles
             </p>
           </div>
@@ -202,14 +202,14 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
           return (
             <div
               key={variant.id}
-              className={`bg - editor - panel - bg border rounded - lg p - 4 transition - all ${isActive ? 'border-purple-600 bg-purple-600/5' : 'border-editor-border'
+              className={`bg - editor - panel - bg border rounded - lg p - 4 transition - all ${isActive ? 'border-purple-600 bg-purple-600/5' : 'border-q-border'
                 } `}
             >
               {isEditing ? (
                 /* Edit Mode */
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm text-editor-text-secondary mb-1">Name</label>
+                    <label className="block text-sm text-q-text-secondary mb-1">Name</label>
                     <input
                       type="text"
                       defaultValue={variant.name}
@@ -218,18 +218,18 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
                           handleUpdateVariant(variant.id, { name: e.target.value.trim() });
                         }
                       }}
-                      className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-600"
+                      className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-purple-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-editor-text-secondary mb-1">Description</label>
+                    <label className="block text-sm text-q-text-secondary mb-1">Description</label>
                     <textarea
                       defaultValue={variant.description || ''}
                       onBlur={(e) => {
                         handleUpdateVariant(variant.id, { description: e.target.value.trim() || undefined });
                       }}
                       rows={2}
-                      className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
+                      className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
                     />
                   </div>
                   <div className="flex justify-end">
@@ -246,7 +246,7 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-editor-text-primary">{variant.name}</h4>
+                      <h4 className="font-semibold text-q-text">{variant.name}</h4>
                       {isActive && (
                         <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-medium rounded-full">
                           Active
@@ -254,9 +254,9 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
                       )}
                     </div>
                     {variant.description && (
-                      <p className="text-sm text-editor-text-secondary">{variant.description}</p>
+                      <p className="text-sm text-q-text-secondary">{variant.description}</p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-editor-text-secondary">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-q-text-secondary">
                       <span>Created: {formatDate(variant.createdAt)}</span>
                       {variant.isDefault && (
                         <span className="px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded-full">
@@ -280,14 +280,14 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
                     <button
                       onClick={() => handleDuplicateVariant(variant)}
                       title="Duplicate variant"
-                      className="p-2 text-editor-text-secondary hover:bg-editor-border rounded-lg transition-colors"
+                      className="p-2 text-q-text-secondary hover:bg-q-surface-overlay rounded-lg transition-colors"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setEditingId(variant.id)}
                       title="Edit variant"
-                      className="p-2 text-editor-text-secondary hover:bg-editor-border rounded-lg transition-colors"
+                      className="p-2 text-q-text-secondary hover:bg-q-surface-overlay rounded-lg transition-colors"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -307,10 +307,10 @@ export const VariantsManager: React.FC<VariantsManagerProps> = ({
       </div>
 
       {variants.length === 0 && !isCreating && (
-        <div className="text-center py-8 bg-editor-panel-bg border border-editor-border rounded-lg">
+        <div className="text-center py-8 bg-q-surface border border-q-border rounded-lg">
           <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-editor-text-secondary mb-2">No variants yet</p>
-          <p className="text-sm text-editor-text-secondary mb-4">
+          <p className="text-q-text-secondary mb-2">No variants yet</p>
+          <p className="text-sm text-q-text-secondary mb-4">
             Create variants to have different styles for this component
           </p>
           <button

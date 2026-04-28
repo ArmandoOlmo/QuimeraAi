@@ -38,7 +38,7 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
 
     if (alerts.length === 0) {
         return (
-            <div className="bg-card rounded-lg border border-border p-6">
+            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
                     Alertas de Recursos
                 </h3>
@@ -58,10 +58,10 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
                             />
                         </svg>
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         No hay alertas de recursos
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-q-text-muted mt-1">
                         Todos los clientes están dentro de sus límites
                     </p>
                 </div>
@@ -70,7 +70,7 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
     }
 
     return (
-        <div className="bg-card rounded-lg border border-border p-6">
+        <div className="bg-q-surface rounded-lg border border-q-border p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground">
                     Alertas de Recursos

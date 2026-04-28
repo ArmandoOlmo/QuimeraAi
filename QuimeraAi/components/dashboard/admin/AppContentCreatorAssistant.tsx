@@ -225,19 +225,19 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
-            <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
+                <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
                     <div className="flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">{t('contentManagement.aiAssistant', 'Asistente de Contenido AI')}</h2>
-                            <p className="text-xs text-muted-foreground">{t('contentManagement.aiAssistantDesc', 'Crea artículos para el blog de Quimera')}</p>
+                            <p className="text-xs text-q-text-muted">{t('contentManagement.aiAssistantDesc', 'Crea artículos para el blog de Quimera')}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="text-q-text-muted hover:text-foreground transition-colors">
                         <X size={24} />
                     </button>
                 </div>
@@ -248,14 +248,14 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="text-center space-y-2 mb-8">
                                 <h3 className="text-2xl font-bold">{t('contentManagement.whatToWrite', '¿Sobre qué quieres escribir?')}</h3>
-                                <p className="text-muted-foreground">{t('contentManagement.topicDesc', 'Describe el tema, idea o título provisional para el artículo.')}</p>
+                                <p className="text-q-text-muted">{t('contentManagement.topicDesc', 'Describe el tema, idea o título provisional para el artículo.')}</p>
                             </div>
                             <textarea
                                 autoFocus
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                                 placeholder={t('contentManagement.topicPlaceholder', 'Ej: Cómo la IA está revolucionando la creación de sitios web en 2025...')}
-                                className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                                className="w-full h-32 bg-secondary/30 border border-q-border rounded-xl p-4 text-lg focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                             />
                             <div className="flex justify-end">
                                 <button
@@ -281,7 +281,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                             onClick={() => setCategory(cat.value)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${category === cat.value
                                                 ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card border-border hover:border-primary/50'
+                                                : 'bg-q-surface border-q-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {cat.label}
@@ -298,7 +298,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                     value={audience}
                                     onChange={(e) => setAudience(e.target.value)}
                                     placeholder={t('contentManagement.audiencePlaceholder', 'Ej: Emprendedores, Desarrolladores, Marketers...')}
-                                    className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:border-primary transition-colors"
                                 />
                             </div>
 
@@ -308,13 +308,13 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                 <div className="flex gap-3">
                                     <button 
                                         onClick={() => setLanguage('es')}
-                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'es' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/50'}`}
+                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'es' ? 'bg-primary text-primary-foreground border-primary' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                     >
                                         Español
                                     </button>
                                     <button 
                                         onClick={() => setLanguage('en')}
-                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'en' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/50'}`}
+                                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${language === 'en' ? 'bg-primary text-primary-foreground border-primary' : 'bg-q-surface border-q-border hover:border-primary/50'}`}
                                     >
                                         English
                                     </button>
@@ -331,7 +331,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                             onClick={() => setTone(t)}
                                             className={`p-3 rounded-lg border text-sm font-medium transition-all ${tone === t
                                                 ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'bg-card border-border hover:border-primary/50'
+                                                : 'bg-q-surface border-q-border hover:border-primary/50'
                                                 }`}
                                         >
                                             {t}
@@ -341,7 +341,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                             </div>
 
                             <div className="flex justify-between pt-4">
-                                <button onClick={() => setStep('topic')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
+                                <button onClick={() => setStep('topic')} className="text-q-text-muted hover:text-foreground font-medium px-4 transition-colors">
                                     {t('common.back', 'Volver')}
                                 </button>
                                 <button
@@ -362,7 +362,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold mb-2">{t('contentManagement.aiWriting', 'La IA está escribiendo...')}</h3>
-                                <p className="text-muted-foreground max-w-xs mx-auto">
+                                <p className="text-q-text-muted max-w-xs mx-auto">
                                     {t('contentManagement.aiWritingDesc', 'Estamos estructurando tu artículo, creando títulos atractivos y redactando contenido de calidad.')}
                                 </p>
                             </div>
@@ -381,7 +381,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.editor.title', 'Título')}</span>
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('contentManagement.editor.title', 'Título')}</span>
                                     <h3 className="text-xl font-bold">{generatedArticle.title || t('contentManagement.noTitle', 'Sin título')}</h3>
                                 </div>
 
@@ -390,20 +390,20 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                         {generatedArticle.category || category}
                                     </span>
                                     {generatedArticle.readTime && (
-                                        <span className="px-2 py-1 text-xs font-medium bg-secondary text-muted-foreground rounded-full">
+                                        <span className="px-2 py-1 text-xs font-medium bg-secondary text-q-text-muted rounded-full">
                                             {generatedArticle.readTime} {t('contentManagement.minRead', 'min de lectura')}
                                         </span>
                                     )}
                                 </div>
 
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.editor.excerpt', 'Resumen')}</span>
-                                    <p className="text-muted-foreground">{generatedArticle.excerpt || t('contentManagement.noExcerpt', 'Sin resumen')}</p>
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('contentManagement.editor.excerpt', 'Resumen')}</span>
+                                    <p className="text-q-text-muted">{generatedArticle.excerpt || t('contentManagement.noExcerpt', 'Sin resumen')}</p>
                                 </div>
 
                                 {generatedArticle.tags && generatedArticle.tags.length > 0 && (
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground uppercase">Tags</span>
+                                        <span className="text-xs font-bold text-q-text-muted uppercase">Tags</span>
                                         <div className="flex gap-2 flex-wrap mt-1">
                                             {generatedArticle.tags.map((tag, i) => (
                                                 <span key={i} className="px-2 py-0.5 text-xs bg-secondary rounded-full">
@@ -415,18 +415,18 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                 )}
 
                                 <div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase">{t('contentManagement.contentPreview', 'Vista previa del contenido')}</span>
-                                    <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-6 bg-secondary/20 p-4 rounded-lg border border-border/50 overflow-hidden">
+                                    <span className="text-xs font-bold text-q-text-muted uppercase">{t('contentManagement.contentPreview', 'Vista previa del contenido')}</span>
+                                    <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-6 bg-secondary/20 p-4 rounded-lg border border-q-border/50 overflow-hidden">
                                         {generatedArticle.content ? (
                                             <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(generatedArticle.content) }} />
                                         ) : (
-                                            <p className="text-muted-foreground italic">{t('contentManagement.noContentGenerated', 'Sin contenido generado')}</p>
+                                            <p className="text-q-text-muted italic">{t('contentManagement.noContentGenerated', 'Sin contenido generado')}</p>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Debug info */}
-                                <details className="text-xs text-muted-foreground">
+                                <details className="text-xs text-q-text-muted">
                                     <summary className="cursor-pointer">{t('common.debugInfo', 'Debug Info')} (click)</summary>
                                     <pre className="mt-2 p-2 bg-secondary/30 rounded overflow-auto max-h-40">
                                         {JSON.stringify(generatedArticle, null, 2)}
@@ -434,8 +434,8 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
                                 </details>
                             </div>
 
-                            <div className="flex justify-between pt-4 border-t border-border mt-auto">
-                                <button onClick={() => setStep('details')} className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors">
+                            <div className="flex justify-between pt-4 border-t border-q-border mt-auto">
+                                <button onClick={() => setStep('details')} className="text-q-text-muted hover:text-foreground font-medium px-4 transition-colors">
                                     {t('common.retry', 'Reintentar')}
                                 </button>
                                 <button

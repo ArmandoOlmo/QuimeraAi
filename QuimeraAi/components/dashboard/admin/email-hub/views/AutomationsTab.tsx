@@ -144,17 +144,17 @@ const WorkflowNode: React.FC<{
                                 {getNodeTypeLabel(step.type, t)}
                             </span>
                             {step.type === 'delay' && step.delayConfig && (
-                                <span className="text-[10px] text-editor-text-secondary bg-editor-bg/60 px-1.5 py-0.5 rounded-md">
+                                <span className="text-[10px] text-q-text-secondary bg-q-bg/60 px-1.5 py-0.5 rounded-md">
                                     {formatDelay(step.delayConfig.delayMinutes)}
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm font-medium text-editor-text-primary truncate mt-0.5">
+                        <p className="text-sm font-medium text-q-text truncate mt-0.5">
                             {step.label}
                         </p>
                         {/* Subtitle info */}
                         {step.type === 'email' && step.emailConfig?.subject && (
-                            <p className="text-xs text-editor-text-secondary truncate mt-0.5">
+                            <p className="text-xs text-q-text-secondary truncate mt-0.5">
                                 Asunto: {step.emailConfig.subject}
                             </p>
                         )}
@@ -173,7 +173,7 @@ const WorkflowNode: React.FC<{
                             </div>
                         )}
                         {step.type === 'condition' && step.conditionConfig && (
-                            <p className="text-xs text-editor-text-secondary truncate mt-0.5">
+                            <p className="text-xs text-q-text-secondary truncate mt-0.5">
                                 {step.conditionConfig.conditionType === 'email-opened' ? 'Si abrió el email' :
                                  step.conditionConfig.conditionType === 'email-clicked' ? 'Si hizo clic' :
                                  step.conditionConfig.conditionType === 'purchase-made' ? 'Si realizó compra' :
@@ -182,7 +182,7 @@ const WorkflowNode: React.FC<{
                             </p>
                         )}
                         {step.type === 'action' && step.actionConfig && (
-                            <p className="text-xs text-editor-text-secondary truncate mt-0.5">
+                            <p className="text-xs text-q-text-secondary truncate mt-0.5">
                                 {step.actionConfig.actionType === 'add-tag' ? `Añadir tag: ${step.actionConfig.tagName}` :
                                  step.actionConfig.actionType === 'remove-tag' ? `Quitar tag: ${step.actionConfig.tagName}` :
                                  step.actionConfig.actionType === 'move-to-audience' ? 'Mover a audiencia' :
@@ -204,22 +204,22 @@ const WorkflowNode: React.FC<{
                         )}
                         <ChevronDown
                             size={16}
-                            className={`text-editor-text-secondary transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            className={`text-q-text-secondary transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                         />
                     </div>
                 </div>
 
                 {/* Expanded Config Panel */}
                 {isExpanded && !readOnly && (
-                    <div className="px-4 pb-4 pt-1 border-t border-editor-border/30 space-y-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="px-4 pb-4 pt-1 border-t border-q-border/30 space-y-3" onClick={(e) => e.stopPropagation()}>
                         {/* Label edit for all types */}
                         <div>
-                            <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.stepName')}</label>
+                            <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.stepName')}</label>
                             <input
                                 type="text"
                                 value={step.label}
                                 onChange={(e) => onUpdate({ ...step, label: e.target.value })}
-                                className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                             />
                         </div>
 
@@ -227,22 +227,22 @@ const WorkflowNode: React.FC<{
                         {step.type === 'email' && (
                             <>
                                 <div>
-                                    <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.emailConfig.subject')}</label>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.emailConfig.subject')}</label>
                                     <input
                                         type="text"
                                         value={step.emailConfig?.subject || ''}
                                         onChange={(e) => onUpdate({ ...step, emailConfig: { ...step.emailConfig!, subject: e.target.value } })}
-                                        className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                         placeholder={t('adminEmail.automations.emailConfig.subjectPlaceholder')}
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.emailConfig.previewText')}</label>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.emailConfig.previewText')}</label>
                                     <input
                                         type="text"
                                         value={step.emailConfig?.previewText || ''}
                                         onChange={(e) => onUpdate({ ...step, emailConfig: { ...step.emailConfig!, previewText: e.target.value } })}
-                                        className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                         placeholder={t('adminEmail.automations.emailConfig.previewTextPlaceholder')}
                                     />
                                 </div>
@@ -268,22 +268,22 @@ const WorkflowNode: React.FC<{
                         {step.type === 'delay' && (
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.delayConfig.waitTime')}</label>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.delayConfig.waitTime')}</label>
                                     <input
                                         type="number"
                                         value={step.delayConfig?.delayMinutes || 60}
                                         onChange={(e) => onUpdate({ ...step, delayConfig: { ...step.delayConfig!, delayMinutes: parseInt(e.target.value) || 0 } })}
-                                        className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                         min={0}
                                     />
-                                    <p className="text-[10px] text-editor-text-secondary mt-1">= {formatDelay(step.delayConfig?.delayMinutes || 0)}</p>
+                                    <p className="text-[10px] text-q-text-secondary mt-1">= {formatDelay(step.delayConfig?.delayMinutes || 0)}</p>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.delayConfig.type')}</label>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.delayConfig.type')}</label>
                                     <select
                                         value={step.delayConfig?.delayType || 'fixed'}
                                         onChange={(e) => onUpdate({ ...step, delayConfig: { ...step.delayConfig!, delayType: e.target.value as 'fixed' | 'until-time' } })}
-                                        className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                     >
                                         <option value="fixed">{t('adminEmail.automations.delayConfig.fixedTime')}</option>
                                         <option value="until-time">{t('adminEmail.automations.delayConfig.untilTimeOfDay')}</option>
@@ -294,11 +294,11 @@ const WorkflowNode: React.FC<{
 
                         {step.type === 'condition' && (
                             <div>
-                                <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.conditionConfig.conditionType')}</label>
+                                <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.conditionConfig.conditionType')}</label>
                                 <select
                                     value={step.conditionConfig?.conditionType || 'email-opened'}
                                     onChange={(e) => onUpdate({ ...step, conditionConfig: { ...step.conditionConfig!, conditionType: e.target.value as any } })}
-                                    className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                    className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                 >
                                     <option value="email-opened">{t('adminEmail.automations.conditionConfig.emailOpened')}</option>
                                     <option value="email-clicked">{t('adminEmail.automations.conditionConfig.emailClicked')}</option>
@@ -311,7 +311,7 @@ const WorkflowNode: React.FC<{
                                         type="text"
                                         value={step.conditionConfig?.tagName || ''}
                                         onChange={(e) => onUpdate({ ...step, conditionConfig: { ...step.conditionConfig!, tagName: e.target.value } })}
-                                        className="w-full mt-2 bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full mt-2 bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                         placeholder={t('adminEmail.automations.conditionConfig.tagPlaceholder')}
                                     />
                                 )}
@@ -321,11 +321,11 @@ const WorkflowNode: React.FC<{
                         {step.type === 'action' && (
                             <>
                                 <div>
-                                    <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.actionConfig.actionType')}</label>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.actionConfig.actionType')}</label>
                                     <select
                                         value={step.actionConfig?.actionType || 'add-tag'}
                                         onChange={(e) => onUpdate({ ...step, actionConfig: { ...step.actionConfig!, actionType: e.target.value as any } })}
-                                        className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                        className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                     >
                                         <option value="add-tag">{t('adminEmail.automations.actionConfig.addTag')}</option>
                                         <option value="remove-tag">{t('adminEmail.automations.actionConfig.removeTag')}</option>
@@ -336,12 +336,12 @@ const WorkflowNode: React.FC<{
                                 </div>
                                 {(step.actionConfig?.actionType === 'add-tag' || step.actionConfig?.actionType === 'remove-tag') && (
                                     <div>
-                                        <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.conditionConfig.tagName')}</label>
+                                        <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1 block">{t('adminEmail.automations.conditionConfig.tagName')}</label>
                                         <input
                                             type="text"
                                             value={step.actionConfig?.tagName || ''}
                                             onChange={(e) => onUpdate({ ...step, actionConfig: { ...step.actionConfig!, tagName: e.target.value } })}
-                                            className="w-full bg-editor-bg/60 border border-editor-border/50 rounded-lg px-3 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                                            className="w-full bg-q-bg/60 border border-q-border/50 rounded-lg px-3 py-1.5 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                                             placeholder={t('adminEmail.automations.conditionConfig.tagPlaceholder')}
                                         />
                                     </div>
@@ -357,7 +357,7 @@ const WorkflowNode: React.FC<{
                 <div className="flex justify-center mt-1 -mb-1">
                     <div className="w-0.5 h-4 bg-gradient-to-b from-editor-border/50 to-editor-border" />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                        <ArrowRight size={10} className="text-editor-border rotate-90" />
+                        <ArrowRight size={10} className="text-q-border rotate-90" />
                     </div>
                 </div>
             )}
@@ -386,8 +386,8 @@ const AddStepButton: React.FC<{
         <div className="relative flex justify-center my-2">
             <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-editor-bg border border-dashed border-editor-border/60 rounded-lg
-                    text-xs text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/40 transition-all group"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-q-bg border border-dashed border-q-border/60 rounded-lg
+                    text-xs text-q-text-secondary hover:text-q-accent hover:border-q-accent/40 transition-all group"
             >
                 <Plus size={14} className="group-hover:rotate-90 transition-transform duration-200" />
                 {t('adminEmail.automations.addStep')}
@@ -396,19 +396,19 @@ const AddStepButton: React.FC<{
             {open && (
                 <>
                     <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-                    <div className="absolute top-full mt-1 z-40 bg-editor-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden w-56">
+                    <div className="absolute top-full mt-1 z-40 bg-q-bg border border-q-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden w-56">
                         {options.map(opt => (
                             <button
                                 key={opt.type}
                                 onClick={() => { onAdd(opt.type); setOpen(false); }}
-                                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-editor-panel-bg transition-colors text-left"
+                                className="flex items-center gap-3 w-full px-4 py-3 hover:bg-q-surface transition-colors text-left"
                             >
                                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getNodeColor(opt.type)} flex items-center justify-center text-white flex-shrink-0`}>
                                     {opt.icon}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-editor-text-primary">{opt.label}</p>
-                                    <p className="text-[10px] text-editor-text-secondary">{opt.desc}</p>
+                                    <p className="text-sm font-medium text-q-text">{opt.label}</p>
+                                    <p className="text-[10px] text-q-text-secondary">{opt.desc}</p>
                                 </div>
                             </button>
                         ))}
@@ -571,14 +571,14 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                 {/* Builder Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <button onClick={handleCloseBuilder} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors">
-                            <X size={20} className="text-editor-text-secondary" />
+                        <button onClick={handleCloseBuilder} className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors">
+                            <X size={20} className="text-q-text-secondary" />
                         </button>
                         <div>
-                            <h2 className="text-lg font-bold text-editor-text-primary">
+                            <h2 className="text-lg font-bold text-q-text">
                                 {isEditing ? t('adminEmail.automations.editAutomation') : t('adminEmail.automations.newAutomation')}
                             </h2>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-xs text-q-text-secondary">
                                 {isEditing ? t('adminEmail.automations.modifyFlow') : t('adminEmail.automations.setupFlow')}
                             </p>
                         </div>
@@ -586,7 +586,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleCloseBuilder}
-                            className="px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            className="px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors"
                         >
                             {t('adminEmail.automations.cancel')}
                         </button>
@@ -605,37 +605,37 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left: Config Panel */}
                     <div className="space-y-4">
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5 space-y-4">
-                            <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider">{t('adminEmail.automations.config')}</h3>
+                        <div className="bg-q-surface border border-q-border rounded-xl p-5 space-y-4">
+                            <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider">{t('adminEmail.automations.config')}</h3>
 
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.name')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.name')}</label>
                                 <input
                                     type="text"
                                     value={newAutomation.name}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                                     placeholder={t('adminEmail.automations.namePlaceholder')}
                                 />
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.description')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.description')}</label>
                                 <textarea
                                     value={newAutomation.description}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, description: e.target.value }))}
                                     rows={2}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
                                     placeholder={t('adminEmail.automations.descPlaceholder')}
                                 />
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.category')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.category')}</label>
                                 <select
                                     value={newAutomation.category}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, category: e.target.value as AutomationCategory }))}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                                 >
                                     <option value="lifecycle">🔄 {t('adminEmail.automations.catLifecycle')}</option>
                                     <option value="conversion">💰 {t('adminEmail.automations.catConversion')}</option>
@@ -645,11 +645,11 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.targetAudience')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.targetAudience')}</label>
                                 <select
                                     value={newAutomation.audienceId}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, audienceId: e.target.value }))}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                                 >
                                     <option value="">{t('adminEmail.automations.allMatchingTrigger')}</option>
                                     {audiences.map(a => (
@@ -659,11 +659,11 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.initialStatus')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">{t('adminEmail.automations.initialStatus')}</label>
                                 <select
                                     value={newAutomation.status}
                                     onChange={e => setNewAutomation(prev => ({ ...prev, status: e.target.value as any }))}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-xl px-4 py-2.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                                    className="w-full bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                                 >
                                     <option value="draft">{t('adminEmail.automations.draftStatus')}</option>
                                     <option value="active">{t('adminEmail.automations.activeStatus')}</option>
@@ -673,24 +673,24 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                         </div>
 
                         {/* Flow summary */}
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5">
-                            <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider mb-3">{t('adminEmail.automations.flowSummary')}</h3>
+                        <div className="bg-q-surface border border-q-border rounded-xl p-5">
+                            <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider mb-3">{t('adminEmail.automations.flowSummary')}</h3>
                             <div className="space-y-2 text-sm">
-                                <div className="flex justify-between text-editor-text-secondary">
+                                <div className="flex justify-between text-q-text-secondary">
                                     <span>{t('adminEmail.automations.totalSteps')}</span>
-                                    <span className="text-editor-text-primary font-medium">{newAutomation.steps.length}</span>
+                                    <span className="text-q-text font-medium">{newAutomation.steps.length}</span>
                                 </div>
-                                <div className="flex justify-between text-editor-text-secondary">
+                                <div className="flex justify-between text-q-text-secondary">
                                     <span>{t('adminEmail.automations.emails')}</span>
-                                    <span className="text-editor-text-primary font-medium">{newAutomation.steps.filter(s => s.type === 'email').length}</span>
+                                    <span className="text-q-text font-medium">{newAutomation.steps.filter(s => s.type === 'email').length}</span>
                                 </div>
-                                <div className="flex justify-between text-editor-text-secondary">
+                                <div className="flex justify-between text-q-text-secondary">
                                     <span>{t('adminEmail.automations.totalDuration')}</span>
-                                    <span className="text-editor-text-primary font-medium">{calculateWorkflowDuration(newAutomation.steps)}</span>
+                                    <span className="text-q-text font-medium">{calculateWorkflowDuration(newAutomation.steps)}</span>
                                 </div>
-                                <div className="flex justify-between text-editor-text-secondary">
+                                <div className="flex justify-between text-q-text-secondary">
                                     <span>{t('adminEmail.automations.conditions')}</span>
-                                    <span className="text-editor-text-primary font-medium">{newAutomation.steps.filter(s => s.type === 'condition').length}</span>
+                                    <span className="text-q-text font-medium">{newAutomation.steps.filter(s => s.type === 'condition').length}</span>
                                 </div>
                             </div>
                         </div>
@@ -698,25 +698,25 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
                     {/* Center + Right: Visual Workflow Builder */}
                     <div className="lg:col-span-2">
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 min-h-[500px]">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6 min-h-[500px]">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-                                    <Zap size={14} className="text-editor-accent" />
+                                <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                                    <Zap size={14} className="text-q-accent" />
                                     {t('adminEmail.automations.workflow')}
                                 </h3>
-                                <span className="text-[10px] text-editor-text-secondary bg-editor-bg px-2 py-0.5 rounded-md">
+                                <span className="text-[10px] text-q-text-secondary bg-q-bg px-2 py-0.5 rounded-md">
                                     {t('adminEmail.automations.steps', { count: newAutomation.steps.length })}
                                 </span>
                             </div>
 
                             {/* Timeline indicator */}
                             {newAutomation.steps.length > 0 && (
-                                <div className="flex items-center gap-2 mb-5 px-3 py-2 bg-editor-bg/50 rounded-lg border border-editor-border/30">
-                                    <Clock size={12} className="text-editor-text-secondary flex-shrink-0" />
-                                    <span className="text-[10px] text-editor-text-secondary">{t('adminEmail.automations.flowDuration')}</span>
-                                    <span className="text-[10px] font-medium text-editor-text-primary">{calculateWorkflowDuration(newAutomation.steps)}</span>
-                                    <span className="text-[10px] text-editor-text-secondary mx-1">•</span>
-                                    <span className="text-[10px] text-editor-text-secondary">{newAutomation.steps.filter(s => s.type === 'email').length} {t('adminEmail.automations.emails').toLowerCase()}</span>
+                                <div className="flex items-center gap-2 mb-5 px-3 py-2 bg-q-bg/50 rounded-lg border border-q-border/30">
+                                    <Clock size={12} className="text-q-text-secondary flex-shrink-0" />
+                                    <span className="text-[10px] text-q-text-secondary">{t('adminEmail.automations.flowDuration')}</span>
+                                    <span className="text-[10px] font-medium text-q-text">{calculateWorkflowDuration(newAutomation.steps)}</span>
+                                    <span className="text-[10px] text-q-text-secondary mx-1">•</span>
+                                    <span className="text-[10px] text-q-text-secondary">{newAutomation.steps.filter(s => s.type === 'email').length} {t('adminEmail.automations.emails').toLowerCase()}</span>
                                 </div>
                             )}
 
@@ -761,9 +761,9 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 {/* Empty state */}
                                 {newAutomation.steps.length === 0 && (
                                     <div className="text-center py-12">
-                                        <Zap size={40} className="mx-auto text-editor-text-secondary/30 mb-3" />
-                                        <p className="text-sm text-editor-text-secondary mb-1">{t('adminEmail.automations.noStepsInFlow')}</p>
-                                        <p className="text-xs text-editor-text-secondary/60">{t('adminEmail.automations.useAddStepToStart')}</p>
+                                        <Zap size={40} className="mx-auto text-q-text-secondary/30 mb-3" />
+                                        <p className="text-sm text-q-text-secondary mb-1">{t('adminEmail.automations.noStepsInFlow')}</p>
+                                        <p className="text-xs text-q-text-secondary/60">{t('adminEmail.automations.useAddStepToStart')}</p>
                                     </div>
                                 )}
                             </div>
@@ -783,13 +783,13 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-lg font-bold text-editor-text-primary">{t('adminEmail.automations.title')}</h2>
-                    <p className="text-sm text-editor-text-secondary">{t('adminEmail.automations.subtitle')}</p>
+                    <h2 className="text-lg font-bold text-q-text">{t('adminEmail.automations.title')}</h2>
+                    <p className="text-sm text-q-text-secondary">{t('adminEmail.automations.subtitle')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowTemplateGallery(!showTemplateGallery)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-editor-panel-bg border border-editor-border text-sm font-medium text-editor-text-primary rounded-xl hover:border-editor-accent/30 transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-q-surface border border-q-border text-sm font-medium text-q-text rounded-xl hover:border-q-accent/30 transition-all"
                     >
                         <Sparkles size={16} className="text-purple-400" />
                         {t('adminEmail.automations.templates')}
@@ -820,15 +820,15 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                     <div key={i} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
                         <div className="flex items-center gap-2 mb-2">
                             <span className={stat.textColor}>{stat.icon}</span>
-                            <span className="text-xs font-medium text-editor-text-secondary uppercase tracking-wider">{stat.label}</span>
+                            <span className="text-xs font-medium text-q-text-secondary uppercase tracking-wider">{stat.label}</span>
                         </div>
-                        <p className="text-2xl font-bold text-editor-text-primary">{stat.value}</p>
+                        <p className="text-2xl font-bold text-q-text">{stat.value}</p>
                     </div>
                 ))}
             </div>
 
             {/* Category Tabs + Search */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
+            <div className="bg-q-surface border border-q-border rounded-xl p-4">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     {/* Category pills */}
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -838,8 +838,8 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 onClick={() => setCategoryFilter(cat.id)}
                                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                                     categoryFilter === cat.id
-                                        ? 'bg-editor-accent/20 text-editor-accent border border-editor-accent/30'
-                                        : 'bg-editor-bg/50 text-editor-text-secondary border border-transparent hover:text-editor-text-primary hover:bg-editor-bg'
+                                        ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                        : 'bg-q-bg/50 text-q-text-secondary border border-transparent hover:text-q-text hover:bg-q-bg'
                                 }`}
                             >
                                 {cat.label}
@@ -848,17 +848,17 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                         ))}
                     </div>
                     {/* Search */}
-                    <div className="flex-1 flex items-center gap-2 bg-editor-bg/50 rounded-lg px-3 py-2 md:max-w-xs md:ml-auto">
-                        <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                    <div className="flex-1 flex items-center gap-2 bg-q-bg/50 rounded-lg px-3 py-2 md:max-w-xs md:ml-auto">
+                        <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder={t('adminEmail.automations.searchAutomations')}
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm text-editor-text-primary placeholder:text-editor-text-secondary"
+                            className="flex-1 bg-transparent outline-none text-sm text-q-text placeholder:text-q-text-secondary"
                         />
                         {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary">
+                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text">
                                 <X size={14} />
                             </button>
                         )}
@@ -868,14 +868,14 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
             {/* Template Gallery (collapsible) */}
             {showTemplateGallery && (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 animate-in slide-in-from-top-2 duration-300">
+                <div className="bg-q-surface border border-q-border rounded-xl p-6 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                             <Sparkles size={14} className="text-purple-400" />
                             {t('adminEmail.automations.templates')}
                         </h3>
-                        <button onClick={() => setShowTemplateGallery(false)} className="p-1.5 hover:bg-editor-border/40 rounded-lg">
-                            <X size={16} className="text-editor-text-secondary" />
+                        <button onClick={() => setShowTemplateGallery(false)} className="p-1.5 hover:bg-q-surface-overlay/40 rounded-lg">
+                            <X size={16} className="text-q-text-secondary" />
                         </button>
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
@@ -883,21 +883,21 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             <button
                                 key={template.id}
                                 onClick={() => handleSelectTemplateAndOpen(template)}
-                                className="flex flex-col items-start gap-2.5 p-4 bg-editor-bg border border-editor-border rounded-xl
-                                    hover:border-editor-accent/30 hover:shadow-lg hover:shadow-black/10 transition-all text-left group"
+                                className="flex flex-col items-start gap-2.5 p-4 bg-q-bg border border-q-border rounded-xl
+                                    hover:border-q-accent/30 hover:shadow-lg hover:shadow-black/10 transition-all text-left group"
                             >
                                 <div className={`p-2.5 rounded-xl ${template.color} transition-transform group-hover:scale-110`}>
                                     {template.icon}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-editor-text-primary">{template.name}</p>
-                                    <p className="text-[10px] text-editor-text-secondary mt-0.5 line-clamp-2">{template.description}</p>
+                                    <p className="text-sm font-semibold text-q-text">{template.name}</p>
+                                    <p className="text-[10px] text-q-text-secondary mt-0.5 line-clamp-2">{template.description}</p>
                                 </div>
                                 <div className="flex items-center gap-2 w-full">
                                     <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getCategoryColor(template.category)}`}>
                                         {getCategoryLabel(template.category)}
                                     </span>
-                                    <span className="text-[9px] text-editor-text-secondary ml-auto">{t('adminEmail.automations.steps', { count: template.defaultSteps.length })}</span>
+                                    <span className="text-[9px] text-q-text-secondary ml-auto">{t('adminEmail.automations.steps', { count: template.defaultSteps.length })}</span>
                                 </div>
                             </button>
                         ))}
@@ -907,12 +907,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
             {/* Automations List */}
             {filteredAutomations.length > 0 ? (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl overflow-hidden">
+                <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
                     <div className="divide-y divide-editor-border">
                         {filteredAutomations.map(auto => (
                             <div
                                 key={auto.id}
-                                className="flex items-center gap-4 px-5 py-4 hover:bg-editor-bg/50 transition-colors cursor-pointer group"
+                                className="flex items-center gap-4 px-5 py-4 hover:bg-q-bg/50 transition-colors cursor-pointer group"
                                 onClick={() => setDetailAutomation(auto)}
                             >
                                 {/* Icon */}
@@ -925,14 +925,14 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <p className="text-sm font-semibold text-editor-text-primary truncate">{auto.name}</p>
+                                        <p className="text-sm font-semibold text-q-text truncate">{auto.name}</p>
                                         {auto.category && (
                                             <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${getCategoryColor(auto.category)}`}>
                                                 {getCategoryLabel(auto.category)}
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-3 text-xs text-editor-text-secondary mt-0.5">
+                                    <div className="flex items-center gap-3 text-xs text-q-text-secondary mt-0.5">
                                         <span className="flex items-center gap-1">
                                             <Zap size={10} />
                                             {formatTriggerEvent(auto.triggerConfig?.event || '')}
@@ -953,17 +953,17 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                 </div>
 
                                 {/* Stats */}
-                                <div className="hidden md:flex items-center gap-6 text-xs text-editor-text-secondary">
+                                <div className="hidden md:flex items-center gap-6 text-xs text-q-text-secondary">
                                     <div className="text-center">
-                                        <p className="font-medium text-editor-text-primary text-sm">{(auto.stats?.triggered || 0).toLocaleString()}</p>
+                                        <p className="font-medium text-q-text text-sm">{(auto.stats?.triggered || 0).toLocaleString()}</p>
                                         <p>{t('adminEmail.automations.activations')}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-medium text-editor-text-primary text-sm">{(auto.stats?.sent || 0).toLocaleString()}</p>
+                                        <p className="font-medium text-q-text text-sm">{(auto.stats?.sent || 0).toLocaleString()}</p>
                                         <p>{t('adminEmail.analytics.sentCount').toLowerCase()}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-medium text-editor-text-primary text-sm">
+                                        <p className="font-medium text-q-text text-sm">
                                             {auto.stats?.sent > 0 ? `${((auto.stats.opened / auto.stats.sent) * 100).toFixed(1)}%` : '—'}
                                         </p>
                                         <p>{t('adminEmail.analytics.openRateLabel').toLowerCase()}</p>
@@ -978,24 +978,24 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                     </span>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); toggleAutomationStatus(auto); }}
-                                        className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title={auto.status === 'active' ? 'Pausar' : 'Activar'}
                                     >
                                         {auto.status === 'active' ? <Pause size={14} className="text-amber-400" /> : <Play size={14} className="text-green-400" />}
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openEditAutomation(auto); }}
-                                        className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title="Editar"
                                     >
-                                        <Edit2 size={14} className="text-editor-text-secondary" />
+                                        <Edit2 size={14} className="text-q-text-secondary" />
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); duplicateAutomation(auto); }}
-                                        className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title="Duplicar"
                                     >
-                                        <Copy size={14} className="text-editor-text-secondary" />
+                                        <Copy size={14} className="text-q-text-secondary" />
                                     </button>
                                     <button
                                         onClick={(e) => {
@@ -1021,12 +1021,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                     </div>
                 </div>
             ) : (
-                <div className="text-center py-16 bg-editor-panel-bg border border-editor-border rounded-xl">
-                    <Zap size={48} className="mx-auto text-editor-text-secondary mb-4 opacity-30" />
-                    <h3 className="text-lg font-medium text-editor-text-primary mb-2">
+                <div className="text-center py-16 bg-q-surface border border-q-border rounded-xl">
+                    <Zap size={48} className="mx-auto text-q-text-secondary mb-4 opacity-30" />
+                    <h3 className="text-lg font-medium text-q-text mb-2">
                         {searchTerm || categoryFilter !== 'all' ? 'No se encontraron automatizaciones' : 'No hay automatizaciones'}
                     </h3>
-                    <p className="text-editor-text-secondary text-sm mb-6 max-w-md mx-auto">
+                    <p className="text-q-text-secondary text-sm mb-6 max-w-md mx-auto">
                         {searchTerm || categoryFilter !== 'all'
                             ? 'Ajusta los filtros para ver más resultados'
                             : 'Crea flujos automáticos para enviar emails basados en el comportamiento de tus clientes'}
@@ -1034,7 +1034,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                     <div className="flex items-center justify-center gap-3">
                         <button
                             onClick={() => setShowTemplateGallery(true)}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-editor-bg border border-editor-border text-sm font-medium text-editor-text-primary rounded-xl hover:border-editor-accent/30 transition-all"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-q-bg border border-q-border text-sm font-medium text-q-text rounded-xl hover:border-q-accent/30 transition-all"
                         >
                             <Sparkles size={16} className="text-purple-400" />
                             Usar Template
@@ -1059,11 +1059,11 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                 <div className="fixed inset-0 z-[180] flex" onClick={() => setDetailAutomation(null)}>
                     <div className="flex-1 bg-black/40 backdrop-blur-sm" />
                     <div
-                        className="w-full max-w-lg bg-editor-bg border-l border-editor-border shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
+                        className="w-full max-w-lg bg-q-bg border-l border-q-border shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Panel Header */}
-                        <div className="sticky top-0 z-10 bg-editor-bg border-b border-editor-border p-5">
+                        <div className="sticky top-0 z-10 bg-q-bg border-b border-q-border p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
@@ -1072,12 +1072,12 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                         {AUTOMATION_TEMPLATES.find(t => t.type === detailAutomation.type)?.icon || <Zap size={20} />}
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-editor-text-primary truncate">{detailAutomation.name}</h3>
-                                        <p className="text-xs text-editor-text-secondary">{formatTriggerEvent(detailAutomation.triggerConfig?.event || '')}</p>
+                                        <h3 className="text-lg font-bold text-q-text truncate">{detailAutomation.name}</h3>
+                                        <p className="text-xs text-q-text-secondary">{formatTriggerEvent(detailAutomation.triggerConfig?.event || '')}</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setDetailAutomation(null)} className="p-2 hover:bg-editor-border/40 rounded-lg transition-colors">
-                                    <X size={18} className="text-editor-text-secondary" />
+                                <button onClick={() => setDetailAutomation(null)} className="p-2 hover:bg-q-surface-overlay/40 rounded-lg transition-colors">
+                                    <X size={18} className="text-q-text-secondary" />
                                 </button>
                             </div>
                         </div>
@@ -1085,7 +1085,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                         <div className="p-5 space-y-6">
                             {/* Status */}
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.status')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.status')}</label>
                                 <div className="flex items-center gap-3">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border font-medium ${getStatusColor(detailAutomation.status)}`}>
                                         {getStatusIcon(detailAutomation.status)}
@@ -1107,8 +1107,8 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             {/* Description */}
                             {detailAutomation.description && (
                                 <div>
-                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.automations.description')}</label>
-                                    <p className="text-sm text-editor-text-primary bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-3">
+                                    <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.automations.description')}</label>
+                                    <p className="text-sm text-q-text bg-q-surface border border-q-border rounded-xl px-4 py-3">
                                         {detailAutomation.description}
                                     </p>
                                 </div>
@@ -1116,7 +1116,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
                             {/* Performance Stats */}
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 block flex items-center gap-1.5">
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 block flex items-center gap-1.5">
                                     <BarChart3 size={14} /> Rendimiento
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -1138,9 +1138,9 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                             color: 'text-emerald-400',
                                         },
                                     ].map((s, i) => (
-                                        <div key={i} className="bg-editor-panel-bg border border-editor-border rounded-xl p-3">
+                                        <div key={i} className="bg-q-surface border border-q-border rounded-xl p-3">
                                             <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                                            <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider mt-0.5">{s.label}</p>
+                                            <p className="text-[10px] text-q-text-secondary uppercase tracking-wider mt-0.5">{s.label}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -1149,7 +1149,7 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                             {/* Workflow Steps Preview */}
                             {detailAutomation.steps && detailAutomation.steps.length > 0 && (
                                 <div>
-                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 block flex items-center gap-1.5">
+                                    <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 block flex items-center gap-1.5">
                                         <Zap size={14} /> {t('adminEmail.automations.workflow')} ({t('adminEmail.automations.steps', { count: detailAutomation.steps.length })})
                                     </label>
                                     <div className="relative max-w-sm space-y-0">
@@ -1170,10 +1170,10 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
                                             />
                                         ))}
                                     </div>
-                                    <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-editor-bg/50 rounded-lg border border-editor-border/30">
-                                        <Clock size={12} className="text-editor-text-secondary" />
-                                        <span className="text-[10px] text-editor-text-secondary">Duración total:</span>
-                                        <span className="text-[10px] font-medium text-editor-text-primary">
+                                    <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-q-bg/50 rounded-lg border border-q-border/30">
+                                        <Clock size={12} className="text-q-text-secondary" />
+                                        <span className="text-[10px] text-q-text-secondary">Duración total:</span>
+                                        <span className="text-[10px] font-medium text-q-text">
                                             {calculateWorkflowDuration(detailAutomation.steps)}
                                         </span>
                                     </div>
@@ -1182,48 +1182,48 @@ const AutomationsTab: React.FC<AutomationsTabProps> = ({
 
                             {/* Details */}
                             <div>
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.details')}</label>
-                                <div className="bg-editor-panel-bg border border-editor-border rounded-xl divide-y divide-editor-border">
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.details')}</label>
+                                <div className="bg-q-surface border border-q-border rounded-xl divide-y divide-editor-border">
                                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                                        <span className="text-editor-text-secondary">{t('adminEmail.detailPanel.type')}</span>
-                                        <span className="text-editor-text-primary capitalize">{detailAutomation.type}</span>
+                                        <span className="text-q-text-secondary">{t('adminEmail.detailPanel.type')}</span>
+                                        <span className="text-q-text capitalize">{detailAutomation.type}</span>
                                     </div>
                                     {detailAutomation.category && (
                                         <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                                            <span className="text-editor-text-secondary">{t('adminEmail.automations.category')}</span>
+                                            <span className="text-q-text-secondary">{t('adminEmail.automations.category')}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded-md border ${getCategoryColor(detailAutomation.category)}`}>
                                                 {getCategoryLabel(detailAutomation.category)}
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                                        <span className="text-editor-text-secondary">Trigger</span>
-                                        <span className="text-editor-text-primary text-xs">{formatTriggerEvent(detailAutomation.triggerConfig?.event || '')}</span>
+                                        <span className="text-q-text-secondary">Trigger</span>
+                                        <span className="text-q-text text-xs">{formatTriggerEvent(detailAutomation.triggerConfig?.event || '')}</span>
                                     </div>
                                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                                        <span className="text-editor-text-secondary">{t('adminEmail.detailPanel.created')}</span>
-                                        <span className="text-editor-text-primary">{formatDate(detailAutomation.createdAt)}</span>
+                                        <span className="text-q-text-secondary">{t('adminEmail.detailPanel.created')}</span>
+                                        <span className="text-q-text">{formatDate(detailAutomation.createdAt)}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Actions */}
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.actions')}</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">{t('adminEmail.detailPanel.actions')}</label>
                                 <button
                                     onClick={() => { setDetailAutomation(null); openEditAutomation(detailAutomation); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 bg-editor-panel-bg border border-editor-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left"
+                                    className="w-full flex items-center gap-3 px-4 py-3 bg-q-surface border border-q-border rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left"
                                 >
                                     <Edit2 size={18} className="text-purple-400" />
                                     <div>
-                                        <p className="text-sm font-medium text-editor-text-primary">{t('adminEmail.automations.editAutomation')}</p>
-                                        <p className="text-xs text-editor-text-secondary">{t('adminEmail.automations.editFlow')}</p>
+                                        <p className="text-sm font-medium text-q-text">{t('adminEmail.automations.editAutomation')}</p>
+                                        <p className="text-xs text-q-text-secondary">{t('adminEmail.automations.editFlow')}</p>
                                     </div>
                                 </button>
                                 <div className="flex gap-2 pt-2">
                                     <button
                                         onClick={() => { duplicateAutomation(detailAutomation); setDetailAutomation(null); }}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-sm text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-q-text-secondary hover:text-q-text hover:border-q-accent/30 transition-all"
                                     >
                                         <Copy size={14} /> {t('adminEmail.detailPanel.duplicate')}
                                     </button>

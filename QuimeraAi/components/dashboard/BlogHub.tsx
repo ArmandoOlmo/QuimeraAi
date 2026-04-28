@@ -200,16 +200,16 @@ const BlogHub: React.FC = () => {
     const catColors = CATEGORY_COLORS[selectedArticle.category] || CATEGORY_COLORS.blog;
 
     return (
-      <div className="flex h-screen bg-background text-foreground">
+      <div className="flex h-screen bg-q-bg text-foreground">
         <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+          <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
             <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -221,7 +221,7 @@ const BlogHub: React.FC = () => {
                 href={`/blog/${selectedArticle.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-secondary/50 hover:bg-secondary text-q-text-muted hover:text-foreground rounded-lg transition-colors"
               >
                 <ExternalLink size={14} />
                 <span className="hidden sm:inline">{t('blog.viewPublic', 'Ver en la web')}</span>
@@ -243,7 +243,7 @@ const BlogHub: React.FC = () => {
                 </>
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/10 via-secondary/20 to-primary/5 flex items-center justify-center">
-                  <Newspaper className="w-16 h-16 text-muted-foreground/20" />
+                  <Newspaper className="w-16 h-16 text-q-text-muted/20" />
                 </div>
               )}
 
@@ -255,7 +255,7 @@ const BlogHub: React.FC = () => {
                   {t(`blog.categories.${selectedArticle.category}`, selectedArticle.category)}
                 </span>
                 {selectedArticle.showDate !== false && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs text-q-text-muted bg-q-bg/80 backdrop-blur-sm px-3 py-1 rounded-full">
                     <Calendar size={12} />
                     {formatDate(selectedArticle.publishedAt || selectedArticle.createdAt, currentLang)}
                   </span>
@@ -268,16 +268,16 @@ const BlogHub: React.FC = () => {
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight tracking-tight">
                 {selectedArticle.title}
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-lg text-q-text-muted mb-8 leading-relaxed">
                 {selectedArticle.excerpt}
               </p>
 
               {/* Author & Read time */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-border mb-10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-q-border mb-10">
                 {selectedArticle.showAuthor !== false && (
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary/50 to-primary/20 p-[2px]">
-                      <div className="w-full h-full bg-background rounded-full overflow-hidden flex items-center justify-center">
+                      <div className="w-full h-full bg-q-bg rounded-full overflow-hidden flex items-center justify-center">
                         {selectedArticle.authorImage ? (
                           <img
                             src={selectedArticle.authorImage}
@@ -285,18 +285,18 @@ const BlogHub: React.FC = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <User size={16} className="text-muted-foreground" />
+                          <User size={16} className="text-q-text-muted" />
                         )}
                       </div>
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{selectedArticle.author}</p>
-                      <p className="text-xs text-muted-foreground">{t('blog.author', 'Autor')}</p>
+                      <p className="text-xs text-q-text-muted">{t('blog.author', 'Autor')}</p>
                     </div>
                   </div>
                 )}
                 {selectedArticle.readTime && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm text-q-text-muted bg-secondary/50 px-3 py-1.5 rounded-lg">
                     <Clock size={14} />
                     <span>{t('blog.minRead', { time: selectedArticle.readTime })}</span>
                   </div>
@@ -309,11 +309,11 @@ const BlogHub: React.FC = () => {
                   prose-headings:font-bold prose-headings:text-foreground
                   prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
                   prose-h3:text-xl prose-h3:mt-8
-                  prose-p:leading-relaxed prose-p:text-muted-foreground
-                  prose-li:text-muted-foreground
+                  prose-p:leading-relaxed prose-p:text-q-text-muted
+                  prose-li:text-q-text-muted
                   prose-img:rounded-xl prose-img:shadow-lg
                   prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
-                  prose-hr:border-border
+                  prose-hr:border-q-border
                   prose-strong:text-foreground
                   prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(articleHtml) }}
@@ -321,9 +321,9 @@ const BlogHub: React.FC = () => {
 
               {/* Tags */}
               {selectedArticle.tags && selectedArticle.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-border">
+                <div className="mt-12 pt-8 border-t border-q-border">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Tag size={16} className="text-muted-foreground" />
+                    <Tag size={16} className="text-q-text-muted" />
                     {selectedArticle.tags.map((tag) => (
                       <button
                         key={tag}
@@ -331,7 +331,7 @@ const BlogHub: React.FC = () => {
                           setSearchQuery(tag);
                           setSelectedArticle(null);
                         }}
-                        className="px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-sm text-muted-foreground hover:text-foreground rounded-lg border border-border transition-colors"
+                        className="px-3 py-1.5 bg-secondary/50 hover:bg-secondary text-sm text-q-text-muted hover:text-foreground rounded-lg border border-q-border transition-colors"
                       >
                         #{tag}
                       </button>
@@ -342,7 +342,7 @@ const BlogHub: React.FC = () => {
 
               {/* Related Articles */}
               {relatedArticles.length > 0 && (
-                <div className="mt-16 pt-8 border-t border-border">
+                <div className="mt-16 pt-8 border-t border-q-border">
                   <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
                     {t('blog.relatedArticles', 'Artículos Relacionados')}
                     <div className="h-px flex-1 bg-border" />
@@ -373,16 +373,16 @@ const BlogHub: React.FC = () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="flex h-screen bg-q-bg text-foreground">
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+        <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors touch-manipulation"
+              className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors touch-manipulation"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -400,18 +400,18 @@ const BlogHub: React.FC = () => {
           {/* Search */}
           <div className="hidden md:flex flex-1 justify-center mx-4">
             <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
-              <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
               <input
                 type="text"
                 placeholder={t('blog.searchPlaceholder', 'Buscar artículos...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-q-text-muted"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                  className="text-q-text-muted hover:text-foreground flex-shrink-0"
                 >
                   <X size={16} />
                 </button>
@@ -426,7 +426,7 @@ const BlogHub: React.FC = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`h-9 w-9 flex items-center justify-center rounded-lg transition-colors ${
-                  showFilters ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                  showFilters ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <Search className="w-4 h-4" />
@@ -437,7 +437,7 @@ const BlogHub: React.FC = () => {
               className={`hidden md:flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                 showFilters || categoryFilter !== 'all'
                   ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground'
+                  : 'bg-secondary/50 hover:bg-secondary text-q-text-muted hover:text-foreground'
               }`}
             >
               <Filter size={14} />
@@ -452,21 +452,21 @@ const BlogHub: React.FC = () => {
 
         {/* Filters panel */}
         {showFilters && (
-          <div className="px-4 sm:px-6 py-3 border-b border-border bg-secondary/20 animate-slide-down">
+          <div className="px-4 sm:px-6 py-3 border-b border-q-border bg-secondary/20 animate-slide-down">
             {/* Mobile search field */}
             <div className="md:hidden mb-3">
-              <div className="flex items-center gap-2 bg-background rounded-lg px-3 py-2 border border-border">
-                <Search className="w-4 h-4 text-muted-foreground" />
+              <div className="flex items-center gap-2 bg-q-bg rounded-lg px-3 py-2 border border-q-border">
+                <Search className="w-4 h-4 text-q-text-muted" />
                 <input
                   type="text"
                   placeholder={t('blog.searchPlaceholder', 'Buscar artículos...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-q-text-muted"
                   autoFocus
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
+                  <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground">
                     <X size={16} />
                   </button>
                 )}
@@ -480,7 +480,7 @@ const BlogHub: React.FC = () => {
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                   categoryFilter === 'all'
                     ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
+                    : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
                 }`}
               >
                 {t('common.all', 'Todos')}
@@ -494,7 +494,7 @@ const BlogHub: React.FC = () => {
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                       categoryFilter === cat
                         ? `${colors.bg} ${colors.text} border ${colors.border} shadow-sm`
-                        : 'bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border'
+                        : 'bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary border border-q-border'
                     }`}
                   >
                     {t(`blog.categories.${cat}`, cat)}
@@ -504,7 +504,7 @@ const BlogHub: React.FC = () => {
               {categoryFilter !== 'all' && (
                 <button
                   onClick={() => setCategoryFilter('all')}
-                  className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 flex-shrink-0"
+                  className="ml-auto text-xs text-q-text-muted hover:text-foreground flex items-center gap-1 flex-shrink-0"
                 >
                   <X size={12} />
                   {t('common.clear', 'Limpiar')}
@@ -524,12 +524,12 @@ const BlogHub: React.FC = () => {
               /* Empty state */
               <div className="text-center py-24">
                 <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Newspaper size={36} className="text-muted-foreground/40" />
+                  <Newspaper size={36} className="text-q-text-muted/40" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">
                   {t('blog.noArticles', 'No hay artículos publicados')}
                 </h3>
-                <p className="text-muted-foreground max-w-md mx-auto">
+                <p className="text-q-text-muted max-w-md mx-auto">
                   {t('blog.comingSoon', 'Próximamente encontrarás contenido interesante aquí. ¡Vuelve pronto!')}
                 </p>
               </div>
@@ -537,12 +537,12 @@ const BlogHub: React.FC = () => {
               /* No results state */
               <div className="text-center py-24">
                 <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search size={36} className="text-muted-foreground/40" />
+                  <Search size={36} className="text-q-text-muted/40" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-3">
                   {t('blog.noResults', 'No se encontraron artículos')}
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-q-text-muted mb-6">
                   {t('blog.tryDifferent', 'Intenta ajustar tu búsqueda o filtros.')}
                 </p>
                 <button
@@ -571,7 +571,7 @@ const BlogHub: React.FC = () => {
                   <div key={group.label}>
                     {/* Month Header */}
                     <div className="flex items-center gap-3 mb-4">
-                      <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                      <h2 className="text-sm font-bold text-q-text-muted uppercase tracking-wider whitespace-nowrap">
                         {group.label}
                       </h2>
                       <div className="h-px flex-1 bg-border" />
@@ -614,7 +614,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
   return (
     <div
       onClick={onClick}
-      className="group relative cursor-pointer rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-500 hover:shadow-lg hover:shadow-primary/5"
+      className="group relative cursor-pointer rounded-2xl overflow-hidden border border-q-border hover:border-primary/30 transition-all duration-500 hover:shadow-lg hover:shadow-primary/5"
     >
       <div className="grid lg:grid-cols-2 gap-0">
         {/* Image */}
@@ -627,7 +627,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/10 via-secondary/20 to-primary/5 flex items-center justify-center">
-              <Newspaper className="w-20 h-20 text-muted-foreground/15" />
+              <Newspaper className="w-20 h-20 text-q-text-muted/15" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-background/80" />
@@ -640,13 +640,13 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8 flex flex-col justify-center bg-card">
+        <div className="p-6 sm:p-8 flex flex-col justify-center bg-q-surface">
           <div className="flex items-center gap-3 mb-4">
             <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${catColors.bg} ${catColors.text} border ${catColors.border}`}>
               {t(`blog.categories.${article.category}`, article.category)}
             </span>
             {article.showDate !== false && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-xs text-q-text-muted">
                 <Calendar size={12} />
                 {formatDate(article.publishedAt || article.createdAt, lang)}
               </span>
@@ -657,7 +657,7 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
             {article.title}
           </h2>
 
-          <p className="text-muted-foreground mb-6 line-clamp-3 leading-relaxed">
+          <p className="text-q-text-muted mb-6 line-clamp-3 leading-relaxed">
             {article.excerpt}
           </p>
 
@@ -668,13 +668,13 @@ const FeaturedArticleHero: React.FC<FeaturedArticleHeroProps> = ({ article, lang
                   {article.authorImage ? (
                     <img src={article.authorImage} alt={article.author} className="w-full h-full object-cover" />
                   ) : (
-                    <User size={14} className="text-muted-foreground" />
+                    <User size={14} className="text-q-text-muted" />
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{article.author}</p>
                   {article.readTime && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <p className="text-xs text-q-text-muted flex items-center gap-1">
                       <Clock size={10} /> {article.readTime} min
                     </p>
                   )}
@@ -709,7 +709,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
   return (
     <article
       onClick={onClick}
-      className="group relative flex flex-col h-full bg-card border border-border hover:border-primary/20 rounded-xl overflow-hidden hover:-translate-y-0.5 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
+      className="group relative flex flex-col h-full bg-q-surface border border-q-border hover:border-primary/20 rounded-xl overflow-hidden hover:-translate-y-0.5 transition-all duration-300 hover:shadow-md hover:shadow-primary/5 cursor-pointer"
     >
       {/* Image */}
       <div className={`relative overflow-hidden bg-secondary/30 ${compact ? 'h-32' : 'h-40 sm:h-44'}`}>
@@ -721,7 +721,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-secondary/50 to-secondary/20 flex items-center justify-center">
-            <FileText className="w-8 h-8 text-muted-foreground/20" />
+            <FileText className="w-8 h-8 text-q-text-muted/20" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent opacity-60" />
@@ -743,7 +743,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
 
       {/* Content */}
       <div className={`flex-1 flex flex-col ${compact ? 'p-3' : 'p-4 sm:p-5'}`}>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+        <div className="flex items-center gap-3 text-xs text-q-text-muted mb-2">
           {article.showDate !== false && (
             <span className="flex items-center gap-1">
               <Calendar size={11} />
@@ -766,22 +766,22 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, lang, compact = fals
         </h3>
 
         {!compact && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3 flex-1">
+          <p className="text-sm text-q-text-muted line-clamp-2 mb-3 flex-1">
             {article.excerpt}
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/50">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-q-border/50">
           {article.showAuthor !== false ? (
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full bg-secondary overflow-hidden flex items-center justify-center flex-shrink-0">
                 {article.authorImage ? (
                   <img src={article.authorImage} alt={article.author} className="w-full h-full object-cover" />
                 ) : (
-                  <User size={10} className="text-muted-foreground" />
+                  <User size={10} className="text-q-text-muted" />
                 )}
               </div>
-              <span className="text-xs text-muted-foreground truncate">{article.author}</span>
+              <span className="text-xs text-q-text-muted truncate">{article.author}</span>
             </div>
           ) : (
             <div />

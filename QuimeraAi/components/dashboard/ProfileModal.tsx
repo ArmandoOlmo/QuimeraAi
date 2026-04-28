@@ -235,11 +235,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
             <>
-                <div className="p-4 sm:p-6 border-b border-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm sm:rounded-t-xl">
+                <div className="p-4 sm:p-6 border-b border-q-border flex justify-between items-center bg-secondary/30 backdrop-blur-sm sm:rounded-t-xl">
                     <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center">
                         {t('profile.title')}
                     </h2>
-                    <button onClick={onClose} className="p-2.5 sm:p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors touch-manipulation">
+                    <button onClick={onClose} className="p-2.5 sm:p-2 rounded-full hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors touch-manipulation">
                         <X size={20} />
                     </button>
                 </div>
@@ -271,7 +271,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                         </div>
                         <div className="space-y-1">
                             <h3 className="font-bold text-xl sm:text-2xl text-foreground">{name || 'User'}</h3>
-                            <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
+                            <p className="text-sm text-q-text-muted break-all">{user?.email}</p>
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 mt-2">
                                 {t('profile.proPlan')}
                             </span>
@@ -290,7 +290,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-base"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-base"
                                 />
                             </div>
 
@@ -313,19 +313,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                                 ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/30'
                                                 : usernameValid && username
                                                     ? 'border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/30'
-                                                    : 'border-border focus:ring-2 focus:ring-primary/50 focus:border-primary'
+                                                    : 'border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary'
                                         }`}
                                     />
                                     {/* Status indicator */}
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                        {usernameChecking && <Loader2 size={16} className="animate-spin text-muted-foreground" />}
+                                        {usernameChecking && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
                                         {!usernameChecking && usernameValid && username && <CheckCircle size={16} className="text-emerald-500" />}
                                         {!usernameChecking && usernameError && <XCircle size={16} className="text-red-500" />}
                                     </div>
                                 </div>
                                 {/* Preview URL */}
                                 {username && !usernameError && (
-                                    <p className="mt-1.5 text-xs text-muted-foreground flex items-center gap-1">
+                                    <p className="mt-1.5 text-xs text-q-text-muted flex items-center gap-1">
                                         <Globe size={11} />
                                         {t('profile.subdomainPreview', 'Tu sitio será visible en:')}
                                         <span className="font-semibold text-primary">{username}.quimera.ai</span>
@@ -338,7 +338,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
 
                             {/* Job Title */}
                             <div>
-                                <label htmlFor="job-title" className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label htmlFor="job-title" className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('profile.jobTitle', 'Cargo / Puesto')}
                                 </label>
                                 <input
@@ -347,13 +347,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     value={jobTitle}
                                     onChange={e => setJobTitle(e.target.value)}
                                     placeholder="e.g. Senior Designer"
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                 />
                             </div>
 
                             {/* Department */}
                             <div>
-                                <label htmlFor="department" className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label htmlFor="department" className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('profile.department', 'Departamento')}
                                 </label>
                                 <input
@@ -362,13 +362,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     value={department}
                                     onChange={e => setDepartment(e.target.value)}
                                     placeholder="e.g. Marketing"
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                 />
                             </div>
 
                             {/* Bio */}
                             <div className="sm:col-span-2">
-                                <label htmlFor="bio" className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label htmlFor="bio" className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('profile.bio', 'Biografía')}
                                 </label>
                                 <textarea
@@ -377,13 +377,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     onChange={e => setBio(e.target.value)}
                                     placeholder={t('profile.bioPlaceholder', 'Cuéntanos un poco sobre ti...')}
                                     rows={3}
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm resize-none"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm resize-none"
                                 />
                             </div>
 
                             {/* Phone */}
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label htmlFor="phone" className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('profile.phone', 'Teléfono')}
                                 </label>
                                 <input
@@ -392,13 +392,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     value={phone}
                                     onChange={e => setPhone(e.target.value)}
                                     placeholder="+1 234 567 890"
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                 />
                             </div>
 
                             {/* Website */}
                             <div>
-                                <label htmlFor="website" className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label htmlFor="website" className="block text-sm font-medium text-q-text-muted mb-2">
                                     {t('profile.website', 'Sitio Web')}
                                 </label>
                                 <input
@@ -407,34 +407,34 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                     value={socialLinks.website}
                                     onChange={e => setSocialLinks(prev => ({ ...prev, website: e.target.value }))}
                                     placeholder="https://"
-                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                    className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                 />
                             </div>
 
                             {/* Social Links */}
                             <div className="sm:col-span-2 space-y-3 pt-2">
-                                <h4 className="text-sm font-medium text-foreground border-b border-border pb-2">Redes Sociales</h4>
+                                <h4 className="text-sm font-medium text-foreground border-b border-q-border pb-2">Redes Sociales</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="linkedin" className="block text-xs text-muted-foreground mb-1">LinkedIn</label>
+                                        <label htmlFor="linkedin" className="block text-xs text-q-text-muted mb-1">LinkedIn</label>
                                         <input
                                             id="linkedin"
                                             type="url"
                                             value={socialLinks.linkedin}
                                             onChange={e => setSocialLinks(prev => ({ ...prev, linkedin: e.target.value }))}
                                             placeholder="LinkedIn Profile URL"
-                                            className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                            className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="twitter" className="block text-xs text-muted-foreground mb-1">Twitter / X</label>
+                                        <label htmlFor="twitter" className="block text-xs text-q-text-muted mb-1">Twitter / X</label>
                                         <input
                                             id="twitter"
                                             type="url"
                                             value={socialLinks.twitter}
                                             onChange={e => setSocialLinks(prev => ({ ...prev, twitter: e.target.value }))}
                                             placeholder="Twitter Profile URL"
-                                            className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
+                                            className="w-full bg-secondary/30 text-foreground p-3 rounded-xl border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
                                         />
                                     </div>
                                 </div>
@@ -442,7 +442,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                         </div>
                     </div>
 
-                    <div className="flex justify-center sm:justify-end pt-4 border-t border-border">
+                    <div className="flex justify-center sm:justify-end pt-4 border-t border-q-border">
                         <button
                             onClick={handleSaveChanges}
                             disabled={!hasChanges || isLoading}
@@ -458,12 +458,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Danger Zone */}
-                    <div className="mt-6 sm:mt-10 pt-6 sm:pt-8 border-t border-border">
+                    <div className="mt-6 sm:mt-10 pt-6 sm:pt-8 border-t border-q-border">
                         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
                             <h3 className="font-bold text-destructive flex items-center text-sm sm:text-base">
                                 <Trash2 size={18} className="mr-2 flex-shrink-0" /> {t('profile.dangerZone')}
                             </h3>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-2 mb-4">
+                            <p className="text-xs sm:text-sm text-q-text-muted mt-2 mb-4">
                                 {t('profile.deleteWarning')}
                             </p>
 
@@ -482,7 +482,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                         onChange={e => setDeletePassword(e.target.value)}
                                         required
                                         placeholder={t('profile.confirmWithPassword')}
-                                        className="w-full bg-background text-foreground p-3 rounded-lg border border-destructive/50 focus:ring-2 focus:ring-destructive focus:outline-none text-base"
+                                        className="w-full bg-q-bg text-foreground p-3 rounded-lg border border-destructive/50 focus:ring-2 focus:ring-destructive focus:outline-none text-base"
                                     />
                                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4 sm:gap-0">
                                         <button
@@ -495,7 +495,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                                         <button
                                             type="button"
                                             onClick={() => setIsDeleteConfirm(false)}
-                                            className="text-sm text-muted-foreground hover:text-foreground py-2 touch-manipulation"
+                                            className="text-sm text-q-text-muted hover:text-foreground py-2 touch-manipulation"
                                         >
                                             {t('common.cancel')}
                                         </button>

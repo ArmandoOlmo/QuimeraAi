@@ -89,7 +89,7 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
     return (
         <div className="flex-1" ref={containerRef}>
             {label && (
-                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                     {label}
                 </label>
             )}
@@ -98,22 +98,22 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center justify-between bg-editor-panel-bg border rounded-md px-3 py-1.5 text-xs text-editor-text-primary transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between bg-q-surface border rounded-md px-3 py-1.5 text-xs text-q-text transition-all cursor-pointer ${
                     isOpen
-                        ? 'border-editor-accent ring-1 ring-editor-accent'
-                        : 'border-editor-border hover:border-editor-accent/50'
+                        ? 'border-q-accent ring-1 ring-q-accent'
+                        : 'border-q-border hover:border-q-accent/50'
                 }`}
             >
                 <span className="truncate" style={{ fontWeight: value }}>
                     {selectedOption.label}
                 </span>
-                <ChevronDown className={`h-3 w-3 text-editor-text-secondary flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3 w-3 text-q-text-secondary flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Dropdown List */}
             {isOpen && (
                 <div className="relative z-50">
-                    <div className="absolute top-1 left-0 right-0 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl overflow-hidden">
+                    <div className="absolute top-1 left-0 right-0 bg-q-surface border border-q-border rounded-lg shadow-xl overflow-hidden">
                         <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain">
                             {FONT_WEIGHT_OPTIONS.map(opt => {
                                 const isSelected = opt.value === value;
@@ -125,8 +125,8 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
                                         onClick={() => handleSelect(opt.value)}
                                         className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
                                             isSelected
-                                                ? 'bg-editor-accent/15 text-editor-accent'
-                                                : 'text-editor-text-primary hover:bg-editor-bg'
+                                                ? 'bg-q-accent/15 text-q-accent'
+                                                : 'text-q-text hover:bg-q-bg'
                                         }`}
                                     >
                                         <span
@@ -135,7 +135,7 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
                                         >
                                             {opt.label}
                                         </span>
-                                        {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-editor-accent" />}
+                                        {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-q-accent" />}
                                     </button>
                                 );
                             })}

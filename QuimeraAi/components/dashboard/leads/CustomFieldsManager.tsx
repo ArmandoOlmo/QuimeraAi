@@ -70,16 +70,16 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="p-2 hover:bg-secondary rounded text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 hover:bg-secondary rounded text-q-text-muted hover:text-foreground transition-colors"
                 title="Configure Custom Fields"
             >
                 <Settings size={16} />
             </button>
 
             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} maxWidth="max-w-2xl">
-                <div className="p-6 border-b border-border bg-secondary/10 flex justify-between items-center">
+                <div className="p-6 border-b border-q-border bg-secondary/10 flex justify-between items-center">
                     <h3 className="font-bold text-lg">{t('leads.customFields.title')}</h3>
-                    <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setIsOpen(false)} className="text-q-text-muted hover:text-foreground">
                         <X size={24} />
                     </button>
                 </div>
@@ -91,7 +91,7 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                             <Sparkles className="text-purple-500" size={16} />
                             <h4 className="text-sm font-bold text-purple-500 uppercase">{t('leads.customFields.industryTemplates')}</h4>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-4">
+                        <p className="text-xs text-q-text-muted mb-4">
                             {t('leads.customFields.industryTemplatesDesc')}
                         </p>
                         <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -99,11 +99,11 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 <button
                                     key={template.id}
                                     onClick={() => handleApplyTemplate(template.id)}
-                                    className="p-3 border border-border rounded-lg hover:bg-secondary/50 transition-colors text-left group"
+                                    className="p-3 border border-q-border rounded-lg hover:bg-secondary/50 transition-colors text-left group"
                                 >
                                     <div className="text-2xl mb-1">{template.icon}</div>
                                     <h5 className="font-bold text-xs mb-0.5 group-hover:text-primary transition-colors">{template.name}</h5>
-                                    <p className="text-[10px] text-muted-foreground">{template.fields.length} {t('leads.customFields.fields')}</p>
+                                    <p className="text-[10px] text-q-text-muted">{template.fields.length} {t('leads.customFields.fields')}</p>
                                 </button>
                             ))}
                         </div>
@@ -111,12 +111,12 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
 
                     {/* Existing Fields */}
                     <div className="space-y-3">
-                        <h4 className="text-sm font-bold text-muted-foreground uppercase">{t('leads.customFields.existingFields')}</h4>
+                        <h4 className="text-sm font-bold text-q-text-muted uppercase">{t('leads.customFields.existingFields')}</h4>
                         {fields.length === 0 ? (
-                            <p className="text-sm text-muted-foreground italic">{t('leads.customFields.noFields')}</p>
+                            <p className="text-sm text-q-text-muted italic">{t('leads.customFields.noFields')}</p>
                         ) : (
                             fields.map(field => (
-                                <div key={field.id} className="flex items-center gap-3 bg-secondary/20 p-3 rounded-lg border border-border">
+                                <div key={field.id} className="flex items-center gap-3 bg-secondary/20 p-3 rounded-lg border border-q-border">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-medium text-sm">{field.name}</span>
@@ -146,20 +146,20 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                     </div>
 
                     {/* Add New Field */}
-                    <div className="border-t border-border pt-6">
-                        <h4 className="text-sm font-bold text-muted-foreground uppercase mb-3">{t('leads.customFields.addNew')}</h4>
+                    <div className="border-t border-q-border pt-6">
+                        <h4 className="text-sm font-bold text-q-text-muted uppercase mb-3">{t('leads.customFields.addNew')}</h4>
                         <div className="grid grid-cols-12 gap-3">
                             <input
                                 type="text"
                                 value={newFieldName}
                                 onChange={e => setNewFieldName(e.target.value)}
                                 placeholder={t('leads.customFields.fieldNamePlaceholder')}
-                                className="col-span-6 bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="col-span-6 bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             />
                             <select
                                 value={newFieldType}
                                 onChange={e => setNewFieldType(e.target.value as any)}
-                                className="col-span-4 bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="col-span-4 bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
                                 <option value="text">{t('leads.customFields.types.text')}</option>
                                 <option value="number">{t('leads.customFields.types.number')}</option>
@@ -176,16 +176,16 @@ const CustomFieldsManager: React.FC<CustomFieldsManagerProps> = ({ customFieldsC
                                 {t('leads.customFields.add')}
                             </button>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <p className="text-xs text-q-text-muted mt-2">
                             {t('leads.customFields.customFieldsHelpText')}
                         </p>
                     </div>
 
                     {/* Save Button */}
-                    <div className="flex justify-end gap-2 pt-4 border-t border-border">
+                    <div className="flex justify-end gap-2 pt-4 border-t border-q-border">
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="px-4 py-2 border border-border rounded hover:bg-secondary transition-colors"
+                            className="px-4 py-2 border border-q-border rounded hover:bg-secondary transition-colors"
                         >
                             {t('common.cancel')}
                         </button>

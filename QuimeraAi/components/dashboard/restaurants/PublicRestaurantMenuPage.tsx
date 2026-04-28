@@ -34,17 +34,17 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
   }, [payload?.items]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return <div className="min-h-screen bg-q-bg flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   if (!payload?.restaurant) {
-    return <div className="min-h-screen bg-background flex items-center justify-center p-6 text-center">Menu not found.</div>;
+    return <div className="min-h-screen bg-q-bg flex items-center justify-center p-6 text-center">Menu not found.</div>;
   }
 
   const restaurant = payload.restaurant;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-q-bg text-foreground">
       <section
         className="min-h-[44vh] flex items-end px-5 py-8"
         style={restaurant.heroImageUrl ? { backgroundImage: `linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.2)), url(${restaurant.heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--muted)))' }}
@@ -67,16 +67,16 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
             <h2 className="text-2xl font-bold mb-4">{category}</h2>
             <div className="space-y-4">
               {items.map((item) => (
-                <article key={item.id} className="flex gap-4 rounded-xl border border-border bg-card/60 p-3">
+                <article key={item.id} className="flex gap-4 rounded-xl border border-q-border bg-q-surface/60 p-3">
                   <div className="h-24 w-24 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Utensils className="m-8 text-muted-foreground" />}
+                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Utensils className="m-8 text-q-text-muted" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-semibold">{item.name}</h3>
                       <p className="font-bold whitespace-nowrap">{item.currency} {Number(item.price || 0).toFixed(2)}</p>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                    <p className="mt-1 text-sm text-q-text-muted">{item.description}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] text-primary">{tag}</span>)}
                     </div>
@@ -88,9 +88,9 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
         ))}
 
         {restaurant.reservationEnabled && (
-          <div id="reserve" className="rounded-xl border border-border bg-card/60 p-5">
+          <div id="reserve" className="rounded-xl border border-q-border bg-q-surface/60 p-5">
             <h2 className="text-xl font-bold">Reserve a table</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Call the restaurant to confirm availability.</p>
+            <p className="mt-2 text-sm text-q-text-muted">Call the restaurant to confirm availability.</p>
             {restaurant.phone && <a href={`tel:${restaurant.phone}`} className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-primary-foreground">Call {restaurant.phone}</a>}
           </div>
         )}

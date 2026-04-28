@@ -537,35 +537,35 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             onClick={onClose}
         >
             <div
-                className="bg-background border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+                className="bg-q-bg border border-q-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-border">
+                <div className="flex items-center justify-between p-5 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <ImageIcon className="w-5 h-5 text-primary" />
                         </div>
                         <div>
                             <h2 className="text-lg font-semibold text-foreground">{t('superadmin.templateEditor.changeThumbnail', 'Change Thumbnail')}</h2>
-                            <p className="text-sm text-muted-foreground">{project.name}</p>
+                            <p className="text-sm text-q-text-muted">{project.name}</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
                         className="p-2 rounded-full hover:bg-secondary transition-colors"
                     >
-                        <X className="w-5 h-5 text-muted-foreground" />
+                        <X className="w-5 h-5 text-q-text-muted" />
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-border">
+                <div className="flex border-b border-q-border">
                     <button
                         onClick={() => setActiveTab('library')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'library'
                             ? 'text-blue-500 border-b-2 border-blue-500 bg-blue-500/5'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <Grid className="w-4 h-4" />
@@ -575,7 +575,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         onClick={() => setActiveTab('upload')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'upload'
                             ? 'text-primary border-b-2 border-primary bg-primary/5'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <Upload className="w-4 h-4" />
@@ -585,7 +585,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         onClick={() => setActiveTab('generate')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'generate'
                             ? 'text-purple-500 border-b-2 border-purple-500 bg-purple-500/5'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <Zap className="w-4 h-4" />
@@ -619,8 +619,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-secondary/50">
                                 <div className="text-center">
-                                    <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-2" />
-                                    <p className="text-sm text-muted-foreground">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
+                                    <ImageIcon className="w-12 h-12 text-q-text-muted/50 mx-auto mb-2" />
+                                    <p className="text-sm text-q-text-muted">{t('superadmin.templateEditor.noThumbnail', 'No thumbnail')}</p>
                                 </div>
                             </div>
                         )}
@@ -654,9 +654,9 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     {themeColors.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                             {themeColors.map((item, index) => (
-                                <div key={index} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <div key={index} className="flex items-center gap-1.5 text-xs text-q-text-muted">
                                     <div
-                                        className="w-3 h-3 rounded-[3px] border border-border"
+                                        className="w-3 h-3 rounded-[3px] border border-q-border"
                                         style={{ backgroundColor: item.color }}
                                     />
                                     <span>{item.name}</span>
@@ -673,27 +673,27 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                 <div className="flex space-x-2 bg-secondary p-1 rounded-lg">
                                     <button
                                         onClick={() => setLibrarySource('admin')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'admin' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'admin' ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         <Globe size={12} /> Admin Assets
                                     </button>
                                     <button
                                         onClick={() => setLibrarySource('global')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${librarySource === 'global' ? 'bg-blue-500 text-white' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         <Globe size={12} /> {t('superadmin.templateEditor.globalLibrary', 'Global Library')}
                                     </button>
                                     <button
                                         onClick={() => setLibrarySource('user')}
-                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${librarySource === 'user' ? 'bg-primary text-primary-foreground' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {t('superadmin.templateEditor.myUploads', 'My Uploads')}
                                     </button>
                                 </div>
 
                                 {/* Search */}
-                                <div className="flex items-center gap-2 w-full sm:w-48 bg-editor-border/40 rounded-lg px-3 py-1.5">
-                                    <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                                <div className="flex items-center gap-2 w-full sm:w-48 bg-q-surface-overlay/40 rounded-lg px-3 py-1.5">
+                                    <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                                     <input
                                         type="text"
                                         value={searchQuery}
@@ -702,7 +702,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                         className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                     />
                                     {searchQuery && (
-                                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                        <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                             <X size={12} />
                                         </button>
                                     )}
@@ -757,7 +757,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                         })}
                                     </div>
                                 ) : searchQuery ? (
-                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center py-8 text-q-text-muted">
                                         <Search size={32} className="mb-2 opacity-50" />
                                         <p className="text-sm">{t('common.noResults', 'No results found')}</p>
                                         <button
@@ -768,7 +768,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                                    <div className="flex flex-col items-center justify-center py-8 text-q-text-muted border-2 border-dashed border-q-border rounded-xl">
                                         <ImageIcon size={32} className="mb-2 opacity-50" />
                                         <p className="text-sm">
                                             {librarySource === 'user'
@@ -797,7 +797,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                 relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer
                                 ${dragActive
                                     ? 'border-primary bg-primary/5'
-                                    : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                                    : 'border-q-border hover:border-primary/50 hover:bg-secondary/50'
                                 }
                             `}
                             onDragEnter={handleDrag}
@@ -822,7 +822,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     <p className="text-sm font-medium text-foreground">
                                         {t('superadmin.templateEditor.clickOrDrag', 'Drag & drop or click to upload')}
                                     </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-xs text-q-text-muted mt-1">
                                         PNG, JPG, WebP up to 5MB
                                     </p>
                                 </div>
@@ -843,7 +843,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                             {/* Prompt Input */}
                             <div>
                                 <div className="flex justify-between items-center mb-1">
-                                    <label className="text-xs text-muted-foreground">
+                                    <label className="text-xs text-q-text-muted">
                                         {t('superadmin.templateEditor.promptLabel', 'Prompt')}
                                     </label>
                                     <div className="flex gap-2">
@@ -880,17 +880,17 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     value={thumbnailPrompt}
                                     onChange={(e) => setThumbnailPrompt(e.target.value)}
                                     placeholder={t('superadmin.templateEditor.describeThumbnail', 'Describe the thumbnail you want to generate...')}
-                                    className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                                    className="w-full bg-q-bg border border-q-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
                                 />
                             </div>
 
                             {/* Reference Images */}
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <label className="text-xs text-muted-foreground">
+                                    <label className="text-xs text-q-text-muted">
                                         {t('dashboard.thumbnailEditor.referenceImages', 'Reference Images')}
                                     </label>
-                                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                                    <span className="text-xs text-q-text-muted bg-secondary px-2 py-0.5 rounded-full">
                                         {referenceImages.length}/14
                                     </span>
                                 </div>
@@ -907,7 +907,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                         border-2 border-dashed rounded-lg p-2 transition-all cursor-pointer
                                         ${isDraggingRef
                                             ? 'border-purple-500 bg-purple-500/10'
-                                            : 'border-border hover:border-purple-400 hover:bg-secondary/50'
+                                            : 'border-q-border hover:border-purple-400 hover:bg-secondary/50'
                                         }
                                     `}
                                     onDragOver={handleRefDragOver}
@@ -918,7 +918,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     {referenceImages.length > 0 ? (
                                         <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                                             {referenceImages.map((img, idx) => (
-                                                <div key={idx} className="relative w-10 h-10 rounded-md overflow-hidden group border border-border">
+                                                <div key={idx} className="relative w-10 h-10 rounded-md overflow-hidden group border border-q-border">
                                                     <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
                                                     <button
                                                         onClick={() => handleRemoveReferenceImage(idx)}
@@ -931,14 +931,14 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                             {referenceImages.length < 14 && (
                                                 <button
                                                     onClick={() => referenceFileInputRef.current?.click()}
-                                                    className="w-10 h-10 flex items-center justify-center border border-dashed border-border rounded-md hover:border-purple-400 hover:bg-secondary text-muted-foreground hover:text-purple-400 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center border border-dashed border-q-border rounded-md hover:border-purple-400 hover:bg-secondary text-q-text-muted hover:text-purple-400 transition-all"
                                                 >
                                                     <Plus size={14} />
                                                 </button>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center py-2 text-muted-foreground">
+                                        <div className="flex flex-col items-center py-2 text-q-text-muted">
                                             <Upload size={16} className="mb-1" />
                                             <span className="text-[10px] font-medium">{t('dashboard.thumbnailEditor.clickOrDragRef', 'Click or drag images')}</span>
                                         </div>
@@ -948,7 +948,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
                             {/* Style Selector */}
                             <div>
-                                <label className="block text-xs text-muted-foreground mb-2">
+                                <label className="block text-xs text-q-text-muted mb-2">
                                     {t('superadmin.templateEditor.styleLabel', 'Style')}
                                 </label>
                                 <div className="flex flex-wrap gap-2">
@@ -959,7 +959,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                             onClick={() => setThumbnailStyle(s.value)}
                                             className={`px-3 py-1.5 text-xs rounded-full transition-colors ${thumbnailStyle === s.value
                                                 ? 'bg-purple-600 text-white'
-                                                : 'bg-secondary text-muted-foreground hover:bg-secondary/70'
+                                                : 'bg-secondary text-q-text-muted hover:bg-secondary/70'
                                                 }`}
                                         >
                                             {s.label}
@@ -990,7 +990,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
                             {/* Regenerate hint */}
                             {generatedThumbnail && (
-                                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                <div className="flex items-center justify-center gap-2 text-xs text-q-text-muted">
                                     <RefreshCw className="w-3 h-3" />
                                     <span>{t('superadmin.templateEditor.regenerate', 'Click generate again to try a new image')}</span>
                                 </div>
@@ -1000,10 +1000,10 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-3 p-5 border-t border-border bg-secondary/30">
+                <div className="flex justify-end gap-3 p-5 border-t border-q-border bg-secondary/30">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground transition-colors"
                     >
 
                         {t('common.cancel', 'Cancel')}

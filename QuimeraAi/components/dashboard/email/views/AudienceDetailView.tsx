@@ -195,14 +195,14 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                         onClick={onBack}
                         className="p-2 hover:bg-muted rounded-lg transition-colors"
                     >
-                        <ArrowLeft size={20} className="text-muted-foreground" />
+                        <ArrowLeft size={20} className="text-q-text-muted" />
                     </button>
                     <div>
                         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {audience.name}
                         </h2>
                         {audience.description && (
-                            <p className="text-muted-foreground">{audience.description}</p>
+                            <p className="text-q-text-muted">{audience.description}</p>
                         )}
                     </div>
                 </div>
@@ -217,42 +217,42 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-card p-4 rounded-xl border border-border">
+                <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <Users className="text-primary" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{totalMembers}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('email.totalMembers', 'Miembros Totales')}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card p-4 rounded-xl border border-border">
+                <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/10 rounded-lg">
                             <Filter className="text-blue-500" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{audience.estimatedCount || 0}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('email.dynamicMembers', 'Miembros Dinámicos')}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card p-4 rounded-xl border border-border">
+                <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-500/10 rounded-lg">
                             <UserPlus className="text-green-500" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{totalStaticMembers}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('email.staticMembers', 'Miembros Manuales')}
                             </p>
                         </div>
@@ -262,7 +262,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
             {/* Dynamic Filters Summary */}
             {audience.filters && audience.filters.length > 0 && (
-                <div className="bg-card p-4 rounded-xl border border-border">
+                <div className="bg-q-surface p-4 rounded-xl border border-q-border">
                     <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Filter size={18} className="text-primary" />
                         {t('email.dynamicFilters', 'Filtros Dinámicos')}
@@ -271,7 +271,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                         {audience.filters.map((filter, idx) => (
                             <span
                                 key={idx}
-                                className="inline-block px-3 py-1 text-sm bg-muted rounded-full text-muted-foreground"
+                                className="inline-block px-3 py-1 text-sm bg-muted rounded-full text-q-text-muted"
                             >
                                 {filter.field}: {filter.value}
                             </span>
@@ -281,8 +281,8 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
             )}
 
             {/* Static Members Table */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="bg-q-surface rounded-xl border border-q-border overflow-hidden">
+                <div className="p-4 border-b border-q-border flex items-center justify-between">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Users size={18} className="text-primary" />
                         {t('email.staticMembers', 'Miembros Manuales')} ({totalStaticMembers})
@@ -290,7 +290,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
                     {/* Search */}
                     <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 w-64">
-                        <Search className="w-4 h-4 text-muted-foreground" />
+                        <Search className="w-4 h-4 text-q-text-muted" />
                         <input
                             type="text"
                             value={searchTerm}
@@ -303,11 +303,11 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
                 {totalStaticMembers === 0 ? (
                     <div className="p-8 text-center">
-                        <AlertCircle className="mx-auto mb-3 text-muted-foreground" size={40} />
+                        <AlertCircle className="mx-auto mb-3 text-q-text-muted" size={40} />
                         <h4 className="font-medium text-foreground mb-1">
                             {t('email.noMembers', 'Sin miembros manuales')}
                         </h4>
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <p className="text-sm text-q-text-muted mb-4">
                             {t('email.noMembersDesc', 'Esta audiencia no tiene miembros añadidos manualmente')}
                         </p>
                         <button
@@ -324,7 +324,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                         {memberLeads.length > 0 && (
                             <>
                                 <div className="px-4 py-2 bg-muted/30">
-                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                         Leads ({memberLeads.length})
                                     </span>
                                 </div>
@@ -343,7 +343,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                                 <p className="font-medium text-foreground">
                                                     {lead.name || t('common.noName', 'Sin nombre')}
                                                 </p>
-                                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                                <div className="flex items-center gap-3 text-sm text-q-text-muted">
                                                     {lead.email && (
                                                         <span className="flex items-center gap-1">
                                                             <Mail size={12} />
@@ -361,7 +361,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {lead.company && (
-                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded flex items-center gap-1">
+                                                <span className="text-xs text-q-text-muted bg-muted px-2 py-1 rounded flex items-center gap-1">
                                                     <Building2 size={12} />
                                                     {lead.company}
                                                 </span>
@@ -395,7 +395,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                         {staticEmails.length > 0 && (
                             <>
                                 <div className="px-4 py-2 bg-muted/30">
-                                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                         {t('email.directEmails', 'Emails Directos')} ({staticEmails.length})
                                     </span>
                                 </div>
@@ -406,7 +406,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                                <Mail size={16} className="text-muted-foreground" />
+                                                <Mail size={16} className="text-q-text-muted" />
                                             </div>
                                             <p className="text-foreground">{email}</p>
                                         </div>
@@ -441,9 +441,9 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
             {/* Edit Lead Modal */}
             {editingLead && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-md">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
                         {/* Header */}
-                        <div className="p-6 border-b border-border flex items-center justify-between">
+                        <div className="p-6 border-b border-q-border flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-primary/10 rounded-lg">
                                     <Edit className="text-primary" size={20} />
@@ -456,7 +456,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                 onClick={() => setEditingLead(null)}
                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                             >
-                                <X size={20} className="text-muted-foreground" />
+                                <X size={20} className="text-q-text-muted" />
                             </button>
                         </div>
 
@@ -471,7 +471,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                     type="text"
                                     value={editForm.name}
                                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -485,7 +485,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                     type="email"
                                     value={editForm.email}
                                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -499,7 +499,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                     type="tel"
                                     value={editForm.phone}
                                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -513,16 +513,16 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                                     type="text"
                                     value={editForm.company}
                                     onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="p-6 border-t border-border flex justify-end gap-3">
+                        <div className="p-6 border-t border-q-border flex justify-end gap-3">
                             <button
                                 onClick={() => setEditingLead(null)}
-                                className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                                className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors"
                             >
                                 {t('common.cancel', 'Cancelar')}
                             </button>

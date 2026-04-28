@@ -237,24 +237,24 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
     // ─── RENDER ──────────────────────────────────────────────────
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-editor-bg border border-editor-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-q-bg border border-q-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-editor-border">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-gradient-to-br from-yellow-400/20 to-amber-600/20 rounded-xl">
                             <Sparkles size={22} className="text-yellow-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-editor-text-primary">
+                            <h2 className="text-lg font-bold text-q-text">
                                 AI Template Generator
                             </h2>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-xs text-q-text-secondary">
                                 Powered by Quimera Nano Banana 2
                             </p>
                         </div>
                     </div>
                     {step !== 'generating' && (
-                        <button onClick={onClose} className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors">
+                        <button onClick={onClose} className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors">
                             <X size={20} />
                         </button>
                     )}
@@ -265,7 +265,7 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                     {/* Step 1: Select Preset */}
                     {step === 'select' && (
                         <div className="space-y-4">
-                            <p className="text-sm text-editor-text-secondary">
+                            <p className="text-sm text-q-text-secondary">
                                 Selecciona un tipo de template. La IA generará todas las imágenes y configurará los componentes automáticamente.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -273,18 +273,18 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                                     <button
                                         key={preset.id}
                                         onClick={() => handleSelectPreset(preset)}
-                                        className="group relative p-5 rounded-xl border border-editor-border hover:border-editor-accent bg-editor-panel-bg hover:bg-editor-accent/5 transition-all duration-300 text-left"
+                                        className="group relative p-5 rounded-xl border border-q-border hover:border-q-accent bg-q-surface hover:bg-q-accent/5 transition-all duration-300 text-left"
                                     >
                                         <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${preset.color} flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform`}>
                                             {preset.icon}
                                         </div>
-                                        <h3 className="font-bold text-editor-text-primary mb-1">{preset.name}</h3>
-                                        <p className="text-xs text-editor-text-secondary leading-relaxed">{preset.description}</p>
+                                        <h3 className="font-bold text-q-text mb-1">{preset.name}</h3>
+                                        <p className="text-xs text-q-text-secondary leading-relaxed">{preset.description}</p>
                                         <div className="mt-3 flex items-center gap-2">
-                                            <span className="text-[10px] px-2 py-0.5 bg-editor-accent/10 text-editor-accent rounded-full font-medium">
+                                            <span className="text-[10px] px-2 py-0.5 bg-q-accent/10 text-q-accent rounded-full font-medium">
                                                 {preset.images.length} imágenes IA
                                             </span>
-                                            <span className="text-[10px] px-2 py-0.5 bg-editor-border/50 text-editor-text-secondary rounded-full">
+                                            <span className="text-[10px] px-2 py-0.5 bg-q-surface-overlay/50 text-q-text-secondary rounded-full">
                                                 {preset.category}
                                             </span>
                                         </div>
@@ -292,10 +292,10 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                                 ))}
 
                                 {/* More coming soon hint */}
-                                <div className="p-4 rounded-xl border border-dashed border-editor-border/30 bg-editor-panel-bg/20 flex items-center justify-center min-h-[140px]">
+                                <div className="p-4 rounded-xl border border-dashed border-q-border/30 bg-q-surface/20 flex items-center justify-center min-h-[140px]">
                                     <div className="text-center">
-                                        <Wand2 size={20} className="text-editor-text-secondary/30 mx-auto mb-2" />
-                                        <span className="text-xs text-editor-text-secondary/40 block">Más industrias pronto</span>
+                                        <Wand2 size={20} className="text-q-text-secondary/30 mx-auto mb-2" />
+                                        <span className="text-xs text-q-text-secondary/40 block">Más industrias pronto</span>
                                     </div>
                                 </div>
                             </div>
@@ -305,40 +305,40 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                     {/* Step 2: Customize */}
                     {step === 'customize' && selectedPreset && (
                         <div className="space-y-6">
-                            <div className="flex items-center gap-3 p-4 bg-editor-panel-bg rounded-xl border border-editor-border">
+                            <div className="flex items-center gap-3 p-4 bg-q-surface rounded-xl border border-q-border">
                                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${selectedPreset.color} flex items-center justify-center text-white flex-shrink-0`}>
                                     {selectedPreset.icon}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-editor-text-primary text-sm">{selectedPreset.name}</h3>
-                                    <p className="text-xs text-editor-text-secondary">{selectedPreset.images.length} imágenes serán generadas con Nano Banana 2</p>
+                                    <h3 className="font-bold text-q-text text-sm">{selectedPreset.name}</h3>
+                                    <p className="text-xs text-q-text-secondary">{selectedPreset.images.length} imágenes serán generadas con Nano Banana 2</p>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Nombre del Template</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">Nombre del Template</label>
                                 <input
                                     type="text"
                                     value={customName}
                                     onChange={(e) => setCustomName(e.target.value)}
-                                    className="w-full bg-editor-panel-bg border border-editor-border rounded-xl px-4 py-3 text-editor-text-primary placeholder:text-editor-text-secondary/40 focus:border-editor-accent focus:ring-1 focus:ring-editor-accent outline-none transition-all"
+                                    className="w-full bg-q-surface border border-q-border rounded-xl px-4 py-3 text-q-text placeholder:text-q-text-secondary/40 focus:border-q-accent focus:ring-1 focus:ring-q-accent outline-none transition-all"
                                     placeholder="Ej: Ristorante Toscano Premium"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Imágenes a Generar</label>
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">Imágenes a Generar</label>
                                 <div className="space-y-2">
                                     {selectedPreset.images.map((img, idx) => (
-                                        <div key={img.key} className="flex items-center gap-3 p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border/50">
-                                            <div className="w-8 h-8 rounded-lg bg-editor-accent/10 flex items-center justify-center text-editor-accent font-bold text-sm flex-shrink-0">
+                                        <div key={img.key} className="flex items-center gap-3 p-3 bg-q-surface/50 rounded-lg border border-q-border/50">
+                                            <div className="w-8 h-8 rounded-lg bg-q-accent/10 flex items-center justify-center text-q-accent font-bold text-sm flex-shrink-0">
                                                 {idx + 1}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <span className="text-sm font-medium text-editor-text-primary capitalize">{img.key.replace(/_/g, ' ')}</span>
-                                                <p className="text-xs text-editor-text-secondary truncate">{img.prompt.substring(0, 80)}...</p>
+                                                <span className="text-sm font-medium text-q-text capitalize">{img.key.replace(/_/g, ' ')}</span>
+                                                <p className="text-xs text-q-text-secondary truncate">{img.prompt.substring(0, 80)}...</p>
                                             </div>
-                                            <span className="text-[10px] text-editor-text-secondary/60 flex-shrink-0">{img.aspectRatio}</span>
+                                            <span className="text-[10px] text-q-text-secondary/60 flex-shrink-0">{img.aspectRatio}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -363,18 +363,18 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                                         <Zap size={28} className="text-white" />
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-editor-text-primary">Generando Template</h3>
-                                <p className="text-sm text-editor-text-secondary">
+                                <h3 className="text-xl font-bold text-q-text">Generando Template</h3>
+                                <p className="text-sm text-q-text-secondary">
                                     Nano Banana 2 está creando las imágenes...
                                 </p>
                             </div>
 
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-editor-text-secondary font-medium">
+                                    <span className="text-q-text-secondary font-medium">
                                         Imagen {currentImageIndex + 1} de {selectedPreset?.images.length || 0}
                                     </span>
-                                    <span className="text-editor-accent font-bold">{Math.round(progress)}%</span>
+                                    <span className="text-q-accent font-bold">{Math.round(progress)}%</span>
                                 </div>
                                 <ProgressBar3D percentage={progress} size="lg" />
                             </div>
@@ -382,15 +382,15 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                             <div className="space-y-1.5 max-h-48 overflow-y-auto">
                                 {generationLogs.map((log, idx) => (
                                     <div key={log.key} className={`flex items-center gap-2 p-2 rounded-lg text-sm transition-all ${
-                                        log.status === 'generating' ? 'bg-editor-accent/10 text-editor-accent' :
+                                        log.status === 'generating' ? 'bg-q-accent/10 text-q-accent' :
                                         log.status === 'success' ? 'bg-green-500/10 text-green-400' :
                                         log.status === 'error' ? 'bg-red-500/10 text-red-400' :
-                                        'text-editor-text-secondary/50'
+                                        'text-q-text-secondary/50'
                                     }`}>
                                         {log.status === 'generating' && <Loader2 size={14} className="animate-spin flex-shrink-0" />}
                                         {log.status === 'success' && <Check size={14} className="flex-shrink-0" />}
                                         {log.status === 'error' && <X size={14} className="flex-shrink-0" />}
-                                        {log.status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-editor-border flex-shrink-0" />}
+                                        {log.status === 'pending' && <div className="w-3.5 h-3.5 rounded-full border border-q-border flex-shrink-0" />}
                                         <span className="capitalize font-medium">{log.key.replace(/_/g, ' ')}</span>
                                         {log.message && <span className="text-xs ml-auto opacity-70">{log.message}</span>}
                                     </div>
@@ -410,8 +410,8 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-bold text-editor-text-primary mb-2">¡Template Creado!</h3>
-                                <p className="text-sm text-editor-text-secondary">
+                                <h3 className="text-2xl font-bold text-q-text mb-2">¡Template Creado!</h3>
+                                <p className="text-sm text-q-text-secondary">
                                     Tu template "{customName}" ha sido generado exitosamente con todas las imágenes de IA.
                                 </p>
                             </div>
@@ -420,7 +420,7 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                             {Object.keys(generatedImages).length > 0 && (
                                 <div className="grid grid-cols-3 gap-2">
                                     {Object.entries(generatedImages).filter(([_, v]) => v).slice(0, 6).map(([key, dataUrl]) => (
-                                        <div key={key} className="relative aspect-video rounded-lg overflow-hidden border border-editor-border">
+                                        <div key={key} className="relative aspect-video rounded-lg overflow-hidden border border-q-border">
                                             <img src={dataUrl} alt={key} className="w-full h-full object-cover" />
                                             <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1.5 py-0.5">
                                                 <span className="text-[9px] text-white/80 font-medium capitalize">{key.replace(/_/g, ' ')}</span>
@@ -434,7 +434,7 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                                 <span className="text-xs px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full">
                                     {Object.values(generatedImages).filter(v => v).length} imágenes generadas
                                 </span>
-                                <span className="text-xs px-2 py-0.5 bg-editor-accent/10 text-editor-accent rounded-full">
+                                <span className="text-xs px-2 py-0.5 bg-q-accent/10 text-q-accent rounded-full">
                                     Guardado en Firestore
                                 </span>
                             </div>
@@ -443,11 +443,11 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-6 py-4 border-t border-editor-border flex justify-between items-center">
+                <div className="px-6 py-4 border-t border-q-border flex justify-between items-center">
                     {step === 'select' && (
                         <>
                             <div />
-                            <button onClick={onClose} className="px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors">
+                            <button onClick={onClose} className="px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors">
                                 Cancelar
                             </button>
                         </>
@@ -455,7 +455,7 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
 
                     {step === 'customize' && (
                         <>
-                            <button onClick={() => { setStep('select'); setSelectedPreset(null); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors">
+                            <button onClick={() => { setStep('select'); setSelectedPreset(null); }} className="flex items-center gap-1.5 px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors">
                                 <ChevronLeft size={16} /> Atrás
                             </button>
                             <button
@@ -472,7 +472,7 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
 
                     {step === 'generating' && (
                         <div className="text-center w-full">
-                            <p className="text-xs text-editor-text-secondary/60 animate-pulse">
+                            <p className="text-xs text-q-text-secondary/60 animate-pulse">
                                 No cierres esta ventana...
                             </p>
                         </div>
@@ -488,13 +488,13 @@ const AITemplateGenerator: React.FC<AITemplateGeneratorProps> = ({ onClose, onTe
                                     setGenerationLogs([]);
                                     setProgress(0);
                                 }}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm text-q-text-secondary hover:text-q-text transition-colors"
                             >
                                 <RotateCcw size={14} /> Crear Otro
                             </button>
                             <button
                                 onClick={onClose}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-editor-accent hover:bg-editor-accent/80 text-white rounded-xl font-bold text-sm transition-all"
+                                className="flex items-center gap-2 px-6 py-2.5 bg-q-accent hover:bg-q-accent/80 text-white rounded-xl font-bold text-sm transition-all"
                             >
                                 <Check size={16} /> Listo
                             </button>

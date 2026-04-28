@@ -243,11 +243,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
                     group relative overflow-hidden
-                    bg-card/50 backdrop-blur-xl 
-                    border border-border/50 rounded-xl
+                    bg-q-surface/50 backdrop-blur-xl 
+                    border border-q-border/50 rounded-xl
                     p-3 cursor-pointer
                     transition-all duration-300 ease-out
-                    hover:bg-card/80 hover:border-border
+                    hover:bg-q-surface/80 hover:border-q-border
                     hover:shadow-lg hover:shadow-black/5
                     hover:-translate-y-0.5
                     animate-fade-in-up
@@ -274,7 +274,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         <h4 className="font-semibold text-sm text-foreground truncate">
                             {appointment.title}
                         </h4>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <p className="text-xs text-q-text-muted flex items-center gap-1">
                             <Clock size={10} />
                             {formatTime(appointment.startDate)} - {formatTime(appointment.endDate)}
                         </p>
@@ -310,11 +310,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
             onMouseLeave={() => { setIsHovered(false); setShowMenu(false); }}
             className={`
                 group relative overflow-hidden
-                bg-card/40 backdrop-blur-2xl
+                bg-q-surface/40 backdrop-blur-2xl
                 border border-white/10 dark:border-white/5
                 rounded-2xl
                 transition-all duration-500 ease-out
-                hover:bg-card/60 hover:border-white/20
+                hover:bg-q-surface/60 hover:border-white/20
                 hover:shadow-2xl hover:shadow-black/10
                 hover:-translate-y-1
                 cursor-pointer
@@ -410,7 +410,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
                                     className={`
                                         p-1.5 rounded-lg
-                                        text-muted-foreground hover:text-foreground
+                                        text-q-text-muted hover:text-foreground
                                         hover:bg-white/10
                                         transition-all duration-200
                                         opacity-0 group-hover:opacity-100
@@ -424,7 +424,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     <div className="
                                         absolute right-0 top-full mt-1 z-50
                                         bg-popover/95 backdrop-blur-xl
-                                        border border-border rounded-xl
+                                        border border-q-border rounded-xl
                                         shadow-2xl shadow-black/20
                                         py-1 min-w-[160px]
                                         animate-scale-in
@@ -452,7 +452,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                             <Bell size={14} />
                                             {t('appointments.form.reminders')}
                                         </button>
-                                        <div className="my-1 border-t border-border/50" />
+                                        <div className="my-1 border-t border-q-border/50" />
                                         {onDelete && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
@@ -486,11 +486,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     month: 'short'
                                 })}
                             </span>
-                            <span className="text-muted-foreground mx-1">·</span>
-                            <span className="text-muted-foreground">
+                            <span className="text-q-text-muted mx-1">·</span>
+                            <span className="text-q-text-muted">
                                 {formatTime(appointment.startDate)}
                             </span>
-                            <span className="text-muted-foreground/60 ml-1 hidden sm:inline">
+                            <span className="text-q-text-muted/60 ml-1 hidden sm:inline">
                                 - {formatTime(appointment.endDate)} ({formatDuration(duration)})
                             </span>
                         </div>
@@ -511,7 +511,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     <MapPin size={12} className="sm:w-3.5 sm:h-3.5" />
                                 )}
                             </div>
-                            <span className="text-muted-foreground truncate max-w-[150px] sm:max-w-none">
+                            <span className="text-q-text-muted truncate max-w-[150px] sm:max-w-none">
                                 {appointment.location.type === 'virtual'
                                     ? t('appointments.locations.virtual')
                                     : appointment.location.type === 'phone'
@@ -560,7 +560,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                                     relative w-6 h-6 sm:w-8 sm:h-8 rounded-full 
                                     bg-muted
                                     flex items-center justify-center
-                                    text-[10px] sm:text-xs font-bold text-muted-foreground
+                                    text-[10px] sm:text-xs font-bold text-q-text-muted
                                     border-2 border-card
                                 ">
                                     +{appointment.participants.length - 3}
@@ -569,7 +569,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         </div>
 
                         {/* Participant count - hidden on mobile */}
-                        <span className="text-xs text-muted-foreground hidden md:inline">
+                        <span className="text-xs text-q-text-muted hidden md:inline">
                             {appointment.participants.length}
                         </span>
                     </div>
@@ -588,7 +588,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                         )}
 
                         {/* Relative time - shortened on mobile */}
-                        <span className="text-[10px] sm:text-xs text-muted-foreground max-w-[60px] sm:max-w-none truncate">
+                        <span className="text-[10px] sm:text-xs text-q-text-muted max-w-[60px] sm:max-w-none truncate">
                             {getRelativeTime(appointment.startDate)}
                         </span>
                     </div>

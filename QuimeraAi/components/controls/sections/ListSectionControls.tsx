@@ -45,8 +45,8 @@ const { data, setNestedData, t, setAiAssistField } = deps;
   return (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -83,8 +83,8 @@ const { data, setNestedData, t, setAiAssistField } = deps;
       {/* Padding Controls */}
       {sectionData.paddingY !== undefined && sectionData.paddingX !== undefined && (
         <>
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
             <div className="space-y-1">
               <PaddingSelector label={t('editor.controls.common.vertical')} value={sectionData.paddingY || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingY`, v)} />
               <PaddingSelector label={t('editor.controls.common.horizontal')} value={sectionData.paddingX || 'md'} onChange={(v) => setNestedData(`${sectionKey}.paddingX`, v)} />
@@ -93,20 +93,20 @@ const { data, setNestedData, t, setAiAssistField } = deps;
         </>
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{getListTitle(t, sectionKey, itemLabel)}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{getListTitle(t, sectionKey, itemLabel)}</label>
       {(sectionData.items || []).map((item: any, index: number) => (
         <div
           key={index}
           data-section-item={`${sectionKey}:${index}`}
-          className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group"
+          className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group"
         >
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold text-editor-text-secondary">{itemLabel} #{index + 1}</span>
+            <span className="text-xs font-bold text-q-text-secondary">{itemLabel} #{index + 1}</span>
             <button type="button"               onClick={() => {
                 const newItems = (sectionData.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData(`${sectionKey}.items`, newItems);
               }}
-              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+              className="text-q-text-secondary hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>
@@ -119,7 +119,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
                   value={item[field.key]}
                   onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)}
                   rows={2}
-                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                  className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                 />
               ) : field.type === 'icon-selector' ? (
                 <IconSelector
@@ -146,7 +146,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
                   placeholder={field.label}
                   value={item[field.key]}
                   onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)}
-                  className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                  className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                 />
               )}
             </div>
@@ -157,7 +157,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           const newItem = fields.reduce((acc, field) => ({ ...acc, [field.key]: '' }), {});
           setNestedData(`${sectionKey}.items`, [...(sectionData.items || []), newItem]);
         }}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> {t('editor.controls.list.add')} {itemLabel}
       </button>

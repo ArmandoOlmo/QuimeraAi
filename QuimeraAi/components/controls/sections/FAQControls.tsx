@@ -32,15 +32,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* FAQ Variant Selector */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.faqStyle')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.faqStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {['classic', 'cards', 'gradient', 'minimal'].map((variant) => (
             <button type="button"               key={variant}
               onClick={() => setNestedData('faq.faqVariant', variant)}
               className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${(data?.faq?.faqVariant || 'classic') === variant
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                : 'bg-q-surface text-q-text-primary border-q-border hover:border-q-accent'
                 }`}
             >
               {variant}
@@ -58,8 +58,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="faq" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.faq?.colors?.background || '#1e293b'} onChange={(v) => setNestedData('faq.colors.background', v)} />
         <ColorControl label={t('controls.sectionTitle')} value={data?.faq?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.heading', v)} />
         <ColorControl label={t('controls.sectionDescription')} value={data?.faq?.colors?.description || data?.faq?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('faq.colors.description', v)} />
@@ -68,8 +68,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Card Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
         <ColorControl label={t('controls.cardBackground')} value={data?.faq?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('faq.colors.cardBackground', v)} />
         <ColorControl label={t('controls.questionText')} value={data?.faq?.colors?.text || '#F9FAFB'} onChange={(v) => setNestedData('faq.colors.text', v)} />
         <ColorControl label={t('controls.borderColor')} value={data?.faq?.colors?.borderColor || '#334155'} onChange={(v) => setNestedData('faq.colors.borderColor', v)} />
@@ -78,8 +78,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Gradient Colors (for gradient variant) */}
       {(data?.faq?.faqVariant === 'gradient') && (
         <>
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.gradient')}</label>
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.gradient')}</label>
             <ColorControl label={t('controls.gradientStart')} value={data?.faq?.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('faq.colors.gradientStart', v)} />
             <ColorControl label={t('controls.gradientEnd')} value={data?.faq?.colors?.gradientEnd || '#7c3aed'} onChange={(v) => setNestedData('faq.colors.gradientEnd', v)} />
           </div>

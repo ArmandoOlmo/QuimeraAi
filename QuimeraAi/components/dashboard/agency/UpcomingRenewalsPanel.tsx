@@ -49,16 +49,16 @@ export function UpcomingRenewalsPanel({
 
     if (renewals.length === 0) {
         return (
-            <div className="bg-card rounded-lg border border-border p-6">
+            <div className="bg-q-surface rounded-lg border border-q-border p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
                     Renovaciones Próximas
                 </h3>
                 <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         No hay renovaciones próximas
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-q-text-muted mt-1">
                         Las renovaciones de los próximos 30 días aparecerán aquí
                     </p>
                 </div>
@@ -67,7 +67,7 @@ export function UpcomingRenewalsPanel({
     }
 
     return (
-        <div className="bg-card rounded-lg border border-border p-6">
+        <div className="bg-q-surface rounded-lg border border-q-border p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-foreground">
                     Renovaciones Próximas
@@ -82,7 +82,7 @@ export function UpcomingRenewalsPanel({
                     <button
                         key={renewal.clientId}
                         onClick={() => handleRenewalClick(renewal)}
-                        className="w-full text-left p-4 rounded-lg border border-border hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md"
+                        className="w-full text-left p-4 rounded-lg border border-q-border hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
@@ -100,14 +100,14 @@ export function UpcomingRenewalsPanel({
                                 </div>
 
                                 {/* Renewal Date */}
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-2 text-sm text-q-text-muted">
                                     <Calendar className="h-4 w-4 flex-shrink-0" />
                                     <span>{formatDate(renewal.renewalDate)}</span>
                                 </div>
 
                                 {/* Monthly Price */}
                                 {renewal.monthlyPrice && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                    <div className="flex items-center gap-2 text-sm text-q-text-muted mt-1">
                                         <DollarSign className="h-4 w-4 flex-shrink-0" />
                                         <span>${renewal.monthlyPrice}/mes</span>
                                     </div>

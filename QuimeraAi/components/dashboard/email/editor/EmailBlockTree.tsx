@@ -146,10 +146,10 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             className={`
                 group relative flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all rounded-lg
                 ${isActive
-                    ? 'bg-editor-accent/10 text-editor-accent border border-editor-accent/30'
-                    : 'text-editor-text-primary hover:bg-editor-panel-bg/50 border border-transparent'
+                    ? 'bg-q-accent/10 text-q-accent border border-q-accent/30'
+                    : 'text-q-text hover:bg-q-surface/50 border border-transparent'
                 }
-                ${isDragging ? 'opacity-50 shadow-lg bg-editor-panel-bg' : ''}
+                ${isDragging ? 'opacity-50 shadow-lg bg-q-surface' : ''}
                 ${!block.visible ? 'opacity-50' : ''}
             `}
             onClick={onSelect}
@@ -163,7 +163,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             >
                 <GripVertical
                     size={14}
-                    className="text-editor-text-secondary hover:text-editor-text-primary"
+                    className="text-q-text-secondary hover:text-q-text"
                 />
             </div>
 
@@ -182,7 +182,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                         e.stopPropagation();
                         onToggleVisibility();
                     }}
-                    className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/50 transition-colors"
+                    className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/50 transition-colors"
                     title={block.visible ? t('email.hideBlock', 'Ocultar') : t('email.showBlock', 'Mostrar')}
                 >
                     {block.visible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -192,7 +192,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                         e.stopPropagation();
                         onDuplicate();
                     }}
-                    className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/50 transition-colors"
+                    className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/50 transition-colors"
                     title={t('email.duplicateBlock', 'Duplicar')}
                 >
                     <Copy size={14} />
@@ -202,7 +202,7 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                         e.stopPropagation();
                         setDeleteConfirmOpen(true);
                     }}
-                    className="flex-shrink-0 p-1.5 rounded text-editor-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="flex-shrink-0 p-1.5 rounded text-q-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                     title={t('email.deleteBlock', 'Eliminar')}
                 >
                     <Trash2 size={14} />
@@ -230,10 +230,10 @@ const DragOverlayItem: React.FC<{ block: EmailBlock }> = ({ block }) => {
     const Icon = blockIcons[block.type] || Type;
 
     return (
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-editor-panel-bg border border-editor-accent rounded-lg shadow-xl">
-            <GripVertical size={14} className="text-editor-accent" />
-            <Icon size={16} className="text-editor-accent" />
-            <span className="text-sm font-medium text-editor-text-primary">
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-q-surface border border-q-accent rounded-lg shadow-xl">
+            <GripVertical size={14} className="text-q-accent" />
+            <Icon size={16} className="text-q-accent" />
+            <span className="text-sm font-medium text-q-text">
                 {blockLabels[block.type]}
             </span>
         </div>
@@ -325,17 +325,17 @@ const EmailBlockTree: React.FC = () => {
     const activeBlock = activeId ? document.blocks.find(b => b.id === activeId) : null;
 
     return (
-        <div className="h-full flex flex-col bg-editor-bg">
+        <div className="h-full flex flex-col bg-q-bg">
             {/* Header */}
-            <div className="p-4 border-b border-editor-border">
+            <div className="p-4 border-b border-q-border">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-editor-text-primary uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-q-text uppercase tracking-wider flex items-center gap-2">
                         <LayoutTemplate size={16} />
                         {t('email.blocks', 'Bloques')}
                     </h3>
                     <button
                         onClick={() => setShowAddMenu(!showAddMenu)}
-                        className="p-1.5 text-editor-accent hover:text-editor-accent-hover hover:bg-editor-accent/10 rounded-md transition-colors"
+                        className="p-1.5 text-q-accent hover:text-q-accent hover:bg-q-accent/10 rounded-md transition-colors"
                         title={t('email.addBlock', 'Agregar bloque')}
                     >
                         {showAddMenu ? <X size={16} /> : <Plus size={16} />}
@@ -344,18 +344,18 @@ const EmailBlockTree: React.FC = () => {
 
                 {/* Search */}
                 <div className="relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary" />
                     <input
                         type="text"
                         placeholder={t('email.searchBlocks', 'Buscar bloques...')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                        className="w-full bg-q-surface border border-q-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-q-accent"
                     />
                     {searchTerm && (
                         <button
                             onClick={() => setSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-editor-text-secondary hover:text-editor-text-primary"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-secondary hover:text-q-text"
                         >
                             <X size={14} />
                         </button>
@@ -365,8 +365,8 @@ const EmailBlockTree: React.FC = () => {
 
             {/* Add Block Menu */}
             {showAddMenu && (
-                <div className="p-3 border-b border-editor-border bg-editor-panel-bg/50">
-                    <div className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
+                <div className="p-3 border-b border-q-border bg-q-surface/50">
+                    <div className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
                         {t('email.addBlock', 'Agregar bloque')}
                     </div>
                     <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
@@ -376,12 +376,12 @@ const EmailBlockTree: React.FC = () => {
                                 <button
                                     key={type}
                                     onClick={() => handleAddBlock(type)}
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-editor-bg border border-transparent hover:border-editor-border transition-all text-left group"
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-q-bg border border-transparent hover:border-q-border transition-all text-left group"
                                 >
-                                    <div className="w-8 h-8 rounded-md bg-editor-accent/10 flex items-center justify-center group-hover:bg-editor-accent/20 transition-colors">
-                                        <Icon size={16} className="text-editor-accent" />
+                                    <div className="w-8 h-8 rounded-md bg-q-accent/10 flex items-center justify-center group-hover:bg-q-accent/20 transition-colors">
+                                        <Icon size={16} className="text-q-accent" />
                                     </div>
-                                    <span className="text-sm text-editor-text-primary font-medium">
+                                    <span className="text-sm text-q-text font-medium">
                                         {blockLabels[type]}
                                     </span>
                                 </button>
@@ -395,13 +395,13 @@ const EmailBlockTree: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-3">
                 {document.blocks.length === 0 ? (
                     <div className="text-center py-8">
-                        <LayoutTemplate size={32} className="mx-auto text-editor-text-secondary mb-3" />
-                        <p className="text-sm text-editor-text-secondary mb-4">
+                        <LayoutTemplate size={32} className="mx-auto text-q-text-secondary mb-3" />
+                        <p className="text-sm text-q-text-secondary mb-4">
                             {t('email.noBlocks', 'No hay bloques')}
                         </p>
                         <button
                             onClick={() => setShowAddMenu(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors text-sm font-medium"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors text-sm font-medium"
                         >
                             <Plus size={16} />
                             {t('email.addFirstBlock', 'Agregar primer bloque')}
@@ -442,10 +442,10 @@ const EmailBlockTree: React.FC = () => {
 
             {/* Quick Add Footer */}
             {document.blocks.length > 0 && (
-                <div className="p-3 border-t border-editor-border">
+                <div className="p-3 border-t border-q-border">
                     <button
                         onClick={() => setShowAddMenu(true)}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-colors"
                     >
                         <Plus size={14} />
                         <span className="text-sm font-medium">{t('email.addBlock', 'Agregar bloque')}</span>

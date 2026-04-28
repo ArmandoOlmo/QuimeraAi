@@ -66,7 +66,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t('leads.timeline.title')}</h3>
+                <h3 className="text-sm font-bold text-q-text-muted uppercase tracking-wider">{t('leads.timeline.title')}</h3>
                 {!isAdding && (
                     <button
                         onClick={() => setIsAdding(true)}
@@ -79,14 +79,14 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
 
             {/* Add Activity Form */}
             {isAdding && (
-                <form onSubmit={handleSubmit} className="bg-secondary/20 border border-border rounded-xl p-4 space-y-3">
+                <form onSubmit={handleSubmit} className="bg-secondary/20 border border-q-border rounded-xl p-4 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Type</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">Type</label>
                             <select
                                 value={newActivity.type}
                                 onChange={e => setNewActivity({ ...newActivity, type: e.target.value as ActivityType })}
-                                className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
                                 <option value="call">Phone Call</option>
                                 <option value="email">Email</option>
@@ -95,24 +95,24 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">Title</label>
                             <input
                                 type="text"
                                 value={newActivity.title}
                                 onChange={e => setNewActivity({ ...newActivity, title: e.target.value })}
                                 placeholder="Quick summary..."
-                                className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 required
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Description (optional)</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">Description (optional)</label>
                         <textarea
                             value={newActivity.description}
                             onChange={e => setNewActivity({ ...newActivity, description: e.target.value })}
                             placeholder="Additional details..."
-                            className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                            className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                             rows={2}
                         />
                     </div>
@@ -123,7 +123,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                                 setIsAdding(false);
                                 setNewActivity({ type: 'note', title: '', description: '' });
                             }}
-                            className="px-3 py-1.5 text-sm border border-border rounded hover:bg-secondary transition-colors"
+                            className="px-3 py-1.5 text-sm border border-q-border rounded hover:bg-secondary transition-colors"
                         >
                             Cancel
                         </button>
@@ -142,7 +142,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
             {/* Timeline */}
             <div className="space-y-3">
                 {activities.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground text-sm italic">
+                    <div className="text-center py-8 text-q-text-muted text-sm italic">
                         {t('leads.timeline.noActivities')}
                     </div>
                 ) : (
@@ -168,7 +168,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                                         <div className="flex-1">
                                             <h4 className="text-sm font-bold text-foreground">{activity.title}</h4>
                                             {activity.description && (
-                                                <p className="text-xs text-muted-foreground mt-1">{activity.description}</p>
+                                                <p className="text-xs text-q-text-muted mt-1">{activity.description}</p>
                                             )}
                                             {activity.metadata && (
                                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -190,7 +190,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                        <span className="text-[10px] text-q-text-muted whitespace-nowrap">
                                             {formatDate(activity.createdAt)}
                                         </span>
                                     </div>

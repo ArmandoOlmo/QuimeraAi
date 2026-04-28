@@ -216,7 +216,7 @@ Personalidad:
 
     // Derived colors from design tokens or custom
     // When colorSource === 'app', map design tokens to match GlobalAiAssistant's
-    // Tailwind class mapping (bg-primary → header, bg-card → bubbles, bg-background → container)
+    // Tailwind class mapping (bg-primary → header, bg-q-surface → bubbles, bg-q-bg → container)
     const dtColors = designTokens?.colors as any;
     const colors: LandingChatbotColors = colorSource === 'app' && dtColors
         ? {

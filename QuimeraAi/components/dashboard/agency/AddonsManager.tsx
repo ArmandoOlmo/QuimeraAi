@@ -246,7 +246,7 @@ export function AddonsManager() {
                     <Users className="w-4 h-4 text-primary" />
                     Sub-clientes Adicionales
                   </strong>
-                  <p className="text-muted-foreground">Cada unidad te permite agregar un cliente adicional a tu cuenta de agencia. Ideal cuando tu negocio crece y necesitas gestionar más clientes.</p>
+                  <p className="text-q-text-muted">Cada unidad te permite agregar un cliente adicional a tu cuenta de agencia. Ideal cuando tu negocio crece y necesitas gestionar más clientes.</p>
                 </div>
               </div>
 
@@ -257,7 +257,7 @@ export function AddonsManager() {
                     <HardDrive className="w-4 h-4 text-primary" />
                     Almacenamiento Extra
                   </strong>
-                  <p className="text-muted-foreground">Cada bloque añade 100GB de almacenamiento para imágenes, videos y archivos de tus clientes. Perfecto para proyectos con mucho contenido multimedia.</p>
+                  <p className="text-q-text-muted">Cada bloque añade 100GB de almacenamiento para imágenes, videos y archivos de tus clientes. Perfecto para proyectos con mucho contenido multimedia.</p>
                 </div>
               </div>
 
@@ -268,7 +268,7 @@ export function AddonsManager() {
                     <Zap className="w-4 h-4 text-primary" />
                     Créditos de IA Adicionales
                   </strong>
-                  <p className="text-muted-foreground">Cada bloque incluye 1000 créditos de IA para generar contenido, imágenes, textos de marketing y más con inteligencia artificial.</p>
+                  <p className="text-q-text-muted">Cada bloque incluye 1000 créditos de IA para generar contenido, imágenes, textos de marketing y más con inteligencia artificial.</p>
                 </div>
               </div>
             </div>
@@ -276,15 +276,15 @@ export function AddonsManager() {
             <div className="pt-3 border-t border-primary/20 space-y-2">
               <div className="flex items-start gap-2">
                 <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <p className="text-muted-foreground"><strong className="text-foreground">Facturación:</strong> Los add-ons se cobran mensualmente junto con tu suscripción base.</p>
+                <p className="text-q-text-muted"><strong className="text-foreground">Facturación:</strong> Los add-ons se cobran mensualmente junto con tu suscripción base.</p>
               </div>
               <div className="flex items-start gap-2">
                 <TrendingUp className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <p className="text-muted-foreground"><strong className="text-foreground">Prorrateado:</strong> Si agregas add-ons a mitad de mes, solo pagas la parte proporcional.</p>
+                <p className="text-q-text-muted"><strong className="text-foreground">Prorrateado:</strong> Si agregas add-ons a mitad de mes, solo pagas la parte proporcional.</p>
               </div>
               <div className="flex items-start gap-2">
                 <DollarSign className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <p className="text-muted-foreground"><strong className="text-foreground">Flexibilidad:</strong> Puedes aumentar o reducir add-ons en cualquier momento según tus necesidades.</p>
+                <p className="text-q-text-muted"><strong className="text-foreground">Flexibilidad:</strong> Puedes aumentar o reducir add-ons en cualquier momento según tus necesidades.</p>
               </div>
             </div>
           </div>
@@ -294,7 +294,7 @@ export function AddonsManager() {
       {/* Add-ons List */}
       <div className="space-y-4">
         {addonsList.map((addon) => (
-          <div key={addon.id} className="bg-card border border-border rounded-xl p-6">
+          <div key={addon.id} className="bg-q-surface border border-q-border rounded-xl p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
                 <div className="bg-primary/10 p-3 rounded-lg">
@@ -309,7 +309,7 @@ export function AddonsManager() {
                       ${addon.pricePerUnit}/{addon.unit}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-q-text-muted">
                     {addon.description}
                   </p>
 
@@ -318,7 +318,7 @@ export function AddonsManager() {
                     <button
                       onClick={() => handleQuantityChange(addon.id, -1)}
                       disabled={addon.currentQuantity === 0 || loading}
-                      className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-q-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -327,7 +327,7 @@ export function AddonsManager() {
                       <div className="text-2xl font-bold text-foreground">
                         {addon.currentQuantity}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-q-text-muted">
                         {addon.unit}
                       </div>
                     </div>
@@ -335,7 +335,7 @@ export function AddonsManager() {
                     <button
                       onClick={() => handleQuantityChange(addon.id, 1)}
                       disabled={loading}
-                      className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-q-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -344,12 +344,12 @@ export function AddonsManager() {
               </div>
 
               <div className="text-right">
-                <div className="text-sm text-muted-foreground mb-1">
+                <div className="text-sm text-q-text-muted mb-1">
                   {t('dashboard.agency.addonsPage.subtotal')}
                 </div>
                 <div className="text-2xl font-bold text-foreground">
                   ${addon.currentQuantity * addon.pricePerUnit}
-                  <span className="text-sm font-normal text-muted-foreground">
+                  <span className="text-sm font-normal text-q-text-muted">
                     {t('dashboard.agency.addonsPage.perMonth')}
                   </span>
                 </div>
@@ -360,24 +360,24 @@ export function AddonsManager() {
       </div>
 
       {/* Summary */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      <div className="bg-q-surface border border-q-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <Package className="w-5 h-5 text-primary" />
               {t('dashboard.agency.addonsPage.summary')}
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-q-text-muted mt-1">
               {t('dashboard.agency.addonsPage.summaryDesc')}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-muted-foreground mb-1">
+            <div className="text-sm text-q-text-muted mb-1">
               {t('dashboard.agency.addonsPage.totalMonthly')}
             </div>
             <div className="text-3xl font-bold text-primary">
               ${calculateTotalPrice()}
-              <span className="text-lg font-normal text-muted-foreground">
+              <span className="text-lg font-normal text-q-text-muted">
                 {t('dashboard.agency.addonsPage.perMonth')}
               </span>
             </div>
@@ -395,7 +395,7 @@ export function AddonsManager() {
                 key={addon.id}
                 className="flex items-center justify-between text-sm"
               >
-                <span className="text-muted-foreground">
+                <span className="text-q-text-muted">
                   {addon.name} ({addon.currentQuantity} × ${addon.pricePerUnit})
                 </span>
                 <span className="font-medium text-foreground">
@@ -406,7 +406,7 @@ export function AddonsManager() {
           })}
 
           {calculateTotalPrice() === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-2">
+            <p className="text-sm text-q-text-muted text-center py-2">
               {t('dashboard.agency.addonsPage.noAddonsSelected')}
             </p>
           )}
@@ -441,11 +441,11 @@ export function AddonsManager() {
       </div>
 
       {/* Info Card */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      <div className="bg-q-surface border border-q-border rounded-xl p-6">
         <h4 className="text-sm font-semibold text-foreground mb-3">
           {t('dashboard.agency.addonsPage.importantInfo')}
         </h4>
-        <ul className="text-sm text-muted-foreground space-y-2">
+        <ul className="text-sm text-q-text-muted space-y-2">
           <li className="flex items-start">
             <span className="mr-2">•</span>
             <span>

@@ -16,8 +16,8 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -28,8 +28,8 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
       </div>
 
       {/* Content Settings */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MessageSquare size={14} />
           {t('controls.content', 'Contenido')}
         </label>
@@ -55,8 +55,8 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
       </div>
 
       {/* Behavior Settings */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Settings size={14} />
           {t('controls.behavior', 'Comportamiento')}
         </label>
@@ -80,8 +80,8 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Palette size={14} />
           {t('controls.colors', 'Colores')}
         </label>

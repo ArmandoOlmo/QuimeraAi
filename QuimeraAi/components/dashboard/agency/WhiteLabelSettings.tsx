@@ -166,7 +166,7 @@ export function WhiteLabelSettings() {
                         <Shield className="h-6 w-6 text-primary" />
                         {t('dashboard.agency.whiteLabel.title')}
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-q-text-muted mt-1">
                         {t('dashboard.agency.whiteLabel.subtitle')}
                     </p>
                 </div>
@@ -195,8 +195,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 1: Company Identity */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.companyIdentity')}
@@ -213,7 +213,7 @@ export function WhiteLabelSettings() {
                             value={branding.companyName || ''}
                             onChange={(e) => updateField('companyName', e.target.value)}
                             placeholder={t('dashboard.agency.whiteLabel.companyNamePlaceholder')}
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
 
@@ -227,7 +227,7 @@ export function WhiteLabelSettings() {
                             value={branding.supportEmail || ''}
                             onChange={(e) => updateField('supportEmail', e.target.value)}
                             placeholder="soporte@tuagencia.com"
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
 
@@ -241,7 +241,7 @@ export function WhiteLabelSettings() {
                             value={branding.supportUrl || ''}
                             onChange={(e) => updateField('supportUrl', e.target.value)}
                             placeholder="https://soporte.tuagencia.com"
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
 
@@ -255,7 +255,7 @@ export function WhiteLabelSettings() {
                             value={branding.footerText || ''}
                             onChange={(e) => updateField('footerText', e.target.value)}
                             placeholder={t('dashboard.agency.whiteLabel.footerTextPlaceholder')}
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
                 </div>
@@ -264,8 +264,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 2: Logo & Favicon */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <ImageIcon className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.logoAndFavicon')}
@@ -278,7 +278,7 @@ export function WhiteLabelSettings() {
                             <label className="block text-sm font-medium text-foreground mb-3">
                                 {t('dashboard.agency.whiteLabel.logo')}
                             </label>
-                            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
+                            <div className="border-2 border-dashed border-q-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
                                 {branding.logoUrl ? (
                                     <div className="space-y-3">
                                         <img
@@ -307,7 +307,7 @@ export function WhiteLabelSettings() {
                                     <button
                                         onClick={() => logoInputRef.current?.click()}
                                         disabled={uploadingLogo}
-                                        className="w-full py-4 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="w-full py-4 flex flex-col items-center gap-2 text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         {uploadingLogo ? (
                                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -319,7 +319,7 @@ export function WhiteLabelSettings() {
                                                 ? t('dashboard.agency.whiteLabel.uploading')
                                                 : t('dashboard.agency.whiteLabel.uploadLogo')}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             PNG, JPG, SVG · Max 2MB
                                         </span>
                                     </button>
@@ -339,7 +339,7 @@ export function WhiteLabelSettings() {
                             <label className="block text-sm font-medium text-foreground mb-3">
                                 {t('dashboard.agency.whiteLabel.favicon')}
                             </label>
-                            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
+                            <div className="border-2 border-dashed border-q-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
                                 {branding.faviconUrl ? (
                                     <div className="space-y-3">
                                         <img
@@ -368,7 +368,7 @@ export function WhiteLabelSettings() {
                                     <button
                                         onClick={() => faviconInputRef.current?.click()}
                                         disabled={uploadingFavicon}
-                                        className="w-full py-4 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="w-full py-4 flex flex-col items-center gap-2 text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         {uploadingFavicon ? (
                                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -380,7 +380,7 @@ export function WhiteLabelSettings() {
                                                 ? t('dashboard.agency.whiteLabel.uploading')
                                                 : t('dashboard.agency.whiteLabel.uploadFavicon')}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             ICO, PNG · 32×32 o 64×64 · Max 1MB
                                         </span>
                                     </button>
@@ -401,8 +401,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 3: Brand Colors */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Palette className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.brandColors')}
@@ -427,8 +427,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 4: Custom Domain — Full Panel */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Globe className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.customDomain')}
@@ -442,8 +442,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 5: Email Configuration */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Mail className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.emailConfig')}
@@ -459,7 +459,7 @@ export function WhiteLabelSettings() {
                             value={branding.emailFromName || ''}
                             onChange={(e) => updateField('emailFromName', e.target.value)}
                             placeholder={t('dashboard.agency.whiteLabel.emailFromNamePlaceholder')}
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
                     <div>
@@ -471,7 +471,7 @@ export function WhiteLabelSettings() {
                             value={branding.emailFromAddress || ''}
                             onChange={(e) => updateField('emailFromAddress', e.target.value)}
                             placeholder="noreply@tuagencia.com"
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
                 </div>
@@ -480,8 +480,8 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 6: Live Preview */}
             {/* ================================================================= */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/30">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Eye className="h-4 w-4 text-primary" />
                         {t('dashboard.agency.whiteLabel.preview')}
@@ -489,7 +489,7 @@ export function WhiteLabelSettings() {
                 </div>
                 <div className="p-6">
                     {/* Simulated portal header */}
-                    <div className="rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div className="rounded-xl border border-q-border overflow-hidden shadow-lg">
                         {/* Portal header bar */}
                         <div
                             className="h-14 flex items-center px-4 gap-3"
@@ -517,7 +517,7 @@ export function WhiteLabelSettings() {
                         </div>
 
                         {/* Portal body mockup */}
-                        <div className="bg-background p-6 space-y-4">
+                        <div className="bg-q-bg p-6 space-y-4">
                             <div className="flex gap-3">
                                 <div
                                     className="w-2 h-16 rounded-full"
@@ -531,7 +531,7 @@ export function WhiteLabelSettings() {
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="rounded-lg border border-border p-3 space-y-2">
+                                    <div key={i} className="rounded-lg border border-q-border p-3 space-y-2">
                                         <div
                                             className="h-1.5 w-8 rounded-full"
                                             style={{ backgroundColor: branding.secondaryColor || '#10b981' }}
@@ -544,8 +544,8 @@ export function WhiteLabelSettings() {
                         </div>
 
                         {/* Portal footer */}
-                        <div className="border-t border-border px-4 py-2 text-center">
-                            <span className="text-[10px] text-muted-foreground">
+                        <div className="border-t border-q-border px-4 py-2 text-center">
+                            <span className="text-[10px] text-q-text-muted">
                                 {branding.footerText || `© ${new Date().getFullYear()} ${branding.companyName || t('dashboard.agency.whiteLabel.companyNamePlaceholder')}`}
                             </span>
                         </div>

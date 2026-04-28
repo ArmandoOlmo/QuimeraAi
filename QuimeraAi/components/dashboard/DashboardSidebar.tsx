@@ -436,15 +436,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               : 'justify-center w-12 mx-auto rounded-lg'
             }
             ${isLocked
-              ? 'text-muted-foreground/60 hover:bg-secondary/50'
+              ? 'text-q-text-muted/60 hover:bg-secondary/50'
               : isActive
                 ? (showExpanded
                   ? 'bg-primary text-white font-bold'
                   : 'text-primary dark:text-primary'
                 )
                 : (showExpanded
-                  ? 'text-muted-foreground hover:bg-secondary/80 md:hover:bg-secondary hover:text-foreground active:bg-secondary'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-q-text-muted hover:bg-secondary/80 md:hover:bg-secondary hover:text-foreground active:bg-secondary'
+                  : 'text-q-text-muted hover:text-foreground'
                 )
             }
             ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -461,7 +461,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               {...listeners}
               className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity"
             >
-              <GripVertical size={16} className="text-muted-foreground" />
+              <GripVertical size={16} className="text-q-text-muted" />
             </div>
           )}
 
@@ -485,7 +485,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           {/* Lock icon for locked features */}
           {isLocked && showExpanded && (
             <div className="flex items-center gap-1 ml-auto">
-              <Lock size={14} className="text-muted-foreground" />
+              <Lock size={14} className="text-q-text-muted" />
               <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">
                 {minPlanRequired}
               </span>
@@ -539,7 +539,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             setDragOffset(0);
           }}
           className={`
-              fixed md:relative z-50 h-[100dvh] md:h-full bg-background/95 backdrop-blur-xl border-r border-border 
+              fixed md:relative z-50 h-[100dvh] md:h-full bg-q-bg/95 backdrop-blur-xl border-r border-q-border 
               shadow-2xl md:shadow-[4px_0_24px_hsl(270_48%_8%/0.3)] flex flex-col
               ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
               ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full md:translate-x-0'}
@@ -552,7 +552,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           aria-label="Main navigation"
         >
           {/* Header / Logo - Enhanced for mobile */}
-          <div className="relative h-[72px] md:h-[80px] flex items-center justify-between px-4 md:px-0 md:justify-center border-b border-border md:border-none flex-shrink-0">
+          <div className="relative h-[72px] md:h-[80px] flex items-center justify-between px-4 md:px-0 md:justify-center border-b border-q-border md:border-none flex-shrink-0">
             <div
               onClick={() => navigate(ROUTES.DASHBOARD)}
               className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'md:px-0 md:justify-center md:gap-0' : 'md:px-6'}`}
@@ -576,7 +576,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             <button
               onClick={onClose}
               className="md:hidden flex items-center justify-center w-11 h-11 rounded-full 
-                          text-muted-foreground hover:text-foreground hover:bg-secondary/80 
+                          text-q-text-muted hover:text-foreground hover:bg-secondary/80 
                           active:scale-95 transition-all touch-manipulation flex-shrink-0"
               aria-label={t('common.close')}
             >
@@ -586,7 +586,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
           {/* Workspace Switcher - Multi-tenant support */}
           {showWorkspaceSwitcher && (
-            <div className={`px-3 md:px-4 py-2 border-b border-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
+            <div className={`px-3 md:px-4 py-2 border-b border-q-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
               <WorkspaceSwitcher
                 collapsed={isCollapsed && !isMobileOpen}
                 onCreateWorkspace={() => {
@@ -599,7 +599,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           )}
 
           {/* Project Switcher - Global project selection */}
-          <div className={`px-3 md:px-4 py-2 border-b border-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
+          <div className={`px-3 md:px-4 py-2 border-b border-q-border ${isCollapsed && !isMobileOpen ? 'hidden md:block' : ''}`}>
             <ProjectSwitcher
               collapsed={isCollapsed && !isMobileOpen}
               onCreateProject={() => {
@@ -634,7 +634,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 {isCollapsed && !isMobileOpen ? (
                   <>
                     {/* Separator */}
-                    <div className="my-2 border-t border-border mx-2" />
+                    <div className="my-2 border-t border-q-border mx-2" />
                     {/* Show all items directly with drag and drop - filtered by service availability */}
                     {[...websiteItems, ...ecommerceItems, ...toolsItems]
                       .filter(isItemAccessible)
@@ -642,7 +642,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                         <SortableNavItem key={item.id} item={item} index={index + 1} />
                       ))}
                     {/* Blog - standalone */}
-                    <div className="my-2 border-t border-border mx-2" />
+                    <div className="my-2 border-t border-q-border mx-2" />
                     <SortableNavItem item={blogItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
                     {/* Agency button - standalone */}
                     <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
@@ -655,7 +655,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <div className="mt-3">
                       <button
                         onClick={() => toggleSection('websites')}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
                         aria-expanded={!collapsedSections.websites}
                       >
                         <div className="flex items-center gap-2">
@@ -671,7 +671,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                         className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.websites ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                           }`}
                       >
-                        <div className="pl-2 border-l border-border ml-4 mt-1">
+                        <div className="pl-2 border-l border-q-border ml-4 mt-1">
                           {websiteItems.filter(isItemAccessible).map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + 1} />
                           ))}
@@ -683,7 +683,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       <div className="mt-3">
                         <button
                           onClick={() => toggleSection('ecommerce')}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
                           aria-expanded={!collapsedSections.ecommerce}
                         >
                           <div className="flex items-center gap-2">
@@ -699,7 +699,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.ecommerce ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                             }`}
                         >
-                          <div className="pl-2 border-l border-border ml-4 mt-1">
+                          <div className="pl-2 border-l border-q-border ml-4 mt-1">
                             {ecommerceItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
                             ))}
@@ -713,7 +713,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       <div className="mt-3">
                         <button
                           onClick={() => toggleSection('tools')}
-                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
+                          className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-q-text-muted hover:bg-secondary/50 hover:text-foreground transition-all duration-200"
                           aria-expanded={!collapsedSections.tools}
                         >
                           <div className="flex items-center gap-2">
@@ -729,7 +729,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsedSections.tools ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'
                             }`}
                         >
-                          <div className="pl-2 border-l border-border ml-4 mt-1">
+                          <div className="pl-2 border-l border-q-border ml-4 mt-1">
                             {toolsItems.filter(isItemAccessible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
                             ))}
@@ -739,7 +739,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     )}
 
                     {/* Blog - Standalone above Agency */}
-                    <div className={`my-3 md:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <div className={`my-3 md:my-4 border-t border-q-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                     <SortableNavItem
                       item={blogItem}
                       index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
@@ -762,7 +762,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 {/* Panel de administración solo para roles autorizados (owner, superadmin, admin, manager) */}
                 {canAccessSuperAdmin && (
                   <>
-                    <div className={`my-3 md:my-4 border-t border-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
+                    <div className={`my-3 md:my-4 border-t border-q-border ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
                     <SortableNavItem
                       item={{
                         id: 'superadmin',
@@ -780,13 +780,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           </nav>
 
           {/* Footer / User Profile / Theme - Optimized for mobile */}
-          <div className="flex-shrink-0 border-t border-border bg-card/40 backdrop-blur-md relative">
+          <div className="flex-shrink-0 border-t border-q-border bg-q-surface/40 backdrop-blur-md relative">
 
             {/* Footer Toggle Button - Small circle at top center */}
             {(!isCollapsed || isMobileOpen) && (
               <button
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 bg-card border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 w-6 bg-q-surface border border-q-border rounded-full flex items-center justify-center text-q-text-muted hover:text-foreground hover:border-primary transition-all shadow-md"
                 style={{ height: '24px', minHeight: '24px' }}
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
@@ -807,14 +807,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-20 opacity-100 mb-3'
                 }`}>
-                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-border">
+                <div className="flex items-center justify-between gap-2 bg-muted p-1.5 rounded-xl border border-q-border">
                   {/* Theme */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setThemeMode('light')}
                       className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'light'
-                        ? 'bg-background text-primary shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        ? 'bg-q-bg text-primary shadow-sm'
+                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
                         }`}
                       title={t('common.lightMode')}
                       aria-label={t('common.lightMode')}
@@ -825,8 +825,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <button
                       onClick={() => setThemeMode('dark')}
                       className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'dark'
-                        ? 'bg-card text-primary shadow-sm border border-border'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        ? 'bg-q-surface text-primary shadow-sm border border-q-border'
+                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
                         }`}
                       title={t('common.darkMode')}
                       aria-label={t('common.darkMode')}
@@ -837,8 +837,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <button
                       onClick={() => setThemeMode('black')}
                       className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${themeMode === 'black'
-                        ? 'bg-card text-primary border border-primary/30 shadow-sm shadow-primary/20'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
+                        ? 'bg-q-surface text-primary border border-primary/30 shadow-sm shadow-primary/20'
+                        : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/40'
                         }`}
                       title={t('common.blackMode')}
                       aria-label={t('common.blackMode')}
@@ -878,7 +878,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   />
 
                   <div className="mt-2 flex justify-between items-center px-1">
-                    <span className="text-[10px] text-muted-foreground font-medium">{t('common.monthlyCredits')}</span>
+                    <span className="text-[10px] text-q-text-muted font-medium">{t('common.monthlyCredits')}</span>
                     {!isOwner && (
                       <button
                         onClick={handleUpgradeClick}
@@ -903,10 +903,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   onClick={openProfileModal}
                 >
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors" />
+                    <img src={user.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border-2 border-q-border group-hover:border-primary transition-colors" />
                   ) : (
-                    <div className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-border group-hover:border-primary transition-colors">
-                      <UserIcon size={22} className="md:w-5 md:h-5 text-muted-foreground" />
+                    <div className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-q-border group-hover:border-primary transition-colors">
+                      <UserIcon size={22} className="md:w-5 md:h-5 text-q-text-muted" />
                     </div>
                   )}
                   <div className="absolute bottom-0 right-0 w-3.5 h-3.5 md:w-3 md:h-3 bg-green-500 border-2 border-background rounded-full"></div>
@@ -915,7 +915,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 {(!isCollapsed || isMobileOpen) && (
                   <div className="flex-1 overflow-hidden min-w-0">
                     <p className="text-sm font-bold text-foreground truncate">{userDocument?.name || t('common.creator')}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    <p className="text-xs text-q-text-muted truncate">{user?.email}</p>
                   </div>
                 )}
 
@@ -923,7 +923,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   {(!isCollapsed || isMobileOpen) && (
                     <button
                       onClick={handleSignOut}
-                      className="p-2.5 md:p-1.5 -mr-1 text-muted-foreground hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      className="p-2.5 md:p-1.5 -mr-1 text-q-text-muted hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
                       aria-label={t('auth.logout')}
                     >
                       <LogOut size={18} className="md:w-4 md:h-4" aria-hidden="true" />
@@ -938,7 +938,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
         {/* Desktop Toggle Button - Outside aside for proper z-index */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-card border border-border rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-all shadow-md"
+          className="hidden md:flex absolute top-[16px] -right-3 z-[100] w-6 h-6 bg-q-surface border border-q-border rounded-full items-center justify-center text-q-text-muted hover:text-foreground hover:border-primary transition-all shadow-md"
           aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
           aria-expanded={!isCollapsed}
         >

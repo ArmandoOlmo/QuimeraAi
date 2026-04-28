@@ -87,7 +87,7 @@ const INDUSTRY_ICONS: Record<string, React.ElementType> = {
 };
 
 const CARD_COLORS = [
-    { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-border', indicator: 'bg-slate-500' },
+    { id: 'default', bg: 'bg-gradient-to-r from-background via-background/60 to-transparent', border: 'border-q-border', indicator: 'bg-slate-500' },
     { id: 'blue', bg: 'bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent', border: 'border-blue-500/30', indicator: 'bg-blue-500' },
     { id: 'green', bg: 'bg-gradient-to-r from-emerald-500/40 via-emerald-500/20 to-transparent', border: 'border-emerald-500/30', indicator: 'bg-emerald-500' },
     { id: 'purple', bg: 'bg-gradient-to-r from-purple-500/40 via-purple-500/20 to-transparent', border: 'border-purple-500/30', indicator: 'bg-purple-500' },
@@ -161,7 +161,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     e.stopPropagation();
                     onDelete(lead.id);
                 }}
-                className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                className="absolute top-2 right-2 z-10 p-1 sm:p-1.5 rounded-full bg-q-surface/80 backdrop-blur-sm border border-q-border/50 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 title="Eliminar lead"
             >
                 <Trash2 size={12} className="sm:hidden" />
@@ -170,7 +170,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             {/* Color Picker Popover */}
             {showPalette && (
                 <div
-                    className="absolute top-2 right-8 z-20 bg-popover border border-border rounded-lg shadow-xl p-1.5 sm:p-2 flex gap-1 sm:gap-1.5 animate-fade-in-up"
+                    className="absolute top-2 right-8 z-20 bg-popover border border-q-border rounded-lg shadow-xl p-1.5 sm:p-2 flex gap-1 sm:gap-1.5 animate-fade-in-up"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
                     {CARD_COLORS.map(c => (
@@ -187,7 +187,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             {/* Emoji Picker Popover - Mobile optimized */}
             {showEmojiPicker && (
                 <div
-                    className="absolute top-8 right-0 sm:right-[-1rem] z-30 bg-popover border border-border rounded-lg shadow-xl p-2 sm:p-3 grid grid-cols-6 gap-1.5 sm:gap-2 animate-fade-in-up w-56 sm:w-72 max-h-48 sm:max-h-60 overflow-y-auto custom-scrollbar"
+                    className="absolute top-8 right-0 sm:right-[-1rem] z-30 bg-popover border border-q-border rounded-lg shadow-xl p-2 sm:p-3 grid grid-cols-6 gap-1.5 sm:gap-2 animate-fade-in-up w-56 sm:w-72 max-h-48 sm:max-h-60 overflow-y-auto custom-scrollbar"
                     onMouseDown={(e) => e.stopPropagation()}
                 >
                     {EMOJI_MARKERS.slice(0, 24).map(e => (
@@ -202,7 +202,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                     ))}
                     <button
                         onClick={(evt) => handleEmojiUpdate(evt, undefined)}
-                        className="text-[10px] sm:text-xs text-muted-foreground hover:text-red-500 col-span-6 border-t border-border pt-1.5 sm:pt-2 mt-1 font-medium"
+                        className="text-[10px] sm:text-xs text-q-text-muted hover:text-red-500 col-span-6 border-t border-q-border pt-1.5 sm:pt-2 mt-1 font-medium"
                         title="Clear"
                     >
                         {t('leads.dashboard.clearMarker')}
@@ -215,7 +215,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                 <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 z-20">
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
-                        className="h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-base sm:text-xl bg-card rounded-full shadow-sm border border-border hover:scale-110 transition-transform"
+                        className="h-6 w-6 sm:h-8 sm:w-8 flex items-center justify-center text-base sm:text-xl bg-q-surface rounded-full shadow-sm border border-q-border hover:scale-110 transition-transform"
                     >
                         {lead.emojiMarker}
                     </button>
@@ -261,7 +261,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
             </div>
 
             <h4 className="font-bold text-foreground text-xs sm:text-sm mb-0.5 line-clamp-1">{lead.name}</h4>
-            {lead.company && <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 sm:mb-1.5 line-clamp-1">{lead.company}</p>}
+            {lead.company && <p className="text-[10px] sm:text-xs text-q-text-muted mb-1 sm:mb-1.5 line-clamp-1">{lead.company}</p>}
 
             {/* Customer Interest Preview - from AI Analysis */}
             {lead.aiAnalysis && (
@@ -290,15 +290,15 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                                 Conversación ({messageCount} mensajes)
                             </span>
                         </div>
-                        <p className="text-[8px] sm:text-[9px] text-muted-foreground line-clamp-2 italic pl-3.5">
+                        <p className="text-[8px] sm:text-[9px] text-q-text-muted line-clamp-2 italic pl-3.5">
                             "{preview.length > 80 ? preview.slice(0, 80) + '...' : preview}"
                         </p>
                     </div>
                 );
             })()}
 
-            <div className="flex items-center justify-between mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border/50">
-                <span className="text-[8px] sm:text-[10px] text-muted-foreground flex items-center">
+            <div className="flex items-center justify-between mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-q-border/50">
+                <span className="text-[8px] sm:text-[10px] text-q-text-muted flex items-center">
                     <Clock size={8} className="sm:hidden mr-0.5" />
                     <Clock size={10} className="hidden sm:block mr-1" />
                     {lead.createdAt && lead.createdAt.seconds
@@ -308,7 +308,7 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                 {/* Mobile: Always show actions, Desktop: show on hover */}
                 <div className="flex gap-0.5 sm:gap-1 transition-opacity">
                     <button
-                        className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-yellow-500 transition-colors"
+                        className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-yellow-500 transition-colors"
                         title={t('leads.dashboard.addEmoji')}
                         onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowPalette(false); }}
                     >
@@ -316,14 +316,14 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
                         <Smile size={12} className="hidden sm:block" />
                     </button>
                     <button
-                        className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-primary transition-colors"
+                        className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-primary transition-colors"
                         title={t('leads.dashboard.changeColor')}
                         onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); setShowEmojiPicker(false); }}
                     >
                         <Palette size={10} className="sm:hidden" />
                         <Palette size={12} className="hidden sm:block" />
                     </button>
-                    <button className="p-1 sm:p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-foreground transition-colors" title="Email">
+                    <button className="p-1 sm:p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-colors" title="Email">
                         <Mail size={10} className="sm:hidden" />
                         <Mail size={12} className="hidden sm:block" />
                     </button>
@@ -982,15 +982,15 @@ const LeadsDashboard: React.FC = () => {
     // Show message when no project is active
     if (!hasActiveProject) {
         return (
-            <div className="flex h-screen bg-background text-foreground">
+            <div className="flex h-screen bg-q-bg text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                     <div className="text-center max-w-md">
-                        <LayoutGrid className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                        <LayoutGrid className="w-16 h-16 text-q-text-muted mx-auto mb-4" />
                         <h2 className="text-xl font-semibold text-foreground mb-2">
                             {t('leads.noProjectSelected', 'No hay proyecto seleccionado')}
                         </h2>
-                        <p className="text-muted-foreground mb-6">
+                        <p className="text-q-text-muted mb-6">
                             {t('leads.selectProjectMessage', 'Selecciona un proyecto desde el menú lateral para ver y gestionar los leads de ese proyecto.')}
                         </p>
                     </div>
@@ -1000,17 +1000,17 @@ const LeadsDashboard: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-[14rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header - Mobile optimized */}
-                <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-border bg-background sticky top-0 z-20 shrink-0">
+                <header className="h-auto min-h-[56px] px-3 sm:px-6 py-2 sm:py-0 border-b border-q-border bg-q-bg sticky top-0 z-20 shrink-0">
                     {/* Main header row */}
                     <div className="flex items-center justify-between h-[52px] sm:h-14">
                         <div className="flex items-center gap-2 sm:gap-4">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation">
                                 <Menu className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2 sm:gap-4">
@@ -1023,7 +1023,7 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="relative" ref={industryDropdownRef}>
                                     <button
                                         onClick={() => setShowIndustryDropdown(!showIndustryDropdown)}
-                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-secondary/60 hover:bg-secondary border border-border/50 rounded-lg text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
+                                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-secondary/60 hover:bg-secondary border border-q-border/50 rounded-lg text-[10px] sm:text-xs font-medium text-q-text-muted hover:text-foreground transition-all"
                                         title={t('leads.industry.title')}
                                     >
                                         {(() => {
@@ -1036,8 +1036,8 @@ const LeadsDashboard: React.FC = () => {
                                     </button>
 
                                     {showIndustryDropdown && (
-                                        <div className="absolute top-full left-0 mt-2 w-[260px] bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-2xl z-50 p-2 animate-fade-in-up">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-2 py-1.5 mb-1">
+                                        <div className="absolute top-full left-0 mt-2 w-[260px] bg-q-surface/95 backdrop-blur-xl border border-q-border rounded-xl shadow-2xl z-50 p-2 animate-fade-in-up">
+                                            <p className="text-[10px] font-bold text-q-text-muted uppercase tracking-wider px-2 py-1.5 mb-1">
                                                 {t('leads.industry.title')}
                                             </p>
                                             {INDUSTRY_META.map(meta => {
@@ -1058,7 +1058,7 @@ const LeadsDashboard: React.FC = () => {
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-semibold truncate">{t(meta.labelKey)}</p>
-                                                            <p className="text-[10px] text-muted-foreground truncate">{t(meta.descriptionKey)}</p>
+                                                            <p className="text-[10px] text-q-text-muted truncate">{t(meta.descriptionKey)}</p>
                                                         </div>
                                                         {isActive && <Check size={14} className="text-primary shrink-0" />}
                                                     </button>
@@ -1068,16 +1068,16 @@ const LeadsDashboard: React.FC = () => {
                                     )}
                                 </div>
 
-                                <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-border/50">
+                                <div className="flex items-center bg-muted/50 p-0.5 sm:p-1 rounded-lg border border-q-border/50">
                                     <button
                                         onClick={() => setActiveTab('pipeline')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-q-bg text-foreground shadow-sm' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {t('leads.dashboard.pipeline')}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('library')}
-                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                        className={`px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium rounded-md transition-all ${activeTab === 'library' ? 'bg-q-bg text-foreground shadow-sm' : 'text-q-text-muted hover:text-foreground'}`}
                                     >
                                         {t('leads.dashboard.library')}
                                     </button>
@@ -1091,18 +1091,18 @@ const LeadsDashboard: React.FC = () => {
                                     {/* Stats Row (Hidden on mobile) */}
                                     <div className="hidden lg:flex items-center gap-6 mr-4">
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.pipelineValue')}</p>
+                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.pipelineValue')}</p>
                                             <p className="text-lg font-bold text-foreground">${stats.totalValue.toLocaleString()}</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.conversionRate')}</p>
+                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.conversionRate')}</p>
                                             <div className="flex items-center text-green-500">
                                                 <p className="text-lg font-bold mr-1">{stats.conversionRate}%</p>
                                                 <ArrowUpRight size={14} />
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('leads.dashboard.activeLeads')}</p>
+                                            <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">{t('leads.dashboard.activeLeads')}</p>
                                             <p className="text-lg font-bold text-foreground">{stats.activeLeads}</p>
                                         </div>
                                     </div>
@@ -1111,21 +1111,21 @@ const LeadsDashboard: React.FC = () => {
                                     <div className="hidden sm:flex items-center gap-0.5 sm:gap-1">
                                         <button
                                             onClick={() => setViewMode('kanban')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.kanbanView')}
                                         >
                                             <Columns className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('table')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.tableView')}
                                         >
                                             <Table className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => setViewMode('list')}
-                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent bg-editor-accent/10' : 'text-muted-foreground hover:text-foreground hover:bg-border/40'}`}
+                                            className={`h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-q-accent bg-q-accent/10' : 'text-q-text-muted hover:text-foreground hover:bg-border/40'}`}
                                             title={t('leads.dashboard.listView')}
                                         >
                                             <List className="w-4 h-4" />
@@ -1133,8 +1133,8 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
 
                                     {/* Search - Desktop only */}
-                                    <div className="hidden md:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 min-w-[200px]">
-                                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                                    <div className="hidden md:flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2 min-w-[200px]">
+                                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                                         <input
                                             type="text"
                                             placeholder={t('leads.dashboard.search')}
@@ -1143,7 +1143,7 @@ const LeadsDashboard: React.FC = () => {
                                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                                         />
                                         {searchQuery && (
-                                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                            <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                                 <X size={16} />
                                             </button>
                                         )}
@@ -1152,7 +1152,7 @@ const LeadsDashboard: React.FC = () => {
                                     {/* Mobile Search Button — square, no bg */}
                                     <button
                                         onClick={() => setIsMobileSearchOpen(true)}
-                                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                                        className="md:hidden h-8 w-8 flex items-center justify-center rounded-md text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         <Search className="w-4 h-4" />
                                     </button>
@@ -1173,14 +1173,14 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={handleExportCSV}
-                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40"
                                         title={t('leads.dashboard.exportCsv')}
                                     >
                                         <Download className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => setIsImportModalOpen(true)}
-                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40"
+                                        className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-md transition-all text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40"
                                         title={t('leads.import.title', 'Importar Leads')}
                                     >
                                         <Upload className="w-4 h-4" />
@@ -1211,7 +1211,7 @@ const LeadsDashboard: React.FC = () => {
                             </div>
                             <div className="w-px h-4 bg-border shrink-0" />
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-xs text-muted-foreground">Active:</span>
+                                <span className="text-xs text-q-text-muted">Active:</span>
                                 <span className="text-xs font-bold text-foreground">{stats.activeLeads}</span>
                             </div>
 
@@ -1219,19 +1219,19 @@ const LeadsDashboard: React.FC = () => {
                             <div className="sm:hidden flex items-center gap-0 ml-auto shrink-0">
                                 <button
                                     onClick={() => setViewMode('kanban')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'kanban' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     <Columns className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('table')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'table' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     <Table className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-muted hover:text-foreground'}`}
                                 >
                                     <List className="w-3.5 h-3.5" />
                                 </button>
@@ -1378,12 +1378,12 @@ const LeadsDashboard: React.FC = () => {
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[85vw] min-w-[85vw] flex flex-col h-full rounded-xl bg-secondary/80 border border-border/50 snap-center"
+                                                    className="w-[85vw] min-w-[85vw] flex flex-col h-full rounded-xl bg-secondary/80 border border-q-border/50 snap-center"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
                                                     {/* Column Header - Editable */}
-                                                    <div className="p-3 flex items-center justify-between shrink-0 border-b border-border/30">
+                                                    <div className="p-3 flex items-center justify-between shrink-0 border-b border-q-border/30">
                                                         <div className="flex items-center gap-2">
                                                             <div className={`w-2 h-2 rounded-full ${stage.color}`} />
                                                             {editingStageId === stage.id ? (
@@ -1405,7 +1405,7 @@ const LeadsDashboard: React.FC = () => {
                                                                     <Pencil size={8} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
                                                                 </h3>
                                                             )}
-                                                            <span className="bg-background px-1.5 py-0.5 rounded-full text-[10px] text-muted-foreground border border-border font-mono">
+                                                            <span className="bg-q-bg px-1.5 py-0.5 rounded-full text-[10px] text-q-text-muted border border-q-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
                                                         </div>
@@ -1423,7 +1423,7 @@ const LeadsDashboard: React.FC = () => {
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
-                                                            <div className="h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground text-[11px] font-medium bg-background/30">
+                                                            <div className="h-20 border-2 border-dashed border-q-border rounded-lg flex items-center justify-center text-q-text-muted text-[11px] font-medium bg-q-bg/30">
                                                                 Drop items here
                                                             </div>
                                                         )}
@@ -1440,7 +1440,7 @@ const LeadsDashboard: React.FC = () => {
                                             return (
                                                 <div
                                                     key={stage.id}
-                                                    className="w-[280px] lg:w-[320px] flex flex-col h-full rounded-2xl bg-secondary/80 border border-border/50"
+                                                    className="w-[280px] lg:w-[320px] flex flex-col h-full rounded-2xl bg-secondary/80 border border-q-border/50"
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, stage.id)}
                                                 >
@@ -1467,13 +1467,13 @@ const LeadsDashboard: React.FC = () => {
                                                                     <Pencil size={10} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
                                                                 </h3>
                                                             )}
-                                                            <span className="bg-background px-2 py-0.5 rounded-full text-xs text-muted-foreground border border-border font-mono">
+                                                            <span className="bg-q-bg px-2 py-0.5 rounded-full text-xs text-q-text-muted border border-q-border font-mono">
                                                                 {stageLeads.length}
                                                             </span>
                                                         </div>
                                                         <button
                                                             onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
-                                                            className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-background transition-colors"
+                                                            className="text-q-text-muted hover:text-foreground p-1 rounded hover:bg-q-bg transition-colors"
                                                             title={t('leads.crmSettings.editStageLabel')}
                                                         >
                                                             <Pencil size={14} />
@@ -1492,7 +1492,7 @@ const LeadsDashboard: React.FC = () => {
                                                             />
                                                         ))}
                                                         {stageLeads.length === 0 && (
-                                                            <div className="h-24 border-2 border-dashed border-border rounded-xl flex items-center justify-center text-muted-foreground text-xs font-medium bg-background/30">
+                                                            <div className="h-24 border-2 border-dashed border-q-border rounded-xl flex items-center justify-center text-q-text-muted text-xs font-medium bg-q-bg/30">
                                                                 Drop items here
                                                             </div>
                                                         )}
@@ -1529,26 +1529,26 @@ const LeadsDashboard: React.FC = () => {
                                         onToggleSelect={handleToggleSelect}
                                     />
                                     {selectedLead && (
-                                        <div className="bg-card border border-border rounded-xl p-6 overflow-y-auto custom-scrollbar">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6 overflow-y-auto custom-scrollbar">
                                             <h3 className="text-lg font-bold mb-4">Quick Preview</h3>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="text-xs font-bold text-muted-foreground uppercase">Name</label>
+                                                    <label className="text-xs font-bold text-q-text-muted uppercase">Name</label>
                                                     <p className="text-sm text-foreground">{selectedLead.name}</p>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-muted-foreground uppercase">Email</label>
+                                                    <label className="text-xs font-bold text-q-text-muted uppercase">Email</label>
                                                     <p className="text-sm text-foreground">{selectedLead.email}</p>
                                                 </div>
                                                 {selectedLead.company && (
                                                     <div>
-                                                        <label className="text-xs font-bold text-muted-foreground uppercase">Company</label>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Company</label>
                                                         <p className="text-sm text-foreground">{selectedLead.company}</p>
                                                     </div>
                                                 )}
                                                 {selectedLead.value && (
                                                     <div>
-                                                        <label className="text-xs font-bold text-muted-foreground uppercase">Value</label>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase">Value</label>
                                                         <p className="text-sm font-bold text-green-500">${selectedLead.value.toLocaleString()}</p>
                                                     </div>
                                                 )}
@@ -1586,11 +1586,11 @@ const LeadsDashboard: React.FC = () => {
                     isOpen={!!selectedLead}
                     onClose={() => { setSelectedLead(null); }}
                     maxWidth="max-w-3xl"
-                    className="bg-card !p-0"
+                    className="bg-q-surface !p-0"
                 >
                     {selectedLead && (
                         <>
-                            <div className="p-4 sm:p-6 border-b border-border bg-secondary/10">
+                            <div className="p-4 sm:p-6 border-b border-q-border bg-secondary/10">
                                 {/* Mobile drag indicator */}
                                 <div className="sm:hidden w-10 h-1 bg-border rounded-full mx-auto mb-3" />
 
@@ -1602,7 +1602,7 @@ const LeadsDashboard: React.FC = () => {
                                                     type="text"
                                                     value={editForm.name || ''}
                                                     onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                                                    className="text-lg sm:text-2xl font-bold text-foreground bg-secondary/20 border border-border rounded-lg px-2 sm:px-3 py-1 outline-none focus:ring-2 focus:ring-primary/50 w-full sm:w-auto"
+                                                    className="text-lg sm:text-2xl font-bold text-foreground bg-secondary/20 border border-q-border rounded-lg px-2 sm:px-3 py-1 outline-none focus:ring-2 focus:ring-primary/50 w-full sm:w-auto"
                                                 />
                                             ) : (
                                                 <h2 className="text-lg sm:text-2xl font-bold text-foreground truncate">{selectedLead.name}</h2>
@@ -1614,14 +1614,14 @@ const LeadsDashboard: React.FC = () => {
                                                 {selectedLead.emojiMarker && <span className="text-lg sm:text-2xl">{selectedLead.emojiMarker}</span>}
                                             </div>
                                         </div>
-                                        <p className="text-muted-foreground flex items-center gap-2 text-xs sm:text-sm flex-wrap">
+                                        <p className="text-q-text-muted flex items-center gap-2 text-xs sm:text-sm flex-wrap">
                                             {isEditMode ? (
                                                 <input
                                                     type="text"
                                                     placeholder="Company name"
                                                     value={editForm.company || ''}
                                                     onChange={e => setEditForm({ ...editForm, company: e.target.value })}
-                                                    className="bg-secondary/20 border border-border rounded px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="bg-secondary/20 border border-q-border rounded px-2 py-1 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
                                                 selectedLead.company && <span className="flex items-center"><Building2 size={12} className="sm:hidden mr-1" /><Building2 size={14} className="hidden sm:block mr-1" /> {selectedLead.company}</span>
@@ -1643,7 +1643,7 @@ const LeadsDashboard: React.FC = () => {
                                                 </button>
                                             </>
                                         )}
-                                        <button onClick={() => { setSelectedLead(null); setIsEditMode(false); }} className="p-1.5 sm:p-2 hover:bg-border rounded-full text-muted-foreground transition-colors">
+                                        <button onClick={() => { setSelectedLead(null); setIsEditMode(false); }} className="p-1.5 sm:p-2 hover:bg-border rounded-full text-q-text-muted transition-colors">
                                             <XCircle size={20} className="sm:hidden" />
                                             <XCircle size={24} className="hidden sm:block" />
                                         </button>
@@ -1686,24 +1686,24 @@ const LeadsDashboard: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="sm:text-right">
-                                                    <span className="text-[10px] text-muted-foreground uppercase font-bold">Action: </span>
+                                                    <span className="text-[10px] text-q-text-muted uppercase font-bold">Action: </span>
                                                     <span className="text-xs sm:text-sm font-bold text-foreground">{selectedLead.recommendedAction || "Review"}</span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs sm:text-sm text-muted-foreground bg-card p-2 sm:p-3 rounded-lg border border-border">
+                                            <p className="text-xs sm:text-sm text-q-text-muted bg-q-surface p-2 sm:p-3 rounded-lg border border-q-border">
                                                 <span className="font-bold text-purple-500 mr-1 sm:mr-2">Insight:</span>
                                                 {selectedLead.aiAnalysis}
                                             </p>
                                         </div>
                                     ) : (
-                                        <p className="text-xs sm:text-sm text-muted-foreground italic">Run analysis to get score and insights.</p>
+                                        <p className="text-xs sm:text-sm text-q-text-muted italic">Run analysis to get score and insights.</p>
                                     )}
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                     <div className="space-y-3 sm:space-y-4">
                                         <div>
-                                            <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Contact Info</label>
+                                            <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block">Contact Info</label>
                                             {isEditMode ? (
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
@@ -1712,7 +1712,7 @@ const LeadsDashboard: React.FC = () => {
                                                             type="email"
                                                             value={editForm.email || ''}
                                                             onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                                                            className="flex-1 bg-secondary/20 border border-border rounded px-2 py-1.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                            className="flex-1 bg-secondary/20 border border-q-border rounded px-2 py-1.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
                                                     <div className="flex items-center gap-2">
@@ -1722,7 +1722,7 @@ const LeadsDashboard: React.FC = () => {
                                                             placeholder="Phone number"
                                                             value={editForm.phone || ''}
                                                             onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                                                            className="flex-1 bg-secondary/20 border border-border rounded px-2 py-1.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                            className="flex-1 bg-secondary/20 border border-q-border rounded px-2 py-1.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
                                                 </div>
@@ -1745,7 +1745,7 @@ const LeadsDashboard: React.FC = () => {
                                     <div className="space-y-3 sm:space-y-4">
                                         <div className="flex sm:block items-center justify-between sm:justify-start gap-4">
                                             <div>
-                                                <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Deal Value</label>
+                                                <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block">Deal Value</label>
                                                 {isEditMode ? (
                                                     <div className="flex items-center gap-1">
                                                         <span className="text-lg sm:text-xl font-bold text-green-500">$</span>
@@ -1753,7 +1753,7 @@ const LeadsDashboard: React.FC = () => {
                                                             type="number"
                                                             value={editForm.value || 0}
                                                             onChange={e => setEditForm({ ...editForm, value: Number(e.target.value) })}
-                                                            className="w-24 sm:flex-1 bg-secondary/20 border border-border rounded px-2 py-1 text-lg sm:text-xl font-bold text-green-500 outline-none focus:ring-2 focus:ring-primary/50"
+                                                            className="w-24 sm:flex-1 bg-secondary/20 border border-q-border rounded px-2 py-1 text-lg sm:text-xl font-bold text-green-500 outline-none focus:ring-2 focus:ring-primary/50"
                                                         />
                                                     </div>
                                                 ) : (
@@ -1761,7 +1761,7 @@ const LeadsDashboard: React.FC = () => {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Source</label>
+                                                <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block">Source</label>
                                                 <p className="text-xs sm:text-sm text-foreground capitalize flex items-center gap-1.5">
                                                     {selectedLead.source === 'chatbot' ? <Bot size={14} /> : <LayoutGrid size={14} />}
                                                     {selectedLead.source}
@@ -1772,10 +1772,10 @@ const LeadsDashboard: React.FC = () => {
                                 </div>
 
                                 {/* Professional Info & Links - Mobile optimized */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 border-t border-border pt-4 sm:pt-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 border-t border-q-border pt-4 sm:pt-6">
                                     <div className="space-y-3">
                                         <div>
-                                            <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                            <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block flex items-center gap-1">
                                                 <Briefcase size={10} className="sm:hidden" />
                                                 <Briefcase size={12} className="hidden sm:block" />
                                                 Job Title
@@ -1786,14 +1786,14 @@ const LeadsDashboard: React.FC = () => {
                                                     placeholder="e.g. Marketing Director"
                                                     value={editForm.jobTitle || ''}
                                                     onChange={e => setEditForm({ ...editForm, jobTitle: e.target.value })}
-                                                    className="w-full bg-secondary/20 border border-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="w-full bg-secondary/20 border border-q-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
                                                 <p className="text-xs sm:text-sm text-foreground">{selectedLead.jobTitle || '-'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                            <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block flex items-center gap-1">
                                                 <Building2 size={10} className="sm:hidden" />
                                                 <Building2 size={12} className="hidden sm:block" />
                                                 Industry
@@ -1804,7 +1804,7 @@ const LeadsDashboard: React.FC = () => {
                                                     placeholder="e.g. Technology, Healthcare"
                                                     value={editForm.industry || ''}
                                                     onChange={e => setEditForm({ ...editForm, industry: e.target.value })}
-                                                    className="w-full bg-secondary/20 border border-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="w-full bg-secondary/20 border border-q-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
                                                 <p className="text-xs sm:text-sm text-foreground">{selectedLead.industry || '-'}</p>
@@ -1813,7 +1813,7 @@ const LeadsDashboard: React.FC = () => {
                                     </div>
                                     <div className="space-y-3">
                                         <div>
-                                            <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                            <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block flex items-center gap-1">
                                                 <Globe size={10} className="sm:hidden" />
                                                 <Globe size={12} className="hidden sm:block" />
                                                 Website
@@ -1824,7 +1824,7 @@ const LeadsDashboard: React.FC = () => {
                                                     placeholder="https://example.com"
                                                     value={editForm.website || ''}
                                                     onChange={e => setEditForm({ ...editForm, website: e.target.value })}
-                                                    className="w-full bg-secondary/20 border border-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="w-full bg-secondary/20 border border-q-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
                                                 selectedLead.website ? (
@@ -1832,12 +1832,12 @@ const LeadsDashboard: React.FC = () => {
                                                         {selectedLead.website.replace(/^https?:\/\//, '')}
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs sm:text-sm text-muted-foreground">-</p>
+                                                    <p className="text-xs sm:text-sm text-q-text-muted">-</p>
                                                 )
                                             )}
                                         </div>
                                         <div>
-                                            <label className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block flex items-center gap-1">
+                                            <label className="text-[10px] sm:text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block flex items-center gap-1">
                                                 <Linkedin size={10} className="sm:hidden" />
                                                 <Linkedin size={12} className="hidden sm:block" />
                                                 LinkedIn
@@ -1848,7 +1848,7 @@ const LeadsDashboard: React.FC = () => {
                                                     placeholder="https://linkedin.com/in/..."
                                                     value={editForm.linkedIn || ''}
                                                     onChange={e => setEditForm({ ...editForm, linkedIn: e.target.value })}
-                                                    className="w-full bg-secondary/20 border border-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="w-full bg-secondary/20 border border-q-border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             ) : (
                                                 selectedLead.linkedIn ? (
@@ -1856,7 +1856,7 @@ const LeadsDashboard: React.FC = () => {
                                                         View Profile
                                                     </a>
                                                 ) : (
-                                                    <p className="text-xs sm:text-sm text-muted-foreground">-</p>
+                                                    <p className="text-xs sm:text-sm text-q-text-muted">-</p>
                                                 )
                                             )}
                                         </div>
@@ -1864,8 +1864,8 @@ const LeadsDashboard: React.FC = () => {
                                 </div>
 
                                 {/* Address Section */}
-                                <div className="border-t border-border pt-6">
-                                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block flex items-center gap-1">
+                                <div className="border-t border-q-border pt-6">
+                                    <label className="text-xs font-bold text-q-text-muted uppercase tracking-wider mb-3 block flex items-center gap-1">
                                         <MapPin size={12} />
                                         Address
                                     </label>
@@ -1879,7 +1879,7 @@ const LeadsDashboard: React.FC = () => {
                                                     ...editForm,
                                                     address: { ...(editForm.address || {}), street: e.target.value }
                                                 })}
-                                                className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                className="w-full bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                             />
                                             <div className="grid grid-cols-2 gap-3">
                                                 <input
@@ -1890,7 +1890,7 @@ const LeadsDashboard: React.FC = () => {
                                                         ...editForm,
                                                         address: { ...(editForm.address || {}), city: e.target.value }
                                                     })}
-                                                    className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                                 <input
                                                     type="text"
@@ -1900,7 +1900,7 @@ const LeadsDashboard: React.FC = () => {
                                                         ...editForm,
                                                         address: { ...(editForm.address || {}), state: e.target.value }
                                                     })}
-                                                    className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
@@ -1912,7 +1912,7 @@ const LeadsDashboard: React.FC = () => {
                                                         ...editForm,
                                                         address: { ...(editForm.address || {}), zipCode: e.target.value }
                                                     })}
-                                                    className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                                 <input
                                                     type="text"
@@ -1922,7 +1922,7 @@ const LeadsDashboard: React.FC = () => {
                                                         ...editForm,
                                                         address: { ...(editForm.address || {}), country: e.target.value }
                                                     })}
-                                                    className="bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                 />
                                             </div>
                                         </div>
@@ -1935,25 +1935,25 @@ const LeadsDashboard: React.FC = () => {
                                                     {selectedLead.address.state && `, ${selectedLead.address.state}`}
                                                     {selectedLead.address.zipCode && ` ${selectedLead.address.zipCode}`}
                                                 </p>
-                                                {selectedLead.address.country && <p className="text-muted-foreground mt-1">{selectedLead.address.country}</p>}
+                                                {selectedLead.address.country && <p className="text-q-text-muted mt-1">{selectedLead.address.country}</p>}
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-muted-foreground italic">No address added</p>
+                                            <p className="text-sm text-q-text-muted italic">No address added</p>
                                         )
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Notes</label>
+                                    <label className="text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2 block">Notes</label>
                                     {isEditMode ? (
                                         <textarea
                                             value={editForm.notes || ''}
                                             onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
-                                            className="w-full bg-secondary/20 border border-border rounded-xl p-4 min-h-[100px] text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-y"
+                                            className="w-full bg-secondary/20 border border-q-border rounded-xl p-4 min-h-[100px] text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-y"
                                             placeholder="Add notes about this lead..."
                                         />
                                     ) : (
-                                        <div className="bg-secondary/20 p-4 rounded-xl border border-border min-h-[100px] text-sm text-foreground leading-relaxed">
+                                        <div className="bg-secondary/20 p-4 rounded-xl border border-q-border min-h-[100px] text-sm text-foreground leading-relaxed">
                                             {selectedLead.notes || "No notes added yet."}
                                         </div>
                                     )}
@@ -1961,15 +1961,15 @@ const LeadsDashboard: React.FC = () => {
 
                                 {/* Custom Fields */}
                                 {customFieldsConfig.length > 0 && (
-                                    <div className="border-t border-border pt-6">
-                                        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Custom Fields</h3>
+                                    <div className="border-t border-q-border pt-6">
+                                        <h3 className="text-sm font-bold text-q-text-muted uppercase tracking-wider mb-4">Custom Fields</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             {customFieldsConfig.map(fieldDef => {
                                                 const currentValue = selectedLead.customFields?.find(f => f.id === fieldDef.id);
 
                                                 return (
                                                     <div key={fieldDef.id}>
-                                                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase tracking-wider mb-1 block">
                                                             {fieldDef.name}
                                                         </label>
                                                         {isEditMode ? (
@@ -1988,7 +1988,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             }
                                                                             setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
-                                                                        className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                                        className="w-full bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     />
                                                                 )}
                                                                 {fieldDef.type === 'number' && (
@@ -2005,7 +2005,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             }
                                                                             setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
-                                                                        className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                                        className="w-full bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     />
                                                                 )}
                                                                 {fieldDef.type === 'select' && fieldDef.options && (
@@ -2021,7 +2021,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             }
                                                                             setEditForm({ ...editForm, customFields: updatedFields });
                                                                         }}
-                                                                        className="w-full bg-secondary/20 border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                                                        className="w-full bg-secondary/20 border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                                                     >
                                                                         <option value="">Select...</option>
                                                                         {fieldDef.options.map(opt => (
@@ -2044,7 +2044,7 @@ const LeadsDashboard: React.FC = () => {
                                                                                 }
                                                                                 setEditForm({ ...editForm, customFields: updatedFields });
                                                                             }}
-                                                                            className="rounded border-border"
+                                                                            className="rounded border-q-border"
                                                                         />
                                                                         <span className="text-sm">Yes</span>
                                                                     </label>
@@ -2064,9 +2064,9 @@ const LeadsDashboard: React.FC = () => {
 
                                 {/* Chatbot Conversation Section */}
                                 {!isEditMode && selectedLead.conversationTranscript && (
-                                    <div className="border-t border-border pt-6">
+                                    <div className="border-t border-q-border pt-6">
                                         <div className="flex justify-between items-center mb-3">
-                                            <h3 className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                            <h3 className="text-xs sm:text-sm font-bold text-q-text-muted uppercase tracking-wider flex items-center gap-2">
                                                 <MessageSquare size={14} />
                                                 Conversación del Chatbot
                                             </h3>
@@ -2106,7 +2106,7 @@ const LeadsDashboard: React.FC = () => {
                                                             </div>
                                                             <div>
                                                                 <h4 className="text-sm font-bold text-foreground">Análisis de IA</h4>
-                                                                <p className="text-xs text-muted-foreground">Resumen de la conversación</p>
+                                                                <p className="text-xs text-q-text-muted">Resumen de la conversación</p>
                                                             </div>
                                                         </div>
                                                         {isNewAnalysis && (
@@ -2206,7 +2206,7 @@ const LeadsDashboard: React.FC = () => {
                                                             // If no sections, show as single block
                                                             if (sections.length === 0) {
                                                                 return (
-                                                                    <div className="bg-card border border-border rounded-xl p-4">
+                                                                    <div className="bg-q-surface border border-q-border rounded-xl p-4">
                                                                         <p className="text-sm text-foreground/90 leading-relaxed">
                                                                             {cleanMarkdown(analysisToShow)}
                                                                         </p>
@@ -2218,7 +2218,7 @@ const LeadsDashboard: React.FC = () => {
                                                             return sections.map((section, idx) => (
                                                                 <div
                                                                     key={idx}
-                                                                    className="bg-card hover:bg-card/80 border border-border rounded-xl p-4 transition-colors"
+                                                                    className="bg-q-surface hover:bg-q-surface/80 border border-q-border rounded-xl p-4 transition-colors"
                                                                 >
                                                                     <div className="flex items-start gap-3">
                                                                         <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
@@ -2228,7 +2228,7 @@ const LeadsDashboard: React.FC = () => {
                                                                             <h5 className="text-sm font-semibold text-foreground mb-1">
                                                                                 {section.title}
                                                                             </h5>
-                                                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                                                            <p className="text-sm text-q-text-muted leading-relaxed">
                                                                                 {section.content}
                                                                             </p>
                                                                         </div>
@@ -2239,14 +2239,14 @@ const LeadsDashboard: React.FC = () => {
                                                     </div>
 
                                                     {/* Subtle footer */}
-                                                    <p className="text-xs text-muted-foreground text-center mt-3">
+                                                    <p className="text-xs text-q-text-muted text-center mt-3">
                                                         Generado por IA • {new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                                                     </p>
                                                 </div>
                                             );
                                         })()}
                                         {/* Conversation Transcript */}
-                                        <div className="bg-gradient-to-b from-secondary/10 to-secondary/5 border border-border rounded-xl p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                        <div className="bg-gradient-to-b from-secondary/10 to-secondary/5 border border-q-border rounded-xl p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
                                             <div className="space-y-4">
                                                 {selectedLead.conversationTranscript.split('\n').map((line, idx) => {
                                                     const isUser = line.toLowerCase().startsWith('user:') || line.toLowerCase().startsWith('usuario:');
@@ -2267,7 +2267,7 @@ const LeadsDashboard: React.FC = () => {
                                                         const messageText = line.replace(/^(bot:|assistant:|asistente:)/i, '').trim();
                                                         return (
                                                             <div key={idx} className="flex justify-start animate-in slide-in-from-left-2 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
-                                                                <div className="bg-card border border-border/50 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] shadow-sm">
+                                                                <div className="bg-q-surface border border-q-border/50 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] shadow-sm">
                                                                     <div className="flex items-start gap-2.5">
                                                                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                                                                             <Bot size={14} className="text-primary" />
@@ -2281,7 +2281,7 @@ const LeadsDashboard: React.FC = () => {
                                                         // System messages or unformatted lines
                                                         return (
                                                             <div key={idx} className="flex justify-center">
-                                                                <div className="bg-muted/50 text-muted-foreground text-xs italic px-3 py-1 rounded-full">
+                                                                <div className="bg-muted/50 text-q-text-muted text-xs italic px-3 py-1 rounded-full">
                                                                     {line}
                                                                 </div>
                                                             </div>
@@ -2295,7 +2295,7 @@ const LeadsDashboard: React.FC = () => {
 
                                 {/* Activity Timeline */}
                                 {!isEditMode && (
-                                    <div className="border-t border-border pt-6">
+                                    <div className="border-t border-q-border pt-6">
                                         <LeadsTimeline
                                             activities={getLeadActivities(selectedLead.id)}
                                             onAddActivity={async (activity) => {
@@ -2307,7 +2307,7 @@ const LeadsDashboard: React.FC = () => {
 
                                 {/* Tasks & Reminders */}
                                 {!isEditMode && (
-                                    <div className="border-t border-border pt-6">
+                                    <div className="border-t border-q-border pt-6">
                                         <LeadTasksList
                                             tasks={getLeadTasks(selectedLead.id)}
                                             onAddTask={async (task) => {
@@ -2328,9 +2328,9 @@ const LeadsDashboard: React.FC = () => {
                                 )}
 
                                 {/* Email Draft Section */}
-                                <div className="border-t border-border pt-6">
+                                <div className="border-t border-q-border pt-6">
                                     <div className="flex justify-between items-center mb-3">
-                                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Quick Email Draft</label>
+                                        <label className="text-xs font-bold text-q-text-muted uppercase tracking-wider block">Quick Email Draft</label>
                                         <button
                                             onClick={handleDraftEmail}
                                             disabled={isDrafting}
@@ -2341,7 +2341,7 @@ const LeadsDashboard: React.FC = () => {
                                         </button>
                                     </div>
                                     {emailDraft ? (
-                                        <div className="bg-card border border-border rounded-lg p-3 relative group">
+                                        <div className="bg-q-surface border border-q-border rounded-lg p-3 relative group">
                                             <textarea
                                                 className="w-full bg-transparent text-sm text-foreground outline-none resize-y min-h-[150px]"
                                                 value={emailDraft}
@@ -2358,7 +2358,7 @@ const LeadsDashboard: React.FC = () => {
                                             />
                                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {/* Auto-saved indicator */}
-                                                <div className="flex items-center text-[10px] text-muted-foreground mr-2 italic">
+                                                <div className="flex items-center text-[10px] text-q-text-muted mr-2 italic">
                                                     Saved
                                                 </div>
                                                 <button
@@ -2378,19 +2378,19 @@ const LeadsDashboard: React.FC = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-xs text-muted-foreground italic bg-secondary/10 p-3 rounded border border-dashed border-border/50">
+                                        <div className="text-xs text-q-text-muted italic bg-secondary/10 p-3 rounded border border-dashed border-q-border/50">
                                             Click "Draft with AI" to generate a personalized outreach email.
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Quick Actions - Mobile optimized */}
-                                <div className="pt-4 sm:pt-6 border-t border-border">
+                                <div className="pt-4 sm:pt-6 border-t border-q-border">
                                     {isEditMode ? (
                                         <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0">
                                             <button
                                                 onClick={handleCancelEdit}
-                                                className="flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-xs sm:text-sm font-bold transition-colors"
+                                                className="flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg border border-q-border bg-q-surface hover:bg-secondary text-foreground text-xs sm:text-sm font-bold transition-colors"
                                             >
                                                 <XCircle size={14} className="mr-1.5 sm:mr-2" /> Cancel
                                             </button>
@@ -2412,7 +2412,7 @@ const LeadsDashboard: React.FC = () => {
                                                     <Palette size={14} className="mr-1.5 sm:mr-2" />
                                                     Open in Email Editor
                                                 </button>
-                                                <button className="flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg border border-border bg-card hover:bg-secondary text-foreground text-xs sm:text-sm font-bold transition-colors">
+                                                <button className="flex items-center justify-center px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg border border-q-border bg-q-surface hover:bg-secondary text-foreground text-xs sm:text-sm font-bold transition-colors">
                                                     <Calendar size={14} className="mr-1.5 sm:mr-2" /> Schedule Meeting
                                                 </button>
                                             </div>

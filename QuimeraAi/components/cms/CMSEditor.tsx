@@ -38,7 +38,7 @@ interface CMSEditorProps {
 const ToolbarButton: React.FC<{ onClick: () => void; isActive?: boolean; title: string; children: React.ReactNode }> = ({ onClick, isActive, title, children }) => (
     <button
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-        className={`p-2 rounded-md transition-colors ${isActive ? 'bg-editor-accent/10 text-editor-accent' : 'text-gray-600 hover:bg-gray-100'}`}
+        className={`p-2 rounded-md transition-colors ${isActive ? 'bg-q-accent/10 text-q-accent' : 'text-gray-600 hover:bg-gray-100'}`}
         title={title}
     >
         {children}
@@ -527,13 +527,13 @@ IMPORTANT FORMATTING RULES:
     };
 
     return (
-        <div className="flex flex-col h-screen bg-background text-foreground absolute inset-0 z-50">
+        <div className="flex flex-col h-screen bg-q-bg text-foreground absolute inset-0 z-50">
             <ImageGeneratorModal isOpen={isImageModalOpen} onClose={() => setIsImageModalOpen(false)} destination="user" />
 
             {/* --- Header --- */}
-            <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
+            <header className="h-16 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
                 <div className="flex items-center gap-4 w-1/3">
-                    <button onClick={onClose} className="p-2 -ml-2 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="p-2 -ml-2 rounded-full text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors">
                         <ArrowLeft size={20} />
                     </button>
                     <div className="h-6 w-px bg-border"></div>
@@ -541,18 +541,18 @@ IMPORTANT FORMATTING RULES:
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Enter Post Title..."
-                        className="bg-transparent text-xl font-bold placeholder:text-muted-foreground/50 focus:outline-none w-full text-foreground truncate"
+                        className="bg-transparent text-xl font-bold placeholder:text-q-text-muted/50 focus:outline-none w-full text-foreground truncate"
                     />
                 </div>
                 <div className="flex items-center justify-end gap-3 w-1/3">
                     <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
-                        <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Draft</button>
-                        <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>Published</button>
+                        <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>Draft</button>
+                        <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-green-500/20 text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>Published</button>
                     </div>
                     <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
                         {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save
                     </button>
-                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>
+                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-q-text-muted hover:bg-secondary'}`}>
                         <MoreVertical size={20} />
                     </button>
                 </div>
@@ -833,29 +833,29 @@ IMPORTANT FORMATTING RULES:
 
                 {/* --- Settings Sidebar --- */}
                 {isSidebarOpen && (
-                    <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 z-20 shadow-xl custom-scrollbar">
+                    <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto p-6 shrink-0 z-20 shadow-xl custom-scrollbar">
                         <div className="mb-6">
                             <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('postEditor.postSettings')}</h3>
-                            <p className="text-xs text-muted-foreground">{t('postEditor.configureMetadata')}</p>
+                            <p className="text-xs text-q-text-muted">{t('postEditor.configureMetadata')}</p>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.urlSlug')}</label>
-                                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.urlSlug')}</label>
+                                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.featuredImage')}</label>
+                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.featuredImage')}</label>
                                 <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('postEditor.excerpt')}</label>
-                                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
+                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.excerpt')}</label>
+                                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
                             </div>
 
-                            <div className="pt-6 border-t border-border">
+                            <div className="pt-6 border-t border-q-border">
                                 <div className="flex justify-between items-center mb-4">
                                     <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('postEditor.seoSettings')}</h4>
                                     <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
@@ -863,12 +863,12 @@ IMPORTANT FORMATTING RULES:
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('postEditor.seoTitle')}</label>
-                                        <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Max 60 characters" />
+                                        <label className="block text-xs font-medium text-q-text-muted mb-1">{t('postEditor.seoTitle')}</label>
+                                        <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Max 60 characters" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('postEditor.seoDescription')}</label>
-                                        <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Max 160 characters" />
+                                        <label className="block text-xs font-medium text-q-text-muted mb-1">{t('postEditor.seoDescription')}</label>
+                                        <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Max 160 characters" />
                                     </div>
                                 </div>
                             </div>

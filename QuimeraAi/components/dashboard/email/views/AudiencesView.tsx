@@ -222,7 +222,7 @@ const AudiencesView: React.FC = () => {
                     <h2 className="text-xl font-bold text-foreground">
                         {t('email.audiences', 'Audiencias')}
                     </h2>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         {t('email.audiencesSubtitle', 'Segmenta tus contactos para envíos personalizados')}
                     </p>
                 </div>
@@ -237,8 +237,8 @@ const AudiencesView: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className="flex items-center gap-2 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
-                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+            <div className="flex items-center gap-2 max-w-md bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                 <input
                     type="text"
                     value={searchTerm}
@@ -247,7 +247,7 @@ const AudiencesView: React.FC = () => {
                     className="flex-1 bg-transparent outline-none text-sm min-w-0"
                 />
                 {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                         <X size={16} />
                     </button>
                 )}
@@ -255,12 +255,12 @@ const AudiencesView: React.FC = () => {
 
             {/* Audiences Grid */}
             {filteredAudiences.length === 0 ? (
-                <div className="text-center py-12 bg-card/50 border border-border rounded-xl">
-                    <Users className="mx-auto text-muted-foreground mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface/50 border border-q-border rounded-xl">
+                    <Users className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('email.noAudiences', 'No hay audiencias')}
                     </h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {t('email.noAudiencesDesc', 'Crea segmentos para enviar emails más relevantes')}
                     </p>
                     <button
@@ -279,7 +279,7 @@ const AudiencesView: React.FC = () => {
                             <div
                                 key={audience.id}
                                 onClick={() => setSelectedAudience(audience as EmailAudience)}
-                                className="bg-card/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors group cursor-pointer"
+                                className="bg-q-surface/50 border border-q-border rounded-xl p-5 hover:border-primary/50 transition-colors group cursor-pointer"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -291,14 +291,14 @@ const AudiencesView: React.FC = () => {
                                             className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.edit', 'Editar')}
                                         >
-                                            <Edit size={14} className="text-muted-foreground" />
+                                            <Edit size={14} className="text-q-text-muted" />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDuplicateAudience(audience.id!); }}
                                             className="p-1.5 hover:bg-muted rounded-lg"
                                             title={t('email.duplicate', 'Duplicar')}
                                         >
-                                            <Copy size={14} className="text-muted-foreground" />
+                                            <Copy size={14} className="text-q-text-muted" />
                                         </button>
                                         {!audience.isDefault && (
                                             <button
@@ -320,12 +320,12 @@ const AudiencesView: React.FC = () => {
                                         </span>
                                     )}
                                 </h3>
-                                <p className="text-muted-foreground text-sm mb-3">
+                                <p className="text-q-text-muted text-sm mb-3">
                                     {audience.description}
                                 </p>
 
                                 {/* Filter info */}
-                                <div className="text-xs text-muted-foreground mb-3 space-y-1">
+                                <div className="text-xs text-q-text-muted mb-3 space-y-1">
                                     {audience.minOrders && (
                                         <div className="flex items-center gap-1">
                                             <ShoppingCart size={12} />
@@ -348,11 +348,11 @@ const AudiencesView: React.FC = () => {
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-sm">
-                                        <Users size={14} className="text-muted-foreground" />
+                                        <Users size={14} className="text-q-text-muted" />
                                         <span className="text-foreground font-medium">
                                             {((audience.estimatedCount || 0) + (audience.staticMemberCount || 0)).toLocaleString()}
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className="text-q-text-muted">
                                             {t('email.contacts', 'contactos')}
                                         </span>
                                         {(audience.staticMemberCount || 0) > 0 && (
@@ -382,8 +382,8 @@ const AudiencesView: React.FC = () => {
             {/* New/Edit Audience Modal */}
             {showNewAudienceModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-border flex items-center justify-between">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-q-border flex items-center justify-between">
                             <h3 className="text-lg font-bold text-foreground">
                                 {editingAudience
                                     ? t('email.editAudience', 'Editar Segmento')
@@ -394,7 +394,7 @@ const AudiencesView: React.FC = () => {
                                 onClick={handleCloseModal}
                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                             >
-                                <X size={20} className="text-muted-foreground" />
+                                <X size={20} className="text-q-text-muted" />
                             </button>
                         </div>
 
@@ -409,7 +409,7 @@ const AudiencesView: React.FC = () => {
                                     value={newAudience.name}
                                     onChange={(e) => setNewAudience({ ...newAudience, name: e.target.value })}
                                     placeholder="Ej: Clientes VIP"
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -423,7 +423,7 @@ const AudiencesView: React.FC = () => {
                                     onChange={(e) => setNewAudience({ ...newAudience, description: e.target.value })}
                                     placeholder="Describe este segmento..."
                                     rows={2}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                                 />
                             </div>
 
@@ -447,7 +447,7 @@ const AudiencesView: React.FC = () => {
                                                 onClick={() => setNewAudience({ ...newAudience, filterType: type.value as FilterType })}
                                                 className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${newAudience.filterType === type.value
                                                     ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-border hover:bg-muted text-foreground'
+                                                    : 'border-q-border hover:bg-muted text-foreground'
                                                     }`}
                                             >
                                                 <TypeIcon size={16} />
@@ -470,7 +470,7 @@ const AudiencesView: React.FC = () => {
                                         onChange={(e) => setNewAudience({ ...newAudience, minOrders: e.target.value })}
                                         placeholder="Ej: 3"
                                         min="1"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                 </div>
                             )}
@@ -487,7 +487,7 @@ const AudiencesView: React.FC = () => {
                                         placeholder="Ej: 500"
                                         min="0"
                                         step="0.01"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                 </div>
                             )}
@@ -503,16 +503,16 @@ const AudiencesView: React.FC = () => {
                                         onChange={(e) => setNewAudience({ ...newAudience, lastOrderDaysAgo: e.target.value })}
                                         placeholder="Ej: 60"
                                         min="1"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                 </div>
                             )}
                         </div>
 
-                        <div className="p-6 border-t border-border flex justify-end gap-3">
+                        <div className="p-6 border-t border-q-border flex justify-end gap-3">
                             <button
                                 onClick={handleCloseModal}
-                                className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                                className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors"
                             >
                                 {t('common.cancel', 'Cancelar')}
                             </button>
@@ -535,7 +535,7 @@ const AudiencesView: React.FC = () => {
             {/* Delete Audience Confirmation Modal */}
             {deleteConfirmId && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
-                    <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl overflow-hidden animate-scale-in">
+                    <div className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in">
                         <div className="p-6">
                             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
                                 <Trash2 size={24} />
@@ -543,14 +543,14 @@ const AudiencesView: React.FC = () => {
                             <h3 className="text-xl font-bold text-center text-foreground mb-2">
                                 {t('email.deleteAudienceTitle', '¿Eliminar audiencia?')}
                             </h3>
-                            <p className="text-center text-muted-foreground mb-6">
+                            <p className="text-center text-q-text-muted mb-6">
                                 {t('email.deleteAudienceMessage', 'Esta acción no se puede deshacer. La audiencia será eliminada permanentemente.')}
                             </p>
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={cancelDeleteAudience}
                                     disabled={isDeleting}
-                                    className="px-5 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm"
+                                    className="px-5 py-2.5 rounded-lg border border-input bg-q-bg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm"
                                 >
                                     {t('common.cancel', 'Cancelar')}
                                 </button>

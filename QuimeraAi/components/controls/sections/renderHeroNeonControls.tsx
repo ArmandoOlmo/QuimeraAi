@@ -41,8 +41,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
     const linkType = slide[typeKey] || 'section';
     
     return (
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border mt-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border mt-3">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Link size={14} />
           {label}
         </label>
@@ -56,7 +56,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         </div>
 
         {/* Link Type Selector */}
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3 flex-wrap">
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3 flex-wrap">
           {[
             { value: 'section', label: 'Sección' },
             { value: 'product', label: 'Producto' },
@@ -74,8 +74,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
                 }
               }}
               className={`flex-1 min-w-[60px] py-1.5 text-[10px] font-medium rounded-sm transition-colors ${linkType === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -150,13 +150,13 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* ========== TEXT LAYOUT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           {t('editor.controls.textLayout.label', 'Text Layout')}
         </label>
-        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
-          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+        <div className="relative bg-q-bg rounded-lg border border-q-border p-3">
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-q-border/50 overflow-hidden mb-2">
             {(() => {
               const tl = sectionData.textPosition || 'bottom-left';
               const isLeft = tl.endsWith('-left');
@@ -168,9 +168,9 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
               return (
                 <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  <div className="h-1.5 w-14 rounded-full bg-q-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-q-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-q-accent/25" />
                 </div>
               );
             })()}
@@ -188,8 +188,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
                   onClick={() => setNestedData('heroNeon.textPosition', pos.value)}
                   className={`flex items-center justify-center h-8 rounded text-xs transition-all duration-200 ${
                     isSelected
-                      ? 'bg-editor-accent/20 border border-editor-accent/50 text-editor-accent'
-                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border text-editor-text-secondary'
+                      ? 'bg-q-accent/20 border border-q-accent/50 text-q-accent'
+                      : 'bg-q-surface/50 border border-transparent hover:bg-q-surface-overlay/50 hover:border-q-border text-q-text-secondary'
                   }`}
                 >
                   {pos.label}
@@ -201,8 +201,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Font Overrides */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.controls.fonts', 'Fuentes (Global para Neon)')}
         </label>
@@ -237,21 +237,21 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Slides Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Layers size={14} />
           Slides
         </label>
         {slides.map((slide: any, index: number) => (
-          <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group relative">
+          <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group relative">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-editor-text-secondary">Slide #{index + 1}</span>
+              <span className="text-xs font-bold text-q-text-secondary">Slide #{index + 1}</span>
               {slides!.length > 1 && (
                 <button type="button" onClick={() => {
                     const newSlides = slides!.filter((_: any, i: number) => i !== index);
                     setNestedData('heroNeon.slides', newSlides);
                   }}
-                  className="text-editor-text-secondary hover:text-red-400 transition-colors"
+                  className="text-q-text-secondary hover:text-red-400 transition-colors"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -300,7 +300,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
             const newSlide = { headline: 'Nuevo Titular', subheadline: 'Nuevo Subtitular', primaryCta: 'Explorar' };
             setNestedData('heroNeon.slides', [...slides!, newSlide]);
           }}
-          className="w-full py-2 mt-2 bg-editor-panel-bg border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          className="w-full py-2 mt-2 bg-q-surface border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
         >
           <Plus size={14} /> Añadir Slide
         </button>
@@ -313,8 +313,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
       {/* Background Image Setup */}
       <BackgroundImageControl sectionKey="heroNeon" data={data} setNestedData={setNestedData} />
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2 mb-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2 mb-2">
             <Maximize2 size={14} /> Layout
         </label>
         <SliderControl
@@ -341,8 +341,8 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
       </div>
 
       {/* ========== GLASSMORPHISM & EFFECTS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efectos Visuales
         </label>
         <ToggleControl
@@ -358,7 +358,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           onChange={(v) => setNestedData('heroNeon.showNeonLines', v)}
         />
         {sectionData.showNeonLines !== false && (
-          <div className="space-y-3 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+          <div className="space-y-3 mt-2 p-3 bg-q-bg border border-q-border rounded-lg">
             <Select
               label="Estilo de Líneas"
               value={sectionData.neonLineStyle || 'stacked'}
@@ -380,7 +380,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               ]}
             />
             <div>
-              <label className="block text-[10px] font-bold text-editor-text-secondary uppercase mb-2">Colores de Líneas de Neón</label>
+              <label className="block text-[10px] font-bold text-q-text-secondary uppercase mb-2">Colores de Líneas de Neón</label>
               <div className="flex flex-wrap gap-2">
                 {(sectionData.neonLineColors || ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA']).slice(0, sectionData.neonLineStyle === 'minimal' ? 2 : 5).map((color: string, i: number) => (
                   <ColorControl
@@ -401,7 +401,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         )}
 
         <div className="space-y-2 pt-2">
-            <label className="text-xs font-bold text-editor-text-secondary">Neon Glow Intensity</label>
+            <label className="text-xs font-bold text-q-text-secondary">Neon Glow Intensity</label>
             <input 
                 type="range" 
                 min="0" max="100" 
@@ -412,9 +412,9 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         </div>
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -422,20 +422,20 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel & Glow')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel & Glow')}</p>
             <ColorControl label="Background" value={sectionData.colors?.background} onChange={(v) => setNestedData('heroNeon.colors.background', v)} />
             <ColorControl label="Card Background" value={sectionData.colors?.cardBackground} onChange={(v) => setNestedData('heroNeon.colors.cardBackground', v)} />
             <ColorControl label="Neon Glow Color" value={sectionData.colors?.neonGlow} onChange={(v) => setNestedData('heroNeon.colors.neonGlow', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.typography', 'Typography')}</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.typography', 'Typography')}</p>
             <ColorControl label={t('editor.controls.common.title', 'Title')} value={sectionData.colors?.heading} onChange={(v) => setNestedData('heroNeon.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={sectionData.colors?.text} onChange={(v) => setNestedData('heroNeon.colors.text', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Primary Button')}</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Primary Button')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={sectionData.colors?.buttonBackground} onChange={(v) => setNestedData('heroNeon.colors.buttonBackground', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={sectionData.colors?.buttonText} onChange={(v) => setNestedData('heroNeon.colors.buttonText', v)} />
           </div>

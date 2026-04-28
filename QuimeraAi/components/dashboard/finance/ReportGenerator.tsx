@@ -109,10 +109,10 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
             {/* Controls */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex items-center gap-2 bg-secondary/30 rounded-xl p-1">
-                    <button onClick={() => setReportType('profit_loss')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'profit_loss' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+                    <button onClick={() => setReportType('profit_loss')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'profit_loss' ? 'bg-primary text-white shadow-md' : 'text-q-text-muted hover:text-foreground'}`}>
                         {t('accounting.profitLoss', 'Profit & Loss')}
                     </button>
-                    <button onClick={() => setReportType('balance_sheet')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'balance_sheet' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+                    <button onClick={() => setReportType('balance_sheet')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${reportType === 'balance_sheet' ? 'bg-primary text-white shadow-md' : 'text-q-text-muted hover:text-foreground'}`}>
                         {t('accounting.balanceSheet', 'Balance Sheet')}
                     </button>
                 </div>
@@ -123,10 +123,10 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
             </div>
 
             {transactions.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
-                    <PieChartIcon size={40} className="mx-auto text-muted-foreground/40 mb-3" />
+                <div className="rounded-2xl border border-dashed border-q-border bg-q-surface/50 p-12 text-center">
+                    <PieChartIcon size={40} className="mx-auto text-q-text-muted/40 mb-3" />
                     <p className="font-medium text-foreground">{t('accounting.noDataForReports', 'No data for reports')}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{t('accounting.addTransactionsFirst', 'Add transactions to generate reports')}</p>
+                    <p className="text-xs text-q-text-muted mt-1">{t('accounting.addTransactionsFirst', 'Add transactions to generate reports')}</p>
                 </div>
             )}
 
@@ -134,25 +134,25 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
                 <div className="space-y-5">
                     {/* Summary cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
-                            <div className="flex items-center gap-2 mb-2"><TrendingUp size={18} className="text-green-400" /><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('accounting.totalIncome', 'Total Income')}</span></div>
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
+                            <div className="flex items-center gap-2 mb-2"><TrendingUp size={18} className="text-green-400" /><span className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">{t('accounting.totalIncome', 'Total Income')}</span></div>
                             <p className="text-2xl font-bold text-green-400">${report.data.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
-                            <div className="flex items-center gap-2 mb-2"><TrendingDown size={18} className="text-red-400" /><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('accounting.totalExpenses', 'Total Expenses')}</span></div>
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
+                            <div className="flex items-center gap-2 mb-2"><TrendingDown size={18} className="text-red-400" /><span className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">{t('accounting.totalExpenses', 'Total Expenses')}</span></div>
                             <p className="text-2xl font-bold text-red-400">${report.data.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
-                            <div className="flex items-center gap-2 mb-2"><DollarSign size={18} className="text-primary" /><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('accounting.netIncome', 'Net Income')}</span></div>
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
+                            <div className="flex items-center gap-2 mb-2"><DollarSign size={18} className="text-primary" /><span className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">{t('accounting.netIncome', 'Net Income')}</span></div>
                             <p className={`text-2xl font-bold ${report.data.netIncome >= 0 ? 'text-green-400' : 'text-red-400'}`}>${report.data.netIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                         </div>
                     </div>
 
                     {/* Category breakdown */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
                             <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2"><TrendingUp size={16} className="text-green-400" />{t('accounting.incomeBreakdown', 'Income Breakdown')}</h4>
-                            {report.data.income.length === 0 ? <p className="text-sm text-muted-foreground">{t('accounting.noIncome', 'No income recorded')}</p> : (
+                            {report.data.income.length === 0 ? <p className="text-sm text-q-text-muted">{t('accounting.noIncome', 'No income recorded')}</p> : (
                                 <div className="space-y-3">{report.data.income.map(item => (
                                     <div key={item.category} className="flex items-center justify-between">
                                         <span className="text-sm text-foreground">{item.category}</span>
@@ -164,9 +164,9 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
                                 ))}</div>
                             )}
                         </div>
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
                             <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2"><TrendingDown size={16} className="text-red-400" />{t('accounting.expenseBreakdown', 'Expense Breakdown')}</h4>
-                            {report.data.expenses.length === 0 ? <p className="text-sm text-muted-foreground">{t('accounting.noExpenses', 'No expenses recorded')}</p> : (
+                            {report.data.expenses.length === 0 ? <p className="text-sm text-q-text-muted">{t('accounting.noExpenses', 'No expenses recorded')}</p> : (
                                 <div className="space-y-3">{report.data.expenses.map(item => (
                                     <div key={item.category} className="flex items-center justify-between">
                                         <span className="text-sm text-foreground">{item.category}</span>
@@ -181,9 +181,9 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
                     </div>
 
                     {/* AI Narrative */}
-                    <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl overflow-hidden">
-                        <div className="p-5 border-b border-border/40 bg-gradient-to-r from-purple-500/10 via-transparent to-primary/10 flex items-center justify-between">
-                            <div className="flex items-center gap-3"><div className="p-2 bg-gradient-to-br from-purple-500/30 to-primary/30 rounded-xl"><Sparkles size={18} className="text-purple-400" /></div><div><h4 className="font-bold text-foreground">{t('accounting.aiNarrative', 'AI Narrative')}</h4><p className="text-xs text-muted-foreground">{t('accounting.narrativeSubtitle', 'AI explains your results in plain language')}</p></div></div>
+                    <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl overflow-hidden">
+                        <div className="p-5 border-b border-q-border/40 bg-gradient-to-r from-purple-500/10 via-transparent to-primary/10 flex items-center justify-between">
+                            <div className="flex items-center gap-3"><div className="p-2 bg-gradient-to-br from-purple-500/30 to-primary/30 rounded-xl"><Sparkles size={18} className="text-purple-400" /></div><div><h4 className="font-bold text-foreground">{t('accounting.aiNarrative', 'AI Narrative')}</h4><p className="text-xs text-q-text-muted">{t('accounting.narrativeSubtitle', 'AI explains your results in plain language')}</p></div></div>
                             <button onClick={handleAiNarrative} disabled={isNarrating} className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-primary text-white shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50">
                                 {isNarrating ? <Loader2 size={14} className="animate-spin" /> : aiNarrative ? <RefreshCw size={14} /> : <Sparkles size={14} />}
                                 {aiNarrative ? t('accounting.regenerate', 'Regenerate') : t('accounting.generateNarrative', 'Generate Narrative')}
@@ -193,7 +193,7 @@ Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}
                             {aiNarrative ? (
                                 <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap leading-relaxed">{aiNarrative}</div>
                             ) : (
-                                <p className="text-sm text-muted-foreground text-center py-4">{t('accounting.clickToGenerateNarrative', 'Click "Generate Narrative" for an AI-powered executive summary')}</p>
+                                <p className="text-sm text-q-text-muted text-center py-4">{t('accounting.clickToGenerateNarrative', 'Click "Generate Narrative" for an AI-powered executive summary')}</p>
                             )}
                         </div>
                     </div>

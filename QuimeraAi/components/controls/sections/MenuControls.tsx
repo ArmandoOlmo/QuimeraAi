@@ -32,8 +32,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Menu Variant Selector */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <Layout size={14} />
           Menu Style
         </label>
@@ -47,15 +47,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <button type="button"               key={variant.value}
               onClick={() => setNestedData('menu.menuVariant', variant.value)}
               className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.menuVariant || 'classic') === variant.value
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                : 'bg-q-surface text-q-text-primary border-q-border hover:border-q-accent'
                 }`}
             >
               {variant.label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-editor-text-secondary mt-2 italic">
+        <p className="text-xs text-q-text-secondary mt-2 italic">
           {(data?.menu?.menuVariant || 'classic') === 'classic' && '🍽️ Traditional grid cards with images on top.'}
           {(data?.menu?.menuVariant || 'classic') === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
           {(data?.menu?.menuVariant || 'classic') === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
@@ -64,8 +64,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Text Alignment - Only for full-image variant */}
         {data?.menu?.menuVariant === 'full-image' && (
-          <div className="mt-4 pt-4 border-t border-editor-border/50 animate-fade-in-up">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.textAlignment')}</label>
+          <div className="mt-4 pt-4 border-t border-q-border/50 animate-fade-in-up">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.textAlignment')}</label>
             <div className="flex gap-2">
               {[
                 { value: 'left', icon: '◀', label: 'Left' },
@@ -75,8 +75,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 <button type="button"                   key={align.value}
                   onClick={() => setNestedData('menu.textAlignment', align.value)}
                   className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md border text-xs transition-all ${(data?.menu?.textAlignment || 'center') === align.value
-                    ? 'bg-editor-accent text-editor-bg border-editor-accent font-bold'
-                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                    ? 'bg-q-accent text-q-bg border-q-accent font-bold'
+                    : 'bg-q-surface text-q-text-primary border-q-border hover:border-q-accent'
                     }`}
                   title={align.label}
                 >
@@ -91,8 +91,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Data Source Toggle */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <List size={14} />
           {t('restaurant.reservation.dataSourceLabel', 'Fuente de Datos')}
         </label>
@@ -105,15 +105,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               key={src.value}
               onClick={() => setNestedData('menu.dataSource', src.value)}
               className={`px-2 py-2 rounded-md border text-xs transition-all ${(data?.menu?.dataSource || 'manual') === src.value
-                ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                : 'bg-q-surface text-q-text-primary border-q-border hover:border-q-accent'
                 }`}
             >
               {src.label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-editor-text-secondary mt-2 italic">
+        <p className="text-xs text-q-text-secondary mt-2 italic">
           {(data?.menu?.dataSource || 'manual') === 'manual'
             ? t('restaurant.reservation.manualHint', '📝 Configura platos manualmente desde el editor.')
             : t('restaurant.reservation.restaurantHint', '🍽️ Los platos se cargan automáticamente del módulo de Restaurantes.')}
@@ -121,13 +121,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Restaurant ID — only visible when dataSource is 'restaurant' */}
         {data?.menu?.dataSource === 'restaurant' && (
-          <div className="mt-3 pt-3 border-t border-editor-border/50 animate-fade-in-up">
+          <div className="mt-3 pt-3 border-t border-q-border/50 animate-fade-in-up">
             <Input
               label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
               value={data?.menu?.restaurantId || ''}
               onChange={(e) => setNestedData('menu.restaurantId', e.target.value)}
             />
-            <p className="text-xs text-editor-text-secondary mt-1 italic">
+            <p className="text-xs text-q-text-secondary mt-1 italic">
               {t('restaurant.reservation.restaurantIdHelp', 'Vincula este menú al restaurante creado en el módulo de Restaurantes.')}
             </p>
           </div>
@@ -137,7 +137,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Content Controls */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
         <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
         <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
@@ -147,7 +147,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Section Icon */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionIcon')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionIcon')}</label>
         <ToggleControl
           label={t('editor.controls.common.showSectionIcon')}
           checked={data?.menu?.showIcon !== false}
@@ -180,7 +180,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">      <BackgroundImageControl sectionKey="menu" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.menu?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('menu.colors.background', v)} />
         <ColorControl label={t('controls.sectionTitle')} value={data?.menu?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('menu.colors.heading', v)} />
         <ColorControl label={t('controls.sectionText')} value={data?.menu?.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.text', v)} />
@@ -190,7 +190,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Card Colors */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
         <ColorControl label={t('controls.cardBackground')} value={data?.menu?.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('menu.colors.cardBackground', v)} />
         <ColorControl label={t('controls.cardTitle')} value={data?.menu?.colors?.cardTitleColor || '#ffffff'} onChange={(v) => setNestedData('menu.colors.cardTitleColor', v)} />
         <ColorControl label={t('controls.cardText')} value={data?.menu?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('menu.colors.cardText', v)} />
@@ -200,8 +200,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />

@@ -109,7 +109,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
 
     const SortIcon = ({ field }: { field: SortField }) => {
         if (sortField !== field) {
-            return <ArrowUpDown size={14} className="text-muted-foreground" />;
+            return <ArrowUpDown size={14} className="text-q-text-muted" />;
         }
         return sortDirection === 'asc' ?
             <ArrowUp size={14} className="text-primary" /> :
@@ -122,7 +122,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
     const showSelectAllBanner = allPageLeadsSelected && selectedLeadIds.length > 0 && totalFilteredCount > paginatedLeads.length;
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             {/* Select All Filtered Banner */}
             {showSelectAllBanner && (
                 <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary/10 border-b border-primary/20 text-sm">
@@ -157,23 +157,23 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
             {/* Mobile Card View */}
             <div className="sm:hidden">
                 {/* Mobile Header with Select All */}
-                <div className="px-3 py-2 border-b border-border bg-secondary/20 flex items-center justify-between">
+                <div className="px-3 py-2 border-b border-q-border bg-secondary/20 flex items-center justify-between">
                     <label className="flex items-center gap-2">
                         <input
                             type="checkbox"
                             checked={allPageLeadsSelected}
                             onChange={onToggleSelectAll}
-                            className="rounded border-border w-4 h-4"
+                            className="rounded border-q-border w-4 h-4"
                         />
-                        <span className="text-xs font-bold text-muted-foreground uppercase">{t('leads.selectAll')}</span>
+                        <span className="text-xs font-bold text-q-text-muted uppercase">{t('leads.selectAll')}</span>
                     </label>
-                    <span className="text-xs text-muted-foreground">{paginatedLeads.length} {t('leads.leads')}</span>
+                    <span className="text-xs text-q-text-muted">{paginatedLeads.length} {t('leads.leads')}</span>
                 </div>
 
                 {/* Mobile Cards */}
                 <div className="divide-y divide-border max-h-[calc(100vh-280px)] overflow-y-auto">
                     {paginatedLeads.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
+                        <div className="text-center py-12 text-q-text-muted">
                             {t('leads.noLeadsFound')}
                         </div>
                     ) : (
@@ -189,7 +189,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                             type="checkbox"
                                             checked={selectedLeadIds.includes(lead.id)}
                                             onChange={() => onToggleSelect(lead.id)}
-                                            className="rounded border-border w-4 h-4"
+                                            className="rounded border-q-border w-4 h-4"
                                         />
                                     </div>
 
@@ -208,7 +208,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         </div>
 
                                         {/* Second Row: Email + Company */}
-                                        <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-2 mb-2 text-xs text-q-text-muted">
                                             <span className="truncate">{lead.email}</span>
                                             {lead.company && (
                                                 <>
@@ -233,7 +233,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                                     <span className="text-xs font-medium">{lead.aiScore}</span>
                                                 </div>
                                             )}
-                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-1 text-xs text-q-text-muted">
                                                 {lead.source === 'chatbot' ? (
                                                     <Bot size={12} className="text-purple-500" />
                                                 ) : (
@@ -269,15 +269,15 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
 
                 {/* Mobile Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-secondary/5">
-                        <span className="text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between px-3 py-2 border-t border-q-border bg-secondary/5">
+                        <span className="text-xs text-q-text-muted">
                             {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, sortedLeads.length)} / {sortedLeads.length}
                         </span>
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                 disabled={currentPage === 1}
-                                className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+                                className="p-2 rounded border border-q-border hover:bg-secondary transition-colors disabled:opacity-50"
                             >
                                 <ChevronLeft size={14} />
                             </button>
@@ -285,7 +285,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <button
                                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                 disabled={currentPage === totalPages}
-                                className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+                                className="p-2 rounded border border-q-border hover:bg-secondary transition-colors disabled:opacity-50"
                             >
                                 <ChevronRight size={14} />
                             </button>
@@ -297,20 +297,20 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
             {/* Desktop Table View */}
             <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-secondary/20 border-b border-border">
+                    <thead className="bg-secondary/20 border-b border-q-border">
                         <tr>
                             <th className="px-4 py-3 text-left w-12">
                                 <input
                                     type="checkbox"
                                     checked={allPageLeadsSelected}
                                     onChange={onToggleSelectAll}
-                                    className="rounded border-border"
+                                    className="rounded border-q-border"
                                 />
                             </th>
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('name')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('common.name')}
                                     <SortIcon field="name" />
@@ -319,7 +319,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('email')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('leads.email')}
                                     <SortIcon field="email" />
@@ -328,7 +328,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('company')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('leads.company')}
                                     <SortIcon field="company" />
@@ -337,7 +337,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('value')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('leads.value')}
                                     <SortIcon field="value" />
@@ -346,7 +346,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('status')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('leads.status')}
                                     <SortIcon field="status" />
@@ -355,17 +355,17 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                             <th className="px-4 py-3 text-left">
                                 <button
                                     onClick={() => handleSort('aiScore')}
-                                    className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                                    className="flex items-center gap-2 text-xs font-bold text-q-text-muted uppercase tracking-wider hover:text-foreground transition-colors"
                                 >
                                     {t('leads.score')}
                                     <SortIcon field="aiScore" />
                                 </button>
                             </th>
                             <th className="px-4 py-3 text-left">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('leads.source')}</span>
+                                <span className="text-xs font-bold text-q-text-muted uppercase tracking-wider">{t('leads.source')}</span>
                             </th>
                             <th className="px-4 py-3 text-right">
-                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('leads.actions')}</span>
+                                <span className="text-xs font-bold text-q-text-muted uppercase tracking-wider">{t('leads.actions')}</span>
                             </th>
                         </tr>
                     </thead>
@@ -373,7 +373,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                         {paginatedLeads.map((lead, index) => (
                             <tr
                                 key={lead.id}
-                                className={`border-b border-border hover:bg-secondary/10 transition-colors ${index % 2 === 0 ? 'bg-card' : 'bg-secondary/5'
+                                className={`border-b border-q-border hover:bg-secondary/10 transition-colors ${index % 2 === 0 ? 'bg-q-surface' : 'bg-secondary/5'
                                     }`}
                             >
                                 <td className="px-4 py-3">
@@ -381,7 +381,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         type="checkbox"
                                         checked={selectedLeadIds.includes(lead.id)}
                                         onChange={() => onToggleSelect(lead.id)}
-                                        className="rounded border-border"
+                                        className="rounded border-q-border"
                                     />
                                 </td>
                                 <td className="px-4 py-3">
@@ -391,7 +391,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                     </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className="text-sm text-muted-foreground">{lead.email}</span>
+                                    <span className="text-sm text-q-text-muted">{lead.email}</span>
                                 </td>
                                 <td className="px-4 py-3">
                                     <span className="text-sm text-foreground">{lead.company || '-'}</span>
@@ -416,7 +416,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                             <span className="text-sm font-bold">{lead.aiScore}</span>
                                         </div>
                                     ) : (
-                                        <span className="text-sm text-muted-foreground">-</span>
+                                        <span className="text-sm text-q-text-muted">-</span>
                                     )}
                                 </td>
                                 <td className="px-4 py-3">
@@ -426,7 +426,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                                         ) : (
                                             <LayoutGrid size={14} className="text-blue-500" />
                                         )}
-                                        <span className="text-xs text-muted-foreground capitalize">{lead.source}</span>
+                                        <span className="text-xs text-q-text-muted capitalize">{lead.source}</span>
                                     </div>
                                 </td>
                                 <td className="px-4 py-3">
@@ -453,7 +453,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                 </table>
 
                 {paginatedLeads.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
+                    <div className="text-center py-12 text-q-text-muted">
                         {t('leads.noLeadsFound')}
                     </div>
                 )}
@@ -461,15 +461,15 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
 
             {/* Desktop Pagination */}
             {totalPages > 1 && (
-                <div className="hidden sm:flex items-center justify-between px-4 py-3 border-t border-border bg-secondary/5">
-                    <div className="text-sm text-muted-foreground">
+                <div className="hidden sm:flex items-center justify-between px-4 py-3 border-t border-q-border bg-secondary/5">
+                    <div className="text-sm text-q-text-muted">
                         Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, sortedLeads.length)} of {sortedLeads.length} leads
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 rounded border border-q-border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronLeft size={16} />
                         </button>
@@ -479,7 +479,7 @@ const LeadsTableView: React.FC<LeadsTableViewProps> = ({
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-2 rounded border border-border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 rounded border border-q-border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronRight size={16} />
                         </button>

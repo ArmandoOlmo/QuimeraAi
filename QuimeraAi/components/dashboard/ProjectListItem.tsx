@@ -130,7 +130,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
 
   const statusColor = {
     'Published': 'bg-green-500/20 text-green-500',
-    'Draft': 'bg-muted text-muted-foreground',
+    'Draft': 'bg-muted text-q-text-muted',
     'Template': 'bg-primary/20 text-primary',
   }[project.status];
 
@@ -145,7 +145,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
       onClick={handleOpenProject}
       className={`
         group relative flex items-center gap-4 p-4 
-        bg-card rounded-xl border border-border
+        bg-q-surface rounded-xl border border-q-border
         hover:border-primary/50 hover:shadow-lg transition-all duration-200 cursor-pointer
         ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
       `}
@@ -159,7 +159,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          <div className="w-full h-full flex items-center justify-center text-q-text-muted">
             <ExternalLink size={24} />
           </div>
         )}
@@ -175,7 +175,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
             {translatedStatus}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-q-text-muted">
           <Clock size={14} />
           <span>{t('common.updated')} {formatDate(project.lastUpdated)}</span>
         </div>
@@ -192,7 +192,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
                 }}
               />
             </div>
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-xs font-medium text-q-text-muted">
               {(tokenUsage?.creditsUsed || 0).toLocaleString()} créditos
             </span>
           </div>
@@ -203,7 +203,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
       <div className="flex-shrink-0 relative" ref={menuRef}>
         <button
           onClick={toggleMenu}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          className="p-2 rounded-lg hover:bg-secondary transition-colors text-q-text-muted hover:text-foreground"
           aria-label={t('common.openMenu')}
         >
           {isDeleting ? (
@@ -215,7 +215,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
 
         {/* Dropdown Menu */}
         {showMenu && !isDeleting && (
-          <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-lg shadow-xl border border-border z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-48 bg-q-surface rounded-lg shadow-xl border border-q-border z-50 overflow-hidden">
             <button
               onClick={handleEditClick}
               className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-secondary transition-colors text-foreground"

@@ -85,7 +85,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                             <p className="text-sm font-medium text-foreground">
                                 {isLoading ? '...' : `Plan ${usage?.plan || 'Free'}`}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-q-text-muted">
                                 {isLoading ? '...' : `${usage?.remaining || 0} ${t('dashboard.creditsRemaining')}`}
                             </p>
                         </div>
@@ -103,7 +103,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
     }
 
     return (
-        <div className={`relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5 rounded-2xl border border-border ${className}`}>
+        <div className={`relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5 rounded-2xl border border-q-border ${className}`}>
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-500/10 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
@@ -139,7 +139,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                         {t('dashboard.currentPlan')}
                                     </span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     {SUBSCRIPTION_PLANS[usage?.planId || 'free'].description}
                                 </p>
                             </div>
@@ -153,7 +153,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                         <Zap className="w-4 h-4 text-primary" />
                                         AI Credits
                                     </span>
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-sm text-q-text-muted">
                                         {usage.used} / {usage.limit}
                                     </span>
                                 </div>
@@ -167,7 +167,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                     />
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="text-xs text-q-text-muted">
                                         {usage.remaining} {t('dashboard.creditsRemaining')}
                                     </span>
                                     {usage.isNearLimit && (
@@ -198,22 +198,22 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                             </div>
 
                             <ul className="space-y-2 mb-4">
-                                <li className="text-sm text-muted-foreground flex items-center gap-2">
+                                <li className="text-sm text-q-text-muted flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                     {nextPlan.limits.maxAiCredits.toLocaleString()} AI credits{t('dashboard.perMonth')}
                                 </li>
-                                <li className="text-sm text-muted-foreground flex items-center gap-2">
+                                <li className="text-sm text-q-text-muted flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                     {nextPlan.limits.maxProjects} {t('settings.subscription.projects')}
                                 </li>
                                 {nextPlan.features.ecommerceEnabled && canAccessEcommerce && (
-                                    <li className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <li className="text-sm text-q-text-muted flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                         {t('dashboard.ecommerceIncluded')}
                                     </li>
                                 )}
                                 {nextPlan.features.customDomains && (
-                                    <li className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <li className="text-sm text-q-text-muted flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                                         {t('dashboard.customDomainsIncluded')}
                                     </li>
@@ -225,7 +225,7 @@ const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
                                     <span className="text-2xl font-bold text-foreground">
                                         ${nextPlan.price.monthly}
                                     </span>
-                                    <span className="text-sm text-muted-foreground">{t('dashboard.perMonth')}</span>
+                                    <span className="text-sm text-q-text-muted">{t('dashboard.perMonth')}</span>
                                 </div>
                                 {nextPlan.price.annually < nextPlan.price.monthly && (
                                     <span className="px-2 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-full">

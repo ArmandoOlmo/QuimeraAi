@@ -97,7 +97,7 @@ const SettingsView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.settings', 'Configuración')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('ecommerce.settingsSubtitle', 'Configura tu tienda')}
                     </p>
                 </div>
@@ -126,7 +126,7 @@ const SettingsView: React.FC = () => {
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                                 isActive
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'bg-card/50 text-muted-foreground hover:text-foreground'
+                                    : 'bg-q-surface/50 text-q-text-muted hover:text-foreground'
                             }`}
                         >
                             <Icon size={18} />
@@ -137,7 +137,7 @@ const SettingsView: React.FC = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="bg-card/50 rounded-xl border border-border p-6">
+            <div className="bg-q-surface/50 rounded-xl border border-q-border p-6">
                 {activeTab === 'general' && (
                     <GeneralSettings
                         settings={localSettings}
@@ -194,37 +194,37 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
 
             <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                         {t('ecommerce.storeName', 'Nombre de la Tienda')}
                     </label>
                     <input
                         type="text"
                         value={settings.storeName || ''}
                         onChange={(e) => onChange('storeName', e.target.value)}
-                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                         {t('ecommerce.storeEmail', 'Email de la Tienda')}
                     </label>
                     <input
                         type="email"
                         value={settings.storeEmail || ''}
                         onChange={(e) => onChange('storeEmail', e.target.value)}
-                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                         {t('ecommerce.currency', 'Moneda')}
                     </label>
                     <select
                         value={settings.currency || 'USD'}
                         onChange={(e) => onChange('currency', e.target.value)}
-                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="USD">USD - Dólar Estadounidense</option>
                         <option value="MXN">MXN - Peso Mexicano</option>
@@ -234,19 +234,19 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    <label className="block text-sm font-medium text-q-text-muted mb-1">
                         {t('ecommerce.currencySymbol', 'Símbolo de Moneda')}
                     </label>
                     <input
                         type="text"
                         value={settings.currencySymbol || '$'}
                         onChange={(e) => onChange('currencySymbol', e.target.value)}
-                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
             </div>
 
-            <div className="border-t border-border pt-6">
+            <div className="border-t border-q-border pt-6">
                 <h4 className="text-md font-medium text-foreground mb-4">
                     {t('ecommerce.taxSettings', 'Configuración de Impuestos')}
                 </h4>
@@ -257,16 +257,16 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                             type="checkbox"
                             checked={settings.taxEnabled || false}
                             onChange={(e) => onChange('taxEnabled', e.target.checked)}
-                            className="w-4 h-4 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-4 h-4 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
-                        <span className="text-muted-foreground">{t('ecommerce.enableTax', 'Habilitar impuestos')}</span>
+                        <span className="text-q-text-muted">{t('ecommerce.enableTax', 'Habilitar impuestos')}</span>
                     </label>
                 </div>
 
                 {settings.taxEnabled && (
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                 {t('ecommerce.taxRate', 'Tasa de Impuesto (%)')}
                             </label>
                             <input
@@ -276,19 +276,19 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                                 min="0"
                                 max="100"
                                 step="0.01"
-                                className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                 {t('ecommerce.taxName', 'Nombre del Impuesto')}
                             </label>
                             <input
                                 type="text"
                                 value={settings.taxName || 'IVA'}
                                 onChange={(e) => onChange('taxName', e.target.value)}
-                                className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
 
@@ -297,9 +297,9 @@ const GeneralSettings: React.FC<SettingsSectionProps> = ({ settings, onChange })
                                 type="checkbox"
                                 checked={settings.taxIncludedInPrice || false}
                                 onChange={(e) => onChange('taxIncludedInPrice', e.target.checked)}
-                                className="w-4 h-4 rounded border-border bg-muted text-primary focus:ring-ring"
+                                className="w-4 h-4 rounded border-q-border bg-muted text-primary focus:ring-ring"
                             />
-                            <span className="text-muted-foreground">
+                            <span className="text-q-text-muted">
                                 {t('ecommerce.taxIncluded', 'Precios incluyen impuesto')}
                             </span>
                         </label>
@@ -402,7 +402,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                 <h4 className="text-foreground font-medium">Stripe Connect</h4>
                                 {getStatusBadge()}
                             </div>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.stripeConnectDesc', 'Recibe pagos directamente en tu cuenta de Stripe')}
                             </p>
                         </div>
@@ -410,7 +410,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                 </div>
 
                 {/* Connect Status & Actions */}
-                <div className="mt-4 pt-4 border-t border-border/50">
+                <div className="mt-4 pt-4 border-t border-q-border/50">
                     {connectError && (
                         <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                             <p className="text-red-400 text-sm">{connectError}</p>
@@ -420,7 +420,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                     {!isConnected ? (
                         // Not connected - Show connect button or form
                         <div className="space-y-4">
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 Conecta tu cuenta de Stripe para empezar a recibir pagos. 
                                 El proceso es guiado y solo toma unos minutos.
                             </p>
@@ -436,7 +436,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             ) : (
                                 <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             Email de tu negocio
                                         </label>
                                         <input
@@ -444,11 +444,11 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             value={connectEmail}
                                             onChange={(e) => setConnectEmail(e.target.value)}
                                             placeholder="negocio@ejemplo.com"
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                                             Nombre de tu tienda
                                         </label>
                                         <input
@@ -456,7 +456,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             value={connectBusinessName}
                                             onChange={(e) => setConnectBusinessName(e.target.value)}
                                             placeholder="Mi Tienda Online"
-                                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                     </div>
                                     <div className="flex gap-2">
@@ -479,7 +479,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             Cancelar
                                         </button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-q-text-muted">
                                         Se abrirá una nueva pestaña con el proceso guiado de Stripe.
                                     </p>
                                 </div>
@@ -491,7 +491,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             {/* Account Info */}
                             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                                 <div>
-                                    <p className="text-sm text-muted-foreground">ID de cuenta</p>
+                                    <p className="text-sm text-q-text-muted">ID de cuenta</p>
                                     <p className="text-foreground font-mono text-sm">
                                         {connectStatus?.accountId}
                                     </p>
@@ -504,7 +504,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                 >
                                     <Loader2 
                                         size={16} 
-                                        className={connectLoading ? 'animate-spin text-primary' : 'text-muted-foreground'} 
+                                        className={connectLoading ? 'animate-spin text-primary' : 'text-q-text-muted'} 
                                     />
                                 </button>
                             </div>
@@ -522,7 +522,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             Recibir pagos
                                         </span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-xs text-q-text-muted mt-1">
                                         {canAcceptPayments ? 'Habilitado' : 'Pendiente de verificación'}
                                     </p>
                                 </div>
@@ -537,7 +537,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             Transferencias
                                         </span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-xs text-q-text-muted mt-1">
                                         {connectStatus?.payoutsEnabled ? 'Habilitado' : 'Pendiente de verificación'}
                                     </p>
                                 </div>
@@ -552,7 +552,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                                             Información pendiente
                                         </span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mb-2">
+                                    <p className="text-xs text-q-text-muted mb-2">
                                         Completa la información faltante para activar tu cuenta:
                                     </p>
                                     <button
@@ -589,11 +589,11 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                 {/* Disconnect confirmation modal */}
                 {showDisconnectConfirm && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-card rounded-xl border border-border w-full max-w-md p-6">
+                        <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-6">
                             <h3 className="text-lg font-bold text-foreground mb-2">
                                 ¿Desconectar Stripe?
                             </h3>
-                            <p className="text-muted-foreground text-sm mb-4">
+                            <p className="text-q-text-muted text-sm mb-4">
                                 Si desconectas tu cuenta de Stripe, no podrás recibir pagos en tu tienda. 
                                 Puedes volver a conectarla en cualquier momento.
                             </p>
@@ -630,7 +630,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                         </div>
                         <div>
                             <h4 className="text-foreground font-medium">PayPal</h4>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.paypalDesc', 'Acepta pagos con PayPal')}
                             </p>
                         </div>
@@ -640,22 +640,22 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             type="checkbox"
                             checked={settings.paypalEnabled || false}
                             onChange={(e) => onChange('paypalEnabled', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
                 </div>
 
                 {settings.paypalEnabled && (
-                    <div className="grid gap-4 mt-4 pt-4 border-t border-border">
+                    <div className="grid gap-4 mt-4 pt-4 border-t border-q-border">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">
+                            <label className="block text-sm font-medium text-q-text-muted mb-1">
                                 PayPal Client ID
                             </label>
                             <input
                                 type="text"
                                 value={settings.paypalClientId || ''}
                                 onChange={(e) => onChange('paypalClientId', e.target.value)}
-                                className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
                     </div>
@@ -673,7 +673,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             <h4 className="text-foreground font-medium">
                                 {t('ecommerce.cod', 'Pago Contra Entrega')}
                             </h4>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.codDesc', 'Cobra al momento de la entrega')}
                             </p>
                         </div>
@@ -683,7 +683,7 @@ const PaymentSettings: React.FC<PaymentSettingsProps> = ({ settings, onChange, u
                             type="checkbox"
                             checked={settings.cashOnDeliveryEnabled || false}
                             onChange={(e) => onChange('cashOnDeliveryEnabled', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
                 </div>
@@ -746,8 +746,8 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                             <div className="flex items-center justify-between mb-2">
                                 <h4 className="text-foreground font-medium">{zone.name}</h4>
                                 <div className="flex items-center gap-2">
-                                    <Globe size={16} className="text-muted-foreground" />
-                                    <span className="text-muted-foreground text-sm">
+                                    <Globe size={16} className="text-q-text-muted" />
+                                    <span className="text-q-text-muted text-sm">
                                         {zone.countries.join(', ')}
                                     </span>
                                 </div>
@@ -755,11 +755,11 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                             <div className="mt-3 space-y-2">
                                 {zone.rates.map((rate) => (
                                     <div key={rate.id} className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">{rate.name}</span>
+                                        <span className="text-q-text-muted">{rate.name}</span>
                                         <span className="text-green-400">
                                             ${rate.price.toFixed(2)}
                                             {rate.minOrder && (
-                                                <span className="text-muted-foreground ml-2">
+                                                <span className="text-q-text-muted ml-2">
                                                     (min. ${rate.minOrder})
                                                 </span>
                                             )}
@@ -771,19 +771,19 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-q-text-muted">
                     {t('ecommerce.noShippingZones', 'No hay zonas de envío configuradas')}
                 </div>
             )}
 
             {/* Free Shipping Threshold */}
-            <div className="border-t border-border pt-6">
+            <div className="border-t border-q-border pt-6">
                 <h4 className="text-md font-medium text-foreground mb-4">
                     {t('ecommerce.freeShippingThreshold', 'Envío Gratis')}
                 </h4>
                 <div className="flex items-center gap-4">
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.minOrderFreeShipping', 'Mínimo para envío gratis ($)')}
                         </label>
                         <input
@@ -791,11 +791,11 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                             value={settings.freeShippingThreshold || 0}
                             onChange={(e) => onChange('freeShippingThreshold', parseFloat(e.target.value) || 0)}
                             min="0"
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                     </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-q-text-muted mt-2">
                     {t('ecommerce.freeShippingNote', 'Deja en 0 para desactivar el envío gratis automático')}
                 </p>
             </div>
@@ -803,8 +803,8 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
             {/* Add Zone Modal */}
             {showAddZone && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-md">
-                        <div className="p-6 border-b border-border">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
+                        <div className="p-6 border-b border-q-border">
                             <h3 className="text-lg font-bold text-foreground">
                                 {t('ecommerce.addShippingZone', 'Agregar Zona de Envío')}
                             </h3>
@@ -812,7 +812,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
 
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.zoneName', 'Nombre de la Zona')} *
                                 </label>
                                 <input
@@ -820,12 +820,12 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                                     value={newZone.name}
                                     onChange={(e) => setNewZone({ ...newZone, name: e.target.value })}
                                     placeholder="Nacional, Internacional, etc."
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.countries', 'Países (separados por coma)')} *
                                 </label>
                                 <input
@@ -833,7 +833,7 @@ const ShippingSettings: React.FC<ShippingSettingsProps> = ({ settings, onChange,
                                     value={newZone.countries}
                                     onChange={(e) => setNewZone({ ...newZone, countries: e.target.value })}
                                     placeholder="México, USA, Canadá"
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -873,12 +873,12 @@ const NotificationSettings: React.FC<SettingsSectionProps> = ({ settings, onChan
             <div className="space-y-4">
                 <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <Mail className="text-muted-foreground" size={20} />
+                        <Mail className="text-q-text-muted" size={20} />
                         <div>
                             <p className="text-foreground font-medium">
                                 {t('ecommerce.notifyNewOrder', 'Nuevo pedido')}
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.notifyNewOrderDesc', 'Recibe un email cuando haya un nuevo pedido')}
                             </p>
                         </div>
@@ -887,18 +887,18 @@ const NotificationSettings: React.FC<SettingsSectionProps> = ({ settings, onChan
                         type="checkbox"
                         checked={settings.notifyOnNewOrder ?? true}
                         onChange={(e) => onChange('notifyOnNewOrder', e.target.checked)}
-                        className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                        className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                     />
                 </label>
 
                 <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <Package className="text-muted-foreground" size={20} />
+                        <Package className="text-q-text-muted" size={20} />
                         <div>
                             <p className="text-foreground font-medium">
                                 {t('ecommerce.notifyLowStock', 'Stock bajo')}
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.notifyLowStockDesc', 'Alerta cuando un producto tiene stock bajo')}
                             </p>
                         </div>
@@ -907,18 +907,18 @@ const NotificationSettings: React.FC<SettingsSectionProps> = ({ settings, onChan
                         type="checkbox"
                         checked={settings.notifyOnLowStock ?? true}
                         onChange={(e) => onChange('notifyOnLowStock', e.target.checked)}
-                        className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                        className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                     />
                 </label>
 
                 <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <Bell className="text-muted-foreground" size={20} />
+                        <Bell className="text-q-text-muted" size={20} />
                         <div>
                             <p className="text-foreground font-medium">
                                 {t('ecommerce.sendOrderConfirmation', 'Confirmación de pedido')}
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.sendOrderConfirmationDesc', 'Envía confirmación por email al cliente')}
                             </p>
                         </div>
@@ -927,18 +927,18 @@ const NotificationSettings: React.FC<SettingsSectionProps> = ({ settings, onChan
                         type="checkbox"
                         checked={settings.sendOrderConfirmation ?? true}
                         onChange={(e) => onChange('sendOrderConfirmation', e.target.checked)}
-                        className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                        className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                     />
                 </label>
 
                 <label className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer">
                     <div className="flex items-center gap-3">
-                        <Truck className="text-muted-foreground" size={20} />
+                        <Truck className="text-q-text-muted" size={20} />
                         <div>
                             <p className="text-foreground font-medium">
                                 {t('ecommerce.sendShippingNotification', 'Notificación de envío')}
                             </p>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-q-text-muted text-sm">
                                 {t('ecommerce.sendShippingNotificationDesc', 'Notifica al cliente cuando se envía su pedido')}
                             </p>
                         </div>
@@ -947,7 +947,7 @@ const NotificationSettings: React.FC<SettingsSectionProps> = ({ settings, onChan
                         type="checkbox"
                         checked={settings.sendShippingNotification ?? true}
                         onChange={(e) => onChange('sendShippingNotification', e.target.checked)}
-                        className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                        className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                     />
                 </label>
             </div>
@@ -1030,7 +1030,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
             {/* Sender Information */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <Send className="text-muted-foreground" size={18} />
+                    <Send className="text-q-text-muted" size={18} />
                     <h4 className="text-md font-medium text-foreground">
                         {t('ecommerce.senderInfo', 'Información del Remitente')}
                     </h4>
@@ -1038,7 +1038,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.fromEmail', 'Email de Envío')}
                         </label>
                         <input
@@ -1046,12 +1046,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             value={localEmailSettings.fromEmail}
                             onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, fromEmail: e.target.value }))}
                             placeholder="orders@tutienda.com"
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.fromName', 'Nombre del Remitente')}
                         </label>
                         <input
@@ -1059,12 +1059,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             value={localEmailSettings.fromName}
                             onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, fromName: e.target.value }))}
                             placeholder="Mi Tienda"
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.replyTo', 'Email de Respuesta')}
                         </label>
                         <input
@@ -1072,9 +1072,9 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             value={localEmailSettings.replyTo}
                             onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, replyTo: e.target.value }))}
                             placeholder="soporte@tutienda.com"
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-q-text-muted mt-1">
                             {t('ecommerce.replyToDesc', 'Las respuestas de clientes llegarán a este email')}
                         </p>
                     </div>
@@ -1090,12 +1090,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                 </button>
             </div>
 
-            <hr className="border-border" />
+            <hr className="border-q-border" />
 
             {/* Branding */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <Palette className="text-muted-foreground" size={18} />
+                    <Palette className="text-q-text-muted" size={18} />
                     <h4 className="text-md font-medium text-foreground">
                         {t('ecommerce.emailBranding', 'Diseño de Emails')}
                     </h4>
@@ -1103,7 +1103,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.logoUrl', 'URL del Logo')}
                         </label>
                         <input
@@ -1111,12 +1111,12 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             value={localEmailSettings.logoUrl}
                             onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, logoUrl: e.target.value }))}
                             placeholder="https://..."
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.primaryColor', 'Color Principal')}
                         </label>
                         <div className="flex gap-2">
@@ -1124,19 +1124,19 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 type="color"
                                 value={localEmailSettings.primaryColor}
                                 onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="w-12 h-10 rounded border border-border cursor-pointer"
+                                className="w-12 h-10 rounded border border-q-border cursor-pointer"
                             />
                             <input
                                 type="text"
                                 value={localEmailSettings.primaryColor}
                                 onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                                className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="flex-1 px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                        <label className="block text-sm font-medium text-q-text-muted mb-1">
                             {t('ecommerce.footerText', 'Texto del Pie')}
                         </label>
                         <textarea
@@ -1144,7 +1144,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             onChange={(e) => setLocalEmailSettings(prev => ({ ...prev, footerText: e.target.value }))}
                             placeholder="Gracias por comprar con nosotros..."
                             rows={2}
-                            className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                            className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                         />
                     </div>
                 </div>
@@ -1159,18 +1159,18 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                 </button>
             </div>
 
-            <hr className="border-border" />
+            <hr className="border-q-border" />
 
             {/* Transactional Email Toggles */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <Mail className="text-muted-foreground" size={18} />
+                    <Mail className="text-q-text-muted" size={18} />
                     <h4 className="text-md font-medium text-foreground">
                         {t('ecommerce.transactionalEmails', 'Emails Transaccionales')}
                     </h4>
                 </div>
 
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-q-text-muted">
                     {t('ecommerce.transactionalEmailsDesc', 'Configura qué emails se envían automáticamente a tus clientes')}
                 </p>
 
@@ -1183,7 +1183,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderConfirmation', 'Confirmación de Pedido')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.orderConfirmationDesc', 'Email al cliente cuando realiza un pedido')}
                                 </p>
                             </div>
@@ -1192,7 +1192,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.orderConfirmation ?? true}
                             onChange={(e) => toggleTransactionalEmail('orderConfirmation', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
 
@@ -1204,7 +1204,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderShipped', 'Pedido Enviado')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.orderShippedDesc', 'Email con número de seguimiento cuando se envía')}
                                 </p>
                             </div>
@@ -1213,7 +1213,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.orderShipped ?? true}
                             onChange={(e) => toggleTransactionalEmail('orderShipped', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
 
@@ -1225,7 +1225,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.orderDelivered', 'Pedido Entregado')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.orderDeliveredDesc', 'Email de confirmación cuando el pedido llega')}
                                 </p>
                             </div>
@@ -1234,7 +1234,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.orderDelivered ?? true}
                             onChange={(e) => toggleTransactionalEmail('orderDelivered', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
 
@@ -1246,7 +1246,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.reviewRequest', 'Solicitud de Reseña')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.reviewRequestDesc', 'Pide una reseña días después de la entrega')}
                                 </p>
                             </div>
@@ -1255,18 +1255,18 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.reviewRequest ?? true}
                             onChange={(e) => toggleTransactionalEmail('reviewRequest', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
                 </div>
             </div>
 
-            <hr className="border-border" />
+            <hr className="border-q-border" />
 
             {/* Admin Notifications */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <Bell className="text-muted-foreground" size={18} />
+                    <Bell className="text-q-text-muted" size={18} />
                     <h4 className="text-md font-medium text-foreground">
                         {t('ecommerce.adminNotifications', 'Notificaciones de Administrador')}
                     </h4>
@@ -1281,7 +1281,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.newOrderNotification', 'Nueva Orden')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.newOrderNotificationDesc', 'Recibe email cuando llega un pedido')}
                                 </p>
                             </div>
@@ -1290,7 +1290,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.newOrderNotification ?? true}
                             onChange={(e) => toggleTransactionalEmail('newOrderNotification', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
 
@@ -1302,7 +1302,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                                 <p className="text-foreground font-medium">
                                     {t('ecommerce.lowStockNotification', 'Stock Bajo')}
                                 </p>
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('ecommerce.lowStockNotificationDesc', 'Alerta cuando un producto tiene stock bajo')}
                                 </p>
                             </div>
@@ -1311,7 +1311,7 @@ const EmailSettingsSection: React.FC<EmailSettingsSectionProps> = ({ userId, sto
                             type="checkbox"
                             checked={transactionalSettings?.lowStockNotification ?? true}
                             onChange={(e) => toggleTransactionalEmail('lowStockNotification', e.target.checked)}
-                            className="w-5 h-5 rounded border-border bg-muted text-primary focus:ring-ring"
+                            className="w-5 h-5 rounded border-q-border bg-muted text-primary focus:ring-ring"
                         />
                     </label>
                 </div>

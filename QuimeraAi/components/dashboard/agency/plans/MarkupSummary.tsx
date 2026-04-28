@@ -70,10 +70,10 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
     }
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             {/* Header */}
             <div
-                className={`px-6 py-4 border-b border-border flex items-center justify-between ${compact ? 'cursor-pointer hover:bg-muted/30' : ''}`}
+                className={`px-6 py-4 border-b border-q-border flex items-center justify-between ${compact ? 'cursor-pointer hover:bg-muted/30' : ''}`}
                 onClick={() => compact && setExpanded(!expanded)}
             >
                 <div className="flex items-center gap-3">
@@ -82,13 +82,13 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                     </div>
                     <div>
                         <h3 className="font-semibold text-foreground">Resumen de Ganancias</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-q-text-muted">
                             Tu margen por cada plan de servicio
                         </p>
                     </div>
                 </div>
                 {compact && (
-                    <button className="p-1 text-muted-foreground">
+                    <button className="p-1 text-q-text-muted">
                         {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </button>
                 )}
@@ -100,25 +100,25 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                     <table className="w-full">
                         <thead className="bg-muted/50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     Plan
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     Precio
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     Costo Base
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     Ganancia
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     % Markup
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     Clientes
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase tracking-wider">
                                     MRR
                                 </th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-green-600 uppercase tracking-wider">
@@ -130,7 +130,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                             {loading ? (
                                 <tr>
                                     <td colSpan={8} className="px-6 py-8 text-center">
-                                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
+                                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-q-text-muted" />
                                     </td>
                                 </tr>
                             ) : (
@@ -144,7 +144,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                                 <span className="text-foreground">{formatCurrency(summary.price)}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <span className="text-muted-foreground">{formatCurrency(summary.baseCost)}</span>
+                                                <span className="text-q-text-muted">{formatCurrency(summary.baseCost)}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <span className="text-green-600 dark:text-green-400 font-medium">
@@ -164,7 +164,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
-                                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                                    <Users className="w-4 h-4 text-q-text-muted" />
                                                     <span className="text-foreground">{summary.clientCount}</span>
                                                 </div>
                                             </td>
@@ -183,7 +183,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                         </tbody>
                         {/* Totals Footer */}
                         {!loading && summaries.length > 0 && (
-                            <tfoot className="bg-muted/70 border-t-2 border-border">
+                            <tfoot className="bg-muted/70 border-t-2 border-q-border">
                                 <tr className="font-semibold">
                                     <td className="px-6 py-4 text-foreground">
                                         TOTAL
@@ -191,7 +191,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                     <td className="px-6 py-4 text-right text-foreground">
                                         -
                                     </td>
-                                    <td className="px-6 py-4 text-right text-muted-foreground">
+                                    <td className="px-6 py-4 text-right text-q-text-muted">
                                         {formatCurrency(totals.cost)}
                                     </td>
                                     <td className="px-6 py-4 text-right text-green-600 dark:text-green-400">
@@ -225,15 +225,15 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                 <div className="px-6 py-4 grid grid-cols-3 gap-4">
                     <div className="text-center">
                         <p className="text-2xl font-bold text-foreground">{totals.clients}</p>
-                        <p className="text-xs text-muted-foreground">Clientes</p>
+                        <p className="text-xs text-q-text-muted">Clientes</p>
                     </div>
                     <div className="text-center">
                         <p className="text-2xl font-bold text-foreground">{formatCurrency(totals.mrr)}</p>
-                        <p className="text-xs text-muted-foreground">MRR</p>
+                        <p className="text-xs text-q-text-muted">MRR</p>
                     </div>
                     <div className="text-center">
                         <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.profit)}</p>
-                        <p className="text-xs text-muted-foreground">Ganancia/mes</p>
+                        <p className="text-xs text-q-text-muted">Ganancia/mes</p>
                     </div>
                 </div>
             )}

@@ -132,9 +132,9 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
     const barWidth = chartWidth / data.length - 4;
 
     return (
-        <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-editor-accent" />
+        <div className="bg-q-surface p-6 rounded-xl border border-q-border">
+            <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-q-accent" />
                 Uso Diario de AI Credits
             </h3>
             <div className="w-full overflow-x-auto">
@@ -160,7 +160,7 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
                                     x={x + barWidth / 2}
                                     y={chartHeight + 20}
                                     textAnchor="middle"
-                                    className="text-[10px] fill-current text-editor-text-secondary"
+                                    className="text-[10px] fill-current text-q-text-secondary"
                                 >
                                     {d.date.split('-').slice(1).join('/')}
                                 </text>
@@ -179,7 +179,7 @@ const DailyUsageChart: React.FC<{ data: Array<{ date: string; credits: number }>
                                         x={x + barWidth / 2}
                                         y={y - 14}
                                         textAnchor="middle"
-                                        className="text-xs font-semibold fill-current text-editor-text-primary"
+                                        className="text-xs font-semibold fill-current text-q-text"
                                     >
                                         {d.credits.toLocaleString()}
                                     </text>
@@ -236,9 +236,9 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
         .slice(0, 8);
 
     return (
-        <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-editor-accent" />
+        <div className="bg-q-surface p-6 rounded-xl border border-q-border">
+            <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-q-accent" />
                 Uso por Tipo de Operación
             </h3>
             <div className="space-y-3">
@@ -249,14 +249,14 @@ const OperationDistributionChart: React.FC<{ data: Record<string, number> }> = (
                     return (
                         <div key={operation}>
                             <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm text-editor-text-secondary">
+                                <span className="text-sm text-q-text-secondary">
                                     {operationLabels[operation] || operation}
                                 </span>
-                                <span className="text-sm text-editor-text-primary font-medium">
+                                <span className="text-sm text-q-text font-medium">
                                     {count.toLocaleString()} ({percentage.toFixed(1)}%)
                                 </span>
                             </div>
-                            <div className="h-2 bg-editor-border rounded-full overflow-hidden">
+                            <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all"
                                     style={{
@@ -286,9 +286,9 @@ const PlanDistributionCard: React.FC<{
     const plansToShow = Object.keys(plans).length > 0 ? plans : SUBSCRIPTION_PLANS;
 
     return (
-        <div className="bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-editor-accent" />
+        <div className="bg-q-surface p-6 rounded-xl border border-q-border">
+            <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                <Crown className="w-5 h-5 text-q-accent" />
                 Distribución de Planes
             </h3>
             <div className="space-y-3">
@@ -303,11 +303,11 @@ const PlanDistributionCard: React.FC<{
                                     className="w-3 h-3 rounded-full"
                                     style={{ backgroundColor: plan.color }}
                                 />
-                                <span className="text-sm text-editor-text-secondary">{plan.name}</span>
+                                <span className="text-sm text-q-text-secondary">{plan.name}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-sm text-editor-text-primary font-medium">{count}</span>
-                                <span className="text-xs text-editor-text-secondary w-12 text-right">
+                                <span className="text-sm text-q-text font-medium">{count}</span>
+                                <span className="text-xs text-q-text-secondary w-12 text-right">
                                     {percentage.toFixed(0)}%
                                 </span>
                             </div>
@@ -315,9 +315,9 @@ const PlanDistributionCard: React.FC<{
                     );
                 })}
             </div>
-            <div className="mt-4 pt-4 border-t border-editor-border flex items-center justify-between">
-                <span className="text-sm text-editor-text-secondary">Total Tenants</span>
-                <span className="text-lg font-bold text-editor-text-primary">{total}</span>
+            <div className="mt-4 pt-4 border-t border-q-border flex items-center justify-between">
+                <span className="text-sm text-q-text-secondary">Total Tenants</span>
+                <span className="text-lg font-bold text-q-text">{total}</span>
             </div>
         </div>
     );
@@ -353,31 +353,31 @@ const AddCreditsModal: React.FC<{
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-editor-panel-bg rounded-xl border border-editor-border w-full max-w-md p-6">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-editor-text-primary flex items-center gap-2">
-                        <Gift className="w-5 h-5 text-editor-accent" />
+                    <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
+                        <Gift className="w-5 h-5 text-q-accent" />
                         Agregar Credits
                     </h3>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="mb-4 p-3 bg-editor-bg rounded-lg">
-                    <p className="text-sm text-editor-text-secondary">Tenant</p>
-                    <p className="text-editor-text-primary font-medium">{tenant.tenantName}</p>
-                    <p className="text-sm text-editor-text-secondary mt-1">
+                <div className="mb-4 p-3 bg-q-bg rounded-lg">
+                    <p className="text-sm text-q-text-secondary">Tenant</p>
+                    <p className="text-q-text font-medium">{tenant.tenantName}</p>
+                    <p className="text-sm text-q-text-secondary mt-1">
                         Credits actuales: {tenant.creditsRemaining.toLocaleString()} / {tenant.creditsIncluded.toLocaleString()}
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm text-editor-text-secondary mb-2">
+                        <label className="block text-sm text-q-text-secondary mb-2">
                             Cantidad de Credits
                         </label>
                         <div className="flex gap-2">
@@ -389,8 +389,8 @@ const AddCreditsModal: React.FC<{
                                     className={`
                                         px-3 py-2 rounded-lg text-sm font-medium transition-colors
                                         ${credits === amount
-                                            ? 'bg-editor-accent text-white'
-                                            : 'bg-editor-border text-editor-text-secondary hover:bg-editor-border/80'
+                                            ? 'bg-q-accent text-white'
+                                            : 'bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/80'
                                         }
                                     `}
                                 >
@@ -402,20 +402,20 @@ const AddCreditsModal: React.FC<{
                             type="number"
                             value={credits}
                             onChange={(e) => setCredits(parseInt(e.target.value) || 0)}
-                            className="mt-2 w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                            className="mt-2 w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                             placeholder="O ingresa una cantidad personalizada"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm text-editor-text-secondary mb-2">
+                        <label className="block text-sm text-q-text-secondary mb-2">
                             Razón (opcional)
                         </label>
                         <input
                             type="text"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                            className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                             placeholder="Ej: Compensación por problema técnico"
                         />
                     </div>
@@ -424,14 +424,14 @@ const AddCreditsModal: React.FC<{
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 rounded-lg bg-editor-border text-editor-text-primary hover:bg-editor-border/80 transition-colors"
+                            className="flex-1 px-4 py-2 rounded-lg bg-q-surface-overlay text-q-text hover:bg-q-surface-overlay/80 transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading || credits <= 0}
-                            className="flex-1 px-4 py-2 rounded-lg bg-editor-accent text-white hover:opacity-90 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors disabled:opacity-50"
                         >
                             {isLoading ? 'Agregando...' : `Agregar ${credits} Credits`}
                         </button>
@@ -454,11 +454,11 @@ const TenantRow: React.FC<{
     const plan = SUBSCRIPTION_PLANS[tenant.planId];
 
     return (
-        <tr className="border-b border-editor-border hover:bg-editor-bg transition-colors">
+        <tr className="border-b border-q-border hover:bg-q-bg transition-colors">
             <td className="p-4">
                 <div>
-                    <p className="text-editor-text-primary font-medium">{tenant.tenantName}</p>
-                    <p className="text-xs text-editor-text-secondary">{tenant.tenantId}</p>
+                    <p className="text-q-text font-medium">{tenant.tenantName}</p>
+                    <p className="text-xs text-q-text-secondary">{tenant.tenantId}</p>
                 </div>
             </td>
             <td className="p-4">
@@ -475,7 +475,7 @@ const TenantRow: React.FC<{
             <td className="p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex-1 max-w-[120px]">
-                        <div className="h-2 bg-editor-border rounded-full overflow-hidden">
+                        <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                             <div
                                 className="h-full rounded-full transition-all"
                                 style={{
@@ -485,16 +485,16 @@ const TenantRow: React.FC<{
                             />
                         </div>
                     </div>
-                    <span className="text-sm text-editor-text-secondary w-12 text-right">
+                    <span className="text-sm text-q-text-secondary w-12 text-right">
                         {tenant.usagePercentage}%
                     </span>
                 </div>
             </td>
             <td className="p-4 text-right">
-                <span className="text-editor-text-primary font-medium">
+                <span className="text-q-text font-medium">
                     {tenant.creditsUsed.toLocaleString()}
                 </span>
-                <span className="text-editor-text-secondary"> / {tenant.creditsIncluded.toLocaleString()}</span>
+                <span className="text-q-text-secondary"> / {tenant.creditsIncluded.toLocaleString()}</span>
             </td>
             <td className="p-4 text-right">
                 <span style={{ color: usageColor }} className="font-medium">
@@ -505,14 +505,14 @@ const TenantRow: React.FC<{
                 <div className="flex items-center justify-end gap-1">
                     <button
                         onClick={() => onViewDetails(tenant)}
-                        className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                         title="Ver detalles"
                     >
                         <Eye className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => onAddCredits(tenant)}
-                        className="p-2 rounded-lg hover:bg-editor-accent/20 text-editor-accent hover:opacity-80 transition-colors"
+                        className="p-2 rounded-lg hover:bg-q-accent/20 text-q-accent hover:opacity-80 transition-colors"
                         title="Agregar credits"
                     >
                         <Plus className="w-4 h-4" />
@@ -916,10 +916,10 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
 
     if (isLoading) {
         return (
-            <div className="flex h-screen bg-editor-bg items-center justify-center">
+            <div className="flex h-screen bg-q-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-editor-accent border-t-transparent rounded-full animate-spin" />
-                    <p className="text-editor-text-secondary">Cargando datos de suscripciones...</p>
+                    <div className="w-12 h-12 border-4 border-q-accent border-t-transparent rounded-full animate-spin" />
+                    <p className="text-q-text-secondary">Cargando datos de suscripciones...</p>
                 </div>
             </div>
         );
@@ -934,22 +934,22 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                 onAddCredits={handleAddCredits}
             />
 
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <div className="flex h-screen bg-q-bg text-q-text">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Header */}
-                    <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                    <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setIsMobileMenuOpen(true)}
-                                className="lg:hidden p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary"
+                                className="lg:hidden p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary"
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
                             <div className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-editor-accent" />
-                                <h1 className="text-lg font-semibold text-editor-text-primary">
+                                <Sparkles className="w-5 h-5 text-q-accent" />
+                                <h1 className="text-lg font-semibold text-q-text">
                                     Gestión de Suscripciones & AI Credits
                                 </h1>
                             </div>
@@ -959,16 +959,16 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                             <button
                                 onClick={handleRefresh}
                                 disabled={isRefreshing}
-                                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors disabled:opacity-50"
+                                className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors disabled:opacity-50"
                             >
                                 <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                             </button>
                     </div>
-                    <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onBack} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
 
                     {/* Tabs */}
-                    <div className="px-4 sm:px-6 border-b border-editor-border">
+                    <div className="px-4 sm:px-6 border-b border-q-border">
                         <div className="flex gap-1">
                             {[
                                 { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -982,8 +982,8 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     className={`
                                         flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2
                                         ${activeTab === tab.id
-                                            ? 'border-editor-accent text-editor-accent'
-                                            : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'border-q-accent text-q-accent'
+                                            : 'border-transparent text-q-text-secondary hover:text-q-text'
                                         }
                                     `}
                                 >
@@ -1046,8 +1046,8 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     <PlanDistributionCard planStats={planStats} plans={plans} />
 
                                     {/* Alertas */}
-                                    <div className="lg:col-span-2 bg-editor-panel-bg p-6 rounded-xl border border-editor-border">
-                                        <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
+                                    <div className="lg:col-span-2 bg-q-surface p-6 rounded-xl border border-q-border">
+                                        <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
                                             <AlertCircle className="w-5 h-5 text-amber-400" />
                                             Tenants que Requieren Atención
                                         </h3>
@@ -1059,11 +1059,11 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                 .map(tenant => (
                                                     <div
                                                         key={tenant.tenantId}
-                                                        className="flex items-center justify-between p-3 bg-editor-bg rounded-lg"
+                                                        className="flex items-center justify-between p-3 bg-q-bg rounded-lg"
                                                     >
                                                         <div>
-                                                            <p className="text-editor-text-primary font-medium">{tenant.tenantName}</p>
-                                                            <p className="text-xs text-editor-text-secondary">
+                                                            <p className="text-q-text font-medium">{tenant.tenantName}</p>
+                                                            <p className="text-xs text-q-text-secondary">
                                                                 {tenant.creditsRemaining.toLocaleString()} credits restantes
                                                             </p>
                                                         </div>
@@ -1076,7 +1076,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                             </span>
                                                             <button
                                                                 onClick={() => setAddCreditsModal({ isOpen: true, tenant })}
-                                                                className="px-3 py-1 rounded-lg bg-editor-accent/20 text-editor-accent text-sm hover:bg-editor-accent/30 transition-colors"
+                                                                className="px-3 py-1 rounded-lg bg-q-accent/20 text-q-accent text-sm hover:bg-q-accent/30 transition-colors"
                                                             >
                                                                 + Credits
                                                             </button>
@@ -1084,7 +1084,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                     </div>
                                                 ))}
                                             {tenants.filter(t => t.usagePercentage >= 80).length === 0 && (
-                                                <p className="text-editor-text-secondary text-center py-4">
+                                                <p className="text-q-text-secondary text-center py-4">
                                                     Todos los tenants tienen suficientes credits
                                                 </p>
                                             )}
@@ -1100,19 +1100,19 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                 {/* Filters */}
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <div className="flex-1 relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-editor-text-secondary" />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-q-text-secondary" />
                                         <input
                                             type="text"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             placeholder="Buscar tenant..."
-                                            className="w-full pl-10 pr-4 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                            className="w-full pl-10 pr-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                         />
                                     </div>
                                     <select
                                         value={filterPlan}
                                         onChange={(e) => setFilterPlan(e.target.value as any)}
-                                        className="px-4 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                        className="px-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                     >
                                         <option value="all">Todos los planes</option>
                                         {Object.entries(SUBSCRIPTION_PLANS).map(([id, plan]) => (
@@ -1122,7 +1122,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     <select
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value as any)}
-                                        className="px-4 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                                        className="px-4 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
                                     >
                                         <option value="usage">Ordenar por uso</option>
                                         <option value="name">Ordenar por nombre</option>
@@ -1131,17 +1131,17 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                 </div>
 
                                 {/* Table */}
-                                <div className="bg-editor-panel-bg rounded-xl border border-editor-border overflow-hidden">
+                                <div className="bg-q-surface rounded-xl border border-q-border overflow-hidden">
                                     <div className="overflow-x-auto">
                                         <table className="w-full">
-                                            <thead className="bg-editor-bg">
+                                            <thead className="bg-q-bg">
                                                 <tr>
-                                                    <th className="p-4 text-left text-sm font-medium text-editor-text-secondary">Tenant</th>
-                                                    <th className="p-4 text-left text-sm font-medium text-editor-text-secondary">Plan</th>
-                                                    <th className="p-4 text-left text-sm font-medium text-editor-text-secondary">Uso</th>
-                                                    <th className="p-4 text-right text-sm font-medium text-editor-text-secondary">Credits Usados</th>
-                                                    <th className="p-4 text-right text-sm font-medium text-editor-text-secondary">Restantes</th>
-                                                    <th className="p-4 text-right text-sm font-medium text-editor-text-secondary">Acciones</th>
+                                                    <th className="p-4 text-left text-sm font-medium text-q-text-secondary">Tenant</th>
+                                                    <th className="p-4 text-left text-sm font-medium text-q-text-secondary">Plan</th>
+                                                    <th className="p-4 text-left text-sm font-medium text-q-text-secondary">Uso</th>
+                                                    <th className="p-4 text-right text-sm font-medium text-q-text-secondary">Credits Usados</th>
+                                                    <th className="p-4 text-right text-sm font-medium text-q-text-secondary">Restantes</th>
+                                                    <th className="p-4 text-right text-sm font-medium text-q-text-secondary">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1161,7 +1161,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     </div>
 
                                     {filteredTenants.length === 0 && (
-                                        <div className="p-8 text-center text-editor-text-secondary">
+                                        <div className="p-8 text-center text-q-text-secondary">
                                             No se encontraron tenants
                                         </div>
                                     )}
@@ -1172,37 +1172,37 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                         {/* Transactions Tab */}
                         {activeTab === 'transactions' && (
                             <div className="space-y-4">
-                                <div className="bg-editor-panel-bg rounded-xl border border-editor-border overflow-hidden">
-                                    <div className="p-4 border-b border-editor-border">
-                                        <h3 className="text-lg font-semibold text-editor-text-primary">
+                                <div className="bg-q-surface rounded-xl border border-q-border overflow-hidden">
+                                    <div className="p-4 border-b border-q-border">
+                                        <h3 className="text-lg font-semibold text-q-text">
                                             Últimas Transacciones de Credits
                                         </h3>
                                     </div>
                                     <div className="divide-y divide-editor-border">
                                         {recentTransactions.map(tx => (
-                                            <div key={tx.id} className="p-4 hover:bg-editor-bg transition-colors">
+                                            <div key={tx.id} className="p-4 hover:bg-q-bg transition-colors">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`
                                                             w-10 h-10 rounded-lg flex items-center justify-center
-                                                            ${tx.creditsUsed < 0 ? 'bg-green-500/20 text-green-400' : 'bg-editor-accent/20 text-editor-accent'}
+                                                            ${tx.creditsUsed < 0 ? 'bg-green-500/20 text-green-400' : 'bg-q-accent/20 text-q-accent'}
                                                         `}>
                                                             {tx.creditsUsed < 0 ? <Plus className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                                                         </div>
                                                         <div>
-                                                            <p className="text-editor-text-primary font-medium">
+                                                            <p className="text-q-text font-medium">
                                                                 {tx.description || tx.operation}
                                                             </p>
-                                                            <p className="text-xs text-editor-text-secondary">
+                                                            <p className="text-xs text-q-text-secondary">
                                                                 {tx.tenantId} • {tx.model || 'N/A'}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className={`font-semibold ${tx.creditsUsed < 0 ? 'text-green-400' : 'text-editor-text-primary'}`}>
+                                                        <p className={`font-semibold ${tx.creditsUsed < 0 ? 'text-green-400' : 'text-q-text'}`}>
                                                             {tx.creditsUsed < 0 ? '+' : '-'}{Math.abs(tx.creditsUsed)} credits
                                                         </p>
-                                                        <p className="text-xs text-editor-text-secondary">
+                                                        <p className="text-xs text-q-text-secondary">
                                                             {tx.timestamp?.seconds
                                                                 ? new Date(tx.timestamp.seconds * 1000).toLocaleString()
                                                                 : 'N/A'
@@ -1215,7 +1215,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                     </div>
 
                                     {recentTransactions.length === 0 && (
-                                        <div className="p-8 text-center text-editor-text-secondary">
+                                        <div className="p-8 text-center text-q-text-secondary">
                                             No hay transacciones recientes
                                         </div>
                                     )}
@@ -1274,10 +1274,10 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                 {/* Header con acciones */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-editor-text-primary">
+                                        <h3 className="text-lg font-semibold text-q-text">
                                             Gestión de Planes
                                         </h3>
-                                        <p className="text-sm text-editor-text-secondary">
+                                        <p className="text-sm text-q-text-secondary">
                                             Administra los planes de suscripción y sus límites
                                         </p>
                                     </div>
@@ -1287,8 +1287,8 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             className={`
                                                 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2
                                                 ${showArchivedPlans
-                                                    ? 'bg-editor-accent text-white'
-                                                    : 'bg-editor-border text-editor-text-secondary hover:text-editor-text-primary'
+                                                    ? 'bg-q-accent text-white'
+                                                    : 'bg-q-surface-overlay text-q-text-secondary hover:text-q-text'
                                                 }
                                             `}
                                         >
@@ -1332,7 +1332,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                         </button>
                                         <button
                                             onClick={() => setPlanEditorModal({ isOpen: true, plan: null })}
-                                            className="px-4 py-2 rounded-lg bg-editor-accent text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2"
+                                            className="px-4 py-2 rounded-lg bg-q-accent text-white text-sm font-medium hover:opacity-90 transition-colors flex items-center gap-2"
                                         >
                                             <Plus className="w-4 h-4" />
                                             Nuevo Plan
@@ -1352,14 +1352,14 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                 <div
                                                     key={plan.id}
                                                     className={`
-                                                        bg-editor-panel-bg rounded-xl border border-editor-border overflow-hidden
+                                                        bg-q-surface rounded-xl border border-q-border overflow-hidden
                                                         ${plan.isArchived ? 'opacity-60' : ''}
-                                                        ${plan.isFeatured ? 'ring-2 ring-editor-accent' : ''}
+                                                        ${plan.isFeatured ? 'ring-2 ring-q-accent' : ''}
                                                     `}
                                                 >
                                                     {/* Plan Header */}
                                                     <div
-                                                        className="p-4 border-b border-editor-border"
+                                                        className="p-4 border-b border-q-border"
                                                         style={{ backgroundColor: `${plan.color}10` }}
                                                     >
                                                         <div className="flex items-center justify-between mb-2">
@@ -1371,7 +1371,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                     <Crown className="w-4 h-4" style={{ color: plan.color }} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="font-semibold text-editor-text-primary flex items-center gap-2">
+                                                                    <h4 className="font-semibold text-q-text flex items-center gap-2">
                                                                         {plan.name}
                                                                         {plan._fromCode && (
                                                                             <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full animate-pulse">
@@ -1379,7 +1379,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                             </span>
                                                                         )}
                                                                         {plan.isPopular && (
-                                                                            <span className="px-2 py-0.5 bg-editor-accent text-white text-xs rounded-full">
+                                                                            <span className="px-2 py-0.5 bg-q-accent text-white text-xs rounded-full">
                                                                                 Popular
                                                                             </span>
                                                                         )}
@@ -1389,13 +1389,13 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                             </span>
                                                                         )}
                                                                     </h4>
-                                                                    <p className="text-xs text-editor-text-secondary">{plan.id}</p>
+                                                                    <p className="text-xs text-q-text-secondary">{plan.id}</p>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-1">
                                                                 <button
                                                                     onClick={() => setPlanEditorModal({ isOpen: true, plan })}
-                                                                    className="p-1.5 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                                                    className="p-1.5 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
                                                                     title="Editar"
                                                                 >
                                                                     <Edit className="w-4 h-4" />
@@ -1419,18 +1419,18 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-editor-text-secondary line-clamp-2">
+                                                        <p className="text-sm text-q-text-secondary line-clamp-2">
                                                             {plan.description}
                                                         </p>
                                                     </div>
 
                                                     {/* Pricing */}
-                                                    <div className="p-4 border-b border-editor-border">
+                                                    <div className="p-4 border-b border-q-border">
                                                         <div className="flex items-baseline gap-1">
-                                                            <span className="text-2xl font-bold text-editor-text-primary">
+                                                            <span className="text-2xl font-bold text-q-text">
                                                                 ${plan.price?.monthly || 0}
                                                             </span>
-                                                            <span className="text-editor-text-secondary">/mes</span>
+                                                            <span className="text-q-text-secondary">/mes</span>
                                                         </div>
                                                         {plan.price?.annually && plan.price.annually > 0 && plan.price.annually < (plan.price?.monthly || 0) && (
                                                             <p className="text-xs text-green-400 mt-1">
@@ -1442,29 +1442,29 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                     {/* Key Limits */}
                                                     <div className="p-4 space-y-2">
                                                         <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-editor-text-secondary flex items-center gap-2">
+                                                            <span className="text-q-text-secondary flex items-center gap-2">
                                                                 <Sparkles className="w-4 h-4" />
                                                                 AI Credits
                                                             </span>
-                                                            <span className="text-editor-text-primary font-medium">
+                                                            <span className="text-q-text font-medium">
                                                                 {formatLimit(plan.limits?.maxAiCredits || 0)}
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-editor-text-secondary flex items-center gap-2">
+                                                            <span className="text-q-text-secondary flex items-center gap-2">
                                                                 <Layers className="w-4 h-4" />
                                                                 Proyectos
                                                             </span>
-                                                            <span className="text-editor-text-primary font-medium">
+                                                            <span className="text-q-text font-medium">
                                                                 {formatLimit(plan.limits?.maxProjects || 0)}
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-editor-text-secondary flex items-center gap-2">
+                                                            <span className="text-q-text-secondary flex items-center gap-2">
                                                                 <Users className="w-4 h-4" />
                                                                 Usuarios
                                                             </span>
-                                                            <span className="text-editor-text-primary font-medium">
+                                                            <span className="text-q-text font-medium">
                                                                 {formatLimit(plan.limits?.maxUsers || 0)}
                                                             </span>
                                                         </div>
@@ -1473,18 +1473,18 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                     {/* Stats */}
                                                     {stats && (
                                                         <div className="px-4 pb-4">
-                                                            <div className="p-3 bg-editor-bg rounded-lg">
+                                                            <div className="p-3 bg-q-bg rounded-lg">
                                                                 <div className="flex items-center justify-between">
-                                                                    <span className="text-xs text-editor-text-secondary">
+                                                                    <span className="text-xs text-q-text-secondary">
                                                                         Suscriptores activos
                                                                     </span>
-                                                                    <span className="text-sm font-semibold text-editor-text-primary">
+                                                                    <span className="text-sm font-semibold text-q-text">
                                                                         {stats.activeSubscribers}
                                                                     </span>
                                                                 </div>
                                                                 {stats.mrr > 0 && (
                                                                     <div className="flex items-center justify-between mt-1">
-                                                                        <span className="text-xs text-editor-text-secondary">
+                                                                        <span className="text-xs text-q-text-secondary">
                                                                             MRR
                                                                         </span>
                                                                         <span className="text-sm font-semibold text-green-400">
@@ -1501,12 +1501,12 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                 </div>
 
                                 {Object.keys(plans).length === 0 && (
-                                    <div className="bg-editor-panel-bg rounded-xl border border-editor-border p-8 text-center">
-                                        <Layers className="w-12 h-12 text-editor-text-secondary mx-auto mb-4" />
-                                        <h4 className="text-lg font-semibold text-editor-text-primary mb-2">
+                                    <div className="bg-q-surface rounded-xl border border-q-border p-8 text-center">
+                                        <Layers className="w-12 h-12 text-q-text-secondary mx-auto mb-4" />
+                                        <h4 className="text-lg font-semibold text-q-text mb-2">
                                             No hay planes configurados
                                         </h4>
-                                        <p className="text-editor-text-secondary mb-4">
+                                        <p className="text-q-text-secondary mb-4">
                                             Inicializa los planes predefinidos o crea uno nuevo
                                         </p>
                                         <div className="flex justify-center gap-3">
@@ -1518,7 +1518,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             </button>
                                             <button
                                                 onClick={() => setPlanEditorModal({ isOpen: true, plan: null })}
-                                                className="px-4 py-2 rounded-lg bg-editor-accent text-white font-medium hover:opacity-90 transition-colors"
+                                                className="px-4 py-2 rounded-lg bg-q-accent text-white font-medium hover:opacity-90 transition-colors"
                                             >
                                                 Crear Plan Nuevo
                                             </button>

@@ -151,12 +151,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                 <div className="mb-3">
                     {label && (
                         <div className="flex items-center justify-between mb-2">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
                         </div>
                     )}
 
                     {/* Prominent Image Preview with overlaid controls */}
-                    <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+                    <div className="relative rounded-lg overflow-hidden border border-q-border group">
                         {value ? (
                             <>
                                 <div className="aspect-video cursor-pointer" onClick={() => {
@@ -184,7 +184,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     <button
                                         type="button"
                                         onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
-                                        className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                                        className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                                         title={t('dashboard.imagePicker.generateWithAI')}
                                     >
                                         <Zap size={14} />
@@ -202,7 +202,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 </div>
                             </>
                         ) : (
-                            <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+                            <div className="aspect-video flex flex-col items-center justify-center bg-q-bg text-q-text-secondary gap-2">
                                 <Image size={32} className="opacity-30" />
                                 <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
                             </div>
@@ -217,7 +217,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 value={value}
                                 onChange={(e) => onChange(e.target.value)}
                                 placeholder="https://..."
-                                className="w-full bg-editor-panel-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent placeholder:text-editor-text-secondary/50 truncate font-mono"
+                                className="w-full bg-q-surface border border-q-border rounded-lg px-3 py-2 text-xs text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent placeholder:text-q-text-secondary/50 truncate font-mono"
                             />
                         </div>
                     )}
@@ -228,14 +228,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                             <button
                                 type="button"
                                 onClick={() => { setIsLibraryOpen(true); setActiveTab('library'); }}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-bg border border-q-border text-q-text-secondary hover:text-q-text hover:border-q-accent/30 transition-all text-xs font-medium"
                             >
                                 <Grid size={12} /> Librería
                             </button>
                             <button
                                 type="button"
                                 onClick={() => { setIsLibraryOpen(true); setActiveTab('generate'); }}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium"
                             >
                                 <Zap size={12} /> Generar IA
                             </button>
@@ -252,16 +252,16 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         onClick={handleClose}
                     >
                         <div
-                            className="bg-editor-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-editor-border"
+                            className="bg-q-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-q-border"
                             onClick={(e) => e.stopPropagation()}
                         >
                         {/* Header */}
-                        <div className="p-4 border-b border-editor-border flex justify-between items-center bg-editor-panel-bg">
+                        <div className="p-4 border-b border-q-border flex justify-between items-center bg-q-surface">
                             <div className="flex gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('library')}
-                                    className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'library' ? 'border-editor-accent text-editor-text-primary' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                    className={`pb-1 border-b-2 text-sm font-bold transition-colors ${activeTab === 'library' ? 'border-q-accent text-q-text' : 'border-transparent text-q-text-secondary hover:text-q-text'}`}
                                 >
                                     {t('dashboard.imagePicker.assetLibrary')}
                                 </button>
@@ -269,7 +269,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab('products')}
-                                        className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'products' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                        className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'products' ? 'border-q-accent text-q-accent' : 'border-transparent text-q-text-secondary hover:text-q-text'}`}
                                     >
                                         <ShoppingBag size={14} /> {t('dashboard.imagePicker.productImages', 'Productos')}
                                     </button>
@@ -277,16 +277,16 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('generate')}
-                                    className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'generate' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                    className={`pb-1 border-b-2 text-sm font-bold transition-colors flex items-center gap-1 ${activeTab === 'generate' ? 'border-q-accent text-q-accent' : 'border-transparent text-q-text-secondary hover:text-q-text'}`}
                                 >
                                     <Zap size={14} /> Quimera.ai
                                 </button>
                             </div>
-                            <button type="button" onClick={handleClose} className="p-1 rounded-full hover:bg-editor-border"><X size={20} /></button>
+                            <button type="button" onClick={handleClose} className="p-1 rounded-full hover:bg-q-surface-overlay"><X size={20} /></button>
                         </div>
 
                         {/* Content */}
-                        <div className={`flex-grow overflow-hidden bg-editor-bg ${activeTab === 'generate' ? '' : 'p-6'}`}>
+                        <div className={`flex-grow overflow-hidden bg-q-bg ${activeTab === 'generate' ? '' : 'p-6'}`}>
 
                             {/* LIBRARY TAB */}
                             {activeTab === 'library' && (
@@ -294,12 +294,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     {/* Library Controls - Compact */}
                                     <div className="flex items-center gap-3 mb-4">
                                         {/* Project indicator */}
-                                        <div className="flex items-center gap-1.5 text-editor-text-secondary">
-                                            <FolderOpen size={14} className="text-editor-accent" />
-                                            <span className="text-xs font-medium text-editor-text-primary">
+                                        <div className="flex items-center gap-1.5 text-q-text-secondary">
+                                            <FolderOpen size={14} className="text-q-accent" />
+                                            <span className="text-xs font-medium text-q-text">
                                                 {destination === 'admin' ? 'Librería de administración' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
                                             </span>
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-editor-panel-bg rounded">
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-q-surface rounded">
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
                                             </span>
                                             {destination === 'admin' && (
@@ -313,8 +313,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         <div className="flex-1" />
 
                                         {/* Search */}
-                                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-lg px-2.5 py-1.5 w-44">
-                                            <Search size={12} className="text-editor-text-secondary flex-shrink-0" />
+                                        <div className="flex items-center gap-1.5 bg-q-surface-overlay/40 rounded-lg px-2.5 py-1.5 w-44">
+                                            <Search size={12} className="text-q-text-secondary flex-shrink-0" />
                                             <input
                                                 type="text"
                                                 value={searchQuery}
@@ -323,7 +323,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                             />
                                             {searchQuery && (
-                                                <button type="button" onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                                <button type="button" onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                                     <X size={10} />
                                                 </button>
                                             )}
@@ -336,7 +336,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     <select
                                                         value={selectedAdminCategory}
                                                         onChange={(e) => setSelectedAdminCategory(e.target.value)}
-                                                        className="h-8 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-xs font-medium focus:outline-none focus:border-editor-accent"
+                                                        className="h-8 px-2 py-1 bg-q-surface border border-q-border rounded text-xs font-medium focus:outline-none focus:border-q-accent"
                                                     >
                                                         <option value="article">Artículos</option>
                                                         <option value="hero">Hero</option>
@@ -358,7 +358,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     maxSizeMB={10}
                                                     variant="compact"
                                                 >
-                                                    <button type="button" className="flex items-center gap-1.5 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-editor-accent-hover transition-colors whitespace-nowrap">
+                                                    <button type="button" className="flex items-center gap-1.5 bg-q-accent text-q-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-q-accent transition-colors whitespace-nowrap">
                                                         <Upload size={14} /> {t('dashboard.imagePicker.upload')}
                                                     </button>
                                                 </DragDropZone>
@@ -374,12 +374,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     <div
                                                         key={file.id}
                                                         onClick={() => { onChange(file.downloadURL); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
-                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
+                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
                                                     >
                                                         <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                                         {value === file.downloadURL ? (
-                                                            <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
-                                                                <div className="bg-editor-accent text-editor-bg rounded-full p-2">
+                                                            <div className="absolute inset-0 bg-q-accent/20 flex items-center justify-center">
+                                                                <div className="bg-q-accent text-q-bg rounded-full p-2">
                                                                     <Check size={20} />
                                                                 </div>
                                                             </div>
@@ -392,19 +392,19 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 ))}
                                             </div>
                                         ) : searchQuery ? (
-                                            <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary">
+                                            <div className="h-full flex flex-col items-center justify-center text-q-text-secondary">
                                                 <Search size={48} className="mb-4 opacity-50" />
                                                 <p className="font-medium mb-2">{t('dashboard.imagePicker.noImagesFound')}</p>
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearchQuery('')}
-                                                    className="text-editor-accent hover:underline text-sm"
+                                                    className="text-q-accent hover:underline text-sm"
                                                 >
                                                     {t('dashboard.imagePicker.clearFilters')}
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="h-full flex flex-col items-center justify-center text-editor-text-secondary border-2 border-dashed border-editor-border rounded-xl">
+                                            <div className="h-full flex flex-col items-center justify-center text-q-text-secondary border-2 border-dashed border-q-border rounded-xl">
                                                 <Image size={48} className="mb-4 opacity-50" />
                                                 <p className="mb-2">{t('dashboard.imagePicker.noImagesInLibrary')}</p>
                                                 {activeTab === 'library' && (
@@ -413,7 +413,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                             <select
                                                                 value={selectedAdminCategory}
                                                                 onChange={(e) => setSelectedAdminCategory(e.target.value)}
-                                                                className="h-8 px-2 py-1 bg-editor-panel-bg border border-editor-border rounded text-xs font-medium focus:outline-none focus:border-editor-accent"
+                                                                className="h-8 px-2 py-1 bg-q-surface border border-q-border rounded text-xs font-medium focus:outline-none focus:border-q-accent"
                                                             >
                                                                 <option value="article">Artículos</option>
                                                                 <option value="hero">Hero</option>
@@ -435,7 +435,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                             maxSizeMB={10}
                                                             variant="compact"
                                                         >
-                                                            <button type="button" className="text-editor-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
+                                                            <button type="button" className="text-q-accent hover:underline">{t('dashboard.imagePicker.uploadOneNow')}</button>
                                                         </DragDropZone>
                                                     </div>
                                                 )}
@@ -450,14 +450,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                 <div className="h-full flex flex-col">
                                     {/* ... Product tab content (kept same) ... */}
                                     <div className="mb-4">
-                                        <p className="text-sm text-editor-text-secondary">
+                                        <p className="text-sm text-q-text-secondary">
                                             {t('dashboard.imagePicker.selectFromProducts', 'Selecciona una imagen de tus productos')}
                                         </p>
                                     </div>
 
                                     {isLoadingProducts ? (
                                         <div className="flex-grow flex items-center justify-center">
-                                            <div className="animate-spin w-8 h-8 border-2 border-editor-accent border-t-transparent rounded-full" />
+                                            <div className="animate-spin w-8 h-8 border-2 border-q-accent border-t-transparent rounded-full" />
                                         </div>
                                     ) : productImages.length > 0 ? (
                                         <div className="flex-grow overflow-y-auto custom-scrollbar">
@@ -466,12 +466,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                     <div
                                                         key={product.id}
                                                         onClick={() => { onChange(product.imageUrl); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
-                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === product.imageUrl ? 'border-editor-accent ring-2 ring-editor-accent/50' : 'border-transparent hover:border-editor-text-secondary'}`}
+                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === product.imageUrl ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
                                                     >
                                                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                                         {value === product.imageUrl ? (
-                                                            <div className="absolute inset-0 bg-editor-accent/20 flex items-center justify-center">
-                                                                <div className="bg-editor-accent text-editor-bg rounded-full p-2">
+                                                            <div className="absolute inset-0 bg-q-accent/20 flex items-center justify-center">
+                                                                <div className="bg-q-accent text-q-bg rounded-full p-2">
                                                                     <Check size={20} />
                                                                 </div>
                                                             </div>
@@ -485,7 +485,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex-grow flex flex-col items-center justify-center text-editor-text-secondary">
+                                        <div className="flex-grow flex flex-col items-center justify-center text-q-text-secondary">
                                             <ShoppingBag size={48} className="mb-4 opacity-50" />
                                             <p className="font-medium mb-2">{t('dashboard.imagePicker.noProductImages', 'No hay imágenes de productos')}</p>
                                             <p className="text-sm text-center max-w-md">

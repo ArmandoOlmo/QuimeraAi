@@ -115,7 +115,7 @@ const ProductsView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.products', 'Productos')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {products.length} {t('ecommerce.productsTotal', 'productos en total')}
                         {lowStockCount > 0 && (
                             <span className="ml-2 text-orange-400">
@@ -135,11 +135,11 @@ const ProductsView: React.FC = () => {
             </div>
 
             {/* Filters Bar */}
-            <div className="bg-card/50 rounded-xl p-4 border border-border">
+            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
-                    <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder={t('ecommerce.searchProducts', 'Buscar productos...')}
@@ -148,7 +148,7 @@ const ProductsView: React.FC = () => {
                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
                         {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -158,7 +158,7 @@ const ProductsView: React.FC = () => {
                     <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="">{t('ecommerce.allCategories', 'Todas las categorías')}</option>
                         {categories.map((cat) => (
@@ -172,7 +172,7 @@ const ProductsView: React.FC = () => {
                     <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value as ProductStatus | '')}
-                        className="px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="">{t('ecommerce.allStatuses', 'Todos los estados')}</option>
                         <option value="active">{t('ecommerce.active', 'Activo')}</option>
@@ -186,7 +186,7 @@ const ProductsView: React.FC = () => {
                             onClick={() => setViewMode('grid')}
                             className={`p-2 rounded transition-colors ${viewMode === 'grid'
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                 }`}
                         >
                             <Grid size={20} />
@@ -195,7 +195,7 @@ const ProductsView: React.FC = () => {
                             onClick={() => setViewMode('list')}
                             className={`p-2 rounded transition-colors ${viewMode === 'list'
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                 }`}
                         >
                             <List size={20} />
@@ -207,11 +207,11 @@ const ProductsView: React.FC = () => {
             {/* Products Grid/List */}
             {filteredProducts.length === 0 ? (
                 <div className="text-center py-12">
-                    <Package className="mx-auto text-muted-foreground mb-4" size={48} />
+                    <Package className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('ecommerce.noProducts', 'No hay productos')}
                     </h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {searchTerm || selectedCategory || selectedStatus
                             ? t('ecommerce.noProductsFilter', 'No se encontraron productos con los filtros aplicados')
                             : t('ecommerce.noProductsYet', 'Aún no has agregado ningún producto')}
@@ -240,26 +240,26 @@ const ProductsView: React.FC = () => {
                     ))}
                 </div>
             ) : (
-                <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
+                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.product', 'Producto')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden md:table-cell">
                                     {t('ecommerce.category', 'Categoría')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.price', 'Precio')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden sm:table-cell">
                                     {t('ecommerce.stock', 'Stock')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden lg:table-cell">
                                     {t('ecommerce.status', 'Estado')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.actions', 'Acciones')}
                                 </th>
                             </tr>
@@ -277,18 +277,18 @@ const ProductsView: React.FC = () => {
                                                 />
                                             ) : (
                                                 <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                                                    <ImageIcon className="text-muted-foreground" size={20} />
+                                                    <ImageIcon className="text-q-text-muted" size={20} />
                                                 </div>
                                             )}
                                             <div>
                                                 <p className="text-foreground font-medium">{product.name}</p>
                                                 {product.sku && (
-                                                    <p className="text-muted-foreground text-sm">SKU: {product.sku}</p>
+                                                    <p className="text-q-text-muted text-sm">SKU: {product.sku}</p>
                                                 )}
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                                    <td className="px-4 py-3 text-q-text-muted hidden md:table-cell">
                                         {getCategoryName(product.categoryId)}
                                     </td>
                                     <td className="px-4 py-3">
@@ -296,7 +296,7 @@ const ProductsView: React.FC = () => {
                                             ${product.price.toFixed(2)}
                                         </p>
                                         {product.compareAtPrice && (
-                                            <p className="text-muted-foreground text-sm line-through">
+                                            <p className="text-q-text-muted text-sm line-through">
                                                 ${product.compareAtPrice.toFixed(2)}
                                             </p>
                                         )}
@@ -306,13 +306,13 @@ const ProductsView: React.FC = () => {
                                             <span
                                                 className={`${product.quantity <= (product.lowStockThreshold || 5)
                                                         ? 'text-orange-400'
-                                                        : 'text-muted-foreground'
+                                                        : 'text-q-text-muted'
                                                     }`}
                                             >
                                                 {product.quantity}
                                             </span>
                                         ) : (
-                                            <span className="text-muted-foreground">∞</span>
+                                            <span className="text-q-text-muted">∞</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 hidden lg:table-cell">
@@ -321,7 +321,7 @@ const ProductsView: React.FC = () => {
                                                     ? 'bg-green-500/20 text-green-400'
                                                     : product.status === 'draft'
                                                         ? 'bg-yellow-500/20 text-yellow-400'
-                                                        : 'bg-muted text-muted-foreground'
+                                                        : 'bg-muted text-q-text-muted'
                                                 }`}
                                         >
                                             {product.status}
@@ -331,13 +331,13 @@ const ProductsView: React.FC = () => {
                                         <div className="flex items-center justify-end gap-2">
                                             <button
                                                 onClick={() => handleEdit(product)}
-                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                             >
                                                 <Edit size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(product.id)}
-                                                className="p-2 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                                                className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
                                             >
                                                 <Trash2 size={18} />
                                             </button>

@@ -159,7 +159,7 @@ const AgencyDashboardMain: React.FC = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -167,9 +167,9 @@ const AgencyDashboardMain: React.FC = () => {
             />
 
             {/* Section Navigation Panel — Desktop only (mirrors Web Editor Controls pattern) */}
-            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-border bg-card/50 flex-shrink-0 overflow-hidden">
+            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden">
                 {/* Panel Header */}
-                <div className="h-14 px-4 border-b border-border flex items-center gap-2 flex-shrink-0">
+                <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
                     <Building2 size={20} className="text-primary" />
                     <h2 className="text-sm font-bold text-foreground truncate">
                         {t('agency.title', 'Agency Dashboard')}
@@ -190,7 +190,7 @@ const AgencyDashboardMain: React.FC = () => {
                                         w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                         ${isActive
                                             ? 'bg-primary/10 text-primary shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                         }
                                     `}
                                 >
@@ -206,12 +206,12 @@ const AgencyDashboardMain: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header — Title + right-aligned back action (tabs moved to sidebar panel) */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                             aria-label={t('dashboard.agency.openNavMenu')}
                         >
                             <Menu className="w-5 h-5" />
@@ -229,7 +229,7 @@ const AgencyDashboardMain: React.FC = () => {
                 </header>
 
                 {/* Mobile Tabs - Grid 5 columnas, 2 filas, sin scroll */}
-                <div className="md:hidden border-b border-border bg-background px-2 py-2">
+                <div className="md:hidden border-b border-q-border bg-q-bg px-2 py-2">
                     <div className="grid grid-cols-5 gap-1">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
@@ -240,7 +240,7 @@ const AgencyDashboardMain: React.FC = () => {
                                     onClick={() => handleTabChange(tab.id)}
                                     className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-colors leading-tight ${isActive
                                         ? 'bg-primary/10 text-primary'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
                                         }`}
                                 >
                                     <Icon size={16} className="shrink-0" />
@@ -284,7 +284,7 @@ const AgencyDashboardMain: React.FC = () => {
                                                 <h2 className="text-2xl font-bold text-foreground">
                                                     {t('agency.billing', 'Facturación')}
                                                 </h2>
-                                                <p className="text-muted-foreground mt-1">
+                                                <p className="text-q-text-muted mt-1">
                                                     {t('agency.billingDesc', 'Gestiona Stripe Connect y facturación de clientes')}
                                                 </p>
                                             </div>
@@ -305,7 +305,7 @@ const AgencyDashboardMain: React.FC = () => {
                                                 <h2 className="text-2xl font-bold text-foreground">
                                                     {t('agency.newClient', 'Nuevo Cliente')}
                                                 </h2>
-                                                <p className="text-muted-foreground mt-1">
+                                                <p className="text-q-text-muted mt-1">
                                                     {t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
                                                 </p>
                                             </div>
@@ -360,7 +360,7 @@ const AgencyDashboardMain: React.FC = () => {
                                                 <h2 className="text-2xl font-bold text-foreground">
                                                     {t('agency.addons', 'Add-ons')}
                                                 </h2>
-                                                <p className="text-muted-foreground mt-1">
+                                                <p className="text-q-text-muted mt-1">
                                                     {t('agency.addonsDesc', 'Gestiona complementos de tu subscription')}
                                                 </p>
                                             </div>

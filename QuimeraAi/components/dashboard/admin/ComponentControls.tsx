@@ -13,7 +13,7 @@ import AnimationConfigurator from './AnimationConfigurator';
 
 // Simple re-usable controls from Controls.tsx
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
 );
 
 const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (checked: boolean) => void; }> = ({ label, checked, onChange }) => (
@@ -28,7 +28,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
             onMouseDown={(e) => e.stopPropagation()}
             onDragStart={(e) => e.preventDefault()}
             draggable={false}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
         >
             <span
                 aria-hidden="true"
@@ -42,9 +42,9 @@ const PaddingControl: React.FC<{ label: string; value: PaddingSize; onChange: (v
     return (
         <div>
             <Label>{label}</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {(['sm', 'md', 'lg'] as PaddingSize[]).map(opt => (
-                    <button key={opt} onClick={() => onChange(opt)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>
+                    <button key={opt} onClick={() => onChange(opt)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>
                         {opt.toUpperCase()}
                     </button>
                 ))}
@@ -57,9 +57,9 @@ const FontSizeControl: React.FC<{ label: string; value: FontSize; onChange: (val
     return (
         <div>
             <Label>{label}</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {(['sm', 'md', 'lg', 'xl'] as FontSize[]).map(opt => (
-                    <button key={opt} onClick={() => onChange(opt)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>
+                    <button key={opt} onClick={() => onChange(opt)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>
                         {opt.toUpperCase()}
                     </button>
                 ))}
@@ -77,9 +77,9 @@ const BorderRadiusControl: React.FC<{ label?: string; value: BorderRadiusSize; o
     return (
         <div>
             {label && <Label>{label}</Label>}
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -93,9 +93,9 @@ const BorderSizeControl: React.FC<{ label: string; value: BorderSize; onChange: 
     return (
         <div>
             <Label>{label}</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -109,9 +109,9 @@ const PositionControl: React.FC<{ value: ImagePosition; onChange: (value: ImageP
     return (
         <div>
             <Label>Image Position</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -125,9 +125,9 @@ const JustifyContentControl: React.FC<{ value: JustifyContent; onChange: (value:
     return (
         <div>
             <Label>Image Align</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -143,9 +143,9 @@ const AspectRatioControl: React.FC<{ value: AspectRatio; onChange: (value: Aspec
     return (
         <div>
             <Label>Aspect Ratio</Label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+            <div className="grid grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -159,9 +159,9 @@ const ObjectFitControl: React.FC<{ value: ObjectFit; onChange: (value: ObjectFit
     return (
         <div>
             <Label>Image Fit</Label>
-            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                 {options.map(option => (
-                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{option.label}</button>
+                    <button key={option.value} onClick={() => onChange(option.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === option.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{option.label}</button>
                 ))}
             </div>
         </div>
@@ -176,8 +176,8 @@ const ImageStyleControl: React.FC<{ value: ImageStyle; onChange: (value: ImageSt
     return (
         <div>
             <Label>Image Style</Label>
-            <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
-                {options.map(opt => <button key={opt.value} onClick={() => onChange(opt.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>{opt.label}</button>)}
+            <div className="grid grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
+                {options.map(opt => <button key={opt.value} onClick={() => onChange(opt.value)} className={`w-full text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${value === opt.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>{opt.label}</button>)}
             </div>
         </div>
     );
@@ -201,7 +201,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         ? customComponents.find(c => c.id === selectedComponentId)
         : { baseComponent: selectedComponentId as EditableComponentID, styles: contextStyles[selectedComponentId as EditableComponentID] };
 
-    if (!componentData) return <div className="p-4 text-editor-text-secondary">Loading controls...</div>;
+    if (!componentData) return <div className="p-4 text-q-text-secondary">Loading controls...</div>;
 
     const { baseComponent, styles } = componentData;
 
@@ -249,21 +249,21 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* ========== HERO INFO ========== */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2 flex items-center gap-2">
                         <Layout size={14} />
                         Hero Section
                     </label>
-                    <p className="text-xs text-editor-text-secondary">
+                    <p className="text-xs text-q-text-secondary">
                         📐 Full-width hero with background image, headline overlay, and call-to-action buttons. Use the content tab to change text and image.
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div>
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Type size={14} />
                         Typography
                     </h4>
@@ -271,11 +271,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <FontSizeControl label="Subheadline Size" value={heroStyles.subheadlineFontSize || 'lg'} onChange={v => handleStyleChange('subheadlineFontSize', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT & SPACING ========== */}
                 <div>
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <AlignJustify size={14} />
                         Layout & Spacing
                     </h4>
@@ -285,16 +285,16 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div>
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Settings size={14} />
                         Colors
                     </h4>
 
-                    <div className="space-y-3 bg-editor-bg/50 p-3 rounded-lg">
+                    <div className="space-y-3 bg-q-bg/50 p-3 rounded-lg">
                         <div className="grid grid-cols-2 gap-4">
                             <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                             <ColorControl label="Body Text" value={colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -303,7 +303,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <ColorControl label="Heading" value={colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
 
                         <div className="pt-2">
-                            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Primary Button</h5>
+                            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Primary Button</h5>
                             <div className="grid grid-cols-2 gap-3">
                                 <ColorControl label="Background" value={colors?.buttonBackground || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
                                 <ColorControl label="Text" value={colors?.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
@@ -311,7 +311,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         </div>
 
                         <div className="pt-2">
-                            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">Secondary Button</h5>
+                            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Secondary Button</h5>
                             <div className="grid grid-cols-2 gap-3">
                                 <ColorControl label="Background" value={colors?.secondaryButtonBackground || '#334155'} onChange={v => handleColorChange('secondaryButtonBackground', v)} />
                                 <ColorControl label="Text" value={colors?.secondaryButtonText || '#ffffff'} onChange={v => handleColorChange('secondaryButtonText', v)} />
@@ -335,15 +335,15 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* --- CONTROL DE VARIANTE --- */}
                 <div>
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                         Features Style
                     </label>
                     <div className="grid grid-cols-4 gap-2 mb-2">
                         <button
                             onClick={() => handleStyleChange('featuresVariant', 'classic')}
                             className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'classic'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                ? 'bg-q-accent text-q-bg border-q-accent'
+                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                 }`}
                         >
                             Classic
@@ -351,8 +351,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('featuresVariant', 'modern')}
                             className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'modern'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                ? 'bg-q-accent text-q-bg border-q-accent'
+                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                 }`}
                         >
                             Bento
@@ -360,8 +360,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('featuresVariant', 'bento-premium')}
                             className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'bento-premium'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                ? 'bg-q-accent text-q-bg border-q-accent'
+                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                 }`}
                         >
                             Premium
@@ -369,14 +369,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('featuresVariant', 'image-overlay')}
                             className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'image-overlay'
-                                ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                ? 'bg-q-accent text-q-bg border-q-accent'
+                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                 }`}
                         >
                             Overlay
                         </button>
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-1">
+                    <p className="text-xs text-q-text-secondary mt-1">
                         {currentVariant === 'classic'
                             ? '📦 Traditional uniform grid layout'
                             : currentVariant === 'modern'
@@ -390,23 +390,23 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 {/* --- CONTROLES ESPECÍFICOS PARA IMAGE-OVERLAY --- */}
                 {currentVariant === 'image-overlay' && (
                     <>
-                        <hr className="border-editor-border/50" />
+                        <hr className="border-q-border/50" />
                         <div className="flex items-center space-x-2">
-                            <Image size={16} className="text-editor-accent" />
-                            <h4 className="font-semibold text-editor-text-primary">Overlay Settings</h4>
+                            <Image size={16} className="text-q-accent" />
+                            <h4 className="font-semibold text-q-text">Overlay Settings</h4>
                         </div>
 
                         {/* Text Alignment */}
                         <div>
                             <Label>Text Alignment</Label>
-                            <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+                            <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                                 {(['left', 'center', 'right'] as const).map(align => (
                                     <button
                                         key={align}
                                         onClick={() => handleStyleChange('overlayTextAlignment', align)}
                                         className={`flex-1 text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors capitalize ${currentTextAlignment === align
-                                            ? 'bg-editor-accent text-editor-bg'
-                                            : 'text-editor-text-secondary hover:bg-editor-border'
+                                            ? 'bg-q-accent text-q-bg'
+                                            : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                             }`}
                                     >
                                         {align === 'left' ? '⬅️ Left' : align === 'center' ? '↔️ Center' : '➡️ Right'}
@@ -420,7 +420,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <Label>Show Section Header</Label>
                             <button
                                 onClick={() => handleStyleChange('showSectionHeader', !showHeader)}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${showHeader ? 'bg-editor-accent' : 'bg-editor-border'
+                                className={`relative w-12 h-6 rounded-full transition-colors ${showHeader ? 'bg-q-accent' : 'bg-q-surface-overlay'
                                     }`}
                             >
                                 <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${showHeader ? 'left-7' : 'left-1'
@@ -430,55 +430,55 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Grid Layout</h4>
+                <h4 className="font-semibold text-q-text">Grid Layout</h4>
                 <div>
                     <Label>Columns (Desktop)</Label>
-                    <div className="flex bg-editor-bg p-1 rounded-md space-x-1 border border-editor-border">
+                    <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
                         {[2, 3, 4].map(cols => (
-                            <button key={cols} onClick={() => handleStyleChange('gridColumns', cols)} className={`flex-1 text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${s.gridColumns === cols ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}>
+                            <button key={cols} onClick={() => handleStyleChange('gridColumns', cols)} className={`flex-1 text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${s.gridColumns === cols ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>
                                 {cols}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <h4 className="font-semibold text-editor-text-primary mt-4">Card Image</h4>
+                <h4 className="font-semibold text-q-text mt-4">Card Image</h4>
                 <div className="space-y-4">
                     <div>
                         <div className="flex justify-between items-center">
                             <Label>Image Height</Label>
-                            <span className="text-sm font-medium text-editor-text-primary">{s.imageHeight || 430}px</span>
+                            <span className="text-sm font-medium text-q-text">{s.imageHeight || 430}px</span>
                         </div>
                         <input
                             type="range" min="100" max="600" step="10"
                             value={s.imageHeight || 430}
                             onChange={e => handleStyleChange('imageHeight', parseInt(e.target.value, 10))}
-                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                         />
                     </div>
                     <ObjectFitControl value={s.imageObjectFit || 'cover'} onChange={v => handleStyleChange('imageObjectFit', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CARD STYLING ========== */}
                 <div className="flex items-center space-x-2">
-                    <Settings size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Card Styling</h4>
+                    <Settings size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Card Styling</h4>
                 </div>
                 <BorderRadiusControl
                     label="Card Border Radius"
@@ -486,22 +486,22 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     onChange={(v) => handleStyleChange('borderRadius', v)}
                 />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={s.colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
@@ -512,10 +512,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CARD COLORS ========== */}
-                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Title" value={s.colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
@@ -525,10 +525,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Border Color" value={s.colors?.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
                 <div className="flex items-center space-x-2">
-                    <Wand2 size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Animations</h4>
+                    <Wand2 size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Animations</h4>
                 </div>
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -538,7 +538,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             role="switch"
                             aria-checked={(s as any).enableCardAnimation !== false}
                             onClick={() => handleStyleChange('enableCardAnimation', !(s as any).enableCardAnimation !== false)}
-                            className={`${(s as any).enableCardAnimation !== false ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out`}
+                            className={`${(s as any).enableCardAnimation !== false ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out`}
                         >
                             <span
                                 aria-hidden="true"
@@ -552,7 +552,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <select
                                 value={(s as any).animationType || 'fade-in-up'}
                                 onChange={(e) => handleStyleChange('animationType', e.target.value as AnimationType)}
-                                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all"
+                                className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all"
                             >
                                 <option value="none">None</option>
                                 <option value="fade-in">Fade In</option>
@@ -576,15 +576,15 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
         return (
             <div className="space-y-4">
-                <h4 className="font-semibold text-editor-text-primary">Testimonials Style</h4>
+                <h4 className="font-semibold text-q-text">Testimonials Style</h4>
                 <div>
                     <Label>Variant</Label>
-                    <div className="grid grid-cols-2 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                    <div className="grid grid-cols-2 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'classic')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'classic'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             📋 Classic
@@ -592,8 +592,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'minimal-cards')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'minimal-cards'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             ✨ Minimal
@@ -601,8 +601,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'glassmorphism')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'glassmorphism'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             💎 Glass
@@ -610,8 +610,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'gradient-glow')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'gradient-glow'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             🌟 Glow
@@ -619,8 +619,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'neon-border')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'neon-border'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             ⚡ Neon
@@ -628,8 +628,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'floating-cards')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'floating-cards'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             🎈 Float
@@ -637,14 +637,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => handleStyleChange('testimonialsVariant', 'gradient-shift')}
                             className={`px-3 py-2 text-xs font-semibold rounded-sm transition-colors ${currentVariant === 'gradient-shift'
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                 }`}
                         >
                             🌈 Shift
                         </button>
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-1">
+                    <p className="text-xs text-q-text-secondary mt-1">
                         {currentVariant === 'classic' && '📋 Traditional cards with borders and shadows'}
                         {currentVariant === 'minimal-cards' && '✨ Clean minimal design with subtle borders'}
                         {currentVariant === 'glassmorphism' && '💎 Modern glass effect with blur'}
@@ -655,9 +655,9 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Card Styling</h4>
+                <h4 className="font-semibold text-q-text">Card Styling</h4>
                 <div className="space-y-4">
                     <BorderRadiusControl
                         label="Border Radius"
@@ -666,17 +666,17 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     />
 
                     {currentVariant === 'classic' && (
-                        <div className="space-y-4 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
+                        <div className="space-y-4 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
                             <div>
                                 <Label>Border Style</Label>
-                                <div className="grid grid-cols-2 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                <div className="grid grid-cols-2 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                     {['none', 'solid', 'gradient', 'glow'].map(style => (
                                         <button
                                             key={style}
                                             onClick={() => handleStyleChange('borderStyle', style)}
                                             className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${(s.borderStyle || 'solid') === style
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                                ? 'bg-q-accent text-q-bg'
+                                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                                 }`}
                                         >
                                             {style}
@@ -687,14 +687,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                             <div>
                                 <Label>Card Shadow</Label>
-                                <div className="grid grid-cols-3 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                <div className="grid grid-cols-3 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                     {['none', 'sm', 'md', 'lg', 'xl'].map(shadow => (
                                         <button
                                             key={shadow}
                                             onClick={() => handleStyleChange('cardShadow', shadow)}
                                             className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors uppercase ${(s.cardShadow || 'lg') === shadow
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                                ? 'bg-q-accent text-q-bg'
+                                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                                 }`}
                                         >
                                             {shadow}
@@ -708,45 +708,45 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <div>
                         <div className="flex justify-between items-center">
                             <Label>Card Padding</Label>
-                            <span className="text-sm font-medium text-editor-text-primary">{s.cardPadding || 32}px</span>
+                            <span className="text-sm font-medium text-q-text">{s.cardPadding || 32}px</span>
                         </div>
                         <input
                             type="range" min="16" max="64" step="4"
                             value={s.cardPadding || 32}
                             onChange={e => handleStyleChange('cardPadding', parseInt(e.target.value, 10))}
-                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                         />
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
@@ -774,30 +774,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
@@ -811,8 +811,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary text-sm">Card Box Colors</h4>
+                <hr className="border-q-border/50" />
+                <h4 className="font-semibold text-q-text text-sm">Card Box Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Border" value={s.colors?.borderColor || '#374151'} onChange={v => handleColorChange('borderColor', v)} />
@@ -822,8 +822,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Card Text" value={s.colors?.cardText || '#ffffff'} onChange={v => handleColorChange('cardText', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary text-sm">Input Field Colors</h4>
+                <hr className="border-q-border/50" />
+                <h4 className="font-semibold text-q-text text-sm">Input Field Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Input Background" value={s.colors?.inputBackground || '#111827'} onChange={v => handleColorChange('inputBackground', v)} />
                     <ColorControl label="Input Text" value={s.colors?.inputText || '#ffffff'} onChange={v => handleColorChange('inputText', v)} />
@@ -833,8 +833,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Input Border" value={s.colors?.inputBorder || '#374151'} onChange={v => handleColorChange('inputBorder', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
-                <h4 className="font-semibold text-editor-text-primary text-sm">Button Colors</h4>
+                <hr className="border-q-border/50" />
+                <h4 className="font-semibold text-q-text text-sm">Button Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Button Background" value={s.colors?.buttonBackground || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
                     <ColorControl label="Button Text" value={s.colors?.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
@@ -849,30 +849,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={s.colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
@@ -895,30 +895,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
@@ -943,30 +943,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={ctaStyles.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={ctaStyles.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={ctaStyles.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={ctaStyles.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Body Text" value={colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -1045,8 +1045,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Branding
                     </h4>
@@ -1055,7 +1055,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                                 <Label>Hide "Made with Quimera"</Label>
-                                <span className="text-xs text-editor-text-secondary">Remove the branding badge from your site</span>
+                                <span className="text-xs text-q-text-secondary">Remove the branding badge from your site</span>
                             </div>
                             <button
                                 type="button"
@@ -1063,7 +1063,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 disabled={!canRemoveBranding}
                                 aria-checked={s.hideBranding || false}
                                 onClick={() => handleStyleChange('hideBranding', !s.hideBranding)}
-                                className={`${s.hideBranding ? 'bg-editor-accent' : 'bg-editor-border'} ${!canRemoveBranding ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out`}
+                                className={`${s.hideBranding ? 'bg-q-accent' : 'bg-q-surface-overlay'} ${!canRemoveBranding ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out`}
                             >
                                 <span
                                     aria-hidden="true"
@@ -1083,24 +1083,24 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'sm'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'sm'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CONTACT INFORMATION ========== */}
                 <div className="flex items-center space-x-2">
-                    <MapPin size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Contact Information</h4>
+                    <MapPin size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Contact Information</h4>
                 </div>
 
-                <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
+                <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md">
                     <div>
                         <Label>Address</Label>
                         <input
@@ -1108,7 +1108,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             value={contactInfo.address || ''}
                             onChange={(e) => handleContactInfoChange('address', e.target.value)}
                             placeholder="123 Main Street"
-                            className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -1119,7 +1119,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 value={contactInfo.city || ''}
                                 onChange={(e) => handleContactInfoChange('city', e.target.value)}
                                 placeholder="City"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                         <div>
@@ -1129,7 +1129,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 value={contactInfo.state || ''}
                                 onChange={(e) => handleContactInfoChange('state', e.target.value)}
                                 placeholder="State"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                     </div>
@@ -1141,7 +1141,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 value={contactInfo.zipCode || ''}
                                 onChange={(e) => handleContactInfoChange('zipCode', e.target.value)}
                                 placeholder="12345"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                         <div>
@@ -1151,58 +1151,58 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 value={contactInfo.country || ''}
                                 onChange={(e) => handleContactInfoChange('country', e.target.value)}
                                 placeholder="Country"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                     </div>
                     <div>
                         <Label>Phone</Label>
                         <div className="flex items-center gap-2">
-                            <Phone size={14} className="text-editor-text-secondary flex-shrink-0" />
+                            <Phone size={14} className="text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="tel"
                                 value={contactInfo.phone || ''}
                                 onChange={(e) => handleContactInfoChange('phone', e.target.value)}
                                 placeholder="+1 (555) 123-4567"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                     </div>
                     <div>
                         <Label>Email</Label>
                         <div className="flex items-center gap-2">
-                            <Mail size={14} className="text-editor-text-secondary flex-shrink-0" />
+                            <Mail size={14} className="text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="email"
                                 value={contactInfo.email || ''}
                                 onChange={(e) => handleContactInfoChange('email', e.target.value)}
                                 placeholder="contact@example.com"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== BUSINESS HOURS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Clock size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Business Hours</h4>
+                    <Clock size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Business Hours</h4>
                 </div>
 
-                <div className="space-y-2 p-3 bg-editor-border/20 rounded-md">
+                <div className="space-y-2 p-3 bg-q-surface-overlay/20 rounded-md">
                     {/* Quick actions */}
                     <div className="flex gap-2 mb-3">
                         <button
                             onClick={() => applyToWeekdays('monday')}
-                            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+                            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
                         >
                             Copy Mon → Weekdays
                         </button>
                         <button
                             onClick={() => applyToAllDays('monday')}
-                            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+                            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
                         >
                             Copy Mon → All Days
                         </button>
@@ -1212,10 +1212,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         const dayHours = businessHours[key] || { isOpen: false, openTime: '09:00', closeTime: '17:00' };
                         return (
                             <div key={key} className="flex items-center gap-2 py-1">
-                                <span className="w-10 text-xs font-medium text-editor-text-secondary">{short}</span>
+                                <span className="w-10 text-xs font-medium text-q-text-secondary">{short}</span>
                                 <button
                                     onClick={() => handleBusinessHoursChange(key, 'isOpen', !dayHours.isOpen)}
-                                    className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
+                                    className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${dayHours.isOpen ? 'bg-green-500' : 'bg-q-surface-overlay'
                                         }`}
                                 >
                                     <span
@@ -1229,30 +1229,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                             type="time"
                                             value={dayHours.openTime || '09:00'}
                                             onChange={(e) => handleBusinessHoursChange(key, 'openTime', e.target.value)}
-                                            className="w-24 bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary"
+                                            className="w-24 bg-q-bg border border-q-border rounded px-2 py-1 text-xs text-q-text"
                                         />
-                                        <span className="text-editor-text-secondary text-xs">-</span>
+                                        <span className="text-q-text-secondary text-xs">-</span>
                                         <input
                                             type="time"
                                             value={dayHours.closeTime || '17:00'}
                                             onChange={(e) => handleBusinessHoursChange(key, 'closeTime', e.target.value)}
-                                            className="w-24 bg-editor-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary"
+                                            className="w-24 bg-q-bg border border-q-border rounded px-2 py-1 text-xs text-q-text"
                                         />
                                     </div>
                                 ) : (
-                                    <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                                    <span className="text-xs text-q-text-secondary italic">Closed</span>
                                 )}
                             </div>
                         );
                     })}
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
@@ -1278,8 +1278,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
             <div className="space-y-4">
                 {/* ========== LAYOUT & STYLE ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout & Style</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout & Style</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1287,7 +1287,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <select
                             value={s.layout || 'classic'}
                             onChange={(e) => handleStyleChange('layout', e.target.value)}
-                            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                            className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
                         >
                             <option value="classic">Classic (Left)</option>
                             <option value="minimal">Minimal</option>
@@ -1300,7 +1300,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <select
                             value={s.style || 'sticky-solid'}
                             onChange={(e) => handleStyleChange('style', e.target.value)}
-                            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                            className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
                         >
                             <option value="sticky-solid">Solid</option>
                             <option value="sticky-transparent">Transparent</option>
@@ -1317,29 +1317,29 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div>
                     <div className="flex justify-between items-center">
                         <Label>Height</Label>
-                        <span className="text-sm font-medium text-editor-text-primary">{s.height || 70}px</span>
+                        <span className="text-sm font-medium text-q-text">{s.height || 70}px</span>
                     </div>
                     <input
                         type="range" min="50" max="120" step="5"
                         value={s.height || 70}
                         onChange={e => handleStyleChange('height', parseInt(e.target.value, 10))}
-                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                        className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                     />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Logo</h4>
+                <h4 className="font-semibold text-q-text">Logo</h4>
                 <div>
                     <Label>Logo Type</Label>
-                    <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+                    <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
                         {['text', 'image', 'both'].map(type => (
                             <button
                                 key={type}
                                 onClick={() => handleStyleChange('logoType', type)}
                                 className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors capitalize ${(s.logoType || 'text') === type
-                                    ? 'bg-editor-accent text-editor-bg'
-                                    : 'text-editor-text-secondary hover:bg-editor-border'
+                                    ? 'bg-q-accent text-q-bg'
+                                    : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                     }`}
                             >
                                 {type}
@@ -1349,7 +1349,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 {((s.logoType || 'text') === 'image' || (s.logoType || 'text') === 'both') && (
-                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
+                    <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md">
                         <div>
                             <Label>Logo Image URL</Label>
                             <input
@@ -1357,12 +1357,12 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 value={s.logoImageUrl || ''}
                                 onChange={(e) => handleStyleChange('logoImageUrl', e.target.value)}
                                 placeholder="https://example.com/logo.png"
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
 
                         {s.logoImageUrl && (
-                            <div className="border border-editor-border rounded-md p-2 bg-editor-bg">
+                            <div className="border border-q-border rounded-md p-2 bg-q-bg">
                                 <img
                                     src={s.logoImageUrl}
                                     alt="Logo preview"
@@ -1377,13 +1377,13 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <div>
                             <div className="flex justify-between items-center">
                                 <Label>Logo Width</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{s.logoWidth || 120}px</span>
+                                <span className="text-sm font-medium text-q-text">{s.logoWidth || 120}px</span>
                             </div>
                             <input
                                 type="range" min="40" max="300" step="5"
                                 value={s.logoWidth || 120}
                                 onChange={e => handleStyleChange('logoWidth', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
                     </div>
@@ -1396,25 +1396,25 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             type="text"
                             value={s.logoText || 'Brand'}
                             onChange={(e) => handleStyleChange('logoText', e.target.value)}
-                            className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                            className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                         />
                     </div>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Call-to-Action Button</h4>
+                <h4 className="font-semibold text-q-text">Call-to-Action Button</h4>
                 <ToggleControl label="Show CTA Button" checked={s.showCta !== false} onChange={(v) => handleStyleChange('showCta', v)} />
 
                 {s.showCta !== false && (
-                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
+                    <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
                         <div>
                             <Label>Button Text</Label>
                             <input
                                 type="text"
                                 value={s.ctaText || 'Get Started'}
                                 onChange={(e) => handleStyleChange('ctaText', e.target.value)}
-                                className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                             />
                         </div>
 
@@ -1426,13 +1426,13 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Login Button</h4>
+                <h4 className="font-semibold text-q-text">Login Button</h4>
                 <ToggleControl label="Show Login Button" checked={s.showLogin !== false} onChange={(v) => handleStyleChange('showLogin', v)} />
 
                 {s.showLogin !== false && (
-                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
+                    <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <Label>Login Text</Label>
@@ -1440,7 +1440,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                     type="text"
                                     value={s.loginText || 'Login'}
                                     onChange={(e) => handleStyleChange('loginText', e.target.value)}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                                 />
                             </div>
                             <div>
@@ -1449,22 +1449,22 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                     type="text"
                                     value={s.loginUrl || '#'}
                                     onChange={(e) => handleStyleChange('loginUrl', e.target.value)}
-                                    className="w-full bg-editor-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary"
+                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-q-text"
                                 />
                             </div>
                         </div>
                     </div>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Navigation Links</h4>
+                <h4 className="font-semibold text-q-text">Navigation Links</h4>
                 <div>
                     <Label>Hover Style</Label>
                     <select
                         value={s.hoverStyle || 'underline'}
                         onChange={(e) => handleStyleChange('hoverStyle', e.target.value)}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-2 py-2 text-sm text-editor-text-primary"
+                        className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
                     >
                         <option value="underline">Underline</option>
                         <option value="bold">Bold</option>
@@ -1476,22 +1476,22 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <div>
                     <div className="flex justify-between items-center">
                         <Label>Link Font Size</Label>
-                        <span className="text-sm font-medium text-editor-text-primary">{s.linkFontSize || 14}px</span>
+                        <span className="text-sm font-medium text-q-text">{s.linkFontSize || 14}px</span>
                     </div>
                     <input
                         type="range" min="10" max="24" step="1"
                         value={s.linkFontSize || 14}
                         onChange={e => handleStyleChange('linkFontSize', parseInt(e.target.value, 10))}
-                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                        className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                     />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#ffffff'} onChange={v => handleColorChange('background', v)} />
@@ -1513,8 +1513,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Menu Style
                     </label>
@@ -1524,8 +1524,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant}
                                 onClick={() => handleStyleChange('menuVariant', variant)}
                                 className={`px-2 py-2 rounded-md border text-xs transition-all ${currentVariant === variant
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant === 'classic' && '🍽️ Classic'}
@@ -1534,18 +1534,18 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-2 italic">
+                    <p className="text-xs text-q-text-secondary mt-2 italic">
                         {currentVariant === 'classic' && '🍽️ Traditional grid cards with images on top.'}
                         {currentVariant === 'modern-grid' && '✨ Bento-style grid with dynamic layouts.'}
                         {currentVariant === 'elegant-list' && '📋 Magazine-style horizontal list layout.'}
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- ICON CONTROLS --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Settings size={14} />
                         Icon Settings
                     </h4>
@@ -1567,36 +1567,36 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                     <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
@@ -1607,10 +1607,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CARD COLORS ========== */}
-                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={colors?.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Title" value={colors?.cardTitleColor || '#ffffff'} onChange={v => handleColorChange('cardTitleColor', v)} />
@@ -1634,8 +1634,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Map Style
                     </label>
@@ -1645,8 +1645,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant}
                                 onClick={() => handleStyleChange('mapVariant', variant)}
                                 className={`px-2 py-2 rounded-md border text-xs transition-all ${currentVariant === variant
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant === 'modern' && '🗺️ Modern'}
@@ -1657,7 +1657,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-2 italic">
+                    <p className="text-xs text-q-text-secondary mt-2 italic">
                         {currentVariant === 'modern' && '🗺️ Split layout with info card on the left.'}
                         {currentVariant === 'minimal' && '✨ Clean map with floating badge.'}
                         {currentVariant === 'dark-tech' && '🌑 Dark mode with tech overlay card.'}
@@ -1666,11 +1666,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- MAP SIZE --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Settings size={14} />
                         Map Settings
                     </h4>
@@ -1678,60 +1678,60 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <Label>Map Height</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{s.height || 400}px</span>
+                                <span className="text-sm font-medium text-q-text">{s.height || 400}px</span>
                             </div>
                             <input
                                 type="range" min="200" max="800" step="50"
                                 value={s.height || 400}
                                 onChange={e => handleStyleChange('height', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <Label>Zoom Level</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{s.zoom || 15}</span>
+                                <span className="text-sm font-medium text-q-text">{s.zoom || 15}</span>
                             </div>
                             <input
                                 type="range" min="10" max="20" step="1"
                                 value={s.zoom || 15}
                                 onChange={e => handleStyleChange('zoom', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <FontSizeControl label="Title Font Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                     <FontSizeControl label="Description Font Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
@@ -1757,8 +1757,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Services Style
                     </label>
@@ -1768,49 +1768,49 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant}
                                 onClick={() => handleStyleChange('servicesVariant', variant)}
                                 className={`px-2 py-2 rounded-md border text-xs transition-all capitalize ${currentVariant === variant
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant}
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-2 italic">
+                    <p className="text-xs text-q-text-secondary mt-2 italic">
                         {currentVariant === 'cards' && 'Standard centered cards with hover effects.'}
                         {currentVariant === 'grid' && 'Modern bento-style grid with left alignment.'}
                         {currentVariant === 'minimal' && 'Clean list layout for a professional look.'}
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
@@ -1821,10 +1821,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CARD COLORS ========== */}
-                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Title" value={colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
                     <ColorControl label="Card Text" value={colors?.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
@@ -1847,8 +1847,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Team Style
                     </label>
@@ -1858,15 +1858,15 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant}
                                 onClick={() => handleStyleChange('teamVariant', variant)}
                                 className={`px-3 py-2 rounded-md border text-xs transition-all capitalize ${currentVariant === variant
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant}
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-2 italic">
+                    <p className="text-xs text-q-text-secondary mt-2 italic">
                         {currentVariant === 'classic' && '⚪ Simple circular images with centered text below.'}
                         {currentVariant === 'cards' && '🎴 Elevated cards with images and hover effects.'}
                         {currentVariant === 'minimal' && '✨ Clean modern layout with square images and grayscale effect.'}
@@ -1874,34 +1874,34 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== LAYOUT ========== */}
                 <div className="flex items-center space-x-2">
-                    <AlignJustify size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Layout</h4>
+                    <AlignJustify size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== SECTION COLORS ========== */}
                 <div className="flex items-center space-x-2">
-                    <Palette size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Section Colors</h4>
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Section Colors</h4>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
@@ -1912,10 +1912,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* ========== CARD COLORS ========== */}
-                <h4 className="font-semibold text-editor-text-primary text-sm">Card Colors</h4>
+                <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Card Background" value={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Name" value={colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
@@ -1935,8 +1935,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         FAQ Style
                     </label>
@@ -1946,15 +1946,15 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant}
                                 onClick={() => handleStyleChange('faqVariant', variant)}
                                 className={`px-3 py-2 rounded-md border text-xs transition-all capitalize ${currentVariant === variant
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant}
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-editor-text-secondary mt-2 italic">
+                    <p className="text-xs text-q-text-secondary mt-2 italic">
                         {currentVariant === 'classic' && '📋 Simple accordion with border dividers'}
                         {currentVariant === 'cards' && '🎴 Each FAQ in a separate card with shadow'}
                         {currentVariant === 'gradient' && '✨ Modern gradient cards with glow effects'}
@@ -1962,31 +1962,31 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </p>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- CARD STYLING --- */}
                 {currentVariant !== 'classic' && (
                     <>
-                        <h4 className="font-semibold text-editor-text-primary">Card Styling</h4>
+                        <h4 className="font-semibold text-q-text">Card Styling</h4>
                         <BorderRadiusControl
                             label="Border Radius"
                             value={(s as any).borderRadius || 'xl'}
                             onChange={(v) => handleStyleChange('borderRadius', v)}
                         />
-                        <hr className="border-editor-border/50" />
+                        <hr className="border-q-border/50" />
                     </>
                 )}
 
                 {/* --- STANDARD CONTROLS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Spacing</h4>
+                <h4 className="font-semibold text-q-text">Layout & Spacing</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
-                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                <h4 className="font-semibold text-q-text">Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
@@ -2007,8 +2007,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 {/* Gradient Colors for Gradient Variant */}
                 {currentVariant === 'gradient' && (
-                    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md animate-fade-in-up">
-                        <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Gradient Colors</h5>
+                    <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
+                        <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">Gradient Colors</h5>
                         <div className="grid grid-cols-2 gap-4">
                             <ColorControl label="Gradient Start" value={colors?.gradientStart || '#4f46e5'} onChange={v => handleColorChange('gradientStart', v)} />
                             <ColorControl label="Gradient End" value={colors?.gradientEnd || '#10b981'} onChange={v => handleColorChange('gradientEnd', v)} />
@@ -2016,10 +2016,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
                 <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
@@ -2030,16 +2030,16 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderChatbotControls = () => {
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-2 flex items-center gap-2">
-                        <Settings size={16} className="text-editor-accent" />
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-2 flex items-center gap-2">
+                        <Settings size={16} className="text-q-accent" />
                         Chatbot Configuration
                     </h4>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         The AI Chatbot is configured through the <strong>AI Assistant Dashboard</strong>.
                         Go to Dashboard → AI Assistant to customize:
                     </p>
-                    <ul className="mt-3 space-y-2 text-sm text-editor-text-secondary">
+                    <ul className="mt-3 space-y-2 text-sm text-q-text-secondary">
                         <li>• Agent name and tone</li>
                         <li>• Widget colors and appearance</li>
                         <li>• Business profile and FAQs</li>
@@ -2054,30 +2054,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderTypographyControls = () => {
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-2 flex items-center gap-2">
-                        <Type size={16} className="text-editor-accent" />
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-2 flex items-center gap-2">
+                        <Type size={16} className="text-q-accent" />
                         Global Typography
                     </h4>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         Typography is configured globally through <strong>Theme Settings</strong> in your project.
                         These fonts apply to all components automatically:
                     </p>
                     <div className="mt-4 space-y-3">
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Header Font</label>
-                            <p className="text-editor-text-primary font-semibold mt-1">{theme.fontFamilyHeader}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">Used for all headings and titles</p>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Header Font</label>
+                            <p className="text-q-text font-semibold mt-1">{theme.fontFamilyHeader}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Used for all headings and titles</p>
                         </div>
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Body Font</label>
-                            <p className="text-editor-text-primary font-semibold mt-1">{theme.fontFamilyBody}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">Used for paragraphs and descriptions</p>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Body Font</label>
+                            <p className="text-q-text font-semibold mt-1">{theme.fontFamilyBody}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Used for paragraphs and descriptions</p>
                         </div>
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Button Font</label>
-                            <p className="text-editor-text-primary font-semibold mt-1">{theme.fontFamilyButton}</p>
-                            <p className="text-xs text-editor-text-secondary mt-1">Used for all buttons and CTAs</p>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Button Font</label>
+                            <p className="text-q-text font-semibold mt-1">{theme.fontFamilyButton}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Used for all buttons and CTAs</p>
                         </div>
                     </div>
                 </div>
@@ -2089,42 +2089,42 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         const globalColors = theme.globalColors || {} as any;
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-2 flex items-center gap-2">
-                        <Palette size={16} className="text-editor-accent" />
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-2 flex items-center gap-2">
+                        <Palette size={16} className="text-q-accent" />
                         Global Colors
                     </h4>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         Colors are configured globally through <strong>Theme Settings</strong> in your project.
                         These colors apply to all components automatically:
                     </p>
                     <div className="mt-4 grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Primary</label>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Primary</label>
                             <div className="flex items-center gap-2 mt-1">
-                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.primary || '#4f46e5' }} />
-                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.primary || '#4f46e5'}</p>
+                                <div className="w-6 h-6 rounded border border-q-border" style={{ backgroundColor: globalColors.primary || '#4f46e5' }} />
+                                <p className="text-q-text text-sm font-mono">{globalColors.primary || '#4f46e5'}</p>
                             </div>
                         </div>
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Secondary</label>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Secondary</label>
                             <div className="flex items-center gap-2 mt-1">
-                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.secondary || '#10b981' }} />
-                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.secondary || '#10b981'}</p>
+                                <div className="w-6 h-6 rounded border border-q-border" style={{ backgroundColor: globalColors.secondary || '#10b981' }} />
+                                <p className="text-q-text text-sm font-mono">{globalColors.secondary || '#10b981'}</p>
                             </div>
                         </div>
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Background</label>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Background</label>
                             <div className="flex items-center gap-2 mt-1">
-                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.background || '#0f172a' }} />
-                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.background || '#0f172a'}</p>
+                                <div className="w-6 h-6 rounded border border-q-border" style={{ backgroundColor: globalColors.background || '#0f172a' }} />
+                                <p className="text-q-text text-sm font-mono">{globalColors.background || '#0f172a'}</p>
                             </div>
                         </div>
-                        <div className="p-3 bg-editor-bg rounded border border-editor-border">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase">Text</label>
+                        <div className="p-3 bg-q-bg rounded border border-q-border">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase">Text</label>
                             <div className="flex items-center gap-2 mt-1">
-                                <div className="w-6 h-6 rounded border border-editor-border" style={{ backgroundColor: globalColors.text || '#94a3b8' }} />
-                                <p className="text-editor-text-primary text-sm font-mono">{globalColors.text || '#94a3b8'}</p>
+                                <div className="w-6 h-6 rounded border border-q-border" style={{ backgroundColor: globalColors.text || '#94a3b8' }} />
+                                <p className="text-q-text text-sm font-mono">{globalColors.text || '#94a3b8'}</p>
                             </div>
                         </div>
                     </div>
@@ -2141,8 +2141,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         return (
             <div className="space-y-4">
                 {/* --- VARIANT SELECTOR --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Slideshow Style
                     </label>
@@ -2157,8 +2157,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                                 key={variant.value}
                                 onClick={() => handleStyleChange('slideshowVariant', variant.value)}
                                 className={`px-3 py-2 rounded-md border text-xs transition-all ${currentVariant === variant.value
-                                    ? 'bg-editor-accent text-editor-bg border-editor-accent shadow-sm font-bold'
-                                    : 'bg-editor-panel-bg text-editor-text-primary border-editor-border hover:border-editor-accent'
+                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
+                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
                                     }`}
                             >
                                 {variant.label}
@@ -2167,11 +2167,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- LAYOUT OPTIONS --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Layout size={14} />
                         Layout Options
                     </h4>
@@ -2181,7 +2181,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             checked={s.fullWidth || false}
                             onChange={(v) => handleStyleChange('fullWidth', v)}
                         />
-                        <p className="text-xs text-editor-text-secondary -mt-2">
+                        <p className="text-xs text-q-text-secondary -mt-2">
                             {s.fullWidth ? '🖼️ Slideshow spans the entire screen width' : '📦 Slideshow is contained within max-width'}
                         </p>
 
@@ -2195,38 +2195,38 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             <div className="animate-fade-in-up">
                                 <div className="flex justify-between items-center">
                                     <Label>Slide Height</Label>
-                                    <span className="text-sm font-medium text-editor-text-primary">{s.slideHeight || 600}px</span>
+                                    <span className="text-sm font-medium text-q-text">{s.slideHeight || 600}px</span>
                                 </div>
                                 <input
                                     type="range" min="300" max="900" step="50"
                                     value={s.slideHeight || 600}
                                     onChange={e => handleStyleChange('slideHeight', parseInt(e.target.value, 10))}
-                                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                    className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                                 />
                             </div>
                         )}
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- TRANSITION SETTINGS --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Settings size={14} />
                         Transition Settings
                     </h4>
                     <div className="space-y-4">
                         <div>
                             <Label>Transition Effect</Label>
-                            <div className="grid grid-cols-3 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                            <div className="grid grid-cols-3 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                 {['slide', 'fade', 'zoom'].map(effect => (
                                     <button
                                         key={effect}
                                         onClick={() => handleStyleChange('transitionEffect', effect)}
                                         className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${(s.transitionEffect || 'slide') === effect
-                                            ? 'bg-editor-accent text-editor-bg'
-                                            : 'text-editor-text-secondary hover:bg-editor-border'
+                                            ? 'bg-q-accent text-q-bg'
+                                            : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                             }`}
                                     >
                                         {effect}
@@ -2238,36 +2238,36 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <div>
                             <div className="flex justify-between items-center">
                                 <Label>Auto-play Speed</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{((s.autoPlaySpeed || 5000) / 1000).toFixed(1)}s</span>
+                                <span className="text-sm font-medium text-q-text">{((s.autoPlaySpeed || 5000) / 1000).toFixed(1)}s</span>
                             </div>
                             <input
                                 type="range" min="2000" max="10000" step="500"
                                 value={s.autoPlaySpeed || 5000}
                                 onChange={e => handleStyleChange('autoPlaySpeed', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                             />
                         </div>
 
                         <div>
                             <div className="flex justify-between items-center">
                                 <Label>Transition Duration</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{s.transitionDuration || 500}ms</span>
+                                <span className="text-sm font-medium text-q-text">{s.transitionDuration || 500}ms</span>
                             </div>
                             <input
                                 type="range" min="200" max="1500" step="100"
                                 value={s.transitionDuration || 500}
                                 onChange={e => handleStyleChange('transitionDuration', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                             />
                         </div>
                     </div>
                 </div>
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- CONTROLS --- */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <h4 className="font-semibold text-editor-text-primary mb-3">Navigation Controls</h4>
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3">Navigation Controls</h4>
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <ToggleControl
@@ -2291,14 +2291,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         {s.showArrows !== false && (
                             <div className="animate-fade-in-up">
                                 <Label>Arrow Style</Label>
-                                <div className="grid grid-cols-4 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                <div className="grid grid-cols-4 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                     {['rounded', 'square', 'minimal', 'floating'].map(style => (
                                         <button
                                             key={style}
                                             onClick={() => handleStyleChange('arrowStyle', style)}
                                             className={`px-2 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${(s.arrowStyle || 'rounded') === style
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                                ? 'bg-q-accent text-q-bg'
+                                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                                 }`}
                                         >
                                             {style}
@@ -2311,14 +2311,14 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         {s.showDots !== false && (
                             <div className="animate-fade-in-up">
                                 <Label>Dot Style</Label>
-                                <div className="grid grid-cols-4 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                <div className="grid grid-cols-4 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                     {['circle', 'line', 'square', 'pill'].map(style => (
                                         <button
                                             key={style}
                                             onClick={() => handleStyleChange('dotStyle', style)}
                                             className={`px-2 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${(s.dotStyle || 'circle') === style
-                                                ? 'bg-editor-accent text-editor-bg'
-                                                : 'text-editor-text-secondary hover:bg-editor-border'
+                                                ? 'bg-q-accent text-q-bg'
+                                                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                                 }`}
                                         >
                                             {style}
@@ -2333,18 +2333,18 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 {/* Ken Burns Intensity (only for kenburns variant) */}
                 {currentVariant === 'kenburns' && (
                     <>
-                        <hr className="border-editor-border/50" />
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border animate-fade-in-up">
-                            <h4 className="font-semibold text-editor-text-primary mb-3">Ken Burns Effect</h4>
+                        <hr className="border-q-border/50" />
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border animate-fade-in-up">
+                            <h4 className="font-semibold text-q-text mb-3">Ken Burns Effect</h4>
                             <Label>Zoom Intensity</Label>
-                            <div className="grid grid-cols-3 gap-2 bg-editor-bg p-1 rounded-md border border-editor-border">
+                            <div className="grid grid-cols-3 gap-2 bg-q-bg p-1 rounded-md border border-q-border">
                                 {['low', 'medium', 'high'].map(intensity => (
                                     <button
                                         key={intensity}
                                         onClick={() => handleStyleChange('kenBurnsIntensity', intensity)}
                                         className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors capitalize ${(s.kenBurnsIntensity || 'medium') === intensity
-                                            ? 'bg-editor-accent text-editor-bg'
-                                            : 'text-editor-text-secondary hover:bg-editor-border'
+                                            ? 'bg-q-accent text-q-bg'
+                                            : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                             }`}
                                     >
                                         {intensity}
@@ -2358,27 +2358,27 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 {/* Thumbnail Size (only for thumbnails variant) */}
                 {currentVariant === 'thumbnails' && (
                     <>
-                        <hr className="border-editor-border/50" />
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border animate-fade-in-up">
-                            <h4 className="font-semibold text-editor-text-primary mb-3">Thumbnail Settings</h4>
+                        <hr className="border-q-border/50" />
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border animate-fade-in-up">
+                            <h4 className="font-semibold text-q-text mb-3">Thumbnail Settings</h4>
                             <div className="flex justify-between items-center">
                                 <Label>Thumbnail Size</Label>
-                                <span className="text-sm font-medium text-editor-text-primary">{s.thumbnailSize || 80}px</span>
+                                <span className="text-sm font-medium text-q-text">{s.thumbnailSize || 80}px</span>
                             </div>
                             <input
                                 type="range" min="50" max="150" step="10"
                                 value={s.thumbnailSize || 80}
                                 onChange={e => handleStyleChange('thumbnailSize', parseInt(e.target.value, 10))}
-                                className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                             />
                         </div>
                     </>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- STYLING --- */}
-                <h4 className="font-semibold text-editor-text-primary">Layout & Spacing</h4>
+                <h4 className="font-semibold text-q-text">Layout & Spacing</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
@@ -2392,10 +2392,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     />
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- COLORS --- */}
-                <h4 className="font-semibold text-editor-text-primary">Colors</h4>
+                <h4 className="font-semibold text-q-text">Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Background" value={colors?.background || '#1e293b'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Heading" value={colors?.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
@@ -2416,12 +2416,12 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </div>
                 )}
 
-                <hr className="border-editor-border/50" />
+                <hr className="border-q-border/50" />
 
                 {/* --- TYPOGRAPHY --- */}
                 <div className="flex items-center space-x-2">
-                    <Type size={16} className="text-editor-accent" />
-                    <h4 className="font-semibold text-editor-text-primary">Typography</h4>
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
                 </div>
                 <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
             </div>
@@ -2461,21 +2461,21 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 return renderStandardControls();
             case 'footer':
                 return renderFooterControls();
-            default: return <p className="text-editor-text-secondary">No specific styles to edit for this component yet.</p>;
+            default: return <p className="text-q-text-secondary">No specific styles to edit for this component yet.</p>;
         }
     };
 
     return (
         <div className="flex flex-col h-full">
             {/* Tabs */}
-            <div className="border-b border-editor-border flex-shrink-0">
+            <div className="border-b border-q-border flex-shrink-0">
                 <div className="px-4">
                     <nav className="-mb-px flex space-x-6">
                         <button
                             onClick={() => setActiveTab('styles')}
                             className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'styles'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             Styles
@@ -2483,8 +2483,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => setActiveTab('responsive')}
                             className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'responsive'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             Responsive
@@ -2492,8 +2492,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <button
                             onClick={() => setActiveTab('animation')}
                             className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'animation'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             Animation

@@ -66,8 +66,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.common.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('editor.controls.common.vertical')} value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
           <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
@@ -76,7 +76,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <BorderRadiusSelector label={t('editor.controls.pricing.cardCorners')} value={data.pricing.cardBorderRadius || 'xl'} onChange={(v) => setNestedData('pricing.cardBorderRadius', v)} />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.sectionColors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.sectionColors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
       <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
@@ -100,8 +100,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Gradient Colors - Only for gradient variant */}
       {currentVariant === 'gradient' && (
         <>
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Sparkles size={14} className="text-editor-accent" />
+          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+            <Sparkles size={14} className="text-q-accent" />
             {t('editor.controls.pricing.gradientColors')}
           </label>
           <div className="space-y-1">
@@ -134,7 +134,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
       <ColorControl label={t('editor.controls.pricing.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
       <ColorControl label={t('editor.controls.pricing.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
       <ColorControl label={t('editor.controls.pricing.cardText')} value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
@@ -143,21 +143,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={t('editor.controls.pricing.featuredAccent')} value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
       <ColorControl label={t('editor.controls.pricing.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.defaultButtonColors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.defaultButtonColors')}</label>
       <div className="space-y-1">
         <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.text')} value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.pricingTiers')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.pricingTiers')}</label>
       {(data.pricing.tiers || []).map((tier, index) => (
-        <div key={index} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-3 group">
+        <div key={index} className="bg-q-bg p-4 rounded-lg border border-q-border mb-3 group">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-bold text-editor-text-secondary">{t('editor.controls.pricing.tier')} #{index + 1}</span>
+            <span className="text-xs font-bold text-q-text-secondary">{t('editor.controls.pricing.tier')} #{index + 1}</span>
             <button type="button" onClick={() => {
               const newTiers = data.pricing.tiers.filter((_, i) => i !== index);
               setNestedData('pricing.tiers', newTiers);
-            }} className="text-editor-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
+            }} className="text-q-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
           </div>
 
           <div className="space-y-3">
@@ -177,13 +177,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             />
 
             <div>
-              <label className="block text-[10px] font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.pricing.featuresHelp')}</label>
+              <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.pricing.featuresHelp')}</label>
               <textarea
                 value={tier.features.join('\n')}
                 onChange={(e) => setNestedData(`pricing.tiers.${index}.features`, e.target.value.split('\n').filter(f => f.trim()))}
                 rows={4}
                 placeholder={t('editor.controls.pricing.featurePlaceholder')}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
               />
             </div>
 
@@ -215,7 +215,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           ...data.pricing.tiers,
           { name: 'New Plan', price: '$0', frequency: '/mo', description: '', features: [], buttonText: 'Get Started', buttonLink: '#', featured: false }
         ])}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> {t('editor.controls.pricing.addTier')}
       </button>
@@ -244,7 +244,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Variant Selector */}
       <div className="mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">{t('controls.styleVariant')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">{t('controls.styleVariant')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'classic', label: 'Classic', desc: 'Traditional card layout' },
@@ -258,15 +258,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               className={`
                 p-3 text-left rounded-lg border transition-all
                 ${currentVariant === variant.value
-                  ? 'bg-editor-accent border-editor-accent text-editor-bg'
-                  : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                  ? 'bg-q-accent border-q-accent text-q-bg'
+                  : 'bg-q-surface border-q-border text-q-text-secondary hover:border-q-accent/50'
                 }
               `}
             >
-              <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-editor-bg' : 'text-editor-text-primary'}`}>
+              <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-q-bg' : 'text-q-text-primary'}`}>
                 {variant.label}
               </div>
-              <div className={`text-[10px] ${currentVariant === variant.value ? 'text-editor-bg/80' : 'text-editor-text-secondary'}`}>
+              <div className={`text-[10px] ${currentVariant === variant.value ? 'text-q-bg/80' : 'text-q-text-secondary'}`}>
                 {variant.desc}
               </div>
             </button>
@@ -275,7 +275,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">Alineación de Tarjetas</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">Alineación de Tarjetas</label>
         <Select
           value={data.pricing.cardsAlignment || 'center'}
           onChange={(v) => setNestedData('pricing.cardsAlignment', v)}
@@ -293,19 +293,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Pricing Tiers */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.pricingTiers')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.pricingTiers')}</label>
       {(data.pricing.tiers || []).map((tier: any, index: number) => (
         <div
           key={index}
           data-section-item={`pricing:${index}`}
-          className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-3 group"
+          className="bg-q-bg p-4 rounded-lg border border-q-border mb-3 group"
         >
           <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-bold text-editor-text-secondary">Tier #{index + 1}</span>
+            <span className="text-xs font-bold text-q-text-secondary">Tier #{index + 1}</span>
             <button type="button" onClick={() => {
               const newTiers = data.pricing.tiers.filter((_: any, i: number) => i !== index);
               setNestedData('pricing.tiers', newTiers);
-            }} className="text-editor-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
+            }} className="text-q-text-secondary hover:text-red-400"><Trash2 size={14} /></button>
           </div>
 
           <div className="space-y-3">
@@ -325,13 +325,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             />
 
             <div>
-              <label className="block text-[10px] font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.featuresOnePerLine')}</label>
+              <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.featuresOnePerLine')}</label>
               <textarea
                 value={tier.features.join('\n')}
                 onChange={(e) => setNestedData(`pricing.tiers.${index}.features`, e.target.value.split('\n').filter((f: string) => f.trim()))}
                 rows={4}
                 placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
               />
             </div>
 
@@ -363,7 +363,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           ...data.pricing.tiers,
           { name: 'New Plan', price: '$0', frequency: '/mo', description: '', features: [], buttonText: 'Get Started', buttonLink: '#', featured: false }
         ])}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> Add Pricing Tier
       </button>
@@ -373,8 +373,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="pricing" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data.pricing.paddingY || 'md'} onChange={(v) => setNestedData('pricing.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.pricing.paddingX || 'md'} onChange={(v) => setNestedData('pricing.paddingX', v)} />
@@ -385,8 +385,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.background} onChange={(v) => setNestedData('pricing.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
@@ -395,8 +395,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Card Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
         <ColorControl label={t('controls.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
         <ColorControl label={t('controls.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
         <ColorControl label={t('controls.cardText')} value={data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.cardText', v)} />
@@ -408,8 +408,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Button Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.buttonColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.buttonColors')}</label>
         <div className="space-y-1">
           <ColorControl label={t('editor.controls.common.background')} value={data.pricing.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.buttonBackground', v)} />
           <ColorControl label={t('controls.text')} value={data.pricing.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.buttonText', v)} />
@@ -419,9 +419,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Gradient Colors - Only for gradient variant */}
       {currentVariant === 'gradient' && (
         <>
-          <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-              <Sparkles size={14} className="text-editor-accent" />
+          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+              <Sparkles size={14} className="text-q-accent" />
               Gradient Colors
             </label>
             <div className="space-y-1">

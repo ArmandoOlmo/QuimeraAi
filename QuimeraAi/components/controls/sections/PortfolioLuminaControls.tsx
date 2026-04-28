@@ -18,8 +18,8 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* Text Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.portfolioLumina.content', 'Header Content')}
         </label>
@@ -50,14 +50,14 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Projects List */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <LayoutGrid size={14} />
           {t('editor.portfolioLumina.projects', 'Projects')}
         </label>
 
         {projects.map((project: any, idx: number) => (
-          <div key={idx} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 space-y-3 relative group">
+          <div key={idx} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 space-y-3 relative group">
             <button
               onClick={() => {
                 const newProjects = projects.filter((_: any, i: number) => i !== idx);
@@ -68,7 +68,7 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
               <Trash2 size={14} />
             </button>
             
-            <span className="text-[10px] font-bold text-editor-accent uppercase block mb-2">Project #{idx + 1}</span>
+            <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Project #{idx + 1}</span>
 
             <ImagePicker
               label={t('editor.portfolioLumina.projectImage', 'Image')}
@@ -91,10 +91,10 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Link Controls */}
-            <div className="mt-3 pt-3 border-t border-editor-border/50">
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.link')}</label>
+            <div className="mt-3 pt-3 border-t border-q-border/50">
+              <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.link')}</label>
               
-              <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+              <div className="flex bg-q-surface rounded-md border border-q-border p-1 mb-2">
                 {[
                   { value: 'manual', label: 'URL' },
                   { value: 'product', label: 'Producto' },
@@ -107,8 +107,8 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
                         setNestedData(`portfolioLumina.projects.${idx}.link`, '');
                     }}
                     className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(project.linkType || 'manual') === type.value
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                      ? 'bg-q-accent text-q-bg'
+                      : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                       }`}
                   >
                     {type.label}
@@ -121,9 +121,9 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
                     placeholder="https://example.com or #section"
                     value={project.link || ''}
                     onChange={(e) => setNestedData(`portfolioLumina.projects.${idx}.link`, e.target.value)}
-                    className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                    className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                   />
-                  <p className="text-xs text-editor-text-secondary mt-1">
+                  <p className="text-xs text-q-text-secondary mt-1">
                     Use URLs for external links or # for page sections
                   </p>
                 </>
@@ -175,7 +175,7 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             const newProject = { title: 'New Project', category: 'Category', image: '', link: '#' };
             setNestedData('portfolioLumina.projects', [...projects, newProject]);
           }}
-          className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
+          className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
         >
           <Plus size={16} /> {t('editor.portfolioLumina.addProject', 'Add Project')}
         </button>
@@ -186,8 +186,8 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -201,9 +201,9 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
       
       {renderLuminaAnimationControls(data.portfolioLumina, (key, value) => setNestedData(`portfolioLumina.${key}`, value))}
       
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -212,7 +212,7 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
               setNestedData('portfolioLumina.colors', {});
               setNestedData('portfolioLumina.glassEffect', true);
             }}
-            className="flex items-center gap-1.5 px-2 py-1 bg-editor-bg border border-editor-border rounded text-[10px] text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-q-bg border border-q-border rounded text-[10px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/30 transition-colors"
             title="Restaurar a los colores originales de Lumina"
           >
             <RotateCcw size={10} />
@@ -222,13 +222,13 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.portfolioLumina.colors?.panelBackground} onChange={(v) => setNestedData('portfolioLumina.colors.panelBackground', v)} />
             <ColorControl label={t('editor.controls.colors.border', 'Border')} value={data.portfolioLumina.colors?.panelBorder} onChange={(v) => setNestedData('portfolioLumina.colors.panelBorder', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">Textos</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Textos</p>
             <ColorControl label="Fondo de Sección" value={data.portfolioLumina.colors?.background} onChange={(v) => setNestedData('portfolioLumina.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title', 'Heading')} value={data.portfolioLumina.colors?.heading} onChange={(v) => setNestedData('portfolioLumina.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.portfolioLumina.colors?.text} onChange={(v) => setNestedData('portfolioLumina.colors.text', v)} />

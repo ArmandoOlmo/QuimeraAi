@@ -49,22 +49,22 @@ const EmailPreview: React.FC = () => {
     return (
         <div className="h-full flex flex-col">
             {/* Preview Header */}
-            <div className="flex-shrink-0 px-4 py-3 border-b border-editor-border bg-editor-bg">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-q-border bg-q-bg">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Mail size={16} className="text-editor-text-secondary" />
-                        <span className="text-sm font-medium text-editor-text-primary">
+                        <Mail size={16} className="text-q-text-secondary" />
+                        <span className="text-sm font-medium text-q-text">
                             {t('email.preview', 'Vista previa')}
                         </span>
-                        <span className="text-xs text-editor-text-secondary px-2 py-0.5 bg-editor-panel-bg rounded">
+                        <span className="text-xs text-q-text-secondary px-2 py-0.5 bg-q-surface rounded">
                             {containerWidth}px
                         </span>
                     </div>
                     
                     {/* Subject Line Preview */}
                     <div className="flex items-center gap-2 text-sm">
-                        <span className="text-editor-text-secondary">{t('email.subject', 'Asunto')}:</span>
-                        <span className="text-editor-text-primary font-medium truncate max-w-[200px]">
+                        <span className="text-q-text-secondary">{t('email.subject', 'Asunto')}:</span>
+                        <span className="text-q-text font-medium truncate max-w-[200px]">
                             {document.subject || t('email.noSubject', 'Sin asunto')}
                         </span>
                     </div>

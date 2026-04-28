@@ -32,8 +32,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   return (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -45,14 +45,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Logo Type Selector */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
           {['text', 'image'].map(type => (
             <button type="button"               key={type}
               onClick={() => setNestedData('footer.logoType', type)}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.footer.logoType || 'text') === type
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:bg-editor-border'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                 }`}
             >
               {type}
@@ -78,11 +78,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
       <div className="space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.linkColumns')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.linkColumns')}</label>
         {(data.footer.linkColumns || []).map((col, colIndex) => (
-          <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
+          <div key={colIndex} className="bg-q-bg p-3 rounded border border-q-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-editor-border focus:border-editor-accent flex-1 text-sm font-bold text-editor-text-primary px-1 min-w-0 focus:outline-none" />
+              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-q-border focus:border-q-accent flex-1 text-sm font-bold text-q-text-primary px-1 min-w-0 focus:outline-none" />
               <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
@@ -102,28 +102,28 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Conditional Link List */}
             {col.menuId ? (
-              <p className="text-[10px] text-editor-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
+              <p className="text-[10px] text-q-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
             ) : (
               <>
                 {(col.links || []).map((link, linkIndex) => (
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
-                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
-                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
+                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
+                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
                     <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
-                    }} className="text-editor-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
+                    }} className="text-q-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
                   </div>
                 ))}
                 <button type="button" onClick={() => {
                   const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                   setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
-                }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
+                }} className="text-xs text-q-accent hover:underline mt-1">+ Add Link</button>
               </>
             )}
           </div>
         ))}
-        <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
+        <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
       </div>
       <SocialLinksEditor
         socialLinks={data.footer.socialLinks}
@@ -134,8 +134,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Contact Information */}
       <div className="space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-          <MapPin size={14} className="text-editor-accent" />
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+          <MapPin size={14} className="text-q-accent" />
           Contact Information
         </label>
         <Input
@@ -189,8 +189,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Business Hours */}
       <div className="space-y-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-          <Clock size={14} className="text-editor-accent" />
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+          <Clock size={14} className="text-q-accent" />
           Business Hours
         </label>
 
@@ -205,7 +205,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               });
               setNestedData('footer.contactInfo.businessHours', { ...businessHours, ...newHours });
             }}
-            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
           >
             Copy Mon → Weekdays
           </button>
@@ -218,14 +218,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               });
               setNestedData('footer.contactInfo.businessHours', newHours);
             }}
-            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
           >
             Copy Mon → All Days
           </button>
         </div>
 
         {/* Days */}
-        <div className="space-y-2 bg-editor-bg p-3 rounded-lg border border-editor-border">
+        <div className="space-y-2 bg-q-bg p-3 rounded-lg border border-q-border">
           {[
             { key: 'monday', label: 'Mon' },
             { key: 'tuesday', label: 'Tue' },
@@ -242,7 +242,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             return (
               <div key={key} className="flex items-center gap-2">
-                <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
+                <span className="w-10 text-xs font-medium text-q-text-secondary">{label}</span>
                 <button type="button"                   onClick={() => {
                     // When toggling, we need to handle the case where contactInfo or businessHours don't exist yet
                     if (!dayHours.isOpen) {
@@ -257,7 +257,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
                     }
                   }}
-                  className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'
+                  className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-q-surface-overlay'
                     }`}
                 >
                   <span
@@ -271,18 +271,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       type="time"
                       value={dayHours.openTime || '09:00'}
                       onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)}
-                      className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary"
+                      className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary"
                     />
-                    <span className="text-editor-text-secondary text-xs">-</span>
+                    <span className="text-q-text-secondary text-xs">-</span>
                     <input
                       type="time"
                       value={dayHours.closeTime || '17:00'}
                       onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)}
-                      className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary"
+                      className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary"
                     />
                   </div>
                 ) : (
-                  <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                  <span className="text-xs text-q-text-secondary italic">Closed</span>
                 )}
               </div>
             );
@@ -290,7 +290,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
         <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
@@ -427,19 +427,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* ========== LOGO ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Image size={14} />
           Logo
         </label>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
           {['text', 'image'].map(type => (
             <button type="button"               key={type}
               onClick={() => setNestedData('footer.logoType', type)}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.footer.logoType || 'text') === type
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:bg-editor-border'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:bg-q-surface-overlay'
                 }`}
             >
               {type}
@@ -460,8 +460,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== CONTENT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Type size={14} />
           Contenido
         </label>
@@ -472,16 +472,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== LINK COLUMNS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Columns size={14} />
           Link Columns
         </label>
         <div className="space-y-4">
         {(data.footer.linkColumns || []).map((col, colIndex) => (
-          <div key={colIndex} className="bg-editor-bg p-3 rounded border border-editor-border space-y-2">
+          <div key={colIndex} className="bg-q-bg p-3 rounded border border-q-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-editor-border focus:border-editor-accent flex-1 text-sm font-bold text-editor-text-primary px-1 min-w-0 focus:outline-none" />
+              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-q-border focus:border-q-accent flex-1 text-sm font-bold text-q-text-primary px-1 min-w-0 focus:outline-none" />
               <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
@@ -499,35 +499,35 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             />
 
             {col.menuId ? (
-              <p className="text-[10px] text-editor-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
+              <p className="text-[10px] text-q-text-secondary italic">Using links from menu: {menus.find(m => m.id === col.menuId)?.title}</p>
             ) : (
               <>
                 {(col.links || []).map((link, linkIndex) => (
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
-                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
-                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-editor-accent" />
+                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
+                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
                     <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
-                    }} className="text-editor-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
+                    }} className="text-q-text-secondary hover:text-red-400 flex-shrink-0"><Trash2 size={12} /></button>
                   </div>
                 ))}
                 <button type="button" onClick={() => {
                   const newLinks = [...(col.links || []), { text: 'New Link', href: '/' }];
                   setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
-                }} className="text-xs text-editor-accent hover:underline mt-1">+ Add Link</button>
+                }} className="text-xs text-q-accent hover:underline mt-1">+ Add Link</button>
               </>
             )}
           </div>
         ))}
-          <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
+          <button type="button" onClick={() => setNestedData('footer.linkColumns', [...(data.footer.linkColumns || []), { title: 'New Column', links: [] }])} className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"><Plus size={14} /> Add Column</button>
         </div>
       </div>
 
 
       {/* ========== SOCIAL LINKS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Share2 size={14} />
           Redes Sociales
         </label>
@@ -540,8 +540,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== CONTACT INFORMATION ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MapPin size={14} />
           Contact Information
         </label>
@@ -562,8 +562,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== BUSINESS HOURS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Clock size={14} />
           Business Hours
         </label>
@@ -577,7 +577,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               });
               setNestedData('footer.contactInfo.businessHours', { ...businessHours, ...newHours });
             }}
-            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
           >
             Copy Mon → Weekdays
           </button>
@@ -590,13 +590,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               });
               setNestedData('footer.contactInfo.businessHours', newHours);
             }}
-            className="text-xs px-2 py-1 bg-editor-accent/20 text-editor-accent rounded hover:bg-editor-accent/30 transition-colors"
+            className="text-xs px-2 py-1 bg-q-accent/20 text-q-accent rounded hover:bg-q-accent/30 transition-colors"
           >
             Copy Mon → All Days
           </button>
         </div>
 
-        <div className="space-y-2 bg-editor-bg p-3 rounded-lg border border-editor-border">
+        <div className="space-y-2 bg-q-bg p-3 rounded-lg border border-q-border">
           {[
             { key: 'monday', label: 'Mon' },
             { key: 'tuesday', label: 'Tue' },
@@ -612,7 +612,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             return (
               <div key={key} className="flex items-center gap-2">
-                <span className="w-10 text-xs font-medium text-editor-text-secondary">{label}</span>
+                <span className="w-10 text-xs font-medium text-q-text-secondary">{label}</span>
                 <button type="button"                   onClick={() => {
                     if (!dayHours.isOpen) {
                       setNestedData(`footer.contactInfo.businessHours.${key}`, {
@@ -624,18 +624,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       setNestedData(`footer.contactInfo.businessHours.${key}.isOpen`, false);
                     }
                   }}
-                  className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-editor-border'}`}
+                  className={`w-10 h-5 rounded-full transition-colors flex-shrink-0 relative ${dayHours.isOpen ? 'bg-green-500' : 'bg-q-surface-overlay'}`}
                 >
                   <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${dayHours.isOpen ? 'left-5' : 'left-0.5'}`} />
                 </button>
                 {dayHours.isOpen ? (
                   <div className="flex items-center gap-1 flex-1">
-                    <input type="time" value={dayHours.openTime || '09:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)} className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary" />
-                    <span className="text-editor-text-secondary text-xs">-</span>
-                    <input type="time" value={dayHours.closeTime || '17:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)} className="w-[90px] bg-editor-panel-bg border border-editor-border rounded px-1.5 py-0.5 text-xs text-editor-text-primary" />
+                    <input type="time" value={dayHours.openTime || '09:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
+                    <span className="text-q-text-secondary text-xs">-</span>
+                    <input type="time" value={dayHours.closeTime || '17:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
                   </div>
                 ) : (
-                  <span className="text-xs text-editor-text-secondary italic">Closed</span>
+                  <span className="text-xs text-q-text-secondary italic">Closed</span>
                 )}
               </div>
             );
@@ -648,8 +648,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">
       {/* ========== VARIANT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Layout size={14} />
           Footer Variant
         </label>
@@ -666,7 +666,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* ========== NEON GLOW ========== */}
       {data.footer.footerVariant === 'neon-glow' && (
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
           <CardGlowControl
             enabled={data.footer.cardGlow?.enabled !== false}
             color={data.footer.cardGlow?.color || '#144CCD'}
@@ -685,8 +685,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* ========== TYPOGRAPHY ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Type size={14} />
           Tipografía
         </label>
@@ -698,8 +698,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Palette size={14} />
           {t('editor.controls.common.colors')}
         </label>

@@ -167,9 +167,9 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-4xl max-h-[85vh] flex flex-col">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-4xl max-h-[85vh] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center justify-between p-4 border-b border-q-border">
                     <div className="flex items-center gap-4">
                         <h2 className="text-lg font-bold text-foreground">
                             {t('ecommerce.selectImage', 'Seleccionar Imagen')}
@@ -181,7 +181,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                 onClick={() => setLibrarySource('project')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'project'
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 <FolderOpen size={14} />
@@ -191,7 +191,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                 onClick={() => setLibrarySource('global')}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${librarySource === 'global'
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                     }`}
                             >
                                 <Globe size={14} />
@@ -202,16 +202,16 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
 
                     <button
                         onClick={onClose}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Search and Upload */}
-                <div className="p-4 border-b border-border flex gap-3">
-                    <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search size={16} className="text-editor-text-secondary flex-shrink-0" />
+                <div className="p-4 border-b border-q-border flex gap-3">
+                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                        <Search size={16} className="text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -220,7 +220,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -251,11 +251,11 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                                     <div key={projectId} className="space-y-3">
                                         {/* Project Header (only show for project library) */}
                                         {librarySource === 'project' && (
-                                            <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                            <div className="flex items-center gap-2 pb-2 border-b border-q-border/50">
                                                 <h3 className="text-sm font-semibold text-foreground">
                                                     {projectNames[projectId] || t('ecommerce.unknownProject', 'Proyecto desconocido')}
                                                 </h3>
-                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                                                <span className="text-xs text-q-text-muted bg-muted px-2 py-0.5 rounded-md">
                                                     {projectImages.length} {projectImages.length === 1
                                                         ? t('ecommerce.image', 'imagen')
                                                         : t('ecommerce.images', 'imágenes')}
@@ -309,7 +309,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             })}
                         </div>
                     ) : searchQuery ? (
-                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-12">
+                        <div className="h-full flex flex-col items-center justify-center text-q-text-muted py-12">
                             <Search size={48} className="mb-4 opacity-50" />
                             <p className="font-medium mb-2">{t('ecommerce.noImagesFound', 'No se encontraron imágenes')}</p>
                             <p className="text-sm mb-4">{t('ecommerce.tryAdjustingSearch', 'Intenta ajustar tu búsqueda')}</p>
@@ -321,7 +321,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                             </button>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border rounded-xl py-12">
+                        <div className="h-full flex flex-col items-center justify-center text-q-text-muted border-2 border-dashed border-q-border rounded-xl py-12">
                             <ImageIcon size={48} className="mb-4 opacity-50" />
                             <p className="mb-2">
                                 {librarySource === 'project'
@@ -340,7 +340,7 @@ const EcommerceImagePicker: React.FC<EcommerceImagePickerProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-border flex justify-end gap-3">
+                <div className="p-4 border-t border-q-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-sm font-medium transition-colors"

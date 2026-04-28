@@ -19,8 +19,8 @@ const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
     const barMargin = 15;
 
     return (
-        <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.charts.newUsers', { defaultValue: 'New Users (Last 6 Months)' })}</h3>
+        <div className="bg-q-surface p-6 rounded-lg border border-q-border">
+            <h3 className="text-lg font-semibold text-q-text mb-4">{t('superadmin.usage.charts.newUsers', { defaultValue: 'New Users (Last 6 Months)' })}</h3>
             <div className="w-full overflow-x-auto">
                 <svg width={data.length * (barWidth + barMargin)} height={chartHeight + 40}>
                     {data.map((item, index) => {
@@ -35,11 +35,11 @@ const UserGrowthChart: React.FC<{ data: MonthlyData[] }> = ({ data }) => {
                                     width={barWidth}
                                     height={barHeight}
                                     fill="currentColor"
-                                    className="text-editor-accent/30 group-hover:text-editor-accent/60 transition-colors"
+                                    className="text-q-accent/30 group-hover:text-q-accent/60 transition-colors"
                                     rx="4"
                                 />
-                                <text x={x + barWidth / 2} y={chartHeight + 20} textAnchor="middle" className="text-xs fill-current text-editor-text-secondary">{item.month}</text>
-                                <text x={x + barWidth / 2} y={y - 8} textAnchor="middle" className="text-sm font-bold fill-current text-editor-text-primary opacity-0 group-hover:opacity-100 transition-opacity">{item.count}</text>
+                                <text x={x + barWidth / 2} y={chartHeight + 20} textAnchor="middle" className="text-xs fill-current text-q-text-secondary">{item.month}</text>
+                                <text x={x + barWidth / 2} y={y - 8} textAnchor="middle" className="text-sm font-bold fill-current text-q-text opacity-0 group-hover:opacity-100 transition-opacity">{item.count}</text>
                             </g>
                         );
                     })}
@@ -58,8 +58,8 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
     let accumulatedOffset = 0;
 
     return (
-        <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border h-full">
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.charts.apiCallsByModel', { defaultValue: 'API Calls by Model' })}</h3>
+        <div className="bg-q-surface p-6 rounded-lg border border-q-border h-full">
+            <h3 className="text-lg font-semibold text-q-text mb-4">{t('superadmin.usage.charts.apiCallsByModel', { defaultValue: 'API Calls by Model' })}</h3>
             <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative w-48 h-48">
                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
@@ -83,8 +83,8 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
                         })}
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-bold text-editor-text-primary">{total.toLocaleString()}</span>
-                        <span className="text-sm text-editor-text-secondary">{t('superadmin.usage.charts.totalCalls', { defaultValue: 'Total Calls' })}</span>
+                        <span className="text-3xl font-bold text-q-text">{total.toLocaleString()}</span>
+                        <span className="text-sm text-q-text-secondary">{t('superadmin.usage.charts.totalCalls', { defaultValue: 'Total Calls' })}</span>
                     </div>
                 </div>
                 <div className="flex-1">
@@ -93,9 +93,9 @@ const ApiUsageByModelChart: React.FC<{ data: ApiCallStat[] }> = ({ data }) => {
                             <li key={item.model} className="flex items-center justify-between text-sm">
                                 <div className="flex items-center">
                                     <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }}></span>
-                                    <span className="text-editor-text-secondary">{item.model}</span>
+                                    <span className="text-q-text-secondary">{item.model}</span>
                                 </div>
-                                <span className="font-semibold text-editor-text-primary">{item.count.toLocaleString()}</span>
+                                <span className="font-semibold text-q-text">{item.count.toLocaleString()}</span>
                             </li>
                         ))}
                     </ul>
@@ -132,10 +132,10 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen bg-editor-bg items-center justify-center">
+            <div className="flex h-screen bg-q-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-editor-text-secondary">{t('superadmin.usage.loading', { defaultValue: 'Loading statistics...' })}</p>
+                    <div className="w-8 h-8 border-4 border-q-accent border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-q-text-secondary">{t('superadmin.usage.loading', { defaultValue: 'Loading statistics...' })}</p>
                 </div>
             </div>
         );
@@ -143,14 +143,14 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
 
     if (error) {
         return (
-            <div className="flex h-screen bg-editor-bg items-center justify-center">
+            <div className="flex h-screen bg-q-bg items-center justify-center">
                 <div className="flex flex-col items-center gap-4 max-w-md text-center">
                     <AlertCircle className="w-12 h-12 text-red-500" />
-                    <h3 className="text-xl font-semibold text-editor-text-primary">{t('superadmin.usage.errorTitle', { defaultValue: 'Error Loading Statistics' })}</h3>
-                    <p className="text-editor-text-secondary">{error}</p>
+                    <h3 className="text-xl font-semibold text-q-text">{t('superadmin.usage.errorTitle', { defaultValue: 'Error Loading Statistics' })}</h3>
+                    <p className="text-q-text-secondary">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
+                        className="px-3 py-2 text-q-accent font-semibold hover:text-q-accent/80 transition-colors"
                     >
                         {t('superadmin.usage.retry', { defaultValue: 'Retry' })}
                     </button>
@@ -161,24 +161,24 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
 
     if (!data) {
         return (
-            <div className="flex h-screen bg-editor-bg items-center justify-center">
-                <div className="w-8 h-8 border-4 border-editor-accent border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex h-screen bg-q-bg items-center justify-center">
+                <div className="w-8 h-8 border-4 border-q-accent border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                         <div className="flex items-center gap-2">
-                            <BarChart3 className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.usage.title', { defaultValue: 'Usage Statistics' })}</h1>
+                            <BarChart3 className="text-q-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-q-text">{t('superadmin.usage.title', { defaultValue: 'Usage Statistics' })}</h1>
                         </div>
                     </div>
-                    <HeaderBackButton onClick={onBack} label={t('common.back', { defaultValue: 'Back' })} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onBack} label={t('common.back', { defaultValue: 'Back' })} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto space-y-8">
@@ -198,33 +198,33 @@ const UsageStatistics: React.FC<UsageStatisticsProps> = ({ onBack }) => {
 
                     {/* Data Tables */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.lists.topActiveUsers', { defaultValue: 'Top 5 Active Users' })}</h3>
+                        <div className="bg-q-surface p-6 rounded-lg border border-q-border">
+                            <h3 className="text-lg font-semibold text-q-text mb-4">{t('superadmin.usage.lists.topActiveUsers', { defaultValue: 'Top 5 Active Users' })}</h3>
                             <ul className="space-y-3">
                                 {data.topUsers.map(user => (
                                     <li key={user.id} className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3">
                                             <img src={user.photoURL} alt={user.name} className="w-9 h-9 rounded-full" />
                                             <div>
-                                                <p className="font-medium text-sm text-editor-text-primary">{user.name}</p>
-                                                <p className="text-xs text-editor-text-secondary">{user.email}</p>
+                                                <p className="font-medium text-sm text-q-text">{user.name}</p>
+                                                <p className="text-xs text-q-text-secondary">{user.email}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-semibold text-sm text-editor-text-primary">{user.projectCount}</p>
-                                            <p className="text-xs text-editor-text-secondary">{t('superadmin.usage.lists.projectsLabel', { defaultValue: 'Projects' })}</p>
+                                            <p className="font-semibold text-sm text-q-text">{user.projectCount}</p>
+                                            <p className="text-xs text-q-text-secondary">{t('superadmin.usage.lists.projectsLabel', { defaultValue: 'Projects' })}</p>
                                         </div>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                        <div className="bg-editor-panel-bg p-6 rounded-lg border border-editor-border">
-                            <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('superadmin.usage.lists.mostUsedTemplates', { defaultValue: 'Most Used Templates' })}</h3>
+                        <div className="bg-q-surface p-6 rounded-lg border border-q-border">
+                            <h3 className="text-lg font-semibold text-q-text mb-4">{t('superadmin.usage.lists.mostUsedTemplates', { defaultValue: 'Most Used Templates' })}</h3>
                             <ul className="space-y-3">
                                 {data.popularTemplates.map(template => (
                                     <li key={template.id} className="flex items-center justify-between">
-                                        <p className="font-medium text-sm text-editor-text-primary">{template.name}</p>
-                                        <p className="font-semibold text-sm text-editor-text-secondary">{template.count.toLocaleString()} {t('superadmin.usage.lists.usesSuffix', { defaultValue: 'uses' })}</p>
+                                        <p className="font-medium text-sm text-q-text">{template.name}</p>
+                                        <p className="font-semibold text-sm text-q-text-secondary">{template.count.toLocaleString()} {t('superadmin.usage.lists.usesSuffix', { defaultValue: 'uses' })}</p>
                                     </li>
                                 ))}
                             </ul>

@@ -35,8 +35,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   return (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -122,12 +122,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {['text', 'image', 'both'].map(type => (
             <button type="button"               key={type}
               onClick={() => setNestedData('header.logoType', type)}
-              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary'}`}
             >
               {type}
             </button>
@@ -169,14 +169,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Favicon Upload Section */}
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.header.favicon')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.header.favicon')}</label>
 
-        <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-editor-border bg-editor-bg/50">
+        <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-q-border bg-q-bg/50">
           {/* Preview */}
           <div className="relative group">
             {activeProject?.faviconUrl ? (
               <div className="relative">
-                <div className="w-16 h-16 rounded-xl border-2 border-editor-border overflow-hidden flex items-center justify-center"
+                <div className="w-16 h-16 rounded-xl border-2 border-q-border overflow-hidden flex items-center justify-center"
                   style={{ backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)', backgroundSize: '8px 8px', backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px' }}>
                   <img
                     src={activeProject.faviconUrl}
@@ -194,9 +194,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 </button>
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-xl border-2 border-dashed border-editor-border/60 flex flex-col items-center justify-center bg-editor-bg gap-1">
-                <Star size={18} className="text-editor-text-secondary/40" />
-                <span className="text-[9px] text-editor-text-secondary/40 font-medium">ICO / PNG</span>
+              <div className="w-16 h-16 rounded-xl border-2 border-dashed border-q-border/60 flex flex-col items-center justify-center bg-q-bg gap-1">
+                <Star size={18} className="text-q-text-secondary/40" />
+                <span className="text-[9px] text-q-text-secondary/40 font-medium">ICO / PNG</span>
               </div>
             )}
           </div>
@@ -224,11 +224,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           <button type="button"             onClick={() => faviconInputRef.current?.click()}
             disabled={isUploadingFavicon}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-q-accent/10 text-q-accent hover:bg-q-accent/20 border border-q-accent/20"
           >
             {isUploadingFavicon ? (
               <>
-                <span className="w-3.5 h-3.5 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-q-accent border-t-transparent rounded-full animate-spin" />
                 Subiendo...
               </>
             ) : (
@@ -269,8 +269,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Navigation Menu Selector */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
         <div className="flex gap-2 mb-3">
           <Select
             value={activeMenuId === 'manual' ? '' : activeMenuId}
@@ -282,7 +282,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             noMargin
           />
           <button type="button"             onClick={() => navigate(ROUTES.NAVIGATION)}
-            className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
+            className="p-2 bg-q-bg border border-q-border rounded text-q-text-secondary hover:text-q-text-primary hover:bg-q-surface"
             title="Manage Menus"
           >
             <Settings size={16} />
@@ -290,12 +290,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         {activeMenuId && activeMenuId !== 'manual' ? (
-          <div className="p-3 bg-editor-accent/10 border border-editor-accent/20 rounded text-xs text-editor-text-primary mb-2">
+          <div className="p-3 bg-q-accent/10 border border-q-accent/20 rounded text-xs text-q-text-primary mb-2">
             Links are currently being pulled from the <strong>{menus.find(m => m.id === activeMenuId)?.title || 'selected'}</strong> menu.
           </div>
         ) : (
           <>
-            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
+            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
             {(data.header.links || []).map((link, i) => (
               <div key={i} className="flex gap-2 mb-2 items-center relative">
                 <div className="w-10 flex-shrink-0">
@@ -311,11 +311,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     fullWidthModal={true}
                   />
                 </div>
-                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" placeholder="Title" value={link.text} onChange={(e) => {
+                <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" placeholder="Title" value={link.text} onChange={(e) => {
                   setNestedData(`header.links.${i}.text`, e.target.value);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
-                <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" placeholder="URL" value={link.href} onChange={(e) => {
+                <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" placeholder="URL" value={link.href} onChange={(e) => {
                   setNestedData(`header.links.${i}.href`, e.target.value);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
@@ -324,7 +324,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     setNestedData('header.links', newLinks);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }}
-                  className="flex-shrink-0 text-editor-text-secondary hover:text-red-400 p-1"
+                  className="flex-shrink-0 text-q-text-secondary hover:text-red-400 p-1"
                   title="Remove link"
                 >
                   <Trash2 size={14} />
@@ -335,7 +335,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
                 if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
               }}
-              className="text-xs text-editor-accent hover:underline flex items-center mt-1"
+              className="text-xs text-q-accent hover:underline flex items-center mt-1"
             >
               <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
             </button>
@@ -343,7 +343,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.heightHover')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.heightHover')}</label>
       <div className="mt-3">
         <SliderControl
           label={t('editor.controls.navigation.height')}
@@ -357,7 +357,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.hoverStyle')}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.hoverStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'simple', label: 'Simple' },
@@ -368,7 +368,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           ].map(style => (
             <button type="button"               key={style.value}
               onClick={() => setNestedData('header.hoverStyle', style.value)}
-              className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+              className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-q-accent text-q-bg' : 'bg-q-bg text-q-text-secondary hover:bg-q-surface-overlay border border-q-border'}`}
             >
               {style.label}
             </button>
@@ -388,19 +388,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.ctaButton')}</label>
       <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
 
       {data.header.showCta !== false && (
         <div className="space-y-3 animate-fade-in-up">
           <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
-            <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
+            <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
               {[{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }].map((opt) => (
                 <button type="button"                   key={opt.v}
                   onClick={() => setNestedData('header.buttonBorderRadius', opt.v)}
-                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                 >
                   {opt.l}
                 </button>
@@ -411,8 +411,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('controls.textoBotn')} value={data.header.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('header.colors.buttonText', v)} />
 
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
-            <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
+            <div className="grid grid-cols-4 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
               {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
                 <button type="button"                   key={type.value}
                   onClick={() => {
@@ -420,7 +420,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
                     else setNestedData('header.ctaUrl', '');
                   }}
-                  className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                  className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                 >
                   {type.label}
                 </button>
@@ -458,7 +458,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       )}
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
       <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
@@ -510,18 +510,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* ========== LOGO ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Image size={14} />
           Logo
         </label>
 
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {['text', 'image', 'both'].map(type => (
             <button type="button"               key={type}
               onClick={() => setNestedData('header.logoType', type)}
-              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary'}`}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary'}`}
             >
               {type}
             </button>
@@ -561,18 +561,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== FAVICON ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Star size={14} />
           {t('editor.controls.header.favicon')}
         </label>
 
-        <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-editor-border bg-editor-bg/50">
+        <div className="flex flex-col items-center gap-3 p-4 rounded-xl border border-q-border bg-q-bg/50">
           {/* Preview */}
           <div className="relative group">
             {activeProject?.faviconUrl ? (
               <div className="relative">
-                <div className="w-16 h-16 rounded-xl border-2 border-editor-border overflow-hidden flex items-center justify-center"
+                <div className="w-16 h-16 rounded-xl border-2 border-q-border overflow-hidden flex items-center justify-center"
                   style={{ backgroundImage: 'linear-gradient(45deg, #808080 25%, transparent 25%), linear-gradient(-45deg, #808080 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #808080 75%), linear-gradient(-45deg, transparent 75%, #808080 75%)', backgroundSize: '8px 8px', backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px' }}>
                   <img
                     src={activeProject.faviconUrl}
@@ -596,9 +596,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 </button>
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-xl border-2 border-dashed border-editor-border/60 flex flex-col items-center justify-center bg-editor-bg gap-1">
-                <Star size={18} className="text-editor-text-secondary/40" />
-                <span className="text-[9px] text-editor-text-secondary/40 font-medium">ICO / PNG</span>
+              <div className="w-16 h-16 rounded-xl border-2 border-dashed border-q-border/60 flex flex-col items-center justify-center bg-q-bg gap-1">
+                <Star size={18} className="text-q-text-secondary/40" />
+                <span className="text-[9px] text-q-text-secondary/40 font-medium">ICO / PNG</span>
               </div>
             )}
           </div>
@@ -626,11 +626,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           <button type="button"             onClick={() => faviconInputRef.current?.click()}
             disabled={isUploadingFavicon}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 border border-editor-accent/20"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 disabled:opacity-50 bg-q-accent/10 text-q-accent hover:bg-q-accent/20 border border-q-accent/20"
           >
             {isUploadingFavicon ? (
               <>
-                <span className="w-3.5 h-3.5 border-2 border-editor-accent border-t-transparent rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-q-accent border-t-transparent rounded-full animate-spin" />
                 Subiendo...
               </>
             ) : (
@@ -645,8 +645,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== VISIBILITY (Login + Search) ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Eye size={14} />
           Visibilidad
         </label>
@@ -673,14 +673,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== NAVIGATION LINKS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Link size={14} />
           Enlaces de Navegación
         </label>
 
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.source')}</label>
           <div className="flex gap-2 mb-3">
             <Select
               value={activeMenuId === 'manual' ? '' : activeMenuId}
@@ -692,7 +692,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               noMargin
             />
             <button type="button"               onClick={() => navigate(ROUTES.NAVIGATION)}
-              className="p-2 bg-editor-bg border border-editor-border rounded text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg"
+              className="p-2 bg-q-bg border border-q-border rounded text-q-text-secondary hover:text-q-text-primary hover:bg-q-surface"
               title="Manage Menus"
             >
               <Settings size={16} />
@@ -700,12 +700,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
 
           {activeMenuId && activeMenuId !== 'manual' ? (
-            <div className="p-3 bg-editor-accent/10 border border-editor-accent/20 rounded text-xs text-editor-text-primary mb-2">
+            <div className="p-3 bg-q-accent/10 border border-q-accent/20 rounded text-xs text-q-text-primary mb-2">
               Links are currently being pulled from the <strong>{menus.find(m => m.id === activeMenuId)?.title || 'selected'}</strong> menu.
             </div>
           ) : (
             <>
-              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
+              <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
                 <div key={i} className="flex gap-2 mb-2 items-center relative">
                   <div className="w-10 flex-shrink-0">
@@ -721,11 +721,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       fullWidthModal={true}
                     />
                   </div>
-                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.text} onChange={(e) => {
+                  <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" value={link.text} onChange={(e) => {
                     setNestedData(`header.links.${i}.text`, e.target.value);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
-                  <input className="flex-1 min-w-0 bg-editor-bg border border-editor-border rounded px-2 py-1 text-sm text-editor-text-primary" value={link.href} onChange={(e) => {
+                  <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" value={link.href} onChange={(e) => {
                     setNestedData(`header.links.${i}.href`, e.target.value);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
@@ -734,7 +734,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       setNestedData('header.links', newLinks);
                       if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                     }}
-                    className="flex-shrink-0 text-editor-text-secondary hover:text-red-400"
+                    className="flex-shrink-0 text-q-text-secondary hover:text-red-400"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -744,7 +744,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   setNestedData('header.links', [...(data.header.links || []), { text: 'New Link', href: '/' }]);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }}
-                className="text-xs text-editor-accent hover:underline flex items-center mt-1"
+                className="text-xs text-q-accent hover:underline flex items-center mt-1"
               >
                 <Plus size={12} className="mr-1" /> {t('editor.controls.navigation.addLink')}
               </button>
@@ -755,8 +755,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== CTA BUTTON ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MousePointerClick size={14} />
           {t('editor.controls.navigation.ctaButton')}
         </label>
@@ -768,8 +768,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
 
             <div>
-              <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
-              <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+              <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
+              <div className="grid grid-cols-4 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
                 {[{ value: 'manual', label: 'URL' }, { value: 'product', label: 'Producto' }, { value: 'collection', label: 'Colección' }, { value: 'content', label: 'Contenido' }].map((type) => (
                   <button type="button"                     key={type.value}
                     onClick={() => {
@@ -777,7 +777,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       if (type.value === 'section') setNestedData('header.ctaUrl', '#cta');
                       else setNestedData('header.ctaUrl', '');
                     }}
-                    className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                    className={`py-1.5 px-1 text-[10px] font-medium rounded-sm transition-colors text-center ${(data.header.ctaLinkType || 'manual') === type.value ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
                   >
                     {type.label}
                   </button>
@@ -821,8 +821,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">
       {/* ========== DESIGN (Layout & Style) ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Layout size={14} />
           Diseño
         </label>
@@ -906,8 +906,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== HEIGHT & HOVER ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <AlignJustify size={14} />
           Altura y Hover
         </label>
@@ -925,7 +925,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         <div className="mt-4">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.hoverStyle')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.hoverStyle')}</label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: 'simple', label: 'Simple' },
@@ -936,7 +936,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             ].map(style => (
               <button type="button"                 key={style.value}
                 onClick={() => setNestedData('header.hoverStyle', style.value)}
-                className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-editor-accent text-editor-bg' : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'}`}
+                className={`py-2 px-3 text-xs font-medium rounded-sm transition-colors ${data.header.hoverStyle === style.value ? 'bg-q-accent text-q-bg' : 'bg-q-bg text-q-text-secondary hover:bg-q-surface-overlay border border-q-border'}`}
               >
                 {style.label}
               </button>
@@ -960,17 +960,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* ========== BUTTON STYLE ========== */}
       {data.header.showCta !== false && (
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
             <SlidersHorizontal size={14} />
             Estilo de Botón
           </label>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {[{ v: 'none', l: 'None' }, { v: 'md', l: 'Med' }, { v: 'xl', l: 'Lg' }, { v: 'full', l: 'Full' }].map((opt) => (
               <button type="button"                 key={opt.v}
                 onClick={() => setNestedData('header.buttonBorderRadius', opt.v)}
-                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+                className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${data.header.buttonBorderRadius === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
               >
                 {opt.l}
               </button>
@@ -985,8 +985,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Palette size={14} />
           {t('editor.controls.common.colors')}
         </label>

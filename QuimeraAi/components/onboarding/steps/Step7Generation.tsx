@@ -110,7 +110,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                 flex items-center gap-4 p-4 rounded-xl transition-all
                 ${status === 'active' ? 'bg-primary/10 border border-primary/30' : ''}
                 ${status === 'completed' ? 'bg-green-500/10 border border-green-500/30' : ''}
-                ${status === 'pending' ? 'bg-card/50 border border-border' : ''}
+                ${status === 'pending' ? 'bg-q-surface/50 border border-q-border' : ''}
                 ${status === 'error' ? 'bg-destructive/10 border border-destructive/30' : ''}
             `}>
                 <div className={`
@@ -122,7 +122,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                 `}>
                     {status === 'active' && <Loader2 size={20} className="text-primary animate-spin" />}
                     {status === 'completed' && <Check size={20} className="text-green-400" />}
-                    {status === 'pending' && <div className="text-muted-foreground">{icon}</div>}
+                    {status === 'pending' && <div className="text-q-text-muted">{icon}</div>}
                     {status === 'error' && <AlertCircle size={20} className="text-destructive" />}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -131,7 +131,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                             font-medium
                             ${status === 'active' ? 'text-primary' : ''}
                             ${status === 'completed' ? 'text-green-400' : ''}
-                            ${status === 'pending' ? 'text-muted-foreground' : ''}
+                            ${status === 'pending' ? 'text-q-text-muted' : ''}
                             ${status === 'error' ? 'text-destructive' : ''}
                         `}>
                             {label}
@@ -149,7 +149,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                         animate={status === 'active'}
                     />
                     {status === 'active' && targetPhase === 'content' && (
-                        <p className="text-xs text-muted-foreground mt-1.5">
+                        <p className="text-xs text-q-text-muted mt-1.5">
                             {t('onboarding.generatingContent', 'Creating personalized content for your website...')}
                         </p>
                     )}
@@ -173,7 +173,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     <h3 className="text-3xl font-bold text-foreground mb-3">
                         {t('onboarding.websiteReady', 'Your Website is Ready!')}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('onboarding.websiteReadyDescription', 'Your website has been generated successfully. You can now customize it in the editor.')}
                     </p>
                 </div>
@@ -185,7 +185,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                             {progress.businessName}
                         </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-q-text-muted">
                         {t('onboarding.redirectingToEditor', 'Redirecting to editor...')}
                     </p>
                 </div>
@@ -199,7 +199,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                                 <p className="font-medium text-foreground">
                                     {t('onboarding.storeCreated', 'Your store is ready')}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-q-text-muted">
                                     {t('onboarding.storeCreatedDesc', 'You can add products from the ecommerce dashboard')}
                                 </p>
                             </div>
@@ -222,7 +222,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                     <h3 className="text-2xl font-bold text-foreground mb-3">
                         {t('onboarding.generationError', 'Something went wrong')}
                     </h3>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {generationProgress?.error || t('onboarding.tryAgain', 'Please try again.')}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -237,7 +237,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                         {onReset && (
                             <button
                                 onClick={onReset}
-                                className="px-6 py-3 bg-muted text-muted-foreground font-medium rounded-xl hover:bg-accent transition-all"
+                                className="px-6 py-3 bg-muted text-q-text-muted font-medium rounded-xl hover:bg-accent transition-all"
                             >
                                 {t('onboarding.startOver', 'Start Over')}
                             </button>
@@ -255,7 +255,7 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
             <div className="text-center">
                 <div className="relative w-20 h-20 mx-auto mb-4">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-orange-500 to-pink-500 animate-spin-slow opacity-50 blur-xl" />
-                    <div className="relative w-20 h-20 rounded-full bg-card border-2 border-border flex items-center justify-center">
+                    <div className="relative w-20 h-20 rounded-full bg-q-surface border-2 border-q-border flex items-center justify-center">
                         <img
                             src={QUIMERA_LOGO}
                             alt="Quimera"
@@ -266,39 +266,39 @@ const Step7Generation: React.FC<Step7GenerationProps> = ({
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.generatingWebsite', 'Generating Your Website')}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('onboarding.pleaseWait', 'This may take a few minutes. Please wait...')}
                 </p>
             </div>
 
             {/* Summary of what's being generated */}
-            <div className="p-4 bg-card border border-border rounded-xl">
+            <div className="p-4 bg-q-surface border border-q-border rounded-xl">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                        <span className="text-muted-foreground">{t('onboarding.business', 'Business')}:</span>
+                        <span className="text-q-text-muted">{t('onboarding.business', 'Business')}:</span>
                         <p className="font-medium text-foreground">{progress.businessName}</p>
                     </div>
                     <div>
-                        <span className="text-muted-foreground">{t('onboarding.template', 'Template')}:</span>
+                        <span className="text-q-text-muted">{t('onboarding.template', 'Template')}:</span>
                         <p className="font-medium text-foreground">{progress.selectedTemplateName}</p>
                     </div>
                     <div>
-                        <span className="text-muted-foreground">{t('onboarding.industry', 'Industry')}:</span>
+                        <span className="text-q-text-muted">{t('onboarding.industry', 'Industry')}:</span>
                         <p className="font-medium text-foreground">
                             {industryLabel}
                         </p>
                     </div>
                     <div>
-                        <span className="text-muted-foreground">{t('onboarding.components', 'Components')}:</span>
+                        <span className="text-q-text-muted">{t('onboarding.components', 'Components')}:</span>
                         <p className="font-medium text-foreground">
                             {progress.enabledComponents?.length || 0} {t('onboarding.active', 'active')}
                         </p>
                     </div>
                     {progress.hasEcommerce && (
-                        <div className="col-span-2 pt-2 border-t border-border">
+                        <div className="col-span-2 pt-2 border-t border-q-border">
                             <div className="flex items-center gap-2">
                                 <ShoppingBag size={14} className="text-primary" />
-                                <span className="text-muted-foreground">{t('onboarding.store', 'Store')}:</span>
+                                <span className="text-q-text-muted">{t('onboarding.store', 'Store')}:</span>
                                 <span className="font-medium text-foreground">
                                     {progress.storeSetup?.storeName || progress.businessName}
                                 </span>

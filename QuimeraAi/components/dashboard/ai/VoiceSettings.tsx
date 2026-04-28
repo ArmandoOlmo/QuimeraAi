@@ -28,14 +28,14 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
     return (
         <div className="space-y-6">
             {/* Live Voice Toggle */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
                             <Mic size={20} className="text-primary" />
                             Habilitar Voz en Vivo
                         </h3>
-                        <p className="text-muted-foreground text-sm mt-1">
+                        <p className="text-q-text-muted text-sm mt-1">
                             Permite a los usuarios hablar con tu asistente en tiempo real usando el micrófono.
                         </p>
                     </div>
@@ -63,25 +63,25 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
 
             {/* Gemini 3.1 Flash Live Advanced Options */}
             {formData.enableLiveVoice && (
-                <div className="bg-card border border-border rounded-xl p-6">
+                <div className="bg-q-surface border border-q-border rounded-xl p-6">
                     <h3 className="font-bold text-foreground text-lg flex items-center gap-2 mb-2">
                         <Zap size={20} className="text-primary" />
                         Capacidades Avanzadas
                     </h3>
-                    <p className="text-muted-foreground text-sm mb-5">
+                    <p className="text-q-text-muted text-sm mb-5">
                         Funcionalidades avanzadas de voz para una experiencia superior.
                     </p>
 
                     <div className="space-y-4">
                         {/* Affective Dialog */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
                                 <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <Heart size={18} className="text-pink-500" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Diálogo Empático</h4>
-                                    <p className="text-muted-foreground text-xs mt-0.5">
+                                    <p className="text-q-text-muted text-xs mt-0.5">
                                         El asistente detecta emoción y tono del usuario, adaptando sus respuestas. Ideal para soporte al cliente.
                                     </p>
                                 </div>
@@ -98,14 +98,14 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                         </div>
 
                         {/* Unlimited Sessions */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
                                 <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <Infinity size={18} className="text-emerald-500" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Sesiones Ilimitadas</h4>
-                                    <p className="text-muted-foreground text-xs mt-0.5">
+                                    <p className="text-q-text-muted text-xs mt-0.5">
                                         Elimina el límite de 15 minutos permitiendo conversaciones de voz de cualquier duración.
                                     </p>
                                 </div>
@@ -122,14 +122,14 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                         </div>
 
                         {/* Auto-Reconnect */}
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-q-bg border border-q-border">
                             <div className="flex items-start gap-3">
                                 <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                                     <RefreshCw size={18} className="text-amber-500" />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-foreground text-sm">Reconexión Automática</h4>
-                                    <p className="text-muted-foreground text-xs mt-0.5">
+                                    <p className="text-q-text-muted text-xs mt-0.5">
                                         Si la conexión se interrumpe, la sesión se reanuda automáticamente sin perder el contexto.
                                     </p>
                                 </div>
@@ -149,12 +149,12 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
             )}
 
             {/* Voice Selection */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <h3 className="font-bold text-foreground text-lg flex items-center gap-2 mb-4">
                     <Volume2 size={20} className="text-primary" />
                     Voz del Asistente
                 </h3>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-q-text-muted text-sm mb-4">
                     Selecciona la voz que usará tu asistente en las conversaciones de voz.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -167,7 +167,7 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                                 onClick={() => updateForm('voiceName', voice.name)}
                                 className={`relative p-4 rounded-xl border text-left transition-all ${isSelected
                                         ? 'bg-primary/10 border-primary shadow-md ring-2 ring-primary/30'
-                                        : 'bg-background border-border hover:border-primary/50 hover:bg-primary/5'
+                                        : 'bg-q-bg border-q-border hover:border-primary/50 hover:bg-primary/5'
                                     }`}
                             >
                                 {isSelected && (
@@ -179,10 +179,10 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                                     <span className="text-lg">{voice.emoji}</span>
                                     <span className="font-semibold text-foreground">{voice.name}</span>
                                 </div>
-                                <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground mb-1">
+                                <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary text-q-text-muted mb-1">
                                     {voice.gender}
                                 </span>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-sm text-q-text-muted mt-1">
                                     {voice.description}
                                 </p>
                             </button>
@@ -197,7 +197,7 @@ function VoiceSettings({ formData, updateForm }: VoiceSettingsProps) {
                     <Mic size={18} />
                     Cómo Funciona la Voz
                 </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-2 text-sm text-q-text-muted">
                     <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>
                         <span><strong>Botón de micrófono:</strong> Los usuarios pueden hablar y escuchar respuestas en tiempo real.</span>

@@ -24,10 +24,10 @@ import {
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, ...props }) => (
     <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <input
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
@@ -43,8 +43,8 @@ const SliderControl: React.FC<{
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
     <div className="mb-3">
         <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
-            <span className="text-xs text-editor-text-primary">{value}{unit}</span>
+            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+            <span className="text-xs text-q-text">{value}{unit}</span>
         </div>
         <input
             type="range"
@@ -53,7 +53,7 @@ const SliderControl: React.FC<{
             step={step}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
     </div>
 );
@@ -62,13 +62,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['none', 'sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>
@@ -86,13 +86,13 @@ const AlignmentSelector: React.FC<{ label: string; value: string; onChange: (val
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt.v}
                         onClick={() => onChange(opt.v)}
-                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {opt.l}
                     </button>
@@ -172,15 +172,15 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                     onChange={(val) => updateContent({ width: val })}
                 />
 
-                <hr className="border-editor-border" />
+                <hr className="border-q-border" />
 
                 {/* Link Type Selector — same as Hero */}
-                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
                         <Link size={14} />
                         {t('email.linkType', 'Tipo de enlace')}
                     </label>
-                    <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+                    <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                         {[
                             { value: 'manual', label: 'URL' },
                             { value: 'product', label: t('email.linkProduct', 'Producto') },
@@ -191,8 +191,8 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                                 key={type.value}
                                 onClick={() => updateContent({ linkType: type.value as any })}
                                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${currentLinkType === type.value
-                                    ? 'bg-editor-accent text-editor-bg'
-                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                                    ? 'bg-q-accent text-q-bg'
+                                    : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                                     }`}
                             >
                                 {type.label}
@@ -210,7 +210,7 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                             onChange={(e) => updateContent({ linkUrl: e.target.value })}
                             placeholder="https://example.com"
                         />
-                        <p className="text-xs text-editor-text-secondary -mt-2">
+                        <p className="text-xs text-q-text-secondary -mt-2">
                             {t('email.linkHelpManual', 'URLs externas o # para secciones de la página (ej. #contacto)')}
                         </p>
                     </>
@@ -271,7 +271,7 @@ const LogoBlockControls: React.FC<LogoBlockControlsProps> = ({ block, activeTab 
                 onChange={(color) => updateStyles({ backgroundColor: color })}
             />
 
-            <hr className="border-editor-border" />
+            <hr className="border-q-border" />
 
             <AlignmentSelector
                 label={t('email.alignment', 'Alineación')}

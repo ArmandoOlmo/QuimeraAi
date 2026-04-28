@@ -114,7 +114,7 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`relative transition-all ${isDragging ? 'ring-2 ring-editor-accent ring-offset-2' : ''} ${className}`}
+                className={`relative transition-all ${isDragging ? 'ring-2 ring-q-accent ring-offset-2' : ''} ${className}`}
             >
                 <input
                     ref={fileInputRef}
@@ -146,10 +146,10 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
             className={`
                 relative border-2 border-dashed rounded-xl transition-all cursor-pointer
                 ${isDragging 
-                    ? 'border-editor-accent bg-editor-accent/10 scale-[1.02]' 
-                    : 'border-editor-border hover:border-editor-accent/50 bg-editor-panel-bg/30'
+                    ? 'border-q-accent bg-q-accent/10 scale-[1.02]' 
+                    : 'border-q-border hover:border-q-accent/50 bg-q-surface/30'
                 }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-editor-panel-bg/50'}
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-q-surface/50'}
                 ${className}
             `}
         >
@@ -166,28 +166,28 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
             <div className="p-8 text-center">
                 {isUploading ? (
                     <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 border-4 border-editor-accent border-t-transparent rounded-full animate-spin mb-4"></div>
-                        <p className="text-sm font-medium text-editor-text-primary">Uploading...</p>
+                        <div className="w-12 h-12 border-4 border-q-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="text-sm font-medium text-q-text">Uploading...</p>
                     </div>
                 ) : (
                     <>
-                        <div className="mx-auto w-16 h-16 bg-editor-bg rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="mx-auto w-16 h-16 bg-q-bg rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             {accept.includes('image') ? (
-                                <ImageIcon size={32} className="text-editor-accent" />
+                                <ImageIcon size={32} className="text-q-accent" />
                             ) : (
-                                <Upload size={32} className="text-editor-accent" />
+                                <Upload size={32} className="text-q-accent" />
                             )}
                         </div>
                         
-                        <h3 className="text-base font-bold text-editor-text-primary mb-2">
+                        <h3 className="text-base font-bold text-q-text mb-2">
                             {isDragging ? 'Drop files here' : 'Drag & drop files here'}
                         </h3>
                         
-                        <p className="text-sm text-editor-text-secondary mb-4">
+                        <p className="text-sm text-q-text-secondary mb-4">
                             or click to browse
                         </p>
                         
-                        <div className="text-xs text-editor-text-secondary space-y-1">
+                        <div className="text-xs text-q-text-secondary space-y-1">
                             {accept !== '*' && (
                                 <p>Accepted: {accept}</p>
                             )}

@@ -74,7 +74,7 @@ const TagSelector: React.FC<{
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 w-48 bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl z-50 py-1">
+          <div className="absolute left-0 top-full mt-1 w-48 bg-q-surface border border-q-border rounded-lg shadow-xl z-50 py-1">
             {allTags.map((tag) => (
               <button
                 key={tag}
@@ -124,13 +124,13 @@ const FeatureEditor: React.FC<{
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-editor-text-primary">
+        <label className="text-sm font-medium text-q-text">
           Características ({features.length})
         </label>
         <button
           type="button"
           onClick={addFeature}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-editor-accent/10 text-editor-accent rounded-lg hover:bg-editor-accent/20 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-q-accent/10 text-q-accent rounded-lg hover:bg-q-accent/20 transition-colors"
         >
           <Plus size={14} />
           Añadir
@@ -138,27 +138,27 @@ const FeatureEditor: React.FC<{
       </div>
 
       {features.length === 0 ? (
-        <p className="text-sm text-editor-text-secondary py-4 text-center border border-dashed border-editor-border rounded-lg">
+        <p className="text-sm text-q-text-secondary py-4 text-center border border-dashed border-q-border rounded-lg">
           No hay características. Añade una para detallar los cambios.
         </p>
       ) : (
         <div className="space-y-3">
           {features.map((feature, index) => (
-            <div key={feature.id} className="flex gap-3 p-3 bg-editor-bg/50 rounded-lg border border-editor-border">
+            <div key={feature.id} className="flex gap-3 p-3 bg-q-bg/50 rounded-lg border border-q-border">
               <div className="flex-1 space-y-2">
                 <input
                   type="text"
                   value={feature.title}
                   onChange={(e) => updateFeature(index, 'title', e.target.value)}
                   placeholder="Título de la característica"
-                  className="w-full px-3 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                  className="w-full px-3 py-2 bg-q-surface border border-q-border rounded-lg text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
                 />
                 <textarea
                   value={feature.description}
                   onChange={(e) => updateFeature(index, 'description', e.target.value)}
                   placeholder="Descripción breve"
                   rows={2}
-                  className="w-full px-3 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent resize-none"
+                  className="w-full px-3 py-2 bg-q-surface border border-q-border rounded-lg text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent resize-none"
                 />
               </div>
               <button
@@ -200,13 +200,13 @@ const EntryEditorModal: React.FC<{
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative w-full max-w-3xl max-h-[90vh] bg-editor-panel-bg border border-editor-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-3xl max-h-[90vh] bg-q-surface border border-q-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-editor-border">
-          <h2 className="text-lg font-bold text-editor-text-primary">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-q-border">
+          <h2 className="text-lg font-bold text-q-text">
             {isNew ? 'Nueva Entrada' : 'Editar Entrada'}
           </h2>
-          <button onClick={onClose} className="p-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors">
+          <button onClick={onClose} className="p-2 text-q-text-secondary hover:text-q-text transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -216,7 +216,7 @@ const EntryEditorModal: React.FC<{
           {/* Title and Tag */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 Título *
               </label>
               <input
@@ -225,11 +225,11 @@ const EntryEditorModal: React.FC<{
                 onChange={(e) => updateField('title', e.target.value)}
                 placeholder="Ej: Nueva funcionalidad de ecommerce"
                 required
-                className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 Tipo
               </label>
               <TagSelector value={formData.tag} onChange={(tag) => updateField('tag', tag)} />
@@ -239,7 +239,7 @@ const EntryEditorModal: React.FC<{
           {/* Date and Version */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 Fecha *
               </label>
               <input
@@ -247,11 +247,11 @@ const EntryEditorModal: React.FC<{
                 value={formData.date}
                 onChange={(e) => updateField('date', e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text focus:outline-none focus:border-q-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 Versión (opcional)
               </label>
               <input
@@ -259,14 +259,14 @@ const EntryEditorModal: React.FC<{
                 value={formData.version || ''}
                 onChange={(e) => updateField('version', e.target.value)}
                 placeholder="Ej: 2.0.0"
-                className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-editor-text-primary mb-2">
+            <label className="block text-sm font-medium text-q-text mb-2">
               Descripción *
             </label>
             <textarea
@@ -275,7 +275,7 @@ const EntryEditorModal: React.FC<{
               placeholder="Describe brevemente esta actualización..."
               required
               rows={4}
-              className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent resize-none"
+              className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent resize-none"
             />
           </div>
 
@@ -288,7 +288,7 @@ const EntryEditorModal: React.FC<{
           {/* Image */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 URL de Imagen (opcional)
               </label>
               <input
@@ -296,11 +296,11 @@ const EntryEditorModal: React.FC<{
                 value={formData.imageUrl || ''}
                 onChange={(e) => updateField('imageUrl', e.target.value)}
                 placeholder="https://..."
-                className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-editor-text-primary mb-2">
+              <label className="block text-sm font-medium text-q-text mb-2">
                 Alt de Imagen
               </label>
               <input
@@ -308,14 +308,14 @@ const EntryEditorModal: React.FC<{
                 value={formData.imageAlt || ''}
                 onChange={(e) => updateField('imageAlt', e.target.value)}
                 placeholder="Descripción de la imagen"
-                className="w-full px-4 py-3 bg-editor-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
               />
             </div>
           </div>
 
           {/* Preview Image */}
           {formData.imageUrl && (
-            <div className="rounded-xl border border-editor-border overflow-hidden">
+            <div className="rounded-xl border border-q-border overflow-hidden">
               <img
                 src={formData.imageUrl}
                 alt={formData.imageAlt || 'Preview'}
@@ -328,7 +328,7 @@ const EntryEditorModal: React.FC<{
           )}
 
           {/* Publish Status */}
-          <div className="flex items-center gap-3 p-4 bg-editor-bg/50 rounded-xl border border-editor-border">
+          <div className="flex items-center gap-3 p-4 bg-q-bg/50 rounded-xl border border-q-border">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -336,13 +336,13 @@ const EntryEditorModal: React.FC<{
                 onChange={(e) => updateField('isPublished', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-editor-accent"></div>
+              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-q-accent"></div>
             </label>
             <div>
-              <p className="font-medium text-editor-text-primary">
+              <p className="font-medium text-q-text">
                 {formData.isPublished ? 'Publicado' : 'Borrador'}
               </p>
-              <p className="text-sm text-editor-text-secondary">
+              <p className="text-sm text-q-text-secondary">
                 {formData.isPublished 
                   ? 'Esta entrada es visible para todos los usuarios' 
                   : 'Esta entrada solo es visible para administradores'
@@ -353,11 +353,11 @@ const EntryEditorModal: React.FC<{
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-editor-border bg-editor-bg/30">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-q-border bg-q-bg/30">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+            className="px-4 py-2 text-q-text-secondary hover:text-q-text transition-colors"
           >
             Cancelar
           </button>
@@ -365,7 +365,7 @@ const EntryEditorModal: React.FC<{
             type="submit"
             onClick={handleSubmit}
             disabled={isSaving || !formData.title || !formData.description}
-            className="flex items-center gap-2 px-6 py-2 bg-editor-accent text-white font-semibold rounded-xl hover:bg-editor-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-6 py-2 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isSaving ? (
               <>
@@ -435,15 +435,15 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
   };
 
   return (
-    <div className="h-screen bg-editor-bg flex flex-col">
+    <div className="h-screen bg-q-bg flex flex-col">
       {/* Header */}
-      <header className="h-14 bg-editor-panel-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
+      <header className="h-14 bg-q-surface border-b border-q-border flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
-          <div className="w-px h-5 bg-editor-border hidden sm:block" />
+          <HeaderBackButton onClick={onBack} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
+          <div className="w-px h-5 bg-q-surface-overlay hidden sm:block" />
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-editor-accent" />
-            <h1 className="text-lg font-bold text-editor-text-primary">
+            <Sparkles className="w-5 h-5 text-q-accent" />
+            <h1 className="text-lg font-bold text-q-text">
               Gestión del Changelog
             </h1>
           </div>
@@ -454,14 +454,14 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
             href="/changelog"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-editor-text-secondary hover:text-editor-accent transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-q-text-secondary hover:text-q-accent transition-colors"
           >
             <ExternalLink size={14} />
             <span className="hidden sm:inline">Ver Público</span>
           </a>
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-editor-accent text-white font-semibold rounded-xl hover:bg-editor-accent/90 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Nueva Entrada</span>
@@ -475,16 +475,16 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
           {/* Search and Stats */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-editor-text-secondary" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-q-text-secondary" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar entradas..."
-                className="w-full pl-10 pr-4 py-2.5 bg-editor-panel-bg border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:border-editor-accent"
+                className="w-full pl-10 pr-4 py-2.5 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:border-q-accent"
               />
             </div>
-            <div className="flex items-center gap-4 text-sm text-editor-text-secondary">
+            <div className="flex items-center gap-4 text-sm text-q-text-secondary">
               <span>{entries.length} entradas</span>
               <span>{entries.filter(e => e.isPublished).length} publicadas</span>
             </div>
@@ -492,18 +492,18 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
 
           {/* Seed button if no entries */}
           {entries.length === 0 && !isLoading && (
-            <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-2xl mb-6">
-              <Sparkles className="w-12 h-12 text-editor-accent mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-editor-text-primary mb-2">
+            <div className="text-center py-12 bg-q-surface border border-q-border rounded-2xl mb-6">
+              <Sparkles className="w-12 h-12 text-q-accent mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-q-text mb-2">
                 No hay entradas todavía
               </h3>
-              <p className="text-editor-text-secondary mb-6 max-w-md mx-auto">
+              <p className="text-q-text-secondary mb-6 max-w-md mx-auto">
                 Comienza creando tu primera entrada o genera datos de ejemplo para ver cómo funciona el changelog.
               </p>
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-editor-accent text-white font-semibold rounded-xl hover:bg-editor-accent/90 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-q-accent text-white font-semibold rounded-xl hover:bg-q-accent/90 transition-colors"
                 >
                   <Plus size={18} />
                   Crear Primera Entrada
@@ -511,7 +511,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                 <button
                   onClick={handleSeed}
                   disabled={isSeeding}
-                  className="flex items-center gap-2 px-6 py-3 bg-editor-panel-bg border border-editor-border text-editor-text-primary font-semibold rounded-xl hover:bg-editor-bg transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-6 py-3 bg-q-surface border border-q-border text-q-text font-semibold rounded-xl hover:bg-q-bg transition-colors disabled:opacity-50"
                 >
                   {isSeeding ? (
                     <RefreshCw size={18} className="animate-spin" />
@@ -527,7 +527,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
           {/* Loading */}
           {isLoading && (
             <div className="flex items-center justify-center py-20">
-              <RefreshCw className="w-8 h-8 text-editor-accent animate-spin" />
+              <RefreshCw className="w-8 h-8 text-q-accent animate-spin" />
             </div>
           )}
 
@@ -544,7 +544,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
               {filteredEntries.map((entry) => (
                 <div
                   key={entry.id}
-                  className="bg-editor-panel-bg border border-editor-border rounded-xl p-5 hover:border-editor-accent/30 transition-all group"
+                  className="bg-q-surface border border-q-border rounded-xl p-5 hover:border-q-accent/30 transition-all group"
                 >
                   <div className="flex items-start gap-4">
                     {/* Content */}
@@ -558,7 +558,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                             Borrador
                           </span>
                         )}
-                        <span className="text-xs text-editor-text-secondary flex items-center gap-1">
+                        <span className="text-xs text-q-text-secondary flex items-center gap-1">
                           <Calendar size={12} />
                           {new Date(entry.date).toLocaleDateString('es-ES', {
                             year: 'numeric',
@@ -567,19 +567,19 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                           })}
                         </span>
                         {entry.version && (
-                          <span className="text-xs text-editor-text-secondary bg-editor-bg px-2 py-0.5 rounded">
+                          <span className="text-xs text-q-text-secondary bg-q-bg px-2 py-0.5 rounded">
                             v{entry.version}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-lg font-bold text-editor-text-primary mb-1 line-clamp-1">
+                      <h3 className="text-lg font-bold text-q-text mb-1 line-clamp-1">
                         {entry.title}
                       </h3>
-                      <p className="text-sm text-editor-text-secondary line-clamp-2">
+                      <p className="text-sm text-q-text-secondary line-clamp-2">
                         {entry.description}
                       </p>
                       {entry.features.length > 0 && (
-                        <p className="text-xs text-editor-text-secondary mt-2">
+                        <p className="text-xs text-q-text-secondary mt-2">
                           {entry.features.length} característica{entry.features.length !== 1 ? 's' : ''}
                         </p>
                       )}
@@ -587,7 +587,7 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
 
                     {/* Thumbnail */}
                     {entry.imageUrl && (
-                      <div className="w-24 h-16 rounded-lg overflow-hidden border border-editor-border flex-shrink-0 hidden sm:block">
+                      <div className="w-24 h-16 rounded-lg overflow-hidden border border-q-border flex-shrink-0 hidden sm:block">
                         <img
                           src={entry.imageUrl}
                           alt={entry.imageAlt || entry.title}
@@ -611,14 +611,14 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
                       </button>
                       <button
                         onClick={() => setEditingEntry(entry)}
-                        className="p-2 text-editor-text-secondary hover:text-editor-accent hover:bg-editor-accent/10 rounded-lg transition-colors"
+                        className="p-2 text-q-text-secondary hover:text-q-accent hover:bg-q-accent/10 rounded-lg transition-colors"
                         title="Editar"
                       >
                         <Edit3 size={18} />
                       </button>
                       <button
                         onClick={() => setConfirmDelete(entry.id)}
-                        className="p-2 text-editor-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        className="p-2 text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
                         title="Eliminar"
                       >
                         <Trash2 size={18} />
@@ -633,11 +633,11 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
           {/* No results */}
           {!isLoading && entries.length > 0 && filteredEntries.length === 0 && (
             <div className="text-center py-12">
-              <Search className="w-12 h-12 text-editor-text-secondary mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-editor-text-primary mb-2">
+              <Search className="w-12 h-12 text-q-text-secondary mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-q-text mb-2">
                 No se encontraron resultados
               </h3>
-              <p className="text-editor-text-secondary">
+              <p className="text-q-text-secondary">
                 Intenta con otros términos de búsqueda
               </p>
             </div>
@@ -670,17 +670,17 @@ const ChangelogManagement: React.FC<ChangelogManagementProps> = ({ onBack }) => 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDelete(null)} />
-          <div className="relative bg-editor-panel-bg border border-editor-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-editor-text-primary mb-2">
+          <div className="relative bg-q-surface border border-q-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-q-text mb-2">
               ¿Eliminar esta entrada?
             </h3>
-            <p className="text-editor-text-secondary mb-6">
+            <p className="text-q-text-secondary mb-6">
               Esta acción no se puede deshacer. La entrada será eliminada permanentemente.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                className="px-4 py-2 text-q-text-secondary hover:text-q-text transition-colors"
               >
                 Cancelar
               </button>

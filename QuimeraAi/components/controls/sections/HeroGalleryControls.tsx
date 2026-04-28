@@ -35,15 +35,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Slides */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <PlaySquare size={14} />
           Slides ({slides.length})
         </label>
 
         {slides.map((slide: any, slideIndex: number) => (
-          <div key={slideIndex} className="bg-editor-bg p-4 rounded-lg border border-editor-border mb-4">
+          <div key={slideIndex} className="bg-q-bg p-4 rounded-lg border border-q-border mb-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-editor-accent uppercase">Slide #{slideIndex + 1}</span>
+              <span className="text-xs font-bold text-q-accent uppercase">Slide #{slideIndex + 1}</span>
               {slides.length > 1 && (
                 <button
                   type="button"
@@ -71,8 +71,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </AIFormControl>
 
             {/* CTAs */}
-            <div className="bg-editor-panel-bg/50 p-3 rounded-md border border-editor-border mt-3">
-              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+            <div className="bg-q-surface/50 p-3 rounded-md border border-q-border mt-3">
+              <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                 <Link size={12} />
                 Call to Actions
               </label>
@@ -88,7 +88,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Background Image */}
             <div className="mt-3">
-              <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
                 <Image size={12} />
                 Background Image
               </label>
@@ -124,23 +124,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             };
             setNestedData('heroGallery.slides', [...slides, newSlide]);
           }}
-          className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
+          className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm"
         >
           <Plus size={16} /> Add Slide
         </button>
       </div>
 
       {/* ========== TEXT LAYOUT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Ubicación del Texto
         </label>
 
         {/* Visual 3x3 position grid */}
-        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3 mb-4">
+        <div className="relative bg-q-bg rounded-lg border border-q-border p-3 mb-4">
           {/* Preview area with position indicator */}
-          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-q-border/50 overflow-hidden mb-2">
             {/* Decorative lines representing text */}
             {(() => {
               const hAlign = data?.heroGallery?.textHorizontalAlign || 'left';
@@ -154,9 +154,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
               return (
                 <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  <div className="h-1.5 w-14 rounded-full bg-q-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-q-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-q-accent/25" />
                 </div>
               );
             })()}
@@ -189,15 +189,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   }}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
                     isSelected
-                      ? 'bg-editor-accent/20 border border-editor-accent/50'
-                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                      ? 'bg-q-accent/20 border border-q-accent/50'
+                      : 'bg-q-surface/50 border border-transparent hover:bg-q-surface-overlay/50 hover:border-q-border'
                   }`}
                   style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
                 >
                   <div className={`rounded-full transition-all duration-200 ${
                     isSelected
-                      ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
-                      : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                      ? 'w-2.5 h-2.5 bg-q-accent shadow-[0_0_8px_var(--editor-accent)]'
+                      : 'w-1.5 h-1.5 bg-q-text-secondary/40'
                   }`} />
                 </button>
               );
@@ -210,8 +210,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">      {/* Overlay & Grain */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Image Overlay
         </label>
@@ -240,8 +240,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Hero Height */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Layout
         </label>
@@ -264,36 +264,36 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Slideshow Settings */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <PlaySquare size={14} />
           Slideshow
         </label>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.autoplaySpeedMs')}</label>
           <input
             type="number" min="2000" max="15000" step="500"
             value={data.heroGallery.autoPlaySpeed || 6000}
             onChange={(e) => setNestedData('heroGallery.autoPlaySpeed', parseInt(e.target.value))}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text-primary focus:outline-none focus:ring-1 focus:ring-q-accent"
           />
         </div>
 
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.transitionDurationMs')}</label>
           <input
             type="number" min="300" max="2000" step="100"
             value={data.heroGallery.transitionDuration || 800}
             onChange={(e) => setNestedData('heroGallery.transitionDuration', parseInt(e.target.value))}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text-primary focus:outline-none focus:ring-1 focus:ring-q-accent"
           />
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.navigation')}</label>
         <ToggleControl label={t('controls.showArrows')} checked={data.heroGallery.showArrows ?? true} onChange={(v) => setNestedData('heroGallery.showArrows', v)} />
         <ToggleControl label={t('controls.showDots')} checked={data.heroGallery.showDots ?? true} onChange={(v) => setNestedData('heroGallery.showDots', v)} />
 
@@ -312,8 +312,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>
@@ -326,14 +326,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           {(data.heroGallery.showArrows ?? true) && (
             <>
-              <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Arrows</p>
+              <p className="text-[10px] text-q-text-secondary uppercase tracking-wider font-bold mt-2">Arrows</p>
               <ColorControl label={t('controls.arrowColor')} value={data.heroGallery.colors?.arrowColor || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.arrowColor', v)} />
             </>
           )}
 
           {(data.heroGallery.showDots ?? true) && (
             <>
-              <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold mt-2">Dots</p>
+              <p className="text-[10px] text-q-text-secondary uppercase tracking-wider font-bold mt-2">Dots</p>
               <ColorControl label={t('controls.activeDot')} value={data.heroGallery.colors?.dotActive || '#ffffff'} onChange={(v) => setNestedData('heroGallery.colors.dotActive', v)} />
               <ColorControl label={t('controls.inactiveDot')} value={data.heroGallery.colors?.dotInactive || 'rgba(255,255,255,0.5)'} onChange={(v) => setNestedData('heroGallery.colors.dotInactive', v)} />
             </>

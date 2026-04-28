@@ -84,14 +84,14 @@ export function AgencyPlanDropdown({
                 disabled={disabled || loading}
                 className={`
                     w-full flex items-center justify-between px-4 py-2.5 
-                    bg-background border border-border rounded-lg text-left
+                    bg-q-bg border border-q-border rounded-lg text-left
                     transition-colors
                     ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary cursor-pointer'}
                     ${isOpen ? 'border-primary ring-2 ring-primary/20' : ''}
                 `}
             >
                 {loading ? (
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-q-text-muted">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Cargando planes...</span>
                     </div>
@@ -111,23 +111,23 @@ export function AgencyPlanDropdown({
                                 )}
                             </div>
                             {showPricing && (
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-sm text-q-text-muted">
                                     {formatCurrency(selectedPlan.price)}/mes
                                 </span>
                             )}
                         </div>
                     </div>
                 ) : (
-                    <span className="text-muted-foreground">{placeholder}</span>
+                    <span className="text-q-text-muted">{placeholder}</span>
                 )}
                 {!loading && (
-                    isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    isOpen ? <ChevronUp className="w-4 h-4 text-q-text-muted" /> : <ChevronDown className="w-4 h-4 text-q-text-muted" />
                 )}
             </button>
 
             {/* Dropdown */}
             {isOpen && plans.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-q-surface border border-q-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
                     {/* No plan option */}
                     <button
                         type="button"
@@ -139,10 +139,10 @@ export function AgencyPlanDropdown({
                         `}
                     >
                         <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                            <Package className="w-4 h-4 text-muted-foreground" />
+                            <Package className="w-4 h-4 text-q-text-muted" />
                         </div>
                         <div className="flex-1">
-                            <span className="text-muted-foreground">Sin plan asignado</span>
+                            <span className="text-q-text-muted">Sin plan asignado</span>
                         </div>
                         {!selectedPlanId && <Check className="w-4 h-4 text-primary" />}
                     </button>
@@ -155,7 +155,7 @@ export function AgencyPlanDropdown({
                             onClick={() => handleSelect(plan)}
                             className={`
                                 w-full flex items-center gap-3 px-4 py-3 text-left
-                                hover:bg-muted/50 transition-colors border-t border-border
+                                hover:bg-muted/50 transition-colors border-t border-q-border
                                 ${selectedPlanId === plan.id ? 'bg-muted/30' : ''}
                             `}
                         >
@@ -176,7 +176,7 @@ export function AgencyPlanDropdown({
                                     )}
                                 </div>
                                 {showPricing && (
-                                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-3 text-sm text-q-text-muted">
                                         <span>{formatCurrency(plan.price)}/mes</span>
                                         <span>•</span>
                                         <span>{plan.limits.maxProjects === -1 ? '∞' : plan.limits.maxProjects} proyectos</span>
@@ -191,9 +191,9 @@ export function AgencyPlanDropdown({
 
             {/* Empty state */}
             {isOpen && plans.length === 0 && !loading && (
-                <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg p-4 text-center">
-                    <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">
+                <div className="absolute z-50 w-full mt-1 bg-q-surface border border-q-border rounded-lg shadow-lg p-4 text-center">
+                    <AlertCircle className="w-8 h-8 text-q-text-muted mx-auto mb-2" />
+                    <p className="text-sm text-q-text-muted">
                         No hay planes creados aún.
                     </p>
                 </div>
@@ -249,7 +249,7 @@ export function AgencyPlanCardSelector({
     if (loading) {
         return (
             <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                <Loader2 className="w-6 h-6 animate-spin text-q-text-muted" />
             </div>
         );
     }
@@ -257,8 +257,8 @@ export function AgencyPlanCardSelector({
     if (plans.length === 0) {
         return (
             <div className="text-center py-8">
-                <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay planes disponibles</p>
+                <Package className="w-10 h-10 text-q-text-muted mx-auto mb-3" />
+                <p className="text-q-text-muted">No hay planes disponibles</p>
             </div>
         );
     }
@@ -278,7 +278,7 @@ export function AgencyPlanCardSelector({
                             relative p-4 rounded-xl border-2 text-left transition-all
                             ${isSelected 
                                 ? 'border-primary bg-primary/5' 
-                                : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                                : 'border-q-border hover:border-primary/50 hover:bg-muted/30'
                             }
                         `}
                     >
@@ -308,7 +308,7 @@ export function AgencyPlanCardSelector({
                                 </div>
                                 <span className="text-lg font-bold text-foreground">
                                     {formatCurrency(plan.price)}
-                                    <span className="text-sm font-normal text-muted-foreground">/mes</span>
+                                    <span className="text-sm font-normal text-q-text-muted">/mes</span>
                                 </span>
                             </div>
                         </div>
@@ -316,19 +316,19 @@ export function AgencyPlanCardSelector({
                         {/* Details */}
                         {showDetails && (
                             <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-q-text-muted">
                                     <Database className="w-4 h-4" />
                                     <span>
                                         {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects} proyectos
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-q-text-muted">
                                     <Users className="w-4 h-4" />
                                     <span>
                                         {plan.limits.maxUsers === -1 ? 'Ilimitados' : plan.limits.maxUsers} usuarios
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-q-text-muted">
                                     <Zap className="w-4 h-4" />
                                     <span>
                                         {plan.limits.maxAiCredits === -1 ? 'Ilimitados' : plan.limits.maxAiCredits.toLocaleString()} AI credits
@@ -339,8 +339,8 @@ export function AgencyPlanCardSelector({
 
                         {/* Clients badge */}
                         {plan.clientCount > 0 && (
-                            <div className="mt-3 pt-3 border-t border-border">
-                                <span className="text-xs text-muted-foreground">
+                            <div className="mt-3 pt-3 border-t border-q-border">
+                                <span className="text-xs text-q-text-muted">
                                     {plan.clientCount} cliente{plan.clientCount !== 1 ? 's' : ''} usando este plan
                                 </span>
                             </div>
@@ -414,11 +414,11 @@ export function AssignPlanModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-lg shadow-xl">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg shadow-xl">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-border">
+                <div className="px-6 py-4 border-b border-q-border">
                     <h3 className="text-lg font-semibold text-foreground">Asignar Plan</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-q-text-muted">
                         Selecciona un plan para <span className="font-medium text-foreground">{clientName}</span>
                     </p>
                 </div>
@@ -440,7 +440,7 @@ export function AssignPlanModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-foreground hover:bg-muted rounded-lg transition-colors"

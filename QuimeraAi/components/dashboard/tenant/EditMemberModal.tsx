@@ -154,31 +154,31 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             {/* Modal */}
             <div className="flex min-h-full items-center justify-center p-4">
                 <div
-                    className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl transform transition-all"
+                    className="relative w-full max-w-lg bg-q-surface border border-q-border rounded-2xl shadow-2xl transform transition-all"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-border">
+                    <div className="flex items-center justify-between p-6 border-b border-q-border">
                         <div className="flex items-center gap-3">
                             {member.userPhotoURL ? (
-                                <img src={member.userPhotoURL} alt={member.userName} className="w-10 h-10 rounded-full object-cover border border-border" />
+                                <img src={member.userPhotoURL} alt={member.userName} className="w-10 h-10 rounded-full object-cover border border-q-border" />
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-border">
-                                    <User size={20} className="text-muted-foreground" />
+                                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-q-border">
+                                    <User size={20} className="text-q-text-muted" />
                                 </div>
                             )}
                             <div>
                                 <h2 className="text-lg font-bold text-foreground">
                                     {member.userName || member.userEmail}
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     {member.userEmail}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -194,13 +194,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                     {t('team.jobTitle', 'Cargo')}
                                 </label>
                                 <div className="relative">
-                                    <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
                                         placeholder="e.g. Designer"
-                                        className="w-full pl-9 pr-3 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="w-full pl-9 pr-3 py-2.5 bg-q-bg border border-q-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
@@ -209,13 +209,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                     {t('team.department', 'Departamento')}
                                 </label>
                                 <div className="relative">
-                                    <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                     <input
                                         type="text"
                                         value={department}
                                         onChange={e => setDepartment(e.target.value)}
                                         placeholder="e.g. Marketing"
-                                        className="w-full pl-9 pr-3 py-2.5 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                        className="w-full pl-9 pr-3 py-2.5 bg-q-bg border border-q-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     />
                                 </div>
                             </div>
@@ -236,7 +236,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                             w-full flex items-start gap-3 p-4 rounded-xl border transition-all text-left
                                             ${selectedRole === role
                                                 ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                                                : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                                                : 'border-q-border hover:border-primary/50 hover:bg-secondary/50'
                                             }
                                         `}
                                         disabled={isLoading}
@@ -246,7 +246,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                             <p className="font-medium text-foreground text-sm">
                                                 {AGENCY_ROLE_LABELS[role]}
                                             </p>
-                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                            <p className="text-xs text-q-text-muted mt-0.5">
                                                 {AGENCY_ROLE_DESCRIPTIONS[role]}
                                             </p>
                                         </div>
@@ -277,7 +277,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                         )}
 
                         {/* Actions */}
-                        <div className="flex items-center justify-between pt-2 border-t border-border mt-6">
+                        <div className="flex items-center justify-between pt-2 border-t border-q-border mt-6">
                             {!isDeleteConfirm ? (
                                 <button
                                     type="button"
@@ -288,7 +288,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                                    <span className="text-xs text-muted-foreground">¿Seguro?</span>
+                                    <span className="text-xs text-q-text-muted">¿Seguro?</span>
                                     <button
                                         type="button"
                                         onClick={handleRemoveMember}
@@ -300,7 +300,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setIsDeleteConfirm(false)}
-                                        className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
+                                        className="text-xs text-q-text-muted hover:text-foreground px-2 py-1"
                                     >
                                         Cancelar
                                     </button>
@@ -311,7 +311,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+                                    className="px-4 py-2.5 text-sm text-q-text-muted hover:text-foreground transition-colors font-medium"
                                     disabled={isLoading}
                                 >
                                     {t('common.cancel', 'Cancelar')}

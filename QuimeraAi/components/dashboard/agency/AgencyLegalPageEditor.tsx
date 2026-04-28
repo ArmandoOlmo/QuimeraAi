@@ -150,20 +150,20 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
 
     return (
         <>
-            <div className="flex flex-col h-screen bg-background">
+            <div className="flex flex-col h-screen bg-q-bg">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                            className="flex items-center gap-2 text-q-text-secondary hover:text-q-text transition-colors"
                         >
                             <ArrowLeft size={18} />
                             Volver
                         </button>
                         <div className="flex items-center gap-2">
-                            <Shield className="text-editor-accent" size={20} />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">
+                            <Shield className="text-q-accent" size={20} />
+                            <h1 className="text-lg font-semibold text-q-text">
                                 {AGENCY_LEGAL_PAGE_LABELS[pageType]}
                             </h1>
                         </div>
@@ -184,55 +184,55 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 overflow-y-auto p-6 bg-[#f6f6f7] dark:bg-background">
+                <main className="flex-1 overflow-y-auto p-6 bg-[#f6f6f7] dark:bg-q-bg">
                     <div className="max-w-4xl mx-auto space-y-6">
                         {/* Basic Info */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <h2 className="font-semibold mb-4">Información General</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Título
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.title}
                                         onChange={(e) => updateForm('title', e.target.value)}
-                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Email de Contacto
                                     </label>
                                     <input
                                         type="email"
                                         value={formData.contactEmail || ''}
                                         onChange={(e) => updateForm('contactEmail', e.target.value)}
-                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                         placeholder="privacy@example.com"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Subtítulo / Descripción
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.subtitle || ''}
                                         onChange={(e) => updateForm('subtitle', e.target.value)}
-                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                         placeholder="Breve descripción de la página"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Estado
                                     </label>
                                     <select
                                         value={formData.status}
                                         onChange={(e) => updateForm('status', e.target.value as 'published' | 'draft')}
-                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                     >
                                         <option value="draft">Borrador</option>
                                         <option value="published">Publicado</option>
@@ -242,7 +242,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                         </div>
 
                         {/* Sections */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="font-semibold">Secciones del Documento</h2>
                                 <button
@@ -256,9 +256,9 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
 
                             {formData.sections.length === 0 ? (
                                 <div className="text-center py-12 bg-secondary/20 rounded-lg">
-                                    <FileText className="w-12 h-12 mx-auto text-muted-foreground opacity-30 mb-3" />
-                                    <p className="text-muted-foreground mb-2">No hay secciones</p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <FileText className="w-12 h-12 mx-auto text-q-text-muted opacity-30 mb-3" />
+                                    <p className="text-q-text-muted mb-2">No hay secciones</p>
+                                    <p className="text-sm text-q-text-muted">
                                         Añade secciones para estructurar el contenido de esta página legal.
                                     </p>
                                 </div>
@@ -278,7 +278,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                     className="flex items-center gap-3 p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
                                                     onClick={() => setExpandedSection(isExpanded ? null : section.id)}
                                                 >
-                                                    <GripVertical size={16} className="text-muted-foreground" />
+                                                    <GripVertical size={16} className="text-q-text-muted" />
                                                     <div className="p-2 bg-primary/10 rounded-lg">
                                                         <IconComponent size={16} className="text-primary" />
                                                     </div>
@@ -287,20 +287,20 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                         <button
                                                             onClick={() => moveSection(index, 'up')}
                                                             disabled={index === 0}
-                                                            className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                                            className="p-1.5 text-q-text-muted hover:text-foreground disabled:opacity-30 transition-colors"
                                                         >
                                                             <ChevronUp size={14} />
                                                         </button>
                                                         <button
                                                             onClick={() => moveSection(index, 'down')}
                                                             disabled={index === formData.sections.length - 1}
-                                                            className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                                                            className="p-1.5 text-q-text-muted hover:text-foreground disabled:opacity-30 transition-colors"
                                                         >
                                                             <ChevronDown size={14} />
                                                         </button>
                                                         <button
                                                             onClick={() => deleteSection(section.id)}
-                                                            className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors"
+                                                            className="p-1.5 text-q-text-muted hover:text-red-500 transition-colors"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -310,27 +310,27 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
 
                                                 {/* Section Content */}
                                                 {isExpanded && (
-                                                    <div className="p-4 pt-0 space-y-4 border-t border-border/50">
+                                                    <div className="p-4 pt-0 space-y-4 border-t border-q-border/50">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                     Título de la Sección
                                                                 </label>
                                                                 <input
                                                                     type="text"
                                                                     value={section.title}
                                                                     onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                                                                    className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                     Icono
                                                                 </label>
                                                                 <select
                                                                     value={section.icon || 'FileText'}
                                                                     onChange={(e) => updateSection(section.id, { icon: e.target.value })}
-                                                                    className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                                                 >
                                                                     {AVAILABLE_ICONS.map(icon => (
                                                                         <option key={icon.id} value={icon.id}>{icon.label}</option>
@@ -339,17 +339,17 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 Contenido (Markdown soportado)
                                                             </label>
                                                             <textarea
                                                                 value={section.content}
                                                                 onChange={(e) => updateSection(section.id, { content: e.target.value })}
                                                                 rows={8}
-                                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary font-mono text-sm resize-y"
+                                                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary font-mono text-sm resize-y"
                                                                 placeholder="Escribe el contenido de esta sección. Puedes usar markdown para formatear."
                                                             />
-                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                            <p className="text-xs text-q-text-muted mt-1">
                                                                 Usa **texto** para negrita, - para listas, \n para saltos de línea
                                                             </p>
                                                         </div>
@@ -363,7 +363,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                         </div>
 
                         {/* Preview Link */}
-                        <div className="bg-card border border-border rounded-xl p-6">
+                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                             <h2 className="font-semibold mb-4">Vista Previa</h2>
                             <div className="flex items-center gap-4">
                                 <a
@@ -375,7 +375,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                                     <Eye size={16} />
                                     Ver página pública
                                 </a>
-                                <span className="text-sm text-muted-foreground">
+                                <span className="text-sm text-q-text-muted">
                                     URL: /{pageType}
                                 </span>
                             </div>

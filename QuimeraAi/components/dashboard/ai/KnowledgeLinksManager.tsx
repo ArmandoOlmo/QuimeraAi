@@ -202,7 +202,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
             {/* URL Input */}
             <div className="flex gap-2">
                 <div className="relative flex-1">
-                    <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                     <input
                         type="text"
                         value={urlInput}
@@ -212,7 +212,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                         }}
                         onKeyDown={handleKeyDown}
                         placeholder={t('aiAssistant.knowledgeLinks.urlPlaceholder')}
-                        className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full bg-q-surface border border-q-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         disabled={isExtracting}
                     />
                     {urlInput && (
@@ -247,7 +247,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
             )}
 
             {/* Hint */}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-q-text-muted">
                 {t('aiAssistant.knowledgeLinks.hint')}
             </p>
 
@@ -255,7 +255,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
             {links.length > 0 && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <span className="text-xs font-medium text-q-text-muted uppercase tracking-wider">
                             {t('aiAssistant.knowledgeLinks.addedLinks')}
                             {readyCount > 0 && (
                                 <span className="ml-1 text-green-500">
@@ -273,7 +273,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                                         ? 'bg-red-500/5 border-red-500/20'
                                         : link.status === 'ready'
                                             ? 'bg-green-500/5 border-green-500/20'
-                                            : 'bg-card border-border'
+                                            : 'bg-q-surface border-q-border'
                                     }`}
                             >
                                 {/* Type/Status Icon */}
@@ -293,7 +293,7 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-muted-foreground hover:text-primary truncate flex items-center gap-1 mt-0.5"
+                                        className="text-xs text-q-text-muted hover:text-primary truncate flex items-center gap-1 mt-0.5"
                                     >
                                         {link.url}
                                         <ExternalLink size={10} />
@@ -349,12 +349,12 @@ const KnowledgeLinksManager: React.FC<KnowledgeLinksManagerProps> = ({
 
             {/* Empty State */}
             {links.length === 0 && (
-                <div className="text-center py-8 bg-secondary/10 rounded-xl border border-dashed border-border">
-                    <Link2 className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-                    <p className="text-sm text-muted-foreground">
+                <div className="text-center py-8 bg-secondary/10 rounded-xl border border-dashed border-q-border">
+                    <Link2 className="w-10 h-10 mx-auto text-q-text-muted/40 mb-3" />
+                    <p className="text-sm text-q-text-muted">
                         {t('aiAssistant.knowledgeLinks.noLinks')}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-q-text-muted mt-1">
                         {t('aiAssistant.knowledgeLinks.noLinksDesc')}
                     </p>
                 </div>

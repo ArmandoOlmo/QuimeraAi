@@ -89,9 +89,9 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
-            <div className="p-6 border-b border-editor-border flex justify-between items-center">
+            <div className="p-6 border-b border-q-border flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-white">{promptToEdit ? 'Edit Prompt' : 'Create New Prompt'}</h2>
-                <button onClick={onClose} className="p-1 rounded-full hover:bg-editor-border"><X /></button>
+                <button onClick={onClose} className="p-1 rounded-full hover:bg-q-surface-overlay"><X /></button>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -100,11 +100,11 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="prompt-name" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.promptName')}</label>
-                            <input id="prompt-name" name="name" type="text" value={formData.name} onChange={handleChange} required className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" />
+                            <label htmlFor="prompt-name" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.promptName')}</label>
+                            <input id="prompt-name" name="name" type="text" value={formData.name} onChange={handleChange} required className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none" />
                         </div>
                         <div>
-                            <label htmlFor="prompt-area" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.areaCategory')}</label>
+                            <label htmlFor="prompt-area" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.areaCategory')}</label>
                             <DashboardSelect
                                 value={formData.area}
                                 onChange={(val) => setFormData(prev => ({ ...prev, area: val as any }))}
@@ -120,17 +120,17 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                     </div>
 
                     <div>
-                        <label htmlFor="prompt-description" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.description')}</label>
-                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" placeholder={t('superadmin.descriptionPlaceholder')} />
+                        <label htmlFor="prompt-description" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.description')}</label>
+                        <textarea id="prompt-description" name="description" value={formData.description} onChange={handleChange} required rows={2} className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none" placeholder={t('superadmin.descriptionPlaceholder')} />
                     </div>
                     <div>
-                        <label htmlFor="prompt-template" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.template')}</label>
-                        <p className="text-xs text-editor-text-secondary/70 mb-2">{'Use placeholders like `{{businessName}}` or `{{context}}` which will be replaced dynamically.'}</p>
-                        <textarea id="prompt-template" name="template" value={formData.template} onChange={handleChange} required rows={8} className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border font-mono text-sm focus:ring-2 focus:ring-editor-accent focus:outline-none" />
+                        <label htmlFor="prompt-template" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.template')}</label>
+                        <p className="text-xs text-q-text-secondary/70 mb-2">{'Use placeholders like `{{businessName}}` or `{{context}}` which will be replaced dynamically.'}</p>
+                        <textarea id="prompt-template" name="template" value={formData.template} onChange={handleChange} required rows={8} className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border font-mono text-sm focus:ring-2 focus:ring-q-accent focus:outline-none" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="prompt-model" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.model')}</label>
+                            <label htmlFor="prompt-model" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.model')}</label>
                             <DashboardSelect
                                 value={formData.model}
                                 onChange={(val) => setFormData(prev => ({ ...prev, model: val }))}
@@ -149,15 +149,15 @@ const PromptEditorModal: React.FC<PromptEditorModalProps> = ({ isOpen, onClose, 
                             />
                         </div>
                         <div>
-                            <label htmlFor="prompt-version" className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.version')}</label>
-                            <input id="prompt-version" name="version" type="number" min="1" value={formData.version} onChange={handleChange} required className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" />
+                            <label htmlFor="prompt-version" className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.version')}</label>
+                            <input id="prompt-version" name="version" type="number" min="1" value={formData.version} onChange={handleChange} required className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none" />
                         </div>
                     </div>
                 </div>
 
-                <div className="p-6 bg-editor-panel-bg/50 border-t border-editor-border flex justify-end items-center space-x-3">
-                    <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border transition-colors">{t('superadmin.cancel')}</button>
-                    <button type="submit" disabled={isLoading} className="bg-editor-accent text-editor-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-editor-accent-hover transition-colors disabled:opacity-50 flex items-center">
+                <div className="p-6 bg-q-surface/50 border-t border-q-border flex justify-end items-center space-x-3">
+                    <button type="button" onClick={onClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-q-surface-overlay transition-colors">{t('superadmin.cancel')}</button>
+                    <button type="submit" disabled={isLoading} className="bg-q-accent text-q-bg font-bold py-2 px-5 rounded-lg shadow-md hover:bg-q-accent transition-colors disabled:opacity-50 flex items-center">
                         {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
                         {isLoading ? t('superadmin.saving') : t('superadmin.savePrompt')}
                     </button>

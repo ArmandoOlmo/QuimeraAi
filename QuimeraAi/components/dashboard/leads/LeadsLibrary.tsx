@@ -112,13 +112,13 @@ const LeadsLibrary: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-background">
+        <div className="flex flex-col h-full bg-q-bg">
             {/* Header & Metrics */}
-            <div className="p-6 border-b border-border space-y-6">
+            <div className="p-6 border-b border-q-border space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl font-bold text-foreground">{t('leads.library.title')}</h2>
-                        <p className="text-muted-foreground">{t('leads.library.description')}</p>
+                        <p className="text-q-text-muted">{t('leads.library.description')}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -133,30 +133,30 @@ const LeadsLibrary: React.FC = () => {
 
                 {/* Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-card border border-border p-4 rounded-xl">
+                    <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">{t('leads.totalLeads')}</span>
+                            <span className="text-sm text-q-text-muted font-medium">{t('leads.totalLeads')}</span>
                             <Users size={16} className="text-primary" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.total}</p>
                     </div>
-                    <div className="bg-card border border-border p-4 rounded-xl">
+                    <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">{t('leads.imported')}</span>
+                            <span className="text-sm text-q-text-muted font-medium">{t('leads.imported')}</span>
                             <CheckCircle2 size={16} className="text-green-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.imported}</p>
                     </div>
-                    <div className="bg-card border border-border p-4 rounded-xl">
+                    <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">{t('leads.pending')}</span>
+                            <span className="text-sm text-q-text-muted font-medium">{t('leads.pending')}</span>
                             <Clock size={16} className="text-yellow-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.notImported}</p>
                     </div>
-                    <div className="bg-card border border-border p-4 rounded-xl">
+                    <div className="bg-q-surface border border-q-border p-4 rounded-xl">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground font-medium">{t('leads.importRate')}</span>
+                            <span className="text-sm text-q-text-muted font-medium">{t('leads.importRate')}</span>
                             <RefreshCw size={16} className="text-blue-500" />
                         </div>
                         <p className="text-2xl font-bold text-foreground">{metrics.importRate}%</p>
@@ -166,8 +166,8 @@ const LeadsLibrary: React.FC = () => {
 
             {/* Actions Bar */}
             <div className="px-6 py-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2 flex-1 max-w-md bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                <div className="flex items-center gap-2 flex-1 max-w-md bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('common.search') + '...'}
@@ -176,7 +176,7 @@ const LeadsLibrary: React.FC = () => {
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
                     {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                        <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                             <X size={16} />
                         </button>
                     )}
@@ -184,7 +184,7 @@ const LeadsLibrary: React.FC = () => {
 
                 {selectedLeadIds.length > 0 && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-200">
-                        <span className="text-sm font-medium text-muted-foreground mr-2">
+                        <span className="text-sm font-medium text-q-text-muted mr-2">
                             {selectedLeadIds.length} selected
                         </span>
                         <button
@@ -208,16 +208,16 @@ const LeadsLibrary: React.FC = () => {
 
             {/* Table */}
             <div className="flex-1 overflow-auto px-6 pb-6">
-                <div className="border border-border rounded-xl overflow-hidden bg-card">
+                <div className="border border-q-border rounded-xl overflow-hidden bg-q-surface">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
+                        <thead className="bg-muted/50 text-q-text-muted font-medium border-b border-q-border">
                             <tr>
                                 <th className="p-4 w-10">
                                     <input
                                         type="checkbox"
                                         checked={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="rounded border-border text-primary focus:ring-primary/20"
+                                        className="rounded border-q-border text-primary focus:ring-primary/20"
                                     />
                                 </th>
                                 <th className="p-4">{t('common.name')}</th>
@@ -231,13 +231,13 @@ const LeadsLibrary: React.FC = () => {
                         <tbody className="divide-y divide-border">
                             {isLoadingLibraryLeads ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                                    <td colSpan={7} className="p-8 text-center text-q-text-muted">
                                         {t('common.loading')}
                                     </td>
                                 </tr>
                             ) : filteredLeads.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                                    <td colSpan={7} className="p-8 text-center text-q-text-muted">
                                         {t('leads.noLeadsFound')}
                                     </td>
                                 </tr>
@@ -249,12 +249,12 @@ const LeadsLibrary: React.FC = () => {
                                                 type="checkbox"
                                                 checked={selectedLeadIds.includes(lead.id)}
                                                 onChange={() => toggleSelect(lead.id)}
-                                                className="rounded border-border text-primary focus:ring-primary/20"
+                                                className="rounded border-q-border text-primary focus:ring-primary/20"
                                             />
                                         </td>
                                         <td className="p-4 font-medium text-foreground">{lead.name}</td>
-                                        <td className="p-4 text-muted-foreground">{lead.email}</td>
-                                        <td className="p-4 text-muted-foreground">{lead.company || '-'}</td>
+                                        <td className="p-4 text-q-text-muted">{lead.email}</td>
+                                        <td className="p-4 text-q-text-muted">{lead.company || '-'}</td>
                                         <td className="p-4">
                                             <span className="px-2 py-1 rounded-full bg-secondary/50 text-xs font-medium">
                                                 {lead.source}
@@ -271,7 +271,7 @@ const LeadsLibrary: React.FC = () => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="p-4 text-muted-foreground">
+                                        <td className="p-4 text-q-text-muted">
                                             {new Date(lead.createdAt.seconds * 1000).toLocaleDateString()}
                                         </td>
                                     </tr>

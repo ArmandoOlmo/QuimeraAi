@@ -32,8 +32,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Team Variant Selector */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.teamStyle')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.teamStyle')}</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'classic', label: 'Classic' },
@@ -44,8 +44,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <button type="button"               key={variant.value}
               onClick={() => setNestedData('team.teamVariant', variant.value)}
               className={`p-2 text-xs font-medium rounded-md border transition-all ${(data?.team?.teamVariant || 'classic') === variant.value
-                ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                : 'bg-editor-panel-bg text-editor-text-secondary border-editor-border hover:border-editor-accent'
+                ? 'bg-q-accent text-q-bg border-q-accent'
+                : 'bg-q-surface text-q-text-secondary border-q-border hover:border-q-accent'
                 }`}
             >
               {variant.label}
@@ -64,9 +64,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Team Members */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.teamMembers')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.teamMembers')}</label>
       {(data?.team?.items || []).map((member: any, index: number) => (
-        <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3">
+        <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3">
           <ImagePicker
             label={`${t('editor.controls.team.member')} #${index + 1}`}
             value={member.imageUrl}
@@ -82,12 +82,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Input label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(e) => setNestedData(`team.items.${index}.bio`, e.target.value)} placeholder="Short bio shown on hover" />
 
           {/* Link Controls */}
-          <div className="mt-3 pt-3 border-t border-editor-border/50">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider flex items-center gap-1">
+          <div className="mt-3 pt-3 border-t border-q-border/50">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider flex items-center gap-1">
               <Link size={12} />
               Perfil / Enlace
             </label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 mb-2">
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1 mb-2">
               {[
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Contenido' }
@@ -95,8 +95,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`team.items.${index}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(member.linkType || 'manual') === type.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                     }`}
                 >
                   {type.label}
@@ -108,7 +108,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 placeholder="https://... o /pagina"
                 value={member.linkUrl || ''}
                 onChange={(e) => setNestedData(`team.items.${index}.linkUrl`, e.target.value)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent"
+                className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
               />
             )}
             {member.linkType === 'content' && (
@@ -127,7 +127,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           const newItems = [...(data?.team?.items || []), { name: 'New Member', role: 'Role', imageUrl: '' }];
           setNestedData('team.items', newItems);
         }}
-        className="w-full py-2 border border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
+        className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
         <Plus size={14} /> Add Member
       </button>
@@ -137,8 +137,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="team" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.team?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('team.colors.background', v)} />
         <ColorControl label={t('controls.sectionTitle')} value={data?.team?.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('team.colors.heading', v)} />
         <ColorControl label={t('controls.sectionDescription')} value={data?.team?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('team.colors.description', v)} />
@@ -147,8 +147,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Card Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardColors')}</label>
         <ColorControl label={t('controls.cardBackground')} value={data?.team?.colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={(v) => setNestedData('team.colors.cardBackground', v)} />
         <ColorControl label={t('controls.cardName')} value={data?.team?.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('team.colors.cardHeading', v)} />
         <ColorControl label={t('controls.cardRole')} value={data?.team?.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('team.colors.cardText', v)} />
@@ -157,8 +157,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data?.team?.paddingY || 'md'} onChange={(v) => setNestedData('team.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.team?.paddingX || 'md'} onChange={(v) => setNestedData('team.paddingX', v)} />

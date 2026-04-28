@@ -17,33 +17,33 @@ import { X, Check, Search, ChevronDown, ChevronUp, ChevronRight, FolderOpen, Pac
 // Helper Components (same as in Controls.tsx)
 const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
     <div className={`mb-3 ${className || ''}`}>
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <input
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
 
 const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) => (
     <div className={`mb-3 ${className || ''}`}>
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <textarea
             {...props}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent resize-y min-h-[80px] transition-all placeholder:text-editor-text-secondary/50"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent resize-y min-h-[80px] transition-all placeholder:text-q-text-secondary/50"
         />
     </div>
 );
 
 const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
     <div className={`flex items-center ${label ? 'justify-between mb-3' : ''}`}>
-        {label && <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>}
+        {label && <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>}
         <button
             type="button"
             role="switch"
             aria-checked={checked}
             onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
         >
             <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
         </button>
@@ -52,10 +52,10 @@ const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: 
 
 const FontSizeSelector = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <div className="flex bg-q-surface rounded-md border border-q-border p-1">
             {['sm', 'md', 'lg', 'xl'].map((size) => (
-                <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
+                <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}>
                     {size.toUpperCase()}
                 </button>
             ))}
@@ -73,10 +73,10 @@ const PaddingSelector = ({ label, value, onChange, showNone, showXl }: { label: 
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {sizes.map((size) => (
-                    <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
+                    <button key={size} onClick={() => onChange(size)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}>
                         {size.toUpperCase()}
                     </button>
                 ))}
@@ -105,10 +105,10 @@ const BorderRadiusSelector = ({ label, value, onChange, extended }: { label: str
         ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
-                    <button key={opt.v} onClick={() => onChange(opt.v)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}>
+                    <button key={opt.v} onClick={() => onChange(opt.v)} className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}>
                         {opt.l}
                     </button>
                 ))}
@@ -119,11 +119,11 @@ const BorderRadiusSelector = ({ label, value, onChange, extended }: { label: str
 
 const SelectControl = ({ label, value, options, onChange }: { label: string, value: string, options: { value: string, label: string }[], onChange: (val: string) => void }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
         >
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -135,8 +135,8 @@ const SelectControl = ({ label, value, options, onChange }: { label: string, val
 const SliderControl = ({ label, value, min, max, step, onChange }: { label: string, value: number, min: number, max: number, step: number, onChange: (val: number) => void }) => (
     <div className="mb-3">
         <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
-            <span className="text-xs text-editor-text-primary">{value}</span>
+            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+            <span className="text-xs text-q-text">{value}</span>
         </div>
         <input
             type="range"
@@ -145,7 +145,7 @@ const SliderControl = ({ label, value, min, max, step, onChange }: { label: stri
             step={step}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
     </div>
 );
@@ -163,11 +163,11 @@ const VisibilityContextSelector = ({
 }) => {
     const { t } = useTranslation();
     return (
-        <div className="mb-4 p-3 bg-editor-bg rounded-lg border border-editor-border">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+        <div className="mb-4 p-3 bg-q-bg rounded-lg border border-q-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">
                 {t('editor.controls.ecommerce.visibility.label', 'Show in')}
             </label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1 gap-1">
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1 gap-1">
                 {[
                     { value: 'both', label: t('editor.controls.ecommerce.visibility.both', 'Both'), icon: '🔗' },
                     { value: 'landing', label: t('editor.controls.ecommerce.visibility.landing', 'Landing Only'), icon: '🏠' },
@@ -177,8 +177,8 @@ const VisibilityContextSelector = ({
                         key={opt.value}
                         onClick={() => onChange(opt.value as ComponentVisibilityContext)}
                         className={`flex-1 py-2 px-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1 ${(value || 'both') === opt.value
-                            ? 'bg-editor-accent text-editor-bg shadow-sm'
-                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                            ? 'bg-q-accent text-q-bg shadow-sm'
+                            : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                             }`}
                     >
                         <span>{opt.icon}</span>
@@ -186,7 +186,7 @@ const VisibilityContextSelector = ({
                     </button>
                 ))}
             </div>
-            <p className="text-[10px] text-editor-text-secondary mt-2 leading-tight">
+            <p className="text-[10px] text-q-text-secondary mt-2 leading-tight">
                 • <strong>{t('editor.controls.ecommerce.visibility.both', 'Both')}:</strong> {t('editor.controls.ecommerce.visibility.bothDesc', 'Visible on landing page and store')}<br />
                 • <strong>{t('editor.controls.ecommerce.visibility.landing', 'Landing Only')}:</strong> {t('editor.controls.ecommerce.visibility.landingDesc', 'Only on the main page')}<br />
                 • <strong>{t('editor.controls.ecommerce.visibility.store', 'Store Only')}:</strong> {t('editor.controls.ecommerce.visibility.storeDesc', 'Only on store/category/product views')}
@@ -197,7 +197,7 @@ const VisibilityContextSelector = ({
 
 const NumberInput = ({ label, value, onChange, min, max, step }: { label: string, value: number, onChange: (val: number) => void, min?: number, max?: number, step?: number }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
         <input
             type="number"
             value={value}
@@ -205,7 +205,7 @@ const NumberInput = ({ label, value, onChange, min, max, step }: { label: string
             min={min}
             max={max}
             step={step}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
         />
     </div>
 );
@@ -245,7 +245,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
 
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 {t('editor.controls.ecommerce.productSelector.selectedProducts', 'Selected Products')} ({selectedIds.length})
             </label>
 
@@ -255,12 +255,12 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                     {selectedProducts.map(product => (
                         <div
                             key={product.id}
-                            className="flex items-center gap-1 bg-editor-accent/20 text-editor-accent px-2 py-1 rounded-full text-xs"
+                            className="flex items-center gap-1 bg-q-accent/20 text-q-accent px-2 py-1 rounded-full text-xs"
                         >
                             <span className="max-w-[120px] truncate">{product.name}</span>
                             <button
                                 onClick={() => removeProduct(product.id)}
-                                className="hover:bg-editor-accent/30 rounded-full p-0.5"
+                                className="hover:bg-q-accent/30 rounded-full p-0.5"
                             >
                                 <X size={12} />
                             </button>
@@ -272,7 +272,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
             {/* Expand/Collapse Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+                className="w-full flex items-center justify-between bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text hover:bg-q-bg transition-colors"
             >
                 <span>{isExpanded ? t('editor.controls.ecommerce.productSelector.hideProducts', 'Hide Products') : t('editor.controls.ecommerce.productSelector.selectProducts', 'Select Products')}</span>
                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -280,11 +280,11 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
 
             {/* Product List */}
             {isExpanded && (
-                <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
+                <div className="mt-2 border border-q-border rounded-md overflow-hidden">
                     {/* Search */}
-                    <div className="p-2 border-b border-editor-border">
-                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
-                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                    <div className="p-2 border-b border-q-border">
+                        <div className="flex items-center gap-1.5 bg-q-surface-overlay/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('editor.controls.ecommerce.productSelector.searchPlaceholder', 'Search products...')}
@@ -293,7 +293,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                     <X size={12} />
                                 </button>
                             )}
@@ -303,11 +303,11 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                     {/* Products List */}
                     <div className="max-h-[250px] overflow-y-auto">
                         {isLoading ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 {t('editor.controls.ecommerce.productSelector.loading', 'Loading products...')}
                             </div>
                         ) : filteredProducts.length === 0 ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 {products.length === 0 ? t('editor.controls.ecommerce.productSelector.noProductsInStore', 'No products in store') : t('editor.controls.ecommerce.productSelector.noProductsFound', 'No products found')}
                             </div>
                         ) : (
@@ -315,13 +315,13 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                                 <button
                                     key={product.id}
                                     onClick={() => toggleProduct(product.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${selectedIds.includes(product.id) ? 'bg-editor-accent/10' : ''
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors ${selectedIds.includes(product.id) ? 'bg-q-accent/10' : ''
                                         }`}
                                 >
                                     {/* Checkbox */}
                                     <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selectedIds.includes(product.id)
-                                        ? 'bg-editor-accent border-editor-accent'
-                                        : 'border-editor-border'
+                                        ? 'bg-q-accent border-q-accent'
+                                        : 'border-q-border'
                                         }`}>
                                         {selectedIds.includes(product.id) && <Check size={12} className="text-white" />}
                                     </div>
@@ -334,15 +334,15 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
                                             className="w-8 h-8 rounded object-cover flex-shrink-0"
                                         />
                                     ) : (
-                                        <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                                            <span className="text-[10px] text-editor-text-secondary">N/A</span>
+                                        <div className="w-8 h-8 rounded bg-q-surface-overlay flex items-center justify-center flex-shrink-0">
+                                            <span className="text-[10px] text-q-text-secondary">N/A</span>
                                         </div>
                                     )}
 
                                     {/* Product Info */}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
-                                        <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                                        <p className="text-sm text-q-text truncate">{product.name}</p>
+                                        <p className="text-xs text-q-text-secondary">${product.price.toFixed(2)}</p>
                                     </div>
                                 </button>
                             ))
@@ -382,13 +382,13 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
 
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 {labelText}
             </label>
 
             {/* Selected Product Display */}
             {selectedProduct && (
-                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                <div className="flex items-center gap-3 mb-2 p-2 bg-q-accent/10 border border-q-accent/30 rounded-lg">
                     {selectedProduct.image ? (
                         <img
                             src={selectedProduct.image}
@@ -396,13 +396,13 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                             className="w-10 h-10 rounded object-cover flex-shrink-0"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] text-editor-text-secondary">N/A</span>
+                        <div className="w-10 h-10 rounded bg-q-surface-overlay flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] text-q-text-secondary">N/A</span>
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedProduct.name}</p>
-                        <p className="text-xs text-editor-text-secondary">${selectedProduct.price.toFixed(2)}</p>
+                        <p className="text-sm font-medium text-q-text truncate">{selectedProduct.name}</p>
+                        <p className="text-xs text-q-text-secondary">${selectedProduct.price.toFixed(2)}</p>
                     </div>
                     <button
                         onClick={() => selectProduct(undefined)}
@@ -417,7 +417,7 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
             {/* Expand/Collapse Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+                className="w-full flex items-center justify-between bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text hover:bg-q-bg transition-colors"
             >
                 <span>{isExpanded ? t('editor.controls.ecommerce.singleProductSelector.hide', 'Hide Products') : selectedProduct ? t('editor.controls.ecommerce.singleProductSelector.change', 'Change Product') : t('editor.controls.ecommerce.singleProductSelector.select', 'Select Product')}</span>
                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -425,11 +425,11 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
 
             {/* Product List */}
             {isExpanded && (
-                <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
+                <div className="mt-2 border border-q-border rounded-md overflow-hidden">
                     {/* Search */}
-                    <div className="p-2 border-b border-editor-border">
-                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
-                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                    <div className="p-2 border-b border-q-border">
+                        <div className="flex items-center gap-1.5 bg-q-surface-overlay/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder={t('editor.controls.ecommerce.singleProductSelector.searchPlaceholder', 'Search products...')}
@@ -438,7 +438,7 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                     <X size={12} />
                                 </button>
                             )}
@@ -448,11 +448,11 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                     {/* Products List */}
                     <div className="max-h-[250px] overflow-y-auto">
                         {isLoading ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 {t('editor.controls.ecommerce.singleProductSelector.loading', 'Loading products...')}
                             </div>
                         ) : filteredProducts.length === 0 ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 {products.length === 0 ? t('editor.controls.ecommerce.singleProductSelector.noProductsInStore', 'No products in store') : t('editor.controls.ecommerce.singleProductSelector.noProductsFound', 'No products found')}
                             </div>
                         ) : (
@@ -460,29 +460,29 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                                 {/* None Option */}
                                 <button
                                     onClick={() => selectProduct(undefined)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors border-b border-editor-border ${!selectedProductId ? 'bg-editor-accent/10' : ''
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors border-b border-q-border ${!selectedProductId ? 'bg-q-accent/10' : ''
                                         }`}
                                 >
                                     <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${!selectedProductId
-                                        ? 'bg-editor-accent border-editor-accent'
-                                        : 'border-editor-border'
+                                        ? 'bg-q-accent border-q-accent'
+                                        : 'border-q-border'
                                         }`}>
                                         {!selectedProductId && <Check size={10} className="text-white" />}
                                     </div>
-                                    <span className="text-sm text-editor-text-secondary italic">{t('editor.controls.ecommerce.singleProductSelector.none', 'None (no product)')}</span>
+                                    <span className="text-sm text-q-text-secondary italic">{t('editor.controls.ecommerce.singleProductSelector.none', 'None (no product)')}</span>
                                 </button>
 
                                 {filteredProducts.map(product => (
                                     <button
                                         key={product.id}
                                         onClick={() => selectProduct(product.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${selectedProductId === product.id ? 'bg-editor-accent/10' : ''
+                                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors ${selectedProductId === product.id ? 'bg-q-accent/10' : ''
                                             }`}
                                     >
                                         {/* Radio */}
                                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedProductId === product.id
-                                            ? 'bg-editor-accent border-editor-accent'
-                                            : 'border-editor-border'
+                                            ? 'bg-q-accent border-q-accent'
+                                            : 'border-q-border'
                                             }`}>
                                             {selectedProductId === product.id && <Check size={10} className="text-white" />}
                                         </div>
@@ -495,15 +495,15 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
                                                 className="w-8 h-8 rounded object-cover flex-shrink-0"
                                             />
                                         ) : (
-                                            <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                                                <span className="text-[10px] text-editor-text-secondary">N/A</span>
+                                            <div className="w-8 h-8 rounded bg-q-surface-overlay flex items-center justify-center flex-shrink-0">
+                                                <span className="text-[10px] text-q-text-secondary">N/A</span>
                                             </div>
                                         )}
 
                                         {/* Product Info */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-editor-text-primary truncate">{product.name}</p>
-                                            <p className="text-xs text-editor-text-secondary">${product.price.toFixed(2)}</p>
+                                            <p className="text-sm text-q-text truncate">{product.name}</p>
+                                            <p className="text-xs text-q-text-secondary">${product.price.toFixed(2)}</p>
                                         </div>
                                     </button>
                                 ))}
@@ -576,15 +576,15 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
 
     return (
         <div className="mb-4">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
                 <FolderOpen size={14} />
                 {labelText}
-                {isLoading && <Loader2 size={12} className="animate-spin text-editor-accent" />}
+                {isLoading && <Loader2 size={12} className="animate-spin text-q-accent" />}
             </label>
 
             {/* Selected Collection Display */}
             {selectedCollection && (
-                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
+                <div className="flex items-center gap-3 mb-2 p-2 bg-q-accent/10 border border-q-accent/30 rounded-lg">
                     {selectedCollection.imageUrl ? (
                         <img
                             src={selectedCollection.imageUrl}
@@ -592,13 +592,13 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
                             className="w-10 h-10 rounded object-cover flex-shrink-0"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                            <FolderOpen size={16} className="text-editor-text-secondary" />
+                        <div className="w-10 h-10 rounded bg-q-surface-overlay flex items-center justify-center flex-shrink-0">
+                            <FolderOpen size={16} className="text-q-text-secondary" />
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedCollection.name}</p>
-                        <p className="text-xs text-editor-text-secondary truncate">
+                        <p className="text-sm font-medium text-q-text truncate">{selectedCollection.name}</p>
+                        <p className="text-xs text-q-text-secondary truncate">
                             {selectedCollection.description || `${selectedCollection.productCount || 0} ${t('editor.controls.ecommerce.collectionSelector.products', 'products')}`}
                         </p>
                     </div>
@@ -615,7 +615,7 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
             {/* Expand/Collapse Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+                className="w-full flex items-center justify-between bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text hover:bg-q-bg transition-colors"
             >
                 <span className="flex items-center gap-2">
                     <FolderOpen size={14} />
@@ -626,31 +626,31 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
 
             {/* Collection List */}
             {isExpanded && (
-                <div className="mt-2 border border-editor-border rounded-md overflow-hidden">
+                <div className="mt-2 border border-q-border rounded-md overflow-hidden">
                     {/* None Option */}
                     <button
                         onClick={() => selectCollection(undefined)}
-                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors border-b border-editor-border ${!selectedCollectionId ? 'bg-editor-accent/10' : ''
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors border-b border-q-border ${!selectedCollectionId ? 'bg-q-accent/10' : ''
                             }`}
                     >
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${!selectedCollectionId
-                            ? 'bg-editor-accent border-editor-accent'
-                            : 'border-editor-border'
+                            ? 'bg-q-accent border-q-accent'
+                            : 'border-q-border'
                             }`}>
                             {!selectedCollectionId && <Check size={10} className="text-white" />}
                         </div>
-                        <span className="text-sm text-editor-text-secondary italic">{t('editor.controls.ecommerce.collectionSelector.none', 'None')}</span>
+                        <span className="text-sm text-q-text-secondary italic">{t('editor.controls.ecommerce.collectionSelector.none', 'None')}</span>
                     </button>
 
                     {/* Collections List */}
                     <div className="max-h-[250px] overflow-y-auto">
                         {isLoading ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 <Loader2 size={20} className="animate-spin mx-auto mb-2" />
                                 {t('editor.controls.ecommerce.collectionSelector.loading', 'Loading collections...')}
                             </div>
                         ) : availableCollections.length === 0 ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 {t('editor.controls.ecommerce.collectionSelector.noCollections', 'No collections available')}
                             </div>
                         ) : (
@@ -658,13 +658,13 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
                                 <button
                                     key={collection.id}
                                     onClick={() => selectCollection(collection.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${selectedCollectionId === collection.id ? 'bg-editor-accent/10' : ''
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors ${selectedCollectionId === collection.id ? 'bg-q-accent/10' : ''
                                         }`}
                                 >
                                     {/* Radio */}
                                     <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${selectedCollectionId === collection.id
-                                        ? 'bg-editor-accent border-editor-accent'
-                                        : 'border-editor-border'
+                                        ? 'bg-q-accent border-q-accent'
+                                        : 'border-q-border'
                                         }`}>
                                         {selectedCollectionId === collection.id && <Check size={10} className="text-white" />}
                                     </div>
@@ -677,15 +677,15 @@ export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> =
                                             className="w-8 h-8 rounded object-cover flex-shrink-0"
                                         />
                                     ) : (
-                                        <div className="w-8 h-8 rounded bg-editor-border flex items-center justify-center flex-shrink-0">
-                                            <FolderOpen size={14} className="text-editor-text-secondary" />
+                                        <div className="w-8 h-8 rounded bg-q-surface-overlay flex items-center justify-center flex-shrink-0">
+                                            <FolderOpen size={14} className="text-q-text-secondary" />
                                         </div>
                                     )}
 
                                     {/* Collection Info */}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-editor-text-primary truncate">{collection.name}</p>
-                                        <p className="text-xs text-editor-text-secondary truncate">
+                                        <p className="text-sm text-q-text truncate">{collection.name}</p>
+                                        <p className="text-xs text-q-text-secondary truncate">
                                             {collection.description || `${collection.productCount || 0} ${t('editor.controls.ecommerce.collectionSelector.products', 'products')}`}
                                         </p>
                                     </div>
@@ -715,7 +715,7 @@ const CategorySelector = ({
 
     if (isLoading) {
         return (
-            <div className="mb-3 text-center py-2 text-editor-text-secondary text-sm">
+            <div className="mb-3 text-center py-2 text-q-text-secondary text-sm">
                 <Loader2 size={16} className="animate-spin inline mr-2" />
                 {t('editor.controls.ecommerce.categorySelector.loading', 'Loading categories...')}
             </div>
@@ -724,7 +724,7 @@ const CategorySelector = ({
 
     if (!categories || categories.length === 0) {
         return (
-            <div className="mb-3 p-2 border border-editor-border bg-editor-panel-bg rounded text-xs text-editor-text-secondary text-center">
+            <div className="mb-3 p-2 border border-q-border bg-q-surface rounded text-xs text-q-text-secondary text-center">
                 {t('editor.controls.ecommerce.categorySelector.noCategories', 'No categories available. Create categories in your store first.')}
             </div>
         );
@@ -732,13 +732,13 @@ const CategorySelector = ({
 
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 {t('editor.controls.ecommerce.categorySelector.label', 'Category')}
             </label>
             <select
                 value={selectedCategoryId || ''}
                 onChange={(e) => onChange(e.target.value || undefined)}
-                className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
             >
                 <option value="">{t('editor.controls.ecommerce.categorySelector.select', 'Select a category...')}</option>
                 {categories.map((cat) => (
@@ -856,7 +856,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -886,7 +886,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -905,7 +905,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -924,7 +924,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Badge Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
 
@@ -943,7 +943,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Price Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceColors', 'Price Colors')}
             </h5>
 
@@ -1045,7 +1045,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -1075,7 +1075,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -1094,7 +1094,7 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
 
 
             {/* Overlay Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.overlayColors', 'Overlay Colors')}
             </h5>
 
@@ -1216,7 +1216,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -1236,7 +1236,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
 
 
             {/* Text Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.textColors', 'Text Colors')}
             </h5>
 
@@ -1260,7 +1260,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -1279,7 +1279,7 @@ export const useProductHeroControls = ({ data, setNestedData, storeId = '' }: Ec
 
 
             {/* Badge Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
 
@@ -1335,7 +1335,7 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
             <Input label={t('editor.controls.ecommerce.title', 'Title')} value={d.title || ''} onChange={(e) => setNestedData('trustBadges.title', e.target.value)} />
 
             {/* Note: In a real implementation, we would have a list editor for the badges (icon + title + desc) */}
-            <div className="text-xs text-editor-text-secondary italic border p-2 rounded border-editor-border">
+            <div className="text-xs text-q-text-secondary italic border p-2 rounded border-q-border">
                 {t('editor.controls.ecommerce.badgesManageNote', 'Badges content management would be here (list of icon/title/desc).')}
             </div>
 
@@ -1362,7 +1362,7 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -1496,7 +1496,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -1526,7 +1526,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Countdown Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.countdownColors', 'Countdown Colors')}
             </h5>
 
@@ -1545,7 +1545,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -1564,7 +1564,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Badge Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
 
@@ -1743,15 +1743,15 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
 
             {/* Messages */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <MessageCircle size={14} />
                 {t('editor.controls.ecommerce.messages', 'Messages')}
             </h5>
 
             {messages.map((msg, index) => (
-                <div key={index} className="p-3 bg-editor-bg/50 rounded-lg border border-editor-border/30 space-y-3">
+                <div key={index} className="p-3 bg-q-bg/50 rounded-lg border border-q-border/30 space-y-3">
                     <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-editor-text-secondary">
+                        <span className="text-xs font-medium text-q-text-secondary">
                             {t('editor.controls.ecommerce.message', 'Message')} {index + 1}
                         </span>
                         {messages.length > 1 && (
@@ -1814,7 +1814,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
             <button
                 onClick={addMessage}
-                className="w-full py-2 px-3 bg-editor-accent/20 hover:bg-editor-accent/30 text-editor-accent rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2 px-3 bg-q-accent/20 hover:bg-q-accent/30 text-q-accent rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
             >
                 <Plus size={14} />
                 {t('editor.controls.ecommerce.addMessage', 'Add Message')}
@@ -1822,7 +1822,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
 
             {/* Display Options */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.displayOptions', 'Display Options')}
             </h5>
 
@@ -1873,7 +1873,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
     const styleTab = (
         <div className="space-y-4">
             {/* Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.colors', 'Colors')}
             </h5>
@@ -1908,7 +1908,7 @@ export const useAnnouncementBarControls = ({ data, setNestedData, storeId = '' }
 
 
             {/* Size & Spacing */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.sizeSpacing', 'Size & Spacing')}
             </h5>
 
@@ -1990,7 +1990,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Button Configuration */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonConfig', 'Configuración del Botón')}
             </h5>
 
@@ -2032,7 +2032,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -2052,7 +2052,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Text Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.textColors', 'Text Colors')}
             </h5>
 
@@ -2076,7 +2076,7 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -2151,7 +2151,7 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -2181,7 +2181,7 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -2250,7 +2250,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -2280,7 +2280,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -2299,7 +2299,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
 
 
             {/* Review Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.reviewColors', 'Review Colors')}
             </h5>
 
@@ -2374,7 +2374,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.sectionColors', 'Section Colors')}
             </h5>
@@ -2404,7 +2404,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -2423,7 +2423,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Price Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceColors', 'Price Colors')}
             </h5>
 
@@ -2442,7 +2442,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -2461,7 +2461,7 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
 
             {/* Badge Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.badgeColors', 'Badge Colors')}
             </h5>
 
@@ -2535,7 +2535,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
     const styleTab = (
         <div className="space-y-4">
             {/* Section Colors */}
-            <h5 className="text-xs font-bold text-editor-accent uppercase tracking-wider flex items-center gap-2">
+            <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
                 {t('editor.controls.ecommerce.storeColors', 'Store Colors')}
             </h5>
@@ -2565,7 +2565,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
 
 
             {/* Card Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
             </h5>
 
@@ -2584,7 +2584,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
 
 
             {/* Button Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.buttonColors', 'Button Colors')}
             </h5>
 
@@ -2603,7 +2603,7 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
 
 
             {/* Price & Badge Colors */}
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                 {t('editor.controls.ecommerce.priceAndBadgeColors', 'Price & Badge')}
             </h5>
 
@@ -2697,20 +2697,20 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
 
     return (
         <div className="mb-4">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider flex items-center gap-1.5">
                 <FileText size={14} />
                 {label}
             </label>
 
             {/* Selected Content Display */}
             {selectedItem && (
-                <div className="flex items-center gap-3 mb-2 p-2 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
-                    <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0 text-editor-accent">
+                <div className="flex items-center gap-3 mb-2 p-2 bg-q-accent/10 border border-q-accent/30 rounded-lg">
+                    <div className="w-8 h-8 rounded bg-q-accent/20 flex items-center justify-center flex-shrink-0 text-q-accent">
                         {selectedItem.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-editor-text-primary truncate">{selectedItem.name}</p>
-                        <p className="text-xs text-editor-text-secondary truncate">
+                        <p className="text-sm font-medium text-q-text truncate">{selectedItem.name}</p>
+                        <p className="text-xs text-q-text-secondary truncate">
                             {selectedItem.type === 'article' ? 'Artículo de Blog' : 'Contenido'}
                         </p>
                     </div>
@@ -2727,7 +2727,7 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
             {/* Expand/Collapse Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary hover:bg-editor-bg transition-colors"
+                className="w-full flex items-center justify-between bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text hover:bg-q-bg transition-colors"
                 title={isExpanded ? "Ocultar panel" : "Mostrar panel de selección"}
             >
                 <span className="flex items-center gap-2">
@@ -2738,11 +2738,11 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
 
             {/* Content List */}
             {isExpanded && (
-                <div className="mt-2 border border-editor-border rounded-md overflow-hidden bg-editor-panel-bg">
+                <div className="mt-2 border border-q-border rounded-md overflow-hidden bg-q-surface">
                     {/* Search */}
-                    <div className="p-2 border-b border-editor-border">
-                        <div className="flex items-center gap-1.5 bg-editor-border/40 rounded-md px-2 py-1.5">
-                            <Search size={14} className="text-editor-text-secondary flex-shrink-0" />
+                    <div className="p-2 border-b border-q-border">
+                        <div className="flex items-center gap-1.5 bg-q-surface-overlay/40 rounded-md px-2 py-1.5">
+                            <Search size={14} className="text-q-text-secondary flex-shrink-0" />
                             <input
                                 type="text"
                                 placeholder="Buscar artículos..."
@@ -2751,7 +2751,7 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                             />
                             {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                                <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                     <X size={12} />
                                 </button>
                             )}
@@ -2760,7 +2760,7 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
 
                     <div className="max-h-[200px] overflow-y-auto">
                         {filteredArticles.length === 0 ? (
-                            <div className="p-4 text-center text-editor-text-secondary text-sm">
+                            <div className="p-4 text-center text-q-text-secondary text-sm">
                                 No hay artículos publicados.
                             </div>
                         ) : (
@@ -2768,14 +2768,14 @@ export const SingleContentSelector: React.FC<SingleContentSelectorProps> = ({
                                 <button
                                     key={article.id}
                                     onClick={() => selectContent(`/blog/${article.slug}`)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-editor-bg transition-colors ${selectedContentPath === `/blog/${article.slug}` ? 'bg-editor-accent/10' : ''}`}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-q-bg transition-colors ${selectedContentPath === `/blog/${article.slug}` ? 'bg-q-accent/10' : ''}`}
                                 >
-                                    <div className="w-8 h-8 rounded bg-editor-accent/20 flex items-center justify-center flex-shrink-0">
-                                        <FileText size={14} className="text-editor-accent" />
+                                    <div className="w-8 h-8 rounded bg-q-accent/20 flex items-center justify-center flex-shrink-0">
+                                        <FileText size={14} className="text-q-accent" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-editor-text-primary truncate">{article.title}</p>
-                                        <p className="text-xs text-editor-text-secondary truncate">{article.slug}</p>
+                                        <p className="text-sm text-q-text truncate">{article.title}</p>
+                                        <p className="text-xs text-q-text-secondary truncate">{article.slug}</p>
                                     </div>
                                 </button>
                             ))

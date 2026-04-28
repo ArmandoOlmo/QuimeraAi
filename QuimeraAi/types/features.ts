@@ -134,6 +134,17 @@ export interface AppThemeColors {
     accent: string;          // --editor-accent
     textPrimary: string;     // --editor-text-primary
     textSecondary: string;   // --editor-text-secondary
+    
+    // Additional Quimera Design System 2.0 Tokens
+    surface: string;
+    surfaceElevated: string;
+    surfaceOverlay: string;
+    borderStrong: string;
+    accentSecondary: string;
+    accentTertiary: string;
+    textMuted: string;
+    textOnAccent: string;
+
     // Colores semánticos
     success: string;
     warning: string;

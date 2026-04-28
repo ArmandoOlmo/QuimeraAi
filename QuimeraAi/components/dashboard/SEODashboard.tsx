@@ -105,7 +105,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
     return (
       <>
         {/* Tabs */}
-        <div className="bg-secondary/20 border-b border-border px-2 sm:px-6 relative z-[2]">
+        <div className="bg-secondary/20 border-b border-q-border px-2 sm:px-6 relative z-[2]">
           <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { id: 'basic', label: t('seo.basicSEO'), icon: Globe },
@@ -119,7 +119,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 onClick={() => setActiveTab(tab.id as SeoTab)}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 border-b-2 transition-colors whitespace-nowrap text-sm shrink-0 ${activeTab === tab.id
                   ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  : 'border-transparent text-q-text-muted hover:text-foreground'
                   }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -136,7 +136,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* Basic SEO Tab */}
             {activeTab === 'basic' && (
               <div className="space-y-6">
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.basicInformation')}
                   </h2>
@@ -150,10 +150,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.title}
                         onChange={(e) => updateField('title', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.myAwesomeWebsite')}
                       />
-                      <p className={`text-xs mt-1 ${localConfig.title.length > 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs mt-1 ${localConfig.title.length > 60 ? 'text-red-500' : 'text-q-text-muted'}`}>
                         {localConfig.title.length} / 60 {t('seo.charactersRecommended')}
                       </p>
                     </div>
@@ -166,10 +166,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         value={localConfig.description}
                         onChange={(e) => updateField('description', e.target.value)}
                         rows={3}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.briefDescriptionOfWebsite')}
                       />
-                      <p className={`text-xs mt-1 ${localConfig.description.length > 160 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs mt-1 ${localConfig.description.length > 160 ? 'text-red-500' : 'text-q-text-muted'}`}>
                         {localConfig.description.length} / 160 {t('seo.charactersRecommended')}
                       </p>
                     </div>
@@ -182,7 +182,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.keywords.join(', ')}
                         onChange={(e) => updateField('keywords', e.target.value.split(',').map(k => k.trim()).filter(k => k))}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.keywordsPlaceholder')}
                       />
                     </div>
@@ -195,7 +195,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.author || ''}
                         onChange={(e) => updateField('author', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.authorPlaceholder')}
                       />
                     </div>
@@ -207,7 +207,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <select
                         value={localConfig.language}
                         onChange={(e) => updateField('language', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
                         <option value="es">Español</option>
                         <option value="en">English</option>
@@ -227,7 +227,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="url"
                         value={localConfig.canonical || ''}
                         onChange={(e) => updateField('canonical', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="https://example.com"
                       />
                     </div>
@@ -239,7 +239,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <select
                         value={localConfig.robots}
                         onChange={(e) => updateField('robots', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
                         <option value="index, follow">{t('seo.indexFollow')}</option>
                         <option value="noindex, follow">{t('seo.noIndexFollow')}</option>
@@ -255,7 +255,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {/* Advanced Tab */}
             {activeTab === 'advanced' && (
               <div className="space-y-6">
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.structuredData')}
                   </h2>
@@ -268,7 +268,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <select
                         value={localConfig.schemaType}
                         onChange={(e) => updateField('schemaType', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
                         <option value="WebSite">{t('seo.website')}</option>
                         <option value="Organization">{t('seo.organization')}</option>
@@ -281,7 +281,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.siteVerification')}
                   </h2>
@@ -295,7 +295,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.googleSiteVerification || ''}
                         onChange={(e) => updateField('googleSiteVerification', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.verificationCode')}
                       />
                     </div>
@@ -308,7 +308,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.bingVerification || ''}
                         onChange={(e) => updateField('bingVerification', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.verificationCode')}
                       />
                     </div>
@@ -332,7 +332,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiCrawlability')}
                   </h2>
@@ -343,7 +343,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         <label className="block text-sm font-medium text-foreground">
                           {t('seo.allowAICrawling')}
                         </label>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-q-text-muted mt-1">
                           {t('seo.allowAICrawlingDesc')}
                         </p>
                       </div>
@@ -369,10 +369,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             value={localConfig.aiDescription || ''}
                             onChange={(e) => updateField('aiDescription', e.target.value)}
                             rows={4}
-                            className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder={t('seo.aiOptimizedDescPlaceholder')}
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-q-text-muted mt-1">
                             {t('seo.aiOptimizedDescHelp')}
                           </p>
                         </div>
@@ -385,10 +385,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             type="text"
                             value={localConfig.aiKeyTopics?.join(', ') || ''}
                             onChange={(e) => updateField('aiKeyTopics', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
-                            className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder={t('seo.keyTopicsPlaceholder')}
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-q-text-muted mt-1">
                             {t('seo.keyTopicsHelp')}
                           </p>
                         </div>
@@ -397,11 +397,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                   </div>
                 </div>
 
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.aiSearchEngines')}
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-q-text-muted mb-4">
                     {t('seo.aiSearchEnginesDesc')}
                   </p>
                   <ul className="space-y-2">
@@ -413,7 +413,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       'Claude (Anthropic)',
                       'You.com'
                     ].map(engine => (
-                      <li key={engine} className="flex items-center gap-2 text-muted-foreground">
+                      <li key={engine} className="flex items-center gap-2 text-q-text-muted">
                         <CheckCircle className="w-4 h-4 text-green-500" />
                         {engine}
                       </li>
@@ -427,7 +427,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
             {activeTab === 'social' && (
               <div className="space-y-6">
                 {/* Open Graph */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.openGraph')}
                   </h2>
@@ -440,7 +440,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <select
                         value={localConfig.ogType}
                         onChange={(e) => updateField('ogType', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
                         <option value="website">{t('seo.website')}</option>
                         <option value="article">{t('seo.article')}</option>
@@ -457,7 +457,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.ogTitle || ''}
                         onChange={(e) => updateField('ogTitle', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.leaveEmptyToUsePageTitle')}
                       />
                     </div>
@@ -470,7 +470,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         value={localConfig.ogDescription || ''}
                         onChange={(e) => updateField('ogDescription', e.target.value)}
                         rows={2}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.leaveEmptyToUseMetaDescription')}
                       />
                     </div>
@@ -483,10 +483,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="url"
                         value={localConfig.ogImage || ''}
                         onChange={(e) => updateField('ogImage', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="https://example.com/image.jpg"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-q-text-muted mt-1">
                         {t('seo.recommendedSize')}
                       </p>
                     </div>
@@ -499,7 +499,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.ogSiteName || ''}
                         onChange={(e) => updateField('ogSiteName', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={t('seo.yourSiteName')}
                       />
                     </div>
@@ -507,7 +507,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter Card */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     {t('seo.twitterCard')}
                   </h2>
@@ -520,7 +520,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       <select
                         value={localConfig.twitterCard}
                         onChange={(e) => updateField('twitterCard', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       >
                         <option value="summary">{t('seo.summary')}</option>
                         <option value="summary_large_image">{t('seo.summaryLargeImage')}</option>
@@ -537,7 +537,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.twitterSite || ''}
                         onChange={(e) => updateField('twitterSite', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="@yoursite"
                       />
                     </div>
@@ -550,7 +550,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         type="text"
                         value={localConfig.twitterCreator || ''}
                         onChange={(e) => updateField('twitterCreator', e.target.value)}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="@yourcreator"
                       />
                     </div>
@@ -578,7 +578,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Facebook/Meta Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#1877F2] flex items-center justify-center">
@@ -588,7 +588,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Meta Pixel</h2>
-                        <p className="text-xs text-muted-foreground">Facebook, Instagram, Messenger Ads</p>
+                        <p className="text-xs text-q-text-muted">Facebook, Instagram, Messenger Ads</p>
                       </div>
                     </div>
                     <button
@@ -617,7 +617,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             facebookPixelId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#1877F2]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#1877F2]/50"
                           placeholder="123456789012345"
                         />
                       </div>
@@ -635,7 +635,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Tag Manager */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#246FDB] flex items-center justify-center">
@@ -645,7 +645,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Google Tag Manager</h2>
-                        <p className="text-xs text-muted-foreground">{t('seo.gtmDesc', 'Contenedor universal para todos tus tags')}</p>
+                        <p className="text-xs text-q-text-muted">{t('seo.gtmDesc', 'Contenedor universal para todos tus tags')}</p>
                       </div>
                     </div>
                     <button
@@ -674,7 +674,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             googleTagManagerId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#246FDB]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#246FDB]/50"
                           placeholder="GTM-XXXXXXX"
                         />
                       </div>
@@ -692,7 +692,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Ads */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#4285F4] via-[#EA4335] to-[#FBBC05] flex items-center justify-center">
@@ -700,7 +700,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Google Ads</h2>
-                        <p className="text-xs text-muted-foreground">{t('seo.gadsDesc', 'Conversiones y Remarketing')}</p>
+                        <p className="text-xs text-q-text-muted">{t('seo.gadsDesc', 'Conversiones y Remarketing')}</p>
                       </div>
                     </div>
                     <button
@@ -729,11 +729,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             googleAdsId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#4285F4]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#4285F4]/50"
                           placeholder="AW-123456789"
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-q-text-muted">
                         {t('seo.gadsHelp', 'Formato: AW-XXXXXXXXX (Google Ads → Herramientas → Conversiones)')}
                       </p>
                     </div>
@@ -741,7 +741,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Google Analytics 4 */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#F9AB00] flex items-center justify-center">
@@ -751,7 +751,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Google Analytics 4</h2>
-                        <p className="text-xs text-muted-foreground">{t('seo.ga4Desc', 'Analytics avanzado y audiencias')}</p>
+                        <p className="text-xs text-q-text-muted">{t('seo.ga4Desc', 'Analytics avanzado y audiencias')}</p>
                       </div>
                     </div>
                     <button
@@ -780,7 +780,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             googleAnalyticsId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#F9AB00]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#F9AB00]/50"
                           placeholder="G-XXXXXXXXXX"
                         />
                       </div>
@@ -798,7 +798,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* TikTok Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -808,7 +808,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">TikTok Pixel</h2>
-                        <p className="text-xs text-muted-foreground">TikTok Ads Manager</p>
+                        <p className="text-xs text-q-text-muted">TikTok Ads Manager</p>
                       </div>
                     </div>
                     <button
@@ -837,7 +837,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             tiktokPixelId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                           placeholder="XXXXXXXXXXXXXXXX"
                         />
                       </div>
@@ -845,7 +845,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         href="https://ads.tiktok.com/i18n/events_manager"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        className="inline-flex items-center gap-1 text-xs text-q-text-muted hover:text-foreground hover:underline"
                       >
                         <ExternalLink size={12} />
                         {t('seo.openTikTokAds', 'Abrir TikTok Ads Manager')}
@@ -855,7 +855,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Twitter/X Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
@@ -865,7 +865,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">X (Twitter) Pixel</h2>
-                        <p className="text-xs text-muted-foreground">X Ads / Twitter Ads</p>
+                        <p className="text-xs text-q-text-muted">X Ads / Twitter Ads</p>
                       </div>
                     </div>
                     <button
@@ -894,7 +894,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             twitterPixelId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                           placeholder="xxxxx"
                         />
                       </div>
@@ -902,7 +902,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         href="https://ads.twitter.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        className="inline-flex items-center gap-1 text-xs text-q-text-muted hover:text-foreground hover:underline"
                       >
                         <ExternalLink size={12} />
                         {t('seo.openXAds', 'Abrir X Ads')}
@@ -912,7 +912,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* LinkedIn Insight Tag */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#0A66C2] flex items-center justify-center">
@@ -922,7 +922,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">LinkedIn Insight Tag</h2>
-                        <p className="text-xs text-muted-foreground">{t('seo.linkedinDesc', 'B2B Tracking y Audiencias')}</p>
+                        <p className="text-xs text-q-text-muted">{t('seo.linkedinDesc', 'B2B Tracking y Audiencias')}</p>
                       </div>
                     </div>
                     <button
@@ -951,7 +951,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             linkedinPartnerId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#0A66C2]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#0A66C2]/50"
                           placeholder="123456"
                         />
                       </div>
@@ -969,7 +969,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Pinterest Tag */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#E60023] flex items-center justify-center">
@@ -979,7 +979,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Pinterest Tag</h2>
-                        <p className="text-xs text-muted-foreground">{t('seo.pinterestDesc', 'E-commerce y Shopping Ads')}</p>
+                        <p className="text-xs text-q-text-muted">{t('seo.pinterestDesc', 'E-commerce y Shopping Ads')}</p>
                       </div>
                     </div>
                     <button
@@ -1008,7 +1008,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             pinterestTagId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#E60023]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#E60023]/50"
                           placeholder="123456789012345"
                         />
                       </div>
@@ -1026,7 +1026,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Snapchat Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FFFC00] flex items-center justify-center">
@@ -1036,7 +1036,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Snapchat Pixel</h2>
-                        <p className="text-xs text-muted-foreground">Snapchat Ads</p>
+                        <p className="text-xs text-q-text-muted">Snapchat Ads</p>
                       </div>
                     </div>
                     <button
@@ -1065,7 +1065,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             snapchatPixelId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#FFFC00]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#FFFC00]/50"
                           placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                         />
                       </div>
@@ -1073,7 +1073,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                         href="https://ads.snapchat.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        className="inline-flex items-center gap-1 text-xs text-q-text-muted hover:text-foreground hover:underline"
                       >
                         <ExternalLink size={12} />
                         {t('seo.openSnapchatAds', 'Abrir Snapchat Ads')}
@@ -1083,7 +1083,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Microsoft/Bing Ads */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#00A4EF] flex items-center justify-center">
@@ -1093,7 +1093,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Microsoft Ads (UET)</h2>
-                        <p className="text-xs text-muted-foreground">Bing Ads / Microsoft Advertising</p>
+                        <p className="text-xs text-q-text-muted">Bing Ads / Microsoft Advertising</p>
                       </div>
                     </div>
                     <button
@@ -1122,7 +1122,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             microsoftUetId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#00A4EF]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#00A4EF]/50"
                           placeholder="123456789"
                         />
                       </div>
@@ -1140,7 +1140,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Reddit Pixel */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-[#FF4500] flex items-center justify-center">
@@ -1150,7 +1150,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-foreground">Reddit Pixel</h2>
-                        <p className="text-xs text-muted-foreground">Reddit Ads</p>
+                        <p className="text-xs text-q-text-muted">Reddit Ads</p>
                       </div>
                     </div>
                     <button
@@ -1179,7 +1179,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                             ...localConfig.adPixels,
                             redditPixelId: e.target.value
                           })}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#FF4500]/50"
+                          className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-[#FF4500]/50"
                           placeholder="a2_xxxxxxxxxx"
                         />
                       </div>
@@ -1197,11 +1197,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                 </div>
 
                 {/* Custom Scripts Section */}
-                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                   <h2 className="text-lg font-semibold text-foreground mb-2">
                     {t('seo.customScripts', 'Scripts Personalizados')}
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-q-text-muted mb-4">
                     {t('seo.customScriptsDesc', 'Agrega scripts personalizados para otros píxeles de tracking o herramientas no listadas arriba.')}
                   </p>
 
@@ -1217,10 +1217,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                           customHeadScripts: e.target.value
                         })}
                         rows={4}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="<script>...</script>"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-q-text-muted mt-1">
                         {t('seo.customHeadScriptsHelp', 'Se inyectarán en el <head> del documento')}
                       </p>
                     </div>
@@ -1236,10 +1236,10 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
                           customBodyScripts: e.target.value
                         })}
                         rows={4}
-                        className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder="<script>...</script>"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-q-text-muted mt-1">
                         {t('seo.customBodyScriptsHelp', 'Se inyectarán al final del <body>')}
                       </p>
                     </div>
@@ -1313,7 +1313,7 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="flex h-screen bg-q-bg text-foreground">
       {/* AI SEO Assistant Modal */}
       {isAiAssistantOpen && (
         <SEOAiAssistant
@@ -1327,11 +1327,11 @@ const SEODashboard: React.FC<SEODashboardProps> = ({ initialTab = 'basic' }) => 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
         {/* Header */}
-        <header className="h-14 px-4 sm:px-6 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
               title={t('common.openMenu', { defaultValue: 'Open menu' })}
             >
               <Menu className="w-5 h-5" />

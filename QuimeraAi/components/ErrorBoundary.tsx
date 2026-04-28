@@ -165,8 +165,8 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI for other errors
       return (
-        <div className="min-h-screen bg-editor-bg flex items-center justify-center p-6">
-          <div className="max-w-2xl w-full bg-editor-panel-bg border border-editor-border rounded-lg p-8 shadow-xl">
+        <div className="min-h-screen bg-q-bg flex items-center justify-center p-6">
+          <div className="max-w-2xl w-full bg-q-surface border border-q-border rounded-lg p-8 shadow-xl">
             {/* Error Icon */}
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-red-500/20 rounded-full">
@@ -175,26 +175,26 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Error Title */}
-            <h1 className="text-3xl font-bold text-editor-text-primary text-center mb-4">
+            <h1 className="text-3xl font-bold text-q-text text-center mb-4">
               Oops! Something went wrong
             </h1>
 
             {/* Error Message */}
-            <p className="text-editor-text-secondary text-center mb-6">
+            <p className="text-q-text-secondary text-center mb-6">
               We encountered an unexpected error. Don't worry, our team has been notified.
             </p>
 
             {/* Error Details */}
             {this.state.error && (
-              <div className="bg-editor-bg border border-editor-border rounded-lg p-4 mb-6 overflow-auto max-h-64">
+              <div className="bg-q-bg border border-q-border rounded-lg p-4 mb-6 overflow-auto max-h-64">
                 <h3 className="font-bold text-red-400 mb-2">Error Details:</h3>
-                <pre className="text-sm text-editor-text-secondary whitespace-pre-wrap">
+                <pre className="text-sm text-q-text-secondary whitespace-pre-wrap">
                   {this.state.error.toString()}
                 </pre>
                 {this.state.errorInfo && (
                   <>
                     <h3 className="font-bold text-red-400 mt-4 mb-2">Component Stack:</h3>
-                    <pre className="text-xs text-editor-text-secondary whitespace-pre-wrap">
+                    <pre className="text-xs text-q-text-secondary whitespace-pre-wrap">
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </>
@@ -206,7 +206,7 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={this.handleReset}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-editor-accent text-editor-bg font-bold rounded-lg hover:bg-opacity-90 transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-q-accent text-q-bg font-bold rounded-lg hover:bg-opacity-90 transition-all"
               >
                 <RefreshCw size={20} />
                 Try Again
@@ -214,7 +214,7 @@ class ErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleReload}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-editor-bg border border-editor-border text-editor-text-primary font-bold rounded-lg hover:bg-editor-border transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-q-bg border border-q-border text-q-text font-bold rounded-lg hover:bg-q-surface-overlay transition-all"
               >
                 <RefreshCw size={20} />
                 Reload Page
@@ -222,7 +222,7 @@ class ErrorBoundary extends Component<Props, State> {
 
               <button
                 onClick={this.handleGoHome}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-editor-bg border border-editor-border text-editor-text-primary font-bold rounded-lg hover:bg-editor-border transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-q-bg border border-q-border text-q-text font-bold rounded-lg hover:bg-q-surface-overlay transition-all"
               >
                 <Home size={20} />
                 Go Home
@@ -230,7 +230,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {/* Help Text */}
-            <p className="text-sm text-editor-text-secondary text-center mt-6">
+            <p className="text-sm text-q-text-secondary text-center mt-6">
               If the problem persists, please contact support with the error details.
             </p>
           </div>

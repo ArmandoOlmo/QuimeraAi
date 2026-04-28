@@ -31,7 +31,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-background border border-border shadow-2xl">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-q-bg border border-q-border shadow-2xl">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
@@ -41,7 +41,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
                 <div className="p-8">
                     <h2 className="text-2xl font-bold mb-2">Upgrade Your Plan</h2>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         You've reached a limit or need a premium feature ({trigger}).
                         Current plan: <span className="font-semibold uppercase">{currentPlanId}</span>
                     </p>
@@ -55,7 +55,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({
                         </button>
                         <button
                             onClick={onClose}
-                            className="w-full py-3 px-4 bg-muted text-muted-foreground rounded-lg font-medium hover:bg-muted/80 transition-colors"
+                            className="w-full py-3 px-4 bg-muted text-q-text-muted rounded-lg font-medium hover:bg-muted/80 transition-colors"
                         >
                             Maybe later
                         </button>

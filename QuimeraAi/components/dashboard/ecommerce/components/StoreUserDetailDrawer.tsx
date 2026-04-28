@@ -214,22 +214,22 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
 
             {/* Drawer */}
-            <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-background border-l border-border shadow-2xl z-50 flex flex-col">
+            <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-q-bg border-l border-q-border shadow-2xl z-50 flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center justify-between p-4 border-b border-q-border">
                     <h2 className="text-lg font-semibold text-foreground">
                         {t('storeUsers.userDetails', 'Detalles del Usuario')}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* User Header */}
-                <div className="p-4 border-b border-border">
+                <div className="p-4 border-b border-q-border">
                     <div className="flex items-center gap-4">
                         {user.photoURL ? (
                             <img
@@ -247,7 +247,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                         )}
                         <div className="flex-1">
                             <h3 className="text-xl font-bold text-foreground">{user.displayName}</h3>
-                            <p className="text-muted-foreground">{user.email}</p>
+                            <p className="text-q-text-muted">{user.email}</p>
                             <div className="flex items-center gap-2 mt-1">
                                 <span
                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white"
@@ -279,21 +279,21 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                     <div className="grid grid-cols-3 gap-4 mt-4">
                         <div className="text-center p-3 bg-muted rounded-lg">
                             <p className="text-2xl font-bold text-foreground">{user.totalOrders}</p>
-                            <p className="text-xs text-muted-foreground">{t('storeUsers.orders', 'Pedidos')}</p>
+                            <p className="text-xs text-q-text-muted">{t('storeUsers.orders', 'Pedidos')}</p>
                         </div>
                         <div className="text-center p-3 bg-muted rounded-lg">
                             <p className="text-2xl font-bold text-foreground">${user.totalSpent.toFixed(0)}</p>
-                            <p className="text-xs text-muted-foreground">{t('storeUsers.spent', 'Gastado')}</p>
+                            <p className="text-xs text-q-text-muted">{t('storeUsers.spent', 'Gastado')}</p>
                         </div>
                         <div className="text-center p-3 bg-muted rounded-lg">
                             <p className="text-2xl font-bold text-foreground">${user.averageOrderValue.toFixed(0)}</p>
-                            <p className="text-xs text-muted-foreground">{t('storeUsers.avgOrder', 'Promedio')}</p>
+                            <p className="text-xs text-q-text-muted">{t('storeUsers.avgOrder', 'Promedio')}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-border">
+                <div className="flex border-b border-q-border">
                     {(['profile', 'activity', 'segments'] as const).map((tab) => (
                         <button
                             key={tab}
@@ -301,7 +301,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                                 activeTab === tab
                                     ? 'text-foreground border-b-2'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                             }`}
                             style={activeTab === tab ? { borderColor: primaryColor } : {}}
                         >
@@ -319,29 +319,29 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                         <div className="space-y-6">
                             {/* Contact Info */}
                             <div>
-                                <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                <h4 className="text-sm font-medium text-q-text-muted mb-3">
                                     {t('storeUsers.contactInfo', 'Información de Contacto')}
                                 </h4>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                                        <Mail size={18} className="text-muted-foreground" />
+                                        <Mail size={18} className="text-q-text-muted" />
                                         <span className="text-foreground">{user.email}</span>
                                     </div>
                                     {user.phone && (
                                         <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                                            <Phone size={18} className="text-muted-foreground" />
+                                            <Phone size={18} className="text-q-text-muted" />
                                             <span className="text-foreground">{user.phone}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                                        <Calendar size={18} className="text-muted-foreground" />
+                                        <Calendar size={18} className="text-q-text-muted" />
                                         <span className="text-foreground">
                                             {t('storeUsers.memberSince', 'Miembro desde')}: {formatDate(user.createdAt)}
                                         </span>
                                     </div>
                                     {user.lastLoginAt && (
                                         <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                                            <Clock size={18} className="text-muted-foreground" />
+                                            <Clock size={18} className="text-q-text-muted" />
                                             <span className="text-foreground">
                                                 {t('storeUsers.lastLogin', 'Último acceso')}: {formatDateTime(user.lastLoginAt)}
                                             </span>
@@ -352,7 +352,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
 
                             {/* Role Management */}
                             <div>
-                                <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                <h4 className="text-sm font-medium text-q-text-muted mb-3">
                                     {t('storeUsers.changeRole', 'Cambiar Rol')}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
 
                             {/* Status Management */}
                             <div>
-                                <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                <h4 className="text-sm font-medium text-q-text-muted mb-3">
                                     {t('storeUsers.changeStatus', 'Cambiar Estado')}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
@@ -419,7 +419,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
 
                             {/* Actions */}
                             <div>
-                                <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                <h4 className="text-sm font-medium text-q-text-muted mb-3">
                                     {t('storeUsers.actions', 'Acciones')}
                                 </h4>
                                 <div className="space-y-2">
@@ -437,7 +437,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                             {/* Internal Notes */}
                             {user.internalNotes && (
                                 <div>
-                                    <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                                    <h4 className="text-sm font-medium text-q-text-muted mb-3">
                                         {t('storeUsers.internalNotes', 'Notas Internas')}
                                     </h4>
                                     <p className="p-3 bg-muted rounded-lg text-foreground text-sm">
@@ -456,7 +456,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                                     <Loader2 className="animate-spin" style={{ color: primaryColor }} size={24} />
                                 </div>
                             ) : activities.length === 0 ? (
-                                <div className="text-center py-12 text-muted-foreground">
+                                <div className="text-center py-12 text-q-text-muted">
                                     <Activity size={48} className="mx-auto mb-4 opacity-50" />
                                     <p>{t('storeUsers.noActivity', 'No hay actividad registrada')}</p>
                                 </div>
@@ -469,12 +469,12 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                                                 key={activity.id}
                                                 className="flex items-start gap-3 p-3 bg-muted rounded-lg"
                                             >
-                                                <div className="p-2 bg-background rounded-lg">
-                                                    <Icon size={16} className="text-muted-foreground" />
+                                                <div className="p-2 bg-q-bg rounded-lg">
+                                                    <Icon size={16} className="text-q-text-muted" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="text-sm text-foreground">{activity.description}</p>
-                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                    <p className="text-xs text-q-text-muted mt-1">
                                                         {formatDateTime(activity.createdAt)}
                                                     </p>
                                                 </div>
@@ -490,7 +490,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                     {activeTab === 'segments' && (
                         <div>
                             {segments.length === 0 ? (
-                                <div className="text-center py-12 text-muted-foreground">
+                                <div className="text-center py-12 text-q-text-muted">
                                     <Tag size={48} className="mx-auto mb-4 opacity-50" />
                                     <p>{t('storeUsers.noSegments', 'No hay segmentos creados')}</p>
                                 </div>
@@ -506,7 +506,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                                                 className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
                                                     isAssigned
                                                         ? 'border-primary bg-primary/10'
-                                                        : 'border-border bg-muted hover:bg-muted/80'
+                                                        : 'border-q-border bg-muted hover:bg-muted/80'
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -517,7 +517,7 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
                                                     <div className="text-left">
                                                         <p className="font-medium text-foreground">{segment.name}</p>
                                                         {segment.description && (
-                                                            <p className="text-sm text-muted-foreground">
+                                                            <p className="text-sm text-q-text-muted">
                                                                 {segment.description}
                                                             </p>
                                                         )}
@@ -538,14 +538,14 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
             {showConfirmBan && (
                 <>
                     <div className="fixed inset-0 bg-black/80 z-[60]" onClick={() => setShowConfirmBan(false)} />
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-background rounded-xl border border-border shadow-2xl z-[60] p-6">
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-q-bg rounded-xl border border-q-border shadow-2xl z-[60] p-6">
                         <div className="flex items-center gap-3 mb-4 text-red-500">
                             <AlertTriangle size={24} />
                             <h3 className="text-lg font-semibold">
                                 {t('storeUsers.confirmBan', 'Confirmar Bloqueo')}
                             </h3>
                         </div>
-                        <p className="text-muted-foreground mb-6">
+                        <p className="text-q-text-muted mb-6">
                             {t('storeUsers.banWarning', '¿Estás seguro de que deseas bloquear a este usuario? No podrá acceder a su cuenta.')}
                         </p>
                         <div className="flex justify-end gap-3">

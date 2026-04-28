@@ -238,25 +238,25 @@ export function AgencyAnalytics() {
                 className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
             >
                 <div>
-                    <h2 className="text-2xl font-bold text-editor-text-primary flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-q-text flex items-center gap-2">
                         <BarChart3 className="w-7 h-7 text-purple-400" />
                         {t('dashboard.agency.analyticsPage.title')}
                     </h2>
-                    <p className="text-editor-text-secondary mt-1">
+                    <p className="text-q-text-secondary mt-1">
                         {t('dashboard.agency.analyticsPage.subtitle')}
                     </p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {/* Date range selector */}
-                    <div className="flex items-center gap-1 bg-editor-panel-bg border border-editor-border rounded-lg p-1">
+                    <div className="flex items-center gap-1 bg-q-surface border border-q-border rounded-lg p-1">
                         {(['7d', '30d', '90d', '12m'] as DateRange[]).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setDateRange(range)}
                                 className={`px-3 py-1.5 text-sm rounded-md transition-colors ${dateRange === range
-                                    ? 'bg-editor-accent text-white'
-                                    : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                    ? 'bg-q-accent text-white'
+                                    : 'text-q-text-secondary hover:text-q-text'
                                     }`}
                             >
                                 {range}
@@ -268,7 +268,7 @@ export function AgencyAnalytics() {
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="p-2 rounded-lg bg-editor-panel-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="p-2 rounded-lg bg-q-surface border border-q-border text-q-text-secondary hover:text-q-text transition-colors"
                         title={t('dashboard.agency.analyticsPage.refreshData')}
                     >
                         <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -276,7 +276,7 @@ export function AgencyAnalytics() {
 
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-editor-accent text-white hover:opacity-90 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         {t('dashboard.agency.analyticsPage.export')}
@@ -291,26 +291,26 @@ export function AgencyAnalytics() {
                 transition={{ delay: 0.1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-4"
             >
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.analyticsPage.mrrTotal')}</p>
+                <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.mrrTotal')}</p>
                     <p className="text-2xl font-bold text-emerald-400">
                         ${aggregatedMetrics.mrr.toLocaleString()}
                     </p>
                 </div>
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.analyticsPage.activeClients')}</p>
+                <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.activeClients')}</p>
                     <p className="text-2xl font-bold text-blue-400">
                         {aggregatedMetrics.activeSubClients}
                     </p>
                 </div>
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.analyticsPage.projects')}</p>
+                <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.projects')}</p>
                     <p className="text-2xl font-bold text-purple-400">
                         {aggregatedMetrics.totalProjects}
                     </p>
                 </div>
-                <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.analyticsPage.aiCreditsUsed')}</p>
+                <div className="bg-q-surface border border-q-border rounded-xl p-4">
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.aiCreditsUsed')}</p>
                     <p className="text-2xl font-bold text-orange-400">
                         {aggregatedMetrics.aiCreditsUsed.toLocaleString()}
                     </p>

@@ -35,7 +35,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     // Loading state
     if (isLoadingPortal) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center">
                 <QuimeraLoader size="md" text={t('common.loading', 'Cargando...')} />
             </div>
         );
@@ -44,12 +44,12 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     // Error state
     if (error || !portalConfig) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center">
                 <div className="text-center p-8">
                     <h1 className="text-2xl font-bold text-foreground mb-2">
                         {t('portal.error', 'Error')}
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {error || t('portal.notFound', 'Portal no encontrado')}
                     </p>
                 </div>
@@ -59,7 +59,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
 
     return (
         <div 
-            className="min-h-screen bg-background"
+            className="min-h-screen bg-q-bg"
             style={{
                 '--primary': theme.primaryColor,
                 '--portal-primary': theme.primaryColor,
@@ -83,13 +83,13 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
             {/* Main content area */}
             <div className="lg:pl-64">
                 {/* Top header */}
-                <header className="sticky top-0 z-30 h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6">
+                <header className="sticky top-0 z-30 h-16 bg-q-surface border-b border-q-border flex items-center justify-between px-4 lg:px-6">
                     {/* Left side */}
                     <div className="flex items-center gap-4">
                         {/* Mobile menu button */}
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="lg:hidden p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <Menu size={24} />
                         </button>
@@ -103,7 +103,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                     {/* Right side */}
                     <div className="flex items-center gap-3">
                         {/* Notifications */}
-                        <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors relative">
+                        <button className="p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors relative">
                             <Bell size={20} />
                             {/* Notification badge */}
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
@@ -138,12 +138,12 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                                         className="fixed inset-0 z-10"
                                         onClick={() => setIsUserMenuOpen(false)}
                                     />
-                                    <div className="absolute right-0 top-full mt-2 z-20 w-56 bg-popover border border-border rounded-xl shadow-xl py-1">
-                                        <div className="px-4 py-3 border-b border-border">
+                                    <div className="absolute right-0 top-full mt-2 z-20 w-56 bg-popover border border-q-border rounded-xl shadow-xl py-1">
+                                        <div className="px-4 py-3 border-b border-q-border">
                                             <p className="text-sm font-medium text-foreground">
                                                 {userDocument?.name || 'Usuario'}
                                             </p>
-                                            <p className="text-xs text-muted-foreground truncate">
+                                            <p className="text-xs text-q-text-muted truncate">
                                                 {user?.email}
                                             </p>
                                         </div>
@@ -154,7 +154,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                                             }}
                                             className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                                         >
-                                            <Settings size={16} className="text-muted-foreground" />
+                                            <Settings size={16} className="text-q-text-muted" />
                                             {t('common.settings', 'Configuración')}
                                         </button>
                                         <button
@@ -180,7 +180,7 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
 
                 {/* Footer */}
                 {theme.footerText && (
-                    <footer className="px-4 lg:px-6 py-4 text-center text-sm text-muted-foreground border-t border-border">
+                    <footer className="px-4 lg:px-6 py-4 text-center text-sm text-q-text-muted border-t border-q-border">
                         {theme.footerText}
                     </footer>
                 )}

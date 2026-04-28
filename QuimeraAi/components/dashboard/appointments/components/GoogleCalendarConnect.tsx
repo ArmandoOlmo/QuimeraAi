@@ -120,7 +120,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
             case 'error':
                 return { color: 'text-red-500', bg: 'bg-red-500/10', label: t('appointments.google.error'), icon: AlertCircle };
             default:
-                return { color: 'text-muted-foreground', bg: 'bg-muted', label: t('appointments.google.notSynced'), icon: Calendar };
+                return { color: 'text-q-text-muted', bg: 'bg-muted', label: t('appointments.google.notSynced'), icon: Calendar };
         }
     };
 
@@ -130,7 +130,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     // Not connected state
     if (!isConnected) {
         return (
-            <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
+            <div className={`rounded-2xl border border-q-border overflow-hidden ${className}`}>
                 <div className="p-6 bg-gradient-to-br from-blue-500/5 via-red-500/5 to-yellow-500/5">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center">
@@ -138,22 +138,22 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         </div>
                         <div>
                             <h3 className="font-bold text-foreground text-lg">Google Calendar</h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('appointments.google.syncAutoDesc')}
                             </p>
                         </div>
                     </div>
 
                     <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Check size={16} className="text-green-500" />
                             {t('appointments.google.bidirectionalSync')}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Check size={16} className="text-green-500" />
                             {t('appointments.google.autoNotifications')}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Check size={16} className="text-green-500" />
                             {t('appointments.google.autoGoogleMeet')}
                         </div>
@@ -183,7 +183,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         </span>
                     </button>
 
-                    <p className="text-xs text-muted-foreground text-center mt-3">
+                    <p className="text-xs text-q-text-muted text-center mt-3">
                         {t('appointments.google.oauthSecure')}
                     </p>
                 </div>
@@ -194,9 +194,9 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
     // Connected state
     return (
         <>
-            <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
+            <div className={`rounded-2xl border border-q-border overflow-hidden ${className}`}>
                 {/* Header */}
-                <div className="p-4 bg-secondary/30 border-b border-border flex items-center justify-between">
+                <div className="p-4 bg-secondary/30 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center">
                             <GoogleCalendarIcon className="w-6 h-6" />
@@ -213,7 +213,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 </span>
                             </div>
                             {config?.calendarName && (
-                                <p className="text-xs text-muted-foreground">{config.calendarName}</p>
+                                <p className="text-xs text-q-text-muted">{config.calendarName}</p>
                             )}
                         </div>
                     </div>
@@ -222,7 +222,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                         <button
                             onClick={handleSync}
                             disabled={isSyncing}
-                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
+                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                             title={t('appointments.google.syncNow')}
                         >
                             {isSyncing ? (
@@ -238,7 +238,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                             p-2 rounded-lg transition-colors
                             ${showSettings
                                     ? 'bg-secondary text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                    : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                                 }
                         `}
                         >
@@ -249,13 +249,13 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
 
                 {/* Settings panel */}
                 {showSettings && (
-                    <div className="p-4 border-b border-border bg-secondary/10 animate-fade-in">
+                    <div className="p-4 border-b border-q-border bg-secondary/10 animate-fade-in">
                         <div className="space-y-4">
                             {/* Sync toggle */}
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="font-medium text-foreground text-sm">{t('appointments.google.autoSync')}</p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-q-text-muted">
                                         {t('appointments.google.autoSyncDesc')}
                                     </p>
                                 </div>
@@ -284,7 +284,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                                 <select
                                     value={config?.calendarId || 'primary'}
                                     onChange={() => { }}
-                                    className="w-full h-10 bg-secondary/50 border border-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                    className="w-full h-10 bg-secondary/50 border border-q-border rounded-lg px-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 >
                                     <option value="primary">{t('appointments.google.primaryCalendar')}</option>
                                 </select>
@@ -319,7 +319,7 @@ export const GoogleCalendarConnect: React.FC<GoogleCalendarConnectProps> = ({
                     )}
 
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t('appointments.google.lastSync')}</span>
+                        <span className="text-q-text-muted">{t('appointments.google.lastSync')}</span>
                         <span className="text-foreground">
                             {lastSyncTime
                                 ? lastSyncTime.toLocaleString(i18n.language, {

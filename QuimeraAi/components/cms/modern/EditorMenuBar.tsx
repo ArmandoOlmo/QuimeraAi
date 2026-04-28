@@ -31,7 +31,7 @@ const MenuButton: React.FC<{
         disabled={disabled}
         className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isActive
             ? 'text-primary'
-            : 'text-muted-foreground hover:text-foreground'
+            : 'text-q-text-muted hover:text-foreground'
             }`}
         title={title}
     >
@@ -69,7 +69,7 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
     const colors = ['#000000', '#4b5563', '#9ca3af', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
 
     return (
-        <div className="border-b border-border bg-card px-2 py-1.5 flex flex-wrap items-center gap-0.5 sticky top-0 z-30">
+        <div className="border-b border-q-border bg-q-surface px-2 py-1.5 flex flex-wrap items-center gap-0.5 sticky top-0 z-30">
             {/* Undo / Redo */}
             <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('cms_editor.toolbar.undo')}>
                 <Undo size={16} />
@@ -84,13 +84,13 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
             <div className="relative shrink-0">
                 <button
                     onClick={() => setShowHeadings(!showHeadings)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-q-text-muted hover:text-foreground hover:bg-muted transition-colors"
                 >
                     <span className="truncate max-w-[80px]">{getBlockLabel()}</span>
                     <ChevronDown size={12} className="opacity-50" />
                 </button>
                 {showHeadings && (
-                    <div className="absolute top-full left-0 mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                    <div className="absolute top-full left-0 mt-1 w-44 bg-q-surface border border-q-border rounded-lg shadow-xl z-50 py-1">
                         <button onClick={() => { editor.chain().focus().setParagraph().run(); setShowHeadings(false); }} className="block w-full text-left px-3 py-1.5 text-sm hover:bg-muted flex items-center text-foreground">
                             <Type size={14} className="mr-2" /> {t('cms_editor.toolbar.paragraph')}
                         </button>
@@ -103,8 +103,8 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                         <button onClick={() => setHeading(3)} className="block w-full text-left px-3 py-1.5 text-sm font-semibold hover:bg-muted flex items-center text-foreground">
                             <Heading3 size={14} className="mr-2" /> {t('cms_editor.toolbar.h3')}
                         </button>
-                        <div className="border-t border-border my-1"></div>
-                        <button onClick={() => { editor.chain().focus().toggleBlockquote().run(); setShowHeadings(false); }} className="block w-full text-left px-3 py-1.5 text-sm italic hover:bg-muted flex items-center text-muted-foreground">
+                        <div className="border-t border-q-border my-1"></div>
+                        <button onClick={() => { editor.chain().focus().toggleBlockquote().run(); setShowHeadings(false); }} className="block w-full text-left px-3 py-1.5 text-sm italic hover:bg-muted flex items-center text-q-text-muted">
                             <Quote size={14} className="mr-2" /> {t('cms_editor.toolbar.quote')}
                         </button>
                     </div>
@@ -138,14 +138,14 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                     <Palette size={16} />
                 </MenuButton>
                 {showColors && (
-                    <div className="absolute top-full left-0 mt-1 p-3 bg-card border border-border rounded-lg shadow-xl z-50 w-48">
-                        <p className="text-xs font-bold text-muted-foreground mb-2">{t('cms_editor.toolbar.textColor')}</p>
+                    <div className="absolute top-full left-0 mt-1 p-3 bg-q-surface border border-q-border rounded-lg shadow-xl z-50 w-48">
+                        <p className="text-xs font-bold text-q-text-muted mb-2">{t('cms_editor.toolbar.textColor')}</p>
                         <div className="grid grid-cols-5 gap-1.5">
                             {colors?.map(color => (
                                 <button
                                     key={color}
                                     onClick={() => { editor.chain().focus().setColor(color).run(); setShowColors(false); }}
-                                    className="w-7 h-7 rounded-md border-2 border-border hover:scale-110 transition-transform"
+                                    className="w-7 h-7 rounded-md border-2 border-q-border hover:scale-110 transition-transform"
                                     style={{ backgroundColor: color }}
                                     title={color}
                                 />
@@ -159,14 +159,14 @@ const EditorMenuBar: React.FC<EditorMenuBarProps> = ({ editor, onImageUpload, on
                     <Highlighter size={16} />
                 </MenuButton>
                 {showHighlight && (
-                    <div className="absolute top-full left-0 mt-1 p-3 bg-card border border-border rounded-lg shadow-xl z-50 w-48">
-                        <p className="text-xs font-bold text-muted-foreground mb-2">{t('cms_editor.toolbar.highlight')}</p>
+                    <div className="absolute top-full left-0 mt-1 p-3 bg-q-surface border border-q-border rounded-lg shadow-xl z-50 w-48">
+                        <p className="text-xs font-bold text-q-text-muted mb-2">{t('cms_editor.toolbar.highlight')}</p>
                         <div className="grid grid-cols-5 gap-1.5">
                             {['#fef08a', '#fbcfe8', '#bfdbfe', '#bbf7d0', '#fed7aa'].map(color => (
                                 <button
                                     key={color}
                                     onClick={() => { editor.chain().focus().setHighlight({ color }).run(); setShowHighlight(false); }}
-                                    className="w-7 h-7 rounded-md border-2 border-border hover:scale-110 transition-transform"
+                                    className="w-7 h-7 rounded-md border-2 border-q-border hover:scale-110 transition-transform"
                                     style={{ backgroundColor: color }}
                                     title={color}
                                 />

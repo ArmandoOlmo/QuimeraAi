@@ -11,7 +11,7 @@ export const AgencyLandingEditor: React.FC = () => {
 
     return (
         <AgencyWebEditorProvider>
-            <div className="flex flex-col h-full bg-editor-bg text-editor-text-primary">
+            <div className="flex flex-col h-full bg-q-bg text-q-text">
                 {/* Agregamos el header simple (sin DashboardSidebar para no mostrar Shop/Blog) */}
                 <Suspense fallback={<QuimeraLoader />}>
                     <SimpleEditorHeader onOpenMobileMenu={() => {}} />

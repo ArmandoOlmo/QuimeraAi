@@ -75,7 +75,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             {!isAdding && !editingId && (
                 <button
                     onClick={() => setIsAdding(true)}
-                    className="w-full py-3 px-4 border-2 border-dashed border-border rounded-xl hover:border-primary/50 hover:bg-card/50 transition-all text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 border-2 border-dashed border-q-border rounded-xl hover:border-primary/50 hover:bg-q-surface/50 transition-all text-sm font-medium text-q-text-muted hover:text-primary flex items-center justify-center gap-2"
                 >
                     <Plus size={18} />
                     {t('aiAssistant.faq.addFaq')}
@@ -84,7 +84,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
 
             {/* Add/Edit Form */}
             {(isAdding || editingId) && (
-                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+                <div className="bg-q-surface border border-q-border rounded-xl p-4 space-y-3">
                     <div>
                         <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
                             {t('aiAssistant.faq.question')}
@@ -94,7 +94,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                             value={formData.question}
                             onChange={(e) => setFormData({ ...formData, question: e.target.value })}
                             placeholder={t('aiAssistant.faq.questionPlaceholder')}
-                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                             autoFocus
                         />
                     </div>
@@ -106,7 +106,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                             value={formData.answer}
                             onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
                             placeholder={t('aiAssistant.faq.answerPlaceholder')}
-                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[100px] resize-y"
+                            className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[100px] resize-y"
                             rows={4}
                         />
                     </div>
@@ -140,7 +140,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                         {faqs.map((faq) => (
                             <div
                                 key={faq.id}
-                                className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors group"
+                                className="bg-q-surface border border-q-border rounded-lg p-4 hover:border-primary/50 transition-colors group"
                             >
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                     <h5 className="text-sm font-semibold text-foreground">
@@ -163,7 +163,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                <p className="text-xs text-q-text-muted leading-relaxed">
                                     {faq.answer}
                                 </p>
                             </div>
@@ -174,9 +174,9 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
 
             {/* Empty State */}
             {faqs.length === 0 && !isAdding && (
-                <div className="text-center py-8 bg-card/50 rounded-xl border border-dashed border-border">
-                    <p className="text-sm text-muted-foreground mb-1">{t('aiAssistant.faq.noFaqs')}</p>
-                    <p className="text-xs text-muted-foreground">
+                <div className="text-center py-8 bg-q-surface/50 rounded-xl border border-dashed border-q-border">
+                    <p className="text-sm text-q-text-muted mb-1">{t('aiAssistant.faq.noFaqs')}</p>
+                    <p className="text-xs text-q-text-muted">
                         {t('aiAssistant.faq.noFaqsDesc')}
                     </p>
                 </div>

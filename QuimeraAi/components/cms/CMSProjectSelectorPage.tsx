@@ -129,7 +129,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
     };
 
     return (
-        <div className="h-screen bg-background flex overflow-hidden">
+        <div className="h-screen bg-q-bg flex overflow-hidden">
             {/* Sidebar */}
             <div className="flex-shrink-0 h-screen overflow-visible z-50">
                 <DashboardSidebar
@@ -141,12 +141,12 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-card/50 backdrop-blur-md border-b border-border flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
+                <header className="h-14 bg-q-surface/50 backdrop-blur-md border-b border-q-border flex-shrink-0 flex items-center px-4 sm:px-6 lg:px-8 z-40">
                     {/* Left: Menu & Title */}
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="lg:hidden p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             aria-label={t('common.openMenu', 'Abrir menú')}
                         >
                             <MenuIcon size={20} />
@@ -163,14 +163,14 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                     <div className="flex items-center gap-3 ml-auto">
                         <button
                             onClick={() => setIsSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-foreground transition-colors"
                             aria-label={t('common.search', 'Buscar')}
                         >
                             <Search size={20} />
                         </button>
                         <button
                             onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-foreground transition-colors"
                             aria-label={t('common.back', 'Volver')}
                         >
                             <ArrowLeft size={20} />
@@ -197,7 +197,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                                         {t('cms.yourProjects', 'Tus Proyectos')}
                                     </h2>
-                                    <p className="text-muted-foreground">
+                                    <p className="text-q-text-muted">
                                         {t('cms.selectProjectDescription', 'Cada proyecto tiene su propio contenido (blog, artículos, páginas). Selecciona uno para gestionar su contenido.')}
                                     </p>
                                 </div>
@@ -212,36 +212,36 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
 
                             {/* Stats Bar */}
                             <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-primary/30 transition-colors">
+                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-primary/30 transition-colors">
                                     <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
                                             <Layers className="text-primary" size={18} />
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{userProjects.length}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('dashboard.totalProjects', 'Total')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.totalProjects', 'Total')}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-green-500/30 transition-colors">
+                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-green-500/30 transition-colors">
                                     <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/20">
                                             <Globe className="text-green-500" size={18} />
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{publishedCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('dashboard.published', 'Publicados')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.published', 'Publicados')}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-card/50 rounded-xl p-3 sm:p-4 border border-border hover:border-slate-500/30 transition-colors">
+                                <div className="bg-q-surface/50 rounded-xl p-3 sm:p-4 border border-q-border hover:border-slate-500/30 transition-colors">
                                     <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="p-1.5 sm:p-2 rounded-lg bg-slate-500/20">
                                             <FileEdit className="text-slate-400" size={18} />
                                         </div>
                                         <div>
                                             <p className="text-xl sm:text-2xl font-bold text-foreground">{draftCount}</p>
-                                            <p className="text-[10px] sm:text-xs text-muted-foreground">{t('dashboard.draft', 'Borradores')}</p>
+                                            <p className="text-[10px] sm:text-xs text-q-text-muted">{t('dashboard.draft', 'Borradores')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -260,7 +260,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                         type="checkbox"
                                         checked={selectedProjects.length === filteredProjects.length && filteredProjects.length > 0}
                                         onChange={handleSelectAll}
-                                        className="rounded border-border w-3.5 h-3.5 accent-primary"
+                                        className="rounded border-q-border w-3.5 h-3.5 accent-primary"
                                     />
                                     {selectedProjects.length > 0 && (
                                         <span className="text-[10px] font-semibold text-primary">
@@ -270,13 +270,13 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                 </label>
                             )}
 
-                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                            <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
                                 {filteredProjects.length}/{userProjects.length}
                             </span>
 
                             {/* Status filter - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('cms.filters.allStatus', 'Estado')}>
-                                <Globe size={15} className={`pointer-events-none transition-colors ${filterStatus !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                <Globe size={15} className={`pointer-events-none transition-colors ${filterStatus !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
                                 <select
                                     value={filterStatus}
                                     onChange={(e) => setFilterStatus(e.target.value as any)}
@@ -290,7 +290,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
 
                             {/* Sort - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('common.mostRecent', 'Ordenar')}>
-                                <ChevronDown size={15} className="pointer-events-none text-muted-foreground hover:text-foreground transition-colors" />
+                                <ChevronDown size={15} className="pointer-events-none text-q-text-muted hover:text-foreground transition-colors" />
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as 'recent' | 'name')}
@@ -305,7 +305,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             {filterStatus !== 'all' && (
                                 <button
                                     onClick={() => setFilterStatus('all')}
-                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
                                     title={t('common.clear', 'Limpiar filtros')}
                                 >
                                     <X size={13} />
@@ -319,14 +319,14 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             <div className="flex gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="Grid View"
                                 >
                                     <LayoutGrid size={15} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="List View"
                                 >
                                     <List size={15} />
@@ -336,7 +336,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
 
                         {/* Results Count */}
                         {searchQuery && (
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-sm text-q-text-muted mb-4">
                                 {filteredProjects.length} {t('common.resultsFound', 'resultados encontrados')}
                             </p>
                         )}
@@ -346,16 +346,16 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                             <div className="flex items-center justify-center h-64">
                                 <div className="text-center">
                                     <QuimeraLoader size="md" />
-                                    <p className="text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
+                                    <p className="text-q-text-muted">{t('common.loading', 'Cargando...')}</p>
                                 </div>
                             </div>
                         ) : filteredProjects.length === 0 ? (
                             <div className="text-center py-16">
                                 <div className="p-4 bg-muted/30 rounded-full w-fit mx-auto mb-6">
                                     {searchQuery ? (
-                                        <Search className="text-muted-foreground" size={48} />
+                                        <Search className="text-q-text-muted" size={48} />
                                     ) : (
-                                        <FileText className="text-muted-foreground" size={48} />
+                                        <FileText className="text-q-text-muted" size={48} />
                                     )}
                                 </div>
                                 <h3 className="text-xl font-bold text-foreground mb-2">
@@ -363,7 +363,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                                         ? t('cms.noProjectsFound', 'No se encontraron proyectos')
                                         : t('cms.noProjectsYet', 'No tienes proyectos aún')}
                                 </h3>
-                                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                                <p className="text-q-text-muted mb-6 max-w-md mx-auto">
                                     {searchQuery
                                         ? t('cms.tryDifferentSearch', 'Intenta con otros términos de búsqueda')
                                         : t('cms.createFirstProject', 'Crea tu primer proyecto para gestionar su contenido')}
@@ -412,7 +412,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
             {/* Floating Bulk Actions Bar */}
             {selectedProjects.length > 0 && (
                 <div className="fixed bottom-[106px] left-1/2 -translate-x-1/2 z-[99998]" style={{ animation: 'slideUp 0.3s ease-out' }}>
-                    <div className="bg-card border border-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
+                    <div className="bg-q-surface border border-q-border rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 backdrop-blur-xl">
                         <span className="text-sm font-bold text-foreground whitespace-nowrap">
                             {selectedProjects.length} {t('common.selected', 'seleccionados')}
                         </span>
@@ -460,7 +460,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
     const { t } = useTranslation();
 
     return (
-        <div className={`group relative bg-card/50 hover:bg-card border rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+        <div className={`group relative bg-q-surface/50 hover:bg-q-surface border rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
             {/* Selection Checkbox */}
             <div
                 className="absolute top-3 left-3 z-10"
@@ -483,7 +483,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                            <Layers size={40} className="text-muted-foreground/30" />
+                            <Layers size={40} className="text-q-text-muted/30" />
                         </div>
                     )}
 
@@ -511,7 +511,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                     <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
                         {project.name}
                     </h3>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-q-text-muted">
                         <Clock size={12} />
                         <span>{formatDate(project.lastUpdated)}</span>
                     </div>
@@ -534,13 +534,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
     const { t } = useTranslation();
 
     return (
-        <div className={`w-full flex items-center gap-4 p-4 bg-card/50 hover:bg-card border rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+        <div className={`w-full flex items-center gap-4 p-4 bg-q-surface/50 hover:bg-q-surface border rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
             {/* Selection Checkbox */}
             <div
                 className="flex-shrink-0 cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
             >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-primary text-white shadow-lg' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-primary text-white shadow-lg' : 'bg-secondary/50 text-q-text-muted hover:bg-secondary'}`}>
                     {isSelected && <span className="text-xs font-bold">✓</span>}
                 </div>
             </div>
@@ -557,7 +557,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                            <Layers size={18} className="text-muted-foreground/30" />
+                            <Layers size={18} className="text-q-text-muted/30" />
                         </div>
                     )}
                 </div>
@@ -567,7 +567,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                     <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                         {project.name}
                     </h3>
-                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground mt-1">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs text-q-text-muted mt-1">
                         <span className={`flex items-center gap-1 ${project.status === 'Published' ? 'text-green-500' : ''}`}>
                             {project.status === 'Published' ? <Globe size={12} /> : <FileEdit size={12} />}
                             <span className="hidden sm:inline">
@@ -583,7 +583,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
                 </div>
 
                 {/* Action */}
-                <div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-2 text-q-text-muted group-hover:text-primary transition-colors">
                     <span className="text-sm font-medium hidden md:block">
                         {t('cms.manageContent', 'Gestionar Contenido')}
                     </span>

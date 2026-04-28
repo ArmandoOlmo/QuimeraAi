@@ -170,11 +170,11 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* Main Editor */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
                         <HeaderBackButton onClick={onClose} label={t('common.back', 'Back')} />
                         <div className="h-6 w-px bg-border" />
@@ -187,7 +187,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                         <button
                             onClick={() => setIsPreview(!isPreview)}
                             className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                                isPreview ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'
+                                isPreview ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground'
                             }`}
                         >
                             <Eye size={14} />
@@ -237,8 +237,8 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                 )}
                             </div>
                             <h1 className="text-4xl font-bold mb-4">{title || 'Untitled Article'}</h1>
-                            <p className="text-lg text-muted-foreground mb-6">{excerpt}</p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">
+                            <p className="text-lg text-q-text-muted mb-6">{excerpt}</p>
+                            <div className="flex items-center gap-4 text-sm text-q-text-muted mb-8">
                                 <span>By {author}</span>
                                 <span>•</span>
                                 <span>{new Date().toLocaleDateString()}</span>
@@ -258,24 +258,24 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Article title..."
-                                    className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/50"
+                                    className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-q-text-muted/50"
                                 />
                             </div>
 
                             {/* Slug */}
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-sm text-q-text-muted">
                                 <LinkIcon size={14} />
                                 <span>/blog/</span>
                                 <input
                                     type="text"
                                     value={slug}
                                     onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                                    className="flex-1 bg-secondary/30 px-2 py-1 rounded border border-border outline-none focus:border-primary"
+                                    className="flex-1 bg-secondary/30 px-2 py-1 rounded border border-q-border outline-none focus:border-primary"
                                 />
                             </div>
 
                             {/* Featured Image */}
-                            <div className="border border-dashed border-border rounded-xl p-6">
+                            <div className="border border-dashed border-q-border rounded-xl p-6">
                                 {featuredImage ? (
                                     <div className="relative">
                                         <img 
@@ -292,14 +292,14 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-8">
-                                        <ImageIcon size={40} className="text-muted-foreground/30 mb-3" />
-                                        <p className="text-sm text-muted-foreground mb-3">Add a featured image</p>
+                                        <ImageIcon size={40} className="text-q-text-muted/30 mb-3" />
+                                        <p className="text-sm text-q-text-muted mb-3">Add a featured image</p>
                                         <input
                                             type="text"
                                             value={featuredImage}
                                             onChange={(e) => setFeaturedImage(e.target.value)}
                                             placeholder="Paste image URL..."
-                                            className="w-full max-w-md px-3 py-2 text-sm bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                            className="w-full max-w-md px-3 py-2 text-sm bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                         />
                                     </div>
                                 )}
@@ -307,7 +307,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
 
                             {/* Excerpt */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     Excerpt / Summary
                                 </label>
                                 <textarea
@@ -315,18 +315,18 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     onChange={(e) => setExcerpt(e.target.value)}
                                     placeholder="Brief summary of the article..."
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary resize-none"
+                                    className="w-full px-4 py-3 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary resize-none"
                                 />
                             </div>
 
                             {/* Content Editor */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     Content (HTML)
                                 </label>
                                 
                                 {/* Toolbar */}
-                                <div className="flex items-center gap-1 p-2 bg-secondary/20 border border-border border-b-0 rounded-t-lg">
+                                <div className="flex items-center gap-1 p-2 bg-secondary/20 border border-q-border border-b-0 rounded-t-lg">
                                     <button
                                         onClick={() => insertFormatting('strong')}
                                         className="p-2 hover:bg-secondary rounded transition-colors"
@@ -394,21 +394,21 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="Write your article content here (HTML supported)..."
                                     rows={15}
-                                    className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-b-lg outline-none focus:border-primary resize-none font-mono text-sm"
+                                    className="w-full px-4 py-3 bg-secondary/30 border border-q-border rounded-b-lg outline-none focus:border-primary resize-none font-mono text-sm"
                                 />
                             </div>
 
                             {/* Meta Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-secondary/10 rounded-xl border border-border">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-secondary/10 rounded-xl border border-q-border">
                                 {/* Category */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Category
                                     </label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as AppArticleCategory)}
-                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                     >
                                         {CATEGORIES.map(cat => (
                                             <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -418,20 +418,20 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
 
                                 {/* Author */}
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Author
                                     </label>
                                     <input
                                         type="text"
                                         value={author}
                                         onChange={(e) => setAuthor(e.target.value)}
-                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                     />
                                 </div>
 
                                 {/* Tags */}
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Tags
                                     </label>
                                     <div className="flex flex-wrap gap-2 mb-2">
@@ -457,7 +457,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                             onChange={(e) => setTagInput(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                             placeholder="Add a tag..."
-                                            className="flex-1 px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                            className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                         />
                                         <button
                                             onClick={handleAddTag}
@@ -474,7 +474,7 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                         <Star className="text-yellow-500" size={20} />
                                         <div>
                                             <p className="font-medium">Featured Article</p>
-                                            <p className="text-sm text-muted-foreground">Show this article prominently on the homepage</p>
+                                            <p className="text-sm text-q-text-muted">Show this article prominently on the homepage</p>
                                         </div>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
@@ -490,14 +490,14 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                             </div>
 
                             {/* SEO Section */}
-                            <div className="p-6 bg-secondary/10 rounded-xl border border-border">
+                            <div className="p-6 bg-secondary/10 rounded-xl border border-q-border">
                                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                                     <Globe size={16} />
                                     SEO Settings
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                             Meta Title
                                         </label>
                                         <input
@@ -505,11 +505,11 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                             value={metaTitle}
                                             onChange={(e) => setMetaTitle(e.target.value)}
                                             placeholder={title || 'SEO title...'}
-                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary"
+                                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-q-text-muted mb-2">
                                             Meta Description
                                         </label>
                                         <textarea
@@ -517,9 +517,9 @@ const AppArticleEditor: React.FC<AppArticleEditorProps> = ({ article, onClose })
                                             onChange={(e) => setMetaDescription(e.target.value)}
                                             placeholder={excerpt || 'SEO description...'}
                                             rows={2}
-                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary resize-none"
+                                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg outline-none focus:border-primary resize-none"
                                         />
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                        <p className="text-xs text-q-text-muted mt-1">
                                             {metaDescription.length}/160 characters
                                         </p>
                                     </div>

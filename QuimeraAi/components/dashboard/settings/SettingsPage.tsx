@@ -80,7 +80,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
     }
 
     return (
-        <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-q-bg">
             {/* Main Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -90,12 +90,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background sticky top-0 z-10">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg sticky top-0 z-10">
                     <div className="flex items-center gap-1 sm:gap-3">
                         {/* Botón menú sidebar - solo en móvil */}
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
                             aria-label={t('common.openMenu', 'Abrir menú')}
                         >
                             <Menu className="w-5 h-5" />
@@ -105,7 +105,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                             {t('settings.title', 'Configuración del Workspace')}
                         </h1>
                         {currentTenant && (
-                            <span className="px-2 py-1 text-xs bg-secondary rounded-md text-muted-foreground hidden sm:inline">
+                            <span className="px-2 py-1 text-xs bg-secondary rounded-md text-q-text-muted hidden sm:inline">
                                 {currentTenant.name}
                             </span>
                         )}
@@ -118,7 +118,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                 {/* Settings Content */}
                 <div className="flex-1 overflow-auto">
                     {/* Tab Navigation - Horizontal */}
-                    <div className="border-b border-border bg-card/50 px-6">
+                    <div className="border-b border-q-border bg-q-surface/50 px-6">
                         <div className="flex gap-1">
                             {tabs.map((tab) => {
                                 const Icon = tab.icon;
@@ -129,7 +129,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                                         onClick={() => handleTabChange(tab.id)}
                                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all ${isActive
                                             ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                                            : 'border-transparent text-q-text-muted hover:text-foreground hover:border-q-border'
                                             }`}
                                     >
                                         <Icon size={18} />

@@ -56,7 +56,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
     ];
 
     return (
-        <div className={cn("flex flex-col border-b border-border bg-background", className)}>
+        <div className={cn("flex flex-col border-b border-q-border bg-q-bg", className)}>
             {/* Row 1: Date Nav + Actions */}
             <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 gap-2">
                 {/* Left: Date Navigation */}
@@ -64,7 +64,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                     <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 shrink-0">
                         <button
                             onClick={() => onNavigate('prev')}
-                            className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-foreground transition-all active:scale-95 touch-manipulation"
+                            className="p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-all active:scale-95 touch-manipulation"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -76,7 +76,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         </button>
                         <button
                             onClick={() => onNavigate('next')}
-                            className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-foreground transition-all active:scale-95 touch-manipulation"
+                            className="p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-all active:scale-95 touch-manipulation"
                         >
                             <ChevronRight size={18} />
                         </button>
@@ -98,8 +98,8 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                                 className={cn(
                                     "px-2 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all touch-manipulation",
                                     viewMode === view.id
-                                        ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                                        ? "bg-q-bg text-foreground shadow-sm"
+                                        : "text-q-text-muted hover:text-foreground hover:bg-q-bg/50"
                                 )}
                             >
                                 {view.label}
@@ -111,7 +111,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         onClick={onRefresh}
                         disabled={isLoading}
                         className={cn(
-                            "hidden sm:flex p-2 sm:p-2.5 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors",
+                            "hidden sm:flex p-2 sm:p-2.5 rounded-full text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors",
                             isLoading && "opacity-50"
                         )}
                     >
@@ -147,7 +147,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         {showMobileSearch ? (
                             <div className="flex items-center gap-2">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted w-4 h-4" />
                                     <input
                                         type="text"
                                         placeholder="Buscar..."
@@ -159,7 +159,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                                 </div>
                                 <button
                                     onClick={() => { setShowMobileSearch(false); onSearch(''); }}
-                                    className="p-2 text-muted-foreground hover:text-foreground touch-manipulation"
+                                    className="p-2 text-q-text-muted hover:text-foreground touch-manipulation"
                                 >
                                     <X size={16} />
                                 </button>
@@ -167,7 +167,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         ) : (
                             <button
                                 onClick={() => setShowMobileSearch(true)}
-                                className="h-9 w-9 flex items-center justify-center bg-secondary/30 hover:bg-secondary/50 rounded-full text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
+                                className="h-9 w-9 flex items-center justify-center bg-secondary/30 hover:bg-secondary/50 rounded-full text-q-text-muted hover:text-foreground transition-colors touch-manipulation"
                             >
                                 <Search size={16} />
                             </button>
@@ -176,7 +176,7 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
 
                     {/* Desktop search - always visible */}
                     <div className="hidden sm:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 group-focus-within:text-foreground transition-colors" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted w-4 h-4 group-focus-within:text-foreground transition-colors" />
                         <input
                             type="text"
                             placeholder="Buscar cita o cliente..."

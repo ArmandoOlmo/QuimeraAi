@@ -168,9 +168,9 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between flex-shrink-0">
+                <div className="p-6 border-b border-q-border flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <Users className="text-primary" size={20} />
@@ -179,7 +179,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                             <h3 className="text-lg font-bold text-foreground">
                                 {t('email.addContact', 'Añadir Contacto')}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {audience.name}
                             </p>
                         </div>
@@ -188,17 +188,17 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                         onClick={onClose}
                         className="p-2 hover:bg-muted rounded-lg transition-colors"
                     >
-                        <X size={20} className="text-muted-foreground" />
+                        <X size={20} className="text-q-text-muted" />
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-border flex-shrink-0">
+                <div className="flex border-b border-q-border flex-shrink-0">
                     <button
                         onClick={() => setActiveTab('existing')}
                         className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'existing'
                             ? 'text-primary border-b-2 border-primary bg-primary/5'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <Users size={16} className="inline-block mr-2" />
@@ -208,7 +208,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                         onClick={() => setActiveTab('new')}
                         className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'new'
                             ? 'text-primary border-b-2 border-primary bg-primary/5'
-                            : 'text-muted-foreground hover:text-foreground'
+                            : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <UserPlus size={16} className="inline-block mr-2" />
@@ -222,7 +222,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                         <div className="space-y-4">
                             {/* Search */}
                             <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                                <Search className="w-4 h-4 text-muted-foreground" />
+                                <Search className="w-4 h-4 text-q-text-muted" />
                                 <input
                                     type="text"
                                     value={searchTerm}
@@ -234,7 +234,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
 
                             {/* Leads list */}
                             {availableLeads.length === 0 ? (
-                                <div className="text-center py-8 text-muted-foreground">
+                                <div className="text-center py-8 text-q-text-muted">
                                     <Users className="mx-auto mb-2" size={32} />
                                     <p className="text-sm">
                                         {searchTerm
@@ -251,7 +251,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                             onClick={() => toggleLeadSelection(lead.id)}
                                             className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${selectedLeadIds.includes(lead.id)
                                                 ? 'border-primary bg-primary/10'
-                                                : 'border-border hover:bg-muted/50'
+                                                : 'border-q-border hover:bg-muted/50'
                                                 }`}
                                         >
                                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${selectedLeadIds.includes(lead.id)
@@ -262,10 +262,10 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                             </div>
                                             <div className="flex-1 text-left">
                                                 <p className="font-medium text-foreground">{lead.name || 'Sin nombre'}</p>
-                                                <p className="text-sm text-muted-foreground">{lead.email}</p>
+                                                <p className="text-sm text-q-text-muted">{lead.email}</p>
                                             </div>
                                             {lead.company && (
-                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                                                <span className="text-xs text-q-text-muted bg-muted px-2 py-1 rounded">
                                                     {lead.company}
                                                 </span>
                                             )}
@@ -285,7 +285,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-sm text-q-text-muted mb-4">
                                 {t('email.createNewContactDesc', 'El nuevo contacto se creará como Lead en el CRM y se añadirá a esta audiencia.')}
                             </p>
 
@@ -299,7 +299,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                     value={newContact.name}
                                     onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
                                     placeholder="John Doe"
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -314,7 +314,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                     value={newContact.email}
                                     onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
                                     placeholder="john@example.com"
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -329,7 +329,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                     value={newContact.phone}
                                     onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
                                     placeholder="+1 234 567 890"
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
@@ -344,7 +344,7 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                                     value={newContact.company}
                                     onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
                                     placeholder="Acme Inc."
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
                         </div>
@@ -352,10 +352,10 @@ const AddContactToAudienceModal: React.FC<AddContactToAudienceModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-border flex justify-end gap-3 flex-shrink-0">
+                <div className="p-6 border-t border-q-border flex justify-end gap-3 flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                        className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors"
                     >
                         {t('common.cancel', 'Cancelar')}
                     </button>

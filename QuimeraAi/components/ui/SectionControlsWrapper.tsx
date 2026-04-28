@@ -22,7 +22,7 @@ const SectionControlsWrapper: React.FC<SectionControlsWrapperProps> = ({ section
     if (childrenArray.length === 1) {
         return <TabbedControls 
             contentTab={children}
-            styleTab={<div className="text-center text-editor-text-secondary py-8">No style options available</div>}
+            styleTab={<div className="text-center text-q-text-secondary py-8">No style options available</div>}
         />;
     }
 
@@ -36,7 +36,7 @@ const SectionControlsWrapper: React.FC<SectionControlsWrapperProps> = ({ section
         // For simpler sections, just show in content tab
         return <TabbedControls 
             contentTab={children}
-            styleTab={<div className="text-center text-editor-text-secondary py-8">No style options available</div>}
+            styleTab={<div className="text-center text-q-text-secondary py-8">No style options available</div>}
         />;
     }
 
@@ -58,7 +58,7 @@ export const organizeControlsIntoTabs = (
     if (forceContentOnly) {
         return {
             content: controls,
-            style: <div className="text-center text-editor-text-secondary py-8">No style options</div>
+            style: <div className="text-center text-q-text-secondary py-8">No style options</div>
         };
     }
 
@@ -68,7 +68,7 @@ export const organizeControlsIntoTabs = (
     // For now, return everything in content until we implement smart parsing
     return {
         content: controls,
-        style: <div className="text-center text-editor-text-secondary py-8">Style options are mixed with content</div>
+        style: <div className="text-center text-q-text-secondary py-8">Style options are mixed with content</div>
     };
 };
 

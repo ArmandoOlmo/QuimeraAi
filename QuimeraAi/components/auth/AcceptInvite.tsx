@@ -98,10 +98,10 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
     // Loading state
     if (isAuthLoading || isInviteLoading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 size={40} className="animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('common.loading', 'Cargando...')}
                     </p>
                 </div>
@@ -112,15 +112,15 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
     // Error state
     if (inviteError || !invite) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-xl p-8 text-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-q-surface border border-q-border rounded-2xl shadow-xl p-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-6">
                         <AlertCircle size={32} className="text-destructive" />
                     </div>
                     <h1 className="text-2xl font-bold text-foreground mb-2">
                         {t('invite.notFound', 'Invitación no encontrada')}
                     </h1>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {inviteError || t('invite.invalidLink', 'Este enlace de invitación no es válido o ya no está disponible.')}
                     </p>
                     <button
@@ -137,15 +137,15 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
     // Expired state
     if (isExpired) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-xl p-8 text-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-q-surface border border-q-border rounded-2xl shadow-xl p-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-6">
                         <Clock size={32} className="text-yellow-500" />
                     </div>
                     <h1 className="text-2xl font-bold text-foreground mb-2">
                         {t('invite.expired', 'Invitación expirada')}
                     </h1>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {t('invite.expiredDescription', 'Esta invitación ha expirado. Contacta al administrador del workspace para recibir una nueva invitación.')}
                     </p>
                     <button
@@ -162,15 +162,15 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
     // Already accepted state
     if (invite.status !== 'pending') {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-xl p-8 text-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-q-surface border border-q-border rounded-2xl shadow-xl p-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
                         <Check size={32} className="text-green-500" />
                     </div>
                     <h1 className="text-2xl font-bold text-foreground mb-2">
                         {t('invite.alreadyAccepted', 'Invitación ya aceptada')}
                     </h1>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {t('invite.alreadyAcceptedDescription', 'Esta invitación ya fue aceptada. Puedes acceder al workspace desde tu dashboard.')}
                     </p>
                     <button
@@ -187,18 +187,18 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
     // Success state
     if (accepted) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-xl p-8 text-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-q-surface border border-q-border rounded-2xl shadow-xl p-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
                         <Check size={32} className="text-green-500" />
                     </div>
                     <h1 className="text-2xl font-bold text-foreground mb-2">
                         {t('invite.accepted', '¡Bienvenido!')}
                     </h1>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {t('invite.acceptedDescription', 'Te has unido exitosamente a')} <strong>{invite.tenantName}</strong>
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-q-text-muted">
                         {t('invite.redirecting', 'Redirigiendo al dashboard...')}
                     </p>
                 </div>
@@ -208,12 +208,12 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
 
     // Main invitation view
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
             <div className="max-w-lg w-full">
                 {/* Card */}
-                <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-q-surface border border-q-border rounded-2xl shadow-xl overflow-hidden">
                     {/* Header with branding */}
-                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 text-center border-b border-border">
+                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 text-center border-b border-q-border">
                         {invite.tenantLogo ? (
                             <img
                                 src={invite.tenantLogo}
@@ -228,7 +228,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                         <h1 className="text-2xl font-bold text-foreground mb-1">
                             {invite.tenantName}
                         </h1>
-                        <p className="text-muted-foreground">
+                        <p className="text-q-text-muted">
                             {t('invite.invitedBy', 'Te ha invitado')} {invite.invitedByName || 'alguien'}
                         </p>
                     </div>
@@ -237,7 +237,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                     <div className="p-8">
                         {/* Role info */}
                         <div className="flex items-start gap-4 p-4 bg-secondary/50 rounded-xl mb-6">
-                            <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 rounded-xl bg-q-bg flex items-center justify-center flex-shrink-0">
                                 {getRoleIcon(invite.role)}
                             </div>
                             <div>
@@ -247,7 +247,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                                 <p className="text-lg font-bold text-foreground">
                                     {AGENCY_ROLE_LABELS[invite.role]}
                                 </p>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <p className="text-sm text-q-text-muted mt-1">
                                     {AGENCY_ROLE_DESCRIPTIONS[invite.role]}
                                 </p>
                             </div>
@@ -256,7 +256,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                         {/* Personal message */}
                         {invite.message && (
                             <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl mb-6">
-                                <p className="text-sm text-muted-foreground mb-1">
+                                <p className="text-sm text-q-text-muted mb-1">
                                     {t('invite.personalMessage', 'Mensaje personal:')}
                                 </p>
                                 <p className="text-foreground italic">"{invite.message}"</p>
@@ -305,7 +305,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                                     <button
                                         onClick={handleDecline}
                                         disabled={isAccepting}
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-4 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl font-medium transition-all"
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-4 text-q-text-muted hover:text-foreground hover:bg-secondary rounded-xl font-medium transition-all"
                                     >
                                         <X size={20} />
                                         {t('invite.decline', 'Rechazar')}
@@ -320,7 +320,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                                         <LogIn size={20} />
                                         {t('invite.loginToAccept', 'Iniciar Sesión para Aceptar')}
                                     </button>
-                                    <p className="text-center text-sm text-muted-foreground">
+                                    <p className="text-center text-sm text-q-text-muted">
                                         {t('invite.noAccount', '¿No tienes cuenta?')}{' '}
                                         <button
                                             onClick={() => navigate(`${ROUTES.SIGNUP}?redirect=/invite/${token}&email=${encodeURIComponent(invite.email)}`)}
@@ -335,8 +335,8 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
                     </div>
 
                     {/* Footer */}
-                    <div className="px-8 py-4 bg-secondary/30 border-t border-border">
-                        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <div className="px-8 py-4 bg-secondary/30 border-t border-q-border">
+                        <div className="flex items-center justify-center gap-2 text-xs text-q-text-muted">
                             <Mail size={14} />
                             <span>{t('invite.sentTo', 'Invitación enviada a')} {invite.email}</span>
                         </div>
@@ -345,7 +345,7 @@ const AcceptInvite: React.FC<AcceptInviteProps> = ({ token }) => {
 
                 {/* Quimera branding */}
                 <div className="mt-6 text-center">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-q-text-muted">
                         {t('common.poweredBy', 'Desarrollado con')}{' '}
                         <span className="font-bold text-foreground">Quimera<span className="text-primary">.ai</span></span>
                     </p>

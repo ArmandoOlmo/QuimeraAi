@@ -99,7 +99,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step3Heading', 'Your Services & Products')}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('onboarding.step3Subheading', 'What do you offer? Let AI suggest or add your own.')}
                 </p>
             </div>
@@ -132,7 +132,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                     <div 
                         key={service.id}
                         className={`
-                            p-4 bg-card border border-border rounded-xl
+                            p-4 bg-q-surface border border-q-border rounded-xl
                             ${service.isAIGenerated ? 'border-l-4 border-l-primary' : ''}
                         `}
                     >
@@ -144,7 +144,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                     value={editForm.name}
                                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                     placeholder={t('onboarding.serviceName', 'Service name')}
-                                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
                                     autoFocus
                                 />
                                 <textarea
@@ -152,12 +152,12 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                                     placeholder={t('onboarding.serviceDescription', 'Brief description (optional)')}
                                     rows={2}
-                                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
                                 />
                                 <div className="flex justify-end gap-2">
                                     <button
                                         onClick={handleCancelEdit}
-                                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                                     >
                                         <X size={18} />
                                     </button>
@@ -174,7 +174,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                             /* Display Mode */
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-1">
-                                    <GripVertical size={16} className="text-muted-foreground/30" />
+                                    <GripVertical size={16} className="text-q-text-muted/30" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                         )}
                                     </div>
                                     {service.description && (
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-sm text-q-text-muted mt-1">
                                             {service.description}
                                         </p>
                                     )}
@@ -196,13 +196,13 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => handleEditService(service)}
-                                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                                     >
                                         <Edit2 size={16} />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteService(service.id)}
-                                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                        className="p-2 text-q-text-muted hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -214,13 +214,13 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 
                 {/* Add New Service */}
                 {isAdding ? (
-                    <div className="p-4 bg-card border border-primary/30 rounded-xl space-y-3">
+                    <div className="p-4 bg-q-surface border border-primary/30 rounded-xl space-y-3">
                         <input
                             type="text"
                             value={newService.name}
                             onChange={(e) => setNewService({ ...newService, name: e.target.value })}
                             placeholder={t('onboarding.serviceName', 'Service name')}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-1 focus:ring-primary/50"
                             autoFocus
                         />
                         <textarea
@@ -228,7 +228,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                             onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                             placeholder={t('onboarding.serviceDescription', 'Brief description (optional)')}
                             rows={2}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
                         />
                         <div className="flex justify-end gap-2">
                             <button
@@ -236,7 +236,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                                     setIsAdding(false);
                                     setNewService({ name: '', description: '' });
                                 }}
-                                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                className="px-3 py-1.5 text-sm text-q-text-muted hover:text-foreground transition-colors"
                             >
                                 {t('common.cancel', 'Cancel')}
                             </button>
@@ -253,7 +253,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
                     <button
                         onClick={() => setIsAdding(true)}
                         disabled={services.length >= 10}
-                        className="w-full p-4 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full p-4 border-2 border-dashed border-q-border rounded-xl text-q-text-muted hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         <Plus size={18} />
                         <span>{t('onboarding.addService', 'Add Service')}</span>
@@ -263,7 +263,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 
             {/* Empty state */}
             {services.length === 0 && !isAdding && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-q-text-muted">
                     <Briefcase size={48} className="mx-auto mb-4 opacity-30" />
                     <p>{t('onboarding.noServicesYet', 'No services added yet')}</p>
                     <p className="text-sm mt-1">{t('onboarding.useAIOrAdd', 'Use AI to generate or add manually')}</p>
@@ -272,7 +272,7 @@ const Step3Services: React.FC<Step3ServicesProps> = ({
 
             {/* Counter */}
             {services.length > 0 && (
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-q-text-muted text-center">
                     {services.length}/10 {t('onboarding.servicesAdded', 'services added')}
                 </p>
             )}

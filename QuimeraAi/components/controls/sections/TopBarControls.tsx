@@ -42,8 +42,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-3">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -53,11 +53,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Messages</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Messages</div>
       {topBarMessages.map((msg: any, idx: number) => (
-        <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
+        <div key={idx} className="bg-q-surface rounded-lg p-3 space-y-2 border border-q-border">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-editor-text-primary">Message {idx + 1}</span>
+            <span className="text-xs font-medium text-q-text-primary">Message {idx + 1}</span>
             {topBarMessages.length > 1 && (
               <button type="button"                 onClick={() => {
                   const updated = topBarMessages.filter((_: any, i: number) => i !== idx);
@@ -73,10 +73,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           {/* Icon selector */}
           <div>
-            <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Icon</div>
+            <div className="text-[10px] font-medium text-q-text-secondary mb-1">Icon</div>
             <div className="grid grid-cols-7 gap-1">
               <button type="button"                 onClick={() => setNestedData(`topBar.messages.${idx}.icon`, '')}
-                className={`p-1.5 rounded flex items-center justify-center ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                className={`p-1.5 rounded flex items-center justify-center ${!msg.icon ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-q-bg hover:hover:bg-q-surface-overlay'}`}
                 title="No icon"
               >
                 <X size={14} />
@@ -87,7 +87,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 return (
                   <button type="button"                     key={ic}
                     onClick={() => setNestedData(`topBar.messages.${idx}.icon`, ic)}
-                    className={`p-1.5 rounded flex items-center justify-center ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-editor-bg hover:bg-editor-hover'}`}
+                    className={`p-1.5 rounded flex items-center justify-center ${isActive ? 'bg-blue-500/20 ring-1 ring-blue-500' : 'bg-q-bg hover:hover:bg-q-surface-overlay'}`}
                     title={ic}
                   >
                     <IconComp size={14} />
@@ -102,8 +102,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           {/* Link Type Selector */}
           <div>
-            <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Link Destination</div>
-            <div className="flex bg-editor-bg rounded-md border border-editor-border p-0.5 mb-2">
+            <div className="text-[10px] font-medium text-q-text-secondary mb-1">Link Destination</div>
+            <div className="flex bg-q-bg rounded-md border border-q-border p-0.5 mb-2">
               {[
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Content' },
@@ -111,8 +111,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`topBar.messages.${idx}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(msg.linkType || 'manual') === type.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-hover'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:text-q-text-primary hover:hover:bg-q-surface-overlay'
                   }`}
                 >
                   {type.label}
@@ -146,13 +146,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-3">      {/* Position */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Position</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Position</div>
       <ToggleControl label={t('controls.aboveHeader')} checked={data.topBar.aboveHeader ?? true} onChange={(v) => setNestedData('topBar.aboveHeader', v)} />
-      <p className="text-[10px] text-editor-text-secondary -mt-1">
+      <p className="text-[10px] text-q-text-secondary -mt-1">
         {data.topBar.aboveHeader ? 'Pinned above navigation bar' : 'Placed in content flow'}
       </p>
 
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Behavior</div>
       <ToggleControl label={t('controls.scrollMarquee')} checked={data.topBar.scrollEnabled ?? false} onChange={(v) => setNestedData('topBar.scrollEnabled', v)} />
       <ToggleControl label={t('controls.pauseOnHover')} checked={data.topBar.pauseOnHover ?? true} onChange={(v) => setNestedData('topBar.pauseOnHover', v)} />
       <ToggleControl label={t('controls.dismissible')} checked={data.topBar.dismissible ?? true} onChange={(v) => setNestedData('topBar.dismissible', v)} />
@@ -193,7 +193,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Separator */}
       <div>
-        <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Separator</div>
+        <div className="text-[10px] font-medium text-q-text-secondary mb-1">Separator</div>
         <div className="flex gap-1">
           {[
             { value: 'dot', label: '•' },
@@ -206,7 +206,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
                 (data.topBar.separator || 'dot') === opt.value
                   ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500'
-                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-hover'
+                  : 'bg-q-bg text-q-text-secondary hover:hover:bg-q-surface-overlay'
               }`}
             >
               {opt.label}
@@ -216,7 +216,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Background */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Background</div>
       <ToggleControl label={t('controls.useGradient')} checked={data.topBar.useGradient ?? false} onChange={(v) => setNestedData('topBar.useGradient', v)} />
 
       {data.topBar.useGradient ? (
@@ -235,7 +235,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* Colors */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Colors</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Colors</div>
       <ColorControl label={t('controls.text')} value={data.topBar.textColor || '#ffffff'} onChange={(v) => setNestedData('topBar.textColor', v)} />
       <ColorControl label={t('controls.link')} value={data.topBar.linkColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.linkColor', v)} />
       <ColorControl label={t('controls.icon')} value={data.topBar.iconColor || '#fbbf24'} onChange={(v) => setNestedData('topBar.iconColor', v)} />

@@ -147,7 +147,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                 <h3 className="text-2xl font-bold text-foreground mb-2">
                     {t('onboarding.step6Heading', 'Store Setup')}
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('onboarding.step6Subheading', 'Configure basic details for your online store')}
                 </p>
             </div>
@@ -162,7 +162,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                     value={storeSetup?.storeName || businessName}
                     onChange={(e) => handleStoreName(e.target.value)}
                     placeholder={t('onboarding.storeNamePlaceholder', 'Your Store Name')}
-                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                 />
             </div>
 
@@ -175,23 +175,23 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                     <button
                         onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
                         className={`
-                            w-full px-4 py-3 bg-card border rounded-xl text-left
+                            w-full px-4 py-3 bg-q-surface border rounded-xl text-left
                             flex items-center justify-between transition-all
                             ${isCurrencyOpen
                                 ? 'border-primary ring-2 ring-primary/50'
-                                : 'border-border hover:border-muted-foreground'
+                                : 'border-q-border hover:border-muted-foreground'
                             }
                         `}
                     >
                         <div className="flex items-center gap-3">
-                            <DollarSign size={18} className="text-muted-foreground" />
+                            <DollarSign size={18} className="text-q-text-muted" />
                             <span className="text-foreground">
                                 {selectedCurrency.symbol} {selectedCurrency.code} - {selectedCurrency.name}
                             </span>
                         </div>
                         <ChevronDown
                             size={18}
-                            className={`text-muted-foreground transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`}
+                            className={`text-q-text-muted transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`}
                         />
                     </button>
 
@@ -201,7 +201,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 className="fixed inset-0 z-40"
                                 onClick={() => setIsCurrencyOpen(false)}
                             />
-                            <div className="absolute z-50 w-full mt-2 rounded-xl shadow-2xl overflow-hidden border border-border bg-popover max-h-64 overflow-y-auto">
+                            <div className="absolute z-50 w-full mt-2 rounded-xl shadow-2xl overflow-hidden border border-q-border bg-popover max-h-64 overflow-y-auto">
                                 {CURRENCIES.map((currency) => (
                                     <button
                                         key={currency.code}
@@ -240,7 +240,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 onClick={() => handleShippingChange(shipping.id)}
                                 className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${storeSetup?.shippingType === shipping.id
                                         ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
+                                        : 'border-q-border hover:border-muted-foreground'
                                     }`}
                             >
                                 <span className="text-xl">{shipping.icon}</span>
@@ -276,10 +276,10 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
 
                 {/* Loading state */}
                 {isLoadingCategories && (
-                    <div className="flex items-center justify-center py-8 bg-muted/30 rounded-xl border border-border">
+                    <div className="flex items-center justify-center py-8 bg-muted/30 rounded-xl border border-q-border">
                         <div className="flex items-center gap-3">
                             <Loader2 size={20} className="animate-spin text-primary" />
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-q-text-muted">
                                 {t('onboarding.generatingCategories', 'Generating categories with AI...')}
                             </span>
                         </div>
@@ -316,7 +316,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
                                 onChange={(e) => setNewCategory(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCategory()}
                                 placeholder={t('onboarding.addCategoryPlaceholder', 'Add custom category...')}
-                                className="flex-1 px-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                className="flex-1 px-4 py-2.5 bg-q-surface border border-q-border rounded-xl text-sm text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                             />
                             <button
                                 onClick={handleAddCustomCategory}
@@ -331,7 +331,7 @@ const Step6StoreSetup: React.FC<Step6StoreSetupProps> = ({
 
                 {/* Selected count */}
                 {storeSetup && storeSetup.selectedCategories.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-q-text-muted">
                         {t('onboarding.selectedCategories', '{{count}} categories selected', {
                             count: storeSetup.selectedCategories.length,
                         })}

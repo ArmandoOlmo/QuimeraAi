@@ -126,8 +126,8 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 onClick={handleCreateWorkspace}
                 className={`
                     flex items-center gap-2 w-full p-2 rounded-lg
-                    bg-primary/10 border border-primary/30 border-dashed
-                    text-primary hover:bg-primary/20 transition-colors
+                    bg-q-accent/10 border border-q-accent/30 border-dashed
+                    text-q-accent hover:bg-q-accent/20 transition-colors
                     ${className}
                 `}
             >
@@ -145,11 +145,11 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     if (isLoadingTenant) {
         return (
             <div className={`flex items-center gap-2 p-2 ${className}`}>
-                <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+                <div className="w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse" />
                 {!collapsed && (
                     <div className="flex-1 space-y-1">
-                        <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-                        <div className="h-3 w-12 bg-muted rounded animate-pulse" />
+                        <div className="h-4 w-20 bg-q-surface-overlay rounded animate-pulse" />
+                        <div className="h-3 w-12 bg-q-surface-overlay rounded animate-pulse" />
                     </div>
                 )}
             </div>
@@ -161,7 +161,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
         return (
             <div className={`flex items-center gap-2 p-2 ${className}`}>
                 {/* Tenant avatar */}
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     {currentTenant?.branding?.logoUrl ? (
                         <img
                             src={currentTenant.branding.logoUrl}
@@ -174,12 +174,12 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 </div>
                 {!collapsed && (
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">
+                        <p className="text-sm font-semibold text-q-text truncate">
                             {currentTenant?.name}
                         </p>
                         <div className="flex items-center gap-1">
                             {currentRole && getRoleIcon(currentRole)}
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-q-text-muted">
                                 {currentRole ? AGENCY_ROLE_LABELS[currentRole] : ''}
                             </span>
                         </div>
@@ -198,16 +198,16 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 disabled={isLoading}
                 className={`
                     flex items-center gap-2 w-full p-2 rounded-lg
-                    bg-card hover:bg-secondary/50 border border-border
+                    bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border
                     transition-all duration-200
-                    ${isOpen ? 'ring-2 ring-primary/50' : ''}
+                    ${isOpen ? 'ring-2 ring-q-accent/50' : ''}
                     ${isLoading ? 'opacity-50 cursor-wait' : ''}
                 `}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
             >
                 {/* Tenant avatar */}
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-q-accent/80 to-q-accent flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0">
                     {currentTenant?.branding?.logoUrl ? (
                         <img
                             src={currentTenant.branding.logoUrl}
@@ -222,19 +222,19 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 {!collapsed && (
                     <>
                         <div className="flex-1 min-w-0 text-left">
-                            <p className="text-sm font-semibold text-foreground truncate">
+                            <p className="text-sm font-semibold text-q-text truncate">
                                 {currentTenant?.name}
                             </p>
                             <div className="flex items-center gap-1">
                                 {currentRole && getRoleIcon(currentRole)}
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-q-text-muted">
                                     {currentRole ? AGENCY_ROLE_LABELS[currentRole] : ''}
                                 </span>
                             </div>
                         </div>
                         <ChevronDown
                             size={16}
-                            className={`text-muted-foreground transition-transform duration-200 flex-shrink-0 ${
+                            className={`text-q-text-muted transition-transform duration-200 flex-shrink-0 ${
                                 isOpen ? 'rotate-180' : ''
                             }`}
                         />
@@ -247,7 +247,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 <div
                     className={`
                         absolute z-50 mt-2 py-1
-                        bg-popover border border-border rounded-xl shadow-xl
+                        bg-q-surface-elevated border border-q-border rounded-xl shadow-xl
                         animate-in fade-in-0 zoom-in-95 duration-200
                         ${collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0'}
                         ${collapsed ? 'w-64' : 'w-full'}
@@ -255,8 +255,8 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     role="listbox"
                 >
                     {/* Header */}
-                    <div className="px-3 py-2 border-b border-border">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="px-3 py-2 border-b border-q-border">
+                        <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                             {t('workspace.selectWorkspace', 'Seleccionar Workspace')}
                         </p>
                     </div>
@@ -273,8 +273,8 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                                     onClick={() => tenant && handleSwitchTenant(tenant.id)}
                                     className={`
                                         flex items-center gap-3 w-full px-3 py-2.5
-                                        hover:bg-secondary/50 transition-colors
-                                        ${isActive ? 'bg-primary/10' : ''}
+                                        hover:bg-q-surface-overlay/50 transition-colors
+                                        ${isActive ? 'bg-q-accent/10' : ''}
                                     `}
                                     role="option"
                                     aria-selected={isActive}
@@ -283,8 +283,8 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                                     <div className={`
                                         w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0
                                         ${isActive
-                                            ? 'bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30'
-                                            : 'bg-gradient-to-br from-muted-foreground/60 to-muted-foreground/40'
+                                            ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
+                                            : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40'
                                         }
                                     `}>
                                         {tenant?.branding?.logoUrl ? (
@@ -301,13 +301,13 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                                     {/* Tenant info */}
                                     <div className="flex-1 min-w-0 text-left">
                                         <p className={`text-sm font-medium truncate ${
-                                            isActive ? 'text-primary' : 'text-foreground'
+                                            isActive ? 'text-q-accent' : 'text-q-text'
                                         }`}>
                                             {tenant?.name}
                                         </p>
                                         <div className="flex items-center gap-1.5">
                                             {getRoleIcon(membership.role)}
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-q-text-muted">
                                                 {AGENCY_ROLE_LABELS[membership.role]}
                                             </span>
                                             {tenant?.type === 'agency_client' && (
@@ -320,7 +320,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
                                     {/* Active indicator */}
                                     {isActive && (
-                                        <Check size={16} className="text-primary flex-shrink-0" />
+                                        <Check size={16} className="text-q-accent flex-shrink-0" />
                                     )}
                                 </button>
                             );
@@ -330,10 +330,10 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     {/* Create new workspace */}
                     {onCreateWorkspace && (
                         <>
-                            <div className="border-t border-border my-1" />
+                            <div className="border-t border-q-border my-1" />
                             <button
                                 onClick={handleCreateWorkspace}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-primary hover:bg-primary/10 transition-colors"
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors"
                             >
                                 <Plus size={18} />
                                 <span className="text-sm font-medium">

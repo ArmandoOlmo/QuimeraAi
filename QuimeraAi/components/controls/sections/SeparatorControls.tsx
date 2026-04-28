@@ -12,12 +12,12 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
   const contentTab = (
     <div className="space-y-4">
       {/* ========== HEIGHT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <AlignJustify size={14} />
           Altura
         </label>
-        <div className="bg-editor-bg/50 p-3 rounded-lg">
+        <div className="bg-q-bg/50 p-3 rounded-lg">
           <SliderControl
             label="Altura del separador"
             value={data[separatorKey as keyof typeof data]?.height || 100}
@@ -32,8 +32,8 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -44,8 +44,8 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
       </div>
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
           Color de Fondo
         </label>
@@ -57,8 +57,8 @@ export const renderSeparatorControlsWithTabs = (deps: ControlsDeps, separatorKey
       </div>
       
       {/* ========== BACKGROUND IMAGE ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <ImageIcon size={14} />
           Imagen de Fondo
         </label>

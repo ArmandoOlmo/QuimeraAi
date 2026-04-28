@@ -52,22 +52,22 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     return (
         <>
             <header
-                className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0"
+                className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0"
                 role="banner"
             >
                 {/* Left Section - Logo & Title */}
                 <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
+                        className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay/80 active:bg-q-surface-overlay rounded-lg transition-colors touch-manipulation"
                         aria-label="Open navigation menu"
                         aria-expanded={isMobileMenuOpen}
                     >
                         <Menu className="w-5 h-5" />
                     </button>
                     <div className="flex items-center gap-1 sm:gap-2">
-                        <HeaderIcon className="text-primary" size={24} aria-hidden="true" />
-                        <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-foreground">
+                        <HeaderIcon className="text-q-accent" size={24} aria-hidden="true" />
+                        <h1 className="text-sm sm:text-xl font-semibold sm:font-bold text-q-text">
                             {headerTitle}
                         </h1>
                     </div>
@@ -82,7 +82,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     {(isDashboard || isWebsites) && (
                         <button
                             onClick={() => setShowMobileSearch(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-q-text transition-colors"
                             aria-label="Open search"
                         >
                             <Search size={20} />

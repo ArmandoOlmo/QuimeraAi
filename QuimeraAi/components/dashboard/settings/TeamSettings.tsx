@@ -44,7 +44,7 @@ const TeamSettings: React.FC = () => {
     const getRoleIcon = (role: AgencyRole) => {
         if (role === 'agency_owner') return <Crown size={14} className="text-yellow-500" />;
         if (role === 'agency_admin') return <ShieldCheck size={14} className="text-blue-500" />;
-        return <UserCheck size={14} className="text-muted-foreground" />;
+        return <UserCheck size={14} className="text-q-text-muted" />;
     };
 
     const pendingInvites = invites.filter(inv => inv.status === 'pending');
@@ -71,8 +71,8 @@ const TeamSettings: React.FC = () => {
             )}
 
             {/* ─── Stats Header ─── */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-border flex items-center justify-between">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+                <div className="p-5 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <Users size={20} className="text-primary" />
@@ -81,7 +81,7 @@ const TeamSettings: React.FC = () => {
                             <h2 className="text-lg font-semibold text-foreground">
                                 {t('team.members', 'Miembros del Equipo')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('team.membersDescription', 'Gestiona quién tiene acceso a este workspace y sus roles.')}
                             </p>
                         </div>
@@ -108,18 +108,18 @@ const TeamSettings: React.FC = () => {
                         <div key={stat.label} className="p-4 text-center">
                             <stat.icon size={16} className={`mx-auto mb-1.5 ${stat.color}`} />
                             <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                            <p className="text-xs text-muted-foreground">{stat.label}</p>
+                            <p className="text-xs text-q-text-muted">{stat.label}</p>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* ─── Members Table ─── */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
                 {membersLoading ? (
                     <div className="p-12 text-center">
                         <Loader2 className="animate-spin mx-auto mb-3 text-primary" size={32} />
-                        <p className="text-muted-foreground">
+                        <p className="text-q-text-muted">
                             {t('common.loading', 'Cargando equipo...')}
                         </p>
                     </div>
@@ -131,7 +131,7 @@ const TeamSettings: React.FC = () => {
                         <h3 className="text-lg font-medium text-foreground mb-2">
                             {t('team.noMembersTitle', 'Tu equipo está vacío')}
                         </h3>
-                        <p className="text-muted-foreground max-w-sm mx-auto mb-4">
+                        <p className="text-q-text-muted max-w-sm mx-auto mb-4">
                             {t('team.noMembers', 'Invita a colegas para colaborar en proyectos y gestionar clientes.')}
                         </p>
                         {canInvite && (
@@ -148,17 +148,17 @@ const TeamSettings: React.FC = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border bg-secondary/30">
-                                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <tr className="border-b border-q-border bg-secondary/30">
+                                    <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                         {t('team.member', 'Miembro')}
                                     </th>
-                                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                         {t('team.role', 'Rol')}
                                     </th>
-                                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                                    <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider hidden md:table-cell">
                                         {t('team.department', 'Departamento')}
                                     </th>
-                                    <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-5 py-3 text-right text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                         {t('team.actions', 'Acciones')}
                                     </th>
                                 </tr>
@@ -177,10 +177,10 @@ const TeamSettings: React.FC = () => {
                                                         <img
                                                             src={member.userPhotoURL}
                                                             alt={member.userName || member.userEmail || ''}
-                                                            className="w-9 h-9 rounded-lg object-cover border border-border"
+                                                            className="w-9 h-9 rounded-lg object-cover border border-q-border"
                                                         />
                                                     ) : (
-                                                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center text-sm font-bold text-muted-foreground border border-border">
+                                                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center text-sm font-bold text-q-text-muted border border-q-border">
                                                             {(member.userName || member.userEmail || '?').charAt(0).toUpperCase()}
                                                         </div>
                                                     )}
@@ -194,7 +194,7 @@ const TeamSettings: React.FC = () => {
                                                     <p className="font-medium text-foreground truncate text-sm">
                                                         {member.userName || t('team.unnamed', 'Sin nombre')}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                                    <p className="text-xs text-q-text-muted truncate flex items-center gap-1">
                                                         <Mail size={10} />
                                                         {member.userEmail}
                                                     </p>
@@ -212,19 +212,19 @@ const TeamSettings: React.FC = () => {
 
                                         {/* Department + Title */}
                                         <td className="px-5 py-3.5 hidden md:table-cell">
-                                            <div className="text-sm text-muted-foreground">
+                                            <div className="text-sm text-q-text-muted">
                                                 {member.department && (
                                                     <span className="text-xs bg-secondary/50 px-2 py-0.5 rounded-md mr-2">
                                                         {member.department}
                                                     </span>
                                                 )}
                                                 {member.title && (
-                                                    <span className="text-xs text-muted-foreground">
+                                                    <span className="text-xs text-q-text-muted">
                                                         {member.title}
                                                     </span>
                                                 )}
                                                 {!member.department && !member.title && (
-                                                    <span className="text-xs text-muted-foreground/50">—</span>
+                                                    <span className="text-xs text-q-text-muted/50">—</span>
                                                 )}
                                             </div>
                                         </td>
@@ -234,13 +234,13 @@ const TeamSettings: React.FC = () => {
                                             {canManageMembers && member.role !== 'agency_owner' && member.userId !== currentMembership?.userId ? (
                                                 <button
                                                     onClick={() => setEditingMember(member)}
-                                                    className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-q-text-muted hover:text-foreground hover:bg-secondary rounded-lg transition-all"
                                                 >
                                                     <Edit size={12} />
                                                     {t('team.manage', 'Gestionar')}
                                                 </button>
                                             ) : (
-                                                <span className="text-xs text-muted-foreground/40">—</span>
+                                                <span className="text-xs text-q-text-muted/40">—</span>
                                             )}
                                         </td>
                                     </tr>
@@ -252,8 +252,8 @@ const TeamSettings: React.FC = () => {
             </div>
 
             {/* ─── Pending Invites ─── */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                <div className="p-5 border-b border-border flex items-center justify-between">
+            <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+                <div className="p-5 border-b border-q-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
                             <Mail size={20} className="text-orange-500" />
@@ -262,7 +262,7 @@ const TeamSettings: React.FC = () => {
                             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                 {t('team.pendingInvites', 'Invitaciones Pendientes')}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {pendingInvites.length > 0
                                     ? t('team.pendingCount', '{{count}} invitación(es) esperando respuesta', { count: pendingInvites.length })
                                     : t('team.noPending', 'No hay invitaciones pendientes')
@@ -281,14 +281,14 @@ const TeamSettings: React.FC = () => {
                     {invitesLoading ? (
                         <div className="py-6 text-center">
                             <Loader2 className="animate-spin mx-auto mb-2 text-primary" size={24} />
-                            <p className="text-sm text-muted-foreground">{t('common.loading', 'Cargando...')}</p>
+                            <p className="text-sm text-q-text-muted">{t('common.loading', 'Cargando...')}</p>
                         </div>
                     ) : pendingInvites.length === 0 ? (
                         <div className="py-6 text-center">
                             <div className="w-14 h-14 rounded-xl bg-secondary/50 flex items-center justify-center mx-auto mb-3">
-                                <Mail size={24} className="text-muted-foreground/50" />
+                                <Mail size={24} className="text-q-text-muted/50" />
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('team.noPendingInvites', 'Todas las invitaciones han sido respondidas')}
                             </p>
                         </div>

@@ -10,7 +10,7 @@ import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
 
 const Label: React.FC<{ children: React.ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
-    <label htmlFor={htmlFor} className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
 );
 
 const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (checked: boolean) => void; }> = ({ label, checked, onChange }) => (
@@ -25,7 +25,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
             onMouseDown={(e) => e.stopPropagation()}
             onDragStart={(e) => e.preventDefault()}
             draggable={false}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
         >
             <span
                 aria-hidden="true"
@@ -155,16 +155,16 @@ const ComponentLibrary: React.FC = () => {
     return (
         <div className="p-6 sm:p-8 overflow-y-auto h-full">
             <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-editor-text-primary mb-2">{t('superadmin.componentsTitle')}</h2>
-                <p className="text-editor-text-secondary mb-6">
+                <h2 className="text-2xl font-bold text-q-text mb-2">{t('superadmin.componentsTitle')}</h2>
+                <p className="text-q-text-secondary mb-6">
                     {t('superadmin.componentsDesc')}
                 </p>
 
                 {/* Search and Filters */}
                 <div className="mb-6 space-y-4">
                     {/* Search Bar - Desktop */}
-                    <div className="hidden sm:flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2 flex-1 sm:flex-initial sm:w-64">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                    <div className="hidden sm:flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2 flex-1 sm:flex-initial sm:w-64">
+                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder="Search components..."
@@ -173,7 +173,7 @@ const ComponentLibrary: React.FC = () => {
                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchQuery('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -182,7 +182,7 @@ const ComponentLibrary: React.FC = () => {
                     {/* Mobile Search Button */}
                     <button
                         onClick={() => setIsMobileSearchOpen(true)}
-                        className="sm:hidden flex items-center justify-center px-3 py-2 bg-editor-border/40 rounded-lg text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                        className="sm:hidden flex items-center justify-center px-3 py-2 bg-q-surface-overlay/40 rounded-lg text-q-text-secondary hover:text-q-text transition-colors"
                     >
                         <Search size={16} />
                     </button>
@@ -198,16 +198,16 @@ const ComponentLibrary: React.FC = () => {
                     {/* Filters */}
                     <div className="flex flex-wrap gap-3">
                         <div className="flex items-center gap-2">
-                            <Filter size={18} className="text-editor-text-secondary" />
-                            <span className="text-sm text-editor-text-secondary font-medium">Status:</span>
+                            <Filter size={18} className="text-q-text-secondary" />
+                            <span className="text-sm text-q-text-secondary font-medium">Status:</span>
                             <div className="flex gap-2">
                                 {['all', 'enabled', 'disabled'].map(status => (
                                     <button
                                         key={status}
                                         onClick={() => setFilterStatus(status as any)}
                                         className={`px-3 py-1 text-sm font-medium transition-colors ${filterStatus === status
-                                            ? 'text-editor-accent'
-                                            : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'text-q-accent'
+                                            : 'text-q-text-secondary hover:text-q-text'
                                             }`}
                                     >
                                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -217,11 +217,11 @@ const ComponentLibrary: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-editor-text-secondary font-medium">Category:</span>
+                            <span className="text-sm text-q-text-secondary font-medium">Category:</span>
                             <select
                                 value={filterCategory}
                                 onChange={(e) => setFilterCategory(e.target.value)}
-                                className="px-3 py-1 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                className="px-3 py-1 bg-q-surface border border-q-border rounded-lg text-q-text text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                             >
                                 {categories.map(cat => (
                                     <option key={cat} value={cat}>
@@ -234,19 +234,19 @@ const ComponentLibrary: React.FC = () => {
                 </div>
 
                 {/* Components List */}
-                <div className="bg-editor-panel-bg border border-editor-border rounded-lg">
-                    <div className="p-4 border-b border-editor-border">
-                        <p className="text-sm text-editor-text-secondary">
+                <div className="bg-q-surface border border-q-border rounded-lg">
+                    <div className="p-4 border-b border-q-border">
+                        <p className="text-sm text-q-text-secondary">
                             Showing {filteredComponents.length} of {Object.keys(componentNames).length} components
                         </p>
                     </div>
                     <ul className="divide-y divide-editor-border">
                         {filteredComponents.map((key) => (
-                            <li key={key} className="p-4 flex justify-between items-center hover:bg-editor-border/30 transition-colors">
+                            <li key={key} className="p-4 flex justify-between items-center hover:bg-q-surface-overlay/30 transition-colors">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3">
-                                        <p className="font-semibold text-editor-text-primary">{componentNames[key]}</p>
-                                        <span className="px-2 py-0.5 text-xs rounded-full bg-editor-border text-editor-text-secondary">
+                                        <p className="font-semibold text-q-text">{componentNames[key]}</p>
+                                        <span className="px-2 py-0.5 text-xs rounded-full bg-q-surface-overlay text-q-text-secondary">
                                             {componentCategories[key]}
                                         </span>
                                     </div>
@@ -254,7 +254,7 @@ const ComponentLibrary: React.FC = () => {
                                         <p className={`text-sm ${componentStatus[key] ? 'text-green-400' : 'text-red-400'}`}>
                                             {componentStatus[key] ? 'Enabled' : 'Disabled'}
                                         </p>
-                                        <p className="text-sm text-editor-text-secondary">
+                                        <p className="text-sm text-q-text-secondary">
                                             Used in {getUsageCount(key)} projects
                                         </p>
                                     </div>
@@ -269,19 +269,19 @@ const ComponentLibrary: React.FC = () => {
                 </div>
 
                 {filteredComponents.length === 0 && (
-                    <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg mt-4">
-                        <p className="text-editor-text-secondary">No components found matching your filters.</p>
+                    <div className="text-center py-12 bg-q-surface border border-q-border rounded-lg mt-4">
+                        <p className="text-q-text-secondary">No components found matching your filters.</p>
                     </div>
                 )}
 
                 {/* Custom Components Section */}
                 {customComponents && customComponents.length > 0 && (
                     <div className="mt-8">
-                        <h3 className="text-xl font-bold text-editor-text-primary mb-4 flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-q-text mb-4 flex items-center gap-2">
                             <Package className="w-5 h-5" />
                             Custom Components
                         </h3>
-                        <p className="text-editor-text-secondary mb-4">
+                        <p className="text-q-text-secondary mb-4">
                             Components created by Super Admins. These are always available for all users.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -293,7 +293,7 @@ const ComponentLibrary: React.FC = () => {
                                 return (
                                     <div
                                         key={component.id}
-                                        className="bg-editor-panel-bg border border-editor-border rounded-lg overflow-hidden hover:border-editor-accent transition-colors group"
+                                        className="bg-q-surface border border-q-border rounded-lg overflow-hidden hover:border-q-accent transition-colors group"
                                     >
                                         {/* Thumbnail */}
                                         <div className="w-full h-40 bg-gradient-to-br from-purple-600 to-indigo-600 relative overflow-hidden">
@@ -315,11 +315,11 @@ const ComponentLibrary: React.FC = () => {
 
                                         {/* Info */}
                                         <div className="p-4">
-                                            <h4 className="font-semibold text-editor-text-primary mb-1 truncate">
+                                            <h4 className="font-semibold text-q-text mb-1 truncate">
                                                 {component.name}
                                             </h4>
-                                            <div className="flex items-center gap-2 text-xs text-editor-text-secondary mb-2">
-                                                <span className="px-2 py-0.5 bg-editor-border rounded-full">
+                                            <div className="flex items-center gap-2 text-xs text-q-text-secondary mb-2">
+                                                <span className="px-2 py-0.5 bg-q-surface-overlay rounded-full">
                                                     {component.baseComponent}
                                                 </span>
                                                 {component.version && (
@@ -329,11 +329,11 @@ const ComponentLibrary: React.FC = () => {
                                                 )}
                                             </div>
                                             {component.description && (
-                                                <p className="text-sm text-editor-text-secondary line-clamp-2 mb-2">
+                                                <p className="text-sm text-q-text-secondary line-clamp-2 mb-2">
                                                     {component.description}
                                                 </p>
                                             )}
-                                            <div className="flex items-center justify-between text-xs text-editor-text-secondary">
+                                            <div className="flex items-center justify-between text-xs text-q-text-secondary">
                                                 <span>Used in {usageCount} projects</span>
                                                 {component.usageCount && (
                                                     <span>{component.usageCount} total uses</span>
@@ -344,7 +344,7 @@ const ComponentLibrary: React.FC = () => {
                                             {component.documentation && (
                                                 <button
                                                     onClick={() => setViewingDocs(component)}
-                                                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-sm font-medium text-editor-text-primary hover:bg-editor-border transition-colors"
+                                                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 bg-q-bg border border-q-border rounded-md text-sm font-medium text-q-text hover:bg-q-surface-overlay transition-colors"
                                                 >
                                                     <BookOpen size={14} />
                                                     View Documentation

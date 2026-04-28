@@ -106,19 +106,19 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-end">
-            <div className="w-full max-w-lg bg-card h-full overflow-y-auto">
+            <div className="w-full max-w-lg bg-q-surface h-full overflow-y-auto">
                 {/* Header */}
-                <div className="sticky top-0 bg-card border-b border-border p-4 z-10">
+                <div className="sticky top-0 bg-q-surface border-b border-q-border p-4 z-10">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-lg font-bold text-foreground">
                                 {t('ecommerce.order', 'Pedido')} #{order.orderNumber}
                             </h2>
-                            <p className="text-muted-foreground text-sm">{formatDate(order.createdAt)}</p>
+                            <p className="text-q-text-muted text-sm">{formatDate(order.createdAt)}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -135,7 +135,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                             value={order.status}
                             onChange={(e) => handleStatusChange(e.target.value as OrderStatus)}
                             disabled={isUpdating}
-                            className="px-3 py-1.5 bg-muted border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            className="px-3 py-1.5 bg-muted border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
                             <option value="pending">Pendiente</option>
                             <option value="paid">Pagado</option>
@@ -153,25 +153,25 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                 <div className="p-4 space-y-6">
                     {/* Customer Info */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <User size={16} />
                             {t('ecommerce.customer', 'Cliente')}
                         </h3>
                         <div className="space-y-2">
                             <p className="text-foreground font-medium">{order.customerName}</p>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Mail size={14} className="text-muted-foreground" />
+                            <div className="flex items-center gap-2 text-q-text-muted">
+                                <Mail size={14} className="text-q-text-muted" />
                                 <span>{order.customerEmail}</span>
                                 <button
                                     onClick={() => copyToClipboard(order.customerEmail)}
                                     className="p-1 hover:bg-muted rounded"
                                 >
-                                    <Copy size={12} className="text-muted-foreground" />
+                                    <Copy size={12} className="text-q-text-muted" />
                                 </button>
                             </div>
                             {order.customerPhone && (
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Phone size={14} className="text-muted-foreground" />
+                                <div className="flex items-center gap-2 text-q-text-muted">
+                                    <Phone size={14} className="text-q-text-muted" />
                                     <span>{order.customerPhone}</span>
                                 </div>
                             )}
@@ -180,11 +180,11 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
                     {/* Shipping Address */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <MapPin size={16} />
                             {t('ecommerce.shippingAddress', 'Dirección de Envío')}
                         </h3>
-                        <div className="text-muted-foreground space-y-1">
+                        <div className="text-q-text-muted space-y-1">
                             <p>{order.shippingAddress.address1}</p>
                             {order.shippingAddress.address2 && <p>{order.shippingAddress.address2}</p>}
                             <p>
@@ -197,18 +197,18 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
                     {/* Tracking Info */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <Truck size={16} />
                             {t('ecommerce.tracking', 'Seguimiento')}
                         </h3>
 
                         {order.trackingNumber ? (
                             <div className="space-y-2">
-                                <p className="text-muted-foreground">
-                                    <span className="text-muted-foreground">Carrier:</span> {order.carrier}
+                                <p className="text-q-text-muted">
+                                    <span className="text-q-text-muted">Carrier:</span> {order.carrier}
                                 </p>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground">Tracking:</span>
+                                    <span className="text-q-text-muted">Tracking:</span>
                                     <code className="text-foreground bg-muted px-2 py-0.5 rounded">
                                         {order.trackingNumber}
                                     </code>
@@ -216,7 +216,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                         onClick={() => copyToClipboard(order.trackingNumber!)}
                                         className="p-1 hover:bg-muted rounded"
                                     >
-                                        <Copy size={12} className="text-muted-foreground" />
+                                        <Copy size={12} className="text-q-text-muted" />
                                     </button>
                                 </div>
                                 {order.trackingUrl && (
@@ -239,7 +239,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     onChange={(e) =>
                                         setTrackingData({ ...trackingData, carrier: e.target.value })
                                     }
-                                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                                 <input
                                     type="text"
@@ -248,7 +248,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     onChange={(e) =>
                                         setTrackingData({ ...trackingData, trackingNumber: e.target.value })
                                     }
-                                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                                 <input
                                     type="url"
@@ -257,7 +257,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     onChange={(e) =>
                                         setTrackingData({ ...trackingData, trackingUrl: e.target.value })
                                     }
-                                    className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                                 <div className="flex gap-2">
                                     <button
@@ -287,7 +287,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
                     {/* Order Items */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <Package size={16} />
                             {t('ecommerce.items', 'Productos')} ({order.items.length})
                         </h3>
@@ -303,15 +303,15 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                         />
                                     ) : (
                                         <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                                            <Package className="text-muted-foreground" size={20} />
+                                            <Package className="text-q-text-muted" size={20} />
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-foreground font-medium truncate">{item.productName}</p>
                                         {item.variantName && (
-                                            <p className="text-muted-foreground text-sm">{item.variantName}</p>
+                                            <p className="text-q-text-muted text-sm">{item.variantName}</p>
                                         )}
-                                        <p className="text-muted-foreground text-sm">
+                                        <p className="text-q-text-muted text-sm">
                                             ${item.price.toFixed(2)} × {item.quantity}
                                         </p>
                                     </div>
@@ -325,13 +325,13 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
                     {/* Order Summary */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <DollarSign size={16} />
                             {t('ecommerce.summary', 'Resumen')}
                         </h3>
 
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between text-muted-foreground">
+                            <div className="flex justify-between text-q-text-muted">
                                 <span>Subtotal</span>
                                 <span>${order.subtotal.toFixed(2)}</span>
                             </div>
@@ -344,19 +344,19 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                     <span>-${order.discountAmount.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-muted-foreground">
+                            <div className="flex justify-between text-q-text-muted">
                                 <span>Envío</span>
                                 <span>
                                     {order.shippingCost === 0 ? 'Gratis' : `$${order.shippingCost.toFixed(2)}`}
                                 </span>
                             </div>
                             {order.taxAmount > 0 && (
-                                <div className="flex justify-between text-muted-foreground">
+                                <div className="flex justify-between text-q-text-muted">
                                     <span>Impuestos</span>
                                     <span>${order.taxAmount.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-foreground font-bold pt-2 border-t border-border">
+                            <div className="flex justify-between text-foreground font-bold pt-2 border-t border-q-border">
                                 <span>Total</span>
                                 <span>${order.total.toFixed(2)}</span>
                             </div>
@@ -365,18 +365,18 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
 
                     {/* Payment Info */}
                     <div className="bg-muted/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                             <CreditCard size={16} />
                             {t('ecommerce.payment', 'Pago')}
                         </h3>
 
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Método</span>
+                                <span className="text-q-text-muted">Método</span>
                                 <span className="text-foreground capitalize">{order.paymentMethod}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Estado</span>
+                                <span className="text-q-text-muted">Estado</span>
                                 <span
                                     className={`${
                                         order.paymentStatus === 'paid'
@@ -390,7 +390,7 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                                 </span>
                             </div>
                             {order.paymentIntentId && (
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-q-text-muted">
                                     <span>Payment Intent:</span>
                                     <code className="text-xs bg-muted px-1 rounded">
                                         {order.paymentIntentId.slice(0, 20)}...
@@ -403,11 +403,11 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
                     {/* Notes */}
                     {order.notes && (
                         <div className="bg-muted/30 rounded-lg p-4">
-                            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-medium text-q-text-muted mb-3 flex items-center gap-2">
                                 <FileText size={16} />
                                 {t('ecommerce.notes', 'Notas')}
                             </h3>
-                            <p className="text-muted-foreground">{order.notes}</p>
+                            <p className="text-q-text-muted">{order.notes}</p>
                         </div>
                     )}
                 </div>

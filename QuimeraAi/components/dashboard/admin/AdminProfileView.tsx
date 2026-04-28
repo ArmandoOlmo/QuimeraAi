@@ -137,14 +137,14 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                 <div className="max-w-5xl mx-auto space-y-6">
 
                     {/* Profile Header Card */}
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 shadow-sm">
+                    <div className="bg-q-surface border border-q-border rounded-xl p-6 shadow-sm">
                         <div className="flex flex-col sm:flex-row items-center gap-6">
                             {/* Avatar */}
                             <div className="relative group cursor-pointer" onClick={handlePhotoClick}>
-                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-editor-bg shadow-lg ring-2 ring-editor-border group-hover:ring-editor-accent transition-all">
+                                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-q-bg shadow-lg ring-2 ring-q-border group-hover:ring-q-accent transition-all">
                                     {uploadingPhoto ? (
-                                        <div className="w-full h-full bg-editor-bg flex items-center justify-center">
-                                            <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
+                                        <div className="w-full h-full bg-q-bg flex items-center justify-center">
+                                            <Loader2 className="w-8 h-8 text-q-accent animate-spin" />
                                         </div>
                                     ) : (
                                         <img
@@ -162,7 +162,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                                     <Camera className="w-8 h-8 text-white" />
                                 </div>
-                                <div className="absolute bottom-0 right-0 bg-editor-accent text-white p-2 rounded-full shadow-lg border-2 border-editor-panel-bg">
+                                <div className="absolute bottom-0 right-0 bg-q-accent text-white p-2 rounded-full shadow-lg border-2 border-q-surface">
                                     <Camera size={14} />
                                 </div>
                             </div>
@@ -177,10 +177,10 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                             {/* Info */}
                             <div className="flex-1 text-center sm:text-left">
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                                    <h1 className="text-2xl font-bold text-editor-text-primary">{user.name}</h1>
+                                    <h1 className="text-2xl font-bold text-q-text">{user.name}</h1>
                                     {isTargetOwner && <Crown size={20} className="text-yellow-500" />}
                                 </div>
-                                <p className="text-editor-text-secondary flex items-center justify-center sm:justify-start gap-2">
+                                <p className="text-q-text-secondary flex items-center justify-center sm:justify-start gap-2">
                                     <Mail size={14} /> {user.email}
                                 </p>
                                 <div className="mt-3">
@@ -199,38 +199,38 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                         <div className="lg:col-span-2 space-y-6">
 
                             {/* Basic Info */}
-                            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                    <User className="w-5 h-5 text-editor-accent" />
+                            <div className="bg-q-surface border border-q-border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                    <User className="w-5 h-5 text-q-accent" />
                                     {t('superadmin.profile.personalInfo')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-editor-text-secondary mb-1.5">{t('superadmin.profile.name')}</label>
+                                        <label className="block text-sm font-medium text-q-text-secondary mb-1.5">{t('superadmin.profile.name')}</label>
                                         <input
                                             type="text"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="w-full px-4 py-2.5 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50 transition-all"
+                                            className="w-full px-4 py-2.5 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50 transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-editor-text-secondary mb-1.5">{t('superadmin.profile.email')}</label>
+                                        <label className="block text-sm font-medium text-q-text-secondary mb-1.5">{t('superadmin.profile.email')}</label>
                                         <input
                                             type="email"
                                             value={user.email}
                                             readOnly
-                                            className="w-full px-4 py-2.5 bg-editor-bg/50 border border-editor-border rounded-lg text-editor-text-secondary cursor-not-allowed"
+                                            className="w-full px-4 py-2.5 bg-q-bg/50 border border-q-border rounded-lg text-q-text-secondary cursor-not-allowed"
                                         />
-                                        <p className="text-xs text-editor-text-secondary mt-1">{t('superadmin.profile.emailReadOnly')}</p>
+                                        <p className="text-xs text-q-text-secondary mt-1">{t('superadmin.profile.emailReadOnly')}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Role Management */}
-                            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold text-editor-text-primary mb-4 flex items-center gap-2">
-                                    <Shield className="w-5 h-5 text-editor-accent" />
+                            <div className="bg-q-surface border border-q-border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold text-q-text mb-4 flex items-center gap-2">
+                                    <Shield className="w-5 h-5 text-q-accent" />
                                     {t('superadmin.profile.rolesPermissions')}
                                 </h3>
                                 {!canEditRole && (
@@ -254,22 +254,22 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                                 className={`
                                                 relative p - 4 rounded - xl border - 2 transition - all
                                                 ${isSelected
-                                                        ? 'border-editor-accent bg-editor-accent/10'
-                                                        : 'border-editor-border hover:border-editor-border/80 bg-editor-bg/30'
+                                                        ? 'border-q-accent bg-q-accent/10'
+                                                        : 'border-q-border hover:border-q-border/80 bg-q-bg/30'
                                                     }
                                                 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
 `}
                                             >
                                                 <div className="flex items-center gap-2 mb-1">
                                                     {getRoleIcon(roleKey)}
-                                                    <span className={`font - semibold ${isSelected ? 'text-editor-text-primary' : 'text-editor-text-secondary'} `}>
+                                                    <span className={`font - semibold ${isSelected ? 'text-q-text' : 'text-q-text-secondary'} `}>
                                                         {t(`superadmin.roles.${roleKey} `)}
                                                     </span>
                                                     {isSelected && (
-                                                        <div className="ml-auto w-3 h-3 rounded-full bg-editor-accent" />
+                                                        <div className="ml-auto w-3 h-3 rounded-full bg-q-accent" />
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-editor-text-secondary pl-6">
+                                                <p className="text-xs text-q-text-secondary pl-6">
                                                     {t(`superadmin.roleDescriptions.${roleKey} `)}
                                                 </p>
                                             </div>
@@ -285,7 +285,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                         <Trash2 className="w-5 h-5" />
                                         {t('superadmin.profile.dangerZone')}
                                     </h3>
-                                    <p className="text-sm text-editor-text-secondary mb-4">
+                                    <p className="text-sm text-q-text-secondary mb-4">
                                         {t('superadmin.profile.dangerZoneDesc')}
                                     </p>
                                     <button
@@ -301,33 +301,33 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
 
                         {/* Right Column: Metadata */}
                         <div className="space-y-6">
-                            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-sm font-semibold text-editor-text-primary flex items-center gap-2 mb-4">
-                                    <Building className="w-4 h-4 text-editor-accent" />
+                            <div className="bg-q-surface border border-q-border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-sm font-semibold text-q-text flex items-center gap-2 mb-4">
+                                    <Building className="w-4 h-4 text-q-accent" />
                                     {t('superadmin.profile.systemInfo')}
                                 </h3>
                                 <div className="space-y-4 text-sm">
-                                    <div className="flex justify-between py-2 border-b border-editor-border/50">
-                                        <span className="text-editor-text-secondary flex items-center gap-2">
+                                    <div className="flex justify-between py-2 border-b border-q-border/50">
+                                        <span className="text-q-text-secondary flex items-center gap-2">
                                             <Shield size={14} /> {t('superadmin.profile.id')}
                                         </span>
-                                        <span className="font-mono text-xs text-editor-text-primary truncate max-w-[120px]" title={user.id}>
+                                        <span className="font-mono text-xs text-q-text truncate max-w-[120px]" title={user.id}>
                                             {user.id.slice(0, 8)}...
                                         </span>
                                     </div>
-                                    <div className="flex justify-between py-2 border-b border-editor-border/50">
-                                        <span className="text-editor-text-secondary flex items-center gap-2">
+                                    <div className="flex justify-between py-2 border-b border-q-border/50">
+                                        <span className="text-q-text-secondary flex items-center gap-2">
                                             <Calendar size={14} /> {t('superadmin.profile.created')}
                                         </span>
-                                        <span className="text-editor-text-primary text-right">
+                                        <span className="text-q-text text-right">
                                             {formatDate(user.createdAt)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between py-2">
-                                        <span className="text-editor-text-secondary flex items-center gap-2">
+                                        <span className="text-q-text-secondary flex items-center gap-2">
                                             <Clock size={14} /> {t('superadmin.profile.lastAccess')}
                                         </span>
-                                        <span className="text-editor-text-primary text-right">
+                                        <span className="text-q-text text-right">
                                             {formatDate(user.lastLogin)}
                                         </span>
                                     </div>
@@ -339,7 +339,7 @@ const AdminProfileView: React.FC<AdminProfileViewProps> = ({ user, onBack }) => 
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium bg-editor-accent text-white rounded-xl hover:bg-editor-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-editor-accent/20"
+                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium bg-q-accent text-white rounded-xl hover:bg-q-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-q-accent/20"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     {t('superadmin.profile.saveChanges')}

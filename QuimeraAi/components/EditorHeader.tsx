@@ -87,7 +87,7 @@ const EditorHeader: React.FC = () => {
   const orientationDisabled = previewDevice === 'desktop';
 
   return (
-    <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
+    <header className="bg-q-bg border-b border-q-border h-14 flex-shrink-0 z-20">
       <div className="h-full flex items-center justify-between px-3 gap-3 relative">
 
         {/* LEFT SECTION - Navigation & Project */}
@@ -95,7 +95,7 @@ const EditorHeader: React.FC = () => {
           {/* Mobile Menu */}
           <button
             title={t('editor.toggleSidebar')}
-            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-full transition-colors md:hidden"
+            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-full transition-colors md:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             <Menu className="w-4 h-4" />
@@ -104,14 +104,14 @@ const EditorHeader: React.FC = () => {
           {/* Dashboard Button */}
           <button
             title={t('editor.goToDashboard')}
-            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-md transition-colors"
+            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-md transition-colors"
             onClick={handleGoToDashboard}
           >
             <LayoutDashboard className="w-4 h-4" />
           </button>
 
           {/* Divider */}
-          <div className="w-px h-6 bg-editor-border" />
+          <div className="w-px h-6 bg-q-surface-overlay" />
 
           {/* Project Name */}
           {isEditingName ? (
@@ -121,15 +121,15 @@ const EditorHeader: React.FC = () => {
               onChange={handleNameChange}
               onBlur={handleNameBlur}
               onKeyDown={handleNameKeyDown}
-              className="bg-transparent text-sm font-medium text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent rounded px-2 h-9 min-w-[120px]"
+              className="bg-transparent text-sm font-medium text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent rounded px-2 h-9 min-w-[120px]"
             />
           ) : (
             <button
               onClick={() => setIsEditingName(true)}
-              className="flex items-center gap-1.5 px-2 h-9 rounded hover:bg-editor-border/40 transition-colors group min-w-0"
+              className="flex items-center gap-1.5 px-2 h-9 rounded hover:bg-q-surface-overlay/40 transition-colors group min-w-0"
               title={t('editor.renameProject')}
             >
-              <span className="text-sm font-medium text-editor-text-primary truncate max-w-[200px]">
+              <span className="text-sm font-medium text-q-text truncate max-w-[200px]">
                 {projectName}
               </span>
             </button>
@@ -147,7 +147,7 @@ const EditorHeader: React.FC = () => {
                 flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                 ${previewDevice === name
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                  : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/50'
                 }
               `}
             >
@@ -167,7 +167,7 @@ const EditorHeader: React.FC = () => {
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
               saveState === 'saved'
                 ? 'bg-green-500/20 text-green-500'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
             }`}
           >
             {saveState === 'idle' ? (
@@ -237,7 +237,7 @@ const EditorHeader: React.FC = () => {
               </>
             )}
           </button>
-          <HeaderBackButton onClick={() => goBack()} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+          <HeaderBackButton onClick={() => goBack()} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
         </div>
       </div>
     </header>

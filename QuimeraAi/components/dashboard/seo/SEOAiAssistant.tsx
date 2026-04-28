@@ -152,19 +152,19 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
-            <div className="bg-card border border-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-q-surface border border-q-border w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
+                <div className="p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/10 to-transparent">
                     <div className="flex items-center gap-3">
                         <div className="bg-primary/20 p-2 rounded-lg">
                             <Sparkles className="text-primary w-6 h-6" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">{t('seo.aiAssistant', 'Asistente SEO con IA')}</h2>
-                            <p className="text-xs text-muted-foreground">{t('seo.aiAssistantDesc', 'Genera configuración SEO optimizada automáticamente')}</p>
+                            <p className="text-xs text-q-text-muted">{t('seo.aiAssistantDesc', 'Genera configuración SEO optimizada automáticamente')}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <button onClick={onClose} className="text-q-text-muted hover:text-foreground transition-colors">
                         <X size={24} />
                     </button>
                 </div>
@@ -175,7 +175,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                         <div className="space-y-6 animate-fade-in-up">
                             <div className="text-center space-y-2 mb-8">
                                 <h3 className="text-2xl font-bold">{t('seo.describeYourBusiness', 'Describe tu negocio')}</h3>
-                                <p className="text-muted-foreground">
+                                <p className="text-q-text-muted">
                                     {t('seo.aiWillOptimize', 'La IA analizará tu descripción y generará toda la configuración SEO optimizada.')}
                                 </p>
                             </div>
@@ -190,7 +190,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         value={businessDescription}
                                         onChange={(e) => setBusinessDescription(e.target.value)}
                                         placeholder={t('seo.businessDescPlaceholder', 'Ej: Somos una agencia de marketing digital especializada en startups y pymes. Ofrecemos servicios de SEO, publicidad en redes sociales y diseño web...')}
-                                        className="w-full h-32 bg-secondary/30 border border-border rounded-xl p-4 text-base focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                                        className="w-full h-32 bg-secondary/30 border border-q-border rounded-xl p-4 text-base focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                                     />
                                 </div>
 
@@ -203,7 +203,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                         value={websiteUrl}
                                         onChange={(e) => setWebsiteUrl(e.target.value)}
                                         placeholder="https://example.com"
-                                        className="w-full bg-secondary/30 border border-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50"
+                                        className="w-full bg-secondary/30 border border-q-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50"
                                     />
                                 </div>
 
@@ -224,7 +224,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                                 onClick={() => setLanguage(lang.value)}
                                                 className={`p-2.5 rounded-lg border text-sm font-medium transition-all ${language === lang.value
                                                     ? 'bg-primary text-primary-foreground border-primary'
-                                                    : 'bg-card border-border hover:border-primary/50'
+                                                    : 'bg-q-surface border-q-border hover:border-primary/50'
                                                     }`}
                                             >
                                                 {lang.label}
@@ -254,7 +254,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold mb-2">{t('seo.aiOptimizing', 'Optimizando tu SEO...')}</h3>
-                                <p className="text-muted-foreground max-w-xs mx-auto">
+                                <p className="text-q-text-muted max-w-xs mx-auto">
                                     {t('seo.aiOptimizingDesc', 'Estamos generando títulos, descripciones, keywords y Open Graph optimizados para tu negocio.')}
                                 </p>
                             </div>
@@ -273,32 +273,32 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 
                             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                                 {/* Basic SEO */}
-                                <div className="bg-secondary/20 rounded-xl p-4 border border-border/50 space-y-3">
+                                <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Globe className="w-4 h-4 text-primary" />
                                         <span className="text-sm font-bold text-primary uppercase">{t('seo.basicSEO', 'SEO Básico')}</span>
                                     </div>
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground uppercase">{t('seo.pageTitle', 'Título')}</span>
+                                        <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.pageTitle', 'Título')}</span>
                                         <p className="text-foreground font-semibold">{generatedSeo.title || '—'}</p>
                                         {generatedSeo.title && (
-                                            <p className={`text-xs mt-0.5 ${generatedSeo.title.length > 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                            <p className={`text-xs mt-0.5 ${generatedSeo.title.length > 60 ? 'text-red-500' : 'text-q-text-muted'}`}>
                                                 {generatedSeo.title.length} / 60
                                             </p>
                                         )}
                                     </div>
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground uppercase">{t('seo.metaDescription', 'Meta Description')}</span>
-                                        <p className="text-muted-foreground text-sm">{generatedSeo.description || '—'}</p>
+                                        <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.metaDescription', 'Meta Description')}</span>
+                                        <p className="text-q-text-muted text-sm">{generatedSeo.description || '—'}</p>
                                         {generatedSeo.description && (
-                                            <p className={`text-xs mt-0.5 ${generatedSeo.description.length > 160 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                            <p className={`text-xs mt-0.5 ${generatedSeo.description.length > 160 ? 'text-red-500' : 'text-q-text-muted'}`}>
                                                 {generatedSeo.description.length} / 160
                                             </p>
                                         )}
                                     </div>
                                     {generatedSeo.keywords && generatedSeo.keywords.length > 0 && (
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">Keywords</span>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">Keywords</span>
                                             <div className="flex gap-1.5 flex-wrap mt-1">
                                                 {generatedSeo.keywords.map((kw, i) => (
                                                     <span key={i} className="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full font-medium">
@@ -311,61 +311,61 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 </div>
 
                                 {/* Social / Open Graph */}
-                                <div className="bg-secondary/20 rounded-xl p-4 border border-border/50 space-y-3">
+                                <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Share2 className="w-4 h-4 text-blue-500" />
                                         <span className="text-sm font-bold text-blue-500 uppercase">{t('seo.socialMedia', 'Redes Sociales')}</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">OG Type</span>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">OG Type</span>
                                             <p className="text-sm text-foreground">{generatedSeo.ogType || '—'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">Schema Type</span>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">Schema Type</span>
                                             <p className="text-sm text-foreground">{generatedSeo.schemaType || '—'}</p>
                                         </div>
                                     </div>
                                     {generatedSeo.ogTitle && (
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">OG Title</span>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">OG Title</span>
                                             <p className="text-sm text-foreground">{generatedSeo.ogTitle}</p>
                                         </div>
                                     )}
                                     {generatedSeo.ogDescription && (
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">OG Description</span>
-                                            <p className="text-sm text-muted-foreground">{generatedSeo.ogDescription}</p>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">OG Description</span>
+                                            <p className="text-sm text-q-text-muted">{generatedSeo.ogDescription}</p>
                                         </div>
                                     )}
                                     {generatedSeo.ogSiteName && (
                                         <div>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase">Site Name</span>
+                                            <span className="text-xs font-bold text-q-text-muted uppercase">Site Name</span>
                                             <p className="text-sm text-foreground">{generatedSeo.ogSiteName}</p>
                                         </div>
                                     )}
                                     <div>
-                                        <span className="text-xs font-bold text-muted-foreground uppercase">Twitter Card</span>
+                                        <span className="text-xs font-bold text-q-text-muted uppercase">Twitter Card</span>
                                         <p className="text-sm text-foreground">{generatedSeo.twitterCard || 'summary_large_image'}</p>
                                     </div>
                                 </div>
 
                                 {/* AI Optimization */}
                                 {(generatedSeo.aiDescription || (generatedSeo.aiKeyTopics && generatedSeo.aiKeyTopics.length > 0)) && (
-                                    <div className="bg-secondary/20 rounded-xl p-4 border border-border/50 space-y-3">
+                                    <div className="bg-secondary/20 rounded-xl p-4 border border-q-border/50 space-y-3">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Bot className="w-4 h-4 text-purple-500" />
                                             <span className="text-sm font-bold text-purple-500 uppercase">{t('seo.aiOptimization', 'Optimización IA')}</span>
                                         </div>
                                         {generatedSeo.aiDescription && (
                                             <div>
-                                                <span className="text-xs font-bold text-muted-foreground uppercase">{t('seo.aiOptimizedDescription', 'Descripción para IA')}</span>
-                                                <p className="text-sm text-muted-foreground">{generatedSeo.aiDescription}</p>
+                                                <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.aiOptimizedDescription', 'Descripción para IA')}</span>
+                                                <p className="text-sm text-q-text-muted">{generatedSeo.aiDescription}</p>
                                             </div>
                                         )}
                                         {generatedSeo.aiKeyTopics && generatedSeo.aiKeyTopics.length > 0 && (
                                             <div>
-                                                <span className="text-xs font-bold text-muted-foreground uppercase">{t('seo.keyTopicsCommaSeparated', 'Temas Clave')}</span>
+                                                <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.keyTopicsCommaSeparated', 'Temas Clave')}</span>
                                                 <div className="flex gap-1.5 flex-wrap mt-1">
                                                     {generatedSeo.aiKeyTopics.map((topic, i) => (
                                                         <span key={i} className="px-2 py-0.5 text-xs bg-purple-500/10 text-purple-500 rounded-full font-medium">
@@ -379,10 +379,10 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                 )}
 
                                 {/* Google Preview */}
-                                <div className="bg-white dark:bg-secondary/30 rounded-xl p-4 border border-border/50 space-y-1">
+                                <div className="bg-white dark:bg-secondary/30 rounded-xl p-4 border border-q-border/50 space-y-1">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Search className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-xs font-bold text-muted-foreground uppercase">{t('seo.googlePreview', 'Vista previa en Google')}</span>
+                                        <Search className="w-4 h-4 text-q-text-muted" />
+                                        <span className="text-xs font-bold text-q-text-muted uppercase">{t('seo.googlePreview', 'Vista previa en Google')}</span>
                                     </div>
                                     <p className="text-[#1a0dab] dark:text-blue-400 text-lg font-medium truncate leading-tight">
                                         {generatedSeo.title || 'Título de la página'}
@@ -390,16 +390,16 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
                                     <p className="text-[#006621] dark:text-green-400 text-sm truncate">
                                         {websiteUrl || 'https://tusitio.com'}
                                     </p>
-                                    <p className="text-[#545454] dark:text-muted-foreground text-sm line-clamp-2">
+                                    <p className="text-[#545454] dark:text-q-text-muted text-sm line-clamp-2">
                                         {generatedSeo.description || 'Descripción de la página...'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="flex justify-between pt-4 border-t border-border mt-auto">
+                            <div className="flex justify-between pt-4 border-t border-q-border mt-auto">
                                 <button
                                     onClick={() => setStep('describe')}
-                                    className="text-muted-foreground hover:text-foreground font-medium px-4 transition-colors"
+                                    className="text-q-text-muted hover:text-foreground font-medium px-4 transition-colors"
                                 >
                                     {t('common.retry', 'Reintentar')}
                                 </button>

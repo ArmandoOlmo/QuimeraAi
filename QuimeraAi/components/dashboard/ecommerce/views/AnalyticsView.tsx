@@ -130,20 +130,20 @@ const AnalyticsView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.analytics', 'Analytics')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('ecommerce.analyticsSubtitle', 'Métricas y rendimiento de tu tienda')}
                     </p>
                 </div>
 
                 {/* Date Range Selector */}
-                <div className="flex items-center gap-2 bg-card/50 rounded-lg p-1">
+                <div className="flex items-center gap-2 bg-q-surface/50 rounded-lg p-1">
                     {(['7d', '30d', '90d', '1y'] as DateRange[]).map((range) => (
                         <button
                             key={range}
                             onClick={() => setDateRange(range)}
                             className={`px-3 py-1.5 rounded-md text-sm transition-colors ${dateRange === range
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                    : 'text-q-text-muted hover:text-foreground'
                                 }`}
                         >
                             {range === '7d' && '7 días'}
@@ -189,7 +189,7 @@ const AnalyticsView: React.FC = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
-                <div className="bg-card/50 rounded-xl p-6 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.revenueOverTime', 'Ingresos en el Tiempo')}
                     </h3>
@@ -234,7 +234,7 @@ const AnalyticsView: React.FC = () => {
                 </div>
 
                 {/* Orders by Status */}
-                <div className="bg-card/50 rounded-xl p-6 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.ordersByStatus', 'Pedidos por Estado')}
                     </h3>
@@ -266,7 +266,7 @@ const AnalyticsView: React.FC = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <div className="flex items-center justify-center h-full text-q-text-muted">
                                 {t('ecommerce.noOrdersYet', 'No hay pedidos aún')}
                             </div>
                         )}
@@ -277,7 +277,7 @@ const AnalyticsView: React.FC = () => {
             {/* Top Products & Customers */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Products */}
-                <div className="bg-card/50 rounded-xl p-6 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topProducts', 'Productos Más Vendidos')}
                     </h3>
@@ -290,7 +290,7 @@ const AnalyticsView: React.FC = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-foreground font-medium truncate">{product.productName}</p>
-                                        <p className="text-muted-foreground text-sm">{product.totalSold} vendidos</p>
+                                        <p className="text-q-text-muted text-sm">{product.totalSold} vendidos</p>
                                     </div>
                                     <p className="text-green-400 font-semibold">
                                         {formatCurrency(product.revenue)}
@@ -299,14 +299,14 @@ const AnalyticsView: React.FC = () => {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-muted-foreground text-center py-8">
+                        <p className="text-q-text-muted text-center py-8">
                             {t('ecommerce.noSalesYet', 'No hay ventas aún')}
                         </p>
                     )}
                 </div>
 
                 {/* Top Customers */}
-                <div className="bg-card/50 rounded-xl p-6 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                         {t('ecommerce.topCustomers', 'Mejores Clientes')}
                     </h3>
@@ -319,7 +319,7 @@ const AnalyticsView: React.FC = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-foreground font-medium truncate">{customer.name}</p>
-                                        <p className="text-muted-foreground text-sm">{customer.totalOrders} pedidos</p>
+                                        <p className="text-q-text-muted text-sm">{customer.totalOrders} pedidos</p>
                                     </div>
                                     <p className="text-green-400 font-semibold">
                                         {formatCurrency(customer.totalSpent)}
@@ -328,7 +328,7 @@ const AnalyticsView: React.FC = () => {
                             ))}
                         </div>
                     ) : (
-                        <p className="text-muted-foreground text-center py-8">
+                        <p className="text-q-text-muted text-center py-8">
                             {t('ecommerce.noCustomersYet', 'No hay clientes aún')}
                         </p>
                     )}
@@ -336,34 +336,34 @@ const AnalyticsView: React.FC = () => {
             </div>
 
             {/* Conversion Metrics */}
-            <div className="bg-card/50 rounded-xl p-6 border border-border">
+            <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
                 <h3 className="text-lg font-semibold text-foreground mb-4">
                     {t('ecommerce.conversionMetrics', 'Métricas de Conversión')}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-foreground">{conversionMetrics.paidOrders}</p>
-                        <p className="text-sm text-muted-foreground">{t('ecommerce.paidOrders', 'Pedidos Pagados')}</p>
+                        <p className="text-sm text-q-text-muted">{t('ecommerce.paidOrders', 'Pedidos Pagados')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-yellow-400">{conversionMetrics.pendingOrders}</p>
-                        <p className="text-sm text-muted-foreground">{t('ecommerce.pendingOrders', 'Pendientes')}</p>
+                        <p className="text-sm text-q-text-muted">{t('ecommerce.pendingOrders', 'Pendientes')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-red-400">{conversionMetrics.cancelledOrders}</p>
-                        <p className="text-sm text-muted-foreground">{t('ecommerce.cancelledOrders', 'Cancelados')}</p>
+                        <p className="text-sm text-q-text-muted">{t('ecommerce.cancelledOrders', 'Cancelados')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-green-400">
                             {conversionMetrics.conversionRate.toFixed(1)}%
                         </p>
-                        <p className="text-sm text-muted-foreground">{t('ecommerce.conversionRate', 'Tasa de Conversión')}</p>
+                        <p className="text-sm text-q-text-muted">{t('ecommerce.conversionRate', 'Tasa de Conversión')}</p>
                     </div>
                     <div className="text-center p-4 bg-muted/30 rounded-lg">
                         <p className="text-3xl font-bold text-orange-400">
                             {conversionMetrics.cancellationRate.toFixed(1)}%
                         </p>
-                        <p className="text-sm text-muted-foreground">{t('ecommerce.cancellationRate', 'Tasa de Cancelación')}</p>
+                        <p className="text-sm text-q-text-muted">{t('ecommerce.cancellationRate', 'Tasa de Cancelación')}</p>
                     </div>
                 </div>
             </div>
@@ -390,10 +390,10 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Ico
     };
 
     return (
-        <div className="bg-card/50 rounded-xl p-6 border border-border">
+        <div className="bg-q-surface/50 rounded-xl p-6 border border-q-border">
             <div className="flex items-start justify-between">
                 <div>
-                    <p className="text-muted-foreground text-sm">{title}</p>
+                    <p className="text-q-text-muted text-sm">{title}</p>
                     <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
                     {change !== undefined && (
                         <div

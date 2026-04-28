@@ -189,7 +189,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <article
-      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 ${compact ? 'h-[260px]' : 'h-[400px]'} ${isSelected ? 'ring-4 ring-primary shadow-2xl shadow-primary/30' : 'hover:shadow-2xl hover:scale-[1.02]'
+      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 ${compact ? 'h-[260px]' : 'h-[400px]'} ${isSelected ? 'ring-4 ring-q-accent shadow-2xl shadow-q-accent/30' : 'hover:shadow-2xl hover:scale-[1.02]'
         }`}
       aria-label={projectLabel}
     >
@@ -237,7 +237,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   checked={isSelected}
                   onChange={handleCheckboxClick}
                   onClick={handleCheckboxClick}
-                  className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-primary checked:border-primary cursor-pointer transition-all"
+                  className="w-5 h-5 rounded border-2 border-white/50 bg-black/30 backdrop-blur-md checked:bg-q-accent checked:border-q-accent cursor-pointer transition-all"
                   aria-label={t('project.aria.select', { name: project.name })}
                 />
               </div>
@@ -279,13 +279,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
               {showMenu && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-44 bg-popover border border-border rounded-xl shadow-2xl py-2 flex flex-col z-30 animate-fade-in-up"
+                  className="absolute right-0 top-full mt-2 w-44 bg-q-surface-elevated border border-q-border rounded-xl shadow-2xl py-2 flex flex-col z-30 animate-fade-in-up"
                   role="menu"
                   aria-label={t('project.aria.actionsMenu')}
                 >
                   <button
                     onClick={handleEditClick}
-                    className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
+                    className="text-left px-4 py-2.5 text-sm text-q-text hover:bg-q-surface-overlay/50 flex items-center gap-3"
                     role="menuitem"
                   >
                     {isTemplate ? <Copy size={16} aria-hidden="true" /> : <Pencil size={16} aria-hidden="true" />}
@@ -299,7 +299,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                           setShowMenu(false);
                           setShowThumbnailEditor(true);
                         }}
-                        className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
+                        className="text-left px-4 py-2.5 text-sm text-q-text hover:bg-q-surface-overlay/50 flex items-center gap-3"
                         role="menuitem"
                       >
                         <ImageIcon size={16} aria-hidden="true" />
@@ -307,7 +307,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                       </button>
                       <button
                         onClick={handleExportClick}
-                        className="text-left px-4 py-2.5 text-sm text-foreground hover:bg-secondary flex items-center gap-3"
+                        className="text-left px-4 py-2.5 text-sm text-q-text hover:bg-q-surface-overlay/50 flex items-center gap-3"
                         role="menuitem"
                       >
                         <Download size={16} aria-hidden="true" />
@@ -350,7 +350,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               />
             )}
             <h3
-              className={`font-bold ${compact ? 'text-base line-clamp-1' : 'text-2xl line-clamp-2'} text-white pointer-events-auto cursor-pointer hover:text-primary/90 transition-colors`}
+              className={`font-bold ${compact ? 'text-base line-clamp-1' : 'text-2xl line-clamp-2'} text-white pointer-events-auto cursor-pointer hover:text-q-accent/90 transition-colors`}
               title={project.name}
               onClick={(e) => {
                 e.stopPropagation();
@@ -418,8 +418,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         maxWidth="max-w-md"
       >
         <div className="p-6">
-          <h3 className="text-xl font-bold mb-4">{t('common.confirm')}</h3>
-          <p className="text-gray-400 mb-6">
+          <h3 className="text-xl font-bold mb-4 text-q-text">{t('common.confirm')}</h3>
+          <p className="text-q-text-muted mb-6">
             {isTemplate
               ? t('project.deleteConfirm.template')
               : t('project.deleteConfirm.project', { name: project.name })}

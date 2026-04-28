@@ -156,7 +156,7 @@ const AgencyLandingPreview: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen relative font-body text-editor-text-primary overflow-x-hidden antialiased flex flex-col">
+    <div className="min-h-screen relative font-body text-q-text overflow-x-hidden antialiased flex flex-col">
       <PageRenderer
         project={{
             id: project.id,

@@ -96,57 +96,57 @@ const CustomersView: React.FC = () => {
                 <h2 className="text-2xl font-bold text-foreground">
                     {t('ecommerce.customers', 'Clientes')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {customers.length} {t('ecommerce.customersTotal', 'clientes registrados')}
                 </p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-primary/20">
                             <Users className="text-primary" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{customers.length}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.totalCustomers', 'Total Clientes')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalCustomers', 'Total Clientes')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-500/20 rounded-lg">
                             <DollarSign className="text-green-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">${stats.totalSpent.toFixed(0)}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-500/20 rounded-lg">
                             <ShoppingBag className="text-purple-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.totalOrders', 'Total Pedidos')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.totalOrders', 'Total Pedidos')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/20 rounded-lg">
                             <Mail className="text-blue-400" size={20} />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-foreground">{stats.marketingSubscribed}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.subscribers', 'Suscritos')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.subscribers', 'Suscritos')}</p>
                         </div>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ const CustomersView: React.FC = () => {
 
             {/* Top Customers */}
             {topCustomers.length > 0 && (
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                         <Star className="text-yellow-400" size={20} />
                         {t('ecommerce.topCustomers', 'Mejores Clientes')}
@@ -174,11 +174,11 @@ const CustomersView: React.FC = () => {
                                         <p className="text-foreground font-medium truncate">
                                             {customer.firstName} {customer.lastName}
                                         </p>
-                                        <p className="text-muted-foreground text-xs">#{index + 1}</p>
+                                        <p className="text-q-text-muted text-xs">#{index + 1}</p>
                                     </div>
                                 </div>
                                 <p className="text-green-400 font-semibold">${customer.totalSpent.toFixed(2)}</p>
-                                <p className="text-muted-foreground text-sm">{customer.totalOrders} pedidos</p>
+                                <p className="text-q-text-muted text-sm">{customer.totalOrders} pedidos</p>
                             </div>
                         ))}
                     </div>
@@ -186,8 +186,8 @@ const CustomersView: React.FC = () => {
             )}
 
             {/* Search */}
-            <div className="flex items-center gap-2 bg-editor-border/40 rounded-lg px-3 py-2">
-                <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+            <div className="flex items-center gap-2 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                 <input
                     type="text"
                     placeholder={t('ecommerce.searchCustomers', 'Buscar por nombre, email o teléfono...')}
@@ -196,7 +196,7 @@ const CustomersView: React.FC = () => {
                     className="flex-1 bg-transparent outline-none text-sm min-w-0"
                 />
                 {searchTerm && (
-                    <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                    <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                         <X size={16} />
                     </button>
                 )}
@@ -204,38 +204,38 @@ const CustomersView: React.FC = () => {
 
             {/* Customers List */}
             {filteredCustomers.length === 0 ? (
-                <div className="text-center py-12 bg-card/50 rounded-xl border border-border">
-                    <Users className="mx-auto text-muted-foreground mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
+                    <Users className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('ecommerce.noCustomers', 'No hay clientes')}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {searchTerm
                             ? t('ecommerce.noCustomersFilter', 'No se encontraron clientes con ese criterio')
                             : t('ecommerce.noCustomersYet', 'Los clientes aparecerán aquí cuando realicen compras')}
                     </p>
                 </div>
             ) : (
-                <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
+                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.customer', 'Cliente')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden md:table-cell">
                                     {t('ecommerce.contact', 'Contacto')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden sm:table-cell">
                                     {t('ecommerce.orders', 'Pedidos')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.spent', 'Gastado')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden lg:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden lg:table-cell">
                                     {t('ecommerce.lastOrder', 'Último Pedido')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.actions', 'Acciones')}
                                 </th>
                             </tr>
@@ -257,7 +257,7 @@ const CustomersView: React.FC = () => {
                                                         {customer.tags.slice(0, 2).map((tag) => (
                                                             <span
                                                                 key={tag}
-                                                                className="px-1.5 py-0.5 bg-muted text-muted-foreground rounded text-xs"
+                                                                className="px-1.5 py-0.5 bg-muted text-q-text-muted rounded text-xs"
                                                             >
                                                                 {tag}
                                                             </span>
@@ -268,24 +268,24 @@ const CustomersView: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 hidden md:table-cell">
-                                        <p className="text-muted-foreground text-sm">{customer.email}</p>
+                                        <p className="text-q-text-muted text-sm">{customer.email}</p>
                                         {customer.phone && (
-                                            <p className="text-muted-foreground text-sm">{customer.phone}</p>
+                                            <p className="text-q-text-muted text-sm">{customer.phone}</p>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                                    <td className="px-4 py-3 text-q-text-muted hidden sm:table-cell">
                                         {customer.totalOrders}
                                     </td>
                                     <td className="px-4 py-3">
                                         <p className="text-foreground font-medium">${customer.totalSpent.toFixed(2)}</p>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
+                                    <td className="px-4 py-3 text-q-text-muted hidden lg:table-cell">
                                         {formatDate(customer.lastOrderAt)}
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <button
                                             onClick={() => handleViewCustomer(customer)}
-                                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                         >
                                             <Eye size={18} />
                                         </button>
@@ -337,8 +337,8 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-card rounded-xl border border-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b border-border">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-q-border">
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xl font-bold">
                             {customer.firstName[0]}{customer.lastName[0]}
@@ -347,7 +347,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                             <h3 className="text-xl font-bold text-foreground">
                                 {customer.firstName} {customer.lastName}
                             </h3>
-                            <p className="text-muted-foreground">{customer.email}</p>
+                            <p className="text-q-text-muted">{customer.email}</p>
                         </div>
                     </div>
                 </div>
@@ -356,26 +356,26 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     {/* Stats */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-muted/30 rounded-lg p-4">
-                            <p className="text-muted-foreground text-sm">{t('ecommerce.totalOrders', 'Total Pedidos')}</p>
+                            <p className="text-q-text-muted text-sm">{t('ecommerce.totalOrders', 'Total Pedidos')}</p>
                             <p className="text-2xl font-bold text-foreground">{customer.totalOrders}</p>
                         </div>
                         <div className="bg-muted/30 rounded-lg p-4">
-                            <p className="text-muted-foreground text-sm">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
+                            <p className="text-q-text-muted text-sm">{t('ecommerce.totalSpent', 'Total Gastado')}</p>
                             <p className="text-2xl font-bold text-green-400">${customer.totalSpent.toFixed(2)}</p>
                         </div>
                     </div>
 
                     {/* Contact Info */}
                     <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('ecommerce.contactInfo', 'Información de Contacto')}</h4>
+                        <h4 className="text-sm font-medium text-q-text-muted mb-3">{t('ecommerce.contactInfo', 'Información de Contacto')}</h4>
                         <div className="space-y-2">
-                            <div className="flex items-center gap-3 text-muted-foreground">
-                                <Mail size={18} className="text-muted-foreground" />
+                            <div className="flex items-center gap-3 text-q-text-muted">
+                                <Mail size={18} className="text-q-text-muted" />
                                 {customer.email}
                             </div>
                             {customer.phone && (
-                                <div className="flex items-center gap-3 text-muted-foreground">
-                                    <Phone size={18} className="text-muted-foreground" />
+                                <div className="flex items-center gap-3 text-q-text-muted">
+                                    <Phone size={18} className="text-q-text-muted" />
                                     {customer.phone}
                                 </div>
                             )}
@@ -385,9 +385,9 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     {/* Default Address */}
                     {customer.defaultShippingAddress && (
                         <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('ecommerce.defaultAddress', 'Dirección Principal')}</h4>
-                            <div className="flex items-start gap-3 text-muted-foreground">
-                                <MapPin size={18} className="text-muted-foreground mt-0.5" />
+                            <h4 className="text-sm font-medium text-q-text-muted mb-3">{t('ecommerce.defaultAddress', 'Dirección Principal')}</h4>
+                            <div className="flex items-start gap-3 text-q-text-muted">
+                                <MapPin size={18} className="text-q-text-muted mt-0.5" />
                                 <div>
                                     <p>{customer.defaultShippingAddress.address1}</p>
                                     {customer.defaultShippingAddress.address2 && (
@@ -405,7 +405,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     {/* Tags */}
                     {customer.tags && customer.tags.length > 0 && (
                         <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('ecommerce.tags', 'Etiquetas')}</h4>
+                            <h4 className="text-sm font-medium text-q-text-muted mb-3">{t('ecommerce.tags', 'Etiquetas')}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {customer.tags.map((tag) => (
                                     <span
@@ -422,15 +422,15 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     {/* Notes */}
                     {customer.notes && (
                         <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('ecommerce.notes', 'Notas')}</h4>
-                            <p className="text-muted-foreground">{customer.notes}</p>
+                            <h4 className="text-sm font-medium text-q-text-muted mb-3">{t('ecommerce.notes', 'Notas')}</h4>
+                            <p className="text-q-text-muted">{customer.notes}</p>
                         </div>
                     )}
 
                     {/* Marketing */}
                     <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${customer.acceptsMarketing ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                        <span className="text-muted-foreground">
+                        <span className="text-q-text-muted">
                             {customer.acceptsMarketing
                                 ? t('ecommerce.acceptsMarketing', 'Acepta marketing')
                                 : t('ecommerce.noMarketing', 'No acepta marketing')}
@@ -438,7 +438,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, onC
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-border flex gap-3">
+                <div className="p-6 border-t border-q-border flex gap-3">
                     <button
                         onClick={onAddToAudience}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"

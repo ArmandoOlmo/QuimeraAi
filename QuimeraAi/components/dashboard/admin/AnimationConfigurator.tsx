@@ -10,7 +10,7 @@ interface AnimationConfiguratorProps {
 }
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
 );
 
 const animationTypes: { value: AdvancedAnimationType; label: string; description: string }[] = [
@@ -97,10 +97,10 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-editor-text-primary">Animation Configuration</h4>
+                <h4 className="font-semibold text-q-text">Animation Configuration</h4>
                 <button
                     onClick={handleSave}
-                    className="px-3 py-1.5 bg-editor-accent text-editor-bg text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
+                    className="px-3 py-1.5 bg-q-accent text-q-bg text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
                 >
                     Save Animation
                 </button>
@@ -116,12 +116,12 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                             onClick={() => setType(anim.value)}
                             className={`p-3 rounded-md border-2 transition-colors text-left ${
                                 type === anim.value
-                                    ? 'border-editor-accent bg-editor-accent/10'
-                                    : 'border-editor-border hover:border-editor-accent/50'
+                                    ? 'border-q-accent bg-q-accent/10'
+                                    : 'border-q-border hover:border-q-accent/50'
                             }`}
                         >
-                            <div className="font-semibold text-sm text-editor-text-primary">{anim.label}</div>
-                            <div className="text-xs text-editor-text-secondary mt-0.5">{anim.description}</div>
+                            <div className="font-semibold text-sm text-q-text">{anim.label}</div>
+                            <div className="text-xs text-q-text-secondary mt-0.5">{anim.description}</div>
                         </button>
                     ))}
                 </div>
@@ -131,7 +131,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
             <div>
                 <div className="flex items-center justify-between mb-1">
                     <Label>Duration</Label>
-                    <span className="text-sm text-editor-text-secondary">{duration}ms</span>
+                    <span className="text-sm text-q-text-secondary">{duration}ms</span>
                 </div>
                 <input
                     type="range"
@@ -140,9 +140,9 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                     step="100"
                     value={duration}
                     onChange={(e) => setDuration(Number(e.target.value))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                    className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                 />
-                <div className="flex justify-between text-xs text-editor-text-secondary mt-1">
+                <div className="flex justify-between text-xs text-q-text-secondary mt-1">
                     <span>100ms</span>
                     <span>5000ms</span>
                 </div>
@@ -152,7 +152,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
             <div>
                 <div className="flex items-center justify-between mb-1">
                     <Label>Delay</Label>
-                    <span className="text-sm text-editor-text-secondary">{delay}ms</span>
+                    <span className="text-sm text-q-text-secondary">{delay}ms</span>
                 </div>
                 <input
                     type="range"
@@ -161,9 +161,9 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                     step="100"
                     value={delay}
                     onChange={(e) => setDelay(Number(e.target.value))}
-                    className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                    className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                 />
-                <div className="flex justify-between text-xs text-editor-text-secondary mt-1">
+                <div className="flex justify-between text-xs text-q-text-secondary mt-1">
                     <span>0ms</span>
                     <span>2000ms</span>
                 </div>
@@ -175,7 +175,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                 <select
                     value={easing}
                     onChange={(e) => setEasing(e.target.value as AnimationEasing)}
-                    className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                 >
                     {easingOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -191,7 +191,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                 <select
                     value={trigger}
                     onChange={(e) => setTrigger(e.target.value as AnimationTrigger)}
-                    className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                 >
                     {triggerOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -211,14 +211,14 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                         value={repeat === -1 ? '' : repeat}
                         onChange={(e) => setRepeat(e.target.value === '' ? -1 : Number(e.target.value))}
                         placeholder="Infinite"
-                        className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                        className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                     />
                     <button
                         onClick={() => setRepeat(-1)}
                         className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                             repeat === -1
-                                ? 'bg-editor-accent text-editor-bg'
-                                : 'bg-editor-border text-editor-text-primary hover:bg-editor-accent hover:text-editor-bg'
+                                ? 'bg-q-accent text-q-bg'
+                                : 'bg-q-surface-overlay text-q-text hover:bg-q-accent hover:text-q-bg'
                         }`}
                     >
                         Infinite
@@ -236,8 +236,8 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                             onClick={() => setDirection(dir)}
                             className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                                 direction === dir
-                                    ? 'bg-editor-accent text-editor-bg'
-                                    : 'bg-editor-border text-editor-text-primary hover:bg-editor-accent hover:text-editor-bg'
+                                    ? 'bg-q-accent text-q-bg'
+                                    : 'bg-q-surface-overlay text-q-text hover:bg-q-accent hover:text-q-bg'
                             }`}
                         >
                             {dir.charAt(0).toUpperCase() + dir.slice(1)}
@@ -255,7 +255,7 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
                         onChange={(e) => setCustomKeyframes(e.target.value)}
                         placeholder="0% { transform: translateX(0); }&#10;100% { transform: translateX(100px); }"
                         rows={4}
-                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-editor-text-primary font-mono text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-md text-q-text font-mono text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                     />
                 </div>
             )}
@@ -263,26 +263,26 @@ const AnimationConfigurator: React.FC<AnimationConfiguratorProps> = ({ component
             {/* Preview */}
             <div>
                 <Label>Preview</Label>
-                <div className="bg-editor-bg border border-editor-border rounded-lg p-8 flex flex-col items-center justify-center min-h-[200px]">
+                <div className="bg-q-bg border border-q-border rounded-lg p-8 flex flex-col items-center justify-center min-h-[200px]">
                     <div
                         key={animationKey}
                         style={getAnimationStyle()}
-                        className="w-20 h-20 bg-editor-accent rounded-lg flex items-center justify-center"
+                        className="w-20 h-20 bg-q-accent rounded-lg flex items-center justify-center"
                     >
-                        <span className="text-editor-bg font-bold">Preview</span>
+                        <span className="text-q-bg font-bold">Preview</span>
                     </div>
                     <div className="flex gap-2 mt-6">
                         <button
                             onClick={playAnimation}
                             disabled={isPlaying}
-                            className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-editor-bg rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-q-accent text-q-bg rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
                         >
                             <Play size={16} />
                             Play
                         </button>
                         <button
                             onClick={resetAnimation}
-                            className="flex items-center gap-2 px-4 py-2 bg-editor-border text-editor-text-primary rounded-md hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay text-q-text rounded-md hover:bg-q-accent hover:text-q-bg transition-colors"
                         >
                             <RotateCcw size={16} />
                             Reset

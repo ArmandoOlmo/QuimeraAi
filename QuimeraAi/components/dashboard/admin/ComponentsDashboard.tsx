@@ -22,7 +22,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
     const [previewOrientation, setPreviewOrientation] = useState<PreviewOrientation>('portrait');
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
@@ -52,7 +52,7 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                                         flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                         ${previewDevice === name
                                             ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/50'
                                         }
                                     `}
                                 >
@@ -64,18 +64,18 @@ const ComponentsDashboard: React.FC<ComponentsDashboardProps> = ({ onBack }) => 
                     ) : undefined}
                 />
 
-                <div className="border-b border-editor-border flex-shrink-0">
+                <div className="border-b border-q-border flex-shrink-0">
                     <div className="px-4 sm:px-6">
                         <nav className="-mb-px flex space-x-6">
                             <button
                                 onClick={() => setActiveTab('library')}
-                                className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'library' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'library' ? 'border-q-accent text-q-accent' : 'border-transparent text-q-text-secondary hover:text-q-text'}`}
                             >
                                 Library
                             </button>
                             <button
                                 onClick={() => setActiveTab('studio')}
-                                className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'studio' ? 'border-editor-accent text-editor-accent' : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`py-3 px-1 border-b-2 text-sm font-medium transition-colors ${activeTab === 'studio' ? 'border-q-accent text-q-accent' : 'border-transparent text-q-text-secondary hover:text-q-text'}`}
                             >
                                 Studio
                             </button>

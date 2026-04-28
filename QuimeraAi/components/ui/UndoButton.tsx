@@ -61,8 +61,8 @@ const sizeLabelClasses = {
 
 const variantClasses = {
     default: 'bg-secondary hover:bg-secondary/80 text-foreground',
-    ghost: 'hover:bg-secondary/50 text-muted-foreground hover:text-foreground',
-    outline: 'border border-border hover:bg-secondary/50 text-muted-foreground hover:text-foreground',
+    ghost: 'hover:bg-secondary/50 text-q-text-muted hover:text-foreground',
+    outline: 'border border-q-border hover:bg-secondary/50 text-q-text-muted hover:text-foreground',
 };
 
 const disabledClasses = 'opacity-40 cursor-not-allowed pointer-events-none';

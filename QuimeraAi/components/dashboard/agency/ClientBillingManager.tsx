@@ -296,8 +296,8 @@ export function ClientBillingManager() {
             )}
 
             {/* Clients Table */}
-            <div className="bg-card rounded-lg border border-border overflow-hidden">
-                <div className="px-6 py-4 border-b border-border">
+            <div className="bg-q-surface rounded-lg border border-q-border overflow-hidden">
+                <div className="px-6 py-4 border-b border-q-border">
                     <h3 className="text-lg font-semibold text-foreground">
                         Configuración de Precios por Cliente
                     </h3>
@@ -307,28 +307,28 @@ export function ClientBillingManager() {
                     <table className="w-full">
                         <thead className="bg-muted">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Cliente
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Plan
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Precio Mensual
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Estado
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Método de Pago
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Próxima Factura
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-q-text-muted uppercase">
                                     Límites
                                 </th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-q-text-muted uppercase">
                                     Acciones
                                 </th>
                             </tr>
@@ -356,7 +356,7 @@ export function ClientBillingManager() {
                                         ) : (
                                             <button
                                                 onClick={() => handleOpenAssignPlan(client)}
-                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-q-text-muted hover:bg-muted/80 transition-colors"
                                             >
                                                 <Plus className="h-3 w-3" />
                                                 Asignar Plan
@@ -376,7 +376,7 @@ export function ClientBillingManager() {
                                                         type="number"
                                                         value={editPrice}
                                                         onChange={(e) => setEditPrice(e.target.value)}
-                                                        className="w-32 pl-6 pr-3 py-1 border border-border rounded bg-background text-foreground text-sm focus:ring-2 focus:ring-blue-500"
+                                                        className="w-32 pl-6 pr-3 py-1 border border-q-border rounded bg-q-bg text-foreground text-sm focus:ring-2 focus:ring-blue-500"
                                                         placeholder="0.00"
                                                         step="0.01"
                                                         min="0"
@@ -439,7 +439,7 @@ export function ClientBillingManager() {
 
                                     {/* Limits */}
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-xs text-muted-foreground space-y-1">
+                                        <div className="text-xs text-q-text-muted space-y-1">
                                             <div>Proyectos: <span className="text-foreground font-medium">{client.limits?.maxProjects || 0}</span></div>
                                             <div>AI Credits: <span className="text-foreground font-medium">{client.limits?.maxAiCredits || 0}</span></div>
                                         </div>
@@ -523,7 +523,7 @@ export function ClientBillingManager() {
                 {clientsBilling.length === 0 && (
                     <div className="text-center py-12">
                         <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-muted-foreground">
+                        <p className="text-q-text-muted">
                             No hay clientes para facturar
                         </p>
                     </div>
@@ -533,15 +533,15 @@ export function ClientBillingManager() {
             {/* Edit Limits Modal */}
             {editLimitsClient && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-border">
+                    <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
                                 Gestionar Límites del Plan
                             </h3>
                         </div>
 
                         <div className="p-6 space-y-4">
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-sm text-q-text-muted mb-4">
                                 Ajusta los límites de recursos para{' '}
                                 <span className="font-medium text-foreground">
                                     {clientsBilling.find(c => c.clientId === editLimitsClient)?.clientName}
@@ -550,53 +550,53 @@ export function ClientBillingManager() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted uppercase mb-1">
                                         Proyectos Máx.
                                     </label>
                                     <input
                                         type="number"
                                         value={editLimits?.maxProjects || 0}
                                         onChange={(e) => setEditLimits({ ...editLimits, maxProjects: parseInt(e.target.value) })}
-                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                        className="w-full px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted uppercase mb-1">
                                         Usuarios Máx.
                                     </label>
                                     <input
                                         type="number"
                                         value={editLimits?.maxUsers || 0}
                                         onChange={(e) => setEditLimits({ ...editLimits, maxUsers: parseInt(e.target.value) })}
-                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                        className="w-full px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted uppercase mb-1">
                                         Almacenamiento (GB)
                                     </label>
                                     <input
                                         type="number"
                                         value={editLimits?.maxStorageGB || 0}
                                         onChange={(e) => setEditLimits({ ...editLimits, maxStorageGB: parseFloat(e.target.value) })}
-                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                        className="w-full px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-muted-foreground uppercase mb-1">
+                                    <label className="block text-xs font-medium text-q-text-muted uppercase mb-1">
                                         Créditos AI Máx.
                                     </label>
                                     <input
                                         type="number"
                                         value={editLimits?.maxAiCredits || 0}
                                         onChange={(e) => setEditLimits({ ...editLimits, maxAiCredits: parseInt(e.target.value) })}
-                                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary"
+                                        className="w-full px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                        <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
                             <button
                                 onClick={() => {
                                     setEditLimitsClient(null);
@@ -629,15 +629,15 @@ export function ClientBillingManager() {
             {/* Setup Modal */}
             {setupModalClient && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-border">
+                    <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
                                 Configurar Facturación
                             </h3>
                         </div>
 
                         <div className="px-6 py-4 space-y-4">
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 Configura el precio mensual para{' '}
                                 {clientsBilling.find((c) => c.clientId === setupModalClient)?.clientName}
                             </p>
@@ -654,7 +654,7 @@ export function ClientBillingManager() {
                                         type="number"
                                         value={setupPrice}
                                         onChange={(e) => setSetupPrice(e.target.value)}
-                                        className="w-full pl-8 pr-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-8 pr-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-2 focus:ring-blue-500"
                                         placeholder="0.00"
                                         step="0.01"
                                         min="0"
@@ -673,7 +673,7 @@ export function ClientBillingManager() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                        <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
                             <button
                                 onClick={() => {
                                     setSetupModalClient(null);

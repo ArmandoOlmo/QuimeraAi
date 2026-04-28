@@ -59,7 +59,7 @@ const STATUS_COLORS: Record<string, string> = {
 const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend }: {
     title: string; value: string; icon: any; trend?: string; trendLabel?: string; isPositiveTrend?: boolean;
 }) => (
-    <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+    <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
         <div className="relative z-10 flex justify-between items-start mb-3">
             <div className="p-2 bg-primary/20 rounded-lg">
@@ -74,9 +74,9 @@ const StatCard = ({ title, value, icon: Icon, trend, trendLabel, isPositiveTrend
             )}
         </div>
         <div className="relative z-10 space-y-1">
-            <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+            <p className="text-[10px] sm:text-xs font-semibold text-q-text-muted uppercase tracking-wider">{title}</p>
             <h3 className="text-xl sm:text-2xl font-bold text-foreground">{value}</h3>
-            {trendLabel && <p className="text-[10px] sm:text-xs text-muted-foreground">{trendLabel}</p>}
+            {trendLabel && <p className="text-[10px] sm:text-xs text-q-text-muted">{trendLabel}</p>}
         </div>
     </div>
 );
@@ -275,16 +275,16 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
     // ─── Render ──────────────────────────────────────────────────────────────
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
 
                 {/* ── Header ─────────────────────────────────────────────── */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-muted-foreground hover:text-foreground">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-q-text-muted hover:text-foreground">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
@@ -298,7 +298,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg">
                             <Zap className="w-4 h-4 text-primary" />
                             <span className="text-sm font-bold text-foreground">${mrr.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            <span className="text-xs text-muted-foreground">/mo</span>
+                            <span className="text-xs text-q-text-muted">/mo</span>
                         </div>
                         <button
                             onClick={syncBilling}
@@ -309,7 +309,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             <CloudDownload size={14} className={syncing ? 'animate-bounce' : ''} />
                             <span>{syncing ? 'Syncing...' : 'Sync'}</span>
                         </button>
-                        <button onClick={loadAllData} disabled={loading} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <button onClick={loadAllData} disabled={loading} className="text-q-text-muted hover:text-foreground transition-colors">
                             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         </button>
                         <HeaderBackButton onClick={onBack} />
@@ -317,15 +317,15 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                 </header>
 
                 {/* ── Period Selector ─────────────────────────────────────── */}
-                <div className="flex items-center gap-1 border-b border-border px-3 sm:px-6 py-2 bg-card/50 z-10 overflow-x-auto">
-                    <Calendar className="w-4 h-4 text-muted-foreground mr-1 shrink-0" />
+                <div className="flex items-center gap-1 border-b border-q-border px-3 sm:px-6 py-2 bg-q-surface/50 z-10 overflow-x-auto">
+                    <Calendar className="w-4 h-4 text-q-text-muted mr-1 shrink-0" />
                     {datePresets.map(preset => (
                         <button
                             key={preset.id}
                             onClick={() => setDatePreset(preset.id)}
                             className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${datePreset === preset.id
                                 ? 'bg-primary text-primary-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                                 }`}
                         >
                             {preset.label}
@@ -333,7 +333,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                     ))}
                     <div className="ml-auto flex items-center gap-1.5 shrink-0">
                         <div className={`w-2 h-2 rounded-full ${stripeLoaded ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
-                        <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">
+                        <span className="text-[10px] text-q-text-muted font-medium hidden sm:inline">
                             {stripeLoaded ? 'Stripe' : 'Firestore'}
                         </span>
                     </div>
@@ -381,7 +381,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
                                 {/* Revenue Over Time (AreaChart) — only if Stripe data */}
                                 <div className="xl:col-span-2">
-                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-6">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-primary" />
                                             {stripeLoaded
@@ -424,7 +424,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
 
                                 {/* Plan Distribution (PieChart) — always from tenants */}
                                 <div className="xl:col-span-1">
-                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6 h-full">
+                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-6 h-full">
                                         <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                             <PieChartIcon className="w-5 h-5 text-primary" />
                                             {t('superadmin.financesDetail.revenueByPlan', 'Distribución por Plan')}
@@ -455,7 +455,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                                 </div>
                                                                 <div className="flex items-center gap-2 shrink-0">
                                                                     <span className="font-bold text-foreground">{item.value}</span>
-                                                                    <span className="text-xs text-muted-foreground">{pct}%</span>
+                                                                    <span className="text-xs text-q-text-muted">{pct}%</span>
                                                                 </div>
                                                             </div>
                                                         );
@@ -463,7 +463,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                 </div>
                                             </>
                                         ) : (
-                                            <div className="flex items-center justify-center h-[250px] text-muted-foreground text-sm italic">
+                                            <div className="flex items-center justify-center h-[250px] text-q-text-muted text-sm italic">
                                                 {t('superadmin.financesDetail.noData', 'Sin datos')}
                                             </div>
                                         )}
@@ -475,7 +475,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
                                 {/* Tenant Growth (BarChart) */}
-                                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-6">
                                     <h3 className="font-bold text-base sm:text-lg mb-4 sm:mb-6 flex items-center gap-2">
                                         <BarChart3 className="w-5 h-5 text-primary" />
                                         {t('superadmin.financesDetail.tenantGrowth', 'Crecimiento de Clientes')}
@@ -494,16 +494,16 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                 </div>
 
                                 {/* Recent Tenants Table */}
-                                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-4 sm:p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-4 sm:p-6">
                                     <h3 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2">
                                         <Building2 className="w-5 h-5 text-primary" />
                                         {t('superadmin.financesDetail.recentClients', 'Clientes Recientes')}
-                                        <span className="text-xs text-muted-foreground font-normal ml-auto">{tenants.length} total</span>
+                                        <span className="text-xs text-q-text-muted font-normal ml-auto">{tenants.length} total</span>
                                     </h3>
                                     <div className="overflow-x-auto -mx-4 sm:mx-0">
                                         <table className="w-full text-sm min-w-[380px]">
                                             <thead>
-                                                <tr className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
+                                                <tr className="text-[10px] sm:text-xs text-q-text-muted uppercase tracking-wider border-b border-q-border">
                                                     <th className="text-left py-2 pl-4 sm:pl-0 pr-2">{t('superadmin.financesDetail.name', 'Nombre')}</th>
                                                     <th className="text-left py-2 pr-2">{t('superadmin.financesDetail.plan', 'Plan')}</th>
                                                     <th className="text-left py-2 pr-2">Tipo</th>
@@ -512,12 +512,12 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                             </thead>
                                             <tbody>
                                                 {recentTenants.map(tenant => (
-                                                    <tr key={tenant.id} className="border-b border-border/50 hover:bg-secondary/20 transition-colors">
+                                                    <tr key={tenant.id} className="border-b border-q-border/50 hover:bg-secondary/20 transition-colors">
                                                         <td className="py-2.5 pl-4 sm:pl-0 pr-2">
                                                             <div className="font-medium text-foreground truncate max-w-[120px] sm:max-w-[180px]">
                                                                 {tenant.name || tenant.companyName || tenant.email || 'Sin nombre'}
                                                             </div>
-                                                            <div className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[180px]">
+                                                            <div className="text-[10px] sm:text-xs text-q-text-muted truncate max-w-[120px] sm:max-w-[180px]">
                                                                 {tenant.email || tenant.id}
                                                             </div>
                                                         </td>
@@ -527,7 +527,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                             </span>
                                                         </td>
                                                         <td className="py-2.5 pr-2">
-                                                            <span className="text-xs text-muted-foreground capitalize">
+                                                            <span className="text-xs text-q-text-muted capitalize">
                                                                 {tenant.type || '—'}
                                                             </span>
                                                         </td>
@@ -539,7 +539,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                                                     </tr>
                                                 ))}
                                                 {recentTenants.length === 0 && (
-                                                    <tr><td colSpan={4} className="text-center py-8 text-muted-foreground italic">{t('superadmin.financesDetail.noClients', 'No hay clientes registrados')}</td></tr>
+                                                    <tr><td colSpan={4} className="text-center py-8 text-q-text-muted italic">{t('superadmin.financesDetail.noClients', 'No hay clientes registrados')}</td></tr>
                                                 )}
                                             </tbody>
                                         </table>

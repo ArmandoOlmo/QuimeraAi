@@ -205,7 +205,7 @@ const ReviewsView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.reviews', 'Reseñas')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('ecommerce.manageReviews', 'Modera las reseñas de tus productos')}
                     </p>
                 </div>
@@ -213,46 +213,46 @@ const ReviewsView: React.FC = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/20 rounded-lg">
                             <MessageSquare className="text-primary" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Total</p>
+                            <p className="text-q-text-muted text-sm">Total</p>
                             <p className="text-2xl font-bold text-foreground">{totalReviews}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-yellow-500/20 rounded-lg">
                             <Clock className="text-yellow-400" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Pendientes</p>
+                            <p className="text-q-text-muted text-sm">Pendientes</p>
                             <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-500/20 rounded-lg">
                             <Check className="text-green-400" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Aprobadas</p>
+                            <p className="text-q-text-muted text-sm">Aprobadas</p>
                             <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-card/50 rounded-xl p-4 border border-border">
+                <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-red-500/20 rounded-lg">
                             <X className="text-red-400" size={20} />
                         </div>
                         <div>
-                            <p className="text-muted-foreground text-sm">Rechazadas</p>
+                            <p className="text-q-text-muted text-sm">Rechazadas</p>
                             <p className="text-2xl font-bold text-foreground">{rejectedCount}</p>
                         </div>
                     </div>
@@ -260,11 +260,11 @@ const ReviewsView: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-card/50 rounded-xl p-4 border border-border">
+            <div className="bg-q-surface/50 rounded-xl p-4 border border-q-border">
                 <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
-                    <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                        <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                    <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                         <input
                             type="text"
                             placeholder={t('ecommerce.searchReviews', 'Buscar reseñas...')}
@@ -273,7 +273,7 @@ const ReviewsView: React.FC = () => {
                             className="flex-1 bg-transparent outline-none text-sm min-w-0"
                         />
                         {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                            <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                                 <X size={16} />
                             </button>
                         )}
@@ -283,7 +283,7 @@ const ReviewsView: React.FC = () => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                        className="px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="all">{t('ecommerce.allStatuses', 'Todos los estados')}</option>
                         <option value="pending">{t('ecommerce.pending', 'Pendientes')}</option>
@@ -295,7 +295,7 @@ const ReviewsView: React.FC = () => {
                     <select
                         value={productFilter}
                         onChange={(e) => setProductFilter(e.target.value)}
-                        className="px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                         <option value="">{t('ecommerce.allProducts', 'Todos los productos')}</option>
                         {products.map((product) => (
@@ -310,11 +310,11 @@ const ReviewsView: React.FC = () => {
             {/* Reviews List */}
             {filteredReviews.length === 0 ? (
                 <div className="text-center py-12">
-                    <MessageSquare className="mx-auto text-muted-foreground mb-4" size={48} />
+                    <MessageSquare className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('ecommerce.noReviews', 'No hay reseñas')}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {searchTerm || statusFilter !== 'all' || productFilter
                             ? t('ecommerce.noReviewsFilter', 'No se encontraron reseñas con los filtros aplicados')
                             : t('ecommerce.noReviewsYet', 'Aún no has recibido ninguna reseña')}
@@ -325,7 +325,7 @@ const ReviewsView: React.FC = () => {
                     {filteredReviews.map((review) => (
                         <div
                             key={review.id}
-                            className="bg-card/50 rounded-xl p-6 border border-border"
+                            className="bg-q-surface/50 rounded-xl p-6 border border-q-border"
                         >
                             {/* Header */}
                             <div className="flex items-start justify-between gap-4 mb-4">
@@ -346,32 +346,32 @@ const ReviewsView: React.FC = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {review.customerEmail}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <RatingDisplay rating={review.rating} />
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                    <p className="text-xs text-q-text-muted mt-1">
                                         {formatDate(review.createdAt)}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Product Info */}
-                            <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 mb-3 text-sm text-q-text-muted">
                                 <Package size={14} />
                                 <span>{review.productName || getProductName(review.productId)}</span>
                             </div>
 
                             {/* Content */}
                             <h4 className="font-semibold text-foreground mb-2">{review.title}</h4>
-                            <p className="text-muted-foreground mb-4">{review.comment}</p>
+                            <p className="text-q-text-muted mb-4">{review.comment}</p>
 
                             {/* Helpful Count */}
                             {review.helpfulVotes > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                                <div className="flex items-center gap-2 text-sm text-q-text-muted mb-4">
                                     <ThumbsUp size={14} />
                                     <span>{review.helpfulVotes} personas encontraron esto útil</span>
                                 </div>
@@ -383,14 +383,14 @@ const ReviewsView: React.FC = () => {
                                     <p className="text-sm font-medium text-foreground mb-1">
                                         Tu respuesta:
                                     </p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-q-text-muted">
                                         {review.adminResponse}
                                     </p>
                                 </div>
                             )}
 
                             {/* Actions */}
-                            <div className="flex items-center gap-2 pt-4 border-t border-border">
+                            <div className="flex items-center gap-2 pt-4 border-t border-q-border">
                                 {review.status === 'pending' && (
                                     <>
                                         <button
@@ -429,7 +429,7 @@ const ReviewsView: React.FC = () => {
                                 <button
                                     onClick={() => handleDelete(review.id)}
                                     disabled={isProcessing === review.id}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors disabled:opacity-50 ml-auto"
+                                    className="flex items-center gap-2 px-3 py-1.5 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors disabled:opacity-50 ml-auto"
                                 >
                                     <Trash2 size={16} />
                                     Eliminar
@@ -443,12 +443,12 @@ const ReviewsView: React.FC = () => {
             {/* Response Modal */}
             {showResponseModal && selectedReview && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-lg">
-                        <div className="p-6 border-b border-border">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg">
+                        <div className="p-6 border-b border-q-border">
                             <h3 className="text-lg font-bold text-foreground">
                                 Responder a la reseña
                             </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-sm text-q-text-muted mt-1">
                                 de {selectedReview.customerName}
                             </p>
                         </div>
@@ -458,12 +458,12 @@ const ReviewsView: React.FC = () => {
                             <div className="p-4 bg-muted/30 rounded-lg">
                                 <RatingDisplay rating={selectedReview.rating} />
                                 <h4 className="font-medium text-foreground mt-2">{selectedReview.title}</h4>
-                                <p className="text-sm text-muted-foreground mt-1">{selectedReview.comment}</p>
+                                <p className="text-sm text-q-text-muted mt-1">{selectedReview.comment}</p>
                             </div>
 
                             {/* Response Input */}
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                <label className="block text-sm font-medium text-q-text-muted mb-2">
                                     Tu respuesta
                                 </label>
                                 <textarea
@@ -471,7 +471,7 @@ const ReviewsView: React.FC = () => {
                                     onChange={(e) => setResponseText(e.target.value)}
                                     rows={4}
                                     placeholder="Escribe tu respuesta..."
-                                    className="w-full px-4 py-3 bg-muted/50 border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                                    className="w-full px-4 py-3 bg-muted/50 border border-q-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                                 />
                             </div>
 

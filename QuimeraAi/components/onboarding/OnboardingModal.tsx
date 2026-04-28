@@ -154,7 +154,7 @@ const OnboardingModal: React.FC = () => {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-                <div className="relative bg-background rounded-2xl p-8 flex items-center gap-4 border border-border">
+                <div className="relative bg-q-bg rounded-2xl p-8 flex items-center gap-4 border border-q-border">
                     <QuimeraLoader size="sm" />
                     <span className="text-foreground">{t('common.loading', 'Loading...')}</span>
                 </div>
@@ -281,9 +281,9 @@ const OnboardingModal: React.FC = () => {
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-none md:max-w-4xl h-[100dvh] md:h-auto md:max-h-[90vh] md:mx-4 md:rounded-2xl bg-background shadow-2xl flex flex-col border-0 md:border border-border overflow-hidden">
+            <div className="relative w-full max-w-none md:max-w-4xl h-[100dvh] md:h-auto md:max-h-[90vh] md:mx-4 md:rounded-2xl bg-q-bg shadow-2xl flex flex-col border-0 md:border border-q-border overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-border bg-card md:rounded-t-2xl flex-shrink-0">
+                <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b border-q-border bg-q-surface md:rounded-t-2xl flex-shrink-0">
                     <div className="flex items-center gap-2 md:gap-3">
                         <img
                             src={QUIMERA_LOGO}
@@ -294,7 +294,7 @@ const OnboardingModal: React.FC = () => {
                             <h2 className="text-base md:text-lg font-bold text-foreground">
                                 {t('onboarding.title', 'Create Your Website')}
                             </h2>
-                            <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">
+                            <p className="text-[10px] md:text-xs text-q-text-muted hidden sm:block">
                                 {t('onboarding.subtitle', 'AI-powered website builder')}
                             </p>
                         </div>
@@ -304,7 +304,7 @@ const OnboardingModal: React.FC = () => {
                         {!isGenerating && (
                             <button
                                 onClick={resetOnboarding}
-                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                                 title={t('onboarding.startOver', 'Start Over')}
                             >
                                 <RotateCcw size={18} />
@@ -324,7 +324,7 @@ const OnboardingModal: React.FC = () => {
                         {!isGenerating && (
                             <button
                                 onClick={closeOnboarding}
-                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                             >
                                 <X size={20} />
                             </button>
@@ -333,7 +333,7 @@ const OnboardingModal: React.FC = () => {
                 </div>
 
                 {/* Step Indicator */}
-                <div className="border-b border-border bg-card/50 flex-shrink-0">
+                <div className="border-b border-q-border bg-q-surface/50 flex-shrink-0">
                     <StepIndicator
                         currentStep={progress.step}
                         totalSteps={totalSteps}
@@ -356,7 +356,7 @@ const OnboardingModal: React.FC = () => {
 
                 {/* Footer with Navigation */}
                 {progress.step !== generationStep && (
-                    <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-t border-border bg-card md:rounded-b-2xl flex-shrink-0">
+                    <div className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-t border-q-border bg-q-surface md:rounded-b-2xl flex-shrink-0">
                         {/* Previous Button */}
                         <button
                             onClick={previousStep}
@@ -365,7 +365,7 @@ const OnboardingModal: React.FC = () => {
                                 flex items-center gap-1 md:gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl font-medium transition-all text-sm md:text-base
                                 ${canGoPrevious()
                                     ? 'text-foreground hover:bg-accent'
-                                    : 'text-muted-foreground/50 cursor-not-allowed'
+                                    : 'text-q-text-muted/50 cursor-not-allowed'
                                 }
                             `}
                         >
@@ -375,7 +375,7 @@ const OnboardingModal: React.FC = () => {
 
                         {/* Saving indicator */}
                         {isSaving && (
-                            <span className="text-xs text-muted-foreground animate-pulse">
+                            <span className="text-xs text-q-text-muted animate-pulse">
                                 {t('onboarding.saving', 'Saving...')}
                             </span>
                         )}
@@ -388,7 +388,7 @@ const OnboardingModal: React.FC = () => {
                                 flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-medium transition-all text-sm md:text-base
                                 ${canGoNext()
                                     ? 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/25 hover:scale-105'
-                                    : 'bg-muted text-muted-foreground/50 cursor-not-allowed'
+                                    : 'bg-muted text-q-text-muted/50 cursor-not-allowed'
                                 }
                             `}
                         >
@@ -411,7 +411,7 @@ const OnboardingModal: React.FC = () => {
                         className="absolute inset-0 bg-black/50"
                         onClick={() => setShowCancelConfirm(false)}
                     />
-                    <div className="relative bg-card border border-border rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+                    <div className="relative bg-q-surface border border-q-border rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
                                 <AlertTriangle size={20} className="text-amber-500" />
@@ -420,7 +420,7 @@ const OnboardingModal: React.FC = () => {
                                 {t('onboarding.cancelGenerationTitle', 'Cancel Generation?')}
                             </h3>
                         </div>
-                        <p className="text-muted-foreground text-sm mb-6">
+                        <p className="text-q-text-muted text-sm mb-6">
                             {t('onboarding.cancelGenerationMessage', 'This will stop the website generation and reset the process. You will need to start over.')}
                         </p>
                         <div className="flex gap-3">

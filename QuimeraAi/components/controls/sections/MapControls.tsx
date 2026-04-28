@@ -119,21 +119,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
 
       {/* ── Location ── */}
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
         <MapPin size={14} />
         {t('controls.map.location', 'Location')}
       </label>
 
       {/* Address input with search button */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.address', 'Address')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.address', 'Address')}</label>
         <div className="flex gap-2">
           <input
             type="text"
             value={data?.map.address || ''}
             onChange={(e) => setNestedData('map.address', e.target.value)}
             placeholder={t('controls.map.addressPlaceholder', 'e.g. 123 Main St, City, Country')}
-            className="flex-1 bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50"
+            className="flex-1 bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text-primary focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -143,7 +143,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
           <button type="button"             onClick={geocodeAddress}
             disabled={isGeocoding}
-            className="px-3 py-2 bg-editor-accent text-white rounded-md hover:bg-editor-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
+            className="px-3 py-2 bg-q-accent text-white rounded-md hover:bg-q-accent/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0"
             title={t('controls.map.searchLocation', 'Search location')}
           >
             {isGeocoding ? (
@@ -174,10 +174,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Manual coordinate inputs (collapsible) */}
       <details className="mt-3">
-        <summary className="text-xs font-medium text-editor-text-secondary cursor-pointer hover:text-editor-text-primary transition-colors">
+        <summary className="text-xs font-medium text-q-text-secondary cursor-pointer hover:text-q-text-primary transition-colors">
           {t('controls.map.manualCoordinates', 'Manual coordinates (advanced)')}
         </summary>
-        <div className="grid grid-cols-2 gap-3 mt-2 pl-2 border-l-2 border-editor-border">
+        <div className="grid grid-cols-2 gap-3 mt-2 pl-2 border-l-2 border-q-border">
           <Input label={t('controls.map.latitude', 'Latitude')} type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
           <Input label={t('controls.map.longitude', 'Longitude')} type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
         </div>
@@ -193,8 +193,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ── Contact Info ── */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Phone size={14} />
           {t('controls.map.contactInfo', 'Contact Info')}
         </label>
@@ -211,7 +211,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="map" data={data} setNestedData={setNestedData} />
       {/* Map Variant */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <Select
           label={t('editor.controls.common.mapStyle')}
           value={data?.map.mapVariant || 'modern'}
@@ -226,7 +226,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Map Height */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SliderControl
           label={t('controls.map.mapHeight', 'Map Height')}
           value={data?.map.height || (data?.map.mapVariant === 'modern' ? 500 : 400)}
@@ -236,8 +236,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
           {t('controls.map.spacing', 'Spacing')}
         </label>
@@ -248,8 +248,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           {t('controls.map.colors', 'Colors')}
         </label>

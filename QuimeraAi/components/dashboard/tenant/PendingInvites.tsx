@@ -101,7 +101,7 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
     if (isLoading) {
         return (
             <div className={`flex items-center justify-center p-8 ${className}`}>
-                <Loader2 size={24} className="animate-spin text-muted-foreground" />
+                <Loader2 size={24} className="animate-spin text-q-text-muted" />
             </div>
         );
     }
@@ -111,9 +111,9 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
     }
 
     return (
-        <div className={`bg-card border border-border rounded-xl ${className}`}>
+        <div className={`bg-q-surface border border-q-border rounded-xl ${className}`}>
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
+            <div className="flex items-center justify-between p-4 border-b border-q-border">
                 <div className="flex items-center gap-2">
                     <Mail size={18} className="text-primary" />
                     <h3 className="font-semibold text-foreground">
@@ -174,12 +174,12 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
                                 <div className="flex items-center gap-2 mt-0.5">
                                     <div className="flex items-center gap-1">
                                         {getRoleIcon(invite.role)}
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             {AGENCY_ROLE_LABELS[invite.role]}
                                         </span>
                                     </div>
-                                    <span className="text-muted-foreground">•</span>
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <span className="text-q-text-muted">•</span>
+                                    <div className="flex items-center gap-1 text-xs text-q-text-muted">
                                         <Clock size={12} />
                                         {invite.daysUntilExpiration > 0 ? (
                                             <span>
@@ -199,12 +199,12 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
                         {/* Actions */}
                         <div className="relative flex-shrink-0">
                             {loadingAction === invite.id ? (
-                                <Loader2 size={18} className="animate-spin text-muted-foreground" />
+                                <Loader2 size={18} className="animate-spin text-q-text-muted" />
                             ) : (
                                 <>
                                     <button
                                         onClick={() => setOpenDropdown(openDropdown === invite.id ? null : invite.id)}
-                                        className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                                        className="p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                                     >
                                         <MoreHorizontal size={18} />
                                     </button>
@@ -216,12 +216,12 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
                                                 className="fixed inset-0 z-10"
                                                 onClick={() => setOpenDropdown(null)}
                                             />
-                                            <div className="absolute right-0 top-full mt-1 z-20 w-48 bg-popover border border-border rounded-xl shadow-xl py-1 animate-in fade-in-0 zoom-in-95">
+                                            <div className="absolute right-0 top-full mt-1 z-20 w-48 bg-popover border border-q-border rounded-xl shadow-xl py-1 animate-in fade-in-0 zoom-in-95">
                                                 <button
                                                     onClick={() => handleResend(invite.id)}
                                                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
                                                 >
-                                                    <RefreshCw size={16} className="text-muted-foreground" />
+                                                    <RefreshCw size={16} className="text-q-text-muted" />
                                                     {t('invite.resend', 'Reenviar')}
                                                 </button>
                                                 <button
@@ -243,10 +243,10 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({
 
             {/* Show more */}
             {hasMore && (
-                <div className="p-3 text-center border-t border-border">
+                <div className="p-3 text-center border-t border-q-border">
                     <button
                         onClick={onViewAll}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-sm text-q-text-muted hover:text-foreground transition-colors"
                     >
                         +{pendingInvites.length - displayedInvites.length} {t('common.more', 'más')}
                     </button>

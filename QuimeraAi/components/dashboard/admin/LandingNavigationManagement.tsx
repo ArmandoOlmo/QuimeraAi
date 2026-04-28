@@ -265,22 +265,22 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const publishedArticles = articles.filter(a => a.status === 'published');
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
+                            className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden transition-colors"
                         >
                             <MenuIcon className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Layout className="text-editor-accent w-5 h-5" />
-                            <h1 className="text-lg font-semibold text-editor-text-primary">
+                            <Layout className="text-q-accent w-5 h-5" />
+                            <h1 className="text-lg font-semibold text-q-text">
                                 App Landing Navigation
                             </h1>
                         </div>
@@ -300,11 +300,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                             Save Changes
                         </button>
-                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     </div>
                 </header>
 
-                <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-background">
+                <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-q-bg">
                     <div className="max-w-5xl mx-auto">
                         
                         {/* Info Banner */}
@@ -315,7 +315,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                     <h4 className="text-sm font-semibold text-foreground mb-1">
                                         Public Landing Page Configuration
                                     </h4>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs text-q-text-muted">
                                         Configure the navigation and footer for the Quimera.ai public landing page. 
                                         Changes will be visible to all visitors.
                                     </p>
@@ -324,13 +324,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex gap-2 mb-6 border-b border-border">
+                        <div className="flex gap-2 mb-6 border-b border-q-border">
                             <button
                                 onClick={() => setActiveTab('header')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'header'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-foreground'
                                 }`}
                             >
                                 <Layout size={14} className="inline mr-2" />
@@ -341,7 +341,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'footer'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-foreground'
                                 }`}
                             >
                                 <Settings size={14} className="inline mr-2" />
@@ -352,7 +352,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'featured'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-foreground'
                                 }`}
                             >
                                 <Star size={14} className="inline mr-2" />
@@ -370,11 +370,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 {activeTab === 'header' && (
                                     <div className="space-y-6">
                                         {/* Logo Settings */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <h3 className="font-semibold mb-4">Logo Settings</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                         Logo Text
                                                     </label>
                                                     <input
@@ -386,11 +386,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 logo: { ...localNav.header.logo!, text: e.target.value }
                                                             }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                         Logo Image URL
                                                     </label>
                                                     <input
@@ -402,14 +402,14 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 logo: { ...localNav.header.logo!, imageUrl: e.target.value }
                                                             }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Navigation Items */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="font-semibold">Navigation Links</h3>
                                                 <button
@@ -427,25 +427,25 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         key={item.id}
                                                         className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg group"
                                                     >
-                                                        <GripVertical size={16} className="text-muted-foreground cursor-move" />
+                                                        <GripVertical size={16} className="text-q-text-muted cursor-move" />
                                                         <input
                                                             type="text"
                                                             value={item.label}
                                                             onChange={(e) => updateHeaderItem(item.id, { label: e.target.value })}
-                                                            className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             placeholder="Label"
                                                         />
                                                         <input
                                                             type="text"
                                                             value={item.href}
                                                             onChange={(e) => updateHeaderItem(item.id, { href: e.target.value })}
-                                                            className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             placeholder="URL or #section"
                                                         />
                                                         <select
                                                             value={item.type}
                                                             onChange={(e) => updateHeaderItem(item.id, { type: e.target.value as any })}
-                                                            className="px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                         >
                                                             <option value="link">Page Link</option>
                                                             <option value="anchor">Anchor (#)</option>
@@ -458,7 +458,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                     articleSlug: e.target.value,
                                                                     href: `/blog/${e.target.value}`
                                                                 })}
-                                                                className="px-2 py-1 bg-background border border-border rounded text-sm"
+                                                                className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             >
                                                                 <option value="">Select article</option>
                                                                 {publishedArticles.map(a => (
@@ -468,7 +468,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         )}
                                                         <button
                                                             onClick={() => deleteHeaderItem(item.id)}
-                                                            className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                                            className="p-1.5 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -476,7 +476,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                 ))}
 
                                                 {localNav.header.items.length === 0 && (
-                                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                                    <p className="text-sm text-q-text-muted text-center py-8">
                                                         No navigation items. Click "Add Link" to create one.
                                                     </p>
                                                 )}
@@ -484,11 +484,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         </div>
 
                                         {/* CTA Buttons */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <h3 className="font-semibold mb-4">Call-to-Action Buttons</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                         Login Button Text
                                                     </label>
                                                     <input
@@ -500,11 +500,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 cta: { ...localNav.header.cta!, loginText: e.target.value }
                                                             }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                         Register Button Text
                                                     </label>
                                                     <input
@@ -516,7 +516,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 cta: { ...localNav.header.cta!, registerText: e.target.value }
                                                             }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                     />
                                                 </div>
                                             </div>
@@ -528,7 +528,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 {activeTab === 'footer' && (
                                     <div className="space-y-6">
                                         {/* Footer Columns */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="font-semibold">Footer Columns</h3>
                                                 <button
@@ -548,11 +548,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 type="text"
                                                                 value={column.title}
                                                                 onChange={(e) => updateFooterColumn(column.id, { title: e.target.value })}
-                                                                className="font-medium bg-transparent border-b border-transparent hover:border-border focus:border-primary outline-none"
+                                                                className="font-medium bg-transparent border-b border-transparent hover:border-q-border focus:border-primary outline-none"
                                                             />
                                                             <button
                                                                 onClick={() => deleteFooterColumn(column.id)}
-                                                                className="p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                                                                className="p-1 text-q-text-muted hover:text-red-500 transition-colors"
                                                             >
                                                                 <Trash2 size={14} />
                                                             </button>
@@ -565,19 +565,19 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                         type="text"
                                                                         value={item.label}
                                                                         onChange={(e) => updateFooterItem(column.id, item.id, { label: e.target.value })}
-                                                                        className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded"
+                                                                        className="flex-1 px-2 py-1 text-sm bg-q-bg border border-q-border rounded"
                                                                         placeholder="Label"
                                                                     />
                                                                     <input
                                                                         type="text"
                                                                         value={item.href}
                                                                         onChange={(e) => updateFooterItem(column.id, item.id, { href: e.target.value })}
-                                                                        className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded"
+                                                                        className="flex-1 px-2 py-1 text-sm bg-q-bg border border-q-border rounded"
                                                                         placeholder="URL"
                                                                     />
                                                                     <button
                                                                         onClick={() => deleteFooterItem(column.id, item.id)}
-                                                                        className="p-1 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                                        className="p-1 text-q-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                                                                     >
                                                                         <X size={12} />
                                                                     </button>
@@ -587,7 +587,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
                                                         <button
                                                             onClick={() => addFooterItem(column.id)}
-                                                            className="mt-3 w-full py-1.5 text-xs text-muted-foreground hover:text-primary border border-dashed border-border hover:border-primary rounded transition-colors"
+                                                            className="mt-3 w-full py-1.5 text-xs text-q-text-muted hover:text-primary border border-dashed border-q-border hover:border-primary rounded transition-colors"
                                                         >
                                                             + Add Link
                                                         </button>
@@ -597,7 +597,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         </div>
 
                                         {/* Social Links */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h3 className="font-semibold">Social Links</h3>
                                                 <button
@@ -612,13 +612,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                             <div className="space-y-3">
                                                 {(localNav.footer.socialLinks || []).map(link => (
                                                     <div key={link.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg group">
-                                                        <span className="text-muted-foreground">
+                                                        <span className="text-q-text-muted">
                                                             {SOCIAL_ICONS[link.platform]}
                                                         </span>
                                                         <select
                                                             value={link.platform}
                                                             onChange={(e) => updateSocialLink(link.id, { platform: e.target.value as any })}
-                                                            className="px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                         >
                                                             <option value="twitter">Twitter</option>
                                                             <option value="linkedin">LinkedIn</option>
@@ -631,12 +631,12 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             type="text"
                                                             value={link.url}
                                                             onChange={(e) => updateSocialLink(link.id, { url: e.target.value })}
-                                                            className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm"
+                                                            className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             placeholder="https://..."
                                                         />
                                                         <button
                                                             onClick={() => deleteSocialLink(link.id)}
-                                                            className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+                                                            className="p-1.5 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
                                                         >
                                                             <Trash2 size={14} />
                                                         </button>
@@ -646,11 +646,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         </div>
 
                                         {/* Footer Text */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <h3 className="font-semibold mb-4">Footer Settings</h3>
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                         Copyright Text
                                                     </label>
                                                     <input
@@ -659,7 +659,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         onChange={(e) => updateLocalNav({
                                                             footer: { ...localNav.footer, bottomText: e.target.value }
                                                         })}
-                                                        className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                        className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                         placeholder="© 2024 Your Company. All rights reserved."
                                                     />
                                                 </div>
@@ -679,7 +679,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                 {localNav.footer.showNewsletter && (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
                                                         <div>
-                                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 Newsletter Title
                                                             </label>
                                                             <input
@@ -688,11 +688,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 onChange={(e) => updateLocalNav({
                                                                     footer: { ...localNav.footer, newsletterTitle: e.target.value }
                                                                 })}
-                                                                className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                                className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                                            <label className="block text-sm font-medium text-q-text-muted mb-2">
                                                                 Newsletter Description
                                                             </label>
                                                             <input
@@ -701,7 +701,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 onChange={(e) => updateLocalNav({
                                                                     footer: { ...localNav.footer, newsletterDescription: e.target.value }
                                                                 })}
-                                                                className="w-full px-3 py-2 bg-secondary/30 border border-border rounded-lg outline-none focus:border-primary"
+                                                                className="w-full px-3 py-2 bg-secondary/30 border border-q-border rounded-lg outline-none focus:border-primary"
                                                             />
                                                         </div>
                                                     </div>
@@ -714,18 +714,18 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 {/* Featured Articles Tab */}
                                 {activeTab === 'featured' && (
                                     <div className="space-y-6">
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <h3 className="font-semibold mb-2">Featured Articles on Homepage</h3>
-                                            <p className="text-sm text-muted-foreground mb-6">
+                                            <p className="text-sm text-q-text-muted mb-6">
                                                 Articles marked as "Featured" will appear on the public landing page. 
                                                 Go to Content Management to edit articles.
                                             </p>
 
                                             {featuredArticles.length === 0 ? (
                                                 <div className="text-center py-12 bg-secondary/20 rounded-lg">
-                                                    <Star className="w-12 h-12 mx-auto text-muted-foreground opacity-30 mb-3" />
-                                                    <p className="text-muted-foreground mb-2">No featured articles</p>
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <Star className="w-12 h-12 mx-auto text-q-text-muted opacity-30 mb-3" />
+                                                    <p className="text-q-text-muted mb-2">No featured articles</p>
+                                                    <p className="text-sm text-q-text-muted">
                                                         Mark articles as "Featured" in Content Management to show them here.
                                                     </p>
                                                 </div>
@@ -744,7 +744,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 />
                                                             ) : (
                                                                 <div className="w-full h-32 bg-secondary flex items-center justify-center">
-                                                                    <FileText className="w-8 h-8 text-muted-foreground opacity-30" />
+                                                                    <FileText className="w-8 h-8 text-q-text-muted opacity-30" />
                                                                 </div>
                                                             )}
                                                             <div className="p-4">
@@ -755,7 +755,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 <h4 className="font-medium text-sm line-clamp-2 mb-2">
                                                                     {article.title}
                                                                 </h4>
-                                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                                <p className="text-xs text-q-text-muted line-clamp-2">
                                                                     {article.excerpt}
                                                                 </p>
                                                             </div>
@@ -766,7 +766,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         </div>
 
                                         {/* All Published Articles */}
-                                        <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <h3 className="font-semibold mb-4">All Published Articles</h3>
                                             <div className="space-y-2">
                                                 {publishedArticles.map(article => (
@@ -779,7 +779,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 <Star size={14} className="text-yellow-500 fill-yellow-500" />
                                                             )}
                                                             <span className="text-sm font-medium">{article.title}</span>
-                                                            <span className="text-xs text-muted-foreground">
+                                                            <span className="text-xs text-q-text-muted">
                                                                 /blog/{article.slug}
                                                             </span>
                                                         </div>
@@ -796,7 +796,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                 ))}
 
                                                 {publishedArticles.length === 0 && (
-                                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                                    <p className="text-sm text-q-text-muted text-center py-8">
                                                         No published articles yet.
                                                     </p>
                                                 )}

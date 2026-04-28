@@ -33,8 +33,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Section Heading */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <FileText size={14} />
           {t('controls.content')}
         </label>
@@ -45,8 +45,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Layout Settings */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <LayoutGrid size={14} />
           {t('editor.controls.cmsFeed.layout')}
         </label>
@@ -109,8 +109,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Card Content Controls */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <SlidersHorizontal size={14} />
           {t('editor.controls.cmsFeed.cardContent')}
         </label>
@@ -159,8 +159,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* View All CTA */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <MousePointerClick size={14} />
           {t('editor.controls.cmsFeed.viewAllCta')}
         </label>
@@ -173,8 +173,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="cmsFeed" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={feedData.paddingY || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={feedData.paddingX || 'md'} onChange={(v) => setNestedData('cmsFeed.paddingX', v)} />
@@ -182,16 +182,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.sectionColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={feedData.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cmsFeed.colors.background', v)} />
         <ColorControl label={t('editor.controls.cmsFeed.sectionTitle')} value={feedData.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('cmsFeed.colors.heading', v)} />
         <ColorControl label={t('editor.controls.cmsFeed.sectionDescription')} value={feedData.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('cmsFeed.colors.text', v)} />
       </div>
 
       {/* Card Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.cardColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.cardColors')}</label>
         <ColorControl label={t('editor.controls.cmsFeed.cardBackground')} value={feedData.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('cmsFeed.colors.cardBackground', v)} />
         <ColorControl label={t('editor.controls.cmsFeed.cardBorder')} value={feedData.colors?.cardBorder || '#334155'} onChange={(v) => setNestedData('cmsFeed.colors.cardBorder', v)} />
         <ColorControl label={t('editor.controls.cmsFeed.cardHeading')} value={feedData.colors?.cardHeading || '#f8fafc'} onChange={(v) => setNestedData('cmsFeed.colors.cardHeading', v)} />
@@ -200,8 +200,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Image Style */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.imageStyle')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.imageStyle')}</label>
         <Select
           label={t('editor.controls.cmsFeed.cardImageShape')}
           value={feedData.imageStyle || 'rounded'}
@@ -215,15 +215,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Category Badge Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.categoryBadge')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.categoryBadge')}</label>
         <ColorControl label={t('editor.controls.cmsFeed.badgeBackground')} value={feedData.colors?.categoryBadgeBackground || '#4f46e5'} onChange={(v) => setNestedData('cmsFeed.colors.categoryBadgeBackground', v)} />
         <ColorControl label={t('editor.controls.cmsFeed.badgeText')} value={feedData.colors?.categoryBadgeText || '#ffffff'} onChange={(v) => setNestedData('cmsFeed.colors.categoryBadgeText', v)} />
       </div>
 
       {/* Button Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.buttons')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('editor.controls.cmsFeed.buttons')}</label>
         <ColorControl label={t('editor.controls.cmsFeed.buttonBackground')} value={feedData.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('cmsFeed.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={feedData.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('cmsFeed.colors.buttonText', v)} />
       </div>

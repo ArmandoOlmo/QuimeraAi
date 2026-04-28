@@ -34,8 +34,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-3">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -48,11 +48,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <Input label={t('controls.title')} value={data.logoBanner.title || ''} onChange={(e) => setNestedData('logoBanner.title', e.target.value)} placeholder="Trusted by industry leaders" />
       <Input label={t('controls.subtitle')} value={data.logoBanner.subtitle || ''} onChange={(e) => setNestedData('logoBanner.subtitle', e.target.value)} placeholder="" />
 
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Logos</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Logos</div>
       {logos.map((logo: any, idx: number) => (
-        <div key={idx} className="bg-editor-card rounded-lg p-3 space-y-2 border border-editor-border">
+        <div key={idx} className="bg-q-surface rounded-lg p-3 space-y-2 border border-q-border">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-editor-text-primary">Logo {idx + 1}</span>
+            <span className="text-xs font-medium text-q-text-primary">Logo {idx + 1}</span>
             {logos.length > 1 && (
               <button type="button"                 onClick={() => {
                   const updated = logos.filter((_: any, i: number) => i !== idx);
@@ -76,8 +76,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           {/* Link Type Selector */}
           <div>
-            <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Link Destination</div>
-            <div className="flex bg-editor-bg rounded-md border border-editor-border p-0.5 mb-2">
+            <div className="text-[10px] font-medium text-q-text-secondary mb-1">Link Destination</div>
+            <div className="flex bg-q-bg rounded-md border border-q-border p-0.5 mb-2">
               {[
                 { value: 'manual', label: 'URL' },
                 { value: 'content', label: 'Content' },
@@ -85,8 +85,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 <button type="button"                   key={type.value}
                   onClick={() => setNestedData(`logoBanner.logos.${idx}.linkType`, type.value)}
                   className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(logo.linkType || 'manual') === type.value
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-hover'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:text-q-text-primary hover:hover:bg-q-surface-overlay'
                   }`}
                 >
                   {type.label}
@@ -120,7 +120,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-3">      {/* Scroll */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Behavior</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Behavior</div>
       <ToggleControl label={t('controls.scrollMarquee')} checked={data.logoBanner.scrollEnabled ?? false} onChange={(v) => setNestedData('logoBanner.scrollEnabled', v)} />
       <ToggleControl label={t('controls.pauseOnHover')} checked={data.logoBanner.pauseOnHover ?? true} onChange={(v) => setNestedData('logoBanner.pauseOnHover', v)} />
       <ToggleControl label={t('controls.grayscaleColorOnHover')} checked={data.logoBanner.grayscale ?? true} onChange={(v) => setNestedData('logoBanner.grayscale', v)} />
@@ -136,7 +136,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* Logo Size */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Logo Size</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Logo Size</div>
       <SliderControl
         label="Logo Height"
         value={data.logoBanner.logoHeight || 40}
@@ -156,7 +156,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Padding */}
       <div>
-        <div className="text-[10px] font-medium text-editor-text-secondary mb-1">Padding</div>
+        <div className="text-[10px] font-medium text-q-text-secondary mb-1">Padding</div>
         <div className="flex gap-1">
           {[
             { value: 'sm', label: 'S' },
@@ -169,7 +169,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               className={`flex-1 py-1.5 rounded text-xs font-medium transition-colors ${
                 (data.logoBanner.paddingY || 'md') === opt.value
                   ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500'
-                  : 'bg-editor-bg text-editor-text-secondary hover:bg-editor-hover'
+                  : 'bg-q-bg text-q-text-secondary hover:hover:bg-q-surface-overlay'
               }`}
             >
               {opt.label}
@@ -179,7 +179,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Background */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Background</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Background</div>
       <ToggleControl label={t('controls.useGradient')} checked={data.logoBanner.useGradient ?? false} onChange={(v) => setNestedData('logoBanner.useGradient', v)} />
 
       {data.logoBanner.useGradient ? (
@@ -198,7 +198,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* Colors */}
-      <div className="text-[10px] font-semibold text-editor-text-secondary uppercase tracking-wider pt-1">Colors</div>
+      <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Colors</div>
       <ColorControl label={t('controls.title')} value={data.logoBanner.titleColor || '#64748b'} onChange={(v) => setNestedData('logoBanner.titleColor', v)} />
       <ColorControl label={t('controls.subtitle')} value={data.logoBanner.subtitleColor || '#94a3b8'} onChange={(v) => setNestedData('logoBanner.subtitleColor', v)} />
       {data.logoBanner.showDivider && (

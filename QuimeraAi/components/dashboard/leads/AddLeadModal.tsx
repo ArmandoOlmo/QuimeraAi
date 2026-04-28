@@ -41,12 +41,12 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('common.name')} <span className="text-red-400">*</span></label>
                     <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             required
                             value={data.name || ''}
                             onChange={e => onChange('name', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Sarah Connor"
                             autoFocus
                         />
@@ -56,13 +56,13 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.email')} <span className="text-red-400">*</span></label>
                     <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             required
                             type="email"
                             value={data.email || ''}
                             onChange={e => onChange('email', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="sarah@skynet.com"
                         />
                     </div>
@@ -71,12 +71,12 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.phone')}</label>
                     <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             type="tel"
                             value={data.phone || ''}
                             onChange={e => onChange('phone', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="+1 (555) 000-0000"
                         />
                     </div>
@@ -85,11 +85,11 @@ const ContactStep: React.FC<ContactStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.jobTitle')}</label>
                     <div className="relative">
-                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             value={data.jobTitle || ''}
                             onChange={e => onChange('jobTitle', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. CTO"
                         />
                     </div>
@@ -113,11 +113,11 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.companyName')}</label>
                     <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             value={data.company || ''}
                             onChange={e => onChange('company', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Cyberdyne Systems"
                         />
                     </div>
@@ -126,11 +126,11 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
                 <div className="space-y-1.5 group">
                     <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{t('leads.industry')}</label>
                     <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                         <input
                             value={data.industry || ''}
                             onChange={e => onChange('industry', e.target.value)}
-                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                            className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                             placeholder="e.g. Technology"
                         />
                     </div>
@@ -140,13 +140,13 @@ const CompanyStep: React.FC<CompanyStepProps> = ({ data, onChange, t }) => {
             <div className="space-y-1.5 group max-w-[50%]">
                 <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-green-500 transition-colors">{t('leads.dealValue')}</label>
                 <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-green-500 transition-colors" size={16} />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-green-500 transition-colors" size={16} />
                     <input
                         type="number"
                         min="0"
                         value={data.value || 0}
                         onChange={e => onChange('value', Number(e.target.value))}
-                        className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-green-500 outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                        className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-green-500 outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                         placeholder="0.00"
                     />
                 </div>
@@ -178,7 +178,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                 <div className="p-1.5 bg-primary/10 rounded-lg">
                     <ClipboardList size={14} className="text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">
+                <p className="text-xs text-q-text-muted font-medium">
                     {t('leads.crmSettings.customFields')}
                 </p>
             </div>
@@ -195,7 +195,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                                         dynamicData[field.id]
                                             ? 'bg-primary border-primary text-primary-foreground'
-                                            : 'border-border hover:border-primary/50'
+                                            : 'border-q-border hover:border-primary/50'
                                     }`}
                                 >
                                     {dynamicData[field.id] && <Check size={12} />}
@@ -212,7 +212,7 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                             <div key={field.id} className="space-y-1.5 group">
                                 <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{field.name}</label>
                                 <div className="relative">
-                                    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                                    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                                     <select
                                         value={dynamicData[field.id] || ''}
                                         onChange={e => onDynamicChange(field.id, e.target.value)}
@@ -232,12 +232,12 @@ const IndustryFieldsStep: React.FC<IndustryFieldsStepProps> = ({ fields, dynamic
                         <div key={field.id} className="space-y-1.5 group">
                             <label className="text-xs font-medium text-foreground/80 ml-1 group-focus-within:text-primary transition-colors">{field.name}</label>
                             <div className="relative">
-                                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+                                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted group-focus-within:text-primary transition-colors" size={16} />
                                 <input
                                     type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
                                     value={dynamicData[field.id] || ''}
                                     onChange={e => onDynamicChange(field.id, field.type === 'number' ? Number(e.target.value) : e.target.value)}
-                                    className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 hover:bg-secondary/50"
+                                    className="w-full bg-secondary/30 border border-white/5 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-q-text-muted/30 hover:bg-secondary/50"
                                     placeholder={field.placeholder || field.name}
                                 />
                             </div>
@@ -389,7 +389,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
             isOpen={isOpen}
             onClose={onClose}
             maxWidth="max-w-2xl"
-            className="bg-card/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
+            className="bg-q-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden"
         >
             <div className="flex flex-col h-[70vh] max-h-[600px]">
                 {/* Header */}
@@ -402,21 +402,21 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                             <h2 className="text-xl font-bold text-foreground tracking-tight">
                                 {t('leads.addNewLead')}
                             </h2>
-                            <p className="text-xs text-muted-foreground font-medium">
+                            <p className="text-xs text-q-text-muted font-medium">
                                 {STEPS[currentStepIndex]?.label}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/5 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200"
+                        className="p-2 hover:bg-white/5 rounded-lg text-q-text-muted hover:text-foreground transition-all duration-200"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Progress */}
-                <div className="px-6 py-4 border-b border-border/50">
+                <div className="px-6 py-4 border-b border-q-border/50">
                     <div className="flex items-center gap-2">
                         {STEPS.map((step, index) => {
                             const isActive = index === currentStepIndex;
@@ -435,7 +435,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                                                 ? 'bg-primary text-primary-foreground'
                                                 : isCompleted
                                                     ? 'bg-primary/10 text-primary cursor-pointer hover:bg-primary/20'
-                                                    : 'text-muted-foreground'
+                                                    : 'text-q-text-muted'
                                             }
                                         `}
                                     >
@@ -446,7 +446,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                                     </button>
 
                                     {index < STEPS.length - 1 && (
-                                        <ChevronRight size={16} className="text-muted-foreground/50" />
+                                        <ChevronRight size={16} className="text-q-text-muted/50" />
                                     )}
                                 </React.Fragment>
                             );
@@ -493,8 +493,8 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ isOpen, onClose, onSubmit, 
                             flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
                             transition-colors
                             ${isFirstStep
-                                ? 'text-muted-foreground/50 cursor-not-allowed'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                                ? 'text-q-text-muted/50 cursor-not-allowed'
+                                : 'text-q-text-muted hover:text-foreground hover:bg-secondary'
                             }
                         `}
                     >

@@ -135,14 +135,14 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
             case 'error':
                 return <XCircle className="text-red-500" size={20} />;
             default:
-                return <Icon className="text-muted-foreground" size={20} />;
+                return <Icon className="text-q-text-muted" size={20} />;
         }
     };
 
     const allComplete = steps.every((step) => step.status === 'success');
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 p-6">
                 <div className="flex items-center gap-4">
@@ -153,7 +153,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                         <h3 className="text-lg font-bold text-foreground">
                             {t('ecommerce.demoDataTitle', 'Datos de Demostración')}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-q-text-muted">
                             {projectName && (
                                 <span>
                                     {t('ecommerce.seedFor', 'Para')}: <strong>{projectName}</strong>
@@ -162,12 +162,12 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                         </p>
                         {storeId && (
                             <div className="flex items-center gap-2 mt-1">
-                                <code className="text-xs bg-black/20 px-2 py-0.5 rounded text-muted-foreground">
+                                <code className="text-xs bg-black/20 px-2 py-0.5 rounded text-q-text-muted">
                                     ID: {storeId}
                                 </code>
                                 <button
                                     onClick={() => navigator.clipboard.writeText(storeId)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                    className="text-q-text-muted hover:text-foreground transition-colors"
                                     title={t('common.copyId', 'Copiar ID')}
                                 >
                                     <Copy size={12} />
@@ -180,7 +180,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
 
             {/* Content */}
             <div className="p-6">
-                <p className="text-muted-foreground mb-6">
+                <p className="text-q-text-muted mb-6">
                     {t(
                         'ecommerce.demoDataDescription',
                         'Llena tu tienda con productos de ejemplo para ver cómo funciona. Incluye categorías, productos con imágenes y configuración básica.'
@@ -193,19 +193,19 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                         {t('ecommerce.includes', 'Incluye')}:
                     </p>
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <FolderTree size={16} className="text-secondary" />
                             <span>{DEMO_CATEGORIES.length} categorías</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Package size={16} className="text-primary" />
                             <span>{DEMO_PRODUCTS.length} productos</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Settings size={16} className="text-orange-400" />
                             <span>Configuración completa</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 text-sm text-q-text-muted">
                             <Zap size={16} className="text-yellow-400" />
                             <span>Imágenes de muestra</span>
                         </div>
@@ -226,7 +226,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                                         ? 'border-green-500/30 bg-green-500/5'
                                         : step.status === 'error'
                                         ? 'border-red-500/30 bg-red-500/5'
-                                        : 'border-border'
+                                        : 'border-q-border'
                                 }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                                     </span>
                                 </div>
                                 {step.count && (
-                                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                                    <span className="text-xs text-q-text-muted bg-muted px-2 py-1 rounded">
                                         {step.count}
                                     </span>
                                 )}
@@ -269,12 +269,12 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                         </div>
                         
                         {/* Store URL */}
-                        <div className="p-3 bg-muted/50 rounded-lg border border-border">
-                            <p className="text-xs text-muted-foreground mb-2">
+                        <div className="p-3 bg-muted/50 rounded-lg border border-q-border">
+                            <p className="text-xs text-q-text-muted mb-2">
                                 {t('ecommerce.storeUrl', 'URL de tu tienda')}:
                             </p>
                             <div className="flex items-center gap-2">
-                                <code className="flex-1 text-sm bg-background px-3 py-2 rounded border border-border text-primary truncate">
+                                <code className="flex-1 text-sm bg-q-bg px-3 py-2 rounded border border-q-border text-primary truncate">
                                     {window.location.origin}/store/{storeId}
                                 </code>
                                 <button
@@ -284,7 +284,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                                     className="p-2 hover:bg-muted rounded-lg transition-colors"
                                     title={t('common.copy', 'Copiar')}
                                 >
-                                    <Copy size={16} className="text-muted-foreground" />
+                                    <Copy size={16} className="text-q-text-muted" />
                                 </button>
                                 <a
                                     href={`/store/${storeId}`}
@@ -293,7 +293,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
                                     className="p-2 hover:bg-muted rounded-lg transition-colors"
                                     title={t('common.openInNewTab', 'Abrir en nueva pestaña')}
                                 >
-                                    <ExternalLink size={16} className="text-muted-foreground" />
+                                    <ExternalLink size={16} className="text-q-text-muted" />
                                 </a>
                             </div>
                         </div>

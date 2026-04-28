@@ -13,13 +13,13 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, 
   const colorClasses = {
     green: active 
       ? 'bg-green-500/20 text-green-500 border-green-500/50' 
-      : 'bg-secondary text-muted-foreground border-border hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/30',
+      : 'bg-secondary text-q-text-muted border-q-border hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/30',
     primary: active 
       ? 'bg-primary/20 text-primary border-primary/50' 
-      : 'bg-secondary text-muted-foreground border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30',
+      : 'bg-secondary text-q-text-muted border-q-border hover:bg-primary/10 hover:text-primary hover:border-primary/30',
     gray: active 
-      ? 'bg-muted text-foreground border-border' 
-      : 'bg-secondary text-muted-foreground border-border hover:bg-muted hover:text-foreground',
+      ? 'bg-muted text-foreground border-q-border' 
+      : 'bg-secondary text-q-text-muted border-q-border hover:bg-muted hover:text-foreground',
   };
 
   return (
@@ -36,7 +36,7 @@ const FilterChip: React.FC<FilterChipProps> = ({ label, active, count, onClick, 
       <span className={`
         px-1.5 py-0.5 md:px-2 rounded-full text-[10px] md:text-xs font-semibold
         ${active 
-          ? 'bg-background/50' 
+          ? 'bg-q-bg/50' 
           : 'bg-muted'
         }
       `}>

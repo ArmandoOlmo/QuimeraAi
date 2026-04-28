@@ -18,13 +18,13 @@ const ColumnCountSelector: React.FC<{ label: string; value: number; onChange: (v
     const options = [2, 3];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt}
                         onClick={() => onChange(opt)}
-                        className={`flex-1 py-2 text-sm font-medium rounded-sm transition-colors flex items-center justify-center gap-2 ${value === opt ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-2 text-sm font-medium rounded-sm transition-colors flex items-center justify-center gap-2 ${value === opt ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         <Columns size={14} />
                         {opt} {opt === 2 ? 'columnas' : 'columnas'}
@@ -39,13 +39,13 @@ const GapSelector: React.FC<{ label: string; value: string; onChange: (value: st
     const options = ['none', 'sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>
@@ -59,13 +59,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['none', 'sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>
@@ -128,8 +128,8 @@ const ColumnsBlockControls: React.FC<ColumnsBlockControlsProps> = ({ block, acti
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
-                <div className="bg-editor-panel-bg/50 rounded-lg p-3 mb-4">
-                    <p className="text-xs text-editor-text-secondary flex items-center gap-2">
+                <div className="bg-q-surface/50 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-q-text-secondary flex items-center gap-2">
                         <Columns size={14} />
                         {t('email.columnsHint', 'Los bloques de columnas permiten dividir el contenido horizontalmente')}
                     </p>

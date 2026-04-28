@@ -25,14 +25,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
     if (!activeSection) {
         return (
-            <div className="h-full flex flex-col items-center justify-center bg-editor-bg p-8 text-center">
-                <div className="bg-editor-panel-bg/50 rounded-full p-6 mb-4">
-                    <Settings size={32} className="text-editor-text-secondary" />
+            <div className="h-full flex flex-col items-center justify-center bg-q-bg p-8 text-center">
+                <div className="bg-q-surface/50 rounded-full p-6 mb-4">
+                    <Settings size={32} className="text-q-text-secondary" />
                 </div>
-                <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
+                <h3 className="text-lg font-semibold text-q-text mb-2">
                     No Section Selected
                 </h3>
-                <p className="text-sm text-editor-text-secondary max-w-xs">
+                <p className="text-sm text-q-text-secondary max-w-xs">
                     Select a component from the page structure to edit its properties
                 </p>
             </div>
@@ -40,16 +40,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     }
 
     return (
-        <div className="h-full flex flex-col bg-editor-bg">
+        <div className="h-full flex flex-col bg-q-bg">
             {/* Header */}
-            <div className="flex-shrink-0 p-4 border-b border-editor-border">
+            <div className="flex-shrink-0 p-4 border-b border-q-border">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="flex-1">
-                        <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider">
                             Properties
                         </h3>
                         {sectionLabel && (
-                            <p className="text-base font-semibold text-editor-text-primary mt-1">
+                            <p className="text-base font-semibold text-q-text mt-1">
                                 {sectionLabel}
                             </p>
                         )}
@@ -57,7 +57,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1">
+                <div className="flex gap-1 rounded-md border border-q-border/70 bg-q-surface/40 p-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         return (
@@ -67,8 +67,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                 className={`
                                     flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-all
                                     ${activeTab === tab.id 
-                                        ? 'bg-editor-accent/15 text-editor-accent' 
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                                        ? 'bg-q-accent/15 text-q-accent' 
+                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                                     }
                                 `}
                             >

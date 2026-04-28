@@ -97,21 +97,21 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
     dayStart.setHours(0, 0, 0, 0);
 
     return (
-        <div className="flex-1 flex flex-col md:flex-row min-h-0 bg-background">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 bg-q-bg">
             {/* Left sidebar with day info - Hidden on mobile, shown as header */}
-            <div className="hidden md:flex md:w-72 lg:w-80 border-r border-border flex-col">
+            <div className="hidden md:flex md:w-72 lg:w-80 border-r border-q-border flex-col">
                 {/* Day header */}
                 <div className={`
-                    p-4 lg:p-6 border-b border-border
+                    p-4 lg:p-6 border-b border-q-border
                     ${isCurrentDay ? 'bg-primary/5' : ''}
                 `}>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                    <p className="text-xs font-medium uppercase tracking-wider text-q-text-muted mb-1">
                         {currentDate.toLocaleDateString(i18n.language, { weekday: 'long' })}
                     </p>
                     <p className={`text-3xl lg:text-4xl font-bold ${isCurrentDay ? 'text-primary' : 'text-foreground'}`}>
                         {currentDate.getDate()}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-q-text-muted mt-1">
                         {currentDate.toLocaleDateString(i18n.language, { month: 'short', year: 'numeric' })}
                     </p>
 
@@ -132,15 +132,15 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                         <h3 className="text-sm font-semibold text-foreground">
                             {t('appointments.appointments')}
                         </h3>
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-q-text-muted">
                             {dayAppointments.length}
                         </span>
                     </div>
 
                     {dayAppointments.length === 0 ? (
                         <div className="text-center py-6">
-                            <Clock className="mx-auto h-10 w-10 text-muted-foreground/30 mb-2" />
-                            <p className="text-sm text-muted-foreground">
+                            <Clock className="mx-auto h-10 w-10 text-q-text-muted/30 mb-2" />
+                            <p className="text-sm text-q-text-muted">
                                 {t('appointments.noAppointments')}
                             </p>
                             <button
@@ -167,7 +167,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
 
             {/* Mobile day header */}
             <div className={`
-                md:hidden px-4 py-3 border-b border-border flex items-center justify-between
+                md:hidden px-4 py-3 border-b border-q-border flex items-center justify-between
                 ${isCurrentDay ? 'bg-primary/5' : ''}
             `}>
                 <div className="flex items-center gap-3">
@@ -183,7 +183,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                         )}
                     </div>
                 </div>
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-q-text-muted">
                     {t('appointments.calendar.appointmentCount', { count: dayAppointments.length })}
                 </span>
             </div>
@@ -191,8 +191,8 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
             {/* Main timeline view */}
             <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
-                <div className="h-14 border-b border-border flex items-center px-4">
-                    <span className="text-sm text-muted-foreground">
+                <div className="h-14 border-b border-q-border flex items-center px-4">
+                    <span className="text-sm text-q-text-muted">
                         {formatDateOnly({ seconds: currentDate.getTime() / 1000, nanoseconds: 0 })}
                     </span>
                 </div>
@@ -204,18 +204,18 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                 >
                     <div className="flex min-h-full">
                         {/* Time column */}
-                        <div className="w-20 flex-shrink-0 border-r border-border">
+                        <div className="w-20 flex-shrink-0 border-r border-q-border">
                             {HOURS.map(hour => (
                                 <div
                                     key={hour}
-                                    className="border-b border-border/30 flex items-start justify-end pr-3 pt-1"
+                                    className="border-b border-q-border/30 flex items-start justify-end pr-3 pt-1"
                                     style={{ height: `${HOUR_HEIGHT}px` }}
                                 >
                                     <span className={`
                                         text-sm font-medium
                                         ${hour >= workingHoursStart && hour < workingHoursEnd
                                             ? 'text-foreground'
-                                            : 'text-muted-foreground/50'
+                                            : 'text-q-text-muted/50'
                                         }
                                     `}>
                                         {hour.toString().padStart(2, '0')}:00
@@ -259,7 +259,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                             }
                                         }}
                                         className={`
-                                            border-b border-border/30
+                                            border-b border-q-border/30
                                             group relative
                                             transition-colors duration-150
                                             ${blocked
@@ -272,7 +272,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                     >
                                         {/* Half-hour line */}
                                         <div
-                                            className="absolute left-0 right-0 border-b border-dashed border-border/20"
+                                            className="absolute left-0 right-0 border-b border-dashed border-q-border/20"
                                             style={{ top: `${HOUR_HEIGHT / 2}px` }}
                                         />
 
@@ -300,7 +300,7 @@ export const CalendarDayView: React.FC<CalendarDayViewProps> = ({
                                                 transition-opacity
                                                 flex items-center justify-center
                                             ">
-                                                <span className="text-sm text-primary font-medium bg-background px-3 py-1 rounded-full shadow-sm">
+                                                <span className="text-sm text-primary font-medium bg-q-bg px-3 py-1 rounded-full shadow-sm">
                                                     <Plus size={14} className="inline mr-1" />
                                                     {hour.toString().padStart(2, '0')}:00
                                                 </span>

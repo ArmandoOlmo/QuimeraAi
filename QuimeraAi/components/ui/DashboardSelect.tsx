@@ -2,7 +2,7 @@
  * DashboardSelect
  * Custom styled dropdown for dashboard views.
  * Replaces native browser <select> with a styled popup dropdown
- * that matches the dashboard UI theme (bg-secondary, border-border, etc.)
+ * that matches the dashboard UI theme (bg-secondary, border-q-border, etc.)
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -84,17 +84,17 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
                 onClick={() => setIsOpen(!isOpen)}
                 className={`h-10 w-full flex items-center justify-between px-3 rounded-xl border text-sm transition-all cursor-pointer ${
                     isOpen
-                        ? 'border-primary/60 ring-2 ring-primary/40 bg-secondary/50 text-foreground'
-                        : 'border-border/60 bg-secondary/30 text-foreground hover:border-primary/40'
+                        ? 'border-q-accent/60 ring-2 ring-q-accent/40 bg-q-surface text-q-text'
+                        : 'border-q-border/60 bg-q-surface/30 text-q-text hover:border-q-accent/40'
                 }`}
             >
                 <span className="truncate">{selectedOption?.label || placeholder || value}</span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3.5 w-3.5 text-q-text-muted flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Dropdown List */}
             {isOpen && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-[999] bg-card border border-border/60 rounded-xl shadow-xl overflow-hidden backdrop-blur-xl">
+                <div className="absolute top-full mt-1 left-0 right-0 z-[999] bg-q-surface border border-q-border/60 rounded-xl shadow-xl overflow-hidden backdrop-blur-xl">
                     <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain py-1">
                         {options.map(opt => {
                             const isSelected = opt.value === value;
@@ -106,12 +106,12 @@ const DashboardSelect: React.FC<DashboardSelectProps> = ({
                                     onClick={() => handleSelect(opt.value)}
                                     className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
                                         isSelected
-                                            ? 'bg-primary/15 text-primary font-medium'
-                                            : 'text-foreground hover:bg-secondary/50'
+                                            ? 'bg-q-accent/15 text-q-accent font-medium'
+                                            : 'text-q-text hover:bg-q-surface-elevated/50'
                                     }`}
                                 >
                                     <span className="flex-1 truncate">{opt.label}</span>
-                                    {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-primary" />}
+                                    {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0 text-q-accent" />}
                                 </button>
                             );
                         })}

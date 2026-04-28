@@ -36,10 +36,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 { label: t('adminEmail.overview.totalContacts'), value: stats.totalContacts.toLocaleString(), icon: <Users size={20} />, color: 'text-pink-400 bg-pink-500/10' },
                 { label: t('adminEmail.overview.deliveryRate'), value: `${stats.deliveryRate}%`, icon: <CheckCircle size={20} />, color: 'text-emerald-400 bg-emerald-500/10' },
             ].map((kpi, i) => (
-                <div key={i} className="bg-editor-panel-bg border border-editor-border rounded-xl p-4 hover:border-editor-accent/30 transition-all">
+                <div key={i} className="bg-q-surface border border-q-border rounded-xl p-4 hover:border-q-accent/30 transition-all">
                     <div className={`p-2 rounded-lg ${kpi.color} w-fit mb-3`}>{kpi.icon}</div>
-                    <p className="text-2xl font-bold text-editor-text-primary">{kpi.value}</p>
-                    <p className="text-xs text-editor-text-secondary mt-1">{kpi.label}</p>
+                    <p className="text-2xl font-bold text-q-text">{kpi.value}</p>
+                    <p className="text-xs text-q-text-secondary mt-1">{kpi.label}</p>
                 </div>
             ))}
         </div>
@@ -47,12 +47,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         {/* Recent Campaigns + Quick Actions */}
         <div className="grid lg:grid-cols-3 gap-6">
             {/* Recent Campaigns */}
-            <div className="lg:col-span-2 bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="lg:col-span-2 bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-editor-text-primary">{t('adminEmail.overview.recentCampaigns')}</h3>
+                    <h3 className="text-lg font-semibold text-q-text">{t('adminEmail.overview.recentCampaigns')}</h3>
                     <button
                         onClick={() => setActiveTab('campaigns')}
-                        className="text-sm text-editor-accent hover:text-editor-accent/80 transition-colors"
+                        className="text-sm text-q-accent hover:text-q-accent/80 transition-colors"
                     >
                         {t('adminEmail.overview.viewAll')}
                     </button>
@@ -60,10 +60,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 {campaigns.length > 0 ? (
                     <div className="space-y-3">
                         {campaigns.slice(0, 5).map(campaign => (
-                            <div key={`${campaign.userId}-${campaign.projectId}-${campaign.id}`} className="flex items-center justify-between p-3 bg-editor-bg/50 rounded-lg hover:bg-editor-bg transition-colors">
+                            <div key={`${campaign.userId}-${campaign.projectId}-${campaign.id}`} className="flex items-center justify-between p-3 bg-q-bg/50 rounded-lg hover:bg-q-bg transition-colors">
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-editor-text-primary truncate">{campaign.name}</p>
-                                    <p className="text-xs text-editor-text-secondary flex items-center gap-2 mt-1">
+                                    <p className="text-sm font-medium text-q-text truncate">{campaign.name}</p>
+                                    <p className="text-xs text-q-text-secondary flex items-center gap-2 mt-1">
                                         <Building2 size={12} />
                                         {campaign.tenantName}
                                         <span className="mx-1">•</span>
@@ -78,7 +78,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-8 text-editor-text-secondary">
+                    <div className="text-center py-8 text-q-text-secondary">
                         <Mail size={32} className="mx-auto mb-2 opacity-50" />
                         <p className="text-sm">{t('adminEmail.overview.noCampaigns')}</p>
                     </div>
@@ -86,12 +86,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-editor-text-primary mb-4">{t('adminEmail.overview.quickActions')}</h3>
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-q-text mb-4">{t('adminEmail.overview.quickActions')}</h3>
                 <div className="space-y-3">
                     <button
                         onClick={() => { setActiveTab('ai-studio'); setShowAIStudio(true); }}
-                        className="w-full flex items-center gap-3 p-3 bg-editor-accent/10 border border-editor-accent/30 rounded-lg text-editor-accent hover:bg-editor-accent/20 transition-colors text-left"
+                        className="w-full flex items-center gap-3 p-3 bg-q-accent/10 border border-q-accent/30 rounded-lg text-q-accent hover:bg-q-accent/20 transition-colors text-left"
                     >
                         <Sparkles size={20} />
                         <div>
@@ -101,22 +101,22 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     </button>
                     <button
                         onClick={() => setActiveTab('automations')}
-                        className="w-full flex items-center gap-3 p-3 bg-editor-bg/50 border border-editor-border rounded-lg text-editor-text-primary hover:border-editor-accent/30 transition-colors text-left"
+                        className="w-full flex items-center gap-3 p-3 bg-q-bg/50 border border-q-border rounded-lg text-q-text hover:border-q-accent/30 transition-colors text-left"
                     >
                         <Zap size={20} className="text-amber-400" />
                         <div>
                             <p className="text-sm font-medium">{t('adminEmail.overview.automations')}</p>
-                            <p className="text-xs text-editor-text-secondary">{t('adminEmail.overview.configureFlows')}</p>
+                            <p className="text-xs text-q-text-secondary">{t('adminEmail.overview.configureFlows')}</p>
                         </div>
                     </button>
                     <button
                         onClick={() => setActiveTab('analytics')}
-                        className="w-full flex items-center gap-3 p-3 bg-editor-bg/50 border border-editor-border rounded-lg text-editor-text-primary hover:border-editor-accent/30 transition-colors text-left"
+                        className="w-full flex items-center gap-3 p-3 bg-q-bg/50 border border-q-border rounded-lg text-q-text hover:border-q-accent/30 transition-colors text-left"
                     >
                         <BarChart3 size={20} className="text-purple-400" />
                         <div>
                             <p className="text-sm font-medium">{t('adminEmail.overview.viewAnalytics')}</p>
-                            <p className="text-xs text-editor-text-secondary">{t('adminEmail.overview.crossTenantMetrics')}</p>
+                            <p className="text-xs text-q-text-secondary">{t('adminEmail.overview.crossTenantMetrics')}</p>
                         </div>
                     </button>
                 </div>
@@ -124,12 +124,12 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 {/* Top Tenants */}
                 {tenantPerformance.length > 0 && (
                     <div className="mt-6">
-                        <h4 className="text-sm font-medium text-editor-text-secondary mb-3">{t('adminEmail.overview.topTenantsBySends')}</h4>
+                        <h4 className="text-sm font-medium text-q-text-secondary mb-3">{t('adminEmail.overview.topTenantsBySends')}</h4>
                         <div className="space-y-2">
                             {tenantPerformance.slice(0, 3).map((tp, i) => (
                                 <div key={i} className="flex items-center justify-between text-sm">
-                                    <span className="text-editor-text-primary truncate">{tp.name}</span>
-                                    <span className="text-editor-text-secondary">{tp.sent.toLocaleString()}</span>
+                                    <span className="text-q-text truncate">{tp.name}</span>
+                                    <span className="text-q-text-secondary">{tp.sent.toLocaleString()}</span>
                                 </div>
                             ))}
                         </div>

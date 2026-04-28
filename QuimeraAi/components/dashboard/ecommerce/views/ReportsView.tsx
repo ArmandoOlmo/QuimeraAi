@@ -240,7 +240,7 @@ const ReportsView: React.FC = () => {
                 <h2 className="text-2xl font-bold text-foreground">
                     {t('ecommerce.reports', 'Reportes')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {t('ecommerce.reportsDesc', 'Genera y descarga reportes de tu tienda')}
                 </p>
             </div>
@@ -260,7 +260,7 @@ const ReportsView: React.FC = () => {
                                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                                         isSelected
                                             ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-primary/50 bg-card/50'
+                                            : 'border-q-border hover:border-primary/50 bg-q-surface/50'
                                     }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -271,12 +271,12 @@ const ReportsView: React.FC = () => {
                                         >
                                             <Icon
                                                 size={20}
-                                                className={isSelected ? 'text-primary' : 'text-muted-foreground'}
+                                                className={isSelected ? 'text-primary' : 'text-q-text-muted'}
                                             />
                                         </div>
                                         <div>
                                             <p className="font-medium text-foreground">{report.title}</p>
-                                            <p className="text-sm text-muted-foreground">{report.description}</p>
+                                            <p className="text-sm text-q-text-muted">{report.description}</p>
                                         </div>
                                     </div>
                                 </button>
@@ -288,7 +288,7 @@ const ReportsView: React.FC = () => {
                 {/* Report Options */}
                 <div className="lg:col-span-2">
                     {selectedReport ? (
-                        <div className="bg-card/50 rounded-xl border border-border p-6 space-y-6">
+                        <div className="bg-q-surface/50 rounded-xl border border-q-border p-6 space-y-6">
                             <h3 className="font-semibold text-foreground">
                                 Configurar reporte
                             </h3>
@@ -296,27 +296,27 @@ const ReportsView: React.FC = () => {
                             {/* Date Range */}
                             {['orders', 'orders_summary'].includes(selectedReport) && (
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         <Calendar className="inline mr-2" size={16} />
                                         Rango de fechas
                                     </label>
                                     <div className="flex gap-4">
                                         <div className="flex-1">
-                                            <label className="block text-xs text-muted-foreground mb-1">Desde</label>
+                                            <label className="block text-xs text-q-text-muted mb-1">Desde</label>
                                             <input
                                                 type="date"
                                                 value={dateRange.start}
                                                 onChange={(e) => setDateRange((prev) => ({ ...prev, start: e.target.value }))}
-                                                className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                             />
                                         </div>
                                         <div className="flex-1">
-                                            <label className="block text-xs text-muted-foreground mb-1">Hasta</label>
+                                            <label className="block text-xs text-q-text-muted mb-1">Hasta</label>
                                             <input
                                                 type="date"
                                                 value={dateRange.end}
                                                 onChange={(e) => setDateRange((prev) => ({ ...prev, end: e.target.value }))}
-                                                className="w-full px-3 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                                className="w-full px-3 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                             />
                                         </div>
                                     </div>
@@ -326,7 +326,7 @@ const ReportsView: React.FC = () => {
                             {/* Status Filter */}
                             {selectedReport === 'orders' && (
                                 <div>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    <label className="block text-sm font-medium text-q-text-muted mb-2">
                                         Filtrar por estado (opcional)
                                     </label>
                                     <div className="flex flex-wrap gap-2">
@@ -337,7 +337,7 @@ const ReportsView: React.FC = () => {
                                                 className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                                                     selectedStatuses.includes(status.value)
                                                         ? 'border-primary bg-primary/10 text-primary'
-                                                        : 'border-border text-muted-foreground hover:border-primary/50'
+                                                        : 'border-q-border text-q-text-muted hover:border-primary/50'
                                                 }`}
                                             >
                                                 {status.label}
@@ -355,11 +355,11 @@ const ReportsView: React.FC = () => {
                                             type="checkbox"
                                             checked={includeItems}
                                             onChange={(e) => setIncludeItems(e.target.checked)}
-                                            className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                                            className="w-5 h-5 rounded border-q-border text-primary focus:ring-primary"
                                         />
                                         <div>
                                             <p className="font-medium text-foreground">Incluir detalle de productos</p>
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="text-sm text-q-text-muted">
                                                 Agrega columnas con los productos de cada pedido
                                             </p>
                                         </div>
@@ -368,7 +368,7 @@ const ReportsView: React.FC = () => {
                             )}
 
                             {/* Generate Button */}
-                            <div className="pt-4 border-t border-border">
+                            <div className="pt-4 border-t border-q-border">
                                 <button
                                     onClick={generateReport}
                                     disabled={isGenerating}
@@ -398,12 +398,12 @@ const ReportsView: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-card/50 rounded-xl border border-border p-12 text-center">
-                            <FileSpreadsheet className="mx-auto text-muted-foreground mb-4" size={48} />
+                        <div className="bg-q-surface/50 rounded-xl border border-q-border p-12 text-center">
+                            <FileSpreadsheet className="mx-auto text-q-text-muted mb-4" size={48} />
                             <h3 className="text-lg font-medium text-foreground mb-2">
                                 Selecciona un tipo de reporte
                             </h3>
-                            <p className="text-muted-foreground">
+                            <p className="text-q-text-muted">
                                 Elige el reporte que deseas generar del panel izquierdo
                             </p>
                         </div>

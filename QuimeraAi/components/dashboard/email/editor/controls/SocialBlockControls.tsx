@@ -15,16 +15,16 @@ import { EmailBlock, EmailSocialContent, EmailBlockStyles, EmailSocialLinks } fr
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string; icon?: React.ReactNode }> = ({ label, icon, ...props }) => (
     <div className="mb-3">
-        {label && <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
+        {label && <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>}
         <div className="relative">
             {icon && (
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary">
                     {icon}
                 </div>
             )}
             <input
                 {...props}
-                className={`w-full bg-editor-panel-bg border border-editor-border rounded-md py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all placeholder:text-editor-text-secondary/50 ${icon ? 'pl-10 pr-3' : 'px-3'}`}
+                className={`w-full bg-q-surface border border-q-border rounded-md py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all placeholder:text-q-text-secondary/50 ${icon ? 'pl-10 pr-3' : 'px-3'}`}
             />
         </div>
     </div>
@@ -37,11 +37,11 @@ const SelectControl: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, value, options, onChange }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
         >
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -54,13 +54,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size.toUpperCase()}
                     </button>
@@ -78,13 +78,13 @@ const AlignmentSelector: React.FC<{ label: string; value: string; onChange: (val
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt.v}
                         onClick={() => onChange(opt.v)}
-                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {opt.l}
                     </button>
@@ -135,7 +135,7 @@ const SocialBlockControls: React.FC<SocialBlockControlsProps> = ({ block, active
     if (activeTab === 'content') {
         return (
             <div className="space-y-4">
-                <p className="text-xs text-editor-text-secondary mb-4">
+                <p className="text-xs text-q-text-secondary mb-4">
                     {t('email.socialLinksHint', 'Agrega los enlaces a tus redes sociales. Deja vacío para ocultar.')}
                 </p>
                 
@@ -179,7 +179,7 @@ const SocialBlockControls: React.FC<SocialBlockControlsProps> = ({ block, active
                     placeholder="https://youtube.com/..."
                 />
                 
-                <hr className="border-editor-border" />
+                <hr className="border-q-border" />
                 
                 <SelectControl
                     label={t('email.iconStyle', 'Estilo de iconos')}

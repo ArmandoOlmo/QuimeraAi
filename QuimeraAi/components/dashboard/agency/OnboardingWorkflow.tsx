@@ -235,7 +235,7 @@ export function OnboardingWorkflow({
 
   const renderProvisioningStep = () => (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-card rounded-lg shadow-sm p-8">
+      <div className="bg-q-surface rounded-lg shadow-sm p-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Clock className="h-8 w-8 text-blue-600 animate-pulse" />
@@ -243,7 +243,7 @@ export function OnboardingWorkflow({
           <h2 className="text-2xl font-bold text-foreground mb-2">
             {t('dashboard.agency.onboardingPage.configuringClient')}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-q-text-muted">
             {t('dashboard.agency.onboardingPage.pleaseWait')}
           </p>
         </div>
@@ -252,7 +252,7 @@ export function OnboardingWorkflow({
           {progress.map((item, index) => (
             <div
               key={index}
-              className="flex items-start gap-4 p-4 border border-border rounded-lg"
+              className="flex items-start gap-4 p-4 border border-q-border rounded-lg"
             >
               <div className="mt-1">
                 {item.status === 'completed' && (
@@ -265,7 +265,7 @@ export function OnboardingWorkflow({
                   <XCircle className="h-6 w-6 text-red-500" />
                 )}
                 {item.status === 'pending' && (
-                  <div className="h-6 w-6 border-4 border-border rounded-full" />
+                  <div className="h-6 w-6 border-4 border-q-border rounded-full" />
                 )}
               </div>
               <div className="flex-1">
@@ -289,7 +289,7 @@ export function OnboardingWorkflow({
 
   const renderCompletedStep = () => (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-card rounded-lg shadow-sm p-8 text-center">
+      <div className="bg-q-surface rounded-lg shadow-sm p-8 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
           <Rocket className="h-10 w-10 text-green-600" />
         </div>
@@ -298,7 +298,7 @@ export function OnboardingWorkflow({
           {t('dashboard.agency.onboardingPage.success')}
         </h2>
 
-        <p className="text-lg text-muted-foreground mb-8">
+        <p className="text-lg text-q-text-muted mb-8">
           {t('dashboard.agency.onboardingPage.workspaceConfigured')}
         </p>
 
@@ -324,11 +324,11 @@ export function OnboardingWorkflow({
         </div>
 
         {/* Next Steps */}
-        <div className="bg-background rounded-lg p-6 mb-8 text-left">
+        <div className="bg-q-bg rounded-lg p-6 mb-8 text-left">
           <h3 className="font-semibold text-foreground mb-3">
             📋 {t('dashboard.agency.onboardingPage.nextSteps')}
           </h3>
-          <ul className="space-y-2 text-muted-foreground">
+          <ul className="space-y-2 text-q-text-muted">
             <li className="flex items-start gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
               <span>
@@ -358,7 +358,7 @@ export function OnboardingWorkflow({
           </button>
           <button
             onClick={handleRetry}
-            className="px-8 py-3 bg-gray-200 text-muted-foreground rounded-lg hover:bg-gray-300 font-semibold"
+            className="px-8 py-3 bg-gray-200 text-q-text-muted rounded-lg hover:bg-gray-300 font-semibold"
           >
             {t('dashboard.agency.onboardingPage.addAnotherClient')}
           </button>
@@ -369,7 +369,7 @@ export function OnboardingWorkflow({
 
   const renderErrorStep = () => (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-card rounded-lg shadow-sm p-8 text-center">
+      <div className="bg-q-surface rounded-lg shadow-sm p-8 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
           <XCircle className="h-10 w-10 text-red-600" />
         </div>
@@ -378,7 +378,7 @@ export function OnboardingWorkflow({
           {t('dashboard.agency.onboardingPage.errorTitle')}
         </h2>
 
-        <p className="text-lg text-muted-foreground mb-8">
+        <p className="text-lg text-q-text-muted mb-8">
           {t('dashboard.agency.onboardingPage.errorDescription')}
         </p>
 
@@ -390,7 +390,7 @@ export function OnboardingWorkflow({
 
         {/* Progress (what was completed) */}
         {progress.length > 0 && (
-          <div className="bg-background rounded-lg p-6 mb-8 text-left">
+          <div className="bg-q-bg rounded-lg p-6 mb-8 text-left">
             <h3 className="font-semibold text-foreground mb-3">
               {t('dashboard.agency.onboardingPage.completedSteps')}
             </h3>
@@ -400,12 +400,12 @@ export function OnboardingWorkflow({
                   {item.status === 'completed' ? (
                     <>
                       <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      <span className="text-muted-foreground">{item.message}</span>
+                      <span className="text-q-text-muted">{item.message}</span>
                     </>
                   ) : item.status === 'error' ? (
                     <>
                       <XCircle className="h-5 w-5 text-red-500" />
-                      <span className="text-muted-foreground">{item.message}</span>
+                      <span className="text-q-text-muted">{item.message}</span>
                     </>
                   ) : null}
                 </div>
@@ -425,7 +425,7 @@ export function OnboardingWorkflow({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="px-8 py-3 bg-gray-200 text-muted-foreground rounded-lg hover:bg-gray-300 font-semibold"
+              className="px-8 py-3 bg-gray-200 text-q-text-muted rounded-lg hover:bg-gray-300 font-semibold"
             >
               {t('common.cancel')}
             </button>
@@ -440,12 +440,12 @@ export function OnboardingWorkflow({
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-background py-12 px-6">
+    <div className="min-h-screen bg-q-bg py-12 px-6">
       <div className="max-w-4xl mx-auto mb-8 text-center">
         <h1 className="text-3xl font-bold text-foreground mb-2">
           {t('dashboard.agency.onboardingPage.addNewClient')}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-q-text-muted">
           {t('dashboard.agency.onboardingPage.completeOnboarding')}
         </p>
       </div>

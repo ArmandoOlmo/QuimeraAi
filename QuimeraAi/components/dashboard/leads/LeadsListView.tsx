@@ -45,10 +45,10 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
     };
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             {/* Header */}
-            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-secondary/10 flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">
+            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-q-border bg-secondary/10 flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-bold text-q-text-muted uppercase tracking-wider">
                     {t('leads.allLeads')} ({leads.length})
                 </span>
             </div>
@@ -56,7 +56,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
             {/* List */}
             <div className="divide-y divide-border max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
                 {leads.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
+                    <div className="text-center py-12 text-q-text-muted">
                         {t('leads.noLeadsFound')}
                     </div>
                 ) : (
@@ -80,7 +80,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={() => onToggleSelect(lead.id)}
-                                                className="rounded border-border w-4 h-4"
+                                                className="rounded border-q-border w-4 h-4"
                                             />
                                         </div>
 
@@ -107,7 +107,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                             </div>
 
                                             {/* Email */}
-                                            <div className="flex items-center gap-1 mb-1.5 text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-1 mb-1.5 text-xs text-q-text-muted">
                                                 <Mail size={10} className="shrink-0" />
                                                 <span className="truncate">{lead.email}</span>
                                             </div>
@@ -121,7 +121,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                                     </span>
                                                 )}
                                                 {lead.company && (
-                                                    <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                                                    <span className="text-xs text-q-text-muted flex items-center gap-1 truncate">
                                                         <Building2 size={10} className="shrink-0" />
                                                         {lead.company}
                                                     </span>
@@ -130,7 +130,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                         </div>
 
                                         {/* Time */}
-                                        <span className="text-[10px] text-muted-foreground shrink-0">
+                                        <span className="text-[10px] text-q-text-muted shrink-0">
                                             {formatDate(lead.createdAt)}
                                         </span>
                                     </div>
@@ -144,7 +144,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                             type="checkbox"
                                             checked={isChecked}
                                             onChange={() => onToggleSelect(lead.id)}
-                                            className="rounded border-border"
+                                            className="rounded border-q-border"
                                         />
                                     </div>
 
@@ -168,15 +168,15 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                             <h4 className="font-bold text-sm text-foreground truncate">{lead.name}</h4>
                                             {lead.company && (
                                                 <>
-                                                    <span className="text-muted-foreground">·</span>
-                                                    <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                                    <span className="text-q-text-muted">·</span>
+                                                    <span className="text-xs text-q-text-muted truncate flex items-center gap-1">
                                                         <Building2 size={10} />
                                                         {lead.company}
                                                     </span>
                                                 </>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-3 text-xs text-q-text-muted">
                                             <span className="flex items-center gap-1 truncate">
                                                 <Mail size={10} />
                                                 {lead.email}
@@ -218,7 +218,7 @@ const LeadsListView: React.FC<LeadsListViewProps> = ({
                                         <div className={`w-2 h-2 rounded-full ${LEAD_STATUS_COLORS[lead.status]}`} title={lead.status} />
 
                                         {/* Date */}
-                                        <span className="text-[10px] text-muted-foreground w-12 text-right">
+                                        <span className="text-[10px] text-q-text-muted w-12 text-right">
                                             {formatDate(lead.createdAt)}
                                         </span>
                                     </div>

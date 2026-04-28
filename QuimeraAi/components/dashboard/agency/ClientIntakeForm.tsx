@@ -265,7 +265,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           onChange={(e) =>
             setFormData({ ...formData, businessName: e.target.value })
           }
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.businessName ? 'border-red-500' : 'border-border'
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.businessName ? 'border-red-500' : 'border-q-border'
             }`}
           placeholder={t('dashboard.agency.newClientPage.businessNamePlaceholder')}
         />
@@ -281,7 +281,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <select
           value={formData.industry}
           onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-red-500' : 'border-border'
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.industry ? 'border-red-500' : 'border-q-border'
             }`}
         >
           <option value="">{t('dashboard.agency.newClientPage.selectIndustry')}</option>
@@ -308,7 +308,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onChange={(e) =>
               setFormData({ ...formData, contactEmail: e.target.value })
             }
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.contactEmail ? 'border-red-500' : 'border-border'
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${errors.contactEmail ? 'border-red-500' : 'border-q-border'
               }`}
             placeholder={t('dashboard.agency.newClientPage.contactEmailPlaceholder')}
           />
@@ -328,7 +328,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onChange={(e) =>
               setFormData({ ...formData, contactPhone: e.target.value })
             }
-            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             placeholder={t('dashboard.agency.newClientPage.contactPhonePlaceholder')}
           />
         </div>
@@ -342,7 +342,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <h3 className="text-lg font-semibold text-foreground mb-4">
           {t('dashboard.agency.newClientPage.initialFeatures')}
         </h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-q-text-muted mb-6">
           {t('dashboard.agency.newClientPage.selectFeatures')}
         </p>
       </div>
@@ -354,7 +354,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             onClick={() => toggleFeature(feature.id)}
             className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.enabledFeatures.includes(feature.id)
               ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-border'
+              : 'border-q-border hover:border-q-border'
               }`}
           >
             <div className="flex items-start gap-3">
@@ -362,12 +362,12 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 {formData.enabledFeatures.includes(feature.id) ? (
                   <CheckCircle2 className="h-5 w-5 text-primary" />
                 ) : (
-                  <div className="h-5 w-5 border-2 border-border rounded-full" />
+                  <div className="h-5 w-5 border-2 border-q-border rounded-full" />
                 )}
               </div>
               <div>
                 <h4 className="font-medium text-foreground">{feature.label}</h4>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <p className="text-sm text-q-text-muted">{feature.description}</p>
               </div>
             </div>
           </div>
@@ -390,7 +390,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           <Palette className="h-5 w-5 text-primary" />
           {t('dashboard.agency.newClientPage.brandingOptional')}
         </h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-q-text-muted mb-6">
           {t('dashboard.agency.newClientPage.customizePortal')}
         </p>
       </div>
@@ -404,7 +404,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             type="file"
             accept="image/*"
             onChange={handleLogoUpload}
-            className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+            className="block w-full text-sm text-q-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
           />
           {formData.logo && (
             <span className="text-sm text-green-600 flex items-center gap-1">
@@ -435,7 +435,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, primaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="#3B82F6"
             />
           </div>
@@ -460,7 +460,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 setFormData({ ...formData, secondaryColor: e.target.value })
               }
-              className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="#10B981"
             />
           </div>
@@ -468,7 +468,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       {/* Preview */}
-      <div className="p-6 border border-border rounded-lg">
+      <div className="p-6 border border-q-border rounded-lg">
         <p className="text-sm font-medium text-foreground mb-3">{t('dashboard.agency.newClientPage.preview')}</p>
         <div
           className="h-24 rounded-lg flex items-center justify-center text-white font-semibold"
@@ -489,13 +489,13 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
           <Users className="h-5 w-5 text-primary" />
           {t('dashboard.agency.newClientPage.initialUsers')}
         </h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-q-text-muted mb-6">
           {t('dashboard.agency.newClientPage.addUsersDesc')}
         </p>
       </div>
 
       {formData.initialUsers.map((user, index) => (
-        <div key={index} className="p-4 border border-border rounded-lg">
+        <div key={index} className="p-4 border border-q-border rounded-lg">
           <div className="flex justify-between items-start mb-4">
             <h4 className="font-medium text-foreground">{t('dashboard.agency.newClientPage.userNumber')} {index + 1}</h4>
             <button
@@ -516,7 +516,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 type="text"
                 value={user.name}
                 onChange={(e) => updateUser(index, 'name', e.target.value)}
-                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder={t('dashboard.agency.newClientPage.namePlaceholder')}
               />
             </div>
@@ -529,7 +529,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 type="email"
                 value={user.email}
                 onChange={(e) => updateUser(index, 'email', e.target.value)}
-                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                 placeholder={t('dashboard.agency.newClientPage.emailPlaceholder')}
               />
             </div>
@@ -544,7 +544,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               onChange={(e) =>
                 updateUser(index, 'role', e.target.value as InitialUser['role'])
               }
-              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             >
               {USER_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
@@ -559,7 +559,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       <button
         type="button"
         onClick={addUser}
-        className="w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+        className="w-full py-3 border-2 border-dashed border-q-border rounded-lg text-q-text-muted hover:border-primary hover:text-primary transition-colors"
       >
         {t('dashboard.agency.newClientPage.addUser')}
       </button>
@@ -579,7 +579,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             {t('dashboard.agency.newClientPage.planAssignment', 'Asignar Plan de Servicio')}
           </h4>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-q-text-muted mb-4">
           {t('dashboard.agency.newClientPage.planAssignmentDesc', 'Selecciona un plan predefinido o configura facturación manual abajo.')}
         </p>
 
@@ -600,7 +600,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 {t('dashboard.agency.newClientPage.planSelected', 'Plan seleccionado')}: {formData.selectedPlanName}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-q-text-muted mt-1">
               {t('dashboard.agency.newClientPage.planSelectedDesc', 'El cliente heredará los límites y precio de este plan.')}
             </p>
           </div>
@@ -619,7 +619,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         </div>
 
         {!formData.selectedPlanId && (
-          <label className="flex items-start gap-3 p-4 border border-border rounded-lg cursor-pointer hover:bg-gray-50">
+          <label className="flex items-start gap-3 p-4 border border-q-border rounded-lg cursor-pointer hover:bg-gray-50">
             <input
               type="checkbox"
               checked={formData.setupBilling}
@@ -632,7 +632,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <p className="font-medium text-foreground">
                 {t('dashboard.agency.newClientPage.setupBillingNow')}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-q-text-muted">
                 {t('dashboard.agency.newClientPage.defineMonthlyPrice')}
               </p>
             </div>
@@ -644,7 +644,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('dashboard.agency.newClientPage.monthlyPriceUsd')}
               {formData.selectedPlanId && (
-                <span className="text-muted-foreground font-normal ml-2">
+                <span className="text-q-text-muted font-normal ml-2">
                   ({t('dashboard.agency.newClientPage.fromPlan', 'del plan')})
                 </span>
               )}
@@ -660,11 +660,11 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                   monthlyPrice: parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-2 border border-q-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               placeholder="99"
             />
             {formData.selectedPlanId && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-q-text-muted mt-1">
                 {t('dashboard.agency.newClientPage.priceFromPlanNote', 'Puedes modificar el precio si deseas cobrar diferente al plan.')}
               </p>
             )}
@@ -693,7 +693,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                   ? 'bg-green-500 text-white'
                   : step === currentStep
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-gray-200 text-muted-foreground'
+                    : 'bg-gray-200 text-q-text-muted'
                   }`}
               >
                 {step < currentStep ? <CheckCircle2 className="h-5 w-5" /> : step}
@@ -711,28 +711,28 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         <div className="flex justify-between text-sm">
           <span
             className={
-              currentStep === 1 ? 'font-semibold text-primary' : 'text-muted-foreground'
+              currentStep === 1 ? 'font-semibold text-primary' : 'text-q-text-muted'
             }
           >
             {t('dashboard.agency.newClientPage.stepInfo')}
           </span>
           <span
             className={
-              currentStep === 2 ? 'font-semibold text-primary' : 'text-muted-foreground'
+              currentStep === 2 ? 'font-semibold text-primary' : 'text-q-text-muted'
             }
           >
             {t('dashboard.agency.newClientPage.stepFeatures')}
           </span>
           <span
             className={
-              currentStep === 3 ? 'font-semibold text-primary' : 'text-muted-foreground'
+              currentStep === 3 ? 'font-semibold text-primary' : 'text-q-text-muted'
             }
           >
             {t('dashboard.agency.newClientPage.stepBranding')}
           </span>
           <span
             className={
-              currentStep === 4 ? 'font-semibold text-primary' : 'text-muted-foreground'
+              currentStep === 4 ? 'font-semibold text-primary' : 'text-q-text-muted'
             }
           >
             {t('dashboard.agency.newClientPage.stepUsers')}
@@ -741,7 +741,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-card rounded-lg shadow-sm p-8">
+      <form onSubmit={handleSubmit} className="bg-q-surface rounded-lg shadow-sm p-8">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
@@ -762,7 +762,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-6 py-2 text-muted-foreground hover:text-foreground"
+                className="px-6 py-2 text-q-text-muted hover:text-foreground"
                 disabled={isSubmitting}
               >
                 {t('dashboard.agency.newClientPage.back')}
@@ -772,7 +772,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-2 text-muted-foreground hover:text-foreground"
+                className="px-6 py-2 text-q-text-muted hover:text-foreground"
                 disabled={isSubmitting}
               >
                 {t('dashboard.agency.newClientPage.cancel')}

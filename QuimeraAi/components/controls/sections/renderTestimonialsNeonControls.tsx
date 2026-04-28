@@ -27,12 +27,12 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
             />
 
             {/* Testimonials List */}
-            <div className="bg-editor-bg p-3 rounded-lg border border-editor-border space-y-3">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+            <div className="bg-q-bg p-3 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase">
                     {t('editor.testimonialsNeonControls.testimonialsList', 'Testimonios')}
                 </label>
                 {(testimonials).map((test: any, index: number) => (
-                    <div key={index} className="space-y-2 p-3 bg-editor-panel-bg rounded border border-editor-border relative">
+                    <div key={index} className="space-y-2 p-3 bg-q-surface rounded border border-q-border relative">
                         <button
                             type="button"
                             onClick={() => {
@@ -40,7 +40,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                                 newList.splice(index, 1);
                                 setNestedData('testimonialsNeon.testimonials', newList);
                             }}
-                            className="absolute top-2 right-2 text-editor-text-secondary hover:text-red-500"
+                            className="absolute top-2 right-2 text-q-text-secondary hover:text-red-500"
                         >
                             &times;
                         </button>
@@ -73,7 +73,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                         newList.push({ quote: 'Nuevo testimonio', authorName: 'Nombre', authorRole: 'Cargo' });
                         setNestedData('testimonialsNeon.testimonials', newList);
                     }}
-                    className="w-full py-2 bg-editor-panel-bg text-editor-text-primary text-sm rounded border border-editor-border hover:bg-editor-accent hover:text-editor-bg transition-colors"
+                    className="w-full py-2 bg-q-surface text-q-text-primary text-sm rounded border border-q-border hover:bg-q-accent hover:text-q-bg transition-colors"
                 >
                     + {t('editor.testimonialsNeonControls.addTestimonial', 'Añadir Testimonio')}
                 </button>
@@ -83,9 +83,9 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
 
     const styleTab = (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-editor-panel-bg p-3 rounded-lg border border-editor-border">
-                <label className="text-sm text-editor-text-primary font-medium flex items-center gap-2">
-                    <Settings size={14} className="text-editor-text-secondary" />
+            <div className="flex justify-between items-center bg-q-surface p-3 rounded-lg border border-q-border">
+                <label className="text-sm text-q-text-primary font-medium flex items-center gap-2">
+                    <Settings size={14} className="text-q-text-secondary" />
                     {t('editor.controls.resetStyles', 'Restaurar Estilos')}
                 </label>
                 <button
@@ -95,7 +95,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                         setNestedData('testimonialsNeon.glassEffect', undefined);
                         setNestedData('testimonialsNeon.glowIntensity', undefined);
                     }}
-                    className="p-1.5 hover:bg-editor-bg rounded-md text-editor-text-secondary hover:text-primary transition-colors"
+                    className="p-1.5 hover:bg-q-bg rounded-md text-q-text-secondary hover:text-primary transition-colors"
                     title={t('editor.controls.resetTooltip', 'Resetear estilos al valor por defecto')}
                 >
                     <RotateCcw size={14} />
@@ -105,8 +105,8 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
             {/* Background Image Setup */}
             <BackgroundImageControl sectionKey="testimonialsNeon" data={data} setNestedData={setNestedData} />
 
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2 flex items-center gap-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2 flex items-center gap-2">
                     <Maximize2 size={14} /> Layout
                 </label>
                 <SliderControl
@@ -133,8 +133,8 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Effect Settings */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-4">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase">
                     {t('editor.controls.effects', 'Efectos Neon')}
                 </label>
                 <ToggleControl
@@ -144,7 +144,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                 />
                 <TopDotsControl sectionKey="testimonialsNeon" data={data} setNestedData={setNestedData} />
                 <div>
-                    <label className="block text-xs text-editor-text-secondary mb-1">
+                    <label className="block text-xs text-q-text-secondary mb-1">
                         {t('editor.heroNeonControls.glowIntensity', 'Intensidad de Resplandor Neon')}
                     </label>
                     <input 
@@ -154,7 +154,7 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                         onChange={(e) => setNestedData('testimonialsNeon.glowIntensity', parseInt(e.target.value))}
                         className="w-full accent-editor-accent"
                     />
-                    <div className="flex justify-between text-[10px] text-editor-text-secondary mt-1">
+                    <div className="flex justify-between text-[10px] text-q-text-secondary mt-1">
                         <span>0%</span>
                         <span>{sectionData.glowIntensity ?? 50}%</span>
                         <span>100%</span>
@@ -163,8 +163,8 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
             </div>
 
             {/* Color Settings */}
-            <div className="bg-editor-panel-bg p-4 rounded-lg border border-editor-border space-y-3">
-                <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-2">
+            <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                     {t('editor.controls.colors', 'Colores')}
                 </label>
                 <ColorControl

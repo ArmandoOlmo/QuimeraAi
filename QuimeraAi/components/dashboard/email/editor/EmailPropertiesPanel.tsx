@@ -53,20 +53,20 @@ const EmailPropertiesPanel: React.FC = () => {
     ];
     
     return (
-        <div className="h-full flex flex-col bg-editor-bg">
+        <div className="h-full flex flex-col bg-q-bg">
             {/* Header */}
-            <div className="flex-shrink-0 p-4 border-b border-editor-border">
+            <div className="flex-shrink-0 p-4 border-b border-q-border">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="flex-1">
-                        <h3 className="text-sm font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <h3 className="text-sm font-bold text-q-text-secondary uppercase tracking-wider">
                             {t('editor.properties', 'Propiedades')}
                         </h3>
                         {selectedBlock ? (
-                            <p className="text-base font-semibold text-editor-text-primary mt-1 capitalize">
+                            <p className="text-base font-semibold text-q-text mt-1 capitalize">
                                 {selectedBlock.type}
                             </p>
                         ) : (
-                            <p className="text-base text-editor-text-secondary mt-1">
+                            <p className="text-base text-q-text-secondary mt-1">
                                 {t('email.document', 'Documento')}
                             </p>
                         )}
@@ -74,7 +74,7 @@ const EmailPropertiesPanel: React.FC = () => {
                 </div>
                 
                 {/* Tabs */}
-                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1">
+                <div className="flex gap-1 rounded-md border border-q-border/70 bg-q-surface/40 p-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         return (
@@ -84,8 +84,8 @@ const EmailPropertiesPanel: React.FC = () => {
                                 className={`
                                     flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-sm text-sm font-medium transition-all
                                     ${activeTab === tab.id 
-                                        ? 'bg-editor-accent/15 text-editor-accent' 
-                                        : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                                        ? 'bg-q-accent/15 text-q-accent' 
+                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                                     }
                                 `}
                             >
@@ -104,14 +104,14 @@ const EmailPropertiesPanel: React.FC = () => {
                         <>
                             {/* Style Sub-Tabs Header (Only if block is selected) */}
                             {selectedBlock && (
-                                <div className="flex gap-1 rounded-md border border-editor-border/70 bg-editor-surface/40 p-1 mb-6">
+                                <div className="flex gap-1 rounded-md border border-q-border/70 bg-q-surface/40 p-1 mb-6">
                                     <button
                                         onClick={() => setStyleSubTab('block')}
                                         className={`
                                             flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center
                                             ${styleSubTab === 'block' 
-                                                ? 'bg-editor-accent/15 text-editor-accent' 
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                                ? 'bg-q-accent/15 text-q-accent' 
+                                                : 'text-q-text-secondary hover:text-q-text'
                                             }
                                         `}
                                     >
@@ -122,8 +122,8 @@ const EmailPropertiesPanel: React.FC = () => {
                                         className={`
                                             flex-1 py-1.5 px-3 rounded-sm text-xs font-medium transition-all text-center flex items-center justify-center gap-1.5
                                             ${styleSubTab === 'global' 
-                                                ? 'bg-editor-accent/15 text-editor-accent' 
-                                                : 'text-editor-text-secondary hover:text-editor-text-primary'
+                                                ? 'bg-q-accent/15 text-q-accent' 
+                                                : 'text-q-text-secondary hover:text-q-text'
                                             }
                                         `}
                                     >
@@ -136,9 +136,9 @@ const EmailPropertiesPanel: React.FC = () => {
                             {/* Style Content */}
                             {styleSubTab === 'global' ? (
                                 <div>
-                                    <div className="mb-4 pb-2 border-b border-editor-border">
-                                        <h4 className="text-sm font-bold text-editor-text-primary flex items-center gap-2">
-                                            <Settings className="w-4 h-4 text-editor-text-secondary" />
+                                    <div className="mb-4 pb-2 border-b border-q-border">
+                                        <h4 className="text-sm font-bold text-q-text flex items-center gap-2">
+                                            <Settings className="w-4 h-4 text-q-text-secondary" />
                                             {t('email.globalSettings', 'Configuración Global')}
                                         </h4>
                                     </div>
@@ -193,7 +193,7 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
             <div className="space-y-4">
                 {/* Email Subject */}
                 <div>
-                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                         {t('email.subject', 'Asunto del email')}
                     </label>
                     <input
@@ -201,13 +201,13 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
                         value={subject}
                         onChange={(e) => onSubjectChange(e.target.value)}
                         placeholder={t('email.subjectPlaceholder', 'Escribe el asunto...')}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+                        className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
                     />
                 </div>
                 
                 {/* Preview Text */}
                 <div>
-                    <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                         {t('email.previewText', 'Texto de vista previa')}
                     </label>
                     <textarea
@@ -215,22 +215,22 @@ const NoBlockSelected: React.FC<NoBlockSelectedProps> = ({
                         onChange={(e) => onPreviewTextChange(e.target.value)}
                         placeholder={t('email.previewTextPlaceholder', 'Texto que aparece después del asunto...')}
                         rows={3}
-                        className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent resize-none"
+                        className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent resize-none"
                     />
-                    <p className="text-xs text-editor-text-secondary mt-1">
+                    <p className="text-xs text-q-text-secondary mt-1">
                         {t('email.previewTextHint', 'Se muestra en la bandeja de entrada después del asunto')}
                     </p>
                 </div>
                 
                 {/* Hint */}
-                <div className="bg-editor-panel-bg/50 rounded-lg p-4 mt-6">
+                <div className="bg-q-surface/50 rounded-lg p-4 mt-6">
                     <div className="flex items-start gap-3">
-                        <Sparkles size={20} className="text-editor-accent flex-shrink-0 mt-0.5" />
+                        <Sparkles size={20} className="text-q-accent flex-shrink-0 mt-0.5" />
                         <div>
-                            <h4 className="text-sm font-medium text-editor-text-primary mb-1">
+                            <h4 className="text-sm font-medium text-q-text mb-1">
                                 {t('email.selectBlockHint', 'Selecciona un bloque')}
                             </h4>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-xs text-q-text-secondary">
                                 {t('email.selectBlockHintDesc', 'Haz clic en un bloque en el preview o en la lista para editar su contenido')}
                             </p>
                         </div>
@@ -247,13 +247,13 @@ const NoBlockStyleSelected: React.FC = () => {
     const { t } = useTranslation();
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="bg-editor-panel-bg/50 rounded-full p-6 mb-4">
-                <Palette size={32} className="text-editor-text-secondary" />
+            <div className="bg-q-surface/50 rounded-full p-6 mb-4">
+                <Palette size={32} className="text-q-text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
+            <h3 className="text-lg font-semibold text-q-text mb-2">
                 {t('email.noBlockSelected', 'Ningún bloque seleccionado')}
             </h3>
-            <p className="text-sm text-editor-text-secondary max-w-xs">
+            <p className="text-sm text-q-text-secondary max-w-xs">
                 {t('email.selectBlockForStyles', 'Selecciona un bloque para editar sus estilos')}
             </p>
         </div>

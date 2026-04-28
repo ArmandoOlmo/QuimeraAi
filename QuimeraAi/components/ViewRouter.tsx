@@ -186,7 +186,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
         // Editor View (data is loaded)
         return (
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <div className="flex h-screen bg-q-bg text-q-text">
                 {/* Sidebar - Desktop: always visible collapsed, Mobile: controlled by isMobileMenuOpen */}
                 <DashboardSidebar
                     isMobileOpen={isMobileMenuOpen}

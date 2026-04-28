@@ -145,13 +145,13 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             />
 
             {/* Modal */}
-            <div className="relative bg-card border border-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[84vh] flex flex-col m-4 overflow-hidden">
+            <div className="relative bg-q-surface border border-q-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[84vh] flex flex-col m-4 overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between h-14 px-4 border-b border-border bg-card/95">
+                <div className="flex items-center justify-between h-14 px-4 border-b border-q-border bg-q-surface/95">
                     <div className="flex items-center gap-2 min-w-0">
                         <Image size={20} className="text-primary" />
                         <h2 className="text-lg font-semibold text-foreground truncate">{title}</h2>
-                        <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md border border-border bg-muted/50 text-xs text-muted-foreground">
+                        <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md border border-q-border bg-muted/50 text-xs text-q-text-muted">
                             <FolderOpen size={12} />
                             {useProjectLibrary ? t('restaurants.projectLibrary', 'Project') : 'Administración'}
                         </span>
@@ -166,10 +166,10 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 </div>
 
                 {/* Search and Upload */}
-                <div className="p-4 border-b border-border space-y-3 bg-muted/20">
+                <div className="p-4 border-b border-q-border space-y-3 bg-muted/20">
                     {/* Search */}
-                    <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
-                        <Search size={16} className="text-muted-foreground" />
+                    <div className="flex items-center gap-2 bg-q-bg border border-q-border rounded-md px-3 py-2">
+                        <Search size={16} className="text-q-text-muted" />
                         <input
                             type="text"
                             value={searchQuery}
@@ -180,7 +180,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="text-muted-foreground hover:text-foreground"
+                                className="text-q-text-muted hover:text-foreground"
                             >
                                 <X size={14} />
                             </button>
@@ -213,7 +213,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                 </>
                             )}
                         </button>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-q-text-muted">
                             {t('landingEditor.maxFileSize', 'Máx. 5MB • PNG, JPG, SVG')}
                         </span>
                     </div>
@@ -234,7 +234,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                 <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                            <div className="flex flex-col items-center justify-center h-40 text-q-text-muted">
                                 <Image size={40} className="mb-2 opacity-50" />
                                 <p className="text-sm">{t('landingEditor.noImagesFound', 'No se encontraron imágenes')}</p>
                             </div>
@@ -247,7 +247,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                     onClick={() => setSelectedUrl(img.downloadURL)}
                                     className={`relative aspect-square rounded-md overflow-hidden border transition-all ${selectedUrl === img.downloadURL
                                             ? 'border-primary ring-2 ring-primary/30'
-                                            : 'border-border/50 hover:border-primary/40'
+                                            : 'border-q-border/50 hover:border-primary/40'
                                         }`}
                                 >
                                     <img
@@ -287,8 +287,8 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between p-4 border-t border-border bg-card/95">
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between p-4 border-t border-q-border bg-q-surface/95">
+                    <p className="text-xs text-q-text-muted">
                         {filteredImages.length} {t('landingEditor.imagesAvailable', 'imágenes disponibles')}
                     </p>
                     <div className="flex gap-2">

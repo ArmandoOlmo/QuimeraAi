@@ -62,7 +62,7 @@ const FilterDropdown: React.FC<{
             <div onClick={onToggle}>{trigger}</div>
             {isOpen && (
                 <div
-                    className={`absolute top-full mt-1.5 z-50 min-w-[200px] bg-popover border border-border rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 duration-150 ${align === 'right' ? 'right-0' : 'left-0'
+                    className={`absolute top-full mt-1.5 z-50 min-w-[200px] bg-popover border border-q-border rounded-lg shadow-xl animate-in fade-in-0 zoom-in-95 duration-150 ${align === 'right' ? 'right-0' : 'left-0'
                         }`}
                 >
                     {children}
@@ -91,7 +91,7 @@ const FilterButton: React.FC<{
             sm:w-auto sm:h-auto sm:justify-start sm:px-2.5 sm:py-1.5 sm:border
             ${isActive
                 ? 'text-primary sm:bg-primary sm:text-primary-foreground sm:border-primary sm:shadow-sm'
-                : 'text-muted-foreground hover:text-foreground sm:bg-secondary/50 sm:text-foreground sm:border-border sm:hover:bg-secondary sm:hover:border-primary/30'
+                : 'text-q-text-muted hover:text-foreground sm:bg-secondary/50 sm:text-foreground sm:border-q-border sm:hover:bg-secondary sm:hover:border-primary/30'
             }
         `}
     >
@@ -191,7 +191,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             <div className="sm:hidden">
                 <button
                     onClick={() => setShowMobileFilters(!showMobileFilters)}
-                    className={`relative h-8 w-8 flex items-center justify-center rounded-md transition-colors ${showMobileFilters || activeFiltersCount > 0 ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`relative h-8 w-8 flex items-center justify-center rounded-md transition-colors ${showMobileFilters || activeFiltersCount > 0 ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                 >
                     <Filter size={16} />
                     {activeFiltersCount > 0 && (
@@ -205,7 +205,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             {/* Toolbar de filtros — always visible on desktop, collapsible on mobile */}
             <div className={`${showMobileFilters ? 'flex' : 'hidden'} sm:flex items-center gap-1 sm:gap-2 flex-wrap`}>
                 {/* Icono de filtros — desktop only */}
-                <div className="hidden sm:flex items-center gap-1.5 text-muted-foreground pr-2 border-r border-border">
+                <div className="hidden sm:flex items-center gap-1.5 text-q-text-muted pr-2 border-r border-q-border">
                     <Filter size={14} />
                     <span className="text-xs font-medium">{t('leads.filters.advancedFilters')}</span>
                 </div>
@@ -306,21 +306,21 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div className="p-3 space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Min</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Min</label>
                                 <input
                                     type="number"
                                     value={filters.valueRange.min}
                                     onChange={e => updateFilter('valueRange', { ...filters.valueRange, min: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Max</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Max</label>
                                 <input
                                     type="number"
                                     value={filters.valueRange.max}
                                     onChange={e => updateFilter('valueRange', { ...filters.valueRange, max: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -344,25 +344,25 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div className="p-3 space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Min (0-100)</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Min (0-100)</label>
                                 <input
                                     type="number"
                                     min="0"
                                     max="100"
                                     value={filters.scoreRange.min}
                                     onChange={e => updateFilter('scoreRange', { ...filters.scoreRange, min: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Max (0-100)</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Max (0-100)</label>
                                 <input
                                     type="number"
                                     min="0"
                                     max="100"
                                     value={filters.scoreRange.max}
                                     onChange={e => updateFilter('scoreRange', { ...filters.scoreRange, max: Number(e.target.value) })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -387,21 +387,21 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
                     <div className="p-3 space-y-2">
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Desde</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Desde</label>
                                 <input
                                     type="date"
                                     value={filters.dateRange.start}
                                     onChange={e => updateFilter('dateRange', { ...filters.dateRange, start: e.target.value })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Hasta</label>
+                                <label className="text-[10px] text-q-text-muted uppercase mb-1 block">Hasta</label>
                                 <input
                                     type="date"
                                     value={filters.dateRange.end}
                                     onChange={e => updateFilter('dateRange', { ...filters.dateRange, end: e.target.value })}
-                                    className="w-full bg-secondary/30 border border-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
+                                    className="w-full bg-secondary/30 border border-q-border rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             </div>
                         </div>
@@ -464,7 +464,7 @@ const LeadsFilters: React.FC<LeadsFiltersProps> = ({ filters, onFiltersChange, a
             {/* Active Filters Display - Solo si hay filtros activos */}
             {activeFiltersCount > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap py-1">
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Activos:</span>
+                    <span className="text-[10px] text-q-text-muted uppercase tracking-wide">Activos:</span>
 
                     {/* Status chips */}
                     {filters.statuses.map(status => {

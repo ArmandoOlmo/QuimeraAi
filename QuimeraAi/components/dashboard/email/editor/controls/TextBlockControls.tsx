@@ -41,8 +41,8 @@ const ToolbarBtn: React.FC<{
         disabled={disabled}
         className={`p-1 rounded transition-colors ${
             active
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
         } ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
     >
         {children}
@@ -87,7 +87,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
         },
         editorProps: {
             attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[100px] px-3 py-2 text-sm text-editor-text-primary',
+                class: 'prose prose-sm max-w-none focus:outline-none min-h-[100px] px-3 py-2 text-sm text-q-text',
             },
         },
     });
@@ -115,12 +115,12 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
 
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 Contenido
             </label>
 
             {/* Mini Toolbar */}
-            <div className="flex flex-wrap items-center gap-0.5 bg-editor-panel-bg border border-editor-border border-b-0 rounded-t-md px-1.5 py-1">
+            <div className="flex flex-wrap items-center gap-0.5 bg-q-surface border border-q-border border-b-0 rounded-t-md px-1.5 py-1">
                 <ToolbarBtn
                     active={editor.isActive('bold')}
                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -150,7 +150,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
                     <Strikethrough size={14} />
                 </ToolbarBtn>
 
-                <div className="w-px h-4 bg-editor-border mx-1" />
+                <div className="w-px h-4 bg-q-surface-overlay mx-1" />
 
                 <ToolbarBtn
                     active={editor.isActive('heading', { level: 2 })}
@@ -174,7 +174,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
                     <ListOrdered size={14} />
                 </ToolbarBtn>
 
-                <div className="w-px h-4 bg-editor-border mx-1" />
+                <div className="w-px h-4 bg-q-surface-overlay mx-1" />
 
                 <ToolbarBtn
                     active={editor.isActive({ textAlign: 'left' })}
@@ -198,7 +198,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
                     <AlignRight size={14} />
                 </ToolbarBtn>
 
-                <div className="w-px h-4 bg-editor-border mx-1" />
+                <div className="w-px h-4 bg-q-surface-overlay mx-1" />
 
                 <ToolbarBtn
                     active={editor.isActive('link')}
@@ -234,7 +234,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
             </div>
 
             {/* Editor Area */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-b-md overflow-hidden [&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-editor-text-primary [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-editor-text-secondary/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_a]:text-blue-500 [&_.ProseMirror_a]:underline [&_.ProseMirror_code]:bg-editor-border/30 [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-xs">
+            <div className="bg-q-surface border border-q-border rounded-b-md overflow-hidden [&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-q-text [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-q-text-secondary/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_a]:text-blue-500 [&_.ProseMirror_a]:underline [&_.ProseMirror_code]:bg-q-surface-overlay/30 [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-xs">
                 <EditorContent editor={editor} />
             </div>
         </div>
@@ -247,13 +247,13 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
 
 const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
     <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
+        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
         <button
             type="button"
             role="switch"
             aria-checked={checked}
             onClick={() => onChange(!checked)}
-            className={`${checked ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
+            className={`${checked ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-[22px] w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors`}
         >
             <span className={`${checked ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition mt-0.5 ml-0.5`} />
         </button>
@@ -264,13 +264,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['none', 'sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>
@@ -284,13 +284,13 @@ const FontSizeSelector: React.FC<{ label: string; value: string; onChange: (valu
     const options = ['sm', 'md', 'lg', 'xl'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size.toUpperCase()}
                     </button>
@@ -308,13 +308,13 @@ const AlignmentSelector: React.FC<{ label: string; value: string; onChange: (val
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt.v}
                         onClick={() => onChange(opt.v)}
-                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-sm font-medium rounded-sm transition-colors ${value === opt.v ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {opt.l}
                     </button>
@@ -366,7 +366,7 @@ const TextBlockControls: React.FC<TextBlockControlsProps> = ({ block, activeTab 
                     placeholder={t('email.textPlaceholder', 'Escribe tu contenido aquí...')}
                 />
 
-                <p className="text-xs text-editor-text-secondary flex items-center gap-1.5">
+                <p className="text-xs text-q-text-secondary flex items-center gap-1.5">
                     <Palette size={12} />
                     {t('email.wysiwygHint', 'Editor visual con formato. El HTML se genera automáticamente.')}
                 </p>
@@ -389,7 +389,7 @@ const TextBlockControls: React.FC<TextBlockControlsProps> = ({ block, activeTab 
                 onChange={(color) => updateStyles({ textColor: color })}
             />
 
-            <hr className="border-editor-border" />
+            <hr className="border-q-border" />
 
             <FontSizeSelector
                 label={t('email.fontSize', 'Tamaño de fuente')}

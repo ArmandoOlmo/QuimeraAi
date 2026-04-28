@@ -16,8 +16,8 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* Text Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.faqLumina.content', 'Header Content')}
         </label>
@@ -48,14 +48,14 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
       </div>
 
       {/* FAQs List */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <HelpCircle size={14} />
           {t('editor.faqLumina.faqs', 'FAQs')}
         </label>
 
         {faqs.map((faq: any, idx: number) => (
-          <div key={idx} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 space-y-3 relative group">
+          <div key={idx} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 space-y-3 relative group">
             <button
               onClick={() => {
                 const newFaqs = faqs.filter((_: any, i: number) => i !== idx);
@@ -66,7 +66,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
               <Trash2 size={14} />
             </button>
             
-            <span className="text-[10px] font-bold text-editor-accent uppercase block mb-2">Question #{idx + 1}</span>
+            <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Question #{idx + 1}</span>
 
             <Input 
               label={t('editor.faqLumina.question', 'Question')} 
@@ -88,7 +88,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             const newFaq = { question: 'New Question?', answer: 'Detailed answer here.' };
             setNestedData('faqLumina.faqs', [...faqs, newFaq]);
           }}
-          className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
+          className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
         >
           <Plus size={16} /> {t('editor.faqLumina.addFaq', 'Add Question')}
         </button>
@@ -99,8 +99,8 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -114,9 +114,9 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
       
       {renderLuminaAnimationControls(data.faqLumina, (key, value) => setNestedData(`faqLumina.${key}`, value))}
       
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -125,7 +125,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
               setNestedData('faqLumina.colors', {});
               setNestedData('faqLumina.glassEffect', true);
             }}
-            className="flex items-center gap-1.5 px-2 py-1 bg-editor-bg border border-editor-border rounded text-[10px] text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-q-bg border border-q-border rounded text-[10px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/30 transition-colors"
             title="Restaurar a los colores originales de Lumina"
           >
             <RotateCcw size={10} />
@@ -135,13 +135,13 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.faqLumina.colors?.panelBackground} onChange={(v) => setNestedData('faqLumina.colors.panelBackground', v)} />
             <ColorControl label={t('editor.controls.colors.border', 'Border')} value={data.faqLumina.colors?.panelBorder} onChange={(v) => setNestedData('faqLumina.colors.panelBorder', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">Textos</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Textos</p>
             <ColorControl label="Fondo de Sección" value={data.faqLumina.colors?.background} onChange={(v) => setNestedData('faqLumina.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title', 'Heading')} value={data.faqLumina.colors?.heading} onChange={(v) => setNestedData('faqLumina.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.faqLumina.colors?.text} onChange={(v) => setNestedData('faqLumina.colors.text', v)} />

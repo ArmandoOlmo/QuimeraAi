@@ -20,7 +20,7 @@ const HeaderBackButton: React.FC<HeaderBackButtonProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border/50 bg-secondary/50 px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 ${className}`}
+      className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border border-q-border/50 bg-secondary/50 px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/25 ${className}`}
       aria-label={resolvedLabel}
       title={resolvedLabel}
     >

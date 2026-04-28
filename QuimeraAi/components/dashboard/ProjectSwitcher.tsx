@@ -138,7 +138,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             );
         }
         return (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1 text-[10px] text-q-text-muted">
                 <FileEdit size={10} />
                 <span className="hidden sm:inline">{t('dashboard.draft', 'Borrador')}</span>
             </span>
@@ -152,8 +152,8 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 onClick={handleCreateProject}
                 className={`
                     flex items-center gap-2 w-full p-2 rounded-lg
-                    bg-primary/10 border border-primary/30 border-dashed
-                    text-primary hover:bg-primary/20 transition-colors
+                    bg-q-accent/10 border border-q-accent/30 border-dashed
+                    text-q-accent hover:bg-q-accent/20 transition-colors
                     ${className}
                 `}
             >
@@ -171,11 +171,11 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     if (isLoadingProjects) {
         return (
             <div className={`flex items-center gap-2 p-2 ${className}`}>
-                <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+                <div className="w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse" />
                 {!collapsed && (
                     <div className="flex-1 space-y-1">
-                        <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-                        <div className="h-3 w-12 bg-muted rounded animate-pulse" />
+                        <div className="h-4 w-20 bg-q-surface-overlay rounded animate-pulse" />
+                        <div className="h-3 w-12 bg-q-surface-overlay rounded animate-pulse" />
                     </div>
                 )}
             </div>
@@ -192,10 +192,10 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 className={`
                     flex items-center gap-2 transition-all duration-200
                     ${collapsed
-                        ? 'w-10 h-10 justify-center mx-auto rounded-lg hover:bg-secondary/50'
-                        : 'w-full p-2 rounded-lg bg-card hover:bg-secondary/50 border border-border'
+                        ? 'w-10 h-10 justify-center mx-auto rounded-lg hover:bg-q-surface-elevated/50'
+                        : 'w-full p-2 rounded-lg bg-q-surface hover:bg-q-surface-elevated/50 border border-q-border'
                     }
-                    ${isOpen && !collapsed ? 'ring-2 ring-primary/50' : ''}
+                    ${isOpen && !collapsed ? 'ring-2 ring-q-accent/50' : ''}
                     ${isLoading ? 'opacity-50 cursor-wait' : ''}
                 `}
                 aria-expanded={isOpen}
@@ -220,14 +220,14 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 {!collapsed && (
                     <>
                         <div className="flex-1 min-w-0 text-left">
-                            <p className="text-sm font-semibold text-foreground truncate">
+                            <p className="text-sm font-semibold text-q-text truncate">
                                 {activeProject?.name || t('project.noProject', 'Sin proyecto')}
                             </p>
                             {activeProject && getStatusBadge(activeProject.status)}
                         </div>
                         <ChevronDown
                             size={16}
-                            className={`text-muted-foreground transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''
+                            className={`text-q-text-muted transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''
                                 }`}
                         />
                     </>
@@ -239,7 +239,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 <div
                     className={`
                         absolute z-50 mt-2 py-1
-                        bg-popover border border-border rounded-xl shadow-xl
+                        bg-q-surface-elevated border border-q-border rounded-xl shadow-xl
                         animate-in fade-in-0 zoom-in-95 duration-200
                         ${collapsed ? 'left-full ml-2 top-0' : 'left-0 right-0'}
                         ${collapsed ? 'w-72' : 'w-full min-w-[280px]'}
@@ -247,17 +247,17 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     role="listbox"
                 >
                     {/* Header */}
-                    <div className="px-3 py-2 border-b border-border">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="px-3 py-2 border-b border-q-border">
+                        <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                             {t('project.selectProject', 'Seleccionar Proyecto')}
                         </p>
                     </div>
 
                     {/* Search */}
                     {userProjects.length > 5 && (
-                        <div className="px-3 py-2 border-b border-border">
-                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-2 py-1.5">
-                                <Search size={14} className="text-muted-foreground flex-shrink-0" />
+                        <div className="px-3 py-2 border-b border-q-border">
+                            <div className="flex items-center gap-2 bg-q-surface-overlay/50 rounded-lg px-2 py-1.5">
+                                <Search size={14} className="text-q-text-muted flex-shrink-0" />
                                 <input
                                     ref={searchInputRef}
                                     type="text"
@@ -269,7 +269,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                 {searchQuery && (
                                     <button
                                         onClick={() => setSearchQuery('')}
-                                        className="text-muted-foreground hover:text-foreground"
+                                        className="text-q-text-muted hover:text-q-text"
                                     >
                                         <X size={14} />
                                     </button>
@@ -281,7 +281,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     {/* Project List */}
                     <div className="max-h-64 overflow-y-auto py-1">
                         {filteredProjects.length === 0 ? (
-                            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                            <div className="px-3 py-4 text-center text-sm text-q-text-muted">
                                 {searchQuery
                                     ? t('cms.noProjectsFound', 'No se encontraron proyectos')
                                     : t('project.noProject', 'Sin proyecto')}
@@ -296,8 +296,8 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                         onClick={() => handleSwitchProject(project.id)}
                                         className={`
                                             flex items-center gap-3 w-full px-3 py-2.5
-                                            hover:bg-secondary/50 transition-colors
-                                            ${isActive ? 'bg-primary/10' : ''}
+                                            hover:bg-q-surface-overlay/50 transition-colors
+                                            ${isActive ? 'bg-q-accent/10' : ''}
                                         `}
                                         role="option"
                                         aria-selected={isActive}
@@ -306,8 +306,8 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                         <div className={`
                                             w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden
                                             ${isActive
-                                                ? 'bg-gradient-to-br from-primary to-primary/80 shadow-md shadow-primary/30'
-                                                : 'bg-gradient-to-br from-muted-foreground/60 to-muted-foreground/40'
+                                                ? 'bg-gradient-to-br from-q-accent to-q-accent/80 shadow-md shadow-q-accent/30'
+                                                : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40'
                                             }
                                         `}>
                                             {getDynamicThumbnailUrl(project) ? (
@@ -323,7 +323,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
 
                                         {/* Project info */}
                                         <div className="flex-1 min-w-0 text-left">
-                                            <p className={`text-sm font-medium truncate ${isActive ? 'text-primary' : 'text-foreground'
+                                            <p className={`text-sm font-medium truncate ${isActive ? 'text-q-accent' : 'text-q-text'
                                                 }`}>
                                                 {project.name}
                                             </p>
@@ -332,7 +332,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
 
                                         {/* Active indicator */}
                                         {isActive && (
-                                            <Check size={16} className="text-primary flex-shrink-0" />
+                                            <Check size={16} className="text-q-accent flex-shrink-0" />
                                         )}
                                     </button>
                                 );
@@ -343,10 +343,10 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     {/* Create new project */}
                     {onCreateProject && (
                         <>
-                            <div className="border-t border-border my-1" />
+                            <div className="border-t border-q-border my-1" />
                             <button
                                 onClick={handleCreateProject}
-                                className="flex items-center gap-2 w-full px-3 py-2.5 text-primary hover:bg-primary/10 transition-colors"
+                                className="flex items-center gap-2 w-full px-3 py-2.5 text-q-accent hover:bg-q-accent/10 transition-colors"
                             >
                                 <Plus size={18} />
                                 <span className="text-sm font-medium">

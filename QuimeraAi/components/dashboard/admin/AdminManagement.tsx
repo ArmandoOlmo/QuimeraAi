@@ -118,18 +118,18 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center">
                         <div className="flex items-center gap-2">
-                            <Shield className="text-editor-accent w-5 h-5" />
+                            <Shield className="text-q-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold">{t('superadmin.admins.title', 'Gestión de Administradores')}</h1>
                         </div>
                     </div>
-                    <HeaderBackButton onClick={onBack} label={t('superadmin.admins.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onBack} label={t('superadmin.admins.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
 
                 <main className="flex-1 p-6 sm:p-8 overflow-y-auto">
@@ -139,7 +139,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                             <AlertCircle className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
                             <div className="flex-1">
                                 <h3 className="font-semibold text-blue-400 mb-2">{t('superadmin.admins.hierarchy.title', 'Sistema de Jerarquía')}</h3>
-                                <div className="text-sm text-editor-text-secondary space-y-1">
+                                <div className="text-sm text-q-text-secondary space-y-1">
                                     <p><strong className="text-yellow-400">{t('superadmin.admins.hierarchy.owner', 'Owner')}:</strong> {isUserOwner ? t('superadmin.admins.hierarchy.ownerYou', 'Tú') : t('superadmin.admins.hierarchy.ownerLabel', 'Propietario de la plataforma')} {t('superadmin.admins.hierarchy.ownerDesc', ' - Único que puede crear Super Admins')}</p>
                                     <p><strong className="text-purple-400">{t('superadmin.admins.hierarchy.superadmin', 'Super Admin')}</strong>{t('superadmin.admins.hierarchy.superadminDesc', ': Acceso total excepto crear otros Super Admins')}</p>
                                     <p><strong className="text-blue-400">{t('superadmin.admins.hierarchy.admin', 'Admin')}</strong>{t('superadmin.admins.hierarchy.adminDesc', ': Gestión de usuarios y tenants, sin acceso a configuraciones críticas')}</p>
@@ -151,37 +151,37 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                     {/* Estadísticas */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-editor-text-secondary">{t('superadmin.admins.totalAdmins', 'Total Admins')}</span>
-                                <Users size={20} className="text-editor-accent" />
+                                <span className="text-sm text-q-text-secondary">{t('superadmin.admins.totalAdmins', 'Total Admins')}</span>
+                                <Users size={20} className="text-q-accent" />
                             </div>
-                            <p className="text-2xl font-bold text-editor-text-primary mt-2">{admins.length}</p>
+                            <p className="text-2xl font-bold text-q-text mt-2">{admins.length}</p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-editor-text-secondary">Super Admins</span>
+                                <span className="text-sm text-q-text-secondary">Super Admins</span>
                                 <Shield size={20} className="text-purple-400" />
                             </div>
-                            <p className="text-2xl font-bold text-editor-text-primary mt-2">
+                            <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'superadmin').length}
                             </p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-editor-text-secondary">Admins</span>
+                                <span className="text-sm text-q-text-secondary">Admins</span>
                                 <UserCog size={20} className="text-blue-400" />
                             </div>
-                            <p className="text-2xl font-bold text-editor-text-primary mt-2">
+                            <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'admin').length}
                             </p>
                         </div>
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4">
+                        <div className="bg-q-surface border border-q-border rounded-lg p-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-editor-text-secondary">Managers</span>
+                                <span className="text-sm text-q-text-secondary">Managers</span>
                                 <Eye size={20} className="text-green-400" />
                             </div>
-                            <p className="text-2xl font-bold text-editor-text-primary mt-2">
+                            <p className="text-2xl font-bold text-q-text mt-2">
                                 {admins.filter(a => a.role === 'manager').length}
                             </p>
                         </div>
@@ -192,7 +192,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                         <div className="mb-6">
                             <button
                                 onClick={() => setShowCreateModal(true)}
-                                className="flex items-center gap-2 px-3 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 text-q-accent font-semibold hover:text-q-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
                                 {t('superadmin.admins.create', 'Crear Nuevo Administrador')}
@@ -217,11 +217,11 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                     <div
                                         key={admin.id}
                                         onClick={() => setSelectedUser(admin)}
-                                        className="bg-editor-panel-bg border border-editor-border rounded-lg p-4 border-b hover:bg-editor-border/30 transition-colors cursor-pointer group"
+                                        className="bg-q-surface border border-q-border rounded-lg p-4 border-b hover:bg-q-surface-overlay/30 transition-colors cursor-pointer group"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4 flex-1">
-                                                <div className="p-2 bg-editor-bg rounded-lg">
+                                                <div className="p-2 bg-q-bg rounded-lg">
                                                     {getRoleIcon(admin.role || 'user')}
                                                 </div>
                                                 <img
@@ -231,11 +231,11 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                 />
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className="font-semibold text-editor-text-primary">{admin.name}</h3>
+                                                        <h3 className="font-semibold text-q-text">{admin.name}</h3>
                                                         {isAdminOwner && <Crown size={16} className="text-yellow-500" />}
                                                     </div>
-                                                    <p className="text-sm text-editor-text-secondary">{admin.email}</p>
-                                                    <p className="text-xs text-editor-text-secondary mt-1">
+                                                    <p className="text-sm text-q-text-secondary">{admin.email}</p>
+                                                    <p className="text-xs text-q-text-secondary mt-1">
                                                         {t(`superadmin.roleDescriptions.${admin.role || 'user'}`, ROLE_DESCRIPTIONS[admin.role || 'user'])}
                                                     </p>
                                                 </div>
@@ -247,7 +247,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                                     <select
                                                         value={admin.role || 'user'}
                                                         onChange={(e) => handleRoleChange(admin.id, e.target.value as UserRole)}
-                                                        className="px-3 py-2 bg-editor-bg border border-editor-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                                        className="px-3 py-2 bg-q-bg border border-q-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                                                     >
                                                         {isUserOwner && <option value="superadmin">Super Admin</option>}
                                                         <option value="admin">Admin</option>
@@ -278,12 +278,12 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                             {
                                 admins.length === 0 && (
-                                    <div className="text-center py-12 bg-editor-panel-bg border border-editor-border rounded-lg">
-                                        <Shield size={48} className="mx-auto text-editor-text-secondary mb-4" />
-                                        <p className="text-lg font-semibold text-editor-text-primary mb-2">
+                                    <div className="text-center py-12 bg-q-surface border border-q-border rounded-lg">
+                                        <Shield size={48} className="mx-auto text-q-text-secondary mb-4" />
+                                        <p className="text-lg font-semibold text-q-text mb-2">
                                             {t('superadmin.admins.noAdmins', 'No hay administradores')}
                                         </p>
-                                        <p className="text-editor-text-secondary">
+                                        <p className="text-q-text-secondary">
                                             {t('superadmin.admins.createFirst', 'Crea el primer administrador del sistema')}
                                         </p>
                                     </div>
@@ -298,8 +298,8 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
             {
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6 max-w-md w-full">
-                            <h2 className="text-xl font-bold text-editor-text-primary mb-4">{t('superadmin.admins.createModal.title', 'Crear Nuevo Administrador')}</h2>
+                        <div className="bg-q-surface border border-q-border rounded-lg p-6 max-w-md w-full">
+                            <h2 className="text-xl font-bold text-q-text mb-4">{t('superadmin.admins.createModal.title', 'Crear Nuevo Administrador')}</h2>
 
                             {errorMessage && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
@@ -309,39 +309,39 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.name', 'Nombre')}</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.admins.createModal.name', 'Nombre')}</label>
                                     <input
                                         type="text"
                                         value={newAdminName}
                                         onChange={(e) => setNewAdminName(e.target.value)}
                                         placeholder={t('superadmin.admins.createModal.namePlaceholder', 'Juan Pérez')}
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.email', 'Email')}</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.admins.createModal.email', 'Email')}</label>
                                     <input
                                         type="email"
                                         value={newAdminEmail}
                                         onChange={(e) => setNewAdminEmail(e.target.value)}
                                         placeholder={t('superadmin.admins.createModal.emailPlaceholder', 'juan@ejemplo.com')}
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-editor-text-secondary mb-1">{t('superadmin.admins.createModal.role', 'Rol')}</label>
+                                    <label className="block text-sm font-medium text-q-text-secondary mb-1">{t('superadmin.admins.createModal.role', 'Rol')}</label>
                                     <select
                                         value={newAdminRole}
                                         onChange={(e) => setNewAdminRole(e.target.value as UserRole)}
-                                        className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         {isUserOwner && <option value="superadmin">Super Admin</option>}
                                         <option value="admin">Admin</option>
                                         <option value="manager">Manager</option>
                                     </select>
-                                    <p className="text-xs text-editor-text-secondary mt-2">
+                                    <p className="text-xs text-q-text-secondary mt-2">
                                         {t(`superadmin.roleDescriptions.${newAdminRole}`, ROLE_DESCRIPTIONS[newAdminRole])}
                                     </p>
                                 </div>
@@ -353,13 +353,13 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                         setShowCreateModal(false);
                                         setErrorMessage('');
                                     }}
-                                    className="flex-1 px-4 py-2 bg-editor-border text-editor-text-primary rounded-lg hover:bg-editor-border/80 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-q-surface-overlay text-q-text rounded-lg hover:bg-q-surface-overlay/80 transition-colors"
                                 >
                                     {t('superadmin.admins.createModal.cancel', 'Cancelar')}
                                 </button>
                                 <button
                                     onClick={handleCreateAdmin}
-                                    className="flex-1 px-4 py-2 text-editor-accent font-semibold hover:text-editor-accent/80 transition-colors"
+                                    className="flex-1 px-4 py-2 text-q-accent font-semibold hover:text-q-accent/80 transition-colors"
                                 >
                                     {t('superadmin.admins.createModal.create', 'Crear')}
                                 </button>

@@ -597,7 +597,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                     <h2 className="text-xl font-bold text-foreground">
                         {t('email.campaigns', 'Campañas')}
                     </h2>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         {t('email.campaignsSubtitle', 'Crea y gestiona tus campañas de email')}
                     </p>
                 </div>
@@ -607,8 +607,8 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
 
             {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         value={searchTerm}
@@ -617,7 +617,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
                     {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                             <X size={16} />
                         </button>
                     )}
@@ -626,7 +626,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as CampaignStatus | 'all')}
-                    className="px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                     <option value="all">{t('email.allStatuses', 'Todos los estados')}</option>
                     <option value="draft">{t('email.draft', 'Borrador')}</option>
@@ -640,12 +640,12 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {/* Campaigns List */}
             {
                 filteredCampaigns.length === 0 ? (
-                    <div className="text-center py-12 bg-card/50 border border-border rounded-xl">
-                        <Mail className="mx-auto text-muted-foreground mb-4" size={48} />
+                    <div className="text-center py-12 bg-q-surface/50 border border-q-border rounded-xl">
+                        <Mail className="mx-auto text-q-text-muted mb-4" size={48} />
                         <h3 className="text-lg font-medium text-foreground mb-2">
                             {t('email.noCampaigns', 'No hay campañas')}
                         </h3>
-                        <p className="text-muted-foreground mb-4">
+                        <p className="text-q-text-muted mb-4">
                             {t('email.noCampaignsDesc', 'Crea tu primera campaña para empezar a enviar emails')}
                         </p>
                         <button
@@ -670,12 +670,12 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                 const isSending = sendingCampaign === campaign.id;
 
                                 return (
-                                    <div key={campaign.id} className="bg-card/50 border border-border rounded-xl p-4">
+                                    <div key={campaign.id} className="bg-q-surface/50 border border-q-border rounded-xl p-4">
                                         {/* Header Row: Name + Status */}
                                         <div className="flex items-start justify-between gap-3 mb-3">
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-foreground font-medium truncate">{campaign.name}</p>
-                                                <p className="text-muted-foreground text-sm truncate">{campaign.subject}</p>
+                                                <p className="text-q-text-muted text-sm truncate">{campaign.subject}</p>
                                             </div>
                                             {isSending ? (
                                                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 shrink-0">
@@ -690,15 +690,15 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                         {/* Stats Row */}
                                         <div className="grid grid-cols-3 gap-2 mb-3 text-center bg-muted/30 rounded-lg p-2">
                                             <div>
-                                                <p className="text-xs text-muted-foreground">{t('email.recipients', 'Dest.')}</p>
+                                                <p className="text-xs text-q-text-muted">{t('email.recipients', 'Dest.')}</p>
                                                 <p className="text-sm font-medium text-foreground">{campaign.stats?.totalRecipients?.toLocaleString() || 0}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-muted-foreground">{t('email.openRate', 'Apert.')}</p>
+                                                <p className="text-xs text-q-text-muted">{t('email.openRate', 'Apert.')}</p>
                                                 <p className="text-sm font-medium text-foreground">{openRate}%</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-muted-foreground">{t('email.clickRate', 'Clicks')}</p>
+                                                <p className="text-xs text-q-text-muted">{t('email.clickRate', 'Clicks')}</p>
                                                 <p className="text-sm font-medium text-foreground">{clickRate}%</p>
                                             </div>
                                         </div>
@@ -736,7 +736,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                                                 title={t('email.duplicate', 'Duplicar')}
                                             >
-                                                <Copy size={16} className="text-muted-foreground" />
+                                                <Copy size={16} className="text-q-text-muted" />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteCampaign(campaign.id)}
@@ -752,27 +752,27 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                         </div>
 
                         {/* Desktop Table View */}
-                        <div className="hidden md:block bg-card/50 border border-border rounded-xl overflow-hidden">
+                        <div className="hidden md:block bg-q-surface/50 border border-q-border rounded-xl overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-border bg-muted/30">
-                                            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                                        <tr className="border-b border-q-border bg-muted/30">
+                                            <th className="text-left px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.campaignName', 'Campaña')}
                                             </th>
-                                            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                                            <th className="text-left px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.status', 'Estado')}
                                             </th>
-                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.recipients', 'Destinatarios')}
                                             </th>
-                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.openRate', 'Apertura')}
                                             </th>
-                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.clickRate', 'Clicks')}
                                             </th>
-                                            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                                            <th className="text-right px-4 py-3 text-sm font-medium text-q-text-muted">
                                                 {t('email.actions', 'Acciones')}
                                             </th>
                                         </tr>
@@ -788,11 +788,11 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                             const isSending = sendingCampaign === campaign.id;
 
                                             return (
-                                                <tr key={campaign.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                                <tr key={campaign.id} className="border-b border-q-border last:border-0 hover:bg-muted/20">
                                                     <td className="px-4 py-4">
                                                         <div>
                                                             <p className="text-foreground font-medium">{campaign.name}</p>
-                                                            <p className="text-muted-foreground text-sm truncate max-w-xs">
+                                                            <p className="text-q-text-muted text-sm truncate max-w-xs">
                                                                 {campaign.subject}
                                                             </p>
                                                         </div>
@@ -852,14 +852,14 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                                                                 title={t('email.view', 'Ver')}
                                                             >
-                                                                <Eye size={16} className="text-muted-foreground" />
+                                                                <Eye size={16} className="text-q-text-muted" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDuplicateCampaign(campaign)}
                                                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                                                                 title={t('email.duplicate', 'Duplicar')}
                                                             >
-                                                                <Copy size={16} className="text-muted-foreground" />
+                                                                <Copy size={16} className="text-q-text-muted" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteCampaign(campaign.id)}
@@ -886,10 +886,10 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                 showNewCampaignModal && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex md:items-center md:justify-center">
                         {/* Mobile: Bottom sheet, Tablet/Desktop: Centered modal */}
-                        <div className="bg-card border-t md:border border-border w-full md:w-auto md:max-w-3xl lg:max-w-4xl md:rounded-2xl md:m-4 max-h-[95vh] md:max-h-[90vh] overflow-hidden shadow-2xl flex flex-col mt-auto md:mt-0 animate-in slide-in-from-bottom md:slide-in-from-bottom-0 md:fade-in duration-300">
+                        <div className="bg-q-surface border-t md:border border-q-border w-full md:w-auto md:max-w-3xl lg:max-w-4xl md:rounded-2xl md:m-4 max-h-[95vh] md:max-h-[90vh] overflow-hidden shadow-2xl flex flex-col mt-auto md:mt-0 animate-in slide-in-from-bottom md:slide-in-from-bottom-0 md:fade-in duration-300">
 
                             {/* Header - Sticky */}
-                            <div className="p-4 md:p-6 border-b border-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent shrink-0">
+                            <div className="p-4 md:p-6 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-primary/5 to-transparent shrink-0">
                                 <div className="flex items-center gap-3">
                                     <div className="bg-primary/10 p-2.5 rounded-xl">
                                         <Mail size={22} className="text-primary" />
@@ -898,7 +898,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                         <h3 className="text-lg md:text-xl font-bold text-foreground">
                                             {t('email.newCampaign', 'Nueva Campaña')}
                                         </h3>
-                                        <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
+                                        <p className="text-xs md:text-sm text-q-text-muted hidden sm:block">
                                             {t('email.newCampaignSubtitle', 'Configure los detalles de su campaña de email')}
                                         </p>
                                     </div>
@@ -906,7 +906,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setShowHelp(!showHelp)}
-                                        className={`p-2 md:p-2.5 rounded-xl transition-all ${showHelp ? 'bg-primary/10 text-primary ring-2 ring-primary/20' : 'hover:bg-muted text-muted-foreground'}`}
+                                        className={`p-2 md:p-2.5 rounded-xl transition-all ${showHelp ? 'bg-primary/10 text-primary ring-2 ring-primary/20' : 'hover:bg-muted text-q-text-muted'}`}
                                         title={showHelp ? "Ocultar ayuda" : "Mostrar ayuda"}
                                     >
                                         {showHelp ? <Eye size={18} /> : <EyeOff size={18} />}
@@ -915,7 +915,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                         onClick={() => { setShowNewCampaignModal(false); resetForm(); }}
                                         className="p-2 md:p-2.5 hover:bg-muted rounded-xl transition-colors"
                                     >
-                                        <X size={20} className="text-muted-foreground" />
+                                        <X size={20} className="text-q-text-muted" />
                                     </button>
                                 </div>
                             </div>
@@ -951,7 +951,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                 </div>
 
                                                 {showHelp && (
-                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-q-text-muted flex gap-2">
                                                         <Info size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
                                                         <p>Nombre interno para identificar tu campaña. Solo visible para ti.</p>
                                                     </div>
@@ -963,9 +963,9 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                         value={newCampaign.name}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
                                                         placeholder="Ej: Newsletter Diciembre 2024"
-                                                        className="w-full pl-4 pr-10 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                        className="w-full pl-4 pr-10 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                     />
-                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-muted">
                                                         <FileText size={16} />
                                                     </div>
                                                 </div>
@@ -988,7 +988,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                 </div>
 
                                                 {showHelp && (
-                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-q-text-muted flex gap-2">
                                                         <Info size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
                                                         <p>Lo primero que verán en la bandeja de entrada. Hazlo breve y atractivo.</p>
                                                     </div>
@@ -1000,9 +1000,9 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                         value={newCampaign.subject}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
                                                         placeholder="Ej: ¡No te pierdas nuestras ofertas!"
-                                                        className="w-full pl-4 pr-10 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                        className="w-full pl-4 pr-10 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                     />
-                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-muted">
                                                         <Mail size={16} />
                                                     </div>
                                                 </div>
@@ -1025,7 +1025,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                 </div>
 
                                                 {showHelp && (
-                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-muted-foreground flex gap-2">
+                                                    <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-xs text-q-text-muted flex gap-2">
                                                         <Info size={14} className="text-blue-500 flex-shrink-0 mt-0.5" />
                                                         <p>Texto que aparece junto al asunto. Úsalo para complementar.</p>
                                                     </div>
@@ -1036,7 +1036,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     value={newCampaign.previewText}
                                                     onChange={(e) => setNewCampaign({ ...newCampaign, previewText: e.target.value })}
                                                     placeholder="Texto que aparece después del asunto..."
-                                                    className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                    className="w-full px-4 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                 />
                                             </div>
 
@@ -1049,7 +1049,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     <select
                                                         value={newCampaign.type}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, type: e.target.value })}
-                                                        className="w-full px-3 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                        className="w-full px-3 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                     >
                                                         <option value="newsletter">Newsletter</option>
                                                         <option value="promotion">Promoción</option>
@@ -1064,7 +1064,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     <select
                                                         value={newCampaign.audienceType}
                                                         onChange={(e) => setNewCampaign({ ...newCampaign, audienceType: e.target.value as AudienceType })}
-                                                        className="w-full px-3 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                        className="w-full px-3 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                     >
                                                         <option value="all">{t('email.allSubscribers', 'Todos')}</option>
                                                         <option value="segment">{t('email.segment', 'Segmento')}</option>
@@ -1082,7 +1082,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                         <select
                                                             value={newCampaign.audienceSegmentId}
                                                             onChange={(e) => setNewCampaign({ ...newCampaign, audienceSegmentId: e.target.value })}
-                                                            className="w-full px-4 py-3 bg-muted/30 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+                                                            className="w-full px-4 py-3 bg-muted/30 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
                                                         >
                                                             <option value="">{t('email.chooseSegment', 'Elige un segmento...')}</option>
                                                             {audiences.map((audience) => (
@@ -1122,7 +1122,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                 </div>
                                                 <div className="text-left flex-1 min-w-0">
                                                     <span className="block font-bold text-base md:text-lg">{t('email.openVisualEditor', 'Abrir Editor Visual')}</span>
-                                                    <span className="block text-xs md:text-sm text-muted-foreground group-hover:text-primary/70 transition-colors">
+                                                    <span className="block text-xs md:text-sm text-q-text-muted group-hover:text-primary/70 transition-colors">
                                                         Diseña emails con drag & drop
                                                     </span>
                                                 </div>
@@ -1132,7 +1132,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                             {/* Divider */}
                                             <div className="flex items-center gap-3 py-2">
                                                 <div className="flex-1 h-px bg-border"></div>
-                                                <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                                                <span className="text-xs text-q-text-muted uppercase tracking-wide">
                                                     {t('email.orCode', 'O código directo')}
                                                 </span>
                                                 <div className="flex-1 h-px bg-border"></div>
@@ -1144,7 +1144,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     <button
                                                         onClick={() => handleAiGenerate('content')}
                                                         disabled={!!aiLoadingField}
-                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-background/90 hover:bg-background border border-border rounded-lg text-primary shadow-sm backdrop-blur-sm transition-all text-xs"
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-q-bg/90 hover:bg-q-bg border border-q-border rounded-lg text-primary shadow-sm backdrop-blur-sm transition-all text-xs"
                                                         title="Generar borrador HTML con IA"
                                                     >
                                                         {aiLoadingField === 'content' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
@@ -1156,13 +1156,13 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                                     onChange={(e) => setNewCampaign({ ...newCampaign, content: e.target.value })}
                                                     placeholder="<html>&#10;  Escribe HTML directamente...&#10;</html>"
                                                     rows={6}
-                                                    className="w-full px-4 py-4 pt-12 bg-muted/20 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 resize-none font-mono text-sm leading-relaxed"
+                                                    className="w-full px-4 py-4 pt-12 bg-muted/20 border border-q-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 resize-none font-mono text-sm leading-relaxed"
                                                 />
                                             </div>
 
                                             {/* Variables hint */}
-                                            <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
-                                                <p className="text-xs text-muted-foreground mb-2">{t('email.availableVars', 'Variables disponibles:')}</p>
+                                            <div className="bg-muted/30 rounded-xl p-3 border border-q-border/50">
+                                                <p className="text-xs text-q-text-muted mb-2">{t('email.availableVars', 'Variables disponibles:')}</p>
                                                 <div className="flex flex-wrap gap-2">
                                                     <code className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md">{`{{firstName}}`}</code>
                                                     <code className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md">{`{{lastName}}`}</code>
@@ -1175,14 +1175,14 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                             </div>
 
                             {/* Footer - Sticky */}
-                            <div className="p-4 md:p-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 bg-gradient-to-r from-muted/20 to-transparent shrink-0">
-                                <p className="text-xs text-muted-foreground hidden md:block">
+                            <div className="p-4 md:p-6 border-t border-q-border flex flex-col sm:flex-row justify-between items-center gap-3 bg-gradient-to-r from-muted/20 to-transparent shrink-0">
+                                <p className="text-xs text-q-text-muted hidden md:block">
                                     {t('email.requiredFields', '* Campos obligatorios')}
                                 </p>
                                 <div className="flex gap-3 w-full sm:w-auto">
                                     <button
                                         onClick={() => { setShowNewCampaignModal(false); resetForm(); }}
-                                        className="flex-1 sm:flex-none px-5 py-2.5 border border-border rounded-xl text-foreground hover:bg-muted transition-colors font-medium"
+                                        className="flex-1 sm:flex-none px-5 py-2.5 border border-q-border rounded-xl text-foreground hover:bg-muted transition-colors font-medium"
                                     >
                                         {t('common.cancel', 'Cancelar')}
                                     </button>
@@ -1205,8 +1205,8 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {
                 showSendConfirmModal && selectedCampaign && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-card rounded-xl border border-border w-full max-w-md">
-                            <div className="p-6 border-b border-border">
+                        <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
+                            <div className="p-6 border-b border-q-border">
                                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                                     <Send size={20} className="text-primary" />
                                     {t('email.confirmSendTitle', 'Enviar Campaña')}
@@ -1232,10 +1232,10 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                     </p>
                                 </div>
                             </div>
-                            <div className="p-6 border-t border-border flex justify-end gap-3">
+                            <div className="p-6 border-t border-q-border flex justify-end gap-3">
                                 <button
                                     onClick={() => { setShowSendConfirmModal(false); setSelectedCampaignId(null); }}
-                                    className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                                    className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors"
                                 >
                                     {t('common.cancel', 'Cancelar')}
                                 </button>
@@ -1256,8 +1256,8 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {
                 showTestEmailModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-                        <div className="bg-card rounded-xl border border-border w-full max-w-md">
-                            <div className="p-6 border-b border-border flex items-center justify-between">
+                        <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
+                            <div className="p-6 border-b border-q-border flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                                     <TestTube size={20} className="text-blue-500" />
                                     {t('email.sendTestEmail', 'Enviar Email de Prueba')}
@@ -1266,11 +1266,11 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                     onClick={() => { setShowTestEmailModal(false); setSelectedCampaignId(null); }}
                                     className="p-2 hover:bg-muted rounded-lg transition-colors"
                                 >
-                                    <X size={20} className="text-muted-foreground" />
+                                    <X size={20} className="text-q-text-muted" />
                                 </button>
                             </div>
                             <div className="p-6 space-y-4">
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-q-text-muted text-sm">
                                     {t('email.testEmailDesc', 'Envía una versión de prueba de esta campaña a tu correo para revisarla antes de enviar.')}
                                 </p>
                                 <div>
@@ -1282,17 +1282,17 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                                         value={testEmail}
                                         onChange={(e) => setTestEmail(e.target.value)}
                                         placeholder="tu@email.com"
-                                        className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                 </div>
                                 {sendError && (
                                     <p className="text-red-500 text-sm">{sendError}</p>
                                 )}
                             </div>
-                            <div className="p-6 border-t border-border flex justify-end gap-3">
+                            <div className="p-6 border-t border-q-border flex justify-end gap-3">
                                 <button
                                     onClick={() => { setShowTestEmailModal(false); setSelectedCampaignId(null); setSendError(null); }}
-                                    className="px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors"
+                                    className="px-4 py-2 border border-q-border rounded-lg text-foreground hover:bg-muted transition-colors"
                                 >
                                     {t('common.cancel', 'Cancelar')}
                                 </button>
@@ -1340,7 +1340,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             {/* Delete Campaign Confirmation Modal */}
             {deleteConfirmId && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in" style={{ zIndex: 9999 }}>
-                    <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl overflow-hidden animate-scale-in">
+                    <div className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in">
                         <div className="p-6">
                             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4 text-red-500 mx-auto">
                                 <Trash2 size={24} />
@@ -1348,14 +1348,14 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                             <h3 className="text-xl font-bold text-center text-foreground mb-2">
                                 {t('email.deleteConfirmTitle', '¿Eliminar campaña?')}
                             </h3>
-                            <p className="text-center text-muted-foreground mb-6">
+                            <p className="text-center text-q-text-muted mb-6">
                                 {t('email.deleteConfirmMessage', 'Esta acción no se puede deshacer. La campaña será eliminada permanentemente.')}
                             </p>
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={cancelDeleteCampaign}
                                     disabled={isDeleting}
-                                    className="px-5 py-2.5 rounded-lg border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm"
+                                    className="px-5 py-2.5 rounded-lg border border-input bg-q-bg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-sm"
                                 >
                                     {t('common.cancel', 'Cancelar')}
                                 </button>

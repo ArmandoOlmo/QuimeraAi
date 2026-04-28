@@ -21,8 +21,8 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
   ) => {
     const linkType = data.heroLumina[typeKey] || 'section';
     return (
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Link size={14} />
           {label}
         </label>
@@ -36,7 +36,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         </div>
 
         {/* Link Type Selector */}
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {[
             { value: 'section', label: 'Sección' },
             { value: 'product', label: 'Producto' },
@@ -54,8 +54,8 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
                 }
               }}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${linkType === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -139,13 +139,13 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* ========== TEXT LAYOUT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           {t('editor.controls.textLayout.label', 'Text Layout')}
         </label>
-        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
-          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+        <div className="relative bg-q-bg rounded-lg border border-q-border p-3">
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-q-border/50 overflow-hidden mb-2">
             {(() => {
               const tl = data.heroLumina.textLayout || 'center';
               const isLeft = tl.startsWith('left');
@@ -157,9 +157,9 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
               const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
               return (
                 <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  <div className="h-1.5 w-14 rounded-full bg-q-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-q-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-q-accent/25" />
                 </div>
               );
             })()}
@@ -182,15 +182,15 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
                   onClick={() => setNestedData('heroLumina.textLayout', pos.value)}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
                     isSelected
-                      ? 'bg-editor-accent/20 border border-editor-accent/50'
-                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                      ? 'bg-q-accent/20 border border-q-accent/50'
+                      : 'bg-q-surface/50 border border-transparent hover:bg-q-surface-overlay/50 hover:border-q-border'
                   }`}
                   style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
                 >
                   <div className={`rounded-full transition-all duration-200 ${
                     isSelected
-                      ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
-                      : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                      ? 'w-2.5 h-2.5 bg-q-accent shadow-[0_0_8px_var(--editor-accent)]'
+                      : 'w-1.5 h-1.5 bg-q-text-secondary/40'
                   }`} />
                 </button>
               );
@@ -200,8 +200,8 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Text Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.heroLumina.content', 'Text Content')}
         </label>
@@ -242,8 +242,8 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -257,9 +257,9 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
       
       {renderLuminaAnimationControls(data.heroLumina, (key, value) => setNestedData(`heroLumina.${key}`, value))}
       
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -268,7 +268,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
               setNestedData('heroLumina.colors', {});
               setNestedData('heroLumina.glassEffect', true);
             }}
-            className="flex items-center gap-1.5 px-2 py-1 bg-editor-bg border border-editor-border rounded text-[10px] text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-q-bg border border-q-border rounded text-[10px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/30 transition-colors"
             title="Restaurar a los colores originales de Lumina"
           >
             <RotateCcw size={10} />
@@ -278,25 +278,25 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.heroLumina.colors?.panelBackground} onChange={(v) => setNestedData('heroLumina.colors.panelBackground', v)} />
             <ColorControl label={t('editor.controls.colors.border', 'Border')} value={data.heroLumina.colors?.panelBorder} onChange={(v) => setNestedData('heroLumina.colors.panelBorder', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.typography', 'Typography')}</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.typography', 'Typography')}</p>
             <ColorControl label={t('editor.controls.common.title', 'Title')} value={data.heroLumina.colors?.heading} onChange={(v) => setNestedData('heroLumina.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.heroLumina.colors?.text} onChange={(v) => setNestedData('heroLumina.colors.text', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Primary Button')}</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.primaryButton', 'Primary Button')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.heroLumina.colors?.primaryButtonBackground} onChange={(v) => setNestedData('heroLumina.colors.primaryButtonBackground', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.heroLumina.colors?.primaryButtonText} onChange={(v) => setNestedData('heroLumina.colors.primaryButtonText', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.secondaryButton', 'Secondary Button')}</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.secondaryButton', 'Secondary Button')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.heroLumina.colors?.secondaryButtonBackground} onChange={(v) => setNestedData('heroLumina.colors.secondaryButtonBackground', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.heroLumina.colors?.secondaryButtonText} onChange={(v) => setNestedData('heroLumina.colors.secondaryButtonText', v)} />
           </div>

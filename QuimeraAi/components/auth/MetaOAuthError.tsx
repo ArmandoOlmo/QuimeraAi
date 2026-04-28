@@ -80,10 +80,10 @@ const MetaOAuthError: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
             <div className="max-w-md w-full">
                 {/* Error Card */}
-                <div className="bg-card border border-border rounded-2xl p-8 text-center shadow-lg">
+                <div className="bg-q-surface border border-q-border rounded-2xl p-8 text-center shadow-lg">
                     {/* Icon */}
                     <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-500/10 flex items-center justify-center">
                         <AlertTriangle size={32} className="text-red-500" />
@@ -95,14 +95,14 @@ const MetaOAuthError: React.FC = () => {
                     </h1>
 
                     {/* Description */}
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {errorInfo.description}
                     </p>
 
                     {/* Custom error description from Meta */}
                     {error.description && (
                         <div className="p-3 bg-secondary/50 rounded-lg mb-4 text-sm text-left">
-                            <p className="text-muted-foreground">
+                            <p className="text-q-text-muted">
                                 <strong>Detalle:</strong> {error.description}
                             </p>
                         </div>
@@ -130,7 +130,7 @@ const MetaOAuthError: React.FC = () => {
 
                         <button
                             onClick={handleBack}
-                            className="w-full py-3 px-4 border border-border hover:bg-secondary text-foreground font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 px-4 border border-q-border hover:bg-secondary text-foreground font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                         >
                             <ArrowLeft size={18} />
                             Volver al Dashboard
@@ -144,7 +144,7 @@ const MetaOAuthError: React.FC = () => {
                         href="https://developers.facebook.com/docs/facebook-login/guides/access-tokens/get-long-lived"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-1 text-sm text-q-text-muted hover:text-foreground transition-colors"
                     >
                         <Facebook size={14} />
                         Documentación de Meta
@@ -153,7 +153,7 @@ const MetaOAuthError: React.FC = () => {
                 </div>
 
                 {/* Error Code (for debugging) */}
-                <p className="mt-4 text-center text-xs text-muted-foreground">
+                <p className="mt-4 text-center text-xs text-q-text-muted">
                     Código de error: <code className="px-1 py-0.5 bg-secondary rounded">{error.code}</code>
                 </p>
             </div>

@@ -99,12 +99,12 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
 
     if (isLoading) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="animate-pulse">
-                    <div className="h-6 w-40 bg-editor-border rounded mb-4" />
+                    <div className="h-6 w-40 bg-q-surface-overlay rounded mb-4" />
                     <div className="space-y-3">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-16 bg-editor-border rounded" />
+                            <div key={i} className="h-16 bg-q-surface-overlay rounded" />
                         ))}
                     </div>
                 </div>
@@ -117,16 +117,16 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-editor-panel-bg border border-editor-border rounded-xl p-6"
+            className="bg-q-surface border border-q-border rounded-xl p-6"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-editor-text-primary flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
                         <Activity className="w-5 h-5 text-cyan-400" />
                         {t('dashboard.agency.charts.clientHealth.title', 'Salud de Clientes')}
                     </h3>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         {t('dashboard.agency.charts.clientHealth.subtitle', 'Estado general de la cartera')}
                     </p>
                 </div>
@@ -157,7 +157,7 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
             {/* Client list */}
             <div className="space-y-3 max-h-80 overflow-y-auto">
                 {clients.length === 0 ? (
-                    <div className="text-center py-8 text-editor-text-secondary">
+                    <div className="text-center py-8 text-q-text-secondary">
                         <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p>{t('dashboard.agency.charts.clientHealth.noClients', 'No hay clientes para mostrar')}</p>
                     </div>
@@ -178,7 +178,7 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         {getStatusIcon(client.status)}
-                                        <span className="font-medium text-editor-text-primary">
+                                        <span className="font-medium text-q-text">
                                             {client.clientName}
                                         </span>
                                     </div>
@@ -187,8 +187,8 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
 
                                 <div className="flex items-center gap-4 text-sm">
                                     {/* Usage */}
-                                    <div className="flex items-center gap-1 text-editor-text-secondary">
-                                        <div className="w-16 h-1.5 bg-editor-border rounded-full overflow-hidden">
+                                    <div className="flex items-center gap-1 text-q-text-secondary">
+                                        <div className="w-16 h-1.5 bg-q-surface-overlay rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full rounded-full ${client.metrics.usage > 90
                                                         ? 'bg-red-400'
@@ -203,7 +203,7 @@ export function ClientHealthScore({ clients, isLoading }: ClientHealthScoreProps
                                     </div>
 
                                     {/* Last activity */}
-                                    <div className="flex items-center gap-1 text-editor-text-secondary">
+                                    <div className="flex items-center gap-1 text-q-text-secondary">
                                         <Clock className="w-3 h-3" />
                                         <span>
                                             {client.metrics.activity === 0

@@ -59,21 +59,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           placeholder={data.video.source === 'youtube' ? 'https://www.youtube.com/watch?v=... or dQw4w9WgXcQ' : 'https://vimeo.com/123456789 or 123456789'}
         />
       )}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <ToggleControl label={t('controls.autoplayMuted')} checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
         <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
         <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data.video.paddingY || 'md'} onChange={(v) => setNestedData('video.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.video.paddingX || 'md'} onChange={(v) => setNestedData('video.paddingX', v)} />
         </div>
       </div>
 
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('controls.colors')}</label>
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.colors')}</label>
       <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
       <ColorControl label={t('controls.text')} value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />
@@ -136,8 +136,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.playbackOptions')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.playbackOptions')}</label>
         <ToggleControl label={t('controls.autoplayMuted')} checked={data.video.autoplay} onChange={(v) => setNestedData('video.autoplay', v)} />
         <ToggleControl label={t('editor.controls.common.loop')} checked={data.video.loop} onChange={(v) => setNestedData('video.loop', v)} />
         <ToggleControl label={t('editor.controls.common.showControls')} checked={data.video.showControls} onChange={(v) => setNestedData('video.showControls', v)} />
@@ -148,8 +148,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="video" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="grid grid-cols-2 gap-3">
           <PaddingSelector label={t('controls.vertical')} value={data.video.paddingY || 'md'} onChange={(v) => setNestedData('video.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.video.paddingX || 'md'} onChange={(v) => setNestedData('video.paddingX', v)} />
@@ -158,8 +158,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data.video.colors?.background} onChange={(v) => setNestedData('video.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.video.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('video.colors.heading', v)} />
         <ColorControl label={t('controls.text')} value={data.video.colors?.text} onChange={(v) => setNestedData('video.colors.text', v)} />

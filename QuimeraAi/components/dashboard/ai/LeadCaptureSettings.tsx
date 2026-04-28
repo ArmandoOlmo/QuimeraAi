@@ -58,7 +58,7 @@ const LeadCaptureSettings: React.FC = () => {
                         <Sparkles className="text-primary" />
                         Lead Capture Settings
                     </h2>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <p className="text-q-text-muted text-sm mt-1">
                         Configure how your chatbot captures leads
                     </p>
                 </div>
@@ -87,14 +87,14 @@ const LeadCaptureSettings: React.FC = () => {
             </div>
 
             {/* Main Enable/Disable */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
                             <Power size={20} className="text-primary" />
                             Enable Lead Capture
                         </h3>
-                        <p className="text-muted-foreground text-sm mt-1">
+                        <p className="text-q-text-muted text-sm mt-1">
                             Turn on/off the entire lead capture system
                         </p>
                     </div>
@@ -113,7 +113,7 @@ const LeadCaptureSettings: React.FC = () => {
             {/* Capture Methods */}
             <div className="grid md:grid-cols-2 gap-4">
                 {/* Pre-Chat Form */}
-                <div className="bg-card border border-border rounded-xl p-5">
+                <div className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground flex items-center gap-2">
                             <FileText size={16} className="text-primary" />
@@ -130,13 +130,13 @@ const LeadCaptureSettings: React.FC = () => {
                             <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         Show a form before the chat starts to capture contact info upfront
                     </p>
                 </div>
 
                 {/* Conversational Mode */}
-                <div className="bg-card border border-border rounded-xl p-5">
+                <div className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground flex items-center gap-2">
                             <MessageSquare size={16} className="text-primary" />
@@ -153,13 +153,13 @@ const LeadCaptureSettings: React.FC = () => {
                             <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         AI extracts contact info naturally during conversation instead of showing a popup form
                     </p>
                 </div>
 
                 {/* Exit Intent */}
-                <div className="bg-card border border-border rounded-xl p-5">
+                <div className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground flex items-center gap-2">
                             <LogOut size={16} className="text-primary" />
@@ -176,13 +176,13 @@ const LeadCaptureSettings: React.FC = () => {
                             <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         Show a special offer when user tries to close the chat
                     </p>
                 </div>
 
                 {/* Progressive Profiling */}
-                <div className="bg-card border border-border rounded-xl p-5">
+                <div className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground flex items-center gap-2">
                             <Users size={16} className="text-primary" />
@@ -199,13 +199,13 @@ const LeadCaptureSettings: React.FC = () => {
                             <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         Gather information gradually across multiple interactions
                     </p>
                 </div>
 
                 {/* Require Email for Advanced Info */}
-                <div className="bg-card border border-border rounded-xl p-5">
+                <div className="bg-q-surface border border-q-border rounded-xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-foreground flex items-center gap-2">
                             <Lock size={16} className="text-primary" />
@@ -222,14 +222,14 @@ const LeadCaptureSettings: React.FC = () => {
                             <div className="w-11 h-6 bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:opacity-50"></div>
                         </label>
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-q-text-muted text-sm">
                         Require email before providing pricing or detailed information
                     </p>
                 </div>
             </div>
 
             {/* Trigger Settings */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 space-y-4">
                 <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
                     <Sliders size={20} className="text-primary" />
                     Trigger Settings
@@ -241,7 +241,7 @@ const LeadCaptureSettings: React.FC = () => {
                         <MessageSquare size={16} className="text-primary" />
                         Trigger After Messages
                     </label>
-                    <p className="text-xs text-muted-foreground mb-3">
+                    <p className="text-xs text-q-text-muted mb-3">
                         Ask for email after this many user messages (if not captured yet)
                     </p>
                     <div className="flex items-center gap-4">
@@ -272,10 +272,10 @@ const LeadCaptureSettings: React.FC = () => {
                             onChange={(e) => setConfig({ ...config, exitIntentOffer: e.target.value })}
                             disabled={!config.enabled}
                             rows={3}
-                            className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
+                            className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
                             placeholder="🎁 Special offer message..."
                         />
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <p className="text-xs text-q-text-muted mt-2">
                             This message will be shown when users try to close the chat
                         </p>
                     </div>
@@ -283,14 +283,14 @@ const LeadCaptureSettings: React.FC = () => {
             </div>
 
             {/* Intent Keywords */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 space-y-4">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 bg-primary/20 rounded-lg">
                         <Tag size={20} className="text-primary" />
                     </div>
                     <div>
                         <h3 className="font-semibold text-foreground">Intent Keywords</h3>
-                        <p className="text-xs text-muted-foreground">Custom keywords that trigger lead capture when detected in conversation</p>
+                        <p className="text-xs text-q-text-muted">Custom keywords that trigger lead capture when detected in conversation</p>
                     </div>
                 </div>
                 <div>
@@ -305,24 +305,24 @@ const LeadCaptureSettings: React.FC = () => {
                         })}
                         disabled={!config.enabled}
                         rows={3}
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
+                        className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent text-foreground disabled:opacity-50"
                         placeholder="precio, comprar, cotización, buy, pricing, schedule..."
                     />
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-xs text-q-text-muted mt-2">
                         Comma-separated keywords. Leave empty to use built-in defaults (precio, buy, quote, schedule, etc.)
                     </p>
                 </div>
             </div>
 
             {/* Business Hours */}
-            <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 space-y-4">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 bg-primary/20 rounded-lg">
                         <Clock size={20} className="text-primary" />
                     </div>
                     <div>
                         <h3 className="font-semibold text-foreground">Business Hours</h3>
-                        <p className="text-xs text-muted-foreground">Set your business hours for appointment scheduling suggestions</p>
+                        <p className="text-xs text-q-text-muted">Set your business hours for appointment scheduling suggestions</p>
                     </div>
                 </div>
 
@@ -333,7 +333,7 @@ const LeadCaptureSettings: React.FC = () => {
                             value={config.businessHoursStart ?? 9}
                             onChange={(e) => setConfig({ ...config, businessHoursStart: parseInt(e.target.value) })}
                             disabled={!config.enabled}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground disabled:opacity-50"
+                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground disabled:opacity-50"
                         >
                             {Array.from({ length: 24 }, (_, i) => (
                                 <option key={i} value={i}>
@@ -348,7 +348,7 @@ const LeadCaptureSettings: React.FC = () => {
                             value={config.businessHoursEnd ?? 18}
                             onChange={(e) => setConfig({ ...config, businessHoursEnd: parseInt(e.target.value) })}
                             disabled={!config.enabled}
-                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground disabled:opacity-50"
+                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground disabled:opacity-50"
                         >
                             {Array.from({ length: 24 }, (_, i) => (
                                 <option key={i} value={i}>
@@ -378,7 +378,7 @@ const LeadCaptureSettings: React.FC = () => {
                                     }}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${isActive
                                         ? 'bg-primary text-primary-foreground'
-                                        : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                                        : 'bg-secondary text-q-text-muted hover:bg-secondary/80'
                                         }`}
                                 >
                                     {day}
@@ -395,7 +395,7 @@ const LeadCaptureSettings: React.FC = () => {
                     <Sparkles size={18} />
                     How Lead Capture Works
                 </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="space-y-2 text-sm text-q-text-muted">
                     <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>
                         <span><strong>Conversational Mode (Recommended):</strong> AI naturally asks for name, email, and phone during the chat — no popups</span>

@@ -140,7 +140,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                 <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
                     {t('onboarding.step1Heading', "Let's start with your business")}
                 </h3>
-                <p className="text-sm sm:text-base text-muted-foreground">
+                <p className="text-sm sm:text-base text-q-text-muted">
                     {t('onboarding.step1Subheading', 'Tell us about your business so we can create the perfect website.')}
                 </p>
             </div>
@@ -155,7 +155,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                     value={businessName}
                     onChange={(e) => onUpdate(e.target.value, industry)}
                     placeholder={t('onboarding.businessNamePlaceholder', 'Enter your business name')}
-                    className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     autoFocus
                 />
             </div>
@@ -171,20 +171,20 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         ref={triggerRef}
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className={`
-                            w-full px-4 py-3 bg-card border rounded-xl text-left
+                            w-full px-4 py-3 bg-q-surface border rounded-xl text-left
                             flex items-center justify-between transition-all touch-manipulation
                             ${isDropdownOpen
                                 ? 'border-primary ring-2 ring-primary/50'
-                                : 'border-border hover:border-muted-foreground'
+                                : 'border-q-border hover:border-muted-foreground'
                             }
                         `}
                     >
-                        <span className={`text-sm sm:text-base ${industry ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                        <span className={`text-sm sm:text-base ${industry ? 'text-foreground' : 'text-q-text-muted/50'}`}>
                             {selectedIndustryLabel || t('onboarding.selectIndustry', 'Select your industry')}
                         </span>
                         <ChevronDown
                             size={18}
-                            className={`text-muted-foreground transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`text-q-text-muted transition-transform flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
                         />
                     </button>
 
@@ -197,7 +197,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                 onClick={() => setIsDropdownOpen(false)}
                             />
                             <div
-                                className="fixed z-[70] rounded-xl shadow-2xl overflow-hidden border border-border bg-popover"
+                                className="fixed z-[70] rounded-xl shadow-2xl overflow-hidden border border-q-border bg-popover"
                                 style={{
                                     top: `${Math.min(dropdownPosition.top, window.innerHeight - 320)}px`,
                                     left: `${dropdownPosition.left}px`,
@@ -206,9 +206,9 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                 }}
                             >
                                 {/* Search */}
-                                <div className="p-2 sm:p-3 border-b border-border bg-popover">
+                                <div className="p-2 sm:p-3 border-b border-q-border bg-popover">
                                     <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-                                        <Search size={16} className="text-muted-foreground flex-shrink-0" />
+                                        <Search size={16} className="text-q-text-muted flex-shrink-0" />
                                         <input
                                             type="text"
                                             value={searchQuery}
@@ -224,7 +224,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                 <div className="max-h-[200px] overflow-y-auto bg-popover overscroll-contain">
                                     {Object.entries(groupedIndustries).map(([categoryKey, industries]) => (
                                         <div key={categoryKey}>
-                                            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 bg-muted">
+                                            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-q-text-muted uppercase tracking-wider sticky top-0 bg-muted">
                                                 {getCategoryLabel(categoryKey)}
                                             </div>
                                             {industries.map((ind) => (
@@ -245,7 +245,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                         </div>
                                     ))}
                                     {Object.keys(groupedIndustries).length === 0 && (
-                                        <div className="px-4 py-6 text-center text-muted-foreground text-sm">
+                                        <div className="px-4 py-6 text-center text-q-text-muted text-sm">
                                             {t('onboarding.noIndustriesFound', 'No industries found')}
                                         </div>
                                     )}
@@ -259,7 +259,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
             {/* Ecommerce Toggle - Only shown if service is enabled in Super Admin */}
             {canAccessEcommerce && (
                 <div className="space-y-3 sm:space-y-4">
-                    <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
+                    <div className="flex items-center justify-between p-3 sm:p-4 bg-q-surface border border-q-border rounded-xl gap-3">
                         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
                                 <ShoppingBag size={18} className="sm:w-5 sm:h-5 text-primary" />
@@ -268,7 +268,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                 <p className="font-medium text-foreground text-sm sm:text-base">
                                     {t('onboarding.sellProductsOnline', 'Sell products online?')}
                                 </p>
-                                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                <p className="text-[10px] sm:text-xs text-q-text-muted truncate">
                                     {t('onboarding.sellProductsOnlineDesc', 'We will include a store in your website')}
                                 </p>
                             </div>
@@ -307,7 +307,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
 
                     {/* Product Type Selector - Only shown if ecommerce is enabled */}
                     {hasEcommerce && (
-                        <div className="space-y-2 sm:space-y-3 p-3 sm:p-4 bg-muted/30 rounded-xl border border-border">
+                        <div className="space-y-2 sm:space-y-3 p-3 sm:p-4 bg-muted/30 rounded-xl border border-q-border">
                             <p className="text-xs sm:text-sm font-medium text-foreground">
                                 {t('onboarding.productType', 'Tipo de productos')}
                             </p>
@@ -317,7 +317,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                     onClick={() => onEcommerceUpdate(true, 'physical')}
                                     className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'physical'
                                         ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
+                                        : 'border-q-border hover:border-muted-foreground'
                                         }`}
                                 >
                                     <Package size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'physical' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
@@ -330,7 +330,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                     onClick={() => onEcommerceUpdate(true, 'digital')}
                                     className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'digital'
                                         ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
+                                        : 'border-q-border hover:border-muted-foreground'
                                         }`}
                                 >
                                     <FileText size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'digital' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
@@ -343,7 +343,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                                     onClick={() => onEcommerceUpdate(true, 'both')}
                                     className={`flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${ecommerceType === 'both'
                                         ? 'border-primary bg-primary/10'
-                                        : 'border-border hover:border-muted-foreground'
+                                        : 'border-q-border hover:border-muted-foreground'
                                         }`}
                                 >
                                     <Layers size={20} className="sm:w-6 sm:h-6" style={{ color: ecommerceType === 'both' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
@@ -358,7 +358,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
             )}
 
             {/* Bio Page Toggle */}
-            <div className="flex items-center justify-between p-3 sm:p-4 bg-card border border-border rounded-xl gap-3">
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-q-surface border border-q-border rounded-xl gap-3">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
                         <Link2 size={18} className="sm:w-5 sm:h-5 text-primary" />
@@ -367,7 +367,7 @@ const Step1BusinessInfo: React.FC<Step1BusinessInfoProps> = ({
                         <p className="font-medium text-foreground text-sm sm:text-base">
                             {t('onboarding.createBioPage', 'Create a "Link in Bio" page?')}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                        <p className="text-[10px] sm:text-xs text-q-text-muted truncate">
                             {t('onboarding.createBioPageDesc', 'Perfect for social media profiles')}
                         </p>
                     </div>

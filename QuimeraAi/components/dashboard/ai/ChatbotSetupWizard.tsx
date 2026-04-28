@@ -259,7 +259,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.nameStep.heading', '¿Cómo quieres que se llame tu asistente?')}
                 </h3>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-q-text-muted mt-2">
                     {t('chatbotWizard.nameStep.subheading', 'Este nombre aparecerá cuando tus clientes chateen')}
                 </p>
             </div>
@@ -270,12 +270,12 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                     value={agentName}
                     onChange={(e) => setAgentName(e.target.value)}
                     placeholder={t('chatbotWizard.nameStep.placeholder', 'Ej: Asistente de Mi Negocio')}
-                    className="w-full px-4 py-3 text-lg border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground"
+                    className="w-full px-4 py-3 text-lg border border-q-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent bg-q-bg text-foreground"
                     autoFocus
                 />
                 
                 <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-q-text-muted">
                         {t('chatbotWizard.nameStep.suggestions', 'Sugerencias:')}
                     </span>
                     {[
@@ -306,7 +306,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.toneStep.heading', '¿Qué tono debe usar tu asistente?')}
                 </h3>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-q-text-muted mt-2">
                     {t('chatbotWizard.toneStep.subheading', 'Elige el estilo de comunicación que mejor represente tu marca')}
                 </p>
             </div>
@@ -319,7 +319,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                         className={`p-4 rounded-xl border-2 text-left transition-all ${
                             tone === option.value
                                 ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50 bg-card'
+                                : 'border-q-border hover:border-primary/50 bg-q-surface'
                         }`}
                     >
                         <div className="flex items-center gap-3 mb-2">
@@ -331,7 +331,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 <Check className="w-5 h-5 text-primary ml-auto" />
                             )}
                         </div>
-                        <p className="text-sm text-muted-foreground italic">
+                        <p className="text-sm text-q-text-muted italic">
                             "{option.example}"
                         </p>
                     </button>
@@ -355,7 +355,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                     <h3 className="text-xl font-bold text-foreground">
                         {t('chatbotWizard.faqsStep.heading', 'Preguntas frecuentes de tus clientes')}
                     </h3>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-q-text-muted mt-2">
                         {t('chatbotWizard.faqsStep.subheading', 'Agrega las preguntas que tus clientes hacen más seguido')}
                     </p>
                 </div>
@@ -372,7 +372,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 <button
                                     key={idx}
                                     onClick={() => handleAddSuggestedFaq(faq)}
-                                    className="px-3 py-2 text-sm bg-background border border-border rounded-lg hover:border-primary transition-colors text-left"
+                                    className="px-3 py-2 text-sm bg-q-bg border border-q-border rounded-lg hover:border-primary transition-colors text-left"
                                 >
                                     + {faq.question}
                                 </button>
@@ -384,14 +384,14 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 {/* Current FAQs */}
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                     {faqs.map((faq, index) => (
-                        <div key={faq.id} className="bg-card border border-border rounded-xl p-4">
+                        <div key={faq.id} className="bg-q-surface border border-q-border rounded-xl p-4">
                             <div className="flex justify-between items-start mb-3">
                                 <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
                                     FAQ #{index + 1}
                                 </span>
                                 <button
                                     onClick={() => handleRemoveFaq(index)}
-                                    className="text-muted-foreground hover:text-destructive text-sm"
+                                    className="text-q-text-muted hover:text-destructive text-sm"
                                 >
                                     {t('common.remove', 'Eliminar')}
                                 </button>
@@ -401,14 +401,14 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 value={faq.question}
                                 onChange={(e) => handleUpdateFaq(index, 'question', e.target.value)}
                                 placeholder={t('chatbotWizard.faqsStep.questionPlaceholder', '¿Cuál es la pregunta?')}
-                                className="w-full px-3 py-2 mb-2 border border-border rounded-lg bg-background text-foreground focus:ring-1 focus:ring-primary"
+                                className="w-full px-3 py-2 mb-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-1 focus:ring-primary"
                             />
                             <textarea
                                 value={faq.answer}
                                 onChange={(e) => handleUpdateFaq(index, 'answer', e.target.value)}
                                 placeholder={t('chatbotWizard.faqsStep.answerPlaceholder', 'Escribe la respuesta...')}
                                 rows={2}
-                                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-1 focus:ring-primary resize-none"
+                                className="w-full px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground focus:ring-1 focus:ring-primary resize-none"
                             />
                         </div>
                     ))}
@@ -416,7 +416,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 
                 <button
                     onClick={handleAddFaq}
-                    className="w-full py-3 border-2 border-dashed border-border rounded-xl text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                    className="w-full py-3 border-2 border-dashed border-q-border rounded-xl text-q-text-muted hover:border-primary hover:text-primary transition-colors"
                 >
                     + {t('chatbotWizard.faqsStep.addFaq', 'Agregar pregunta frecuente')}
                 </button>
@@ -433,7 +433,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 <h3 className="text-xl font-bold text-foreground">
                     {t('chatbotWizard.leadsStep.heading', 'Captura contactos de clientes potenciales')}
                 </h3>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-q-text-muted mt-2">
                     {t('chatbotWizard.leadsStep.subheading', 'Decide cómo quieres obtener información de contacto')}
                 </p>
             </div>
@@ -441,7 +441,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
             <div className="max-w-md mx-auto space-y-4">
                 {/* Lead Capture Toggle */}
                 <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                    leadCaptureEnabled ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                    leadCaptureEnabled ? 'border-primary bg-primary/5' : 'border-q-border bg-q-surface'
                 }`} onClick={() => setLeadCaptureEnabled(!leadCaptureEnabled)}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -456,7 +456,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 <span className="font-medium text-foreground">
                                     {t('chatbotWizard.leadsStep.enableCapture', 'Capturar leads')}
                                 </span>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     {t('chatbotWizard.leadsStep.enableCaptureDesc', 'Solicita email después de algunas interacciones')}
                                 </p>
                             </div>
@@ -467,7 +467,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 {/* Pre-chat Form Toggle (only visible if lead capture is enabled) */}
                 {leadCaptureEnabled && (
                     <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                        preChatForm ? 'border-primary bg-primary/5' : 'border-border bg-card'
+                        preChatForm ? 'border-primary bg-primary/5' : 'border-q-border bg-q-surface'
                     }`} onClick={() => setPreChatForm(!preChatForm)}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -482,7 +482,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                     <span className="font-medium text-foreground">
                                         {t('chatbotWizard.leadsStep.preChatForm', 'Formulario antes del chat')}
                                     </span>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-q-text-muted">
                                         {t('chatbotWizard.leadsStep.preChatFormDesc', 'Pide nombre y email antes de iniciar')}
                                     </p>
                                 </div>
@@ -493,7 +493,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 
                 {/* Info box */}
                 <div className="p-4 bg-accent/30 rounded-xl">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-q-text-muted">
                         💡 {t('chatbotWizard.leadsStep.tip', 
                             'Los leads capturados aparecerán automáticamente en tu CRM para que puedas darles seguimiento.'
                         )}
@@ -515,14 +515,14 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                     <h3 className="text-xl font-bold text-foreground">
                         {t('chatbotWizard.previewStep.heading', '¡Así se verá tu chatbot!')}
                     </h3>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-q-text-muted mt-2">
                         {t('chatbotWizard.previewStep.subheading', 'Prueba cómo funcionará antes de activarlo')}
                     </p>
                 </div>
 
                 {/* Preview Container */}
                 <div className="max-w-md mx-auto">
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl h-[450px]">
+                    <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden shadow-xl h-[450px]">
                         {activeProject && (
                             <ChatCore
                                 config={previewConfig}
@@ -541,7 +541,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                     <h4 className="font-semibold text-foreground mb-2">
                         {t('chatbotWizard.previewStep.summary', 'Resumen de configuración')}
                     </h4>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
+                    <ul className="space-y-1 text-sm text-q-text-muted">
                         <li>✓ Nombre: <strong>{agentName}</strong></li>
                         <li>✓ Tono: <strong>{tone}</strong></li>
                         <li>✓ FAQs: <strong>{faqs.length} preguntas</strong></li>
@@ -558,9 +558,9 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-background rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div className="bg-q-bg rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
                 {/* Header with Progress */}
-                <div className="p-6 border-b border-border">
+                <div className="p-6 border-b border-q-border">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
@@ -569,7 +569,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                         {onClose && (
                             <button
                                 onClick={onClose}
-                                className="text-muted-foreground hover:text-foreground"
+                                className="text-q-text-muted hover:text-foreground"
                             >
                                 ✕
                             </button>
@@ -588,7 +588,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                             ? 'text-primary'
                                             : index < currentStep
                                             ? 'text-primary/70 cursor-pointer'
-                                            : 'text-muted-foreground/50'
+                                            : 'text-q-text-muted/50'
                                     }`}
                                 >
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
@@ -624,13 +624,13 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                 </div>
 
                 {/* Footer with Navigation */}
-                <div className="p-6 border-t border-border flex items-center justify-between">
+                <div className="p-6 border-t border-q-border flex items-center justify-between">
                     <button
                         onClick={handleBack}
                         disabled={currentStep === 0}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
                             currentStep === 0
-                                ? 'text-muted-foreground/50 cursor-not-allowed'
+                                ? 'text-q-text-muted/50 cursor-not-allowed'
                                 : 'text-foreground hover:bg-accent'
                         }`}
                     >
@@ -645,7 +645,7 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium transition-all ${
                                 canProceed()
                                     ? 'bg-primary text-primary-foreground hover:shadow-lg hover:shadow-primary/25'
-                                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    : 'bg-muted text-q-text-muted cursor-not-allowed'
                             }`}
                         >
                             {t('common.next', 'Siguiente')}

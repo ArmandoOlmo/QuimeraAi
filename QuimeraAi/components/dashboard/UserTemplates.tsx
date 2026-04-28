@@ -130,17 +130,17 @@ const UserTemplates: React.FC = () => {
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons />
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-full transition-colors"
                             aria-label="Open navigation menu"
                         >
                             <Menu className="w-4 h-4" />
@@ -157,7 +157,7 @@ const UserTemplates: React.FC = () => {
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-foreground transition-colors"
                             aria-label={t('common.search', 'Buscar')}
                         >
                             <Search size={20} />
@@ -198,7 +198,7 @@ const UserTemplates: React.FC = () => {
                                     {/* Close button */}
                                     <button
                                         onClick={dismissInstructions}
-                                        className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
+                                        className="absolute top-4 right-4 p-2 rounded-full text-q-text-muted hover:text-foreground hover:bg-secondary/50 transition-colors z-20"
                                         aria-label={t('common.close')}
                                     >
                                         <X size={18} />
@@ -217,7 +217,7 @@ const UserTemplates: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+                                        <ul className="space-y-2 text-sm text-q-text-muted mb-4">
                                             <li className="flex items-center gap-2">
                                                 <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                                                 <span>{t('userTemplates.step1', 'Explora las plantillas disponibles y encuentra una que se ajuste a tu industria')}</span>
@@ -236,7 +236,7 @@ const UserTemplates: React.FC = () => {
                                             </li>
                                         </ul>
 
-                                        <div className="flex items-center justify-end pt-2 border-t border-border/50">
+                                        <div className="flex items-center justify-end pt-2 border-t border-q-border/50">
                                             <button
                                                 onClick={dismissInstructions}
                                                 className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
@@ -251,13 +251,13 @@ const UserTemplates: React.FC = () => {
 
                         {/* Filter toolbar - Icons only, no boxes */}
                         <div className="flex items-center gap-3 sm:gap-4 mb-6">
-                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                            <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
                                 {filteredTemplates.length}/{templates.length}
                             </span>
 
                             {/* Category filter - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('superadmin.allCategories', 'Categoría')}>
-                                <Building2 size={15} className={`pointer-events-none transition-colors ${filterIndustry !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                <Building2 size={15} className={`pointer-events-none transition-colors ${filterIndustry !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
                                 <select
                                     value={filterIndustry}
                                     onChange={(e) => setFilterIndustry(e.target.value)}
@@ -274,7 +274,7 @@ const UserTemplates: React.FC = () => {
                             {filterIndustry !== 'all' && (
                                 <button
                                     onClick={() => setFilterIndustry('all')}
-                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
                                     title={t('common.clear', 'Limpiar filtros')}
                                 >
                                     <X size={13} />
@@ -291,7 +291,7 @@ const UserTemplates: React.FC = () => {
                                         setShowInstructions(true);
                                         localStorage.setItem('quimera_show_templates_instructions', 'true');
                                     }}
-                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
                                     title={t('dashboard.showHelp', 'Mostrar guía')}
                                 >
                                     <BookOpen size={15} />
@@ -302,14 +302,14 @@ const UserTemplates: React.FC = () => {
                             <div className="flex gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="Grid View"
                                 >
                                     <Grid size={15} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                     title="List View"
                                 >
                                     <List size={15} />
@@ -323,7 +323,7 @@ const UserTemplates: React.FC = () => {
                                 {filteredTemplates.map(template => (
                                     <div
                                         key={template.id}
-                                        className="group relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer"
+                                        className="group relative rounded-2xl overflow-hidden bg-q-surface border border-q-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
                                         {/* Thumbnail */}
@@ -382,7 +382,7 @@ const UserTemplates: React.FC = () => {
                                             )}
 
                                             {template.description && (
-                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                <p className="text-xs text-q-text-muted line-clamp-2">
                                                     {template.description}
                                                 </p>
                                             )}
@@ -396,7 +396,7 @@ const UserTemplates: React.FC = () => {
                                 {filteredTemplates.map(template => (
                                     <div
                                         key={template.id}
-                                        className="group bg-card border border-border rounded-xl p-4 flex items-center gap-4 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
+                                        className="group bg-q-surface border border-q-border rounded-xl p-4 flex items-center gap-4 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
                                         onClick={() => setPreviewTemplate(template)}
                                     >
                                         {/* Thumbnail */}
@@ -425,7 +425,7 @@ const UserTemplates: React.FC = () => {
                                             {template.industries && template.industries.length > 0 && (
                                                 <div className="flex items-center gap-1 mt-1">
                                                     <Building2 className="w-3 h-3 text-primary" />
-                                                    <span className="text-xs text-muted-foreground">
+                                                    <span className="text-xs text-q-text-muted">
                                                         {template.industries.slice(0, 2).map(ind => getIndustryLabel(ind)).join(', ')}
                                                         {template.industries.length > 2 && ` +${template.industries.length - 2}`}
                                                     </span>
@@ -446,11 +446,11 @@ const UserTemplates: React.FC = () => {
                         {/* Empty State */}
                         {filteredTemplates.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <LayoutTemplate className="w-16 h-16 text-muted-foreground/40 mb-4" />
+                                <LayoutTemplate className="w-16 h-16 text-q-text-muted/40 mb-4" />
                                 <h3 className="text-lg font-semibold text-foreground mb-2">
                                     {t('userTemplates.noTemplatesFound', 'No se encontraron plantillas')}
                                 </h3>
-                                <p className="text-sm text-muted-foreground mb-6 max-w-md">
+                                <p className="text-sm text-q-text-muted mb-6 max-w-md">
                                     {t('userTemplates.tryAdjustingFilters', 'Intenta ajustar los filtros de búsqueda')}
                                 </p>
                                 <button
@@ -472,16 +472,16 @@ const UserTemplates: React.FC = () => {
                     onClick={() => setPreviewTemplate(null)}
                 >
                     <div
-                        className="bg-card rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl"
+                        className="bg-q-surface rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="sticky top-0 bg-card border-b border-border p-6 z-10">
+                        <div className="sticky top-0 bg-q-surface border-b border-q-border p-6 z-10">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                     <h2 className="text-2xl font-bold text-foreground">{previewTemplate.name}</h2>
                                     {previewTemplate.description && (
-                                        <p className="text-muted-foreground mt-1">{previewTemplate.description}</p>
+                                        <p className="text-q-text-muted mt-1">{previewTemplate.description}</p>
                                     )}
                                 </div>
                                 <button
@@ -542,12 +542,12 @@ const UserTemplates: React.FC = () => {
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {previewTemplate.componentOrder.slice(0, 8).map(section => (
-                                            <span key={section} className="bg-card text-muted-foreground px-2 py-1 rounded text-xs border border-border">
+                                            <span key={section} className="bg-q-surface text-q-text-muted px-2 py-1 rounded text-xs border border-q-border">
                                                 {section}
                                             </span>
                                         ))}
                                         {previewTemplate.componentOrder.length > 8 && (
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-q-text-muted">
                                                 +{previewTemplate.componentOrder.length - 8} más
                                             </span>
                                         )}
@@ -561,7 +561,7 @@ const UserTemplates: React.FC = () => {
                                     <Info className="w-4 h-4 text-green-500" />
                                     {t('userTemplates.whatHappensNext', '¿Qué pasa después?')}
                                 </h3>
-                                <ul className="space-y-2 text-sm text-muted-foreground">
+                                <ul className="space-y-2 text-sm text-q-text-muted">
                                     <li className="flex items-start gap-2">
                                         <ChevronRight className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                                         {t('userTemplates.nextStep1', 'Se creará una copia de esta plantilla como tu nuevo proyecto')}

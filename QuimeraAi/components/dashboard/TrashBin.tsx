@@ -96,12 +96,12 @@ const TrashBin: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-base font-bold text-foreground">{t('trash.title')}</h3>
-                                <p className="text-xs text-muted-foreground">{t('trash.subtitle')}</p>
+                                <p className="text-xs text-q-text-muted">{t('trash.subtitle')}</p>
                             </div>
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-muted-foreground"
+                            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-q-text-muted"
                             aria-label={t('common.close')}
                         >
                             <X size={18} />
@@ -130,7 +130,7 @@ const TrashBin: React.FC = () => {
                                     {/* Project Info */}
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                         {/* Thumbnail or fallback */}
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary/50 border border-border/30">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary/50 border border-q-border/30">
                                             {project.thumbnailUrl ? (
                                                 <img
                                                     src={project.thumbnailUrl}
@@ -139,7 +139,7 @@ const TrashBin: React.FC = () => {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <Trash2 size={16} className="text-muted-foreground/40" />
+                                                    <Trash2 size={16} className="text-q-text-muted/40" />
                                                 </div>
                                             )}
                                         </div>
@@ -149,8 +149,8 @@ const TrashBin: React.FC = () => {
                                                 {project.name}
                                             </p>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <Clock size={12} className="text-muted-foreground/50" />
-                                                <span className="text-xs text-muted-foreground/60">
+                                                <Clock size={12} className="text-q-text-muted/50" />
+                                                <span className="text-xs text-q-text-muted/60">
                                                     {t('trash.deletedAgo', { time: deletedAt ? getTimeAgo(deletedAt) : '' })}
                                                 </span>
                                                 <span className="text-[10px] text-red-400/60 font-medium">

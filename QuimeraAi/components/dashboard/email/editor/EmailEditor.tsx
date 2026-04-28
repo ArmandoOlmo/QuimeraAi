@@ -291,7 +291,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
 
     return (
         <EmailEditorContext.Provider value={contextValue}>
-            <div className="flex flex-col h-full bg-editor-bg text-editor-text-primary">
+            <div className="flex flex-col h-full bg-q-bg text-q-text">
                 {/* Main Editor Content */}
                 <div className="flex flex-col flex-1 min-w-0 min-h-0">
                     {/* Header */}
@@ -307,19 +307,19 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                     {/* Main Content - 3 Column Layout */}
                     <div className="flex-1 flex overflow-hidden relative">
                         {/* Left Sidebar - Block Tree */}
-                        <div className="w-64 flex-shrink-0 border-r border-editor-border overflow-hidden hidden md:flex flex-col">
+                        <div className="w-64 flex-shrink-0 border-r border-q-border overflow-hidden hidden md:flex flex-col">
                             <EmailBlockTree />
                         </div>
 
                         {/* Center - Preview */}
-                        <div className="flex-1 overflow-hidden bg-editor-panel-bg relative min-w-0">
+                        <div className="flex-1 overflow-hidden bg-q-surface relative min-w-0">
                             <EmailPreview />
                         </div>
 
                         {/* Toggle Properties Panel Button - Right aligned, same pattern as Controls.tsx */}
                         <button
                             onClick={() => setIsPropertiesPanelOpen(!isPropertiesPanelOpen)}
-                            className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isPropertiesPanelOpen
+                            className={`hidden lg:flex fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isPropertiesPanelOpen
                                 ? 'right-[calc(20rem-18px)]'
                                 : 'right-0 rounded-l-lg rounded-r-none'
                                 }`}
@@ -329,7 +329,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                         </button>
 
                         {/* Right Sidebar - Properties Panel */}
-                        <div className={`flex-shrink-0 border-l border-editor-border bg-editor-panel-bg flex flex-col overflow-hidden hidden lg:flex transition-all duration-300 ${isPropertiesPanelOpen ? 'w-80' : 'w-0'}`}>
+                        <div className={`flex-shrink-0 border-l border-q-border bg-q-surface flex flex-col overflow-hidden hidden lg:flex transition-all duration-300 ${isPropertiesPanelOpen ? 'w-80' : 'w-0'}`}>
                             <div className="w-80 h-full flex-shrink-0">
                                 <EmailPropertiesPanel />
                             </div>

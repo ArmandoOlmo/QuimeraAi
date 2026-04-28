@@ -274,9 +274,9 @@ export function ClientPermissionsEditor({
     }
 
     return (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-border">
+            <div className="p-6 border-b border-q-border">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -286,7 +286,7 @@ export function ClientPermissionsEditor({
                             <h3 className="font-semibold text-foreground">
                                 Permisos de Cliente
                             </h3>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {clientName}
                             </p>
                         </div>
@@ -325,8 +325,8 @@ export function ClientPermissionsEditor({
             </div>
 
             {/* Presets */}
-            <div className="p-4 border-b border-border bg-muted/30">
-                <p className="text-sm text-muted-foreground mb-2">Presets rápidos:</p>
+            <div className="p-4 border-b border-q-border bg-muted/30">
+                <p className="text-sm text-q-text-muted mb-2">Presets rápidos:</p>
                 <div className="flex gap-2">
                     <button
                         onClick={() => handleSelectPreset('minimal')}
@@ -434,7 +434,7 @@ function PermissionToggle({
             className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                 enabled
                     ? 'bg-primary/5 border border-primary/20'
-                    : 'bg-secondary/50 border border-transparent hover:border-border'
+                    : 'bg-secondary/50 border border-transparent hover:border-q-border'
             }`}
             onClick={onToggle}
         >
@@ -443,16 +443,16 @@ function PermissionToggle({
                     enabled ? 'bg-primary/10' : 'bg-secondary'
                 }`}>
                     <Icon className={`w-4 h-4 ${
-                        enabled ? 'text-primary' : 'text-muted-foreground'
+                        enabled ? 'text-primary' : 'text-q-text-muted'
                     }`} />
                 </div>
                 <div>
                     <p className={`text-sm font-medium ${
-                        enabled ? 'text-foreground' : 'text-muted-foreground'
+                        enabled ? 'text-foreground' : 'text-q-text-muted'
                     }`}>
                         {label}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-q-text-muted">
                         {description}
                     </p>
                 </div>

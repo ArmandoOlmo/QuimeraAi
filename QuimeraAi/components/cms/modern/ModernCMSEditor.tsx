@@ -105,36 +105,36 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     <>
         <div className="mb-6">
             <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('cms_editor.postSettings')}</h3>
-            <p className="text-xs text-muted-foreground">{t('cms_editor.metaDescription')}</p>
+            <p className="text-xs text-q-text-muted">{t('cms_editor.metaDescription')}</p>
         </div>
 
         <div className="space-y-6">
             <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.urlSlug')}</label>
-                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.urlSlug')}</label>
+                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.featuredImage')}</label>
+                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.featuredImage')}</label>
                 <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} />
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.excerpt')}</label>
-                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
+                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.excerpt')}</label>
+                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.excerptPlaceholder')} />
             </div>
 
             {/* Category Selector */}
             {categories.length > 0 && (
                 <div>
-                    <label className="block text-xs font-bold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <label className="block text-xs font-bold text-q-text-muted uppercase mb-2 flex items-center gap-1.5">
                         <Tag size={12} />
                         {t('cms_editor.category', 'Categoría')}
                     </label>
                     <select
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
+                        className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
                     >
                         <option value="">{t('cms_editor.noCategory', t('cms.uncategorized'))}</option>
                         {categories.map(cat => (
@@ -145,7 +145,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
             )}
 
             {/* Podcast Audio */}
-            <div className="pt-6 border-t border-border">
+            <div className="pt-6 border-t border-q-border">
                 <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> {t('cms_editor.podcastAudio', 'Podcast Audio')}</h4>
                 {podcastAudioUrl ? (
                     <div className="space-y-3">
@@ -170,7 +170,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-primary', 'bg-primary/10'); }}
                             onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); }}
                             onDrop={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); if (e.dataTransfer.files?.length) onAudioFileDrop(e.dataTransfer.files); }}
-                            className={`w-full border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-secondary/20 transition-all cursor-pointer ${isUploadingAudio ? 'opacity-50 cursor-wait' : ''}`}
+                            className={`w-full border-2 border-dashed border-q-border rounded-xl p-5 flex flex-col items-center gap-2 text-q-text-muted hover:border-primary/50 hover:bg-secondary/20 transition-all cursor-pointer ${isUploadingAudio ? 'opacity-50 cursor-wait' : ''}`}
                         >
                             {isUploadingAudio ? (
                                 <>
@@ -181,7 +181,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 <>
                                     <Upload size={24} />
                                     <span className="text-xs font-medium">{t('cms_editor.uploadOrDragAudio', 'Upload or drag audio file')}</span>
-                                    <span className="text-[10px] text-muted-foreground/60">MP3, WAV, OGG, AAC, M4A</span>
+                                    <span className="text-[10px] text-q-text-muted/60">MP3, WAV, OGG, AAC, M4A</span>
                                 </>
                             )}
                         </div>
@@ -191,7 +191,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 value={podcastAudioUrl}
                                 onChange={(e) => setPodcastAudioUrl(e.target.value)}
                                 placeholder={t('cms_editor.pasteAudioUrl', 'Or paste an audio URL...')}
-                                className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground/50"
+                                className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-q-text-muted/50"
                             />
                         </div>
                     </div>
@@ -199,7 +199,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
             </div>
 
             {/* Podcast Video */}
-            <div className="pt-6 border-t border-border">
+            <div className="pt-6 border-t border-q-border">
                 <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> {t('cms_editor.articleVideo', 'Article Video')}</h4>
                 {podcastVideoUrl ? (
                     <div className="space-y-3">
@@ -236,7 +236,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('border-primary', 'bg-primary/10'); }}
                             onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); }}
                             onDrop={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('border-primary', 'bg-primary/10'); if (e.dataTransfer.files?.length) onVideoFileDrop(e.dataTransfer.files); }}
-                            className={`w-full border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-secondary/20 transition-all cursor-pointer ${isUploadingVideo ? 'opacity-50 cursor-wait' : ''}`}
+                            className={`w-full border-2 border-dashed border-q-border rounded-xl p-5 flex flex-col items-center gap-2 text-q-text-muted hover:border-primary/50 hover:bg-secondary/20 transition-all cursor-pointer ${isUploadingVideo ? 'opacity-50 cursor-wait' : ''}`}
                         >
                             {isUploadingVideo ? (
                                 <>
@@ -252,7 +252,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 <>
                                     <VideoIcon size={24} />
                                     <span className="text-xs font-medium">{t('cms_editor.uploadOrDragVideo', 'Upload or drag video')}</span>
-                                    <span className="text-[10px] text-muted-foreground/60">MP4, MOV, WEBM, AVI</span>
+                                    <span className="text-[10px] text-q-text-muted/60">MP4, MOV, WEBM, AVI</span>
                                 </>
                             )}
                         </div>
@@ -262,7 +262,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 value={podcastVideoUrl}
                                 onChange={(e) => setPodcastVideoUrl(e.target.value)}
                                 placeholder={t('cms_editor.pasteVideoUrl', 'Or paste a video URL...')}
-                                className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-muted-foreground/50"
+                                className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-q-text-muted/50"
                             />
                         </div>
                     </div>
@@ -270,30 +270,30 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
             </div>
 
             {/* Author & Date Controls */}
-            <div className="pt-6 border-t border-border">
+            <div className="pt-6 border-t border-q-border">
                 <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> {t('cms_editor.authorDate', 'Author & Date')}</h4>
                 <div className="space-y-4">
                     {/* Author Name */}
                     <div>
-                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.author', 'Author')}</label>
-                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.authorPlaceholder', 'Author name...')} />
+                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.author', 'Author')}</label>
+                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.authorPlaceholder', 'Author name...')} />
                     </div>
 
                     {/* Publication Date */}
                     <div>
-                        <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">{t('cms_editor.publicationDate', 'Publication Date')}</label>
+                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.publicationDate', 'Publication Date')}</label>
                         <input
                             type="datetime-local"
                             value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
                             onChange={(e) => setPublishedAt(e.target.value ? new Date(e.target.value).toISOString() : '')}
-                            className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                            className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                         />
                     </div>
 
                     {/* Show Author Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                         <div className="flex items-center gap-2">
-                            <User size={14} className="text-muted-foreground" />
+                            <User size={14} className="text-q-text-muted" />
                             <span className="text-sm font-medium">{t('cms_editor.showAuthor', 'Show Author')}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -308,9 +308,9 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     </div>
 
                     {/* Show Date Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-border rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                         <div className="flex items-center gap-2">
-                            <Calendar size={14} className="text-muted-foreground" />
+                            <Calendar size={14} className="text-q-text-muted" />
                             <span className="text-sm font-medium">{t('cms_editor.showDate', 'Show Date')}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -326,7 +326,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                 </div>
             </div>
 
-            <div className="pt-6 border-t border-border">
+            <div className="pt-6 border-t border-q-border">
                 <div className="flex justify-between items-center mb-4">
                     <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
                     <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-yellow-400 hover:text-yellow-300 flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
@@ -334,12 +334,12 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoTitle')}</label>
-                        <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
+                        <label className="block text-xs font-medium text-q-text-muted mb-1">{t('cms_editor.seoTitle')}</label>
+                        <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">{t('cms_editor.seoDescription')}</label>
-                        <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
+                        <label className="block text-xs font-medium text-q-text-muted mb-1">{t('cms_editor.seoDescription')}</label>
+                        <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
                     </div>
                 </div>
             </div>
@@ -1037,7 +1037,7 @@ IMPORTANT FORMATTING RULES:
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* General App Sidebar - Collapsed by default */}
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
@@ -1048,12 +1048,12 @@ IMPORTANT FORMATTING RULES:
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 {/* Header - Replicated from LandingPageEditor */}
-                <header className="h-12 px-3 lg:px-4 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-12 px-3 lg:px-4 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     {/* Left Section - Menu + Icon */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsMobileSidebarOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -1063,14 +1063,14 @@ IMPORTANT FORMATTING RULES:
                     {/* Center - Status Toggle */}
                     <div className="flex items-center gap-2 mx-auto">
                         {lastSaved && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 mr-2">
+                            <span className="text-xs text-q-text-muted flex items-center gap-1 mr-2">
                                 <Check size={12} className="text-green-500" />
                                 {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         )}
                         <div className="flex items-center gap-1 text-xs font-medium">
-                            <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
-                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-muted-foreground hover:text-foreground'}`}>{t('cms_editor.published')}</button>
+                            <button onClick={() => setStatus('draft')} className={`px-2 py-1 rounded-md transition-all ${status === 'draft' ? 'text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>{t('cms_editor.draft')}</button>
+                            <button onClick={() => setStatus('published')} className={`px-2 py-1 rounded-md transition-all ${status === 'published' ? 'text-green-400' : 'text-q-text-muted hover:text-foreground'}`}>{t('cms_editor.published')}</button>
                         </div>
                     </div>
 
@@ -1091,7 +1091,7 @@ IMPORTANT FORMATTING RULES:
                         {activeProject?.id && (
                             <button
                                 onClick={() => navigate(ROUTES.EDITOR.replace(':projectId', activeProject.id))}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
                                 title={t('cms_editor.goToWebEditor', 'Ir al Web Editor')}
                             >
                                 <Monitor className="w-4 h-4" />
@@ -1101,7 +1101,7 @@ IMPORTANT FORMATTING RULES:
                         {/* Back */}
                         <button
                             onClick={onClose}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
                             title={t('common.back', 'Volver')}
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -1110,7 +1110,7 @@ IMPORTANT FORMATTING RULES:
                         {/* Sidebar Toggle */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'}`}
                             title={t('cms_editor.postSettings')}
                         >
                             <MoreVertical size={16} />
@@ -1152,7 +1152,7 @@ IMPORTANT FORMATTING RULES:
                 {/* AI Vision Modal */}
                 {showVisionModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+                        <div className="bg-q-surface border border-q-border rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold flex items-center gap-2">
                                     <Sparkles size={18} className="text-primary" />
@@ -1160,7 +1160,7 @@ IMPORTANT FORMATTING RULES:
                                 </h3>
                                 <button
                                     onClick={() => { setShowVisionModal(false); setVisionMedia(null); setVisionMediaPreview(null); setVisionInstruction(''); }}
-                                    className="p-1.5 hover:bg-secondary rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                    className="p-1.5 hover:bg-secondary rounded-lg text-q-text-muted hover:text-foreground transition-colors"
                                 >
                                     <XIcon size={18} />
                                 </button>
@@ -1177,11 +1177,11 @@ IMPORTANT FORMATTING RULES:
                             {!visionMediaPreview ? (
                                 <button
                                     onClick={() => visionFileRef.current?.click()}
-                                    className="w-full border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-secondary/20 transition-all"
+                                    className="w-full border-2 border-dashed border-q-border rounded-xl p-8 flex flex-col items-center gap-2 text-q-text-muted hover:border-primary/50 hover:bg-secondary/20 transition-all"
                                 >
                                     <Upload size={28} />
                                     <span className="text-sm font-medium">{t('cms_editor.visionUpload', { defaultValue: 'Upload image or video' })}</span>
-                                    <span className="text-xs text-muted-foreground/60">JPG, PNG, GIF, WebP, MP4, WebM</span>
+                                    <span className="text-xs text-q-text-muted/60">JPG, PNG, GIF, WebP, MP4, WebM</span>
                                 </button>
                             ) : (
                                 <div className="relative mb-4">
@@ -1200,7 +1200,7 @@ IMPORTANT FORMATTING RULES:
                             )}
 
                             <div className="mt-3">
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                <label className="block text-xs font-medium text-q-text-muted mb-1.5">
                                     {t('cms_editor.visionInstructionLabel', { defaultValue: 'Instruction (optional)' })}
                                 </label>
                                 <input
@@ -1208,7 +1208,7 @@ IMPORTANT FORMATTING RULES:
                                     value={visionInstruction}
                                     onChange={(e) => setVisionInstruction(e.target.value)}
                                     placeholder={t('cms_editor.visionPlaceholder', { defaultValue: 'e.g. Describe this product photo...' })}
-                                    className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                    className="w-full bg-secondary/50 border border-q-border rounded-lg px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                     onKeyDown={(e) => e.key === 'Enter' && visionMedia && handleVisionGenerate()}
                                 />
                             </div>
@@ -1296,7 +1296,7 @@ IMPORTANT FORMATTING RULES:
                             isAiWorking={isAiWorking}
                         />
 
-                        <div className="flex-1 overflow-y-auto bg-background relative z-0">
+                        <div className="flex-1 overflow-y-auto bg-q-bg relative z-0">
                             {/* Content container - full width, no border */}
                             <div className="w-full">
                                 {/* Post Title Input */}
@@ -1306,7 +1306,7 @@ IMPORTANT FORMATTING RULES:
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={t('cms_editor.titlePlaceholder', 'Escribe el título del artículo...')}
-                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/50 leading-tight"
+                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-q-text-muted/50 leading-tight"
                                     />
                                     <div className="mt-3 h-px bg-border/50" />
                                 </div>
@@ -1327,7 +1327,7 @@ IMPORTANT FORMATTING RULES:
 
                     {/* Settings Sidebar - Desktop Only (Fixed) */}
                     {viewportType === 'desktop' && isSidebarOpen && (
-                        <aside className="w-80 bg-card border-l border-border overflow-y-auto p-6 shrink-0 shadow-xl">
+                        <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto p-6 shrink-0 shadow-xl">
                             <SettingsSidebarContent
                                 t={t}
                                 slug={slug}

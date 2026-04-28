@@ -20,11 +20,11 @@ const SelectControl: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, value, options, onChange }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
         >
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -44,8 +44,8 @@ const SliderControl: React.FC<{
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
     <div className="mb-3">
         <div className="flex justify-between items-center mb-1">
-            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{label}</label>
-            <span className="text-xs text-editor-text-primary">{value}{unit}</span>
+            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+            <span className="text-xs text-q-text">{value}{unit}</span>
         </div>
         <input
             type="range"
@@ -54,7 +54,7 @@ const SliderControl: React.FC<{
             step={step}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
         />
     </div>
 );
@@ -63,13 +63,13 @@ const PaddingSelector: React.FC<{ label: string; value: string; onChange: (value
     const options = ['none', 'sm', 'md', 'lg'];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>

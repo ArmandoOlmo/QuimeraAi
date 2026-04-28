@@ -58,9 +58,9 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
 
     return (
         <Modal isOpen={isOpen} onClose={handleClose}>
-            <div className="p-6 border-b border-editor-border flex justify-between items-center">
+            <div className="p-6 border-b border-q-border flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-white">Create New Component</h2>
-                <button onClick={handleClose} className="p-1 rounded-full hover:bg-editor-border"><X/></button>
+                <button onClick={handleClose} className="p-1 rounded-full hover:bg-q-surface-overlay"><X/></button>
             </div>
             
             <form onSubmit={handleSubmit}>
@@ -68,20 +68,20 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
                     {error && <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded-md">{error}</p>}
                     
                     <div>
-                        <label htmlFor="component-name" className="block text-sm font-medium text-editor-text-secondary mb-1">Component Name</label>
+                        <label htmlFor="component-name" className="block text-sm font-medium text-q-text-secondary mb-1">Component Name</label>
                         <input 
                             id="component-name" 
                             type="text" 
                             value={name} 
                             onChange={(e) => setName(e.target.value)} 
                             required 
-                            className="w-full bg-editor-bg text-white p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent focus:outline-none" 
+                            className="w-full bg-q-bg text-white p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent focus:outline-none" 
                             placeholder="e.g., Product Hero"
                         />
                     </div>
                     
                     <div>
-                        <label htmlFor="base-component-type" className="block text-sm font-medium text-editor-text-secondary mb-1">Base Component Type</label>
+                        <label htmlFor="base-component-type" className="block text-sm font-medium text-q-text-secondary mb-1">Base Component Type</label>
                         <DashboardSelect
                             value={baseComponent}
                             onChange={(val) => setBaseComponent(val as EditableComponentID)}
@@ -90,10 +90,10 @@ const CreateComponentModal: React.FC<CreateComponentModalProps> = ({ isOpen, onC
                     </div>
                 </div>
 
-                <div className="p-6 bg-editor-panel-bg/50 border-t border-editor-border flex justify-end items-center space-x-3">
-                    <button type="button" onClick={handleClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-editor-border transition-colors">Cancel</button>
-                    <button type="submit" disabled={isLoading} className="text-editor-accent font-bold py-2 px-4 hover:text-editor-accent-hover transition-colors disabled:opacity-50 flex items-center">
-                        {isLoading && <div className="w-4 h-4 border-2 border-editor-accent border-t-transparent rounded-full animate-spin mr-2"></div>}
+                <div className="p-6 bg-q-surface/50 border-t border-q-border flex justify-end items-center space-x-3">
+                    <button type="button" onClick={handleClose} className="font-semibold py-2 px-5 rounded-lg hover:bg-q-surface-overlay transition-colors">Cancel</button>
+                    <button type="submit" disabled={isLoading} className="text-q-accent font-bold py-2 px-4 hover:text-q-accent transition-colors disabled:opacity-50 flex items-center">
+                        {isLoading && <div className="w-4 h-4 border-2 border-q-accent border-t-transparent rounded-full animate-spin mr-2"></div>}
                         {isLoading ? 'Creating...' : 'Create Component'}
                     </button>
                 </div>

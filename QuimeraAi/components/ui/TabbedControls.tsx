@@ -30,7 +30,7 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
     return (
         <div className="space-y-5">
             {/* Tab Selector */}
-            <div className="flex gap-1 bg-editor-bg/70 backdrop-blur-md p-1 rounded-md border border-editor-border/50 sticky top-0 z-10">
+            <div className="flex gap-1 bg-q-bg/70 backdrop-blur-md p-1 rounded-md border border-q-border/50 sticky top-0 z-10">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
                     return (
@@ -40,8 +40,8 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
                             className={`
                                 flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-semibold transition-all
                                 ${activeTab === tab.id 
-                                    ? 'bg-editor-panel-bg text-editor-accent shadow-sm ring-1 ring-editor-border/70' 
-                                    : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/60'
+                                    ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-q-border/70' 
+                                    : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/60'
                                 }
                             `}
                             title={tab.label}

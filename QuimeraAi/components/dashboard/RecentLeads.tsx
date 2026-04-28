@@ -160,7 +160,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
 
     // Get source config
     const getSource = (source: string) => {
-        return SOURCE_CONFIG[source] || { label: source, icon: Globe, color: 'text-muted-foreground bg-secondary/50' };
+        return SOURCE_CONFIG[source] || { label: source, icon: Globe, color: 'text-q-text-muted bg-secondary/50' };
     };
 
     // Status badge color
@@ -172,7 +172,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
             case 'negotiation': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
             case 'won': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
             case 'lost': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-secondary/50 text-muted-foreground border-border';
+            default: return 'bg-secondary/50 text-q-text-muted border-q-border';
         }
     };
 
@@ -200,12 +200,12 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
     // Empty state
     if (recentLeads.length === 0) {
         return (
-            <div className="text-center py-10 bg-card/50 rounded-2xl border border-border">
-                <Users className="mx-auto text-muted-foreground mb-3" size={36} />
-                <p className="text-muted-foreground text-sm">
+            <div className="text-center py-10 bg-q-surface/50 rounded-2xl border border-q-border">
+                <Users className="mx-auto text-q-text-muted mb-3" size={36} />
+                <p className="text-q-text-muted text-sm">
                     {t('dashboard.leads.empty', 'No hay leads recientes')}
                 </p>
-                <p className="text-muted-foreground/60 text-xs mt-1">
+                <p className="text-q-text-muted/60 text-xs mt-1">
                     {t('dashboard.leads.emptyDesc', 'Los leads aparecerán aquí cuando los recibas')}
                 </p>
             </div>
@@ -222,7 +222,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                     <div
                         key={`${lead.projectId}-${lead.id}`}
                         onClick={() => handleOpenLeads(lead.projectId, lead.id)}
-                        className="group relative bg-card/60 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
+                        className="group relative bg-q-surface/60 hover:bg-q-surface border border-q-border/50 hover:border-primary/30 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5"
                     >
                         {/* Top row: Name + Time */}
                         <div className="flex items-start justify-between gap-2 mb-2">
@@ -238,21 +238,21 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                                         {lead.name || lead.email || t('leads.anonymous', 'Anónimo')}
                                     </h4>
                                     {lead.email && lead.name && (
-                                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                        <p className="text-xs text-q-text-muted truncate flex items-center gap-1">
                                             <Mail size={10} className="flex-shrink-0" />
                                             {lead.email}
                                         </p>
                                     )}
                                 </div>
                             </div>
-                            <span className="text-[10px] text-muted-foreground/70 flex-shrink-0 mt-1">
+                            <span className="text-[10px] text-q-text-muted/70 flex-shrink-0 mt-1">
                                 {formatDate(lead.createdAt)}
                             </span>
                         </div>
 
                         {/* Message / Notes snippet */}
                         {(lead.message || lead.notes) && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5 leading-relaxed">
+                            <p className="text-xs text-q-text-muted line-clamp-2 mb-2.5 leading-relaxed">
                                 {lead.message || lead.notes}
                             </p>
                         )}
@@ -271,7 +271,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                                 </span>
                             </div>
                             {/* Project name */}
-                            <span className="text-[10px] text-muted-foreground/60 truncate max-w-[100px]" title={lead.projectName}>
+                            <span className="text-[10px] text-q-text-muted/60 truncate max-w-[100px]" title={lead.projectName}>
                                 {lead.projectName}
                             </span>
                         </div>

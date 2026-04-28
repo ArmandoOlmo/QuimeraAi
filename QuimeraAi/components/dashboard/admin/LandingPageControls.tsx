@@ -49,8 +49,8 @@ interface LandingPageControlsProps {
 
 // Reusable control components
 const ControlGroup: React.FC<{ label: string; icon?: React.ElementType; children: React.ReactNode }> = ({ label, icon: Icon = SlidersHorizontal, children }) => (
-    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="flex items-center gap-2 text-[11px] font-semibold text-editor-text-secondary uppercase tracking-wider">
+    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="flex items-center gap-2 text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">
             <Icon size={14} />
             {label}
         </label>
@@ -73,7 +73,7 @@ const TextInput: React.FC<{
                 value={value}
                 onChange={(e) => handleChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm resize-none min-h-[80px] focus:outline-none focus:ring-2 focus:ring-editor-accent/50"
+                className="w-full px-3 py-2 rounded-lg border border-q-border bg-q-bg text-sm resize-none min-h-[80px] focus:outline-none focus:ring-2 focus:ring-q-accent/50"
             />
         );
     }
@@ -83,7 +83,7 @@ const TextInput: React.FC<{
             value={value}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent/50"
+            className="w-full px-3 py-2 rounded-lg border border-q-border bg-q-bg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50"
         />
     );
 };
@@ -94,7 +94,7 @@ const Toggle: React.FC<{
     onChange: (checked: boolean) => void;
 }> = ({ label, checked, onChange }) => (
     <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-editor-text-primary">{label}</span>
+        <span className="text-sm font-medium text-q-text">{label}</span>
         <button
             type="button"
             role="switch"
@@ -102,7 +102,7 @@ const Toggle: React.FC<{
             aria-label={label}
             onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
             onMouseDown={(e) => e.stopPropagation()}
-            className={`${checked ? 'bg-primary' : 'bg-editor-text-secondary/30'} relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-bg`}
+            className={`${checked ? 'bg-primary' : 'bg-q-text-secondary/30'} relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent/40 focus:ring-offset-2 focus:ring-offset-editor-bg`}
         >
             <span
                 aria-hidden="true"
@@ -122,11 +122,11 @@ const SelectControl: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, value, options, onChange }) => (
     <div className="flex items-center justify-between">
-        <span className="text-sm text-editor-text-primary">{label}</span>
+        <span className="text-sm text-q-text">{label}</span>
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-editor-border bg-editor-bg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent/50"
+            className="px-3 py-1.5 rounded-lg border border-q-border bg-q-bg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50"
         >
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -144,13 +144,13 @@ const RangeControl: React.FC<{
     unit?: string;
     onChange: (value: number) => void;
 }> = ({ label, value, min, max, step = 1, unit = '', onChange }) => (
-    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-sm text-editor-text-primary">
-                <SlidersHorizontal size={14} className="text-editor-text-secondary" />
+            <span className="flex items-center gap-2 text-sm text-q-text">
+                <SlidersHorizontal size={14} className="text-q-text-secondary" />
                 {label}
             </span>
-            <span className="text-[10px] text-editor-accent font-mono bg-editor-accent/10 px-2 py-0.5 rounded-full">{value}{unit}</span>
+            <span className="text-[10px] text-q-accent font-mono bg-q-accent/10 px-2 py-0.5 rounded-full">{value}{unit}</span>
         </div>
         <input
             type="range"
@@ -171,13 +171,13 @@ const FontSizeSelector: React.FC<{
     onChange: (val: string) => void;
 }> = ({ label, value, onChange }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-        <div className="flex bg-editor-panel-bg p-1 rounded-md border border-editor-border">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+        <div className="flex bg-q-surface p-1 rounded-md border border-q-border">
             {['sm', 'md', 'lg', 'xl'].map((size) => (
                 <button
                     key={size}
                     onClick={() => onChange(size)}
-                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                    className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                 >
                     {size.toUpperCase()}
                 </button>
@@ -201,13 +201,13 @@ const PaddingSelector: React.FC<{
     ];
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{label}</label>
-            <div className="flex bg-editor-panel-bg p-1 rounded-md border border-editor-border">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{label}</label>
+            <div className="flex bg-q-surface p-1 rounded-md border border-q-border">
                 {options.map((size) => (
                     <button
                         key={size}
                         onClick={() => onChange(size)}
-                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'}`}
+                        className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === size ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'}`}
                     >
                         {size === 'none' ? '0' : size.toUpperCase()}
                     </button>
@@ -280,16 +280,16 @@ const LinkPicker: React.FC<{
     return (
         <div className="space-y-2">
             {/* Mode toggle */}
-            <div className="flex bg-editor-panel-bg p-0.5 rounded-md border border-editor-border">
+            <div className="flex bg-q-surface p-0.5 rounded-md border border-q-border">
                 <button
                     onClick={() => setMode('preset')}
-                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'preset' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'preset' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text'}`}
                 >
                     {t('landingEditor.linkPages', 'Páginas')}
                 </button>
                 <button
                     onClick={() => setMode('custom')}
-                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'custom' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                    className={`flex-1 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors ${mode === 'custom' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:text-q-text'}`}
                 >
                     {t('landingEditor.linkCustom', 'URL Manual')}
                 </button>
@@ -299,19 +299,19 @@ const LinkPicker: React.FC<{
                 <div className="relative">
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm hover:border-editor-accent/50 transition-colors"
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-q-border bg-q-bg text-sm hover:border-q-accent/50 transition-colors"
                     >
-                        <span className={value && currentLabel ? 'text-editor-text-primary' : 'text-editor-text-secondary'}>
+                        <span className={value && currentLabel ? 'text-q-text' : 'text-q-text-secondary'}>
                             {currentLabel || (value ? value : t('landingEditor.selectLink', 'Seleccionar destino...'))}
                         </span>
-                        <ChevronDown size={14} className={`text-editor-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={14} className={`text-q-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-editor-bg border border-editor-border rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-q-bg border border-q-border rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
                             {LINK_CATEGORIES.map((category) => (
                                 <div key={category.label}>
-                                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-editor-text-secondary bg-editor-panel-bg/80 sticky top-0">
+                                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-q-text-secondary bg-q-surface/80 sticky top-0">
                                         {category.label}
                                     </div>
                                     {category.items.map((item) => (
@@ -321,10 +321,10 @@ const LinkPicker: React.FC<{
                                                 onChange(item.value);
                                                 setIsOpen(false);
                                             }}
-                                            className={`w-full text-left px-3 py-2 text-sm hover:bg-editor-accent/10 transition-colors flex items-center justify-between ${value === item.value ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-primary'}`}
+                                            className={`w-full text-left px-3 py-2 text-sm hover:bg-q-accent/10 transition-colors flex items-center justify-between ${value === item.value ? 'bg-q-accent/10 text-q-accent' : 'text-q-text'}`}
                                         >
                                             <span>{item.label}</span>
-                                            <span className="text-[10px] text-editor-text-secondary font-mono">{item.value}</span>
+                                            <span className="text-[10px] text-q-text-secondary font-mono">{item.value}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -341,13 +341,13 @@ const LinkPicker: React.FC<{
                         onChange(e.target.value);
                     }}
                     placeholder={placeholder || 'https://... o /ruta-interna'}
-                    className="w-full px-3 py-2 rounded-lg border border-editor-border bg-editor-bg text-sm focus:outline-none focus:ring-2 focus:ring-editor-accent/50 font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-q-border bg-q-bg text-sm focus:outline-none focus:ring-2 focus:ring-q-accent/50 font-mono"
                 />
             )}
 
             {/* Current value indicator */}
             {value && (
-                <div className="flex items-center gap-1.5 text-[10px] text-editor-text-secondary">
+                <div className="flex items-center gap-1.5 text-[10px] text-q-text-secondary">
                     <Link2 size={10} />
                     <span className="font-mono truncate">{value}</span>
                 </div>
@@ -442,8 +442,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         <button
             onClick={() => setActiveTab(tab)}
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === tab
-                ? 'bg-editor-accent text-white shadow-sm'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/50'
+                ? 'bg-q-accent text-white shadow-sm'
+                : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/50'
                 }`}
         >
             {icon}
@@ -525,7 +525,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     // REUSABLE: Background Image Controls (shared across all sections)
     // ========================================================================
     const renderBgImageControls = () => (
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
             <Toggle
                 label={t('landingEditor.bgImage', 'Imagen de Fondo')}
                 checked={data.bgImageEnabled || false}
@@ -547,10 +547,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Object Fit */}
                     <div>
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block mb-2">
                             {t('landingEditor.bgObjectFit', 'Ajuste de Imagen')}
                         </label>
-                        <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                        <div className="grid grid-cols-4 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
                             {[
                                 { id: 'cover', label: 'Cover' },
                                 { id: 'contain', label: 'Contain' },
@@ -561,8 +561,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     key={opt.id}
                                     onClick={() => updateData('bgObjectFit', opt.id)}
                                     className={`px-2 py-1.5 text-[10px] font-semibold rounded-sm transition-colors uppercase tracking-wide ${(data.bgObjectFit || 'cover') === opt.id
-                                        ? 'bg-editor-accent text-editor-bg'
-                                        : 'text-editor-text-secondary hover:bg-editor-border'
+                                        ? 'bg-q-accent text-q-bg'
+                                        : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                     }`}
                                 >
                                     {opt.label}
@@ -573,10 +573,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Background Position */}
                     <div>
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block mb-2">
                             {t('landingEditor.bgPosition', 'Posición')}
                         </label>
-                        <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+                        <div className="grid grid-cols-3 gap-1 bg-q-bg p-1.5 rounded-md border border-q-border w-fit mx-auto">
                             {[
                                 { id: 'top left', icon: ArrowUpLeft },
                                 { id: 'top center', icon: ArrowUp },
@@ -594,8 +594,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         key={pos.id}
                                         onClick={() => updateData('bgPosition', pos.id)}
                                         className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${(data.bgPosition || 'center center') === pos.id
-                                            ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                                            : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                            ? 'bg-q-accent text-q-bg shadow-md scale-110'
+                                            : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'
                                         }`}
                                         title={pos.id}
                                     >
@@ -609,10 +609,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     {/* Blur */}
                     <div>
                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.bgBlur', 'Desenfoque')}
                             </label>
-                            <span className="text-xs font-mono text-editor-text-primary">{data.bgBlur || 0}px</span>
+                            <span className="text-xs font-mono text-q-text">{data.bgBlur || 0}px</span>
                         </div>
                         <input
                             type="range"
@@ -621,17 +621,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             step="1"
                             value={data.bgBlur || 0}
                             onChange={(e) => updateData('bgBlur', parseInt(e.target.value))}
-                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                         />
                     </div>
 
                     {/* Image Opacity */}
                     <div>
                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.bgOpacity', 'Opacidad de Imagen')}
                             </label>
-                            <span className="text-xs font-mono text-editor-text-primary">{data.bgOpacity ?? 100}%</span>
+                            <span className="text-xs font-mono text-q-text">{data.bgOpacity ?? 100}%</span>
                         </div>
                         <input
                             type="range"
@@ -640,7 +640,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                             step="5"
                             value={data.bgOpacity ?? 100}
                             onChange={(e) => updateData('bgOpacity', parseInt(e.target.value))}
-                            className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                         />
                     </div>
                 </div>
@@ -736,7 +736,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             {activeTab === 'style' && (
                 <>
                     {/* Animation Controls */}
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
                         <Toggle
                             label={t('landingEditor.heroAnimation', 'Animación de Fondo')}
                             checked={data.heroAnimationEnabled !== false}
@@ -744,7 +744,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
                         {data.heroAnimationEnabled !== false && (
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block">
                                     {t('landingEditor.animationType', 'Tipo de Animación')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
@@ -763,8 +763,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                             key={anim.id}
                                             onClick={() => updateData('heroAnimationType', anim.id)}
                                             className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all gap-1.5 ${(data.heroAnimationType || 'goldRibbons') === anim.id
-                                                ? 'bg-editor-accent/10 border-editor-accent text-editor-accent'
-                                                : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-secondary'
+                                                ? 'bg-q-accent/10 border-q-accent text-q-accent'
+                                                : 'bg-q-surface border-q-border hover:border-q-accent/50 text-q-text-secondary'
                                             }`}
                                             title={anim.label}
                                         >
@@ -778,7 +778,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </div>
 
                     {/* Background Image Controls */}
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
                         <Toggle
                             label={t('landingEditor.heroBgImage', 'Imagen de Fondo del Hero')}
                             checked={data.heroBgImageEnabled || false}
@@ -800,10 +800,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                                 {/* Object Fit */}
                                 <div>
-                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                                    <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block mb-2">
                                         {t('landingEditor.bgObjectFit', 'Ajuste de Imagen')}
                                     </label>
-                                    <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+                                    <div className="grid grid-cols-4 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
                                         {[
                                             { id: 'cover', label: 'Cover' },
                                             { id: 'contain', label: 'Contain' },
@@ -814,8 +814,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                                 key={opt.id}
                                                 onClick={() => updateData('heroBgObjectFit', opt.id)}
                                                 className={`px-2 py-1.5 text-[10px] font-semibold rounded-sm transition-colors uppercase tracking-wide ${(data.heroBgObjectFit || 'cover') === opt.id
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'text-editor-text-secondary hover:bg-editor-border'
+                                                    ? 'bg-q-accent text-q-bg'
+                                                    : 'text-q-text-secondary hover:bg-q-surface-overlay'
                                                 }`}
                                             >
                                                 {opt.label}
@@ -826,10 +826,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                                 {/* Background Position */}
                                 <div>
-                                    <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block mb-2">
+                                    <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block mb-2">
                                         {t('landingEditor.bgPosition', 'Posición')}
                                     </label>
-                                    <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1.5 rounded-md border border-editor-border w-fit mx-auto">
+                                    <div className="grid grid-cols-3 gap-1 bg-q-bg p-1.5 rounded-md border border-q-border w-fit mx-auto">
                                         {[
                                             { id: 'top left', icon: ArrowUpLeft },
                                             { id: 'top center', icon: ArrowUp },
@@ -847,8 +847,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                                     key={pos.id}
                                                     onClick={() => updateData('heroBgPosition', pos.id)}
                                                     className={`w-8 h-8 flex items-center justify-center rounded-sm transition-all ${(data.heroBgPosition || 'center center') === pos.id
-                                                        ? 'bg-editor-accent text-editor-bg shadow-md scale-110'
-                                                        : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'
+                                                        ? 'bg-q-accent text-q-bg shadow-md scale-110'
+                                                        : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'
                                                     }`}
                                                     title={pos.id}
                                                 >
@@ -862,10 +862,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 {/* Blur */}
                                 <div>
                                     <div className="flex justify-between items-center mb-1">
-                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             {t('landingEditor.bgBlur', 'Desenfoque')}
                                         </label>
-                                        <span className="text-xs font-mono text-editor-text-primary">{data.heroBgBlur || 0}px</span>
+                                        <span className="text-xs font-mono text-q-text">{data.heroBgBlur || 0}px</span>
                                     </div>
                                     <input
                                         type="range"
@@ -874,17 +874,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         step="1"
                                         value={data.heroBgBlur || 0}
                                         onChange={(e) => updateData('heroBgBlur', parseInt(e.target.value))}
-                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                        className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                                     />
                                 </div>
 
                                 {/* Image Opacity */}
                                 <div>
                                     <div className="flex justify-between items-center mb-1">
-                                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                             {t('landingEditor.bgOpacity', 'Opacidad de Imagen')}
                                         </label>
-                                        <span className="text-xs font-mono text-editor-text-primary">{data.heroBgOpacity ?? 100}%</span>
+                                        <span className="text-xs font-mono text-q-text">{data.heroBgOpacity ?? 100}%</span>
                                     </div>
                                     <input
                                         type="range"
@@ -893,15 +893,15 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         step="5"
                                         value={data.heroBgOpacity ?? 100}
                                         onChange={(e) => updateData('heroBgOpacity', parseInt(e.target.value))}
-                                        className="w-full h-2 bg-editor-border rounded-lg appearance-none cursor-pointer accent-editor-accent"
+                                        className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer accent-editor-accent"
                                     />
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-4">
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-4">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block">
                             {t('landingEditor.layout', 'DISEÑO Y ESTRUCTURA')}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
@@ -914,8 +914,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     key={option.id}
                                     onClick={() => updateData('layout', option.id)}
                                     className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${(data.layout || 'centered') === option.id
-                                        ? 'bg-editor-accent/10 border-editor-accent text-primary'
-                                        : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-secondary'
+                                        ? 'bg-q-accent/10 border-q-accent text-primary'
+                                        : 'bg-q-surface border-q-border hover:border-q-accent/50 text-q-text-secondary'
                                         }`}
                                     title={option.label}
                                 >
@@ -925,8 +925,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
                     </div>
 
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">Colores</label>
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block">Colores</label>
                         <ColorControl portalContainer={portalContainer}
                             label={t('landingEditor.backgroundColor', 'Fondo')}
                             value={data.backgroundColor || '#000000'}
@@ -941,8 +941,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
                     </div>
 
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider block">Espaciado</label>
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider block">Espaciado</label>
                         <RangeControl
                             label={t('landingEditor.padding', 'Padding')}
                             value={data.padding || 80}
@@ -953,14 +953,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
                     </div>
 
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                         <Toggle
                             label={t('landingEditor.gradient', 'Mostrar Gradiente')}
                             checked={data.showGradient || false}
                             onChange={(v) => updateData('showGradient', v)}
                         />
                         {data.showGradient && (
-                            <div className="mt-4 space-y-4 pl-4 border-l-2 border-editor-accent/20">
+                            <div className="mt-4 space-y-4 pl-4 border-l-2 border-q-accent/20">
                                 <SelectControl
                                     label="Dirección"
                                     value={data.gradientDirection || 'to bottom'}
@@ -990,14 +990,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
                     </div>
 
-                    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 block">
+                    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 block">
                             {t('landingEditor.overlay', 'SUPERPOSICIÓN (OVERLAY)')}
                         </label>
                         <div className="space-y-4">
-                            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+                            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
                                 <div className="flex justify-between text-xs">
-                                    <span className="text-editor-text-secondary">Opacidad</span>
+                                    <span className="text-q-text-secondary">Opacidad</span>
                                     <span className="font-mono">{((data.overlayOpacity ?? 0) * 100).toFixed(0)}%</span>
                                 </div>
                                 <input
@@ -1065,9 +1065,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         <ControlGroup label={t('landingEditor.features', 'Características')}>
                             <div className="space-y-3 mt-2">
                                 {(data.features || []).map((feature: any, idx: number) => (
-                                    <div key={idx} className="p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-2">
+                                    <div key={idx} className="p-3 bg-q-surface/50 rounded-lg border border-q-border space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-editor-text-secondary">#{idx + 1}</span>
+                                            <span className="text-xs font-medium text-q-text-secondary">#{idx + 1}</span>
                                             <button
                                                 onClick={() => {
                                                     const newItems = [...(data.features || [])];
@@ -1100,16 +1100,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         />
                                         {/* Image picker for feature */}
                                         <div className="flex items-center gap-2">
-                                            <div className="relative w-12 h-8 bg-editor-panel-bg rounded overflow-hidden flex-shrink-0 border border-editor-border">
+                                            <div className="relative w-12 h-8 bg-q-surface rounded overflow-hidden flex-shrink-0 border border-q-border">
                                                 {feature.imageUrl ? (
                                                     <img src={feature.imageUrl} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-editor-text-secondary"><ImageIcon size={10} /></div>
+                                                    <div className="w-full h-full flex items-center justify-center text-q-text-secondary"><ImageIcon size={10} /></div>
                                                 )}
                                             </div>
                                             <button
                                                 onClick={() => { setImageTargetField('features'); setImageTargetIndex(idx); setIsImagePickerOpen(true); }}
-                                                className="shrink-0 p-1.5 rounded bg-editor-panel-bg hover:bg-editor-bg transition-colors"
+                                                className="shrink-0 p-1.5 rounded bg-q-surface hover:bg-q-bg transition-colors"
                                                 title={t('landingEditor.selectFromLibrary', 'Seleccionar imagen')}
                                             >
                                                 <Image size={14} />
@@ -1134,7 +1134,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         const newItems = [...(data.features || []), { title: '', description: '', imageUrl: '' }];
                                         updateData('features', newItems);
                                     }}
-                                    className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-2 px-4 rounded-lg border border-dashed border-q-border text-sm text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Plus size={16} />
                                     {t('landingEditor.addFeature', 'Añadir característica')}
@@ -1148,8 +1148,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     <>
                     {renderBgImageControls()}
                         {/* === VARIANT SELECTOR === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.featuresStyle', 'Estilo de Features')}
                             </label>
                             <div className="grid grid-cols-4 gap-2">
@@ -1163,15 +1163,15 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         key={variant.id}
                                         onClick={() => updateData('featuresVariant', variant.id)}
                                         className={`px-2 py-2 rounded-lg border transition-all text-xs font-medium ${currentVariant === variant.id
-                                            ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                            : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-primary'
+                                            ? 'bg-q-accent text-q-bg border-q-accent'
+                                            : 'bg-q-surface border-q-border hover:border-q-accent/50 text-q-text'
                                             }`}
                                     >
                                         {variant.label}
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-xs text-editor-text-secondary">
+                            <p className="text-xs text-q-text-secondary">
                                 {currentVariant === 'classic' && '📦 Grid uniforme tradicional'}
                                 {currentVariant === 'modern' && '✨ Grid bento moderno asimétrico'}
                                 {currentVariant === 'bento-premium' && '🎯 Bento premium con tarjeta destacada'}
@@ -1188,16 +1188,16 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         {/* === OVERLAY-SPECIFIC CONTROLS === */}
                         {currentVariant === 'image-overlay' && (
-                            <div className="space-y-4 p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border">
-                                <div className="flex items-center gap-2 text-sm font-medium text-editor-text-primary">
-                                    <ImageIcon size={14} className="text-editor-accent" />
+                            <div className="space-y-4 p-3 bg-q-surface/50 rounded-lg border border-q-border">
+                                <div className="flex items-center gap-2 text-sm font-medium text-q-text">
+                                    <ImageIcon size={14} className="text-q-accent" />
                                     {t('landingEditor.overlaySettings', 'Configuración de Overlay')}
                                 </div>
 
                                 {/* Text Alignment */}
-                                <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                                    <label className="text-xs text-editor-text-secondary">{t('landingEditor.textAlignment', 'Alineación de texto')}</label>
-                                    <div className="flex bg-editor-panel-bg p-1 rounded-lg gap-1">
+                                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                                    <label className="text-xs text-q-text-secondary">{t('landingEditor.textAlignment', 'Alineación de texto')}</label>
+                                    <div className="flex bg-q-surface p-1 rounded-lg gap-1">
                                         {[
                                             { id: 'left', label: '⬅️ Izq', icon: AlignLeft },
                                             { id: 'center', label: '↔️ Centro', icon: AlignCenter },
@@ -1207,8 +1207,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                                 key={align.id}
                                                 onClick={() => updateData('overlayTextAlignment', align.id)}
                                                 className={`flex-1 px-2 py-1.5 text-xs font-medium rounded transition-colors ${currentTextAlignment === align.id
-                                                    ? 'bg-editor-accent text-editor-bg'
-                                                    : 'text-editor-text-secondary hover:bg-editor-bg'
+                                                    ? 'bg-q-accent text-q-bg'
+                                                    : 'text-q-text-secondary hover:bg-q-bg'
                                                     }`}
                                             >
                                                 {align.label}
@@ -1227,19 +1227,19 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
 
                         {/* === GRID LAYOUT === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                                 <LayoutGrid size={12} />
                                 {t('landingEditor.gridLayout', 'Grid Layout')}
                             </label>
-                            <div className="flex bg-editor-panel-bg p-1 rounded-lg gap-1">
+                            <div className="flex bg-q-surface p-1 rounded-lg gap-1">
                                 {[2, 3, 4].map((cols) => (
                                     <button
                                         key={cols}
                                         onClick={() => { updateData('gridColumns', cols); updateData('columns', cols); }}
                                         className={`flex-1 px-3 py-1.5 text-sm font-medium rounded transition-colors ${(data.gridColumns || 3) === cols
-                                            ? 'bg-editor-accent text-editor-bg'
-                                            : 'text-editor-text-secondary hover:bg-editor-bg'
+                                            ? 'bg-q-accent text-q-bg'
+                                            : 'text-q-text-secondary hover:bg-q-bg'
                                             }`}
                                     >
                                         {cols}
@@ -1250,7 +1250,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         {/* === CARD IMAGE === */}
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.cardImage', 'Imagen de Tarjeta')}
                             </label>
                             <RangeControl
@@ -1275,8 +1275,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === LAYOUT & PADDING === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.layout', 'Espaciado')}
                             </label>
                             <div className="space-y-3">
@@ -1308,8 +1308,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === SECTION COLORS === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.sectionColors', 'Colores de Sección')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1357,8 +1357,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === CARD COLORS === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1392,8 +1392,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* === ANIMATIONS === */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.animations', 'Animaciones')}
                             </label>
                             <Toggle
@@ -1462,15 +1462,15 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </ControlGroup>
 
                         {/* Pricing Tiers Management */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.pricingTiers', 'Planes de Precio')}
                             </label>
 
                             {tiers.map((tier: any, idx: number) => (
-                                <div key={idx} className="p-4 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-3">
+                                <div key={idx} className="p-4 bg-q-surface/50 rounded-lg border border-q-border space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-editor-text-secondary">
+                                        <span className="text-xs font-medium text-q-text-secondary">
                                             {t('landingEditor.tier', 'Plan')} #{idx + 1}
                                         </span>
                                         <button
@@ -1532,7 +1532,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                                     {/* Features */}
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+                                        <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider">
                                             {t('landingEditor.planFeatures', 'Características (una por línea)')}
                                         </label>
                                         <textarea
@@ -1547,7 +1547,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                             }}
                                             rows={4}
                                             placeholder={t('landingEditor.featurePlaceholder', 'Característica 1\nCaracterística 2\nCaracterística 3')}
-                                            className="w-full bg-editor-bg border border-editor-border rounded-lg px-3 py-2 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent resize-none"
+                                            className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-xs text-q-text focus:outline-none focus:border-q-accent resize-none"
                                         />
                                     </div>
 
@@ -1603,7 +1603,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     ];
                                     updateData('tiers', newTiers);
                                 }}
-                                className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-2 px-4 rounded-lg border border-dashed border-q-border text-sm text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors flex items-center justify-center gap-2"
                             >
                                 <Plus size={16} />
                                 {t('landingEditor.addTier', 'Añadir Plan')}
@@ -1616,8 +1616,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     <>
                     {renderBgImageControls()}
                         {/* Variant Selector */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.pricingStyle', 'Estilo de Pricing')}
                             </label>
                             <div className="grid grid-cols-2 gap-2">
@@ -1631,14 +1631,14 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         key={variant.value}
                                         onClick={() => updateData('pricingVariant', variant.value)}
                                         className={`p-3 text-left rounded-lg border transition-all ${currentVariant === variant.value
-                                            ? 'bg-editor-accent text-editor-bg border-editor-accent'
-                                            : 'bg-editor-panel-bg border-editor-border hover:border-editor-accent/50 text-editor-text-primary'
+                                            ? 'bg-q-accent text-q-bg border-q-accent'
+                                            : 'bg-q-surface border-q-border hover:border-q-accent/50 text-q-text'
                                             }`}
                                     >
-                                        <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-editor-bg' : 'text-editor-text-primary'}`}>
+                                        <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-q-bg' : 'text-q-text'}`}>
                                             {variant.label}
                                         </div>
-                                        <div className={`text-[10px] ${currentVariant === variant.value ? 'text-editor-bg/80' : 'text-editor-text-secondary'}`}>
+                                        <div className={`text-[10px] ${currentVariant === variant.value ? 'text-q-bg/80' : 'text-q-text-secondary'}`}>
                                             {variant.desc}
                                         </div>
                                     </button>
@@ -1647,8 +1647,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Spacing Controls */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.spacing', 'Espaciado')}
                             </label>
                             <div className="space-y-3">
@@ -1695,8 +1695,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
 
                         {/* Section Colors */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.sectionColors', 'Colores de Sección')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1730,8 +1730,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Card Colors */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1785,8 +1785,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         </div>
 
                         {/* Button Colors */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.buttonColors', 'Colores de Botón')}
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -1807,8 +1807,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                         {/* Gradient Colors (only for gradient variant) */}
                         {currentVariant === 'gradient' && (
-                            <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                                     <span>✨</span>
                                     {t('landingEditor.gradientColors', 'Colores de Degradado')}
                                 </label>
@@ -1840,8 +1840,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
 
                         {/* Animations */}
-                        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-3">
-                            <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                            <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.animations', 'Animaciones')}
                             </label>
                             <Toggle
@@ -1895,9 +1895,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     <ControlGroup label={t('landingEditor.testimonials', 'Testimonios')}>
                         <div className="space-y-3 mt-2">
                             {(data.testimonials || []).map((testimonial: any, idx: number) => (
-                                <div key={idx} className="p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-2">
+                                <div key={idx} className="p-3 bg-q-surface/50 rounded-lg border border-q-border space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-editor-text-secondary">Testimonio #{idx + 1}</span>
+                                        <span className="text-xs font-medium text-q-text-secondary">Testimonio #{idx + 1}</span>
                                         <button
                                             onClick={() => {
                                                 const newTestimonials = [...(data.testimonials || [])];
@@ -1944,7 +1944,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     const newTestimonials = [...(data.testimonials || []), { name: '', role: '', text: '' }];
                                     updateData('testimonials', newTestimonials);
                                 }}
-                                className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-2 px-4 rounded-lg border border-dashed border-q-border text-sm text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors flex items-center justify-center gap-2"
                             >
                                 <Plus size={16} />
                                 {t('landingEditor.addTestimonial', 'Añadir testimonio')}
@@ -2017,8 +2017,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     key={variant}
                                     onClick={() => updateData('faqVariant', variant)}
                                     className={`px-3 py-2 rounded-lg border text-sm transition-all capitalize ${(data.faqVariant || 'classic') === variant
-                                        ? 'bg-editor-accent text-editor-bg border-editor-accent font-medium'
-                                        : 'bg-editor-panel-bg/50 text-editor-text-secondary border-editor-border hover:border-editor-accent'
+                                        ? 'bg-q-accent text-q-bg border-q-accent font-medium'
+                                        : 'bg-q-surface/50 text-q-text-secondary border-q-border hover:border-q-accent'
                                         }`}
                                 >
                                     {variant === 'classic' ? 'Clásico' :
@@ -2059,9 +2059,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     <ControlGroup label={t('landingEditor.faqs', 'Preguntas')}>
                         <div className="space-y-3 mt-2">
                             {(data.items || []).map((faq: any, idx: number) => (
-                                <div key={idx} className="p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-2">
+                                <div key={idx} className="p-3 bg-q-surface/50 rounded-lg border border-q-border space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-editor-text-secondary">#{idx + 1}</span>
+                                        <span className="text-xs font-medium text-q-text-secondary">#{idx + 1}</span>
                                         <button
                                             onClick={() => {
                                                 const newItems = [...(data.items || [])];
@@ -2099,7 +2099,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     const newItems = [...(data.items || []), { question: '', answer: '' }];
                                     updateData('items', newItems);
                                 }}
-                                className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-2 px-4 rounded-lg border border-dashed border-q-border text-sm text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors flex items-center justify-center gap-2"
                             >
                                 <Plus size={16} />
                                 {t('landingEditor.addFaq', 'Añadir pregunta')}
@@ -2114,7 +2114,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     {renderBgImageControls()}
                     {/* Section Colors */}
                     <div className="space-y-3">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                             {t('landingEditor.sectionColors', 'Colores de Sección')}
                         </label>
                         <ColorControl portalContainer={portalContainer}
@@ -2144,8 +2144,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </div>
 
                     {/* Card Colors */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
-                        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                    <div className="space-y-3 pt-3 border-t border-q-border">
+                        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                             {t('landingEditor.cardColors', 'Colores de Tarjeta')}
                         </label>
                         <ColorControl portalContainer={portalContainer}
@@ -2170,8 +2170,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Gradient Colors (for gradient variant) */}
                     {data.faqVariant === 'gradient' && (
-                        <div className="space-y-3 pt-3 border-t border-editor-border">
-                            <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <div className="space-y-3 pt-3 border-t border-q-border">
+                            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                                 {t('landingEditor.gradientColors', 'Colores de Gradiente')}
                             </label>
                             <ColorControl portalContainer={portalContainer}
@@ -2190,7 +2190,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     )}
 
                     {/* Spacing */}
-                    <div className="space-y-3 pt-3 border-t border-editor-border">
+                    <div className="space-y-3 pt-3 border-t border-q-border">
                         <SelectControl
                             label={t('landingEditor.verticalPadding', 'Espaciado Vertical')}
                             value={data.paddingY || 'lg'}
@@ -2356,7 +2356,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         />
                         {/* Gradient Preview */}
                         <div
-                            className="h-8 rounded-lg border border-editor-border"
+                            className="h-8 rounded-lg border border-q-border"
                             style={{
                                 backgroundImage: `linear-gradient(135deg, ${data.colors?.gradientStart || '#4f46e5'}, ${data.colors?.gradientEnd || '#7c3aed'})`
                             }}
@@ -2599,7 +2599,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 <ControlGroup label={t('landingEditor.logoImage', 'Imagen del Logo')}>
                     <div className="space-y-3">
                         {data.logoImage && (
-                            <div className="relative w-full h-20 rounded-lg border border-editor-border overflow-hidden bg-editor-panel-bg flex items-center justify-center">
+                            <div className="relative w-full h-20 rounded-lg border border-q-border overflow-hidden bg-q-surface flex items-center justify-center">
                                 <img
                                     src={data.logoImage}
                                     alt="Logo"
@@ -2620,7 +2620,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         )}
                         <button
                             onClick={() => setIsLogoPickerOpen(true)}
-                            className="w-full py-3 px-4 rounded-lg border border-dashed border-editor-accent/50 text-editor-accent hover:bg-editor-accent/5 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 px-4 rounded-lg border border-dashed border-q-accent/50 text-q-accent hover:bg-q-accent/5 transition-colors flex items-center justify-center gap-2"
                         >
                             <Image size={18} />
                             {data.logoImage
@@ -2684,8 +2684,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             </ControlGroup>
 
             {/* Style controls - included inline since tabs are hidden */}
-            <div className="border-t border-editor-border pt-4 mt-4">
-                <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 block">
+            <div className="border-t border-q-border pt-4 mt-4">
+                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 block">
                     {t('landingEditor.style', 'ESTILO')}
                 </label>
                 <div className="space-y-4">
@@ -2808,27 +2808,27 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         <ControlGroup label={t('landingEditor.carouselImages', 'Imágenes')}>
                             <div className="space-y-3 mt-2">
                                 {images.map((image: any, idx: number) => (
-                                    <div key={idx} className="p-3 bg-editor-panel-bg/50 rounded-lg border border-editor-border space-y-2">
+                                    <div key={idx} className="p-3 bg-q-surface/50 rounded-lg border border-q-border space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            <div className="relative w-16 h-10 bg-editor-panel-bg rounded overflow-hidden flex-shrink-0 border border-editor-border">
+                                            <div className="relative w-16 h-10 bg-q-surface rounded overflow-hidden flex-shrink-0 border border-q-border">
                                                 {image.url ? (
                                                     <img src={image.url} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-editor-text-secondary"><Image size={12} /></div>
+                                                    <div className="w-full h-full flex items-center justify-center text-q-text-secondary"><Image size={12} /></div>
                                                 )}
                                             </div>
 
                                             <div className="flex gap-1">
                                                 <button
                                                     onClick={() => { setImageTargetField('carouselImage'); setImageTargetIndex(idx); setIsImagePickerOpen(true); }}
-                                                    className="shrink-0 p-2 rounded-lg bg-editor-panel-bg hover:bg-editor-bg transition-colors"
+                                                    className="shrink-0 p-2 rounded-lg bg-q-surface hover:bg-q-bg transition-colors"
                                                     title={t('landingEditor.selectFromLibrary', 'Seleccionar de librería')}
                                                 >
                                                     <Image size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => { setImageTargetField('carouselImage'); setImageTargetIndex(idx); setIsAIGeneratorOpen(true); }}
-                                                    className="shrink-0 p-2 rounded-lg bg-editor-accent/10 text-editor-accent hover:bg-editor-accent/20 transition-colors"
+                                                    className="shrink-0 p-2 rounded-lg bg-q-accent/10 text-q-accent hover:bg-q-accent/20 transition-colors"
                                                     title={t('landingEditor.generateWithAI', 'Generar con IA')}
                                                 >
                                                     <Sparkles size={16} />
@@ -2848,7 +2848,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                                         {/* Show extra fields for non-basic modes */}
                                         {data.variant !== 'basic' && (
-                                            <div className="pl-2 border-l-2 border-editor-accent/20 space-y-2 animate-in slide-in-from-left-2 duration-200">
+                                            <div className="pl-2 border-l-2 border-q-accent/20 space-y-2 animate-in slide-in-from-left-2 duration-200">
                                                 <TextInput
                                                     value={image.title || ''}
                                                     onChange={(v) => {
@@ -2875,7 +2875,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     onClick={() => {
                                         updateImages([...images, { url: '', title: '', subtitle: '' }]);
                                     }}
-                                    className="w-full py-2 px-4 rounded-lg border border-dashed border-editor-border text-sm text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-2 px-4 rounded-lg border border-dashed border-q-border text-sm text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Plus size={16} />
                                     {t('landingEditor.addImage', 'Añadir imagen')}
@@ -3068,7 +3068,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 >
                     <div className="flex items-center gap-2">
                         <Upload size={16} className="text-purple-400" />
-                        <span className="text-sm font-medium text-editor-text-primary">
+                        <span className="text-sm font-medium text-q-text">
                             {t('landingEditor.importFromCoolors', 'Importar paleta de Coolors.co')}
                         </span>
                     </div>
@@ -3084,13 +3084,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {/* Palette History Section */}
             {paletteHistory.length > 0 && (
-                <div className="border border-editor-border rounded-lg overflow-hidden">
-                    <div className="flex items-center justify-between p-3 bg-editor-panel-bg/50">
-                        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
-                            <Clock size={14} className="text-editor-accent" />
+                <div className="border border-q-border rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between p-3 bg-q-surface/50">
+                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                            <Clock size={14} className="text-q-accent" />
                             {t('landingEditor.paletteHistory', 'Paletas Recientes')}
                         </label>
-                        <span className="text-xs text-editor-text-secondary">
+                        <span className="text-xs text-q-text-secondary">
                             {paletteHistory.length}/10
                         </span>
                     </div>
@@ -3106,8 +3106,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                 })}
                                 disabled={isApplyingPalette}
                                 className={`relative p-2 rounded-lg border transition-all text-left ${selectedPaletteId === entry.id
-                                    ? 'border-editor-accent ring-1 ring-editor-accent bg-editor-accent/10'
-                                    : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg hover:bg-editor-panel-bg/50'
+                                    ? 'border-q-accent ring-1 ring-q-accent bg-q-accent/10'
+                                    : 'border-q-border hover:border-q-accent/50 bg-q-bg hover:bg-q-surface/50'
                                     } ${isApplyingPalette ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
                             >
                                 <div className="flex gap-0.5 mb-1">
@@ -3119,7 +3119,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                         />
                                     ))}
                                 </div>
-                                <p className="text-xs font-medium text-editor-text-primary truncate">
+                                <p className="text-xs font-medium text-q-text truncate">
                                     {entry.name}
                                 </p>
                             </button>
@@ -3129,17 +3129,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             )}
 
             {/* Palettes Section - Collapsible */}
-            <div className="border border-dashed border-editor-border rounded-lg overflow-hidden">
+            <div className="border border-dashed border-q-border rounded-lg overflow-hidden">
                 <button
                     onClick={() => setShowPresetPalettes(!showPresetPalettes)}
-                    className="w-full flex items-center justify-between p-3 bg-editor-panel-bg/20 hover:bg-editor-panel-bg/40 transition-all"
+                    className="w-full flex items-center justify-between p-3 bg-q-surface/20 hover:bg-q-surface/40 transition-all"
                 >
                     <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-editor-accent" />
-                        <span className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                        <Sparkles size={14} className="text-q-accent" />
+                        <span className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                             {t('landingEditor.presetPalettes', 'Paletas Predefinidas')}
                         </span>
-                        <span className="text-xs text-editor-text-secondary">
+                        <span className="text-xs text-q-text-secondary">
                             ({colorPalettes.length})
                         </span>
                     </div>
@@ -3147,20 +3147,20 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); handleResetColors(); }}
                             disabled={isApplyingPalette}
-                            className="text-xs text-editor-text-secondary hover:text-editor-accent flex items-center gap-1 transition-colors disabled:opacity-50"
+                            className="text-xs text-q-text-secondary hover:text-q-accent flex items-center gap-1 transition-colors disabled:opacity-50"
                         >
                             <RotateCcw size={12} className={isApplyingPalette ? 'animate-spin' : ''} />
                             {t('landingEditor.reset', 'Reset')}
                         </button>
-                        <ChevronDown size={14} className={`text-editor-text-secondary transition-transform ${showPresetPalettes ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={14} className={`text-q-text-secondary transition-transform ${showPresetPalettes ? 'rotate-180' : ''}`} />
                     </div>
                 </button>
 
                 {showPresetPalettes && (
-                    <div className="p-3 border-t border-editor-border">
+                    <div className="p-3 border-t border-q-border">
                         {/* Info Banner */}
-                        <div className="mb-3 p-2.5 bg-editor-accent/10 border border-editor-accent/30 rounded-lg">
-                            <p className="text-xs text-editor-accent flex items-start gap-2">
+                        <div className="mb-3 p-2.5 bg-q-accent/10 border border-q-accent/30 rounded-lg">
+                            <p className="text-xs text-q-accent flex items-start gap-2">
                                 <Info size={14} className="flex-shrink-0 mt-0.5" />
                                 <span>
                                     {t('landingEditor.paletteInfo', 'Los colores se aplicarán a la sección actual. Puedes ajustarlos individualmente después.')}
@@ -3176,13 +3176,13 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     onClick={() => handlePaletteSelect(palette)}
                                     disabled={isApplyingPalette}
                                     className={`relative p-2.5 rounded-lg border transition-all text-left group ${selectedPaletteId === palette.id
-                                        ? 'border-editor-accent ring-1 ring-editor-accent bg-editor-accent/10'
-                                        : 'border-editor-border hover:border-editor-accent/50 bg-editor-bg hover:bg-editor-panel-bg/50'
+                                        ? 'border-q-accent ring-1 ring-q-accent bg-q-accent/10'
+                                        : 'border-q-border hover:border-q-accent/50 bg-q-bg hover:bg-q-surface/50'
                                         } ${isApplyingPalette ? 'opacity-60 cursor-wait' : 'cursor-pointer'}`}
                                 >
                                     {/* Selection indicator */}
                                     {selectedPaletteId === palette.id && (
-                                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-editor-accent rounded-full flex items-center justify-center">
+                                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-q-accent rounded-full flex items-center justify-center">
                                             {isApplyingPalette ? (
                                                 <Loader2 size={10} className="text-white animate-spin" />
                                             ) : (
@@ -3203,7 +3203,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                                     </div>
 
                                     {/* Palette Name */}
-                                    <p className="text-xs font-medium text-editor-text-primary truncate">
+                                    <p className="text-xs font-medium text-q-text truncate">
                                         {palette.nameEs}
                                     </p>
                                 </button>
@@ -3215,15 +3215,15 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
             {/* Custom Colors Section - Matches GlobalStylesControl.tsx */}
             <div>
-                <label className="block text-xs font-bold text-editor-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
+                <label className="block text-xs font-bold text-q-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
                     <Grid size={14} />
                     {t('landingEditor.customColors', 'COLORES PERSONALIZADOS')}
                 </label>
 
                 <div className="space-y-4">
                     {/* Colores Principales */}
-                    <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                        <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('landingEditor.mainColors', 'Colores Principales')}</p>
+                    <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50">
+                        <p className="text-xs font-semibold text-q-text mb-3">{t('landingEditor.mainColors', 'Colores Principales')}</p>
                         <div className="grid grid-cols-2 gap-3">
                             <ColorControl portalContainer={portalContainer}
                                 label={t('landingEditor.primary', 'PRIMARIO')}
@@ -3249,8 +3249,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </div>
 
                     {/* Fondos */}
-                    <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                        <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('landingEditor.backgrounds', 'Fondos')}</p>
+                    <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50">
+                        <p className="text-xs font-semibold text-q-text mb-3">{t('landingEditor.backgrounds', 'Fondos')}</p>
                         <div className="space-y-3">
                             <ColorControl portalContainer={portalContainer}
                                 label={t('landingEditor.mainBackground', 'FONDO PRINCIPAL')}
@@ -3268,8 +3268,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </div>
 
                     {/* Texto */}
-                    <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                        <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('landingEditor.textColors', 'Texto')}</p>
+                    <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50">
+                        <p className="text-xs font-semibold text-q-text mb-3">{t('landingEditor.textColors', 'Texto')}</p>
                         <div className="space-y-3">
                             <ColorControl portalContainer={portalContainer}
                                 label={t('landingEditor.text', 'TEXTO')}
@@ -3295,8 +3295,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     </div>
 
                     {/* Bordes y Estados */}
-                    <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50">
-                        <p className="text-xs font-semibold text-editor-text-primary mb-3">{t('landingEditor.bordersStates', 'Bordes y Estados')}</p>
+                    <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50">
+                        <p className="text-xs font-semibold text-q-text mb-3">{t('landingEditor.bordersStates', 'Bordes y Estados')}</p>
                         <div className="space-y-3">
                             <ColorControl portalContainer={portalContainer}
                                 label={t('landingEditor.borders', 'BORDES')}
@@ -3372,8 +3372,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                     }}
                     className={`flex items-center justify-center w-8 self-stretch rounded-md border transition-all cursor-pointer ${
                         data[styleKey] === 'italic'
-                            ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
-                            : 'bg-editor-panel-bg border-editor-border text-editor-text-secondary hover:border-editor-accent/50'
+                            ? 'bg-q-accent/20 border-q-accent text-q-accent'
+                            : 'bg-q-surface border-q-border text-q-text-secondary hover:border-q-accent/50'
                     }`}
                     title="Italic"
                 >
@@ -3386,8 +3386,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
     const renderTypographyControls = () => (
         <div className="space-y-5">
             {/* Font Controls */}
-            <div className="bg-editor-panel-bg/30 p-4 rounded-lg border border-editor-border">
-                <label className="block text-xs font-bold text-editor-accent mb-4 uppercase tracking-wider flex items-center gap-2">
+            <div className="bg-q-surface/30 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-accent mb-4 uppercase tracking-wider flex items-center gap-2">
                     <Type size={14} />
                     {t('landingEditor.globalFonts', 'FUENTES GLOBALES')}
                 </label>
@@ -3396,19 +3396,19 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 {renderFontSelect(t('landingEditor.buttonFont', 'FUENTE DE BOTONES'), 'buttonFont', 'buttonFontWeight', 'buttonFontStyle', 600)}
 
                 {/* All Caps Toggles Section */}
-                <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-4">
-                    <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+                <div className="mt-4 pt-4 border-t border-q-border/50 space-y-4">
+                    <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">
                         {t('landingEditor.allCaps', 'MAYÚSCULAS (ALL CAPS)')}
                     </label>
 
                     {/* Headings All Caps */}
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-editor-text-primary">
+                        <span className="text-sm text-q-text">
                             {t('landingEditor.headingsCaps', 'Encabezados')}
                         </span>
                         <button
                             onClick={() => updateData('headingsCaps', !data.headingsCaps)}
-                            className={`${data.headingsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.headingsCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
                             <span className={`${data.headingsCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
@@ -3416,12 +3416,12 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Buttons All Caps */}
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-editor-text-primary">
+                        <span className="text-sm text-q-text">
                             {t('landingEditor.buttonsCaps', 'Botones')}
                         </span>
                         <button
                             onClick={() => updateData('buttonsCaps', !data.buttonsCaps)}
-                            className={`${data.buttonsCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.buttonsCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
                             <span className={`${data.buttonsCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
@@ -3429,12 +3429,12 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
                     {/* Nav Links All Caps */}
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-editor-text-primary">
+                        <span className="text-sm text-q-text">
                             {t('landingEditor.navLinksCaps', 'Enlaces de Navegación')}
                         </span>
                         <button
                             onClick={() => updateData('navLinksCaps', !data.navLinksCaps)}
-                            className={`${data.navLinksCaps ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
+                            className={`${data.navLinksCaps ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none`}
                         >
                             <span className={`${data.navLinksCaps ? 'translate-x-[16px]' : 'translate-x-0'} pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out`} />
                         </button>
@@ -3443,8 +3443,8 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             </div>
 
             {/* Font Preview */}
-            <div className="p-4 rounded-lg border border-editor-border bg-editor-bg">
-                <p className="text-xs text-editor-text-secondary mb-3 uppercase tracking-wider font-bold">
+            <div className="p-4 rounded-lg border border-q-border bg-q-bg">
+                <p className="text-xs text-q-text-secondary mb-3 uppercase tracking-wider font-bold">
                     {t('landingEditor.preview', 'VISTA PREVIA')}
                 </p>
                 <div
@@ -3558,7 +3558,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         <div className="flex flex-col h-full overflow-hidden">
             {/* Tabs - hidden for global settings */}
             {!hideTabs && (
-                <div className="shrink-0 flex gap-1 bg-editor-panel-bg/95 backdrop-blur-md p-1 rounded-lg border border-editor-border/50 sticky top-0 z-10 shadow-sm m-4 mb-0">
+                <div className="shrink-0 flex gap-1 bg-q-surface/95 backdrop-blur-md p-1 rounded-lg border border-q-border/50 sticky top-0 z-10 shadow-sm m-4 mb-0">
                     <TabButton tab="content" label={t('landingEditor.content', 'Contenido')} icon={<FileText size={16} />} />
                     <TabButton tab="style" label={t('landingEditor.style', 'Estilo')} icon={<Palette size={16} />} />
                 </div>
@@ -3570,10 +3570,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             </div>
 
             {/* Apply button - fixed at bottom using flexbox */}
-            <div className="shrink-0 p-4 border-t border-editor-border bg-editor-panel-bg">
+            <div className="shrink-0 p-4 border-t border-q-border bg-q-surface">
                 <button
                     onClick={onRefreshPreview}
-                    className="w-full py-2.5 px-4 rounded-lg bg-editor-accent text-editor-bg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    className="w-full py-2.5 px-4 rounded-lg bg-q-accent text-q-bg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                     <Eye size={16} />
                     {t('landingEditor.applyChanges', 'Aplicar cambios')}

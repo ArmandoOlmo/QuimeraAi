@@ -96,7 +96,7 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
           <Palette size={14} />
           {t('editor.controls.cornerGradient')}
         </label>
@@ -104,9 +104,9 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
       </div>
 
       {enabled && (
-        <div className="space-y-3 animate-fade-in-up bg-editor-bg/50 p-3 rounded-lg">
+        <div className="space-y-3 animate-fade-in-up bg-q-bg/50 p-3 rounded-lg">
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase tracking-wider">
               {t('editor.controls.startPosition')}
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -121,8 +121,8 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
                       onPositionChange(pos.value);
                     }}
                     className={`py-2 px-3 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2 ${position === pos.value
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'bg-editor-panel-bg text-editor-text-secondary hover:bg-editor-border border border-editor-border'
+                      ? 'bg-q-accent text-q-bg'
+                      : 'bg-q-surface text-q-text-muted hover:bg-q-surface-overlay border border-q-border'
                       }`}
                     title={pos.title}
                   >
@@ -149,15 +149,15 @@ export const CornerGradientControl: React.FC<CornerGradientControlProps> = ({
             onChange={(v) => onSizeChange(v)}
             min={20} max={100} step={5} suffix="%"
           />
-            <p className="text-xs text-editor-text-secondary mt-1 italic">
+            <p className="text-xs text-q-text-muted mt-1 italic">
               {t('editor.controls.size')}
             </p>
 
           <div>
-            <label className="block text-xs font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase tracking-wider">
               {t('editor.controls.preview')}
             </label>
-            <div className="w-full h-20 rounded-md border border-editor-border relative overflow-hidden"
+            <div className="w-full h-20 rounded-md border border-q-border relative overflow-hidden"
               style={{ backgroundColor: '#1e293b' }}
             >
               <div className="absolute inset-0" style={{
@@ -204,16 +204,16 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
 }) => {
   return (
     <div
-      className={`border-b border-editor-border bg-editor-bg transition-colors ${isOpen ? 'bg-editor-bg' : ''}`}
+      className={`border-b border-q-border bg-q-bg transition-colors ${isOpen ? 'bg-q-bg' : ''}`}
       style={dragHandlers?.style}
       onDragOver={dragHandlers?.draggable ? dragHandlers.onDragOver : undefined}
       onDrop={dragHandlers?.draggable ? dragHandlers.onDrop : undefined}
     >
-      <div className={`flex items-center justify-between p-4 hover:bg-editor-panel-bg/50 transition-colors select-none ${isOpen ? 'bg-editor-panel-bg/50' : ''}`}>
+      <div className={`flex items-center justify-between p-4 hover:bg-q-surface/50 transition-colors select-none ${isOpen ? 'bg-q-surface/50' : ''}`}>
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {dragHandlers?.draggable && (
             <div
-              className="text-editor-text-secondary hover:text-editor-text-primary -ml-1 cursor-grab active:cursor-grabbing flex-shrink-0"
+              className="text-q-text-muted hover:text-q-text -ml-1 cursor-grab active:cursor-grabbing flex-shrink-0"
               draggable={true}
               onDragStart={dragHandlers.onDragStart}
               onDragEnd={dragHandlers.onDragEnd}
@@ -225,8 +225,8 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
             className="flex items-center gap-3 flex-1 cursor-pointer min-w-0"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDoubleClick(); }}
           >
-            {Icon && <Icon size={18} className={`text-editor-text-secondary ${isOpen ? 'text-editor-accent' : ''} flex-shrink-0 transition-colors duration-200`} />}
-            <span className={`font-semibold text-sm ${isOpen ? 'text-editor-accent' : 'text-editor-text-primary'} truncate transition-colors duration-200`}>{title}</span>
+            {Icon && <Icon size={18} className={`text-q-text-muted ${isOpen ? 'text-q-accent' : ''} flex-shrink-0 transition-colors duration-200`} />}
+            <span className={`font-semibold text-sm ${isOpen ? 'text-q-accent' : 'text-q-text'} truncate transition-colors duration-200`}>{title}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -234,23 +234,23 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(); }}
-              className="p-1 text-editor-text-secondary hover:text-red-400 transition-colors"
+              className="p-1 text-q-text-muted hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>
           )}
           <ToggleControl checked={isVisible} onChange={onToggleVisibility} />
-          <button type="button" className="cursor-pointer p-1 hover:bg-editor-panel-bg rounded transition-colors"
+          <button type="button" className="cursor-pointer p-1 hover:bg-q-surface rounded transition-colors"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDoubleClick(); }}
           >
             <span className={`block transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
-              <ChevronDown size={16} className="text-editor-text-secondary" />
+              <ChevronDown size={16} className="text-q-text-muted" />
             </span>
           </button>
         </div>
       </div>
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="p-4 bg-editor-panel-bg border-t border-editor-border cursor-default">
+        <div className="p-4 bg-q-surface border-t border-q-border cursor-default">
           {children}
         </div>
       </div>
@@ -270,13 +270,13 @@ export const BackgroundImageControl: React.FC<{
   const [showPicker, setShowPicker] = useState(false);
 
   return (
-    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+      <label className="block text-xs font-bold text-q-text-muted uppercase mb-3 flex items-center gap-2">
         <Image size={14} />
         {t('editor.controls.common.backgroundImage', 'Background Image')}
       </label>
 
-      <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+      <div className="relative rounded-lg overflow-hidden border border-q-border group">
         {hasImage ? (
           <>
             <div className="aspect-video">
@@ -294,7 +294,7 @@ export const BackgroundImageControl: React.FC<{
               <button 
                 type="button"
                 onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
-                className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                 title={t('dashboard.imagePicker.generateWithAI')}>
                 <Zap size={14} />
               </button>
@@ -308,7 +308,7 @@ export const BackgroundImageControl: React.FC<{
             </div>
           </>
         ) : (
-          <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+          <div className="aspect-video flex flex-col items-center justify-center bg-q-bg text-q-text-muted gap-2">
             <Image size={32} className="opacity-30" />
             <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
           </div>
@@ -327,21 +327,21 @@ export const BackgroundImageControl: React.FC<{
           <button 
             type="button"
             onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-bg border border-q-border text-q-text-muted hover:text-q-text hover:border-q-accent/30 transition-all text-xs font-medium">
             <Grid size={12} /> Librería
           </button>
           <button 
             type="button"
             onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium">
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium">
             <Zap size={12} /> Generar IA
           </button>
         </div>
       )}
 
       {hasImage && (
-        <div className="mt-4 pt-4 border-t border-editor-border/50 space-y-3 animate-fade-in-up">
-          <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">Overlay</h5>
+        <div className="mt-4 pt-4 border-t border-q-border/50 space-y-3 animate-fade-in-up">
+          <h5 className="text-xs font-bold text-q-text-muted uppercase tracking-wider">Overlay</h5>
           <ToggleControl
             label={t('editor.controls.common.enableOverlay')}
             checked={sectionData?.backgroundOverlayEnabled !== false}
@@ -361,8 +361,8 @@ export const BackgroundImageControl: React.FC<{
                 min={0} max={100} step={5} suffix="%"
               />
                 <div className="flex justify-between mt-1">
-                  <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
-                  <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+                  <span className="text-[9px] text-q-text-muted/50">Claro</span>
+                  <span className="text-[9px] text-q-text-muted/50">Oscuro</span>
                 </div>
             </div>
           )}
@@ -376,8 +376,8 @@ export const BackgroundImageControl: React.FC<{
       )}
 
       {/* Glass Effect should always be visible regardless of section background image */}
-      <div className="mt-4 pt-3 border-t border-editor-border/50 animate-fade-in-up">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2 mb-2">
+      <div className="mt-4 pt-3 border-t border-q-border/50 animate-fade-in-up">
+        <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider flex items-center gap-2 mb-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -415,7 +415,7 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
           <Zap size={14} />
           Neon Inner Glow
         </label>
@@ -425,7 +425,7 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
       {enabled && (
         <div className="space-y-5 animate-fade-in-up pt-2">
           <div className="space-y-3">
-            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+            <label className="block text-[10px] font-bold text-q-text-muted uppercase tracking-wider">
               Glow Effect
             </label>
             <ColorControl label="Neon Glow" value={color} onChange={onColorChange} />
@@ -438,7 +438,7 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
           </div>
 
           <div className="space-y-3">
-            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase tracking-wider">
+            <label className="block text-[10px] font-bold text-q-text-muted uppercase tracking-wider">
               Background Gradient
             </label>
             <ColorControl label="Start Color" value={gradientStart} onChange={onGradientStartChange} />
@@ -453,10 +453,10 @@ export const CardGlowControl: React.FC<CardGlowControlProps> = ({
           />
           
           <div>
-            <label className="block text-[10px] font-bold text-editor-text-secondary mb-2 uppercase tracking-wider">
+            <label className="block text-[10px] font-bold text-q-text-muted mb-2 uppercase tracking-wider">
               {t('editor.controls.preview')}
             </label>
-            <div className="w-full h-24 relative overflow-hidden rounded-xl border border-editor-border shadow-inner">
+            <div className="w-full h-24 relative overflow-hidden rounded-xl border border-q-border shadow-inner">
                <div className="w-full h-full" style={{
                   background: `linear-gradient(180deg, ${gradientStart} 0%, ${gradientEnd} 100%)`,
                   borderRadius: 'inherit',
@@ -485,14 +485,14 @@ export const TopDotsControl: React.FC<{
   const dotColors = sectionData.dotColors || ['#FF5F56', '#FFBD2E', '#27C93F'];
 
   return (
-    <div className="space-y-2 mt-4 pt-4 border-t border-editor-border/50">
+    <div className="space-y-2 mt-4 pt-4 border-t border-q-border/50">
       <ToggleControl
         label="Mostrar Puntos Decorativos (Dots)"
         checked={sectionData.showTopDots ?? true}
         onChange={(v) => setNestedData(`${sectionKey}.showTopDots`, v)}
       />
       {sectionData.showTopDots !== false && (
-        <div className="space-y-4 mt-2 p-3 bg-editor-bg border border-editor-border rounded-lg">
+        <div className="space-y-4 mt-2 p-3 bg-q-bg border border-q-border rounded-lg">
           <SliderControl
             label="Cantidad de Dots"
             value={dotColors.length}
@@ -511,7 +511,7 @@ export const TopDotsControl: React.FC<{
             min={1} max={10} step={1}
           />
           <div className="space-y-2">
-            <label className="block text-[10px] font-bold text-editor-text-secondary uppercase">Colores de los Dots</label>
+            <label className="block text-[10px] font-bold text-q-text-muted uppercase">Colores de los Dots</label>
             <div className="flex flex-wrap gap-2">
               {dotColors.map((color: string, i: number) => (
                 <div key={i} className="flex flex-col items-center gap-1">

@@ -50,10 +50,10 @@ const AdminEmailHub = React.lazy(() => import('./admin/AdminEmailHub'));
 
 // Loading skeleton for admin panels
 const AdminPanelLoader = () => (
-    <div className="flex items-center justify-center h-screen bg-editor-bg">
+    <div className="flex items-center justify-center h-screen bg-q-bg">
         <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 text-editor-accent animate-spin" />
-            <span className="text-sm text-editor-text-secondary">Cargando panel...</span>
+            <Loader2 className="w-8 h-8 text-q-accent animate-spin" />
+            <span className="text-sm text-q-text-secondary">Cargando panel...</span>
         </div>
     </div>
 );
@@ -118,8 +118,8 @@ const AdminCard: React.FC<{
         <div
             onClick={onClick}
             className={`
-                group relative bg-editor-panel-bg rounded-xl border border-editor-border
-                hover:border-editor-accent hover:shadow-lg hover:shadow-editor-accent/10
+                group relative bg-q-surface rounded-xl border border-q-border
+                hover:border-q-accent hover:shadow-lg hover:shadow-q-accent/10
                 transition-all duration-300 cursor-pointer overflow-hidden
                 ${isCompact ? 'p-3' : isList ? 'p-4' : 'p-6'}
                 ${isList ? 'flex items-center gap-4' : ''}
@@ -129,9 +129,9 @@ const AdminCard: React.FC<{
 
             <div className={`relative z-10 ${isList ? 'flex items-center gap-4 flex-1' : ''}`}>
                 <div className={`
-                    bg-editor-accent/10 rounded-lg text-editor-accent
+                    bg-q-accent/10 rounded-lg text-q-accent
                     flex items-center justify-center flex-shrink-0
-                    group-hover:bg-editor-accent group-hover:text-white
+                    group-hover:bg-q-accent group-hover:text-white
                     transition-all duration-300 group-hover:scale-110
                     ${isCompact ? 'w-8 h-8' : 'w-12 h-12'}
                 `}>
@@ -141,8 +141,8 @@ const AdminCard: React.FC<{
                 <div className={`${isList ? 'flex-1' : isCompact ? 'mt-2' : 'mt-4'}`}>
                     <div className="flex items-center gap-2">
                         <h3 className={`
-                            font-bold text-editor-text-primary 
-                            group-hover:text-editor-accent transition-colors
+                            font-bold text-q-text 
+                            group-hover:text-q-accent transition-colors
                             ${isCompact ? 'text-sm' : 'text-lg'}
                         `}>
                             {feature.title}
@@ -157,14 +157,14 @@ const AdminCard: React.FC<{
                         )}
                     </div>
                     {!isCompact && (
-                        <p className={`text-editor-text-secondary mt-1 ${isList ? 'text-sm' : 'text-sm'}`}>
+                        <p className={`text-q-text-secondary mt-1 ${isList ? 'text-sm' : 'text-sm'}`}>
                             {feature.description}
                         </p>
                     )}
                 </div>
 
                 {isList && (
-                    <ArrowLeft className="w-5 h-5 text-editor-text-secondary group-hover:text-editor-accent transition-colors rotate-180" />
+                    <ArrowLeft className="w-5 h-5 text-q-text-secondary group-hover:text-q-accent transition-colors rotate-180" />
                 )}
             </div>
         </div>
@@ -180,23 +180,23 @@ const CategoryChip: React.FC<{
 }> = ({ label, active, onClick, count, color = 'accent' }) => {
     const colorMap = {
         accent: active
-            ? 'bg-editor-accent/30 text-editor-accent border-editor-accent/50 shadow-sm shadow-editor-accent/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-editor-accent/20 hover:text-editor-accent hover:border-editor-accent/30',
+            ? 'bg-q-accent/30 text-q-accent border-q-accent/50 shadow-sm shadow-q-accent/10 backdrop-blur-md'
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-q-accent/20 hover:text-q-accent hover:border-q-accent/30',
         emerald: active
             ? 'bg-emerald-500/30 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/30',
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/30',
         amber: active
             ? 'bg-amber-500/30 text-amber-400 border-amber-500/50 shadow-sm shadow-amber-500/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-amber-500/20 hover:text-amber-400 hover:border-amber-500/30',
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-amber-500/20 hover:text-amber-400 hover:border-amber-500/30',
         violet: active
             ? 'bg-violet-500/30 text-violet-400 border-violet-500/50 shadow-sm shadow-violet-500/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/30',
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-violet-500/20 hover:text-violet-400 hover:border-violet-500/30',
         rose: active
             ? 'bg-rose-500/30 text-rose-400 border-rose-500/50 shadow-sm shadow-rose-500/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30',
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30',
         sky: active
             ? 'bg-sky-500/30 text-sky-400 border-sky-500/50 shadow-sm shadow-sky-500/10 backdrop-blur-md'
-            : 'bg-editor-bg/90 text-editor-text-secondary border-editor-border backdrop-blur-md hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/30',
+            : 'bg-q-bg/90 text-q-text-secondary border-q-border backdrop-blur-md hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/30',
     };
 
     return (
@@ -214,7 +214,7 @@ const CategoryChip: React.FC<{
                     px-1.5 py-0.5 sm:px-2 rounded-full text-[10px] sm:text-xs font-bold min-w-[20px] text-center
                     ${active
                         ? 'bg-white/20'
-                        : 'bg-editor-border/50'
+                        : 'bg-q-surface-overlay/50'
                     }
                 `}>
                     {count}
@@ -358,13 +358,13 @@ const SuperAdminDashboard = () => {
             case 'subdomains': return <SubdomainManagement onBack={handleBack} />;
             case 'finances': return <FinancialDashboard onBack={handleBack} />;
             case 'admin-leads': return (
-                <div className="flex h-screen bg-background text-foreground">
+                <div className="flex h-screen bg-q-bg text-foreground">
                     <DashboardSidebar isMobileOpen={false} onClose={() => {}} />
                     <AdminLeadsDashboard onBack={handleBack} />
                 </div>
             );
             case 'admin-appointments': return (
-                <div className="flex h-screen bg-background text-foreground">
+                <div className="flex h-screen bg-q-bg text-foreground">
                     <DashboardSidebar isMobileOpen={false} onClose={() => {}} />
                     <AdminAppointmentsDashboard onBack={handleBack} />
                 </div>
@@ -381,22 +381,22 @@ const SuperAdminDashboard = () => {
     }
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons />
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="text-editor-text-secondary hover:text-editor-text-primary lg:hidden transition-colors"
+                            className="text-q-text-secondary hover:text-q-text lg:hidden transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <Shield className="text-editor-accent w-5 h-5" />
-                        <h1 className="text-lg font-bold text-editor-text-primary">{t('superadmin.title')}</h1>
+                        <Shield className="text-q-accent w-5 h-5" />
+                        <h1 className="text-lg font-bold text-q-text">{t('superadmin.title')}</h1>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -404,21 +404,21 @@ const SuperAdminDashboard = () => {
                         <div className="hidden md:flex items-center gap-3 mr-4">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`transition-colors ${viewMode === 'grid' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`transition-colors ${viewMode === 'grid' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                 title={t('superadmin.viewGrid', 'Vista Cuadrícula')}
                             >
                                 <Grid3x3 size={20} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`transition-colors ${viewMode === 'list' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`transition-colors ${viewMode === 'list' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                 title={t('superadmin.viewList', 'Vista Lista')}
                             >
                                 <List size={20} />
                             </button>
                             <button
                                 onClick={() => setViewMode('compact')}
-                                className={`transition-colors ${viewMode === 'compact' ? 'text-editor-accent' : 'text-editor-text-secondary hover:text-editor-text-primary'}`}
+                                className={`transition-colors ${viewMode === 'compact' ? 'text-q-accent' : 'text-q-text-secondary hover:text-q-text'}`}
                                 title={t('superadmin.viewCompact', 'Vista Compacta')}
                             >
                                 <Settings size={20} />
@@ -428,7 +428,7 @@ const SuperAdminDashboard = () => {
                         {/* Search Button */}
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-editor-border/40"
+                            className="text-q-text-muted hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-q-surface-overlay/40"
                             aria-label={t('common.search', 'Buscar')}
                         >
                             <Search size={20} />
@@ -443,7 +443,7 @@ const SuperAdminDashboard = () => {
                         <HeaderBackButton
                             onClick={handleBackToDashboard}
                             label={t('superadmin.backToDashboard', 'Volver al Dashboard')}
-                            className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25"
+                            className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25"
                         />
                     </div>
                 </header>
@@ -473,7 +473,7 @@ const SuperAdminDashboard = () => {
 
                         {/* Results count */}
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm text-editor-text-secondary">
+                            <p className="text-sm text-q-text-secondary">
                                 {t('superadmin.showingResults', { count: filteredFeatures.length, total: adminFeatures.length })}
                             </p>
                             {(searchQuery || selectedCategory !== 'all') && (
@@ -482,7 +482,7 @@ const SuperAdminDashboard = () => {
                                         setSearchQuery('');
                                         setSelectedCategory('all');
                                     }}
-                                    className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
+                                    className="text-sm text-q-accent hover:text-q-accent/80 font-medium"
                                 >
                                     {t('superadmin.clearFilters')}
                                 </button>
@@ -498,13 +498,13 @@ const SuperAdminDashboard = () => {
                             </div>
                         ) : (
                             <div className="text-center py-12">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-editor-panel-bg border-2 border-dashed border-editor-border mb-4">
-                                    <Search className="w-8 h-8 text-editor-text-secondary" />
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-q-surface border-2 border-dashed border-q-border mb-4">
+                                    <Search className="w-8 h-8 text-q-text-secondary" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-editor-text-primary mb-2">
+                                <h3 className="text-lg font-semibold text-q-text mb-2">
                                     {t('superadmin.noResultsFound')}
                                 </h3>
-                                <p className="text-editor-text-secondary mb-4">
+                                <p className="text-q-text-secondary mb-4">
                                     {t('superadmin.noResultsDesc')}
                                 </p>
                                 <button
@@ -512,7 +512,7 @@ const SuperAdminDashboard = () => {
                                         setSearchQuery('');
                                         setSelectedCategory('all');
                                     }}
-                                    className="px-4 py-2 text-editor-accent hover:text-editor-accent/80 transition-colors font-medium"
+                                    className="px-4 py-2 text-q-accent hover:text-q-accent/80 transition-colors font-medium"
                                 >
                                     {t('superadmin.viewAllFeatures')}
                                 </button>

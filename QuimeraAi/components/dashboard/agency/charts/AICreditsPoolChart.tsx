@@ -67,8 +67,8 @@ export function AICreditsPoolChart({
             const data = payload[0];
             const percentage = poolTotal > 0 ? ((data.value / poolTotal) * 100).toFixed(1) : 0;
             return (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-3 shadow-lg">
-                    <p className="text-sm font-medium text-editor-text-primary mb-1">
+                <div className="bg-q-surface border border-q-border rounded-lg p-3 shadow-lg">
+                    <p className="text-sm font-medium text-q-text mb-1">
                         {data.name}
                     </p>
                     <p className="text-sm" style={{ color: data.payload.fill }}>
@@ -82,10 +82,10 @@ export function AICreditsPoolChart({
 
     if (isLoading) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="animate-pulse">
-                    <div className="h-6 w-40 bg-editor-border rounded mb-4" />
-                    <div className="h-64 bg-editor-border rounded-full mx-auto w-64" />
+                    <div className="h-6 w-40 bg-q-surface-overlay rounded mb-4" />
+                    <div className="h-64 bg-q-surface-overlay rounded-full mx-auto w-64" />
                 </div>
             </div>
         );
@@ -96,16 +96,16 @@ export function AICreditsPoolChart({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-editor-panel-bg border border-editor-border rounded-xl p-6"
+            className="bg-q-surface border border-q-border rounded-xl p-6"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-semibold text-editor-text-primary flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-q-text flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-purple-400" />
                         {t('dashboard.agency.charts.aiCredits.title', 'Pool de AI Credits')}
                     </h3>
-                    <p className="text-sm text-editor-text-secondary">
+                    <p className="text-sm text-q-text-secondary">
                         {t('dashboard.agency.charts.aiCredits.subtitle', 'Distribución por cliente')}
                     </p>
                 </div>
@@ -153,7 +153,7 @@ export function AICreditsPoolChart({
                 {/* Center label */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-editor-text-primary">
+                        <div className="text-2xl font-bold text-q-text">
                             <CountUp
                                 start={0}
                                 end={usagePercentage}
@@ -162,7 +162,7 @@ export function AICreditsPoolChart({
                                 suffix="%"
                             />
                         </div>
-                        <div className="text-xs text-editor-text-secondary">{t('dashboard.agency.charts.aiCredits.used', 'usado')}</div>
+                        <div className="text-xs text-q-text-secondary">{t('dashboard.agency.charts.aiCredits.used', 'usado')}</div>
                     </div>
                 </div>
             </div>
@@ -176,11 +176,11 @@ export function AICreditsPoolChart({
                                 className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
-                            <span className="text-editor-text-secondary truncate max-w-[120px]">
+                            <span className="text-q-text-secondary truncate max-w-[120px]">
                                 {client.name}
                             </span>
                         </div>
-                        <span className="text-editor-text-primary">
+                        <span className="text-q-text">
                             {client.creditsUsed.toLocaleString()}
                         </span>
                     </div>
@@ -188,16 +188,16 @@ export function AICreditsPoolChart({
             </div>
 
             {/* Footer stats */}
-            <div className="mt-4 pt-4 border-t border-editor-border grid grid-cols-2 gap-4">
+            <div className="mt-4 pt-4 border-t border-q-border grid grid-cols-2 gap-4">
                 <div>
-                    <p className="text-xs text-editor-text-secondary">{t('dashboard.agency.charts.aiCredits.usedLabel', 'Usados')}</p>
+                    <p className="text-xs text-q-text-secondary">{t('dashboard.agency.charts.aiCredits.usedLabel', 'Usados')}</p>
                     <p className="text-lg font-semibold text-purple-400">
                         {poolUsed.toLocaleString()}
                     </p>
                 </div>
                 <div>
-                    <p className="text-xs text-editor-text-secondary">{t('dashboard.agency.charts.aiCredits.availableLabel', 'Disponibles')}</p>
-                    <p className="text-lg font-semibold text-editor-text-primary">
+                    <p className="text-xs text-q-text-secondary">{t('dashboard.agency.charts.aiCredits.availableLabel', 'Disponibles')}</p>
+                    <p className="text-lg font-semibold text-q-text">
                         {poolRemaining.toLocaleString()}
                     </p>
                 </div>

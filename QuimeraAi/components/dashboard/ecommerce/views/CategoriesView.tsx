@@ -122,7 +122,7 @@ const CategoriesView: React.FC = () => {
                     <h2 className="text-2xl font-bold text-foreground">
                         {t('ecommerce.categories', 'Categorías')}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {categories.length} {t('ecommerce.categoriesTotal', 'categorías en total')}
                     </p>
                 </div>
@@ -138,12 +138,12 @@ const CategoriesView: React.FC = () => {
 
             {/* Categories List */}
             {categories.length === 0 ? (
-                <div className="text-center py-12 bg-card/50 rounded-xl border border-border">
-                    <FolderTree className="mx-auto text-muted-foreground mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
+                    <FolderTree className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('ecommerce.noCategories', 'No hay categorías')}
                     </h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-q-text-muted mb-4">
                         {t('ecommerce.noCategoriesYet', 'Crea categorías para organizar tus productos')}
                     </p>
                     <button
@@ -155,7 +155,7 @@ const CategoriesView: React.FC = () => {
                     </button>
                 </div>
             ) : (
-                <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
+                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
                     <div className="divide-y divide-border">
                         {rootCategories.map((category) => (
                             <CategoryRow
@@ -175,8 +175,8 @@ const CategoriesView: React.FC = () => {
             {/* Category Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-md">
-                        <div className="p-6 border-b border-border">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md">
+                        <div className="p-6 border-b border-q-border">
                             <h3 className="text-lg font-bold text-foreground">
                                 {editingCategory
                                     ? t('ecommerce.editCategory', 'Editar Categoría')
@@ -186,7 +186,7 @@ const CategoriesView: React.FC = () => {
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.categoryName', 'Nombre')} *
                                 </label>
                                 <input
@@ -194,42 +194,42 @@ const CategoriesView: React.FC = () => {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.description', 'Descripción')}
                                 </label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={3}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.imageUrl', 'URL de Imagen')}
                                 </label>
                                 <input
                                     type="url"
                                     value={formData.imageUrl}
                                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">
+                                <label className="block text-sm font-medium text-q-text-muted mb-1">
                                     {t('ecommerce.parentCategory', 'Categoría Padre')}
                                 </label>
                                 <select
                                     value={formData.parentId}
                                     onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                                    className="w-full px-4 py-2 bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                    className="w-full px-4 py-2 bg-muted/50 border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 >
                                     <option value="">{t('ecommerce.noParent', 'Ninguna (categoría raíz)')}</option>
                                     {rootCategories
@@ -298,7 +298,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
     return (
         <>
             <div className="flex items-center gap-4 p-4 hover:bg-muted/20">
-                <div className="text-muted-foreground cursor-grab">
+                <div className="text-q-text-muted cursor-grab">
                     <GripVertical size={20} />
                 </div>
 
@@ -310,31 +310,31 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                     />
                 ) : (
                     <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                        <FolderTree className="text-muted-foreground" size={24} />
+                        <FolderTree className="text-q-text-muted" size={24} />
                     </div>
                 )}
 
                 <div className="flex-1">
                     <h4 className="text-foreground font-medium">{category.name}</h4>
                     {category.description && (
-                        <p className="text-muted-foreground text-sm line-clamp-1">{category.description}</p>
+                        <p className="text-q-text-muted text-sm line-clamp-1">{category.description}</p>
                     )}
                 </div>
 
-                <div className="text-muted-foreground text-sm">
+                <div className="text-q-text-muted text-sm">
                     {productCount} {t('ecommerce.products', 'productos')}
                 </div>
 
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => onEdit(category)}
-                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                         <Edit size={18} />
                     </button>
                     <button
                         onClick={() => onDelete(category.id)}
-                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                        className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
                     >
                         <Trash2 size={18} />
                     </button>
@@ -343,8 +343,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
             {/* Subcategories */}
             {subcategories.map((sub) => (
-                <div key={sub.id} className="flex items-center gap-4 p-4 pl-12 hover:bg-muted/20 border-l-2 border-border ml-6">
-                    <div className="text-muted-foreground cursor-grab">
+                <div key={sub.id} className="flex items-center gap-4 p-4 pl-12 hover:bg-muted/20 border-l-2 border-q-border ml-6">
+                    <div className="text-q-text-muted cursor-grab">
                         <GripVertical size={20} />
                     </div>
 
@@ -356,7 +356,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                         />
                     ) : (
                         <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                            <FolderTree className="text-muted-foreground" size={20} />
+                            <FolderTree className="text-q-text-muted" size={20} />
                         </div>
                     )}
 
@@ -364,20 +364,20 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                         <h4 className="text-foreground font-medium">{sub.name}</h4>
                     </div>
 
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-q-text-muted text-sm">
                         {getProductCount(sub.id)} {t('ecommerce.products', 'productos')}
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => onEdit(sub)}
-                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                         >
                             <Edit size={18} />
                         </button>
                         <button
                             onClick={() => onDelete(sub.id)}
-                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                            className="p-2 text-q-text-muted hover:text-destructive hover:bg-muted rounded-lg transition-colors"
                         >
                             <Trash2 size={18} />
                         </button>

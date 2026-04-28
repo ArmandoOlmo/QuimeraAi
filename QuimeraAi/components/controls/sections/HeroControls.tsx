@@ -32,15 +32,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   return (
     <div className="space-y-4">
       {/* ========== TEXT LAYOUT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Ubicación del Texto
         </label>
         {/* Visual 3x3 position grid */}
-        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
+        <div className="relative bg-q-bg rounded-lg border border-q-border p-3">
           {/* Preview area with position indicator */}
-          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-q-border/50 overflow-hidden mb-2">
             {/* Decorative lines representing text */}
             {(() => {
               const tl = data.hero.textLayout || 'left-top';
@@ -53,9 +53,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
               return (
                 <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  <div className="h-1.5 w-14 rounded-full bg-q-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-q-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-q-accent/25" />
                 </div>
               );
             })()}
@@ -83,15 +83,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   onClick={() => setNestedData('hero.textLayout', pos.value)}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
                     isSelected
-                      ? 'bg-editor-accent/20 border border-editor-accent/50'
-                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                      ? 'bg-q-accent/20 border border-q-accent/50'
+                      : 'bg-q-surface/50 border border-transparent hover:bg-q-surface-overlay/50 hover:border-q-border'
                   }`}
                   style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
                 >
                   <div className={`rounded-full transition-all duration-200 ${
                     isSelected
-                      ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
-                      : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                      ? 'w-2.5 h-2.5 bg-q-accent shadow-[0_0_8px_var(--editor-accent)]'
+                      : 'w-1.5 h-1.5 bg-q-text-secondary/40'
                   }`} />
                 </button>
               );
@@ -105,14 +105,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== BACKGROUND IMAGE ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Image size={14} />
           Imagen de Fondo
         </label>
 
         {/* Prominent Image Preview with overlaid controls */}
-        <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+        <div className="relative rounded-lg overflow-hidden border border-q-border group">
           {data.hero.imageUrl ? (
             <>
               <div className="aspect-video">
@@ -129,7 +129,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   <Grid size={14} />
                 </button>
                 <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
-                  className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                  className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                   title="Generar con IA"
                 >
                   <Zap size={14} />
@@ -143,7 +143,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
             </>
           ) : (
-            <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+            <div className="aspect-video flex flex-col items-center justify-center bg-q-bg text-q-text-secondary gap-2">
               <Image size={32} className="opacity-30" />
               <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
             </div>
@@ -166,12 +166,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {!data.hero.imageUrl && (
           <div className="flex gap-2 mt-3">
             <button type="button"               onClick={() => setShowHeroImagePicker(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-bg border border-q-border text-q-text-secondary hover:text-q-text-primary hover:border-q-accent/30 transition-all text-xs font-medium"
             >
               <Grid size={12} /> Librería
             </button>
             <button type="button"               onClick={() => setShowHeroImagePicker(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium"
             >
               <Zap size={12} /> Generar IA
             </button>
@@ -190,20 +190,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             suffix="%"
           />
           <div className="flex justify-between mt-1">
-            <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
-            <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+            <span className="text-[9px] text-q-text-secondary/50">Claro</span>
+            <span className="text-[9px] text-q-text-secondary/50">Oscuro</span>
           </div>
         </div>
       </div>
 
 
       {/* ========== HERO HEIGHT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <AlignJustify size={14} />
           {t('controls.heroHeight')}
         </label>
-        <div className="bg-editor-bg/50 p-3 rounded-lg">
+        <div className="bg-q-bg/50 p-3 rounded-lg">
           <SliderControl
             label={t('controls.sectionHeight')}
             value={data.hero.heroHeight ?? 0}
@@ -214,16 +214,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             suffix="vh"
           />
           <div className="flex justify-between mt-1">
-            <span className="text-[9px] text-editor-text-secondary/50">{t('controls.auto')}</span>
-            <span className="text-[9px] text-editor-text-secondary/50">100vh</span>
+            <span className="text-[9px] text-q-text-secondary/50">{t('controls.auto')}</span>
+            <span className="text-[9px] text-q-text-secondary/50">100vh</span>
           </div>
         </div>
       </div>
 
 
       {/* ========== CONTENT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('controls.content')}
         </label>
@@ -246,8 +246,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Settings size={14} />
           {t('editor.controls.common.colors')}
         </label>
@@ -259,7 +259,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.accent', { defaultValue: 'Primary Accent' })} value={data.hero.colors?.primary} onChange={(v) => setNestedData('hero.colors.primary', v)} />
 
           <div className="pt-2">
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.primaryButton')}</h5>
             <div className="space-y-1">
               <ColorControl label={t('editor.background')} value={data.hero.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('hero.colors.buttonBackground', v)} />
               <ColorControl label={t('editor.text')} value={data.hero.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('hero.colors.buttonText', v)} />
@@ -267,18 +267,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
 
           <div className="pt-2">
-            <h5 className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">{t('editor.secondaryButton')}</h5>
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.secondaryButton')}</h5>
 
             {/* Button Style Selector */}
             <div className="mb-3">
-              <label className="block text-xs font-medium text-editor-text-secondary mb-1">{t('editor.controls.common.style')}</label>
-              <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+              <label className="block text-xs font-medium text-q-text-secondary mb-1">{t('editor.controls.common.style')}</label>
+              <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
                 {['solid', 'outline', 'ghost'].map(style => (
                   <button type="button"                     key={style}
                     onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
                     className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
-                      ? 'bg-editor-accent text-editor-bg'
-                      : 'text-editor-text-secondary hover:bg-editor-border'
+                      ? 'bg-q-accent text-q-bg'
+                      : 'text-q-text-secondary hover:bg-q-surface-overlay'
                       }`}
                   >
                     {style}
@@ -324,8 +324,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('controls.content')}
         </label>
@@ -347,12 +347,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Logo / Headline Image — optional override */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Image size={14} />
           Logo / Imagen del Título (opcional)
         </label>
-        <p className="text-xs text-editor-text-secondary mb-3">Si subes una imagen, se mostrará en lugar del texto del título.</p>
+        <p className="text-xs text-q-text-secondary mb-3">Si subes una imagen, se mostrará en lugar del texto del título.</p>
         <ImagePicker
           label={t('controls.logoDelTtulo')}
           value={data.hero.headlineImageUrl || ''}
@@ -368,14 +368,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Primary CTA Link */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Link size={14} />
           Enlace Botón Principal
         </label>
 
         {/* Link Type Selector */}
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {[
             { value: 'section', label: 'Sección' },
             { value: 'product', label: 'Producto' },
@@ -393,8 +393,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 }
               }}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${(data.hero.primaryCtaLinkType || 'section') === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -495,14 +495,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Secondary CTA Link */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Link size={14} />
           Enlace Botón Secundario
         </label>
 
         {/* Link Type Selector */}
-        <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
           {[
             { value: 'section', label: 'Sección' },
             { value: 'product', label: 'Producto' },
@@ -520,8 +520,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 }
               }}
               className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${(data.hero.secondaryCtaLinkType || 'section') === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -626,14 +626,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">      {/* ========== BACKGROUND IMAGE ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Image size={14} />
           Imagen de Fondo
         </label>
 
         {/* Prominent Image Preview with overlaid controls */}
-        <div className="relative rounded-lg overflow-hidden border border-editor-border group">
+        <div className="relative rounded-lg overflow-hidden border border-q-border group">
           {data.hero.imageUrl ? (
             <>
               <div className="aspect-video">
@@ -648,7 +648,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   <Grid size={14} />
                 </button>
                 <button type="button"                   onClick={() => setShowHeroImagePicker(true)}
-                  className="p-2 rounded-lg bg-editor-accent/80 backdrop-blur-md border border-editor-accent/40 text-white hover:bg-editor-accent transition-all duration-200"
+                  className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                   title="Generar con IA"
                 >
                   <Zap size={14} />
@@ -662,7 +662,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
             </>
           ) : (
-            <div className="aspect-video flex flex-col items-center justify-center bg-editor-bg text-editor-text-secondary gap-2">
+            <div className="aspect-video flex flex-col items-center justify-center bg-q-bg text-q-text-secondary gap-2">
               <Image size={32} className="opacity-30" />
               <span className="text-[10px] uppercase tracking-wider opacity-50">Sin imagen</span>
             </div>
@@ -683,12 +683,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {!data.hero.imageUrl && (
           <div className="flex gap-2 mt-3">
             <button type="button"               onClick={() => setShowHeroImagePicker(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-bg border border-editor-border text-editor-text-secondary hover:text-editor-text-primary hover:border-editor-accent/30 transition-all text-xs font-medium"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-bg border border-q-border text-q-text-secondary hover:text-q-text-primary hover:border-q-accent/30 transition-all text-xs font-medium"
             >
               <Grid size={12} /> Librería
             </button>
             <button type="button"               onClick={() => setShowHeroImagePicker(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-editor-accent/10 border border-editor-accent/20 text-editor-accent hover:bg-editor-accent/20 transition-all text-xs font-medium"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium"
             >
               <Zap size={12} /> Generar IA
             </button>
@@ -707,23 +707,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             suffix="%"
           />
           <div className="flex justify-between mt-1">
-            <span className="text-[9px] text-editor-text-secondary/50">Claro</span>
-            <span className="text-[9px] text-editor-text-secondary/50">Oscuro</span>
+            <span className="text-[9px] text-q-text-secondary/50">Claro</span>
+            <span className="text-[9px] text-q-text-secondary/50">Oscuro</span>
           </div>
         </div>
       </div>
 
 
       {/* ========== TEXT LAYOUT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Ubicación del Texto
         </label>
         {/* Visual 3x3 position grid */}
-        <div className="relative bg-editor-bg rounded-lg border border-editor-border p-3">
+        <div className="relative bg-q-bg rounded-lg border border-q-border p-3">
           {/* Preview area with position indicator */}
-          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-editor-border/50 overflow-hidden mb-2">
+          <div className="relative aspect-video bg-gradient-to-br from-editor-panel-bg to-editor-bg rounded-md border border-q-border/50 overflow-hidden mb-2">
             {/* Decorative lines representing text */}
             {(() => {
               const tl = data.hero.textLayout || 'left-top';
@@ -736,9 +736,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               const textAlign = isLeft ? 'items-start' : isRight ? 'items-end' : 'items-center';
               return (
                 <div className={`absolute ${hPos} ${vPos} flex flex-col gap-1 ${textAlign} transition-all duration-300 ease-out`}>
-                  <div className="h-1.5 w-14 rounded-full bg-editor-accent/80" />
-                  <div className="h-1 w-10 rounded-full bg-editor-accent/40" />
-                  <div className="h-1 w-8 rounded-full bg-editor-accent/25" />
+                  <div className="h-1.5 w-14 rounded-full bg-q-accent/80" />
+                  <div className="h-1 w-10 rounded-full bg-q-accent/40" />
+                  <div className="h-1 w-8 rounded-full bg-q-accent/25" />
                 </div>
               );
             })()}
@@ -766,15 +766,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   onClick={() => setNestedData('hero.textLayout', pos.value)}
                   className={`flex items-center justify-center h-7 rounded transition-all duration-200 ${
                     isSelected
-                      ? 'bg-editor-accent/20 border border-editor-accent/50'
-                      : 'bg-editor-panel-bg/50 border border-transparent hover:bg-editor-border/50 hover:border-editor-border'
+                      ? 'bg-q-accent/20 border border-q-accent/50'
+                      : 'bg-q-surface/50 border border-transparent hover:bg-q-surface-overlay/50 hover:border-q-border'
                   }`}
                   style={{ gridRow: pos.row + 1, gridColumn: pos.col + 1 }}
                 >
                   <div className={`rounded-full transition-all duration-200 ${
                     isSelected
-                      ? 'w-2.5 h-2.5 bg-editor-accent shadow-[0_0_8px_var(--editor-accent)]'
-                      : 'w-1.5 h-1.5 bg-editor-text-secondary/40'
+                      ? 'w-2.5 h-2.5 bg-q-accent shadow-[0_0_8px_var(--editor-accent)]'
+                      : 'w-1.5 h-1.5 bg-q-text-secondary/40'
                   }`} />
                 </button>
               );
@@ -788,12 +788,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== HERO HEIGHT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <AlignJustify size={14} />
           Altura de Sección
         </label>
-        <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
           <SliderControl
             label="Altura"
             value={data.hero.heroHeight ?? 0}
@@ -804,16 +804,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             suffix="vh"
           />
           <div className="flex justify-between">
-            <span className="text-[9px] text-editor-text-secondary">{t('controls.auto')}</span>
-            <span className="text-[9px] text-editor-text-secondary">100vh</span>
+            <span className="text-[9px] text-q-text-secondary">{t('controls.auto')}</span>
+            <span className="text-[9px] text-q-text-secondary">100vh</span>
           </div>
         </div>
       </div>
 
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>
@@ -826,8 +826,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <MousePointerClick size={14} />
           Button Colors
         </label>
@@ -839,15 +839,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         {/* Secondary Button Style */}
-        <div className="mt-4 pt-3 border-t border-editor-border/50">
-          <label className="block text-xs font-medium text-editor-text-secondary mb-2">{t('controls.secondaryButtonStyle')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+        <div className="mt-4 pt-3 border-t border-q-border/50">
+          <label className="block text-xs font-medium text-q-text-secondary mb-2">{t('controls.secondaryButtonStyle')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {['solid', 'outline', 'ghost'].map(style => (
               <button type="button"                 key={style}
                 onClick={() => setNestedData('hero.secondaryButtonStyle', style)}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-sm capitalize transition-colors ${(data.hero.secondaryButtonStyle || 'solid') === style
-                  ? 'bg-editor-accent text-editor-bg'
-                  : 'text-editor-text-secondary hover:bg-editor-border'
+                  ? 'bg-q-accent text-q-bg'
+                  : 'text-q-text-secondary hover:bg-q-surface-overlay'
                   }`}
               >
                 {style}
@@ -872,8 +872,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <SlidersHorizontal size={14} />
           Button Style
         </label>

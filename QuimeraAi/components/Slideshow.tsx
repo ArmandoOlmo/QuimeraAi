@@ -522,7 +522,7 @@ const Slideshow: React.FC<SlideshowProps> = ({
                         {renderVariant()}
                     </div>
                 ) : (
-                    <div className={`text-center text-editor-text-secondary p-8 bg-editor-panel-bg rounded-lg ${fullWidth ? 'mx-4' : ''}`}>
+                    <div className={`text-center text-q-text-secondary p-8 bg-q-surface rounded-lg ${fullWidth ? 'mx-4' : ''}`}>
                         No slides to display. Add some in the editor!
                     </div>
                 )}

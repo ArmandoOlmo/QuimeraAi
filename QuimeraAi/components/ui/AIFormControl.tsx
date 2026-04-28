@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 
 const Label: React.FC<{ children: ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
-    <label htmlFor={htmlFor} className="block text-sm font-medium text-editor-text-secondary mb-1">{children}</label>
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-q-text-secondary mb-1">{children}</label>
 );
 
 interface AIFormControlProps {
@@ -22,10 +22,10 @@ const AIFormControl: React.FC<AIFormControlProps> = ({ children, label, onAssist
         <button
           type="button"
           onClick={onAssistClick}
-          className="flex items-center text-xs font-semibold py-1 px-2 rounded-md bg-editor-border text-editor-text-secondary hover:bg-editor-accent hover:text-editor-bg transition-colors"
+          className="flex items-center text-xs font-semibold py-1 px-2 rounded-md bg-q-surface-overlay text-q-text-secondary hover:bg-q-accent hover:text-q-bg transition-colors"
           title={t('controls.assist')}
         >
-          <Sparkles size={16} className="text-editor-accent" />
+          <Sparkles size={16} className="text-q-accent" />
           <span className="ml-1">{t('controls.assist')}</span>
         </button>
       </div>

@@ -29,20 +29,20 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
     const isDisabled = !EXECUTION_MODE_FLAGS.allowToggle;
 
     return (
-        <div className="min-h-screen bg-editor-bg p-6">
+        <div className="min-h-screen bg-q-bg p-6">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
-                <HeaderBackButton onClick={onBack} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                <HeaderBackButton onClick={onBack} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 <div>
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold text-editor-text-primary">
+                        <h1 className="text-2xl font-bold text-q-text">
                             ⚡ Execution Mode
                         </h1>
                         <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-400 rounded-full">
                             Coming Soon
                         </span>
                     </div>
-                    <p className="text-editor-text-secondary mt-1">
+                    <p className="text-q-text-secondary mt-1">
                         Configure how the Global Assistant executes actions
                     </p>
                 </div>
@@ -53,15 +53,15 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                 <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                 <div>
                     <p className="text-blue-400 font-medium">Feature in Development</p>
-                    <p className="text-editor-text-secondary text-sm mt-1">
+                    <p className="text-q-text-secondary text-sm mt-1">
                         This feature is being prepared for a future release. The current behavior (Instant mode) will remain unchanged until this feature is activated.
                     </p>
                 </div>
             </div>
 
             {/* Mode Toggle Card */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 max-w-2xl">
-                <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-2xl">
+                <h2 className="text-lg font-semibold text-q-text mb-4">
                     Assistant Execution Behavior
                 </h2>
 
@@ -71,29 +71,29 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                         className={`
               relative p-4 rounded-lg border-2 transition-all
               ${currentMode === 'instant'
-                                ? 'border-editor-accent bg-editor-accent/5'
-                                : 'border-editor-border bg-editor-panel-bg opacity-50'}
+                                ? 'border-q-accent bg-q-accent/5'
+                                : 'border-q-border bg-q-surface opacity-50'}
             `}
                     >
                         <div className="flex items-start gap-4">
-                            <div className="p-2 rounded-lg bg-editor-accent/20">
-                                <Zap className="w-6 h-6 text-editor-accent" />
+                            <div className="p-2 rounded-lg bg-q-accent/20">
+                                <Zap className="w-6 h-6 text-q-accent" />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-editor-text-primary">
+                                    <h3 className="font-semibold text-q-text">
                                         {EXECUTION_MODE_LABELS.instant}
                                     </h3>
-                                    <span className="px-2 py-0.5 text-xs font-medium bg-editor-accent/20 text-editor-accent rounded">
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-q-accent/20 text-q-accent rounded">
                                         Current
                                     </span>
-                                    <Lock className="w-4 h-4 text-editor-text-secondary" />
+                                    <Lock className="w-4 h-4 text-q-text-secondary" />
                                 </div>
-                                <p className="text-sm text-editor-text-secondary mt-1">
+                                <p className="text-sm text-q-text-secondary mt-1">
                                     {EXECUTION_MODE_DESCRIPTIONS.instant}
                                 </p>
                             </div>
-                            <div className="w-5 h-5 rounded-full border-2 border-editor-accent bg-editor-accent flex items-center justify-center">
+                            <div className="w-5 h-5 rounded-full border-2 border-q-accent bg-q-accent flex items-center justify-center">
                                 <div className="w-2 h-2 rounded-full bg-white" />
                             </div>
                         </div>
@@ -103,7 +103,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                     <div
                         className={`
               relative p-4 rounded-lg border-2 transition-all cursor-not-allowed
-              border-editor-border bg-editor-panel-bg opacity-40
+              border-q-border bg-q-surface opacity-40
             `}
                     >
                         <div className="flex items-start gap-4">
@@ -112,26 +112,26 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-editor-text-primary">
+                                    <h3 className="font-semibold text-q-text">
                                         {EXECUTION_MODE_LABELS.safe}
                                     </h3>
                                     <span className="px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-400 rounded">
                                         Not Available
                                     </span>
                                 </div>
-                                <p className="text-sm text-editor-text-secondary mt-1">
+                                <p className="text-sm text-q-text-secondary mt-1">
                                     {EXECUTION_MODE_DESCRIPTIONS.safe}
                                 </p>
                             </div>
-                            <div className="w-5 h-5 rounded-full border-2 border-editor-border" />
+                            <div className="w-5 h-5 rounded-full border-2 border-q-border" />
                         </div>
                     </div>
                 </div>
 
                 {/* Disabled State Notice */}
                 {isDisabled && (
-                    <div className="mt-6 p-3 bg-editor-border/30 rounded-lg text-center">
-                        <p className="text-sm text-editor-text-secondary">
+                    <div className="mt-6 p-3 bg-q-surface-overlay/30 rounded-lg text-center">
+                        <p className="text-sm text-q-text-secondary">
                             <Lock className="w-4 h-4 inline-block mr-1 -mt-0.5" />
                             This setting cannot be changed while the feature is in development
                         </p>
@@ -140,7 +140,7 @@ const ExecutionModeToggle: React.FC<ExecutionModeToggleProps> = ({ onBack }) => 
             </div>
 
             {/* Technical Note */}
-            <div className="mt-6 text-xs text-editor-text-secondary max-w-2xl">
+            <div className="mt-6 text-xs text-q-text-secondary max-w-2xl">
                 <p>
                     <strong>Note:</strong> When enabled, Safe mode will require confirmation before the assistant performs actions like creating content, modifying settings, or executing tools.
                 </p>

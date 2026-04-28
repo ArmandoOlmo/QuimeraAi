@@ -204,7 +204,7 @@ export function AgencyPlanManager() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-foreground">Planes de Servicio</h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-q-text-muted mt-1">
                         Crea y gestiona los planes que ofreces a tus clientes
                     </p>
                 </div>
@@ -212,7 +212,7 @@ export function AgencyPlanManager() {
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="p-2 rounded-lg hover:bg-muted text-q-text-muted hover:text-foreground transition-colors"
                     >
                         <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                     </button>
@@ -220,7 +220,7 @@ export function AgencyPlanManager() {
                         onClick={() => setShowArchived(!showArchived)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showArchived
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:text-foreground'
+                            : 'bg-muted text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         {showArchived ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -254,7 +254,7 @@ export function AgencyPlanManager() {
                     </button>
                     {!instructionsCollapsed && (
                         <div className="mt-3 space-y-3">
-                            <div className="text-muted-foreground space-y-2">
+                            <div className="text-q-text-muted space-y-2">
                                 <p>
                                     <strong className="text-foreground">Los planes te permiten ofrecer diferentes niveles de servicio a tus clientes.</strong>
                                     {' '}Por cada plan defines un precio (lo que cobra tu agencia) y un costo base (lo que pagas a Quimera).
@@ -294,46 +294,46 @@ export function AgencyPlanManager() {
             {/* Stats Cards */}
             {stats && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                 <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Planes Activos</p>
+                                <p className="text-sm text-q-text-muted">Planes Activos</p>
                                 <p className="text-2xl font-bold text-foreground">{stats.activePlans}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                                 <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Clientes Totales</p>
+                                <p className="text-sm text-q-text-muted">Clientes Totales</p>
                                 <p className="text-2xl font-bold text-foreground">{stats.totalClients}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
                                 <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">MRR Total</p>
+                                <p className="text-sm text-q-text-muted">MRR Total</p>
                                 <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalMRR)}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-card border border-border rounded-lg p-4">
+                    <div className="bg-q-surface border border-q-border rounded-lg p-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
                                 <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Ganancia Mensual</p>
+                                <p className="text-sm text-q-text-muted">Ganancia Mensual</p>
                                 <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalMarkup)}</p>
                             </div>
                         </div>
@@ -348,14 +348,14 @@ export function AgencyPlanManager() {
 
             {/* Plans Grid */}
             {plans.length === 0 ? (
-                <div className="bg-card border border-border rounded-xl p-12 text-center">
+                <div className="bg-q-surface border border-q-border rounded-xl p-12 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                        <Package className="w-8 h-8 text-muted-foreground" />
+                        <Package className="w-8 h-8 text-q-text-muted" />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
                         No hay planes creados
                     </h3>
-                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    <p className="text-q-text-muted mb-6 max-w-md mx-auto">
                         Crea tu primer plan de servicio para empezar a ofrecerlo a tus clientes.
                         Define precio, límites y features incluidas.
                     </p>
@@ -377,14 +377,14 @@ export function AgencyPlanManager() {
                             <div
                                 key={plan.id}
                                 className={`
-                                    bg-card border rounded-xl overflow-hidden transition-all
-                                    ${plan.isArchived ? 'opacity-60 border-dashed' : 'border-border'}
+                                    bg-q-surface border rounded-xl overflow-hidden transition-all
+                                    ${plan.isArchived ? 'opacity-60 border-dashed' : 'border-q-border'}
                                     ${plan.isDefault ? 'ring-2 ring-primary' : ''}
                                 `}
                             >
                                 {/* Plan Header */}
                                 <div
-                                    className="p-4 border-b border-border"
+                                    className="p-4 border-b border-q-border"
                                     style={{ backgroundColor: `${plan.color}10` }}
                                 >
                                     <div className="flex items-start justify-between">
@@ -405,19 +405,19 @@ export function AgencyPlanManager() {
                                                         </span>
                                                     )}
                                                     {plan.isArchived && (
-                                                        <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                                                        <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-q-text-muted">
                                                             Archivado
                                                         </span>
                                                     )}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground line-clamp-1">
+                                                <p className="text-sm text-q-text-muted line-clamp-1">
                                                     {plan.description || 'Sin descripción'}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="relative">
                                             <button
-                                                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+                                                className="p-1.5 rounded-lg hover:bg-muted text-q-text-muted"
                                                 disabled={isProcessing}
                                             >
                                                 {isProcessing ? (
@@ -431,16 +431,16 @@ export function AgencyPlanManager() {
                                 </div>
 
                                 {/* Pricing */}
-                                <div className="p-4 border-b border-border">
+                                <div className="p-4 border-b border-q-border">
                                     <div className="flex items-baseline gap-1 mb-2">
                                         <span className="text-3xl font-bold text-foreground">
                                             {formatCurrency(plan.price)}
                                         </span>
-                                        <span className="text-muted-foreground">/mes</span>
+                                        <span className="text-q-text-muted">/mes</span>
                                     </div>
                                     <div className="flex items-center gap-4 text-sm">
                                         <div>
-                                            <span className="text-muted-foreground">Costo: </span>
+                                            <span className="text-q-text-muted">Costo: </span>
                                             <span className="text-foreground">{formatCurrency(plan.baseCost)}</span>
                                         </div>
                                         <div className="text-green-600 dark:text-green-400 font-medium">
@@ -452,25 +452,25 @@ export function AgencyPlanManager() {
                                 {/* Limits Summary */}
                                 <div className="p-4 space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Proyectos</span>
+                                        <span className="text-q-text-muted">Proyectos</span>
                                         <span className="text-foreground font-medium">
                                             {plan.limits.maxProjects === -1 ? '∞' : plan.limits.maxProjects}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Usuarios</span>
+                                        <span className="text-q-text-muted">Usuarios</span>
                                         <span className="text-foreground font-medium">
                                             {plan.limits.maxUsers === -1 ? '∞' : plan.limits.maxUsers}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-muted-foreground">AI Credits</span>
+                                        <span className="text-q-text-muted">AI Credits</span>
                                         <span className="text-foreground font-medium">
                                             {plan.limits.maxAiCredits === -1 ? '∞' : plan.limits.maxAiCredits.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Almacenamiento</span>
+                                        <span className="text-q-text-muted">Almacenamiento</span>
                                         <span className="text-foreground font-medium">
                                             {plan.limits.maxStorageGB === -1 ? '∞' : `${plan.limits.maxStorageGB} GB`}
                                         </span>
@@ -478,18 +478,18 @@ export function AgencyPlanManager() {
                                 </div>
 
                                 {/* Stats & Actions */}
-                                <div className="p-4 bg-muted/30 border-t border-border">
+                                <div className="p-4 bg-muted/30 border-t border-q-border">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 text-sm">
-                                            <Users className="w-4 h-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
+                                            <Users className="w-4 h-4 text-q-text-muted" />
+                                            <span className="text-q-text-muted">
                                                 {plan.clientCount} cliente{plan.clientCount !== 1 ? 's' : ''}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 onClick={() => handleEditPlan(plan)}
-                                                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                                className="p-2 rounded-lg hover:bg-muted text-q-text-muted hover:text-foreground transition-colors"
                                                 title="Editar"
                                             >
                                                 <Edit className="w-4 h-4" />

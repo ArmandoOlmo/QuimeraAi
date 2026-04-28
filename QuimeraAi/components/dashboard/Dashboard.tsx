@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
 
     // ─── Render ──────────────────────────────────────────────────────────────
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             {/* Skip to content link for accessibility */}
             <a
                 href="#main-content"

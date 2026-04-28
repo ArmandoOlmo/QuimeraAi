@@ -32,8 +32,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <FileText size={14} />
           {t('controls.content')}
         </label>
@@ -44,8 +44,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Steps */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <SlidersHorizontal size={14} />
           Steps
         </label>
@@ -63,14 +63,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           />
         </div>
       {(data?.howItWorks?.items || []).map((item: any, index: number) => (
-        <div key={index} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 group">
+        <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold text-editor-text-secondary">Step #{index + 1}</span>
+            <span className="text-xs font-bold text-q-text-secondary">Step #{index + 1}</span>
             <button type="button"               onClick={() => {
                 const newItems = (data?.howItWorks?.items || []).filter((_: any, i: number) => i !== index);
                 setNestedData('howItWorks.items', newItems);
               }}
-              className="text-editor-text-secondary hover:text-red-400 transition-colors"
+              className="text-q-text-secondary hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>
@@ -79,14 +79,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             placeholder="Title"
             value={item.title}
             onChange={(e) => setNestedData(`howItWorks.items.${index}.title`, e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
           <textarea
             placeholder="Description"
             value={item.description}
             onChange={(e) => setNestedData(`howItWorks.items.${index}.description`, e.target.value)}
             rows={2}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded px-2 py-1 text-xs text-editor-text-primary focus:outline-none focus:border-editor-accent mb-2"
+            className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
           <Select
             value={item.icon}
@@ -100,7 +100,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           const newItems = [...(data?.howItWorks?.items || []), { title: 'New Step', description: 'Step description', icon: 'upload' }];
           setNestedData('howItWorks.items', newItems);
         }}
-        className="w-full py-2 border-2 border-dashed border-editor-border rounded-lg text-editor-text-secondary hover:border-editor-accent hover:text-editor-accent transition-colors text-sm"
+        className="w-full py-2 border-2 border-dashed border-q-border rounded-lg text-q-text-secondary hover:border-q-accent hover:text-q-accent transition-colors text-sm"
       >
         + Add Step
       </button>
@@ -111,8 +111,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="howItWorks" data={data} setNestedData={setNestedData} />
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>
         <ColorControl label={t('editor.controls.common.background')} value={data?.howItWorks?.colors?.background || '#0f172a'} onChange={(v) => setNestedData('howItWorks.colors.background', v)} />
         <ColorControl label={t('controls.sectionTitle')} value={data?.howItWorks?.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.heading', v)} />
         <ColorControl label={t('controls.sectionDescription')} value={data?.howItWorks?.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('howItWorks.colors.description', v)} />
@@ -120,8 +120,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Step Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.stepColors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.stepColors')}</label>
         <ColorControl label={t('controls.circleBackground')} value={data?.howItWorks?.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('howItWorks.colors.accent', v)} />
         <ColorControl label={t('controls.iconColor')} value={data?.howItWorks?.colors?.iconColor || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.iconColor', v)} />
         <ColorControl label={t('controls.stepTitle')} value={data?.howItWorks?.colors?.stepTitle || '#ffffff'} onChange={(v) => setNestedData('howItWorks.colors.stepTitle', v)} />
@@ -130,8 +130,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data?.howItWorks?.paddingY || 'md'} onChange={(v) => setNestedData('howItWorks.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.howItWorks?.paddingX || 'md'} onChange={(v) => setNestedData('howItWorks.paddingX', v)} />

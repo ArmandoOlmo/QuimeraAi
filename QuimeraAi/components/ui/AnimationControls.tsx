@@ -21,16 +21,16 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
   const { t } = useTranslation();
   const label = labelProp || t('controls.cardAnimations');
   return (
-    <div className="space-y-3 p-3 bg-editor-border/20 rounded-md">
+    <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md">
       <div className="flex items-center gap-2 mb-2">
-        <Wand2 size={14} className="text-editor-accent" />
-        <label className="text-xs font-bold text-editor-text-primary uppercase tracking-wider">
+        <Wand2 size={14} className="text-q-accent" />
+        <label className="text-xs font-bold text-q-text uppercase tracking-wider">
           {label}
         </label>
       </div>
 
       <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-editor-text-secondary uppercase tracking-wider">
+        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
           {t('controls.enableAnimations')}
         </label>
         <button
@@ -38,7 +38,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           role="switch"
           aria-checked={enableCardAnimation}
           onClick={() => onToggleAnimation(!enableCardAnimation)}
-          className={`${enableCardAnimation ? 'bg-editor-accent' : 'bg-editor-border'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-editor-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
+          className={`${enableCardAnimation ? 'bg-q-accent' : 'bg-q-surface-overlay'} relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-q-accent/40 focus:ring-offset-2 focus:ring-offset-editor-panel-bg`}
         >
           <span
             aria-hidden="true"
@@ -49,13 +49,13 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
 
       {enableCardAnimation && (
         <div>
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
             {t('controls.animationType')}
           </label>
           <select
             value={animationType}
             onChange={(e) => onChangeAnimationType(e.target.value as AnimationType)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent transition-all"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent transition-all"
           >
             <option value="none">{t('controls.animNone')}</option>
             <option value="fade-in">{t('controls.animFadeIn')}</option>

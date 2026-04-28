@@ -229,13 +229,13 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 {/* Search */}
                 <div className="relative flex-1 w-full sm:w-auto">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                     <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder={t('accounting.searchTransactions', 'Search transactions...')}
-                        className="w-full h-10 pl-9 pr-4 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                        className="w-full h-10 pl-9 pr-4 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                     />
                 </div>
 
@@ -277,7 +277,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         onClick={() => setShowAiVerifiedOnly((v) => !v)}
                         className={`h-10 px-3 rounded-xl border text-sm font-medium flex items-center gap-1.5 transition-all ${showAiVerifiedOnly
                                 ? 'bg-primary/20 border-primary/40 text-primary'
-                                : 'border-border/60 bg-secondary/30 text-muted-foreground hover:text-foreground'
+                                : 'border-q-border/60 bg-secondary/30 text-q-text-muted hover:text-foreground'
                             }`}
                     >
                         <Sparkles size={14} />
@@ -297,7 +297,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
 
             {/* Add/Edit Form (collapsible) */}
             {showAddForm && (
-                <div className="rounded-2xl border border-primary/20 bg-card/90 backdrop-blur-xl p-5 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="rounded-2xl border border-primary/20 bg-q-surface/90 backdrop-blur-xl p-5 space-y-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between">
                         <h3 className="font-bold text-foreground flex items-center gap-2">
                             {editingId ? (
@@ -306,20 +306,20 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                 <><Plus size={16} /> {t('accounting.newTransaction', 'New Transaction')}</>
                             )}
                         </h3>
-                        <button onClick={() => { setShowAddForm(false); setEditingId(null); }} className="text-muted-foreground hover:text-foreground">
+                        <button onClick={() => { setShowAddForm(false); setEditingId(null); }} className="text-q-text-muted hover:text-foreground">
                             <X size={18} />
                         </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <input type="date" value={formData.date} onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.description} onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
                             placeholder={t('accounting.description', 'Description')}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:ring-2 focus:ring-primary/40" />
                         <input type="number" value={formData.amount || ''} onChange={(e) => setFormData((f) => ({ ...f, amount: parseFloat(e.target.value) || 0 }))}
                             placeholder={t('accounting.amount', 'Amount')} min={0} step="0.01"
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:ring-2 focus:ring-primary/40" />
                         <DashboardSelect
                             value={formData.type}
                             onChange={(val) => setFormData((f) => ({ ...f, type: val as TransactionType }))}
@@ -333,13 +333,13 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <input type="text" value={formData.counterpartyName || ''} onChange={(e) => setFormData((f) => ({ ...f, counterpartyName: e.target.value }))}
                             placeholder={t('accounting.counterparty', 'Client / Vendor')}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.category} onChange={(e) => setFormData((f) => ({ ...f, category: e.target.value }))}
                             placeholder={t('accounting.categoryOptional', 'Category (AI will auto-fill)')}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:ring-2 focus:ring-primary/40" />
                         <input type="text" value={formData.account} onChange={(e) => setFormData((f) => ({ ...f, account: e.target.value }))}
                             placeholder={t('accounting.accountOptional', 'Account (AI will auto-fill)')}
-                            className="h-10 px-3 rounded-xl border border-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40" />
+                            className="h-10 px-3 rounded-xl border border-q-border/60 bg-secondary/30 text-sm text-foreground placeholder:text-q-text-muted focus:ring-2 focus:ring-primary/40" />
                     </div>
 
                     <div className="flex items-center gap-3 justify-end">
@@ -359,11 +359,11 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
             )}
 
             {/* Table */}
-            <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl overflow-hidden">
+            <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <tr className="border-b border-q-border/40 text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                 <th className="text-left p-4 cursor-pointer hover:text-foreground transition-colors" onClick={() => toggleSort('date')}>
                                     <span className="flex items-center gap-1">{t('accounting.date', 'Date')} <ArrowUpDown size={12} /></span>
                                 </th>
@@ -381,7 +381,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="p-12 text-center text-muted-foreground">
+                                    <td colSpan={8} className="p-12 text-center text-q-text-muted">
                                         <DollarSign size={40} className="mx-auto mb-3 opacity-40" />
                                         <p className="font-medium">{t('accounting.noTransactions', 'No transactions found')}</p>
                                         <p className="text-xs mt-1">{t('accounting.addFirstTransaction', 'Add your first transaction to get started')}</p>
@@ -391,16 +391,16 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                 filtered.map((tx) => (
                                     <tr
                                         key={tx.id}
-                                        className="border-b border-border/30 hover:bg-secondary/20 transition-colors cursor-pointer group"
+                                        className="border-b border-q-border/30 hover:bg-secondary/20 transition-colors cursor-pointer group"
                                         onClick={() => startEdit(tx)}
                                     >
                                         <td className="p-4 text-sm text-foreground font-medium whitespace-nowrap">{tx.date}</td>
                                         <td className="p-4 text-sm text-foreground max-w-[200px] truncate">{tx.description}</td>
-                                        <td className="p-4 text-sm text-muted-foreground">{tx.counterpartyName || '—'}</td>
+                                        <td className="p-4 text-sm text-q-text-muted">{tx.counterpartyName || '—'}</td>
                                         <td className="p-4">
                                             <span className="text-xs px-2 py-1 rounded-full bg-secondary/50 text-foreground font-medium">{tx.category || '—'}</span>
                                         </td>
-                                        <td className="p-4 text-sm text-muted-foreground">{tx.account || '—'}</td>
+                                        <td className="p-4 text-sm text-q-text-muted">{tx.account || '—'}</td>
                                         <td className={`p-4 text-sm font-bold text-right whitespace-nowrap ${tx.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                                             {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                         </td>
@@ -418,7 +418,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                                         <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                                             <button
                                                 onClick={() => setDeleteId(tx.id)}
-                                                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                                                className="p-1.5 rounded-lg text-q-text-muted hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
                                                 aria-label={t('accounting.delete', 'Delete')}
                                             >
                                                 <Trash2 size={14} />
@@ -433,7 +433,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
 
                 {/* Footer summary */}
                 {filtered.length > 0 && (
-                    <div className="px-4 py-3 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="px-4 py-3 border-t border-q-border/40 flex items-center justify-between text-xs text-q-text-muted">
                         <span>{t('accounting.showingCount', '{{count}} transactions', { count: filtered.length })}</span>
                         <div className="flex items-center gap-4">
                             <span className="flex items-center gap-1.5">

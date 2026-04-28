@@ -162,19 +162,19 @@ const NavigationDashboard: React.FC = () => {
     });
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons />
 
                 {/* Standardized Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 sticky top-0" role="banner">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 sticky top-0" role="banner">
                     {/* Left Section - Menu & Title */}
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-lg transition-colors touch-manipulation"
                             aria-label="Open navigation menu"
                             aria-expanded={isMobileMenuOpen}
                         >
@@ -192,7 +192,7 @@ const NavigationDashboard: React.FC = () => {
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileSearchOpen(true)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-q-text-muted hover:text-foreground transition-colors"
                             aria-label="Search"
                         >
                             <Search size={20} />
@@ -202,7 +202,7 @@ const NavigationDashboard: React.FC = () => {
                         {effectiveProject && (
                             <button
                                 onClick={handleCreateNew}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-q-text-muted hover:text-foreground transition-colors"
                                 title={t('navigationDashboard.addMenu')}
                             >
                                 <Plus size={20} />
@@ -214,14 +214,14 @@ const NavigationDashboard: React.FC = () => {
                         <div className="hidden sm:flex gap-2">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`transition-colors ${viewMode === 'grid' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                 aria-label="Grid view"
                             >
                                 <LayoutGrid size={15} />
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`transition-colors ${viewMode === 'list' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                 aria-label="List view"
                             >
                                 <LayoutList size={15} />
@@ -238,13 +238,13 @@ const NavigationDashboard: React.FC = () => {
                     placeholder={t('navigationDashboard.searchMenus')}
                 />
 
-                <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background/50 relative z-10">
+                <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-q-bg/50 relative z-10">
                     <div className="max-w-7xl mx-auto space-y-8">
 
                         {/* Stats Overview */}
                         {effectiveProject && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -255,10 +255,10 @@ const NavigationDashboard: React.FC = () => {
                                         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg shadow-black/10">
                                             <Globe className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
+                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.totalMenus', 'Total de Menús')}</p>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-green-500 to-emerald-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -269,10 +269,10 @@ const NavigationDashboard: React.FC = () => {
                                         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-400 shadow-lg shadow-black/10">
                                             <Check className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
+                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.activeMenus', 'Menús Activos')}</p>
                                     </div>
                                 </div>
-                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
+                                <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 min-h-[130px] shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 ease-out">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-30 dark:opacity-20 blur-2xl bg-gradient-to-br from-orange-500 to-amber-400 group-hover:opacity-50 dark:group-hover:opacity-35 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
                                     <div className="absolute right-4 bottom-3 select-none pointer-events-none">
                                         <span className="leading-[0.85] text-foreground/[0.08] dark:text-white/[0.10] group-hover:text-foreground/[0.14] dark:group-hover:text-white/[0.16] transition-colors duration-500" style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(4rem, 6vw, 7rem)' }}>
@@ -283,7 +283,7 @@ const NavigationDashboard: React.FC = () => {
                                         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 shadow-lg shadow-black/10">
                                             <LinkIcon className="w-5 h-5 text-white" strokeWidth={2} />
                                         </div>
-                                        <p className="text-sm text-muted-foreground font-medium mt-auto">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
+                                        <p className="text-sm text-q-text-muted font-medium mt-auto">{t('navigationDashboard.orphanMenus', 'Sin Asignar')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -297,7 +297,7 @@ const NavigationDashboard: React.FC = () => {
                                     <h4 className="text-sm font-semibold text-foreground mb-1">
                                         {t('navigationDashboard.connectMenus')}
                                     </h4>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-q-text-muted">
                                         {t('navigationDashboard.connectMenusDesc')}
                                         <button
                                             onClick={() => loadProject(effectiveProjectId!, false, true)}
@@ -313,13 +313,13 @@ const NavigationDashboard: React.FC = () => {
 
                         {/* Filter Bar - icon only */}
                         <div className="flex items-center gap-3 sm:gap-4">
-                            <span className="text-[10px] text-muted-foreground font-medium flex-shrink-0">
+                            <span className="text-[10px] text-q-text-muted font-medium flex-shrink-0">
                                 {filteredMenus.length}/{menus.length}
                             </span>
 
                             {/* Usage filter - icon only */}
                             <div className="relative flex-shrink-0 cursor-pointer" title={t('navigationDashboard.allMenus', 'Filtrar')}>
-                                <Layers size={15} className={`pointer-events-none transition-colors ${filterUsage !== 'all' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`} />
+                                <Layers size={15} className={`pointer-events-none transition-colors ${filterUsage !== 'all' ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`} />
                                 <select
                                     value={filterUsage}
                                     onChange={(e) => setFilterUsage(e.target.value as any)}
@@ -336,7 +336,7 @@ const NavigationDashboard: React.FC = () => {
                             {filterUsage !== 'all' && (
                                 <button
                                     onClick={() => setFilterUsage('all')}
-                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                    className="text-q-text-muted hover:text-foreground transition-colors flex-shrink-0"
                                     title={t('common.clear', 'Limpiar filtros')}
                                 >
                                     <X size={13} />
@@ -346,16 +346,16 @@ const NavigationDashboard: React.FC = () => {
 
                         {/* Content Area */}
                         {filteredMenus.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 bg-card/50 border border-border border-dashed rounded-xl">
+                            <div className="flex flex-col items-center justify-center py-20 bg-q-surface/50 border border-q-border border-dashed rounded-xl">
                                 <div className="p-4 bg-muted/50 rounded-full mb-4">
-                                    <Search className="text-muted-foreground opacity-50" size={32} />
+                                    <Search className="text-q-text-muted opacity-50" size={32} />
                                 </div>
                                 <h3 className="text-lg font-medium text-foreground mb-1">
                                     {searchQuery || filterUsage !== 'all'
                                         ? t('navigationDashboard.noMenusMatch')
                                         : t('navigationDashboard.noMenusFound')}
                                 </h3>
-                                <p className="text-sm text-muted-foreground mb-6 text-center max-w-sm">
+                                <p className="text-sm text-q-text-muted mb-6 text-center max-w-sm">
                                     {t('navigationDashboard.tryAdjustingFilters', 'Intenta ajustar tu búsqueda o crea un nuevo menú.')}
                                 </p>
                                 {effectiveProject && (
@@ -380,7 +380,7 @@ const NavigationDashboard: React.FC = () => {
                                         <div
                                             key={menu.id}
                                             onClick={() => handleEdit(menu)}
-                                            className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/40 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
+                                            className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out cursor-pointer"
                                         >
                                             {/* Gradient blob decoration */}
                                             <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 dark:opacity-15 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-40 dark:group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
@@ -389,7 +389,7 @@ const NavigationDashboard: React.FC = () => {
                                                     <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
                                                         {menu.title}
                                                     </h3>
-                                                    <p className="text-xs text-muted-foreground mt-1 font-mono bg-secondary/50 inline-block px-1.5 py-0.5 rounded">
+                                                    <p className="text-xs text-q-text-muted mt-1 font-mono bg-secondary/50 inline-block px-1.5 py-0.5 rounded">
                                                         {menu.handle}
                                                     </p>
                                                 </div>
@@ -417,13 +417,13 @@ const NavigationDashboard: React.FC = () => {
                                                 ) : (
                                                     <>
                                                         {menu.items.slice(0, 3).map((item, idx) => (
-                                                            <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                            <div key={idx} className="flex items-center gap-2 text-sm text-q-text-muted">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-border md:group-hover:bg-primary/50 transition-colors"></div>
                                                                 <span className="truncate">{item.text}</span>
                                                             </div>
                                                         ))}
                                                         {menu.items.length > 3 && (
-                                                            <div className="text-xs text-muted-foreground pl-3.5 italic">
+                                                            <div className="text-xs text-q-text-muted pl-3.5 italic">
                                                                 + {menu.items.length - 3} {t('common.more')}
                                                             </div>
                                                         )}
@@ -432,29 +432,29 @@ const NavigationDashboard: React.FC = () => {
                                             </div>
 
                                             {/* Footer / Actions */}
-                                            <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                                                <span className="text-xs text-muted-foreground">
+                                            <div className="flex items-center justify-between pt-4 border-t border-q-border/50">
+                                                <span className="text-xs text-q-text-muted">
                                                     {menu.items.length} {t('navigationDashboard.items')}
                                                 </span>
 
                                                 <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
-                                                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                         title={t('common.edit')}
                                                     >
                                                         <Edit2 size={16} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                        className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
                                                         title={t('common.duplicate')}
                                                     >
                                                         <Copy size={16} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => handleDelete(e, menu.id)}
-                                                        className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                         title={t('common.delete')}
                                                     >
                                                         <Trash2 size={16} />
@@ -467,15 +467,15 @@ const NavigationDashboard: React.FC = () => {
                             </div>
                         ) : (
                             /* LIST VIEW (Enhanced Table) */
-                            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                            <div className="bg-q-surface border border-q-border rounded-xl shadow-sm overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="border-b border-border bg-muted/30">
-                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('editor.title')}</th>
-                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('navigationDashboard.items')}</th>
-                                                <th className="p-4 font-medium text-sm text-muted-foreground">{t('dashboard.usage')}</th>
-                                                <th className="p-4 font-medium text-sm text-muted-foreground w-40 text-right pr-6">{t('common.actions')}</th>
+                                            <tr className="border-b border-q-border bg-muted/30">
+                                                <th className="p-4 font-medium text-sm text-q-text-muted">{t('editor.title')}</th>
+                                                <th className="p-4 font-medium text-sm text-q-text-muted">{t('navigationDashboard.items')}</th>
+                                                <th className="p-4 font-medium text-sm text-q-text-muted">{t('dashboard.usage')}</th>
+                                                <th className="p-4 font-medium text-sm text-q-text-muted w-40 text-right pr-6">{t('common.actions')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border">
@@ -497,7 +497,7 @@ const NavigationDashboard: React.FC = () => {
                                                                 </div>
                                                                 <div>
                                                                     <div className="font-semibold text-foreground">{menu.title}</div>
-                                                                    <div className="text-xs text-muted-foreground mt-0.5 font-mono">{menu.handle}</div>
+                                                                    <div className="text-xs text-q-text-muted mt-0.5 font-mono">{menu.handle}</div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -508,7 +508,7 @@ const NavigationDashboard: React.FC = () => {
                                                                     {t('navigationDashboard.empty')}
                                                                 </span>
                                                             ) : (
-                                                                <span className="text-muted-foreground inline-flex items-center gap-1.5">
+                                                                <span className="text-q-text-muted inline-flex items-center gap-1.5">
                                                                     <MousePointerClick size={14} />
                                                                     {menu.items.length} {menu.items.length === 1 ? t('navigationDashboard.item') : t('navigationDashboard.items')}
                                                                 </span>
@@ -529,7 +529,7 @@ const NavigationDashboard: React.FC = () => {
                                                                     </span>
                                                                 )}
                                                                 {!usedInHeader && !usedInFooter && (
-                                                                    <span className="text-xs text-muted-foreground/60 italic px-2">
+                                                                    <span className="text-xs text-q-text-muted/60 italic px-2">
                                                                         — {t('navigationDashboard.notAssigned')}
                                                                     </span>
                                                                 )}
@@ -539,21 +539,21 @@ const NavigationDashboard: React.FC = () => {
                                                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleEdit(menu); }}
-                                                                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                                                    className="p-2 text-q-text-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                                                                     title={t('common.edit')}
                                                                 >
                                                                     <Edit2 size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleDuplicate(menu); }}
-                                                                    className="p-2 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                                                                    className="p-2 text-q-text-muted hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
                                                                     title={t('common.duplicate')}
                                                                 >
                                                                     <Copy size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => handleDelete(e, menu.id)}
-                                                                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                    className="p-2 text-q-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                                                     title={t('common.delete')}
                                                                 >
                                                                     <Trash2 size={16} />
@@ -571,7 +571,7 @@ const NavigationDashboard: React.FC = () => {
 
                         {effectiveProject && (
                             <div className="flex justify-center mt-8">
-                                <p className="text-xs text-muted-foreground opacity-60">
+                                <p className="text-xs text-q-text-muted opacity-60">
                                     {t('navigationDashboard.menusHelp', 'Los menús te permiten organizar la navegación de tu sitio web.')}
                                 </p>
                             </div>

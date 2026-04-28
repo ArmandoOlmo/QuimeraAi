@@ -64,7 +64,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
         <>
             {/* Statistics Section */}
             <section className="relative z-[1] grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                <div className="bg-q-surface/50 border border-q-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                         <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
                             <Globe className="text-primary w-4 h-4 md:w-5 md:h-5" />
@@ -73,12 +73,12 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                     <div className="text-xl md:text-3xl font-extrabold text-foreground">
                         {allUserProjects.length}
                     </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
                         {t('dashboard.totalWebsites')}
                     </div>
                 </div>
 
-                <div className="bg-card/50 border border-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                <div className="bg-q-surface/50 border border-q-border hover:border-green-500/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                         <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-green-500/20">
                             <CheckCircle className="text-green-500 w-4 h-4 md:w-5 md:h-5" />
@@ -87,26 +87,26 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                     <div className="text-xl md:text-3xl font-extrabold text-foreground">
                         {publishedCount}
                     </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
                         {t('dashboard.published')}
                     </div>
                 </div>
 
-                <div className="bg-card/50 border border-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                <div className="bg-q-surface/50 border border-q-border hover:border-muted-foreground/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                         <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-muted">
-                            <FileEdit className="text-muted-foreground w-4 h-4 md:w-5 md:h-5" />
+                            <FileEdit className="text-q-text-muted w-4 h-4 md:w-5 md:h-5" />
                         </div>
                     </div>
                     <div className="text-xl md:text-3xl font-extrabold text-foreground">
                         {draftCount}
                     </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
                         {t('dashboard.draft')}
                     </div>
                 </div>
 
-                <div className="bg-card/50 border border-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
+                <div className="bg-q-surface/50 border border-q-border hover:border-primary/30 rounded-xl md:rounded-2xl p-2.5 md:p-4 hover:shadow-lg transition-all">
                     <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                         <div className="p-1.5 md:p-2 rounded-md md:rounded-lg bg-primary/20">
                             <LayoutGrid className="text-primary w-4 h-4 md:w-5 md:h-5" />
@@ -115,7 +115,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                     <div className="text-xl md:text-3xl font-extrabold text-foreground">
                         {userProjects.length}
                     </div>
-                    <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
+                    <div className="text-[10px] md:text-xs font-semibold text-q-text-muted uppercase tracking-wider mt-0.5 md:mt-1 leading-tight">
                         {t('dashboard.filtered')}
                     </div>
                 </div>
@@ -163,7 +163,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                     setSortOrder('desc');
                                 }
                             }}
-                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                            className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-medium transition-all bg-secondary/50 text-q-text-muted hover:text-foreground hover:bg-secondary"
                             aria-label={`Sort by ${sortBy} (${sortOrder}ending)`}
                         >
                             <ArrowUpDown size={14} aria-hidden="true" />
@@ -182,8 +182,8 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                 onClick={() => setViewMode('grid')}
                                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                                     viewMode === 'grid'
-                                        ? 'text-primary bg-background shadow-sm'
-                                        : 'text-muted-foreground hover:text-foreground'
+                                        ? 'text-primary bg-q-bg shadow-sm'
+                                        : 'text-q-text-muted hover:text-foreground'
                                 }`}
                                 aria-label={t('dashboard.gridView')}
                                 aria-pressed={viewMode === 'grid'}
@@ -194,8 +194,8 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                 onClick={() => setViewMode('list')}
                                 className={`h-8 w-8 flex items-center justify-center rounded-md transition-all ${
                                     viewMode === 'list'
-                                        ? 'text-primary bg-background shadow-sm'
-                                        : 'text-muted-foreground hover:text-foreground'
+                                        ? 'text-primary bg-q-bg shadow-sm'
+                                        : 'text-q-text-muted hover:text-foreground'
                                 }`}
                                 aria-label={t('dashboard.listView')}
                                 aria-pressed={viewMode === 'list'}
@@ -205,7 +205,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                         </div>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-xs md:text-sm text-muted-foreground">
+                        <span className="text-xs md:text-sm text-q-text-muted">
                             {t('dashboard.showingProjects', {
                                 count: userProjects.length,
                                 total: allUserProjects.length,
@@ -217,7 +217,7 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                                 onClick={() =>
                                     setViewMode(viewMode === 'grid' ? 'list' : 'grid')
                                 }
-                                className="p-2 bg-secondary/50 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                                className="p-2 bg-secondary/50 rounded-lg text-q-text-muted hover:text-foreground transition-colors"
                             >
                                 {viewMode === 'grid' ? (
                                     <List size={16} />

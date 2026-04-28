@@ -45,7 +45,7 @@ const AIAssistButton: React.FC<AIAssistButtonProps> = ({
         `,
         secondary: `
             bg-muted hover:bg-accent
-            text-foreground border border-border
+            text-foreground border border-q-border
             hover:border-primary/50
         `,
         ghost: `

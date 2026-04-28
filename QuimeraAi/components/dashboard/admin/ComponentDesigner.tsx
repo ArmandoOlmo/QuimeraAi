@@ -167,21 +167,21 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
 
     const LeftSidebar = () => (
         <aside className={`
-            fixed xl:relative inset-y-0 left-0 z-50 xl:z-30 w-64 bg-editor-panel-bg border-r border-editor-border flex flex-col
+            fixed xl:relative inset-y-0 left-0 z-50 xl:z-30 w-64 bg-q-surface border-r border-q-border flex flex-col
             transform transition-transform duration-300 ease-in-out xl:transform-none shadow-2xl xl:shadow-none
             ${activeMobilePanel === 'nav' ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}
         `}>
-             <div className="p-4 border-b border-editor-border flex-shrink-0 flex justify-between items-center">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary">Components</h3>
-                <button onClick={() => setActiveMobilePanel('none')} className="xl:hidden p-1 rounded-md hover:bg-editor-border">
+             <div className="p-4 border-b border-q-border flex-shrink-0 flex justify-between items-center">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-q-text-secondary">Components</h3>
+                <button onClick={() => setActiveMobilePanel('none')} className="xl:hidden p-1 rounded-md hover:bg-q-surface-overlay">
                     <X size={18} />
                 </button>
             </div>
             <nav className="flex-1 overflow-y-auto p-2 space-y-1">
                 <div>
-                    <p className="px-2 pt-2 pb-1 text-xs font-bold text-editor-text-secondary uppercase">Standard</p>
+                    <p className="px-2 pt-2 pb-1 text-xs font-bold text-q-text-secondary uppercase">Standard</p>
                     {componentOptions.map(opt => (
-                        <button key={opt.id} onClick={() => handleComponentSelect(opt.id)} className={`w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors ${selectedComponentId === opt.id ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'}`}>
+                        <button key={opt.id} onClick={() => handleComponentSelect(opt.id)} className={`w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors ${selectedComponentId === opt.id ? 'bg-q-accent/10 text-q-accent' : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'}`}>
                             <span className="mr-3">{opt.icon}</span>
                             {opt.name}
                         </button>
@@ -189,9 +189,9 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                 </div>
                 {customComponents && customComponents.length > 0 && (
                         <div>
-                        <p className="px-2 pt-4 pb-1 text-xs font-bold text-editor-text-secondary uppercase">Custom</p>
+                        <p className="px-2 pt-4 pb-1 text-xs font-bold text-q-text-secondary uppercase">Custom</p>
                         {customComponents.map((comp) => (
-                            <div key={comp.id} className={`group w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors ${selectedComponentId === comp.id ? 'bg-editor-accent/10 text-editor-accent' : 'text-editor-text-secondary hover:bg-editor-border hover:text-editor-text-primary'}`}>
+                            <div key={comp.id} className={`group w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors ${selectedComponentId === comp.id ? 'bg-q-accent/10 text-q-accent' : 'text-q-text-secondary hover:bg-q-surface-overlay hover:text-q-text'}`}>
                                 <span className="mr-3 opacity-60"><Puzzle size={18} /></span>
                                 {editingComponentId === comp.id ? (
                                     <div className="flex-1 flex items-center gap-1">
@@ -200,7 +200,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                             value={editingName}
                                             onChange={(e) => setEditingName(e.target.value)}
                                             onKeyDown={(e) => handleKeyDown(e, comp.id)}
-                                            className="flex-1 bg-editor-bg border border-editor-accent rounded px-2 py-1 text-sm text-editor-text-primary focus:outline-none"
+                                            className="flex-1 bg-q-bg border border-q-accent rounded px-2 py-1 text-sm text-q-text focus:outline-none"
                                             autoFocus
                                         />
                                         <button
@@ -208,7 +208,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                                 e.preventDefault(); // Prevenir que el input pierda el foco
                                                 handleSaveEdit(comp.id);
                                             }}
-                                            className="p-1 rounded hover:bg-editor-accent/20 text-editor-accent"
+                                            className="p-1 rounded hover:bg-q-accent/20 text-q-accent"
                                             title="Guardar"
                                         >
                                             <Check size={14} />
@@ -218,7 +218,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                                 e.preventDefault(); // Prevenir que el input pierda el foco
                                                 handleCancelEdit();
                                             }}
-                                            className="p-1 rounded hover:bg-editor-border text-editor-text-secondary"
+                                            className="p-1 rounded hover:bg-q-surface-overlay text-q-text-secondary"
                                             title="Cancelar"
                                         >
                                             <X size={14} />
@@ -237,7 +237,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                                 e.stopPropagation();
                                                 handleStartEdit(comp.id, comp.name);
                                             }}
-                                            className="p-1 rounded hover:bg-editor-accent/20 text-editor-text-secondary hover:text-editor-accent opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="p-1 rounded hover:bg-q-accent/20 text-q-text-secondary hover:text-q-accent opacity-0 group-hover:opacity-100 transition-opacity"
                                             title="Editar nombre"
                                         >
                                             <Edit2 size={14} />
@@ -249,8 +249,8 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     </div>
                 )}
             </nav>
-                <div className="p-2 border-t border-editor-border">
-                <button onClick={() => setIsCreateModalOpen(true)} className="w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors text-editor-accent hover:bg-editor-accent/10">
+                <div className="p-2 border-t border-q-border">
+                <button onClick={() => setIsCreateModalOpen(true)} className="w-full flex items-center text-left p-2 rounded-md text-sm font-medium transition-colors text-q-accent hover:bg-q-accent/10">
                     <Plus size={18} className="mr-3" />
                     Create New Component
                 </button>
@@ -265,14 +265,14 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
 
         return (
             <aside className={`
-                fixed xl:relative inset-y-0 right-0 z-50 xl:z-30 w-80 sm:w-[384px] bg-editor-panel-bg border-l border-editor-border flex flex-col
+                fixed xl:relative inset-y-0 right-0 z-50 xl:z-30 w-80 sm:w-[384px] bg-q-surface border-l border-q-border flex flex-col
                 transform transition-transform duration-300 ease-in-out xl:transform-none shadow-2xl xl:shadow-none
                 ${activeMobilePanel === 'props' ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'}
             `}>
-                <div className="p-4 border-b border-editor-border flex-shrink-0">
+                <div className="p-4 border-b border-q-border flex-shrink-0">
                     <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-editor-text-secondary">Properties</h3>
-                        <button onClick={() => setActiveMobilePanel('none')} className="xl:hidden p-1 rounded-md hover:bg-editor-border">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-q-text-secondary">Properties</h3>
+                        <button onClick={() => setActiveMobilePanel('none')} className="xl:hidden p-1 rounded-md hover:bg-q-surface-overlay">
                             <X size={18} />
                         </button>
                     </div>
@@ -280,7 +280,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     {/* Component Name Editor for Custom Components */}
                     {selectedComponent && (
                         <div className="mb-2">
-                            <label className="block text-xs font-medium text-editor-text-secondary mb-1">Component Name</label>
+                            <label className="block text-xs font-medium text-q-text-secondary mb-1">Component Name</label>
                             <div className="flex items-center gap-2">
                                 {editingComponentId === selectedComponent.id ? (
                                     <>
@@ -289,7 +289,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                             value={editingName}
                                             onChange={(e) => setEditingName(e.target.value)}
                                             onKeyDown={(e) => handleKeyDown(e, selectedComponent.id)}
-                                            className="flex-1 bg-editor-bg border border-editor-accent rounded px-2 py-1.5 text-sm text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent/50"
+                                            className="flex-1 bg-q-bg border border-q-accent rounded px-2 py-1.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/50"
                                             autoFocus
                                         />
                                         <button
@@ -297,7 +297,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                                 e.preventDefault(); // Prevenir que el input pierda el foco
                                                 handleSaveEdit(selectedComponent.id);
                                             }}
-                                            className="p-1.5 rounded bg-editor-accent text-editor-bg hover:bg-editor-accent-hover"
+                                            className="p-1.5 rounded bg-q-accent text-q-bg hover:bg-q-accent"
                                             title="Guardar"
                                         >
                                             <Check size={16} />
@@ -307,7 +307,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                                 e.preventDefault(); // Prevenir que el input pierda el foco
                                                 handleCancelEdit();
                                             }}
-                                            className="p-1.5 rounded bg-editor-border text-editor-text-secondary hover:bg-editor-border/70"
+                                            className="p-1.5 rounded bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/70"
                                             title="Cancelar"
                                         >
                                             <X size={16} />
@@ -315,12 +315,12 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                                     </>
                                 ) : (
                                     <>
-                                        <div className="flex-1 bg-editor-bg border border-editor-border rounded px-2 py-1.5 text-sm text-editor-text-primary">
+                                        <div className="flex-1 bg-q-bg border border-q-border rounded px-2 py-1.5 text-sm text-q-text">
                                             {selectedComponent.name}
                                         </div>
                                         <button
                                             onClick={() => handleStartEdit(selectedComponent.id, selectedComponent.name)}
-                                            className="p-1.5 rounded bg-editor-border text-editor-text-secondary hover:bg-editor-accent/20 hover:text-editor-accent"
+                                            className="p-1.5 rounded bg-q-surface-overlay text-q-text-secondary hover:bg-q-accent/20 hover:text-q-accent"
                                             title="Editar nombre"
                                         >
                                             <Edit2 size={16} />
@@ -356,7 +356,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                         <button 
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-2 bg-editor-accent text-editor-bg px-3 py-1.5 rounded-md text-xs font-bold hover:bg-editor-accent-hover transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 bg-q-accent text-q-bg px-3 py-1.5 rounded-md text-xs font-bold hover:bg-q-accent transition-colors disabled:opacity-50"
                         >
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                             Save Changes
@@ -368,19 +368,19 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     
                     {/* Variants Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-editor-border mt-4">
+                        <div className="border-t border-q-border mt-4">
                             <button
                                 onClick={() => setShowVariants(!showVariants)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-editor-border/30 transition-colors"
+                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
                             >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-editor-text-primary">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
                                     <Sparkles className="w-4 h-4" />
                                     Variants {selectedComponent.variants && `(${selectedComponent.variants.length})`}
                                 </div>
                                 <span className={`transition-transform ${showVariants ? 'rotate-180' : ''}`}>▼</span>
                             </button>
                             {showVariants && (
-                                <div className="p-4 bg-editor-bg">
+                                <div className="p-4 bg-q-bg">
                                     <VariantsManager
                                         component={selectedComponent}
                                         onUpdateVariants={async (variants, activeVariant) => {
@@ -394,19 +394,19 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     
                     {/* Permissions Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-editor-border">
+                        <div className="border-t border-q-border">
                             <button
                                 onClick={() => setShowPermissions(!showPermissions)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-editor-border/30 transition-colors"
+                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
                             >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-editor-text-primary">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
                                     <Shield className="w-4 h-4" />
                                     Permissions
                                 </div>
                                 <span className={`transition-transform ${showPermissions ? 'rotate-180' : ''}`}>▼</span>
                             </button>
                             {showPermissions && (
-                                <div className="p-4 bg-editor-bg">
+                                <div className="p-4 bg-q-bg">
                                     <ComponentPermissionsEditor
                                         component={selectedComponent}
                                         onUpdate={async (permissions: ComponentPermissions) => {
@@ -421,19 +421,19 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                     
                     {/* Documentation Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-editor-border">
+                        <div className="border-t border-q-border">
                             <button
                                 onClick={() => setShowDocumentation(!showDocumentation)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-editor-border/30 transition-colors"
+                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
                             >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-editor-text-primary">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
                                     <BookOpen className="w-4 h-4" />
                                     Documentation
                                 </div>
                                 <span className={`transition-transform ${showDocumentation ? 'rotate-180' : ''}`}>▼</span>
                             </button>
                             {showDocumentation && (
-                                <div className="p-4 bg-editor-bg">
+                                <div className="p-4 bg-q-bg">
                                     <ComponentDocumentationEditor
                                         component={selectedComponent}
                                         onUpdate={async (documentation: ComponentDocumentation) => {
@@ -485,26 +485,26 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                 <LeftSidebar />
 
                 {/* Center Panel: Preview */}
-                <main className="flex-1 flex flex-col min-w-0 bg-editor-bg relative z-0">
+                <main className="flex-1 flex flex-col min-w-0 bg-q-bg relative z-0">
                     {/* Mobile/Tablet Toolbar */}
-                    <div className="xl:hidden h-14 border-b border-editor-border bg-editor-panel-bg flex items-center justify-between px-4 flex-shrink-0 z-30 relative gap-4">
+                    <div className="xl:hidden h-14 border-b border-q-border bg-q-surface flex items-center justify-between px-4 flex-shrink-0 z-30 relative gap-4">
                          <button 
                             onClick={() => toggleMobilePanel('nav')}
-                            className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'nav' ? 'bg-editor-accent/10 text-editor-accent' : 'bg-editor-bg text-editor-text-secondary border border-editor-border'}`}
+                            className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'nav' ? 'bg-q-accent/10 text-q-accent' : 'bg-q-bg text-q-text-secondary border border-q-border'}`}
                         >
                             <Menu size={18} className="mr-2" />
                             Components
                         </button>
                         <button 
                             onClick={() => toggleMobilePanel('props')}
-                             className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'props' ? 'bg-editor-accent/10 text-editor-accent' : 'bg-editor-bg text-editor-text-secondary border border-editor-border'}`}
+                             className={`flex-1 p-2 rounded-md text-sm font-medium flex items-center justify-center transition-colors ${activeMobilePanel === 'props' ? 'bg-q-accent/10 text-q-accent' : 'bg-q-bg text-q-text-secondary border border-q-border'}`}
                         >
                             <Settings size={18} className="mr-2" />
                             Properties
                         </button>
                     </div>
 
-                    <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center items-start bg-editor-bg">
+                    <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center items-start bg-q-bg">
                         <ComponentPreview 
                             selectedComponentId={selectedComponentId} 
                             previewDevice={previewDevice}

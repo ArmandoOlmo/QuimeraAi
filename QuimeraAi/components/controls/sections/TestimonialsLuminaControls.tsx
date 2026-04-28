@@ -17,8 +17,8 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
   const contentTab = (
     <div className="space-y-4">
       {/* Text Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('editor.testimonialsLumina.content', 'Header Content')}
         </label>
@@ -49,14 +49,14 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
       </div>
 
       {/* Testimonials List */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <MessageSquare size={14} />
           {t('editor.testimonialsLumina.testimonials', 'Testimonials')}
         </label>
 
         {testimonials.map((test: any, idx: number) => (
-          <div key={idx} className="bg-editor-bg p-3 rounded-lg border border-editor-border mb-3 space-y-3 relative group">
+          <div key={idx} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 space-y-3 relative group">
             <button
               onClick={() => {
                 const newTests = testimonials.filter((_: any, i: number) => i !== idx);
@@ -67,7 +67,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
               <Trash2 size={14} />
             </button>
             
-            <span className="text-[10px] font-bold text-editor-accent uppercase block mb-2">Testimonial #{idx + 1}</span>
+            <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Testimonial #{idx + 1}</span>
 
             <TextArea 
               label={t('editor.testimonialsLumina.quote', 'Quote')} 
@@ -103,7 +103,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             const newTest = { quote: 'Great product!', authorName: 'John Doe', authorRole: 'Customer', authorImage: '' };
             setNestedData('testimonialsLumina.testimonials', [...testimonials, newTest]);
           }}
-          className="w-full py-2 bg-editor-accent text-editor-bg rounded-md hover:bg-editor-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
+          className="w-full py-2 bg-q-accent text-q-bg rounded-md hover:bg-q-accent/90 transition-colors flex items-center justify-center gap-2 font-medium text-sm mt-2"
         >
           <Plus size={16} /> {t('editor.testimonialsLumina.addTestimonial', 'Add Testimonial')}
         </button>
@@ -114,8 +114,8 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
   const styleTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -129,9 +129,9 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
       
       {renderLuminaAnimationControls(data.testimonialsLumina, (key, value) => setNestedData(`testimonialsLumina.${key}`, value))}
       
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <div className="flex items-center justify-between mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase flex items-center gap-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2">
             <Settings size={14} />
             {t('editor.controls.common.colors', 'Colors')}
           </label>
@@ -140,7 +140,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
               setNestedData('testimonialsLumina.colors', {});
               setNestedData('testimonialsLumina.glassEffect', true);
             }}
-            className="flex items-center gap-1.5 px-2 py-1 bg-editor-bg border border-editor-border rounded text-[10px] text-editor-text-secondary hover:text-editor-accent hover:border-editor-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 bg-q-bg border border-q-border rounded text-[10px] text-q-text-secondary hover:text-q-accent hover:border-q-accent/30 transition-colors"
             title="Restaurar a los colores originales de Lumina"
           >
             <RotateCcw size={10} />
@@ -150,13 +150,13 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.controls.colors.panel', 'Panel')}</p>
             <ColorControl label={t('editor.controls.common.background', 'Background')} value={data.testimonialsLumina.colors?.panelBackground} onChange={(v) => setNestedData('testimonialsLumina.colors.panelBackground', v)} />
             <ColorControl label={t('editor.controls.colors.border', 'Border')} value={data.testimonialsLumina.colors?.panelBorder} onChange={(v) => setNestedData('testimonialsLumina.colors.panelBorder', v)} />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-editor-border/50">
-            <p className="text-[10px] uppercase font-bold text-editor-text-secondary/70 mb-1">Textos</p>
+          <div className="space-y-2 pt-2 border-t border-q-border/50">
+            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Textos</p>
             <ColorControl label="Fondo de Sección" value={data.testimonialsLumina.colors?.background} onChange={(v) => setNestedData('testimonialsLumina.colors.background', v)} />
             <ColorControl label={t('editor.controls.common.title', 'Heading')} value={data.testimonialsLumina.colors?.heading} onChange={(v) => setNestedData('testimonialsLumina.colors.heading', v)} />
             <ColorControl label={t('editor.controls.common.text', 'Text')} value={data.testimonialsLumina.colors?.text} onChange={(v) => setNestedData('testimonialsLumina.colors.text', v)} />

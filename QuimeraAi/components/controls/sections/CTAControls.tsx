@@ -31,15 +31,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <FileText size={14} />
           {t('controls.content')}
         </label>
         <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
         
-        <div className="bg-editor-panel-bg/30 p-3 rounded-lg border border-editor-border/50 my-3">
+        <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50 my-3">
           <ToggleControl
             label={t('controls.mostrarAcento')}
             checked={data?.cta.showAccent !== false}
@@ -61,12 +61,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <Input label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(e) => setNestedData('cta.secondaryText', e.target.value)} />
       </div>
 
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Link size={14} />
           Link Type
         </label>
-        <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+        <div className="flex bg-q-surface rounded-md border border-q-border p-1">
           {[
             { value: 'manual', label: 'Manual URL' },
             { value: 'product', label: 'Product' },
@@ -76,8 +76,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <button type="button"               key={type.value}
               onClick={() => setNestedData('cta.linkType', type.value)}
               className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data?.cta.linkType || 'manual') === type.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                 }`}
             >
               {type.label}
@@ -94,7 +94,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(e) => setNestedData('cta.buttonUrl', e.target.value)}
             placeholder="https://example.com or #section"
           />
-          <p className="text-xs text-editor-text-secondary -mt-2">
+          <p className="text-xs text-q-text-secondary -mt-2">
             Use URLs for external links or # for page sections (e.g., #contact)
           </p>
         </>
@@ -145,8 +145,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="cta" data={data} setNestedData={setNestedData} />
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical')} value={data?.cta?.paddingY || 'md'} onChange={(v) => setNestedData('cta.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.cta?.paddingX || 'md'} onChange={(v) => setNestedData('cta.paddingX', v)} />
@@ -155,15 +155,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.colors')}</label>
         <ColorControl label={t('controls.sectionBackground')} value={data?.cta.colors?.background || '#0f172a'} onChange={(v) => setNestedData('cta.colors.background', v)} />
       </div>
 
 
       {/* Card Appearance */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardAppearance')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardAppearance')}</label>
         
         <div className="mb-3">
           <ToggleControl
@@ -188,8 +188,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Text & Button */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.textButton')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.textButton')}</label>
         <ColorControl label={t('editor.controls.common.title')} value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
         <ColorControl label={t('controls.fondoBotn')} value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />

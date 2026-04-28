@@ -185,9 +185,9 @@ const AssetPreviewModal: React.FC<{
     const categoryConfig = CATEGORY_CONFIG[asset.category];
 
     return (
-        <div className="flex flex-col h-full max-h-[85vh] bg-card rounded-xl overflow-hidden">
+        <div className="flex flex-col h-full max-h-[85vh] bg-q-surface rounded-xl overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b border-border flex justify-between items-center bg-card z-10">
+            <div className="p-4 border-b border-q-border flex justify-between items-center bg-q-surface z-10">
                 <div className="flex items-center gap-3">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${categoryConfig.color}`}>
                         {categoryConfig.icon}
@@ -202,7 +202,7 @@ const AssetPreviewModal: React.FC<{
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-2 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                    className="p-2 rounded-full hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
                 >
                     <X size={20} />
                 </button>
@@ -222,13 +222,13 @@ const AssetPreviewModal: React.FC<{
             </div>
 
             {/* Details Section */}
-            <div className="border-t border-border bg-card z-10">
+            <div className="border-t border-q-border bg-q-surface z-10">
                 {/* Basic Info */}
-                <div className="p-4 border-b border-border/50">
+                <div className="p-4 border-b border-q-border/50">
                     <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                             <p className="text-sm font-bold text-foreground mb-1">{t('adminAssets.details', 'Details')}</p>
-                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-q-text-muted">
                                 <span className="flex items-center">
                                     <HardDrive size={14} className="mr-2 text-primary" />
                                     {formatBytes(asset.size)}
@@ -243,11 +243,11 @@ const AssetPreviewModal: React.FC<{
 
                     {/* Category Selector */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.category', 'Category')}</label>
+                        <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.category', 'Category')}</label>
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value as AdminAssetCategory)}
-                            className="w-full bg-background text-sm text-foreground p-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full bg-q-bg text-sm text-foreground p-2 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none"
                         >
                             {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                 <option key={key} value={key}>{label}</option>
@@ -257,11 +257,11 @@ const AssetPreviewModal: React.FC<{
 
                     {/* Category Selector */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">Categoría</label>
+                        <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">Categoría</label>
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value as AdminAssetCategory)}
-                            className="w-full bg-background text-sm text-foreground p-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full bg-q-bg text-sm text-foreground p-2 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none"
                         >
                             {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
                                 <option key={key} value={key}>
@@ -273,31 +273,31 @@ const AssetPreviewModal: React.FC<{
 
                     {/* Description */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.description', 'Description')}</label>
+                        <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.description', 'Description')}</label>
                         <textarea
                             value={description}
                             onChange={handleDescriptionChange}
                             rows={2}
                             placeholder={t('adminAssets.descriptionPlaceholder', 'Add a description...')}
-                            className="w-full bg-background text-sm text-foreground p-3 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                            className="w-full bg-q-bg text-sm text-foreground p-3 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none resize-none"
                         />
                     </div>
 
                     {/* Tags */}
                     <div className="mb-3">
-                        <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.tags', 'Tags')} (comma separated)</label>
+                        <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.tags', 'Tags')} (comma separated)</label>
                         <input
                             type="text"
                             value={tags}
                             onChange={(e) => setTags(e.target.value)}
                             placeholder="tag1, tag2, tag3"
-                            className="w-full bg-background text-sm text-foreground p-2 rounded-lg border border-border focus:ring-2 focus:ring-primary focus:outline-none"
+                            className="w-full bg-q-bg text-sm text-foreground p-2 rounded-lg border border-q-border focus:ring-2 focus:ring-primary focus:outline-none"
                         />
                     </div>
 
                     {/* Used In Articles */}
                     {asset.usedIn && asset.usedIn.length > 0 && (
-                        <div className="bg-secondary/30 p-3 rounded-lg border border-border/50">
+                        <div className="bg-secondary/30 p-3 rounded-lg border border-q-border/50">
                             <div className="flex items-center mb-2">
                                 <LinkIcon size={14} className="text-primary mr-2" />
                                 <span className="text-xs font-bold text-primary uppercase">{t('adminAssets.usedIn', 'Used in Articles')}</span>
@@ -436,7 +436,7 @@ const AssetItem: React.FC<{
                             {isSelected ? (
                                 <CheckSquare size={20} className="text-primary" />
                             ) : (
-                                <Square size={20} className="text-muted-foreground" />
+                                <Square size={20} className="text-q-text-muted" />
                             )}
                         </button>
                     </div>
@@ -1081,17 +1081,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -1101,7 +1101,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                 {t('adminAssets.title', 'Admin Asset Library')}
                             </h1>
                         </div>
-                        <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                        <span className="text-xs text-q-text-muted bg-secondary px-2 py-1 rounded-md">
                             {adminAssets.length} {t('adminAssets.assets', 'assets')}
                         </span>
                     </div>
@@ -1145,17 +1145,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                     <div className="max-w-7xl mx-auto space-y-8">
 
                         {/* Single Card Container for Generator + Library */}
-                        <div className="bg-card/80 border border-border rounded-2xl overflow-hidden">
+                        <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
 
                             {/* AI IMAGE GENERATOR */}
-                            <div className="p-6 border-b border-border">
+                            <div className="p-6 border-b border-q-border">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-primary rounded-lg">
                                         <Zap className="w-6 h-6 text-primary-foreground" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-foreground">{t('adminAssets.generator.title', 'AI Image Generator')}</h2>
-                                        <p className="text-sm text-muted-foreground">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
+                                        <p className="text-sm text-q-text-muted">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
                                     </div>
                                 </div>
 
@@ -1177,15 +1177,15 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             value={prompt}
                                             onChange={(e) => setPrompt(e.target.value)}
                                             placeholder={t('adminAssets.generator.promptPlaceholder', 'A professional hero image for a SaaS landing page...')}
-                                            className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
+                                            className="w-full bg-q-bg border border-q-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
                                         />
                                     </div>
 
                                     {/* Reference Images */}
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <label className="block text-xs font-bold text-muted-foreground uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
-                                            <span className="text-xs text-muted-foreground">{referenceImages.length}/14</span>
+                                            <label className="block text-xs font-bold text-q-text-muted uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
+                                            <span className="text-xs text-q-text-muted">{referenceImages.length}/14</span>
                                         </div>
 
                                         <input
@@ -1198,7 +1198,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         />
 
                                         <div
-                                            className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary hover:bg-primary/5'}`}
+                                            className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-q-border hover:border-primary hover:bg-primary/5'}`}
                                             onDragOver={handleDragOver}
                                             onDragLeave={handleDragLeave}
                                             onDrop={handleDrop}
@@ -1206,7 +1206,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             {referenceImages.length > 0 ? (
                                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2 mb-2">
                                                     {referenceImages.map((img, idx) => (
-                                                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-border">
+                                                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-q-border">
                                                             <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
@@ -1219,7 +1219,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                     {referenceImages.length < 14 && (
                                                         <button
                                                             onClick={() => referenceFileInputRef.current?.click()}
-                                                            className="aspect-square flex flex-col items-center justify-center gap-1 border border-border rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                                                            className="aspect-square flex flex-col items-center justify-center gap-1 border border-q-border rounded-md hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
                                                         >
                                                             <Plus size={16} />
                                                             <span className="text-[10px]">{t('common.add', 'Add')}</span>
@@ -1229,7 +1229,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             ) : (
                                                 <button
                                                     onClick={() => referenceFileInputRef.current?.click()}
-                                                    className="w-full flex flex-col items-center gap-2 text-muted-foreground py-4"
+                                                    className="w-full flex flex-col items-center gap-2 text-q-text-muted py-4"
                                                 >
                                                     <Upload size={24} />
                                                     <span className="text-xs font-medium">{t('adminAssets.generator.uploadRef', 'Upload reference images')}</span>
@@ -1242,11 +1242,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     {/* Quick Controls Row */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.category', 'Save to Category')}</label>
+                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.category', 'Save to Category')}</label>
                                             <select
                                                 value={selectedCategory}
                                                 onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
                                                 {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                                     <option key={key} value={key}>{label}</option>
@@ -1255,11 +1255,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.aspectRatio', 'Aspect Ratio')}</label>
+                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.aspectRatio', 'Aspect Ratio')}</label>
                                             <select
                                                 value={aspectRatio}
                                                 onChange={(e) => setAspectRatio(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
                                                 {ASPECT_RATIOS.map(ratio => (
                                                     <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
@@ -1268,11 +1268,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.style', 'Style')}</label>
+                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.style', 'Style')}</label>
                                             <select
                                                 value={style}
                                                 onChange={(e) => setStyle(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
                                                 {STYLES.map(s => (
                                                     <option key={s} value={s}>{s}</option>
@@ -1281,11 +1281,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.resolution', 'Resolution')}</label>
+                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.resolution', 'Resolution')}</label>
                                             <select
                                                 value={resolution}
                                                 onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                             >
                                                 {RESOLUTIONS.map(res => (
                                                     <option key={res.value} value={res.value}>{res.label}</option>
@@ -1305,7 +1305,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     )}
 
                                     {/* Advanced Controls Toggle */}
-                                    <div className="border-t border-border/50 pt-3">
+                                    <div className="border-t border-q-border/50 pt-3">
                                         <button
                                             onClick={() => setShowAdvanced(!showAdvanced)}
                                             className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
@@ -1318,11 +1318,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     {showAdvanced && (
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.lighting', 'Lighting')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.lighting', 'Lighting')}</label>
                                                 <select
                                                     value={lighting}
                                                     onChange={(e) => setLighting(e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     {LIGHTING_OPTIONS.map(l => (
                                                         <option key={l} value={l}>{l}</option>
@@ -1331,11 +1331,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.camera', 'Camera Angle')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.camera', 'Camera Angle')}</label>
                                                 <select
                                                     value={cameraAngle}
                                                     onChange={(e) => setCameraAngle(e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     {CAMERA_ANGLES.map(c => (
                                                         <option key={c} value={c}>{c}</option>
@@ -1344,11 +1344,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.color', 'Color Grading')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.color', 'Color Grading')}</label>
                                                 <select
                                                     value={colorGrading}
                                                     onChange={(e) => setColorGrading(e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     {COLOR_GRADING.map(c => (
                                                         <option key={c} value={c}>{c}</option>
@@ -1357,11 +1357,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.generator.dof', 'Depth of Field')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.dof', 'Depth of Field')}</label>
                                                 <select
                                                     value={depthOfField}
                                                     onChange={(e) => setDepthOfField(e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     {DEPTH_OF_FIELD.map(d => (
                                                         <option key={d} value={d}>{d}</option>
@@ -1388,11 +1388,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                 {/* Header */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                                     <div className="flex items-center gap-3">
-                                        <h2 className="text-base font-bold text-muted-foreground uppercase tracking-wider">
+                                        <h2 className="text-base font-bold text-q-text-muted uppercase tracking-wider">
                                             {t('adminAssets.library', 'Asset Library')}
                                         </h2>
                                         {filteredAssets.length < adminAssets.length && (
-                                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                                            <span className="text-xs text-q-text-muted bg-secondary px-2 py-1 rounded-md">
                                                 {filteredAssets.length} of {adminAssets.length}
                                             </span>
                                         )}
@@ -1401,7 +1401,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                         {/* Search Bar - Desktop */}
                                         <div className="hidden sm:flex items-center gap-2 flex-1 sm:flex-initial sm:w-48 bg-secondary/40 rounded-lg px-3 py-1.5">
-                                            <Search size={14} className="text-muted-foreground flex-shrink-0" />
+                                            <Search size={14} className="text-q-text-muted flex-shrink-0" />
                                             <input
                                                 type="text"
                                                 value={searchQuery}
@@ -1410,7 +1410,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                 className="flex-1 bg-transparent outline-none text-xs min-w-0"
                                             />
                                             {searchQuery && (
-                                                <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                                                <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground flex-shrink-0">
                                                     <X size={14} />
                                                 </button>
                                             )}
@@ -1419,7 +1419,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         {/* Mobile Search Button */}
                                         <button
                                             onClick={() => setIsMobileSearchOpen(true)}
-                                            className="sm:hidden flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors text-muted-foreground hover:text-foreground"
+                                            className="sm:hidden flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors text-q-text-muted hover:text-foreground"
                                         >
                                             <Search size={14} />
                                         </button>
@@ -1435,7 +1435,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         {/* Filter Toggle */}
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
-                                            className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors ${showFilters ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex items-center justify-center px-3 py-1.5 text-xs font-bold transition-colors ${showFilters ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             <Filter size={14} />
                                         </button>
@@ -1443,7 +1443,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         {/* Selection Mode Toggle */}
                                         <button
                                             onClick={() => setIsSelectionMode(!isSelectionMode)}
-                                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${isSelectionMode ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                            className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${isSelectionMode ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
                                         >
                                             <CheckSquare className="w-4 h-4" />
                                             {isSelectionMode && selectedIds.size > 0 && (
@@ -1458,7 +1458,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             maxSizeMB={10}
                                             variant="compact"
                                         >
-                                            <button className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary">
+                                            <button className="flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary">
                                                 <Upload className="w-4 h-4" />
                                                 {t('common.upload', 'Upload')}
                                             </button>
@@ -1472,7 +1472,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                         onClick={() => setCategoryFilter('all')}
                                         className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === 'all'
                                             ? 'bg-primary/10 text-primary border-primary/30'
-                                            : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                            : 'bg-secondary/50 text-q-text-muted border-q-border hover:border-primary/30'
                                             }`}
                                     >
                                         <FolderOpen size={12} />
@@ -1487,7 +1487,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                 onClick={() => setCategoryFilter(key as AdminAssetCategory)}
                                                 className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${categoryFilter === key
                                                     ? config.color
-                                                    : 'bg-secondary/50 text-muted-foreground border-border hover:border-primary/30'
+                                                    : 'bg-secondary/50 text-q-text-muted border-q-border hover:border-primary/30'
                                                     }`}
                                             >
                                                 {config.icon}
@@ -1499,14 +1499,14 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
                                 {/* Filters Panel */}
                                 {showFilters && (
-                                    <div className="mb-4 p-4 bg-secondary/50 rounded-lg border border-border animate-fade-in-up">
+                                    <div className="mb-4 p-4 bg-secondary/50 rounded-lg border border-q-border animate-fade-in-up">
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.sortBy', 'Sort By')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.sortBy', 'Sort By')}</label>
                                                 <select
                                                     value={sortBy}
                                                     onChange={(e) => setSortBy(e.target.value as any)}
-                                                    className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                                    className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
                                                 >
                                                     <option value="date">{t('adminAssets.date', 'Date')}</option>
                                                     <option value="name">{t('adminAssets.name', 'Name')}</option>
@@ -1516,10 +1516,10 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.order', 'Order')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.order', 'Order')}</label>
                                                 <button
                                                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                                                    className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-background border border-border rounded-lg hover:bg-secondary transition-colors"
+                                                    className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg hover:bg-secondary transition-colors"
                                                 >
                                                     <span>{sortOrder === 'asc' ? t('adminAssets.ascending', 'Ascending') : t('adminAssets.descending', 'Descending')}</span>
                                                     <ArrowUpDown size={14} />
@@ -1527,11 +1527,11 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             </div>
 
                                             <div>
-                                                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase">{t('adminAssets.uploadTo', 'Upload to')}</label>
+                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.uploadTo', 'Upload to')}</label>
                                                 <select
                                                     value={selectedCategory}
                                                     onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
-                                                    className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
+                                                    className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"
                                                 >
                                                     {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
                                                         <option key={key} value={key}>{label}</option>
@@ -1566,7 +1566,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                 {/* Assets Grid - Grouped by Category */}
                                 <div className="max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
                                     {isAdminAssetsLoading ? (
-                                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center py-8 text-q-text-muted">
                                             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2"></div>
                                             <span className="text-xs">{t('common.loading', 'Loading...')}</span>
                                         </div>
@@ -1579,12 +1579,12 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                                 return (
                                                     <div key={categoryKey} className="space-y-3">
                                                         {/* Category Header */}
-                                                        <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                                        <div className="flex items-center gap-2 pb-2 border-b border-q-border/50">
                                                             <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border ${config.color}`}>
                                                                 {config.icon}
                                                                 {config.label}
                                                             </span>
-                                                            <span className="text-xs text-muted-foreground">
+                                                            <span className="text-xs text-q-text-muted">
                                                                 {categoryAssets.length} {categoryAssets.length === 1 ? 'asset' : 'assets'}
                                                             </span>
                                                         </div>
@@ -1610,14 +1610,14 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             })}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-xl bg-secondary/20">
-                                            <ImageIcon size={32} className="mx-auto mb-2 text-muted-foreground opacity-50" />
+                                        <div className="text-center py-8 px-4 border-2 border-dashed border-q-border rounded-xl bg-secondary/20">
+                                            <ImageIcon size={32} className="mx-auto mb-2 text-q-text-muted opacity-50" />
                                             <p className="text-sm font-medium text-foreground mb-1">
                                                 {searchQuery || categoryFilter !== 'all'
                                                     ? t('adminAssets.noResults', 'No assets found')
                                                     : t('adminAssets.empty', 'No assets yet')}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-q-text-muted">
                                                 {searchQuery || categoryFilter !== 'all'
                                                     ? t('adminAssets.tryFilters', 'Try adjusting your filters')
                                                     : t('adminAssets.startUploading', 'Generate your first image above to get started')}

@@ -229,29 +229,29 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
   );
 
   return (
-    <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+    <div className="flex h-screen bg-q-bg text-q-text">
       <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+        <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
           <div className="flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary lg:hidden mr-2 transition-colors"
+              className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text lg:hidden mr-2 transition-colors"
               title={t('common.openMenu')}
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <Globe className="text-editor-accent w-5 h-5" />
+              <Globe className="text-q-accent w-5 h-5" />
               <div>
-                <h1 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.languageManagement')}</h1>
-                <p className="text-xs text-editor-text-secondary hidden sm:block">{t('superadmin.configurePlatformLanguages')}</p>
+                <h1 className="text-lg font-semibold text-q-text">{t('superadmin.languageManagement')}</h1>
+                <p className="text-xs text-q-text-secondary hidden sm:block">{t('superadmin.configurePlatformLanguages')}</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
             {saveStatus === 'success' && (
               <div className="flex items-center gap-2 text-green-500 text-sm">
                 <Check size={16} />
@@ -267,7 +267,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             <button
               onClick={handleSave}
               disabled={saveStatus === 'saving'}
-              className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-editor-text-secondary hover:text-editor-text-primary disabled:opacity-50"
+              className="flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all text-q-text-secondary hover:text-q-text disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saveStatus === 'saving' ? t('superadmin.saving') : t('common.save')}
@@ -280,11 +280,11 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
           <div className="max-w-6xl mx-auto space-y-6">
 
             {/* Current Language Selector */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
+            <div className="bg-q-surface border border-q-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-editor-text-primary">{t('superadmin.currentInterfaceLanguage')}</h2>
-                  <p className="text-sm text-editor-text-secondary mt-1">
+                  <h2 className="text-lg font-semibold text-q-text">{t('superadmin.currentInterfaceLanguage')}</h2>
+                  <p className="text-sm text-q-text-secondary mt-1">
                     {t('superadmin.currentAdminInterface')}
                   </p>
                 </div>
@@ -296,8 +296,8 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                     key={lang.code}
                     onClick={() => i18n.changeLanguage(lang.code)}
                     className={`px-4 py-2 transition-colors ${i18n.language === lang.code
-                      ? 'text-editor-accent font-semibold'
-                      : 'text-editor-text-secondary hover:text-editor-text-primary'
+                      ? 'text-q-accent font-semibold'
+                      : 'text-q-text-secondary hover:text-q-text'
                       }`}
                   >
                     <span className="mr-2">{lang.flag}</span>
@@ -308,11 +308,11 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
 
             {/* Enabled Languages */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
+            <div className="bg-q-surface border border-q-border rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-q-text mb-4">
                 {t('superadmin.enabledLanguages')} ({enabledLanguages.length})
               </h2>
-              <p className="text-sm text-editor-text-secondary mb-6">
+              <p className="text-sm text-q-text-secondary mb-6">
                 {t('superadmin.languagesAvailableToUsers')}
               </p>
 
@@ -320,31 +320,31 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                 {enabledLanguages.map(lang => (
                   <div
                     key={lang.code}
-                    className="bg-editor-bg border border-editor-border rounded-lg p-4 hover:border-editor-accent transition-colors"
+                    className="bg-q-bg border border-q-border rounded-lg p-4 hover:border-q-accent transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
                         <span className="text-3xl">{lang.flag}</span>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-editor-text-primary">
+                            <h3 className="font-semibold text-q-text">
                               {lang.nativeName}
                             </h3>
-                            <span className="text-sm text-editor-text-secondary">({lang.name})</span>
+                            <span className="text-sm text-q-text-secondary">({lang.name})</span>
                             {lang.isDefault && (
-                              <span className="text-xs text-editor-accent font-semibold">
+                              <span className="text-xs text-q-accent font-semibold">
                                 {t('superadmin.default')}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center gap-3 mt-2">
-                            <div className="flex-1 bg-editor-border rounded-full h-2 overflow-hidden">
+                            <div className="flex-1 bg-q-surface-overlay rounded-full h-2 overflow-hidden">
                               <div
                                 className="bg-green-500 h-full transition-all"
                                 style={{ width: `${lang.completeness}%` }}
                               />
                             </div>
-                            <span className="text-sm text-editor-text-secondary">
+                            <span className="text-sm text-q-text-secondary">
                               {lang.completeness}%
                             </span>
                           </div>
@@ -355,7 +355,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                         {!lang.isDefault && (
                           <button
                             onClick={() => handleSetDefault(lang.code)}
-                            className="px-3 py-1.5 text-sm bg-editor-border hover:bg-editor-bg-secondary text-editor-text-secondary rounded-lg transition-colors"
+                            className="px-3 py-1.5 text-sm bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text-secondary rounded-lg transition-colors"
                           >
                             {t('superadmin.setAsDefault')}
                           </button>
@@ -375,11 +375,11 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
 
             {/* Available Languages */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
+            <div className="bg-q-surface border border-q-border rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-q-text mb-4">
                 {t('superadmin.availableLanguages')} ({availableLanguages.length})
               </h2>
-              <p className="text-sm text-editor-text-secondary mb-6">
+              <p className="text-sm text-q-text-secondary mb-6">
                 {t('superadmin.enableLanguagesToMakeAvailable')}
               </p>
 
@@ -387,21 +387,21 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                 {availableLanguages.map(lang => (
                   <div
                     key={lang.code}
-                    className="bg-editor-bg border border-editor-border rounded-lg p-4 hover:border-editor-accent transition-colors"
+                    className="bg-q-bg border border-q-border rounded-lg p-4 hover:border-q-accent transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{lang.flag}</span>
                         <div>
-                          <h3 className="font-semibold text-editor-text-primary">
+                          <h3 className="font-semibold text-q-text">
                             {lang.nativeName}
                           </h3>
-                          <span className="text-sm text-editor-text-secondary">{lang.name}</span>
+                          <span className="text-sm text-q-text-secondary">{lang.name}</span>
                         </div>
                       </div>
                       <button
                         onClick={() => handleToggleEnabled(lang.code)}
-                        className="px-3 py-1.5 text-sm text-editor-accent hover:text-editor-accent-hover transition-colors font-semibold"
+                        className="px-3 py-1.5 text-sm text-q-accent hover:text-q-accent transition-colors font-semibold"
                       >
                         {t('superadmin.enable')}
                       </button>
@@ -418,11 +418,11 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
 
             {/* Translation Management */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
+            <div className="bg-q-surface border border-q-border rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-q-text mb-4">
                 {t('superadmin.translationManagement')}
               </h2>
-              <p className="text-sm text-editor-text-secondary mb-6">
+              <p className="text-sm text-q-text-secondary mb-6">
                 {t('superadmin.importExportTranslations')}
               </p>
 
@@ -436,14 +436,14 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                 />
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text rounded-lg transition-colors"
                 >
                   <Upload size={16} />
                   {t('superadmin.importTranslations')}
                 </button>
                 <button 
                   onClick={handleExportAll}
-                  className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text rounded-lg transition-colors"
                 >
                   <Download size={16} />
                   {t('superadmin.exportAll')}
@@ -454,7 +454,7 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                       const currentLang = i18n.language;
                       handleEditTranslations(currentLang);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-editor-border hover:bg-editor-bg-secondary text-editor-text-primary rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-q-surface-overlay hover:bg-q-bg-secondary text-q-text rounded-lg transition-colors"
                   >
                     <Edit2 size={16} />
                     {t('superadmin.editTranslations')}
@@ -463,14 +463,14 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
               </div>
 
               {/* Quick edit buttons per language */}
-              <div className="mt-4 pt-4 border-t border-editor-border">
-                <p className="text-sm text-editor-text-secondary mb-3">{t('superadmin.editByLanguage', 'Editar por idioma:')}</p>
+              <div className="mt-4 pt-4 border-t border-q-border">
+                <p className="text-sm text-q-text-secondary mb-3">{t('superadmin.editByLanguage', 'Editar por idioma:')}</p>
                 <div className="flex flex-wrap gap-2">
                   {enabledLanguages.map(lang => (
                     <button
                       key={lang.code}
                       onClick={() => handleEditTranslations(lang.code)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-editor-bg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary rounded-lg text-sm transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-q-bg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text rounded-lg text-sm transition-colors"
                     >
                       <span>{lang.flag}</span>
                       <span>{lang.code.toUpperCase()}</span>
@@ -481,18 +481,18 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             </div>
 
             {/* Translation Files Location */}
-            <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-editor-text-primary mb-4">
+            <div className="bg-q-surface border border-q-border rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-q-text mb-4">
                 {t('superadmin.translationFiles')}
               </h2>
-              <p className="text-sm text-editor-text-secondary mb-4">
+              <p className="text-sm text-q-text-secondary mb-4">
                 {t('superadmin.translationFilesStored')}
               </p>
-              <div className="bg-editor-bg rounded-lg p-4 font-mono text-sm space-y-2">
+              <div className="bg-q-bg rounded-lg p-4 font-mono text-sm space-y-2">
                 {enabledLanguages.map(lang => (
-                  <div key={lang.code} className="flex items-center gap-2 text-editor-text-secondary">
-                    <span className="text-editor-accent">{lang.flag}</span>
-                    <code className="text-editor-text-primary">/locales/{lang.code}/translation.json</code>
+                  <div key={lang.code} className="flex items-center gap-2 text-q-text-secondary">
+                    <span className="text-q-accent">{lang.flag}</span>
+                    <code className="text-q-text">/locales/{lang.code}/translation.json</code>
                     <span className="ml-auto text-green-500 flex items-center gap-1">
                       <Check size={14} />
                       {t('superadmin.available')}
@@ -525,12 +525,12 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
       {/* Edit Translations Modal */}
       {showEditModal && editingLang && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-editor-panel-bg border border-editor-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+          <div className="bg-q-surface border border-q-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-editor-border">
+            <div className="flex items-center justify-between p-4 border-b border-q-border">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{languages.find(l => l.code === editingLang)?.flag}</span>
-                <h2 className="text-lg font-semibold text-editor-text-primary">
+                <h2 className="text-lg font-semibold text-q-text">
                   {t('superadmin.editingTranslations', 'Editando traducciones')} - {editingLang.toUpperCase()}
                 </h2>
               </div>
@@ -541,22 +541,22 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                   setEditingTranslations({});
                   setSearchKey('');
                 }}
-                className="p-2 rounded-lg hover:bg-editor-border text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Search */}
-            <div className="p-4 border-b border-editor-border">
+            <div className="p-4 border-b border-q-border">
               <input
                 type="text"
                 placeholder={t('superadmin.searchTranslations', 'Buscar por clave o valor...')}
                 value={searchKey}
                 onChange={(e) => setSearchKey(e.target.value)}
-                className="w-full px-4 py-2 bg-editor-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                className="w-full px-4 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
               />
-              <p className="text-xs text-editor-text-secondary mt-2">
+              <p className="text-xs text-q-text-secondary mt-2">
                 {t('superadmin.translationsCount', 'Mostrando {{count}} de {{total}} traducciones', {
                   count: filteredTranslations.length,
                   total: Object.keys(editingTranslations).length
@@ -567,8 +567,8 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
             {/* Translations List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {filteredTranslations.map(([key, value]) => (
-                <div key={key} className="bg-editor-bg rounded-lg p-3 border border-editor-border">
-                  <label className="block text-xs text-editor-text-secondary mb-1 font-mono">
+                <div key={key} className="bg-q-bg rounded-lg p-3 border border-q-border">
+                  <label className="block text-xs text-q-text-secondary mb-1 font-mono">
                     {key}
                   </label>
                   <input
@@ -578,20 +578,20 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                       ...prev,
                       [key]: e.target.value
                     }))}
-                    className="w-full px-3 py-2 bg-editor-panel-bg border border-editor-border rounded-lg text-editor-text-primary focus:outline-none focus:ring-2 focus:ring-editor-accent"
+                    className="w-full px-3 py-2 bg-q-surface border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                   />
                 </div>
               ))}
               {filteredTranslations.length === 0 && (
-                <div className="text-center py-8 text-editor-text-secondary">
+                <div className="text-center py-8 text-q-text-secondary">
                   {t('superadmin.noTranslationsFound', 'No se encontraron traducciones')}
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between p-4 border-t border-editor-border">
-              <p className="text-sm text-editor-text-secondary">
+            <div className="flex items-center justify-between p-4 border-t border-q-border">
+              <p className="text-sm text-q-text-secondary">
                 {t('superadmin.changesAreTemporary', 'Los cambios son temporales hasta guardar en el servidor')}
               </p>
               <div className="flex gap-3">
@@ -602,13 +602,13 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
                     setEditingTranslations({});
                     setSearchKey('');
                   }}
-                  className="px-4 py-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                  className="px-4 py-2 text-q-text-secondary hover:text-q-text transition-colors"
                 >
                   {t('common.cancel', 'Cancelar')}
                 </button>
                 <button
                   onClick={handleSaveTranslations}
-                  className="flex items-center gap-2 px-4 py-2 bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
                 >
                   <Save size={16} />
                   {t('superadmin.applyChanges', 'Aplicar cambios')}

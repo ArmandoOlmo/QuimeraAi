@@ -80,7 +80,7 @@ const QUIMERA_PALETTE: string[] = [
 // =============================================================================
 
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <h4 className="text-sm font-bold text-editor-text-primary mb-3 pb-2 border-b border-editor-border">
+    <h4 className="text-sm font-bold text-q-text mb-3 pb-2 border-b border-q-border">
         {children}
     </h4>
 );
@@ -92,13 +92,13 @@ const SelectControl: React.FC<{
     onChange: (value: string) => void;
 }> = ({ label, value, options, onChange }) => (
     <div className="mb-3">
-        <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
             {label}
         </label>
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-editor-panel-bg border border-editor-border rounded-md px-3 py-2 text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+            className="w-full bg-q-surface border border-q-border rounded-md px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-q-accent"
         >
             {options.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -124,17 +124,17 @@ const BorderRadiusSelector: React.FC<{
 
     return (
         <div className="mb-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                 {label}
             </label>
-            <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+            <div className="flex bg-q-surface rounded-md border border-q-border p-1">
                 {options.map((opt) => (
                     <button
                         key={opt.v}
                         onClick={() => onChange(opt.v)}
                         className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${value === opt.v
-                            ? 'bg-editor-accent text-editor-bg'
-                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                            ? 'bg-q-accent text-q-bg'
+                            : 'text-q-text-secondary hover:text-q-text hover:bg-q-bg'
                             }`}
                     >
                         {opt.l}
@@ -293,10 +293,10 @@ const GlobalStylesControls: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Quimera.ai Brand Import — always available */}
-            <div className="p-4 bg-gradient-to-br from-[#FBB92B]/10 via-[#7f22dd]/10 to-[#10b981]/10 border border-editor-border rounded-lg">
+            <div className="p-4 bg-gradient-to-br from-[#FBB92B]/10 via-[#7f22dd]/10 to-[#10b981]/10 border border-q-border rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 text-[#FBB92B]" />
-                    <h4 className="text-sm font-bold text-editor-text-primary">
+                    <h4 className="text-sm font-bold text-q-text">
                         Quimera.ai Brand
                     </h4>
                 </div>
@@ -304,7 +304,7 @@ const GlobalStylesControls: React.FC = () => {
                     {QUIMERA_PALETTE.slice(0, 12).map((color, i) => (
                         <div
                             key={i}
-                            className="w-5 h-5 rounded-full border border-editor-border shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                            className="w-5 h-5 rounded-full border border-q-border shadow-sm cursor-pointer hover:scale-110 transition-transform"
                             style={{ backgroundColor: color }}
                             title={color}
                             onClick={() => {
@@ -317,7 +317,7 @@ const GlobalStylesControls: React.FC = () => {
                 <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2 border-[#FBB92B]/30 hover:bg-[#FBB92B]/10 hover:border-[#FBB92B]/50 text-editor-text-primary"
+                    className="w-full gap-2 border-[#FBB92B]/30 hover:bg-[#FBB92B]/10 hover:border-[#FBB92B]/50 text-q-text"
                     onClick={handleImportQuimeraColors}
                 >
                     <Sparkles className="w-3 h-3 text-[#FBB92B]" />
@@ -327,20 +327,20 @@ const GlobalStylesControls: React.FC = () => {
 
             {/* Project Style Import — only when inside a project */}
             {hasProjectColors && (
-                <div className="p-4 bg-editor-panel-bg border border-editor-border rounded-lg">
+                <div className="p-4 bg-q-surface border border-q-border rounded-lg">
                     <div className="flex items-center gap-2 mb-3">
-                        <Palette className="w-4 h-4 text-editor-accent" />
-                        <h4 className="text-sm font-bold text-editor-text-primary">
+                        <Palette className="w-4 h-4 text-q-accent" />
+                        <h4 className="text-sm font-bold text-q-text">
                             {t('email.projectStyles', 'Estilos del Proyecto')}
                         </h4>
                     </div>
-                    <p className="text-xs text-editor-text-secondary mb-3">
+                    <p className="text-xs text-q-text-secondary mb-3">
                         {t('email.importStylesHint', 'Importa los colores de tu sitio web para mantener la consistencia de marca.')}
                     </p>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="w-full gap-2 border-editor-border hover:bg-editor-bg"
+                        className="w-full gap-2 border-q-border hover:bg-q-bg"
                         onClick={handleImportProjectColors}
                     >
                         <Download className="w-3 h-3" />
@@ -421,7 +421,7 @@ const GlobalStylesControls: React.FC = () => {
                     value={globalStyles.borderRadius}
                     onChange={(value) => updateGlobalStyles({ borderRadius: value as any })}
                 />
-                <p className="text-xs text-editor-text-secondary">
+                <p className="text-xs text-q-text-secondary">
                     {t('email.borderRadiusHint', 'Se aplica a botones y tarjetas por defecto')}
                 </p>
             </div>

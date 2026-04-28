@@ -66,7 +66,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
         if (diffDays === 1) return { text: 'Tomorrow', color: 'text-yellow-500', urgent: false };
         if (diffDays <= 7) return { text: `${diffDays}d`, color: 'text-foreground', urgent: false };
 
-        return { text: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'text-muted-foreground', urgent: false };
+        return { text: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'text-q-text-muted', urgent: false };
     };
 
     const pendingTasks = tasks.filter(t => !t.completed);
@@ -75,7 +75,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-sm font-bold text-q-text-muted uppercase tracking-wider flex items-center gap-2">
                     {t('leads.tasks.title')}
                     {pendingTasks.length > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
@@ -95,14 +95,14 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
 
             {/* Add Task Form */}
             {isAdding && (
-                <form onSubmit={handleSubmit} className="bg-secondary/20 border border-border rounded-xl p-4 space-y-3">
+                <form onSubmit={handleSubmit} className="bg-secondary/20 border border-q-border rounded-xl p-4 space-y-3">
                     <div>
                         <input
                             type="text"
                             value={newTask.title}
                             onChange={e => setNewTask({ ...newTask, title: e.target.value })}
                             placeholder="Task title..."
-                            className="w-full bg-card border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             required
                             autoFocus
                         />
@@ -112,27 +112,27 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                             value={newTask.description}
                             onChange={e => setNewTask({ ...newTask, description: e.target.value })}
                             placeholder="Description (optional)..."
-                            className="w-full bg-card border border-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                            className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                             rows={2}
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Due Date</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">Due Date</label>
                             <input
                                 type="date"
                                 value={newTask.dueDate}
                                 onChange={e => setNewTask({ ...newTask, dueDate: e.target.value })}
-                                className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Priority</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">Priority</label>
                             <select
                                 value={newTask.priority}
                                 onChange={e => setNewTask({ ...newTask, priority: e.target.value as any })}
-                                className="w-full bg-card border border-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -147,7 +147,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                 setIsAdding(false);
                                 setNewTask({ title: '', description: '', dueDate: '', priority: 'medium' });
                             }}
-                            className="px-3 py-1.5 text-sm border border-border rounded hover:bg-secondary transition-colors"
+                            className="px-3 py-1.5 text-sm border border-q-border rounded hover:bg-secondary transition-colors"
                         >
                             {t('common.cancel')}
                         </button>
@@ -174,11 +174,11 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                             return (
                                 <div
                                     key={task.id}
-                                    className="group flex items-start gap-3 bg-card border border-border rounded-lg p-3 hover:shadow-sm transition-all"
+                                    className="group flex items-start gap-3 bg-q-surface border border-q-border rounded-lg p-3 hover:shadow-sm transition-all"
                                 >
                                     <button
                                         onClick={() => toggleTaskComplete(task)}
-                                        className="shrink-0 mt-0.5 text-muted-foreground hover:text-green-500 transition-colors"
+                                        className="shrink-0 mt-0.5 text-q-text-muted hover:text-green-500 transition-colors"
                                     >
                                         <Circle size={18} />
                                     </button>
@@ -188,7 +188,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                             <div className="flex-1">
                                                 <h4 className="text-sm font-medium text-foreground">{task.title}</h4>
                                                 {task.description && (
-                                                    <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                                                    <p className="text-xs text-q-text-muted mt-1">{task.description}</p>
                                                 )}
                                             </div>
                                             <button
@@ -220,18 +220,18 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                 {/* Completed Tasks */}
                 {completedTasks.length > 0 && (
                     <details className="group/details">
-                        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors py-2">
+                        <summary className="cursor-pointer text-xs text-q-text-muted hover:text-foreground transition-colors py-2">
                             Completed ({completedTasks.length})
                         </summary>
                         <div className="space-y-2 mt-2">
                             {completedTasks.map(task => (
                                 <div
                                     key={task.id}
-                                    className="group flex items-start gap-3 bg-secondary/20 border border-border/50 rounded-lg p-3 opacity-60"
+                                    className="group flex items-start gap-3 bg-secondary/20 border border-q-border/50 rounded-lg p-3 opacity-60"
                                 >
                                     <button
                                         onClick={() => toggleTaskComplete(task)}
-                                        className="shrink-0 mt-0.5 text-green-500 hover:text-muted-foreground transition-colors"
+                                        className="shrink-0 mt-0.5 text-green-500 hover:text-q-text-muted transition-colors"
                                     >
                                         <CheckCircle2 size={18} />
                                     </button>
@@ -241,7 +241,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
                                             <div className="flex-1">
                                                 <h4 className="text-sm font-medium text-foreground line-through">{task.title}</h4>
                                                 {task.description && (
-                                                    <p className="text-xs text-muted-foreground mt-1 line-through">{task.description}</p>
+                                                    <p className="text-xs text-q-text-muted mt-1 line-through">{task.description}</p>
                                                 )}
                                             </div>
                                             <button
@@ -261,7 +261,7 @@ const LeadTasksList: React.FC<LeadTasksListProps> = ({ tasks, onAddTask, onUpdat
 
                 {/* Empty State */}
                 {tasks.length === 0 && !isAdding && (
-                    <div className="text-center py-8 text-muted-foreground text-sm italic">
+                    <div className="text-center py-8 text-q-text-muted text-sm italic">
                         {t('leads.tasks.noTasks')}
                     </div>
                 )}

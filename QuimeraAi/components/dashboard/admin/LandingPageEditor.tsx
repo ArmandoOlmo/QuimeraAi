@@ -135,10 +135,10 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                 className="cursor-grab active:cursor-grabbing touch-none"
                 onClick={(e) => e.stopPropagation()}
             >
-                <GripVertical size={14} className="text-muted-foreground flex-shrink-0" />
+                <GripVertical size={14} className="text-q-text-muted flex-shrink-0" />
             </div>
 
-            <Icon size={16} className="text-muted-foreground flex-shrink-0" />
+            <Icon size={16} className="text-q-text-muted flex-shrink-0" />
 
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate capitalize">{section.type}</p>
@@ -167,7 +167,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
 const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => {
     const Icon = getLandingSectionIcon(section.type);
     return (
-    <div className="flex items-center gap-2 p-2.5 bg-card border border-primary rounded-lg shadow-xl">
+    <div className="flex items-center gap-2 p-2.5 bg-q-surface border border-primary rounded-lg shadow-xl">
         <GripVertical size={14} className="text-primary" />
         <Icon size={16} className="text-primary" />
         <span className="text-sm font-medium capitalize">{section.type}</span>
@@ -1163,25 +1163,25 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-background">
+            <div className="flex h-screen items-center justify-center bg-q-bg">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
             {/* Sidebar */}
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 px-4 lg:px-6 border-b border-border flex items-center bg-background z-20 sticky top-0 relative">
+                <header className="h-14 px-4 lg:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0 relative">
                     {/* Left Section */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                         >
                             <MenuIcon className="w-5 h-5" />
                         </button>
@@ -1214,7 +1214,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                         ${previewDevice === name
                                             ? 'bg-primary text-primary-foreground'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                            : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/50'
                                         }
                                     `}
                                     title={t(`landingEditor.${name}`)}
@@ -1231,7 +1231,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         {/* Refresh preview */}
                         <button
                             onClick={() => setPreviewKey(prev => prev + 1)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
                             title={t('landingEditor.refreshPreview', 'Refrescar vista previa')}
                         >
                             <RefreshCw size={16} />
@@ -1240,7 +1240,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         {/* Toggle preview */}
                         <button
                             onClick={() => setIsPreviewVisible(!isPreviewVisible)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
                             title={isPreviewVisible ? 'Ocultar vista previa' : 'Mostrar vista previa'}
                         >
                             {isPreviewVisible ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -1263,7 +1263,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             disabled={isSaving || !hasUnsavedChanges}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${hasUnsavedChanges
                                 ? 'bg-primary text-primary-foreground hover:opacity-90'
-                                : 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
+                                : 'bg-secondary/50 text-q-text-muted cursor-not-allowed'
                                 }`}
                         >
                             {isSaving ? (
@@ -1283,8 +1283,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 {/* Main Content - Three Panel Layout */}
                 <main className="flex-1 flex overflow-hidden relative">
                     {/* Left Panel - Grouped Component List */}
-                    <div className="w-64 lg:w-72 border-r border-border bg-card/50 flex flex-col overflow-hidden">
-                        <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="w-64 lg:w-72 border-r border-q-border bg-q-surface/50 flex flex-col overflow-hidden">
+                        <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h2 className="font-semibold text-sm">{t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
                                 onClick={() => setShowAddComponent(true)}
@@ -1306,7 +1306,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
                                     <Layers size={14} />
                                     <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
-                                    <span className="text-muted-foreground">({STRUCTURE_ITEMS.length})</span>
+                                    <span className="text-q-text-muted">({STRUCTURE_ITEMS.length})</span>
                                 </button>
 
                                 {isStructureExpanded && (
@@ -1320,7 +1320,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                                     : 'hover:bg-secondary/50 border border-transparent'
                                                     }`}
                                             >
-                                                {React.createElement(item.icon, { size: 16, className: 'text-muted-foreground flex-shrink-0' })}
+                                                {React.createElement(item.icon, { size: 16, className: 'text-q-text-muted flex-shrink-0' })}
                                                 <span className="text-sm font-medium">{item.label}</span>
                                             </button>
                                         ))}
@@ -1337,7 +1337,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
                                     <FileText size={14} />
                                     <span>{t('landingEditor.content', 'CONTENIDO')}</span>
-                                    <span className="text-muted-foreground">({sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').length})</span>
+                                    <span className="text-q-text-muted">({sections.filter(s => s.type !== 'header' && s.type !== 'footer' && s.type !== 'typography' && s.type !== 'colors').length})</span>
                                 </button>
 
                                 {isContentExpanded && (
@@ -1379,7 +1379,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                         {/* Last saved indicator */}
                         {lastSaved && (
-                            <div className="p-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="p-3 border-t border-q-border flex items-center gap-2 text-xs text-q-text-muted">
                                 <Check size={12} className="text-green-500" />
                                 <span>
                                     {t('landingEditor.lastSaved', 'Guardado')}: {lastSaved.toLocaleTimeString()}
@@ -1393,16 +1393,16 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         <div className="flex-1 bg-muted/30 p-4 overflow-hidden flex flex-col relative">
                             {/* Portal target for ImagePicker modals - renders on top of preview */}
                             <div ref={previewOverlayRef} className="absolute inset-0 z-[200] pointer-events-none" />
-                            <div className={`flex-1 rounded-xl shadow-2xl bg-card border border-border flex flex-col overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
+                            <div className={`flex-1 rounded-xl shadow-2xl bg-q-surface border border-q-border flex flex-col overflow-hidden mx-auto ${previewWidth} w-full transition-all duration-300`}>
                                 {/* Browser Header */}
-                                <div className="flex-shrink-0 h-12 bg-background border-b border-border flex items-center px-4 space-x-2 z-10">
+                                <div className="flex-shrink-0 h-12 bg-q-bg border-b border-q-border flex items-center px-4 space-x-2 z-10">
                                     <div className="flex space-x-2">
                                         <span className="w-3.5 h-3.5 bg-red-500 rounded-full"></span>
                                         <span className="w-3.5 h-3.5 bg-yellow-500 rounded-full"></span>
                                         <span className="w-3.5 h-3.5 bg-green-500 rounded-full"></span>
                                     </div>
                                     <div className="flex-grow flex items-center justify-center">
-                                        <div className="bg-secondary/50 text-muted-foreground text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-border/50">
+                                        <div className="bg-secondary/50 text-q-text-muted text-sm rounded-full px-4 py-1.5 w-full max-w-md text-center truncate flex items-center justify-center cursor-default select-none border border-q-border/50">
                                             <span className="opacity-50 mr-0.5">https://quimera.ai/</span>
                                             <span className="font-medium text-foreground">landing</span>
                                         </div>
@@ -1425,7 +1425,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     {(currentStructureSection || currentSection) && (
                         <button
                             onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
-                            className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-card border border-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
+                            className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
                                 ? (isPreviewVisible ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-[calc(42rem-18px)]')
                                 : 'right-0 rounded-l-lg rounded-r-none'
                                 }`}
@@ -1437,13 +1437,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                     {/* Right Panel - Component Controls - Only visible when a section is selected */}
                     {(currentStructureSection || currentSection) && (
-                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme border-l border-editor-border bg-editor-bg flex flex-col overflow-hidden transition-all duration-300`}>
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme border-l border-q-border bg-q-bg flex flex-col overflow-hidden transition-all duration-300`}>
                             {/* Structure Item Controls (Colores, Tipografía, etc.) */}
                             {currentStructureSection ? (
                                 <>
-                                    <div className="p-4 border-b border-editor-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
-                                            <Settings size={16} className="text-editor-accent" />
+                                    <div className="p-4 border-b border-q-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-q-text">
+                                            <Settings size={16} className="text-q-accent" />
                                             {t('landingEditor.edit', 'Editar')}: <span className="capitalize">
                                                 {currentStructureLabel}
                                             </span>
@@ -1463,9 +1463,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 </>
                             ) : (
                                 <>
-                                    <div className="p-4 border-b border-editor-border">
-                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-editor-text-primary">
-                                            <Settings size={16} className="text-editor-accent" />
+                                    <div className="p-4 border-b border-q-border">
+                                        <h2 className="font-semibold text-sm flex items-center gap-2 text-q-text">
+                                            <Settings size={16} className="text-q-accent" />
                                             {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
                                         </h2>
                                     </div>
@@ -1489,8 +1489,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             {/* Add Component Modal */}
             {showAddComponent && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-card rounded-xl border border-border w-full max-w-md shadow-xl">
-                        <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-md shadow-xl">
+                        <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h3 className="font-semibold">{t('landingEditor.addComponent', 'Añadir componente')}</h3>
                             <button
                                 onClick={() => setShowAddComponent(false)}
@@ -1532,7 +1532,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             >
                 <div className="p-6">
                     <h3 className="text-xl font-bold mb-4">{t('common.confirm', 'Confirmar')}</h3>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {t('landingEditor.confirmReset', '¿Descartar todos los cambios no guardados?')}
                     </p>
                     <div className="flex justify-end gap-3">
@@ -1566,7 +1566,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             >
                 <div className="p-6">
                     <h3 className="text-xl font-bold mb-4">{t('landingEditor.confirmDeleteTitle', 'Eliminar Sección')}</h3>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-q-text-muted mb-6">
                         {t('landingEditor.confirmDeleteMessage', '¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.')}
                     </p>
                     <div className="flex justify-end gap-3">

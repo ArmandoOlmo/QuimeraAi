@@ -110,7 +110,7 @@ const OrdersView: React.FC = () => {
                 <h2 className="text-2xl font-bold text-foreground">
                     {t('ecommerce.orders', 'Pedidos')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-q-text-muted">
                     {orders.length} {t('ecommerce.ordersTotal', 'pedidos en total')}
                 </p>
             </div>
@@ -121,14 +121,14 @@ const OrdersView: React.FC = () => {
                     onClick={() => setSelectedStatus('pending')}
                     className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'pending'
                             ? 'bg-yellow-500/20 border-yellow-500/50'
-                            : 'bg-card/50 border-border hover:bg-card'
+                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
                         }`}
                 >
                     <div className="flex items-center gap-3">
                         <Clock className="text-yellow-400" size={24} />
                         <div className="text-left">
                             <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.pending', 'Pendientes')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.pending', 'Pendientes')}</p>
                         </div>
                     </div>
                 </button>
@@ -137,14 +137,14 @@ const OrdersView: React.FC = () => {
                     onClick={() => setSelectedStatus('paid')}
                     className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'paid'
                             ? 'bg-green-500/20 border-green-500/50'
-                            : 'bg-card/50 border-border hover:bg-card'
+                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
                         }`}
                 >
                     <div className="flex items-center gap-3">
                         <DollarSign className="text-green-400" size={24} />
                         <div className="text-left">
                             <p className="text-2xl font-bold text-foreground">{stats.paid}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.paid', 'Pagados')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.paid', 'Pagados')}</p>
                         </div>
                     </div>
                 </button>
@@ -153,14 +153,14 @@ const OrdersView: React.FC = () => {
                     onClick={() => setSelectedStatus('shipped')}
                     className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'shipped'
                             ? 'bg-purple-500/20 border-purple-500/50'
-                            : 'bg-card/50 border-border hover:bg-card'
+                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
                         }`}
                 >
                     <div className="flex items-center gap-3">
                         <Truck className="text-purple-400" size={24} />
                         <div className="text-left">
                             <p className="text-2xl font-bold text-foreground">{stats.shipped}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.shipped', 'Enviados')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.shipped', 'Enviados')}</p>
                         </div>
                     </div>
                 </button>
@@ -169,14 +169,14 @@ const OrdersView: React.FC = () => {
                     onClick={() => setSelectedStatus('delivered')}
                     className={`p-4 rounded-xl border transition-colors ${selectedStatus === 'delivered'
                             ? 'bg-green-500/20 border-green-500/50'
-                            : 'bg-card/50 border-border hover:bg-card'
+                            : 'bg-q-surface/50 border-q-border hover:bg-q-surface'
                         }`}
                 >
                     <div className="flex items-center gap-3">
                         <CheckCircle className="text-green-400" size={24} />
                         <div className="text-left">
                             <p className="text-2xl font-bold text-foreground">{stats.delivered}</p>
-                            <p className="text-sm text-muted-foreground">{t('ecommerce.delivered', 'Entregados')}</p>
+                            <p className="text-sm text-q-text-muted">{t('ecommerce.delivered', 'Entregados')}</p>
                         </div>
                     </div>
                 </button>
@@ -184,8 +184,8 @@ const OrdersView: React.FC = () => {
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex items-center gap-2 flex-1 bg-editor-border/40 rounded-lg px-3 py-2">
-                    <Search className="w-4 h-4 text-editor-text-secondary flex-shrink-0" />
+                <div className="flex items-center gap-2 flex-1 bg-q-surface-overlay/40 rounded-lg px-3 py-2">
+                    <Search className="w-4 h-4 text-q-text-secondary flex-shrink-0" />
                     <input
                         type="text"
                         placeholder={t('ecommerce.searchOrders', 'Buscar por número, cliente o email...')}
@@ -194,7 +194,7 @@ const OrdersView: React.FC = () => {
                         className="flex-1 bg-transparent outline-none text-sm min-w-0"
                     />
                     {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="text-editor-text-secondary hover:text-editor-text-primary flex-shrink-0">
+                        <button onClick={() => setSearchTerm('')} className="text-q-text-secondary hover:text-q-text flex-shrink-0">
                             <X size={16} />
                         </button>
                     )}
@@ -212,38 +212,38 @@ const OrdersView: React.FC = () => {
 
             {/* Orders List */}
             {filteredOrders.length === 0 ? (
-                <div className="text-center py-12 bg-card/50 rounded-xl border border-border">
-                    <ShoppingCart className="mx-auto text-muted-foreground mb-4" size={48} />
+                <div className="text-center py-12 bg-q-surface/50 rounded-xl border border-q-border">
+                    <ShoppingCart className="mx-auto text-q-text-muted mb-4" size={48} />
                     <h3 className="text-lg font-medium text-foreground mb-2">
                         {t('ecommerce.noOrders', 'No hay pedidos')}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {searchTerm || selectedStatus
                             ? t('ecommerce.noOrdersFilter', 'No se encontraron pedidos con los filtros aplicados')
                             : t('ecommerce.noOrdersYet', 'Aún no has recibido ningún pedido')}
                     </p>
                 </div>
             ) : (
-                <div className="bg-card/50 rounded-xl border border-border overflow-hidden">
+                <div className="bg-q-surface/50 rounded-xl border border-q-border overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-muted/30">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.order', 'Pedido')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden md:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden md:table-cell">
                                     {t('ecommerce.customer', 'Cliente')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted hidden sm:table-cell">
                                     {t('ecommerce.date', 'Fecha')}
                                 </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-left text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.status', 'Estado')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.total', 'Total')}
                                 </th>
-                                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                <th className="px-4 py-3 text-right text-sm font-medium text-q-text-muted">
                                     {t('ecommerce.actions', 'Acciones')}
                                 </th>
                             </tr>
@@ -257,13 +257,13 @@ const OrdersView: React.FC = () => {
                                     <tr key={order.id} className="hover:bg-muted/20">
                                         <td className="px-4 py-3">
                                             <p className="text-foreground font-medium">{order.orderNumber}</p>
-                                            <p className="text-muted-foreground text-sm md:hidden">{order.customerName}</p>
+                                            <p className="text-q-text-muted text-sm md:hidden">{order.customerName}</p>
                                         </td>
                                         <td className="px-4 py-3 hidden md:table-cell">
                                             <p className="text-foreground">{order.customerName}</p>
-                                            <p className="text-muted-foreground text-sm">{order.customerEmail}</p>
+                                            <p className="text-q-text-muted text-sm">{order.customerEmail}</p>
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                                        <td className="px-4 py-3 text-q-text-muted hidden sm:table-cell">
                                             {formatDate(order.createdAt)}
                                         </td>
                                         <td className="px-4 py-3">
@@ -278,14 +278,14 @@ const OrdersView: React.FC = () => {
                                             <p className="text-foreground font-medium">
                                                 ${order.total.toFixed(2)}
                                             </p>
-                                            <p className="text-muted-foreground text-sm">
+                                            <p className="text-q-text-muted text-sm">
                                                 {order.items.length} {t('ecommerce.items', 'items')}
                                             </p>
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             <button
                                                 onClick={() => handleViewOrder(order)}
-                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                className="p-2 text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                             >
                                                 <Eye size={18} />
                                             </button>

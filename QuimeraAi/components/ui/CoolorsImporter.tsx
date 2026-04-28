@@ -531,14 +531,14 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                 <div className="p-1.5 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
                     <Sparkles size={14} className="text-white" />
                 </div>
-                <span className="text-sm font-semibold text-editor-text-primary">
+                <span className="text-sm font-semibold text-q-text">
                     {t('coolorsImporter.title', 'Importar desde Coolors.co')}
                 </span>
             </div>
 
             {/* Input URL */}
             <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-editor-text-secondary">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-secondary">
                     <Link2 size={16} />
                 </div>
                 <input
@@ -546,15 +546,15 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     value={inputUrl}
                     onChange={(e) => handleInputChange(e.target.value)}
                     placeholder={t('coolorsImporter.placeholder', 'Pega URL de coolors.co o los colores...')}
-                    className="w-full bg-editor-bg border border-editor-border rounded-lg pl-10 pr-4 py-3 text-sm text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                    className="w-full bg-q-bg border border-q-border rounded-lg pl-10 pr-4 py-3 text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                     disabled={isLoading}
                 />
             </div>
 
             {/* Preview de colores parseados */}
             {parsedColors && parsedColors.length > 0 && (
-                <div className="bg-editor-bg/50 border border-editor-border rounded-lg p-3">
-                    <p className="text-xs text-editor-text-secondary mb-2 flex items-center gap-1">
+                <div className="bg-q-bg/50 border border-q-border rounded-lg p-3">
+                    <p className="text-xs text-q-text-secondary mb-2 flex items-center gap-1">
                         <Palette size={12} />
                         {parsedColors.length} {t('coolorsImporter.colorsDetected', 'colores detectados')}:
                     </p>
@@ -569,7 +569,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                                     style={{ backgroundColor: color }}
                                     title={color}
                                 />
-                                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-editor-text-secondary opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-q-text-secondary opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                     {color}
                                 </span>
                             </div>
@@ -602,7 +602,7 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
                     className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg hover:shadow-xl'
-                            : 'bg-editor-border text-editor-text-secondary cursor-not-allowed'
+                            : 'bg-q-surface-overlay text-q-text-secondary cursor-not-allowed'
                         }`}
                 >
                     {isLoading ? (
@@ -623,8 +623,8 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
                     onClick={handleGeneratePalette}
                     disabled={!parsedColors || parsedColors.length < 3 || isLoading}
                     className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${parsedColors && parsedColors.length >= 3 && !isLoading
-                            ? 'bg-editor-bg border border-purple-500/50 text-purple-400 hover:bg-purple-500/10'
-                            : 'bg-editor-bg border border-editor-border text-editor-text-secondary/50 cursor-not-allowed'
+                            ? 'bg-q-bg border border-purple-500/50 text-purple-400 hover:bg-purple-500/10'
+                            : 'bg-q-bg border border-q-border text-q-text-secondary/50 cursor-not-allowed'
                         }`}
                 >
                     <Wand2 size={16} />
@@ -633,12 +633,12 @@ const CoolorsImporter: React.FC<CoolorsImporterProps> = ({
             </div>
 
             {/* Help text */}
-            <div className="text-xs text-editor-text-secondary/70 space-y-1">
+            <div className="text-xs text-q-text-secondary/70 space-y-1">
                 <p className="flex items-center gap-1">
                     <span className="text-purple-400">💡</span>
                     {t('coolorsImporter.helpTitle', 'Ejemplos de formato aceptado:')}
                 </p>
-                <code className="block bg-editor-bg px-2 py-1 rounded text-[10px] break-all">
+                <code className="block bg-q-bg px-2 py-1 rounded text-[10px] break-all">
                     coolors.co/264653-2a9d8f-e9c46a-f4a261-e76f51
                 </code>
             </div>

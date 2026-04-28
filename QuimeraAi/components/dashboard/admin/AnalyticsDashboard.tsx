@@ -153,11 +153,11 @@ const AnalyticsDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-editor-text-primary mb-2 flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-q-text mb-2 flex items-center gap-3">
             <BarChart3 className="w-7 h-7" />
             Component Analytics
           </h2>
-          <p className="text-editor-text-secondary">
+          <p className="text-q-text-secondary">
             Insights into component usage across all projects
           </p>
         </div>
@@ -204,10 +204,10 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Filters and Sort */}
-        <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-4 mb-6">
+        <div className="bg-q-surface border border-q-border rounded-lg p-4 mb-6">
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-editor-text-secondary font-medium">Sort by:</span>
+              <span className="text-sm text-q-text-secondary font-medium">Sort by:</span>
               <div className="flex gap-2">
                 {[
                   { value: 'usage', label: 'Usage' },
@@ -219,8 +219,8 @@ const AnalyticsDashboard: React.FC = () => {
                     onClick={() => setSortBy(option.value as any)}
                     className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                       sortBy === option.value
-                        ? 'text-editor-accent'
-                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                        ? 'text-q-accent'
+                        : 'text-q-text-secondary hover:text-q-text'
                     }`}
                   >
                     {option.label}
@@ -230,7 +230,7 @@ const AnalyticsDashboard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-editor-text-secondary font-medium">Type:</span>
+              <span className="text-sm text-q-text-secondary font-medium">Type:</span>
               <div className="flex gap-2">
                 {[
                   { value: 'all', label: 'All' },
@@ -242,8 +242,8 @@ const AnalyticsDashboard: React.FC = () => {
                     onClick={() => setFilterType(option.value as any)}
                     className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                       filterType === option.value
-                        ? 'text-editor-accent'
-                        : 'text-editor-text-secondary hover:text-editor-text-primary'
+                        ? 'text-q-accent'
+                        : 'text-q-text-secondary hover:text-q-text'
                     }`}
                   >
                     {option.label}
@@ -255,34 +255,34 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Analytics Table */}
-        <div className="bg-editor-panel-bg border border-editor-border rounded-lg overflow-hidden">
+        <div className="bg-q-surface border border-q-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-editor-border/30">
+              <thead className="bg-q-surface-overlay/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Component
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Usage
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Projects
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Trend
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-editor-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-q-text-secondary uppercase tracking-wider">
                     Last Used
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-editor-border">
                 {analytics.map((item, index) => (
-                  <tr key={item.id} className="hover:bg-editor-border/20 transition-colors">
+                  <tr key={item.id} className="hover:bg-q-surface-overlay/20 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
@@ -293,7 +293,7 @@ const AnalyticsDashboard: React.FC = () => {
                           <Package className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="font-medium text-editor-text-primary">{item.name}</p>
+                          <p className="font-medium text-q-text">{item.name}</p>
                           {index < 3 && item.usageCount > 0 && (
                             <span className="text-xs text-amber-500">⭐ Top performer</span>
                           )}
@@ -310,12 +310,12 @@ const AnalyticsDashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="font-semibold text-editor-text-primary">
+                      <span className="font-semibold text-q-text">
                         {item.usageCount}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="font-semibold text-editor-text-primary">
+                      <span className="font-semibold text-q-text">
                         {item.projectCount}
                       </span>
                     </td>
@@ -324,7 +324,7 @@ const AnalyticsDashboard: React.FC = () => {
                         <TrendIcon trend={item.trend} />
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-editor-text-secondary">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-q-text-secondary">
                       {formatDate(item.lastUsed)}
                     </td>
                   </tr>

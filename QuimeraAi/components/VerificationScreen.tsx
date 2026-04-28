@@ -8,7 +8,7 @@ const Logo: React.FC = () => (
         alt="Quimera Logo" 
         className="w-12 h-12 object-contain" 
       />
-      <span className="text-2xl font-bold text-editor-text-primary">Quimera<span className="text-yellow-400">.ai</span></span>
+      <span className="text-2xl font-bold text-q-text">Quimera<span className="text-yellow-400">.ai</span></span>
     </div>
 );
 
@@ -19,16 +19,16 @@ interface VerificationScreenProps {
 
 const VerificationScreen: React.FC<VerificationScreenProps> = ({ email, onGoToLogin }) => {
   return (
-    <div className="min-h-screen bg-editor-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-editor-panel-bg p-8 rounded-lg shadow-2xl border border-editor-border text-center">
+    <div className="min-h-screen bg-q-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-q-surface p-8 rounded-lg shadow-2xl border border-q-border text-center">
         <Logo />
         <h2 className="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
-        <p className="text-editor-text-secondary mb-6">
-          We've sent a verification email to <strong className="text-editor-text-primary">{email}</strong>. Please check your inbox and click the link to continue.
+        <p className="text-q-text-secondary mb-6">
+          We've sent a verification email to <strong className="text-q-text">{email}</strong>. Please check your inbox and click the link to continue.
         </p>
         <button 
           onClick={onGoToLogin}
-          className="w-full bg-editor-accent text-editor-bg font-bold py-3 px-4 rounded-lg shadow-md hover:bg-editor-accent-hover transition-colors"
+          className="w-full bg-q-accent text-q-bg font-bold py-3 px-4 rounded-lg shadow-md hover:bg-q-accent transition-colors"
         >
           Back to Login
         </button>

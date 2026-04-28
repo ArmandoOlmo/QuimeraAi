@@ -33,7 +33,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">
       {/* Content Section */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('controls.content')}
         </label>
@@ -52,8 +52,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Link Type Selector */}
         <div className="mb-3">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
-          <div className="flex bg-editor-panel-bg rounded-md border border-editor-border p-1">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.linkType')}</label>
+          <div className="flex bg-q-surface rounded-md border border-q-border p-1">
             {[
               { value: 'manual', label: 'Manual URL' },
               { value: 'product', label: 'Product' },
@@ -63,8 +63,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <button type="button"                 key={type.value}
                 onClick={() => setNestedData('heroSplit.linkType', type.value)}
                 className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors ${(data.heroSplit.linkType || 'manual') === type.value
-                  ? 'bg-editor-accent text-editor-bg'
-                  : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-bg'
+                  ? 'bg-q-accent text-q-bg'
+                  : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
                   }`}
               >
                 {type.label}
@@ -115,7 +115,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {/* Image */}
       <div>
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Image size={14} />
           Image
         </label>
@@ -127,29 +127,29 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="heroSplit" data={data} setNestedData={setNestedData} />
       {/* Layout */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Layout size={14} />
           Layout
         </label>
 
         {/* Image Position Toggle */}
         <div className="mb-4">
-          <label className="block text-xs font-semibold text-editor-text-secondary mb-2">{t('controls.imagePosition')}</label>
-          <div className="flex bg-editor-bg p-1 rounded-md border border-editor-border">
+          <label className="block text-xs font-semibold text-q-text-secondary mb-2">{t('controls.imagePosition')}</label>
+          <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
             {['left', 'right'].map(pos => (
               <button type="button"                 key={pos}
                 onClick={() => setNestedData('heroSplit.imagePosition', pos)}
                 className={`flex-1 py-2 text-sm font-medium rounded-sm capitalize ${data.heroSplit.imagePosition === pos
-                  ? 'bg-editor-accent text-editor-bg'
-                  : 'text-editor-text-secondary hover:bg-editor-border'
+                  ? 'bg-q-accent text-q-bg'
+                  : 'text-q-text-secondary hover:bg-q-surface-overlay'
                   }`}
               >
                 {pos === 'left' ? '← Image Left' : 'Image Right →'}
               </button>
             ))}
           </div>
-          <p className="text-xs text-editor-text-secondary mt-1 italic">
+          <p className="text-xs text-q-text-secondary mt-1 italic">
             Switch between image on left or right side
           </p>
         </div>
@@ -172,7 +172,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(v) => setNestedData('heroSplit.angleIntensity', v)}
             min={0} max={30} step={5} suffix="%"
           />
-          <p className="text-xs text-editor-text-secondary mt-1 italic">
+          <p className="text-xs text-q-text-secondary mt-1 italic">
             0 = straight line, higher = more diagonal
           </p>
         </div>
@@ -180,8 +180,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
           Colors
         </label>
@@ -194,7 +194,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('controls.headlineColor')} value={data.heroSplit.colors?.heading || '#111827'} onChange={(v) => setNestedData('heroSplit.colors.heading', v)} />
           <ColorControl label={t('controls.textColor')} value={data.heroSplit.colors?.text || '#4b5563'} onChange={(v) => setNestedData('heroSplit.colors.text', v)} />
 
-          <p className="text-[10px] text-editor-text-secondary uppercase tracking-wider font-bold">Button</p>
+          <p className="text-[10px] text-q-text-secondary uppercase tracking-wider font-bold">Button</p>
 
           <ColorControl label={t('controls.fondoBotn')} value={data.heroSplit.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('heroSplit.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data.heroSplit.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('heroSplit.colors.buttonText', v)} />

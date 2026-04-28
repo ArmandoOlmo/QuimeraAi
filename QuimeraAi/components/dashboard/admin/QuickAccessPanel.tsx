@@ -32,13 +32,13 @@ const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
     }
 
     return (
-        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4 mb-6">
+        <div className="bg-q-surface border border-q-border rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-editor-accent" />
-                    <h2 className="text-lg font-bold text-editor-text-primary">Acceso Rápido</h2>
+                    <Star className="w-5 h-5 text-q-accent" />
+                    <h2 className="text-lg font-bold text-q-text">Acceso Rápido</h2>
                 </div>
-                <span className="text-xs text-editor-text-secondary">
+                <span className="text-xs text-q-text-secondary">
                     Más usadas
                 </span>
             </div>
@@ -48,16 +48,16 @@ const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
                     <button
                         key={item.id}
                         onClick={() => onItemClick(item.id)}
-                        className="group flex flex-col items-center justify-center p-4 bg-editor-bg border border-editor-border rounded-lg hover:border-editor-accent hover:bg-editor-panel-bg transition-all duration-200"
+                        className="group flex flex-col items-center justify-center p-4 bg-q-bg border border-q-border rounded-lg hover:border-q-accent hover:bg-q-surface transition-all duration-200"
                     >
-                        <div className="w-10 h-10 bg-editor-accent/10 rounded-lg flex items-center justify-center text-editor-accent group-hover:bg-editor-accent group-hover:text-white transition-all mb-2">
+                        <div className="w-10 h-10 bg-q-accent/10 rounded-lg flex items-center justify-center text-q-accent group-hover:bg-q-accent group-hover:text-white transition-all mb-2">
                             {item.icon}
                         </div>
-                        <span className="text-sm font-medium text-editor-text-primary text-center line-clamp-2">
+                        <span className="text-sm font-medium text-q-text text-center line-clamp-2">
                             {item.title}
                         </span>
                         {item.lastAccessed && (
-                            <span className="text-xs text-editor-text-secondary mt-1 flex items-center gap-1">
+                            <span className="text-xs text-q-text-secondary mt-1 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {item.lastAccessed}
                             </span>

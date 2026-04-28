@@ -75,10 +75,10 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
                     <Contact size={32} className="text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-editor-text-primary mb-2">
+                <h3 className="text-2xl font-bold text-q-text mb-2">
                     {t('onboarding.step5Heading', 'Contact Information')}
                 </h3>
-                <p className="text-editor-text-secondary">
+                <p className="text-q-text-secondary">
                     {t('onboarding.step5Subheading', 'How can customers reach you? (All fields optional)')}
                 </p>
             </div>
@@ -87,8 +87,8 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
             <div className="space-y-4">
                 {/* Email */}
                 <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-editor-text-primary">
-                        <Mail size={16} className="text-editor-text-secondary" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-q-text">
+                        <Mail size={16} className="text-q-text-secondary" />
                         {t('onboarding.email', 'Email')}
                     </label>
                     <input
@@ -96,14 +96,14 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.email || ''}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="contact@yourbusiness.com"
-                        className="w-full px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                 </div>
 
                 {/* Phone */}
                 <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-editor-text-primary">
-                        <Phone size={16} className="text-editor-text-secondary" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-q-text">
+                        <Phone size={16} className="text-q-text-secondary" />
                         {t('onboarding.phone', 'Phone')}
                     </label>
                     <input
@@ -111,14 +111,14 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.phone || ''}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                 </div>
 
                 {/* Address */}
                 <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-editor-text-primary">
-                        <MapPin size={16} className="text-editor-text-secondary" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-q-text">
+                        <MapPin size={16} className="text-q-text-secondary" />
                         {t('onboarding.address', 'Address')}
                     </label>
                     <input
@@ -126,7 +126,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.address || ''}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="123 Main Street"
-                        className="w-full px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="w-full px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                 </div>
 
@@ -137,52 +137,52 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                         value={contactInfo.city || ''}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         placeholder={t('onboarding.city', 'City')}
-                        className="px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                     <input
                         type="text"
                         value={contactInfo.state || ''}
                         onChange={(e) => handleInputChange('state', e.target.value)}
                         placeholder={t('onboarding.state', 'State')}
-                        className="px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                     <input
                         type="text"
                         value={contactInfo.zipCode || ''}
                         onChange={(e) => handleInputChange('zipCode', e.target.value)}
                         placeholder={t('onboarding.zip', 'ZIP')}
-                        className="px-4 py-3 bg-editor-sidebar border border-editor-border rounded-xl text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                        className="px-4 py-3 bg-q-surface border border-q-border rounded-xl text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
                     />
                 </div>
             </div>
 
             {/* Social Media (Collapsible) */}
-            <div className="border border-editor-border rounded-xl overflow-hidden">
+            <div className="border border-q-border rounded-xl overflow-hidden">
                 <button
                     onClick={() => setShowSocial(!showSocial)}
-                    className="w-full flex items-center justify-between p-4 bg-editor-sidebar hover:bg-editor-sidebar-hover transition-colors"
+                    className="w-full flex items-center justify-between p-4 bg-q-surface hover:bg-q-surface-hover transition-colors"
                 >
                     <div className="flex items-center gap-3">
-                        <Globe size={18} className="text-editor-text-secondary" />
-                        <span className="font-medium text-editor-text-primary">
+                        <Globe size={18} className="text-q-text-secondary" />
+                        <span className="font-medium text-q-text">
                             {t('onboarding.socialMedia', 'Social Media')}
                         </span>
-                        <span className="text-xs text-editor-text-secondary">
+                        <span className="text-xs text-q-text-secondary">
                             ({t('onboarding.optional', 'optional')})
                         </span>
                     </div>
                     {showSocial ? (
-                        <ChevronUp size={18} className="text-editor-text-secondary" />
+                        <ChevronUp size={18} className="text-q-text-secondary" />
                     ) : (
-                        <ChevronDown size={18} className="text-editor-text-secondary" />
+                        <ChevronDown size={18} className="text-q-text-secondary" />
                     )}
                 </button>
 
                 {showSocial && (
-                    <div className="p-4 border-t border-editor-border space-y-3">
+                    <div className="p-4 border-t border-q-border space-y-3">
                         {SOCIAL_PLATFORMS.map((platform) => (
                             <div key={platform.id} className="flex items-center gap-3">
-                                <span className="w-24 text-sm text-editor-text-secondary">
+                                <span className="w-24 text-sm text-q-text-secondary">
                                     {t(`onboarding.social.${platform.id}`, platform.label)}
                                 </span>
                                 <input
@@ -190,7 +190,7 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                     value={(contactInfo as any)[platform.id] || ''}
                                     onChange={(e) => handleSocialChange(platform.id, e.target.value)}
                                     placeholder={platform.placeholder}
-                                    className="flex-1 px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary placeholder:text-editor-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                    className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm text-q-text placeholder:text-q-text-secondary/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                                 />
                             </div>
                         ))}
@@ -199,29 +199,29 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
             </div>
 
             {/* Business Hours (Collapsible) */}
-            <div className="border border-editor-border rounded-xl overflow-hidden">
+            <div className="border border-q-border rounded-xl overflow-hidden">
                 <button
                     onClick={() => setShowHours(!showHours)}
-                    className="w-full flex items-center justify-between p-4 bg-editor-sidebar hover:bg-editor-sidebar-hover transition-colors"
+                    className="w-full flex items-center justify-between p-4 bg-q-surface hover:bg-q-surface-hover transition-colors"
                 >
                     <div className="flex items-center gap-3">
-                        <Clock size={18} className="text-editor-text-secondary" />
-                        <span className="font-medium text-editor-text-primary">
+                        <Clock size={18} className="text-q-text-secondary" />
+                        <span className="font-medium text-q-text">
                             {t('onboarding.businessHours', 'Business Hours')}
                         </span>
-                        <span className="text-xs text-editor-text-secondary">
+                        <span className="text-xs text-q-text-secondary">
                             ({t('onboarding.optional', 'optional')})
                         </span>
                     </div>
                     {showHours ? (
-                        <ChevronUp size={18} className="text-editor-text-secondary" />
+                        <ChevronUp size={18} className="text-q-text-secondary" />
                     ) : (
-                        <ChevronDown size={18} className="text-editor-text-secondary" />
+                        <ChevronDown size={18} className="text-q-text-secondary" />
                     )}
                 </button>
 
                 {showHours && (
-                    <div className="p-4 border-t border-editor-border space-y-3">
+                    <div className="p-4 border-t border-q-border space-y-3">
                         {DAYS.map((day) => {
                             const dayHours = contactInfo.businessHours?.[day] || { isOpen: false };
                             return (
@@ -231,9 +231,9 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                             type="checkbox"
                                             checked={dayHours.isOpen}
                                             onChange={(e) => handleHoursChange(day, 'isOpen', e.target.checked)}
-                                            className="w-4 h-4 rounded border-editor-border bg-editor-sidebar text-cyan-500 focus:ring-cyan-500/50"
+                                            className="w-4 h-4 rounded border-q-border bg-q-surface text-cyan-500 focus:ring-cyan-500/50"
                                         />
-                                        <span className="text-sm text-editor-text-primary">
+                                        <span className="text-sm text-q-text">
                                             {getTranslatedDay(day)}
                                         </span>
                                     </label>
@@ -243,19 +243,19 @@ const Step5ContactInfo: React.FC<Step5ContactInfoProps> = ({
                                                 type="time"
                                                 value={dayHours.openTime || '09:00'}
                                                 onChange={(e) => handleHoursChange(day, 'openTime', e.target.value)}
-                                                className="px-2 py-1 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                                             />
-                                            <span className="text-editor-text-secondary">-</span>
+                                            <span className="text-q-text-secondary">-</span>
                                             <input
                                                 type="time"
                                                 value={dayHours.closeTime || '18:00'}
                                                 onChange={(e) => handleHoursChange(day, 'closeTime', e.target.value)}
-                                                className="px-2 py-1 bg-editor-bg border border-editor-border rounded-lg text-sm text-editor-text-primary focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                                                className="px-2 py-1 bg-q-bg border border-q-border rounded-lg text-sm text-q-text focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                                             />
                                         </div>
                                     )}
                                     {!dayHours.isOpen && (
-                                        <span className="text-sm text-editor-text-secondary/50">
+                                        <span className="text-sm text-q-text-secondary/50">
                                             {t('onboarding.closed', 'Closed')}
                                         </span>
                                     )}

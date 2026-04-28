@@ -243,12 +243,12 @@ const UploadStep: React.FC<{
                     transition-all cursor-pointer group
                     ${isDragging
                         ? 'border-primary bg-primary/5 scale-[1.02]'
-                        : 'border-border hover:border-primary/50 hover:bg-primary/5'}`}
+                        : 'border-q-border hover:border-primary/50 hover:bg-primary/5'}`}
             >
                 {isProcessing ? (
                     <div className="flex flex-col items-center gap-3">
                         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                        <p className="text-sm text-muted-foreground">{t('leads.import.processing')}</p>
+                        <p className="text-sm text-q-text-muted">{t('leads.import.processing')}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center gap-3">
@@ -259,7 +259,7 @@ const UploadStep: React.FC<{
                             <p className="text-base font-semibold text-foreground mb-1">
                                 {t('leads.import.dropzone.title')}
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-q-text-muted">
                                 {t('leads.import.dropzone.subtitle')}
                             </p>
                         </div>
@@ -291,7 +291,7 @@ const UploadStep: React.FC<{
             )}
 
             {/* Template Download */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-q-text-muted">
                 <Download size={14} />
                 <button
                     onClick={(e) => {
@@ -341,41 +341,41 @@ const MappingStep: React.FC<{
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-border">
-                            <th className="text-left py-2 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
+                        <tr className="border-b border-q-border">
+                            <th className="text-left py-2 px-3 text-q-text-muted font-medium text-xs uppercase tracking-wider">
                                 {t('leads.import.fileColumn')}
                             </th>
-                            <th className="text-center py-2 px-3 text-muted-foreground font-medium text-xs">→</th>
-                            <th className="text-left py-2 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
+                            <th className="text-center py-2 px-3 text-q-text-muted font-medium text-xs">→</th>
+                            <th className="text-left py-2 px-3 text-q-text-muted font-medium text-xs uppercase tracking-wider">
                                 {t('leads.import.leadField')}
                             </th>
-                            <th className="text-left py-2 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider hidden sm:table-cell">
+                            <th className="text-left py-2 px-3 text-q-text-muted font-medium text-xs uppercase tracking-wider hidden sm:table-cell">
                                 {t('leads.import.sampleData')}
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         {mapping.map((m, idx) => (
-                            <tr key={m.fileColumn} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                            <tr key={m.fileColumn} className="border-b border-q-border/50 hover:bg-muted/30 transition-colors">
                                 <td className="py-2.5 px-3">
                                     <div className="flex items-center gap-2">
-                                        <FileSpreadsheet size={14} className="text-muted-foreground shrink-0" />
+                                        <FileSpreadsheet size={14} className="text-q-text-muted shrink-0" />
                                         <span className="font-medium text-foreground truncate max-w-[150px]" title={m.fileColumn}>
                                             {m.fileColumn}
                                         </span>
                                     </div>
                                 </td>
                                 <td className="text-center py-2.5 px-3">
-                                    <ArrowRight size={14} className={`mx-auto ${m.confidence > 60 ? 'text-green-500' : 'text-muted-foreground'}`} />
+                                    <ArrowRight size={14} className={`mx-auto ${m.confidence > 60 ? 'text-green-500' : 'text-q-text-muted'}`} />
                                 </td>
                                 <td className="py-2.5 px-3">
                                     <select
                                         value={m.leadField}
                                         onChange={(e) => onMappingChange(idx, e.target.value as LeadField)}
-                                        className={`w-full bg-background border rounded-lg px-2.5 py-1.5 text-sm outline-none
+                                        className={`w-full bg-q-bg border rounded-lg px-2.5 py-1.5 text-sm outline-none
                                             transition-colors cursor-pointer
                                             ${m.leadField === 'skip'
-                                                ? 'border-border text-muted-foreground'
+                                                ? 'border-q-border text-q-text-muted'
                                                 : m.confidence > 60
                                                     ? 'border-green-500/30 text-foreground bg-green-500/5'
                                                     : 'border-primary/30 text-foreground bg-primary/5'}`}
@@ -386,7 +386,7 @@ const MappingStep: React.FC<{
                                     </select>
                                 </td>
                                 <td className="py-2.5 px-3 hidden sm:table-cell">
-                                    <span className="text-xs text-muted-foreground italic truncate block max-w-[200px]" title={sampleRows[0]?.[m.fileColumn] || ''}>
+                                    <span className="text-xs text-q-text-muted italic truncate block max-w-[200px]" title={sampleRows[0]?.[m.fileColumn] || ''}>
                                         {sampleRows[0]?.[m.fileColumn] || '—'}
                                     </span>
                                 </td>
@@ -459,23 +459,23 @@ const PreviewStep: React.FC<{
                         <Table size={14} />
                         {t('leads.import.previewTitle')} ({Math.min(validLeads.length, 5)} {t('leads.import.of')} {validLeads.length})
                     </h4>
-                    <div className="overflow-x-auto rounded-xl border border-border">
+                    <div className="overflow-x-auto rounded-xl border border-q-border">
                         <table className="w-full text-xs">
                             <thead>
                                 <tr className="bg-muted/50">
-                                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">{t('leads.import.fields.name')}</th>
-                                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">{t('leads.import.fields.email')}</th>
-                                    <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden sm:table-cell">{t('leads.import.fields.phone')}</th>
-                                    <th className="text-left py-2 px-3 font-medium text-muted-foreground hidden sm:table-cell">{t('leads.import.fields.company')}</th>
+                                    <th className="text-left py-2 px-3 font-medium text-q-text-muted">{t('leads.import.fields.name')}</th>
+                                    <th className="text-left py-2 px-3 font-medium text-q-text-muted">{t('leads.import.fields.email')}</th>
+                                    <th className="text-left py-2 px-3 font-medium text-q-text-muted hidden sm:table-cell">{t('leads.import.fields.phone')}</th>
+                                    <th className="text-left py-2 px-3 font-medium text-q-text-muted hidden sm:table-cell">{t('leads.import.fields.company')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {validLeads.slice(0, 5).map((lead, i) => (
-                                    <tr key={i} className="border-t border-border/50">
+                                    <tr key={i} className="border-t border-q-border/50">
                                         <td className="py-2 px-3 text-foreground">{lead.name || '—'}</td>
                                         <td className="py-2 px-3 text-foreground">{lead.email || '—'}</td>
-                                        <td className="py-2 px-3 text-muted-foreground hidden sm:table-cell">{lead.phone || '—'}</td>
-                                        <td className="py-2 px-3 text-muted-foreground hidden sm:table-cell">{lead.company || '—'}</td>
+                                        <td className="py-2 px-3 text-q-text-muted hidden sm:table-cell">{lead.phone || '—'}</td>
+                                        <td className="py-2 px-3 text-q-text-muted hidden sm:table-cell">{lead.company || '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -484,12 +484,12 @@ const PreviewStep: React.FC<{
                 </div>
 
                 {/* Import Tag */}
-                <div className="border border-border rounded-xl p-4 bg-muted/20">
+                <div className="border border-q-border rounded-xl p-4 bg-muted/20">
                     <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
                         <Tag size={14} className="text-primary" />
                         {t('leads.import.tagSection', 'Etiqueta de Importación')}
                     </h4>
-                    <p className="text-xs text-muted-foreground mb-2">
+                    <p className="text-xs text-q-text-muted mb-2">
                         {t('leads.import.tagDescription', 'Esta etiqueta se asignará a todos los leads importados para identificarlos fácilmente.')}
                     </p>
                     <input
@@ -497,23 +497,23 @@ const PreviewStep: React.FC<{
                         value={importTag}
                         onChange={(e) => onImportTagChange(e.target.value)}
                         placeholder={t('leads.import.tagPlaceholder', 'Ej: Evento Miami 2026')}
-                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                        className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
                     />
                 </div>
 
                 {/* Audience Assignment */}
-                <div className="border border-border rounded-xl p-4 bg-muted/20">
+                <div className="border border-q-border rounded-xl p-4 bg-muted/20">
                     <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                             <Users size={14} className="text-primary" />
                             {t('leads.import.audienceSection')}
                         </h4>
-                        <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full bg-muted border border-border">
+                        <span className="text-[10px] text-q-text-muted px-2 py-0.5 rounded-full bg-muted border border-q-border">
                             {t('leads.import.optional')}
                         </span>
                     </div>
 
-                    <p className="text-xs text-muted-foreground mb-3">
+                    <p className="text-xs text-q-text-muted mb-3">
                         {t('leads.import.audienceDescription')}
                     </p>
 
@@ -523,7 +523,7 @@ const PreviewStep: React.FC<{
                             onClick={() => { if (createNewAudience) onToggleCreateAudience(); }}
                             className={`px-3 py-1.5 text-xs rounded-lg transition-all ${!createNewAudience
                                 ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                                : 'bg-muted text-q-text-muted hover:text-foreground'}`}
                         >
                             {t('leads.import.existingAudience')}
                         </button>
@@ -531,7 +531,7 @@ const PreviewStep: React.FC<{
                             onClick={() => { if (!createNewAudience) onToggleCreateAudience(); }}
                             className={`px-3 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1 ${createNewAudience
                                 ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                                : 'bg-muted text-q-text-muted hover:text-foreground'}`}
                         >
                             <Plus size={12} />
                             {t('leads.import.newAudience')}
@@ -544,23 +544,23 @@ const PreviewStep: React.FC<{
                             value={newAudienceName}
                             onChange={(e) => onNewAudienceNameChange(e.target.value)}
                             placeholder={t('leads.import.newAudiencePlaceholder')}
-                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                            className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:border-primary transition-colors"
                         />
                     ) : (
                         <div className="space-y-2">
                             <div className="relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                 <input
                                     type="text"
                                     value={audienceSearch}
                                     onChange={(e) => setAudienceSearch(e.target.value)}
                                     placeholder={t('leads.import.searchAudience')}
-                                    className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-q-bg border border-q-border rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-primary transition-colors"
                                 />
                             </div>
 
                             {audiencesLoading ? (
-                                <div className="flex items-center justify-center py-4 text-muted-foreground">
+                                <div className="flex items-center justify-center py-4 text-q-text-muted">
                                     <Loader2 size={16} className="animate-spin mr-2" />
                                     <span className="text-xs">{t('leads.import.loadingAudiences')}</span>
                                 </div>
@@ -571,7 +571,7 @@ const PreviewStep: React.FC<{
                                         onClick={() => onAudienceChange('')}
                                         className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${selectedAudienceId === ''
                                             ? 'bg-primary/10 text-primary border border-primary/20'
-                                            : 'hover:bg-muted text-muted-foreground'}`}
+                                            : 'hover:bg-muted text-q-text-muted'}`}
                                     >
                                         {t('leads.import.noAudience')}
                                     </button>
@@ -588,7 +588,7 @@ const PreviewStep: React.FC<{
                                         </button>
                                     ))}
                                     {filteredAudiences.length === 0 && !audiencesLoading && (
-                                        <p className="text-xs text-muted-foreground text-center py-3">
+                                        <p className="text-xs text-q-text-muted text-center py-3">
                                             {t('leads.import.noAudiencesFound')}
                                         </p>
                                     )}
@@ -811,7 +811,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
         <Modal isOpen={isOpen} onClose={handleClose} maxWidth="max-w-3xl">
             <div className="flex flex-col max-h-[85vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border">
+                <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-q-border">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                             <Upload className="w-5 h-5 text-primary" />
@@ -820,18 +820,18 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                             <h2 className="text-base sm:text-lg font-bold text-foreground">
                                 {t('leads.import.title')}
                             </h2>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-q-text-muted">
                                 {t('leads.import.subtitle')}
                             </p>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                    <button onClick={handleClose} className="p-2 rounded-lg hover:bg-muted transition-colors text-q-text-muted hover:text-foreground">
                         <X size={18} />
                     </button>
                 </div>
 
                 {/* Step Indicator */}
-                <div className="flex items-center justify-center gap-2 px-6 py-3 bg-muted/30 border-b border-border">
+                <div className="flex items-center justify-center gap-2 px-6 py-3 bg-muted/30 border-b border-q-border">
                     {STEPS.map((step, i) => {
                         const StepIcon = step.icon;
                         const isActive = step.id === currentStep;
@@ -841,7 +841,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                             <React.Fragment key={step.id}>
                                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
                                     ${isActive ? 'bg-primary text-primary-foreground' :
-                                        isCompleted ? 'bg-green-500/10 text-green-500' : 'text-muted-foreground'}`}
+                                        isCompleted ? 'bg-green-500/10 text-green-500' : 'text-q-text-muted'}`}
                                 >
                                     {isCompleted ? <CheckCircle size={14} /> : <StepIcon size={14} />}
                                     <span className="hidden sm:inline">{t(step.labelKey)}</span>
@@ -868,7 +868,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                                         <h3 className="text-lg font-bold text-foreground mb-1">
                                             {t('leads.import.successTitle')}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {t('leads.import.successMessage', { count: importResult.success })}
                                         </p>
                                         {(createNewAudience && newAudienceName) && (
@@ -898,7 +898,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                                         <h3 className="text-lg font-bold text-foreground mb-1">
                                             {t('leads.import.errorTitle')}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-q-text-muted">
                                             {t('leads.import.errorMessage')}
                                         </p>
                                     </div>
@@ -949,10 +949,10 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
 
                 {/* Footer Actions */}
                 {!importResult && (
-                    <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-t border-border bg-muted/20">
+                    <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-t border-q-border bg-muted/20">
                         <button
                             onClick={currentStep === 'upload' ? handleClose : goBack}
-                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground rounded-lg hover:bg-muted transition-colors"
                             disabled={isImporting}
                         >
                             {currentStep === 'upload' ? (
@@ -974,7 +974,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                                         style={{ width: `${importProgress}%` }}
                                     />
                                 </div>
-                                <p className="text-[10px] text-muted-foreground text-center mt-1">
+                                <p className="text-[10px] text-q-text-muted text-center mt-1">
                                     {t('leads.import.importing')} ({importProgress}%)
                                 </p>
                             </div>
@@ -986,7 +986,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
                             className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold rounded-xl transition-all
                                 ${canProceed && !isImporting
                                     ? 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm'
-                                    : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
+                                    : 'bg-muted text-q-text-muted cursor-not-allowed'}`}
                         >
                             {isImporting ? (
                                 <>

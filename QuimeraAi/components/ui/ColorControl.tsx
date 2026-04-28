@@ -6,12 +6,12 @@ import { useSafeProject } from '../../contexts/project';
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
     <input
         {...props}
-        className="w-full bg-editor-bg text-editor-text-primary p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none transition-all text-xs font-mono"
+        className="w-full bg-q-bg text-q-text p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent focus:outline-none transition-all text-xs font-mono"
     />
 );
 
 const Label: React.FC<{ children: ReactNode, htmlFor?: string }> = ({ children, htmlFor }) => (
-    <label htmlFor={htmlFor} className="block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1">{children}</label>
+    <label htmlFor={htmlFor} className="block text-[10px] font-bold text-q-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1">{children}</label>
 );
 
 const PRESET_COLORS = [
@@ -207,33 +207,33 @@ interface ColorControlProps {
 // Style maps per variant
 const variantStyles = {
     editor: {
-        input: 'w-full bg-editor-bg text-editor-text-primary p-2 rounded-md border border-editor-border focus:ring-2 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none transition-all text-xs font-mono',
-        label: 'block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1',
-        popover: 'z-[999999] bg-editor-panel-bg border border-editor-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
-        trigger: 'w-full flex items-center gap-2.5 bg-editor-bg border border-editor-border rounded-lg px-2.5 py-2 text-sm text-editor-text-primary hover:border-editor-accent/60 hover:shadow-sm transition-all group',
-        swatch: 'w-7 h-7 rounded-md border border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
-        hexText: 'flex-1 text-left font-mono text-xs text-editor-text-primary/80',
-        chevron: 'text-editor-text-secondary group-hover:text-editor-text-primary',
-        presetBtn: 'rounded border border-editor-border hover:scale-110 transition-transform',
-        rgbInput: 'flex-1 bg-editor-bg text-editor-text-primary p-1.5 rounded-md border border-editor-border focus:ring-1 focus:ring-editor-accent/50 focus:border-editor-accent focus:outline-none text-xs font-mono',
-        rgbLabel: 'text-[10px] text-editor-text-secondary uppercase font-bold w-4 text-center flex-shrink-0',
-        sectionLabel: 'block text-[10px] font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider',
-        paletteLabel: 'text-[10px] text-editor-text-secondary truncate max-w-[60px] shrink-0',
-        paletteRow: 'flex items-center gap-1 p-1 rounded bg-editor-border/30 hover:bg-editor-border/50 transition-colors min-w-0',
+        input: 'w-full bg-q-bg text-q-text p-2 rounded-md border border-q-border focus:ring-2 focus:ring-q-accent/50 focus:border-q-accent focus:outline-none transition-all text-xs font-mono',
+        label: 'block text-[10px] font-bold text-q-text-secondary mb-1.5 uppercase tracking-wider flex items-center gap-1',
+        popover: 'z-[999999] bg-q-surface border border-q-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        trigger: 'w-full flex items-center gap-2.5 bg-q-bg border border-q-border rounded-lg px-2.5 py-2 text-sm text-q-text hover:border-q-accent/60 hover:shadow-sm transition-all group',
+        swatch: 'w-7 h-7 rounded-md border border-q-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
+        hexText: 'flex-1 text-left font-mono text-xs text-q-text/80',
+        chevron: 'text-q-text-secondary group-hover:text-q-text',
+        presetBtn: 'rounded border border-q-border hover:scale-110 transition-transform',
+        rgbInput: 'flex-1 bg-q-bg text-q-text p-1.5 rounded-md border border-q-border focus:ring-1 focus:ring-q-accent/50 focus:border-q-accent focus:outline-none text-xs font-mono',
+        rgbLabel: 'text-[10px] text-q-text-secondary uppercase font-bold w-4 text-center flex-shrink-0',
+        sectionLabel: 'block text-[10px] font-bold text-q-text-secondary mb-1.5 uppercase tracking-wider',
+        paletteLabel: 'text-[10px] text-q-text-secondary truncate max-w-[60px] shrink-0',
+        paletteRow: 'flex items-center gap-1 p-1 rounded bg-q-surface-overlay/30 hover:bg-q-surface-overlay/50 transition-colors min-w-0',
     },
     dashboard: {
-        input: 'w-full bg-background text-foreground p-2 rounded-md border border-border focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all text-xs font-mono',
-        label: 'block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider flex items-center gap-1',
-        popover: 'z-[999999] bg-card border border-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
-        trigger: 'w-full flex items-center gap-2.5 bg-background border border-border rounded-lg px-2.5 py-2.5 text-sm text-foreground hover:border-primary/60 hover:shadow-sm transition-all group',
-        swatch: 'w-7 h-7 rounded-md border border-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
+        input: 'w-full bg-q-bg text-foreground p-2 rounded-md border border-q-border focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none transition-all text-xs font-mono',
+        label: 'block text-[10px] font-bold text-q-text-muted mb-1.5 uppercase tracking-wider flex items-center gap-1',
+        popover: 'z-[999999] bg-q-surface border border-q-border rounded-xl shadow-2xl shadow-black/30 p-3.5 overflow-y-auto max-h-[85vh]',
+        trigger: 'w-full flex items-center gap-2.5 bg-q-bg border border-q-border rounded-lg px-2.5 py-2.5 text-sm text-foreground hover:border-primary/60 hover:shadow-sm transition-all group',
+        swatch: 'w-7 h-7 rounded-md border border-q-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered flex-shrink-0',
         hexText: 'flex-1 text-left font-mono text-xs text-foreground/80',
-        chevron: 'text-muted-foreground group-hover:text-foreground',
-        presetBtn: 'rounded border border-border hover:scale-110 transition-transform',
-        rgbInput: 'flex-1 bg-background text-foreground p-1.5 rounded-md border border-border focus:ring-1 focus:ring-primary/50 focus:border-primary focus:outline-none text-xs font-mono',
-        rgbLabel: 'text-[10px] text-muted-foreground uppercase font-bold w-4 text-center flex-shrink-0',
-        sectionLabel: 'block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-wider',
-        paletteLabel: 'text-[10px] text-muted-foreground truncate max-w-[60px] shrink-0',
+        chevron: 'text-q-text-muted group-hover:text-foreground',
+        presetBtn: 'rounded border border-q-border hover:scale-110 transition-transform',
+        rgbInput: 'flex-1 bg-q-bg text-foreground p-1.5 rounded-md border border-q-border focus:ring-1 focus:ring-primary/50 focus:border-primary focus:outline-none text-xs font-mono',
+        rgbLabel: 'text-[10px] text-q-text-muted uppercase font-bold w-4 text-center flex-shrink-0',
+        sectionLabel: 'block text-[10px] font-bold text-q-text-muted mb-1.5 uppercase tracking-wider',
+        paletteLabel: 'text-[10px] text-q-text-muted truncate max-w-[60px] shrink-0',
         paletteRow: 'flex items-center gap-1 p-1 rounded bg-secondary/30 hover:bg-secondary/50 transition-colors min-w-0',
     },
 };
@@ -671,7 +671,7 @@ const ColorControl: React.FC<ColorControlProps> = ({ label, value, onChange, pal
                     <button
                         ref={triggerRef}
                         onClick={() => setIsOpen(!isOpen)}
-                        className="w-8 h-8 rounded-full border-2 border-editor-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered hover:scale-105 transition-transform"
+                        className="w-8 h-8 rounded-full border-2 border-q-border/80 shadow-inner flex items-center justify-center overflow-hidden bg-checkered hover:scale-105 transition-transform"
                         title={label ? `${label}: ${safeValue}` : safeValue}
                     >
                         <div className="w-full h-full" style={{ backgroundColor: safeValue }} />

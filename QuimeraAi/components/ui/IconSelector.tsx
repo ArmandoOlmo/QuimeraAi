@@ -166,7 +166,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
     const [selectedCategory, setSelectedCategory] = useState<string>('Development');
 
     const CurrentIcon = (!value || value === 'none')
-        ? <LucideIcons.Ban size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} className="text-editor-text-secondary opacity-50" />
+        ? <LucideIcons.Ban size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} className="text-q-text-secondary opacity-50" />
         : getIconComponent(value, size === 'sm' ? 16 : size === 'lg' ? 24 : 20);
 
     // Size classes
@@ -179,14 +179,14 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
     return (
         <div className={fullWidthModal ? 'static' : 'relative'}>
             {label && (
-                <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
                     {label}
                 </label>
             )}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-full flex items-center ${hideText && hideChevron ? 'justify-center p-1.5' : `justify-between ${sizeClasses[size]}`} bg-editor-panel-bg border border-editor-border rounded-md text-editor-text-primary hover:border-editor-accent transition-colors`}
+                className={`w-full flex items-center ${hideText && hideChevron ? 'justify-center p-1.5' : `justify-between ${sizeClasses[size]}`} bg-q-surface border border-q-border rounded-md text-q-text hover:border-q-accent transition-colors`}
             >
                 <div className="flex items-center gap-2">
                     {CurrentIcon}
@@ -204,30 +204,30 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                     />
 
                     {/* Panel de selección de iconos */}
-                    <div className={`absolute z-[9999] mt-1 ${fullWidthModal ? 'w-full left-0 right-0 top-full' : (hideText ? 'w-72 -left-2' : 'w-full')} bg-editor-panel-bg border border-editor-border rounded-lg shadow-xl max-h-96 overflow-visible flex flex-col`}>
+                    <div className={`absolute z-[9999] mt-1 ${fullWidthModal ? 'w-full left-0 right-0 top-full' : (hideText ? 'w-72 -left-2' : 'w-full')} bg-q-surface border border-q-border rounded-lg shadow-xl max-h-96 overflow-visible flex flex-col`}>
                         {/* Remove Icon Control */}
-                        <div className="p-2 border-b border-editor-border bg-editor-panel-bg flex justify-between items-center">
-                            <span className="text-xs font-bold text-editor-text-secondary uppercase">Estado del Icono</span>
+                        <div className="p-2 border-b border-q-border bg-q-surface flex justify-between items-center">
+                            <span className="text-xs font-bold text-q-text-secondary uppercase">Estado del Icono</span>
                             <button
                                 onClick={() => {
                                     onChange('none');
                                     setIsOpen(false);
                                 }}
-                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${!value || value === 'none' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-editor-bg text-editor-text-secondary border border-editor-border hover:text-red-400'}`}
+                                className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors ${!value || value === 'none' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-q-bg text-q-text-secondary border border-q-border hover:text-red-400'}`}
                             >
                                 {!value || value === 'none' ? 'Apagado' : 'Apagar'}
                             </button>
                         </div>
 
                         {/* Category tabs */}
-                        <div className="flex overflow-x-auto border-b border-editor-border bg-editor-bg">
+                        <div className="flex overflow-x-auto border-b border-q-border bg-q-bg">
                             {Object.keys(serviceIconCategories).map((category) => (
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
                                     className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${selectedCategory === category
-                                            ? 'text-editor-accent border-b-2 border-editor-accent bg-editor-panel-bg/50'
-                                            : 'text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-panel-bg/30'
+                                            ? 'text-q-accent border-b-2 border-q-accent bg-q-surface/50'
+                                            : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/30'
                                         }`}
                                 >
                                     {t(`editor.controls.iconSelector.categories.${getCategoryKey(category)}`, category)}
@@ -248,8 +248,8 @@ const IconSelector: React.FC<IconSelectorProps> = ({ value, onChange, label, siz
                                                 setIsOpen(false);
                                             }}
                                             className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all hover:scale-105 ${value === iconName
-                                                    ? 'bg-editor-accent/20 border-editor-accent text-editor-accent'
-                                                    : 'bg-editor-bg border-editor-border text-editor-text-primary hover:border-editor-accent hover:bg-editor-panel-bg'
+                                                    ? 'bg-q-accent/20 border-q-accent text-q-accent'
+                                                    : 'bg-q-bg border-q-border text-q-text hover:border-q-accent hover:bg-q-surface'
                                                 }`}
                                             title={iconName}
                                         >

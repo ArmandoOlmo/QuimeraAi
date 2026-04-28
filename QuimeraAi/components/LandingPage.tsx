@@ -1613,7 +1613,7 @@ const LandingPageContent: React.FC = () => {
       <main className="min-h-screen bg-site-base relative">
         {/* 1. Loading State */}
         {showArticleLoading && (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center text-editor-text-secondary">
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-q-text-secondary">
             <QuimeraLoader size="md" />
             <p>Loading article...</p>
           </div>

@@ -53,8 +53,8 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-editor-panel-bg border border-editor-border rounded-lg p-3 shadow-lg">
-                    <p className="text-sm font-medium text-editor-text-primary mb-1">{label}</p>
+                <div className="bg-q-surface border border-q-border rounded-lg p-3 shadow-lg">
+                    <p className="text-sm font-medium text-q-text mb-1">{label}</p>
                     <p className="text-sm text-emerald-400">
                         MRR: {formatCurrency(payload[0].value)}
                     </p>
@@ -71,10 +71,10 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
 
     if (isLoading) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6">
+            <div className="bg-q-surface border border-q-border rounded-xl p-6">
                 <div className="animate-pulse">
-                    <div className="h-6 w-32 bg-editor-border rounded mb-4" />
-                    <div className="h-64 bg-editor-border rounded" />
+                    <div className="h-6 w-32 bg-q-surface-overlay rounded mb-4" />
+                    <div className="h-64 bg-q-surface-overlay rounded" />
                 </div>
             </div>
         );
@@ -85,20 +85,20 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-editor-panel-bg border border-editor-border rounded-xl p-6"
+            className="bg-q-surface border border-q-border rounded-xl p-6"
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-editor-text-primary">
+                    <h3 className="text-lg font-semibold text-q-text">
                         {t('dashboard.agency.charts.mrr.title', 'Ingresos Recurrentes (MRR)')}
                     </h3>
-                    <p className="text-sm text-editor-text-secondary">{t('dashboard.agency.charts.mrr.subtitle', 'Últimos 12 meses')}</p>
+                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.charts.mrr.subtitle', 'Últimos 12 meses')}</p>
                 </div>
                 <div className="text-right">
                     <div className="flex items-center gap-2">
                         <DollarSign className="w-5 h-5 text-emerald-400" />
-                        <span className="text-2xl font-bold text-editor-text-primary">
+                        <span className="text-2xl font-bold text-q-text">
                             <CountUp
                                 start={0}
                                 end={currentMRR}

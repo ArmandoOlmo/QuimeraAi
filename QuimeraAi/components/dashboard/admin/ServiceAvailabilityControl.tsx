@@ -147,16 +147,16 @@ const StatusSelector: React.FC<{
             {/* Reason Modal */}
             {showReasonModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                    <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 max-w-md w-full mx-4">
+                    <div className="bg-q-surface border border-q-border rounded-xl p-6 max-w-md w-full mx-4">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
                                 <AlertTriangle className="w-5 h-5 text-amber-400" />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-editor-text-primary">
+                                <h3 className="font-semibold text-q-text">
                                     {t('serviceAvailability.confirmChange', 'Confirmar Cambio')}
                                 </h3>
-                                <p className="text-sm text-editor-text-secondary">
+                                <p className="text-sm text-q-text-secondary">
                                     {pendingStatus === 'not_public'
                                         ? t('serviceAvailability.warningNotPublic', 'Este servicio será completamente oculto')
                                         : t('serviceAvailability.warningDevelopment', 'Solo Super Admin podrá acceder')}
@@ -165,14 +165,14 @@ const StatusSelector: React.FC<{
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-editor-text-secondary mb-2">
+                            <label className="block text-sm font-medium text-q-text-secondary mb-2">
                                 {t('serviceAvailability.reasonOptional', 'Razón (opcional)')}
                             </label>
                             <textarea
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
                                 placeholder={t('serviceAvailability.reasonPlaceholder', 'Ej: Mantenimiento programado...')}
-                                className="w-full px-3 py-2 bg-editor-bg border border-editor-border rounded-lg text-sm resize-none focus:outline-none focus:border-editor-accent"
+                                className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm resize-none focus:outline-none focus:border-q-accent"
                                 rows={3}
                             />
                         </div>
@@ -184,13 +184,13 @@ const StatusSelector: React.FC<{
                                     setPendingStatus(null);
                                     setReason('');
                                 }}
-                                className="px-4 py-2 text-sm font-medium text-editor-text-secondary hover:text-editor-text-primary transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-q-text-secondary hover:text-q-text transition-colors"
                             >
                                 {t('common.cancel', 'Cancelar')}
                             </button>
                             <button
                                 onClick={handleConfirm}
-                                className="px-4 py-2 text-sm font-medium bg-editor-accent text-white rounded-lg hover:bg-editor-accent/90 transition-colors"
+                                className="px-4 py-2 text-sm font-medium bg-q-accent text-white rounded-lg hover:bg-q-accent/90 transition-colors"
                             >
                                 {t('common.confirm', 'Confirmar')}
                             </button>
@@ -213,7 +213,7 @@ const ServiceCard: React.FC<{
     const { t } = useTranslation();
 
     return (
-        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-5 hover:border-editor-accent/30 transition-colors">
+        <div className="bg-q-surface border border-q-border rounded-xl p-5 hover:border-q-accent/30 transition-colors">
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                     <div
@@ -223,10 +223,10 @@ const ServiceCard: React.FC<{
                         {iconMap[service.icon] || <FileText size={20} />}
                     </div>
                     <div>
-                        <h3 className="font-semibold text-editor-text-primary">
+                        <h3 className="font-semibold text-q-text">
                             {t(service.nameKey, service.id)}
                         </h3>
-                        <p className="text-sm text-editor-text-secondary mt-0.5">
+                        <p className="text-sm text-q-text-secondary mt-0.5">
                             {t(service.descriptionKey, '')}
                         </p>
                         {statusReason && (
@@ -239,9 +239,9 @@ const ServiceCard: React.FC<{
                 </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-editor-border">
+            <div className="mt-4 pt-4 border-t border-q-border">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-editor-text-secondary">
+                    <span className="text-xs text-q-text-secondary">
                         {t('serviceAvailability.status', 'Estado')}:
                     </span>
                     <StatusSelector
@@ -262,27 +262,27 @@ const AuditLogEntry: React.FC<{ entry: ServiceAuditEntry }> = ({ entry }) => {
     const date = new Date(entry.timestamp.seconds * 1000);
 
     return (
-        <div className="flex items-start gap-4 py-3 border-b border-editor-border last:border-0">
-            <div className="w-8 h-8 rounded-full bg-editor-accent/10 flex items-center justify-center flex-shrink-0">
-                <History className="w-4 h-4 text-editor-accent" />
+        <div className="flex items-start gap-4 py-3 border-b border-q-border last:border-0">
+            <div className="w-8 h-8 rounded-full bg-q-accent/10 flex items-center justify-center flex-shrink-0">
+                <History className="w-4 h-4 text-q-accent" />
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-editor-text-primary">
+                    <span className="font-medium text-q-text">
                         {service ? t(service.nameKey, entry.serviceId) : entry.serviceId}
                     </span>
-                    <span className="text-editor-text-secondary">→</span>
+                    <span className="text-q-text-secondary">→</span>
                     <StatusBadge status={entry.previousStatus} />
-                    <span className="text-editor-text-secondary">→</span>
+                    <span className="text-q-text-secondary">→</span>
                     <StatusBadge status={entry.newStatus} />
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-editor-text-secondary">
+                <div className="flex items-center gap-3 mt-1 text-xs text-q-text-secondary">
                     <span>{entry.userEmail}</span>
                     <span>•</span>
                     <span>{date.toLocaleDateString()} {date.toLocaleTimeString()}</span>
                 </div>
                 {entry.reason && (
-                    <p className="text-sm text-editor-text-secondary mt-1 italic">
+                    <p className="text-sm text-q-text-secondary mt-1 italic">
                         "{entry.reason}"
                     </p>
                 )}
@@ -346,7 +346,7 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
 
         return (
             <div className="mb-8">
-                <h2 className="text-sm font-semibold text-editor-text-secondary uppercase tracking-wider mb-4">
+                <h2 className="text-sm font-semibold text-q-text-secondary uppercase tracking-wider mb-4">
                     {title}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -367,49 +367,49 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
 
     if (isLoading) {
         return (
-            <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+            <div className="flex h-screen bg-q-bg text-q-text">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                 <div className="flex-1 flex items-center justify-center">
-                    <RefreshCw className="w-8 h-8 text-editor-accent animate-spin" />
+                    <RefreshCw className="w-8 h-8 text-q-accent animate-spin" />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-editor-bg text-editor-text-primary">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-editor-bg border-b border-editor-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+                <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 -ml-2 text-editor-text-secondary hover:text-editor-text-primary transition-colors md:hidden"
+                            className="p-2 -ml-2 text-q-text-secondary hover:text-q-text transition-colors md:hidden"
                         >
                             <Menu className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="font-bold text-editor-text-primary">
+                            <h1 className="font-bold text-q-text">
                                 {t('serviceAvailability.title', 'Disponibilidad de Servicios')}
                             </h1>
-                            <p className="text-xs text-editor-text-secondary hidden sm:block">
+                            <p className="text-xs text-q-text-secondary hidden sm:block">
                                 {t('serviceAvailability.subtitle', 'Control global de servicios de la plataforma')}
                             </p>
                         </div>
                     </div>
-                    <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                    <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                 </header>
 
                 {/* Tabs */}
-                <div className="border-b border-editor-border px-4 sm:px-6">
+                <div className="border-b border-q-border px-4 sm:px-6">
                     <div className="flex gap-1">
                         <button
                             onClick={() => setActiveTab('services')}
                             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'services'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             {t('serviceAvailability.tabServices', 'Servicios')}
@@ -417,8 +417,8 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                         <button
                             onClick={() => setActiveTab('audit')}
                             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'audit'
-                                ? 'border-editor-accent text-editor-accent'
-                                : 'border-transparent text-editor-text-secondary hover:text-editor-text-primary'
+                                ? 'border-q-accent text-q-accent'
+                                : 'border-transparent text-q-text-secondary hover:text-q-text'
                                 }`}
                         >
                             <History size={16} />
@@ -439,14 +439,14 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                         <>
                             {/* Category Filter */}
                             <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-                                <Filter size={16} className="text-editor-text-secondary flex-shrink-0" />
+                                <Filter size={16} className="text-q-text-secondary flex-shrink-0" />
                                 {categories.map(cat => (
                                     <button
                                         key={cat.id}
                                         onClick={() => setCategoryFilter(cat.id)}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${categoryFilter === cat.id
-                                            ? 'bg-editor-accent text-white'
-                                            : 'bg-editor-panel-bg text-editor-text-secondary hover:text-editor-text-primary'
+                                            ? 'bg-q-accent text-white'
+                                            : 'bg-q-surface text-q-text-secondary hover:text-q-text'
                                             }`}
                                     >
                                         {cat.label}
@@ -480,15 +480,15 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                     )}
 
                     {activeTab === 'audit' && (
-                        <div className="bg-editor-panel-bg border border-editor-border rounded-xl">
-                            <div className="p-4 border-b border-editor-border flex items-center justify-between">
-                                <h2 className="font-semibold text-editor-text-primary">
+                        <div className="bg-q-surface border border-q-border rounded-xl">
+                            <div className="p-4 border-b border-q-border flex items-center justify-between">
+                                <h2 className="font-semibold text-q-text">
                                     {t('serviceAvailability.auditLogTitle', 'Registro de Cambios')}
                                 </h2>
                                 <button
                                     onClick={refreshAuditLog}
                                     disabled={isLoadingAuditLog}
-                                    className="p-2 text-editor-text-secondary hover:text-editor-accent transition-colors"
+                                    className="p-2 text-q-text-secondary hover:text-q-accent transition-colors"
                                 >
                                     <RefreshCw className={`w-4 h-4 ${isLoadingAuditLog ? 'animate-spin' : ''}`} />
                                 </button>
@@ -496,10 +496,10 @@ const ServiceAvailabilityControl: React.FC<ServiceAvailabilityControlProps> = ({
                             <div className="p-4">
                                 {isLoadingAuditLog ? (
                                     <div className="flex items-center justify-center py-8">
-                                        <RefreshCw className="w-6 h-6 text-editor-accent animate-spin" />
+                                        <RefreshCw className="w-6 h-6 text-q-accent animate-spin" />
                                     </div>
                                 ) : auditLog.length === 0 ? (
-                                    <div className="text-center py-8 text-editor-text-secondary">
+                                    <div className="text-center py-8 text-q-text-secondary">
                                         <History className="w-12 h-12 mx-auto mb-3 opacity-30" />
                                         <p>{t('serviceAvailability.noAuditEntries', 'No hay cambios registrados')}</p>
                                     </div>

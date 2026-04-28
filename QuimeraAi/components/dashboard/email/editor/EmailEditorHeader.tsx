@@ -54,7 +54,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
     ];
 
     return (
-        <header className="bg-editor-bg border-b border-editor-border h-14 flex-shrink-0 z-20">
+        <header className="bg-q-bg border-b border-q-border h-14 flex-shrink-0 z-20">
             <div className="h-full flex items-center justify-between px-4 gap-4 relative">
                 {/* LEFT SECTION - Mobile Menu & Name */}
                 <div className="flex items-center gap-3 min-w-0">
@@ -62,7 +62,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     {onOpenMobileMenu && (
                         <button
                             onClick={onOpenMobileMenu}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-editor-text-secondary hover:text-editor-text-primary hover:bg-editor-border/40 rounded-md transition-colors"
+                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-md transition-colors"
                             title={t('common.menu', 'Menú')}
                         >
                             <Menu className="w-5 h-5" />
@@ -70,15 +70,15 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     )}
 
                     {/* Divider */}
-                    <div className="w-px h-6 bg-editor-border" />
+                    <div className="w-px h-6 bg-q-surface-overlay" />
 
                     {/* Document Name */}
                     <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-medium text-editor-text-primary truncate max-w-[200px]">
+                        <span className="text-sm font-medium text-q-text truncate max-w-[200px]">
                             {documentName}
                         </span>
                         {isDirty && (
-                            <span className="text-xs text-editor-text-secondary">
+                            <span className="text-xs text-q-text-secondary">
                                 ({t('editor.unsaved', 'Sin guardar')})
                             </span>
                         )}
@@ -95,7 +95,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                                 flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all
                                 ${previewDevice === name
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                    : 'text-q-text-muted hover:text-foreground hover:bg-q-bg/50'
                                 }
                             `}
                             title={`${t('email.preview', 'Vista previa')} ${name} (${width})`}
@@ -110,7 +110,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                 <div className="flex items-center gap-2">
                     {/* Preview Button */}
                     <button
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
                         title={t('email.previewEmail', 'Vista previa del email')}
                     >
                         <Eye className="w-4 h-4" />
@@ -121,7 +121,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     <button
                         onClick={onSendTest}
                         disabled={!onSendTest}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('email.sendTest', 'Enviar prueba')}
                     >
                         <Send className="w-4 h-4" />
@@ -155,7 +155,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     </button>
 
                     {onClose && (
-                        <HeaderBackButton onClick={onClose} className="border-editor-border/60 bg-editor-panel-bg/60 text-editor-text-secondary hover:bg-editor-border/40 hover:text-editor-text-primary focus:ring-editor-accent/25" />
+                        <HeaderBackButton onClick={onClose} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     )}
                 </div>
             </div>

@@ -143,9 +143,9 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                         </div>
                     </div>
                 )}
-                <div className="text-center py-12 bg-card/50 rounded-2xl border border-border">
+                <div className="text-center py-12 bg-q-surface/50 rounded-2xl border border-q-border">
                     <CheckCircle className="mx-auto text-green-500 mb-4" size={40} />
-                    <p className="text-muted-foreground">
+                    <p className="text-q-text-muted">
                         {t('dashboard.news.allCaughtUp', 'Estás al día con todas las novedades')}
                     </p>
                     <button
@@ -177,7 +177,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                         </div>
                         <button
                             onClick={() => fetchUserNews()}
-                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-q-text-muted hover:text-foreground"
                             title={t('dashboard.news.refresh', 'Actualizar')}
                         >
                             <RefreshCw size={18} />
@@ -191,7 +191,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                         <div
                             key={news.id}
                             onClick={() => handleCardClick(news)}
-                            className="group relative h-[220px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 border border-border/50 hover:border-primary/30"
+                            className="group relative h-[220px] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 border border-q-border/50 hover:border-primary/30"
                         >
                             {/* Full background image */}
                             {news.imageUrl ? (
@@ -244,12 +244,12 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                         {/* Dropdown menu */}
                                         {menuOpenId === news.id && (
                                             <div
-                                                className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-xl py-1 z-20 min-w-[120px]"
+                                                className="absolute right-0 top-full mt-1 bg-q-surface border border-q-border rounded-lg shadow-xl py-1 z-20 min-w-[120px]"
                                                 onClick={e => e.stopPropagation()}
                                             >
                                                 <button
                                                     onClick={(e) => handleDismiss(e, news.id)}
-                                                    className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-2"
+                                                    className="w-full px-3 py-2 text-left text-sm text-q-text-muted hover:text-foreground hover:bg-secondary flex items-center gap-2"
                                                 >
                                                     {dismissingId === news.id ? (
                                                         <Loader2 size={14} className="animate-spin" />
@@ -306,7 +306,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                     onClick={() => setSelectedNews(null)}
                 >
                     <div
-                        className="bg-background w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl"
+                        className="bg-q-bg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Modal Header with Image */}
@@ -390,7 +390,7 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                         >
                                             {t(`dashboard.news.category.${selectedNews.category}`, NEWS_CATEGORY_LABELS[selectedNews.category])}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-q-text-muted">
                                             {formatDate(selectedNews.createdAt)}
                                         </span>
                                     </div>
@@ -415,11 +415,11 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
 
                             {/* Tags */}
                             {selectedNews.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border">
+                                <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-q-border">
                                     {selectedNews.tags.map(tag => (
                                         <span
                                             key={tag}
-                                            className="px-3 py-1.5 bg-secondary rounded-full text-xs font-medium text-muted-foreground"
+                                            className="px-3 py-1.5 bg-secondary rounded-full text-xs font-medium text-q-text-muted"
                                         >
                                             #{tag}
                                         </span>
@@ -429,10 +429,10 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 border-t border-border flex items-center justify-between">
+                        <div className="p-4 border-t border-q-border flex items-center justify-between">
                             <button
                                 onClick={e => handleDismiss(e as any, selectedNews.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-q-text-muted hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
                             >
                                 <X size={16} />
                                 {t('dashboard.news.dismiss', 'Descartar')}

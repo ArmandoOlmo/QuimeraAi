@@ -77,24 +77,24 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 
     if (displayActivities.length === 0) {
         return (
-            <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-6 text-center">
-                <Clock className="w-12 h-12 text-editor-text-secondary mx-auto mb-3 opacity-50" />
-                <p className="text-editor-text-secondary">No hay actividad reciente</p>
+            <div className="bg-q-surface border border-q-border rounded-xl p-6 text-center">
+                <Clock className="w-12 h-12 text-q-text-secondary mx-auto mb-3 opacity-50" />
+                <p className="text-q-text-secondary">No hay actividad reciente</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-editor-panel-bg border border-editor-border rounded-xl p-4">
+        <div className="bg-q-surface border border-q-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-editor-accent" />
-                    <h2 className="text-lg font-bold text-editor-text-primary">Actividad Reciente</h2>
+                    <Clock className="w-5 h-5 text-q-accent" />
+                    <h2 className="text-lg font-bold text-q-text">Actividad Reciente</h2>
                 </div>
                 {onViewAll && (
                     <button
                         onClick={onViewAll}
-                        className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
+                        className="text-sm text-q-accent hover:text-q-accent/80 font-medium"
                     >
                         Ver todo
                     </button>
@@ -107,12 +107,12 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                         key={activity.id}
                         className={`
                             relative pl-8 pb-3
-                            ${index !== displayActivities.length - 1 ? 'border-l-2 border-editor-border ml-2' : ''}
+                            ${index !== displayActivities.length - 1 ? 'border-l-2 border-q-border ml-2' : ''}
                         `}
                     >
                         {/* Timeline dot */}
                         <div className={`
-                            absolute left-0 top-0 -ml-[9px] w-4 h-4 rounded-full border-2 border-editor-bg
+                            absolute left-0 top-0 -ml-[9px] w-4 h-4 rounded-full border-2 border-q-bg
                             flex items-center justify-center
                             ${getSeverityColor(activity.severity)}
                         `}>
@@ -120,32 +120,32 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                         </div>
 
                         {/* Activity content */}
-                        <div className="bg-editor-bg border border-editor-border rounded-lg p-3 hover:border-editor-accent/50 transition-colors">
+                        <div className="bg-q-bg border border-q-border rounded-lg p-3 hover:border-q-accent/50 transition-colors">
                             <div className="flex items-start justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-2 flex-1">
-                                    <div className="bg-editor-panel-bg p-1.5 rounded">
+                                    <div className="bg-q-surface p-1.5 rounded">
                                         {getActivityIcon(activity.type)}
                                     </div>
-                                    <h3 className="text-sm font-semibold text-editor-text-primary">
+                                    <h3 className="text-sm font-semibold text-q-text">
                                         {activity.title}
                                     </h3>
                                     {getSeverityIcon(activity.severity)}
                                 </div>
-                                <span className="text-xs text-editor-text-secondary whitespace-nowrap">
+                                <span className="text-xs text-q-text-secondary whitespace-nowrap">
                                     {activity.timestamp}
                                 </span>
                             </div>
                             
-                            <p className="text-sm text-editor-text-secondary ml-8">
+                            <p className="text-sm text-q-text-secondary ml-8">
                                 {activity.description}
                             </p>
                             
                             {activity.user && (
-                                <div className="flex items-center gap-2 mt-2 ml-8 text-xs text-editor-text-secondary">
+                                <div className="flex items-center gap-2 mt-2 ml-8 text-xs text-q-text-secondary">
                                     <User className="w-3 h-3" />
                                     <span>{activity.user.name}</span>
-                                    <span className="text-editor-text-secondary/60">•</span>
-                                    <span className="text-editor-text-secondary/80">{activity.user.email}</span>
+                                    <span className="text-q-text-secondary/60">•</span>
+                                    <span className="text-q-text-secondary/80">{activity.user.email}</span>
                                 </div>
                             )}
                         </div>
@@ -154,10 +154,10 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
             </div>
 
             {activities.length > maxItems && (
-                <div className="mt-3 pt-3 border-t border-editor-border text-center">
+                <div className="mt-3 pt-3 border-t border-q-border text-center">
                     <button
                         onClick={onViewAll}
-                        className="text-sm text-editor-accent hover:text-editor-accent/80 font-medium"
+                        className="text-sm text-q-accent hover:text-q-accent/80 font-medium"
                     >
                         Ver {activities.length - maxItems} actividades más
                     </button>

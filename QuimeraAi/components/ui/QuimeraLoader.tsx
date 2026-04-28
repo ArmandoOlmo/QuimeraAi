@@ -54,14 +54,14 @@ const QuimeraLoader: React.FC<QuimeraLoaderProps> = ({
             </div>
 
             {text && (
-                <p className="text-editor-text-secondary text-sm animate-pulse">{text}</p>
+                <p className="text-q-text-secondary text-sm animate-pulse">{text}</p>
             )}
         </div>
     );
 
     if (fullScreen) {
         return (
-            <div className="min-h-screen bg-editor-bg flex items-center justify-center">
+            <div className="min-h-screen bg-q-bg flex items-center justify-center">
                 {loader}
             </div>
         );

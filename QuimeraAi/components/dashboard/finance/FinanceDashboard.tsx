@@ -61,7 +61,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 // Local Helper Components
 const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary" }: any) => (
-    <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
+    <div className="group relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-5 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 ease-out">
         <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-15 dark:opacity-10 blur-2xl bg-gradient-to-br from-primary to-primary/60 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500" aria-hidden="true" />
         <div className="relative z-10 flex justify-between items-start mb-3">
             <div className="p-2 bg-primary/20 rounded-lg">
@@ -74,7 +74,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendColor = "text-primary"
             )}
         </div>
         <div className="relative z-10 space-y-1">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+            <p className="text-xs font-semibold text-q-text-muted uppercase tracking-wider">{title}</p>
             <h3 className="text-2xl font-bold text-foreground">{value}</h3>
         </div>
     </div>
@@ -135,7 +135,7 @@ const AccountingTabContent: React.FC<{
 
                     {/* Cash Flow Chart */}
                     {cashFlow.length > 0 && (
-                        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl p-5">
+                        <div className="rounded-2xl border border-q-border/60 bg-q-surface/80 backdrop-blur-xl p-5">
                             <h3 className="font-bold text-foreground mb-4">{t('accounting.cashFlowChart', 'Cash Flow')}</h3>
                             <ResponsiveContainer width="100%" height={280}>
                                 <AreaChart data={cashFlow}>
@@ -160,12 +160,12 @@ const AccountingTabContent: React.FC<{
 
                     {/* Overdue invoices widget */}
                     {overdueInvoices.length > 0 && (
-                        <div className="rounded-2xl border border-red-500/20 bg-card/80 backdrop-blur-xl p-5">
+                        <div className="rounded-2xl border border-red-500/20 bg-q-surface/80 backdrop-blur-xl p-5">
                             <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" />{t('accounting.overdueInvoices', 'Overdue Invoices')}</h3>
                             <div className="space-y-2">
                                 {overdueInvoices.map(inv => (
                                     <div key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 border border-red-500/10">
-                                        <div><span className="font-semibold text-foreground">{inv.invoiceNumber}</span><span className="text-sm text-muted-foreground ml-2">{inv.clientName}</span></div>
+                                        <div><span className="font-semibold text-foreground">{inv.invoiceNumber}</span><span className="text-sm text-q-text-muted ml-2">{inv.clientName}</span></div>
                                         <span className="font-bold text-red-400">${inv.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 ))}
@@ -675,15 +675,15 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-28 h-72 z-0 pointer-events-none overflow-hidden" />
                 {/* Header */}
-                <header className="h-14 px-2 sm:px-6 border-b border-border flex items-center justify-between bg-background z-20 shrink-0">
+                <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-bg z-20 shrink-0">
                     <div className="flex items-center gap-1 sm:gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground rounded-lg">
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-1 sm:gap-2">
@@ -707,7 +707,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                 </header>
 
                 {/* View Tabs */}
-                <div className="flex border-b border-border px-3 sm:px-6 bg-card/50 overflow-x-auto scrollbar-none">
+                <div className="flex border-b border-q-border px-3 sm:px-6 bg-q-surface/50 overflow-x-auto scrollbar-none">
                     {[
                         { id: 'dashboard', label: t('accounting.dashboard', 'Dashboard'), icon: Wallet },
                         { id: 'transactions', label: t('accounting.transactions', 'Transactions'), icon: CreditCard },
@@ -722,7 +722,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             onClick={() => setActiveView(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeView === tab.id
                                 ? 'border-primary text-foreground font-semibold'
-                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                : 'border-transparent text-q-text-muted hover:text-foreground'
                                 }`}
                         >
                             <tab.icon className="w-4 h-4" />
@@ -772,7 +772,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Left / Main column */}
                                 <div className="xl:col-span-2 space-y-6">
                                     {/* Upload Area - Fresha style: Clean and direct */}
-                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-8 text-center hover:shadow-lg transition-all border-dashed border-2 hover:border-primary/50 group">
+                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-8 text-center hover:shadow-lg transition-all border-dashed border-2 hover:border-primary/50 group">
                                         <input
                                             type="file"
                                             id="receipt-upload"
@@ -799,7 +799,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 <h3 className="text-xl font-bold text-foreground">
                                                     {isUploading ? t('financeDashboard.upload.processing') : t('financeDashboard.upload.title')}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                                                <p className="text-sm text-q-text-muted max-w-sm mx-auto">
                                                     {t('financeDashboard.upload.description')}
                                                 </p>
                                             </div>
@@ -820,7 +820,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                                     {/* Charts Section */}
                                     {expenses.length > 0 ? (
-                                        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
+                                        <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
                                             <div className="flex justify-between items-center mb-6">
                                                 <h3 className="font-bold text-lg flex items-center gap-2">
                                                     <TrendingUp className="w-5 h-5 text-primary" />
@@ -829,11 +829,11 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 <div className="flex gap-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-3 h-3 rounded-full bg-primary" />
-                                                        <span className="text-xs text-muted-foreground font-medium">{t('financeDashboard.charts.expenses')}</span>
+                                                        <span className="text-xs text-q-text-muted font-medium">{t('financeDashboard.charts.expenses')}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-3 h-3 rounded-full bg-orange-500 border border-orange-500 border-dashed" />
-                                                        <span className="text-xs text-muted-foreground font-medium">{t('financeDashboard.charts.average')}</span>
+                                                        <span className="text-xs text-q-text-muted font-medium">{t('financeDashboard.charts.average')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -891,14 +891,14 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 gap-6">
-                                            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6 h-[380px] flex flex-col">
+                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6 h-[380px] flex flex-col">
                                                 <Skeleton className="h-6 w-48 mb-6" />
                                                 <div className="flex-1 flex items-center justify-center">
                                                     <div className="text-center space-y-4">
                                                         <div className="w-16 h-16 bg-secondary/30 rounded-full mx-auto animate-pulse flex items-center justify-center">
-                                                            <BarChart3 className="w-8 h-8 text-muted-foreground/30" />
+                                                            <BarChart3 className="w-8 h-8 text-q-text-muted/30" />
                                                         </div>
-                                                        <p className="text-muted-foreground italic text-sm">{t('financeDashboard.charts.waitingForData')}</p>
+                                                        <p className="text-q-text-muted italic text-sm">{t('financeDashboard.charts.waitingForData')}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -908,7 +908,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                     {/* Bottom Grid: Categories */}
                                     {expenses.length > 0 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
+                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
                                                 <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
                                                     <PieChartIcon className="w-5 h-5 text-primary" />
                                                     {t('financeDashboard.byCategory')}
@@ -938,7 +938,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
                                             </div>
 
-                                            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
+                                            <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
                                                 <h3 className="font-bold text-lg mb-6">{t('financeDashboard.topCategories')}</h3>
                                                 <div className="space-y-4">
                                                     {expensesByCategory.slice(0, 5).map((cat, idx) => (
@@ -951,7 +951,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                                     />
                                                                     {cat.name}
                                                                 </span>
-                                                                <span className="text-muted-foreground font-bold">${cat.value.toLocaleString()}</span>
+                                                                <span className="text-q-text-muted font-bold">${cat.value.toLocaleString()}</span>
                                                             </div>
                                                             <div className="w-full h-1.5 bg-secondary/30 rounded-full overflow-hidden">
                                                                 <div
@@ -973,7 +973,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                 {/* Right Column - Siderbar Context */}
                                 <div className="space-y-6">
                                     {/* Recent Activity Mini-Card */}
-                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
+                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
                                         <h3 className="font-bold mb-4">{t('financeDashboard.recentActivity')}</h3>
                                         <div className="space-y-4">
                                             {expenses.slice(0, 4).map(expense => (
@@ -986,7 +986,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-bold truncate">{expense.supplier}</p>
-                                                        <p className="text-[10px] text-muted-foreground">{expense.date}</p>
+                                                        <p className="text-[10px] text-q-text-muted">{expense.date}</p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-sm font-bold">${expense.total.toLocaleString()}</p>
@@ -994,11 +994,11 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
                                             ))}
                                             {expenses.length === 0 && (
-                                                <p className="text-xs text-muted-foreground italic text-center py-4">{t('financeDashboard.noRecentActivity')}</p>
+                                                <p className="text-xs text-q-text-muted italic text-center py-4">{t('financeDashboard.noRecentActivity')}</p>
                                             )}
                                             <button
                                                 onClick={() => setActiveView('list')}
-                                                className="w-full text-xs font-bold text-primary hover:underline pt-2 border-t border-border/50 text-center"
+                                                className="w-full text-xs font-bold text-primary hover:underline pt-2 border-t border-q-border/50 text-center"
                                             >
                                                 {t('financeDashboard.viewAllMovements')}
                                             </button>
@@ -1014,9 +1014,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             </div>
                                             <div className="space-y-3">
                                                 {anomalies.slice(0, 2).map(anomaly => (
-                                                    <div key={anomaly.id} className="text-xs p-3 bg-card border border-orange-500/10 rounded-lg">
+                                                    <div key={anomaly.id} className="text-xs p-3 bg-q-surface border border-orange-500/10 rounded-lg">
                                                         <p className="font-bold mb-1">{anomaly.supplier}</p>
-                                                        <p className="text-muted-foreground line-clamp-2">{anomaly.reason}</p>
+                                                        <p className="text-q-text-muted line-clamp-2">{anomaly.reason}</p>
                                                     </div>
                                                 ))}
                                                 <button
@@ -1038,17 +1038,17 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
                                         <div>
                                             <h4 className="font-bold text-yellow-600 dark:text-yellow-400">{t('financeDashboard.anomaliesDetected')}</h4>
-                                            <p className="text-xs text-muted-foreground mt-1">{anomalies.length} {t('financeDashboard.unusualExpenses')}</p>
+                                            <p className="text-xs text-q-text-muted mt-1">{anomalies.length} {t('financeDashboard.unusualExpenses')}</p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         {anomalies.slice(0, 3).map(anomaly => (
-                                            <div key={anomaly.id} className="bg-background/50 rounded-lg p-3 text-sm">
+                                            <div key={anomaly.id} className="bg-q-bg/50 rounded-lg p-3 text-sm">
                                                 <div className="flex justify-between mb-1">
                                                     <span className="font-semibold">{anomaly.supplier}</span>
                                                     <span className="text-red-500 font-bold">${anomaly.total}</span>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">{anomaly.reason}</p>
+                                                <p className="text-xs text-q-text-muted">{anomaly.reason}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -1057,7 +1057,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             <button
                                 onClick={() => setShowAnomalies(!showAnomalies)}
-                                className="w-full py-2 px-4 rounded-lg border border-border hover:bg-secondary transition-colors text-sm font-medium"
+                                className="w-full py-2 px-4 rounded-lg border border-q-border hover:bg-secondary transition-colors text-sm font-medium"
                             >
                                 <Eye className="w-4 h-4 inline mr-2" />
                                 {showAnomalies ? t('financeDashboard.hideAnomalies') : t('financeDashboard.showAnomalies')} {t('financeDashboard.anomalies')} ({anomalies.length})
@@ -1069,30 +1069,30 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                     {activeView === 'list' && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2">
-                                <div className="p-4 border-b border-border flex flex-col md:flex-row gap-4 justify-between items-center bg-card">
+                                <div className="p-4 border-b border-q-border flex flex-col md:flex-row gap-4 justify-between items-center bg-q-surface">
                                     <div className="flex items-center gap-2">
                                         <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                             <Receipt size={18} />
                                         </div>
                                         <h3 className="font-bold text-foreground shrink-0">{t('financeDashboard.recentMovements')}</h3>
-                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{filteredExpenses.length}</span>
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-q-text-muted">{filteredExpenses.length}</span>
                                     </div>
                                     <div className="flex gap-2 w-full max-w-md">
                                         <div className="relative flex-1">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-q-text-muted" />
                                             <input
                                                 type="text"
                                                 placeholder={t('financeDashboard.supplier') + '...'}
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                                className="w-full bg-q-bg border border-q-border rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                             />
                                         </div>
                                         <div className="flex gap-2">
                                             <select
                                                 value={dateFilterPreset}
                                                 onChange={(e) => handleDatePresetChange(e.target.value)}
-                                                className="bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
+                                                className="bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
                                             >
                                                 <option value="thisMonth">{t('financeDashboard.filters.time.thisMonth')}</option>
                                                 <option value="lastMonth">{t('financeDashboard.filters.time.lastMonth')}</option>
@@ -1103,14 +1103,14 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             </select>
 
                                             {dateFilterPreset === 'custom' && (
-                                                <div className="flex gap-2 items-center bg-background border border-border rounded-lg px-2 h-10">
+                                                <div className="flex gap-2 items-center bg-q-bg border border-q-border rounded-lg px-2 h-10">
                                                     <input
                                                         type="date"
                                                         value={dateRange.start.toISOString().split('T')[0]}
                                                         onChange={(e) => setDateRange(prev => ({ ...prev, start: new Date(e.target.value) }))}
                                                         className="bg-transparent text-sm outline-none w-32"
                                                     />
-                                                    <span className="text-muted-foreground">-</span>
+                                                    <span className="text-q-text-muted">-</span>
                                                     <input
                                                         type="date"
                                                         value={dateRange.end.toISOString().split('T')[0]}
@@ -1123,7 +1123,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             <select
                                                 value={filterCategory}
                                                 onChange={(e) => setFilterCategory(e.target.value)}
-                                                className="bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
+                                                className="bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
                                             >
                                                 <option value="all">{t('financeDashboard.filters.allCategories')}</option>
                                                 {Object.keys(CATEGORY_COLORS).map(cat => (
@@ -1136,7 +1136,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-secondary/20 text-muted-foreground font-bold uppercase text-xs">
+                                        <thead className="bg-secondary/20 text-q-text-muted font-bold uppercase text-xs">
                                             <tr>
                                                 <th className="px-4 py-3">{t('financeDashboard.date')}</th>
                                                 <th className="px-4 py-3">{t('financeDashboard.supplier')}</th>
@@ -1149,7 +1149,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         <tbody className="divide-y divide-border">
                                             {filteredExpenses.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">
+                                                    <td colSpan={6} className="px-4 py-8 text-center text-q-text-muted italic">
                                                         {expenses.length === 0 ? t('financeDashboard.noExpenses') : t('financeDashboard.noExpenses')}
                                                     </td>
                                                 </tr>
@@ -1199,7 +1199,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                         <td className="px-4 py-3 text-right">
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDeleteExpense(expense.id); }}
-                                                                className="text-muted-foreground hover:text-red-500 transition-colors"
+                                                                className="text-q-text-muted hover:text-red-500 transition-colors"
                                                             >
                                                                 <Trash2 size={16} />
                                                             </button>
@@ -1215,29 +1215,29 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             {/* Detail Panel */}
                             <div className="lg:col-span-1">
                                 {selectedExpense ? (
-                                    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl flex flex-col h-[calc(100vh-200px)] sticky top-6 shadow-xl shadow-black/5">
-                                        <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
+                                    <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl flex flex-col h-[calc(100vh-200px)] sticky top-6 shadow-xl shadow-black/5">
+                                        <div className="p-4 border-b border-q-border flex justify-between items-center bg-muted/30">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                                     <FileText size={16} />
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-sm">{t('financeDashboard.expenseDetail')}</h3>
-                                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">ID: {selectedExpense.id.slice(0, 8)}</p>
+                                                    <p className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider">ID: {selectedExpense.id.slice(0, 8)}</p>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => setSelectedExpense(null)}
                                                 className="p-1 hover:bg-muted rounded-md transition-colors"
                                             >
-                                                <X size={16} className="text-muted-foreground" />
+                                                <X size={16} className="text-q-text-muted" />
                                             </button>
                                         </div>
 
                                         <div className="flex-1 overflow-y-auto p-5 space-y-6">
                                             {/* Header Amount */}
-                                            <div className="text-center py-4 border-b border-border border-dashed">
-                                                <p className="text-xs font-medium text-muted-foreground mb-1">{t('financeDashboard.details.totalAmount')}</p>
+                                            <div className="text-center py-4 border-b border-q-border border-dashed">
+                                                <p className="text-xs font-medium text-q-text-muted mb-1">{t('financeDashboard.details.totalAmount')}</p>
                                                 <div className="flex items-center justify-center gap-1">
                                                     <span className="text-3xl font-bold tracking-tight">${selectedExpense.total.toLocaleString()}</span>
                                                 </div>
@@ -1251,23 +1251,23 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                             <div className="space-y-4">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="text-xs font-bold text-muted-foreground uppercase block mb-1.5">{t('financeDashboard.date')}</label>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase block mb-1.5">{t('financeDashboard.date')}</label>
                                                         <div className="relative">
-                                                            <Calendar className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
+                                                            <Calendar className="absolute left-2.5 top-2.5 w-4 h-4 text-q-text-muted" />
                                                             <input
                                                                 type="date"
                                                                 value={selectedExpense.date}
                                                                 onChange={(e) => handleUpdateExpense(selectedExpense.id, { date: e.target.value })}
-                                                                className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                                className="w-full pl-9 pr-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                             />
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="text-xs font-bold text-muted-foreground uppercase block mb-1.5">{t('financeDashboard.category')}</label>
+                                                        <label className="text-xs font-bold text-q-text-muted uppercase block mb-1.5">{t('financeDashboard.category')}</label>
                                                         <select
                                                             value={selectedExpense.category}
                                                             onChange={(e) => handleUpdateExpense(selectedExpense.id, { category: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
+                                                            className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none"
                                                             style={{ color: CATEGORY_COLORS[selectedExpense.category] }}
                                                         >
                                                             {Object.keys(CATEGORY_COLORS).map(cat => (
@@ -1278,22 +1278,22 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                 </div>
 
                                                 <div>
-                                                    <label className="text-xs font-bold text-muted-foreground uppercase block mb-1.5">{t('financeDashboard.supplier')}</label>
+                                                    <label className="text-xs font-bold text-q-text-muted uppercase block mb-1.5">{t('financeDashboard.supplier')}</label>
                                                     <div className="relative">
-                                                        <Building2 className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
+                                                        <Building2 className="absolute left-2.5 top-2.5 w-4 h-4 text-q-text-muted" />
                                                         <input
                                                             type="text"
                                                             value={selectedExpense.supplier}
                                                             onChange={(e) => handleUpdateExpense(selectedExpense.id, { supplier: e.target.value })}
-                                                            className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                            className="w-full pl-9 pr-3 py-2 bg-q-bg border border-q-border rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 {/* Line Items */}
-                                                <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                                                <div className="bg-muted/30 rounded-lg p-4 border border-q-border/50">
                                                     <div className="flex items-center justify-between mb-3">
-                                                        <h4 className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-2">
+                                                        <h4 className="text-xs font-bold text-q-text-muted uppercase flex items-center gap-2">
                                                             <List size={12} />
                                                             {t('financeDashboard.items.detected')}
                                                         </h4>
@@ -1305,14 +1305,14 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                             {selectedExpense.items.map((item: any, idx: number) => {
                                                                 const itemData = typeof item === 'string' ? { description: item } : item;
                                                                 return (
-                                                                    <div key={idx} className="flex flex-col gap-2 p-3 bg-background rounded border border-border/50 group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                                                                    <div key={idx} className="flex flex-col gap-2 p-3 bg-q-bg rounded border border-q-border/50 group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
                                                                         <div className="flex gap-2">
                                                                             <input
                                                                                 type="text"
                                                                                 value={itemData.description || ''}
                                                                                 onChange={(e) => handleUpdateItem(idx, 'description', e.target.value)}
                                                                                 placeholder={t('financeDashboard.items.description')}
-                                                                                className="flex-1 bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground/50 w-full"
+                                                                                className="flex-1 bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-q-text-muted/50 w-full"
                                                                             />
                                                                             <input
                                                                                 type="number"
@@ -1322,9 +1322,9 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                                                 placeholder="$0.00"
                                                                             />
                                                                         </div>
-                                                                        <div className="flex items-center gap-2 border-t border-border/30 pt-2">
+                                                                        <div className="flex items-center gap-2 border-t border-q-border/30 pt-2">
                                                                             <div className="flex items-center gap-1">
-                                                                                <span className="text-[10px] text-muted-foreground">{t('financeDashboard.items.quantity')}</span>
+                                                                                <span className="text-[10px] text-q-text-muted">{t('financeDashboard.items.quantity')}</span>
                                                                                 <input
                                                                                     type="number"
                                                                                     value={itemData.quantity || 1}
@@ -1336,7 +1336,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                                             <select
                                                                                 value={itemData.category || ''}
                                                                                 onChange={(e) => handleUpdateItem(idx, 'category', e.target.value)}
-                                                                                className="bg-transparent text-[10px] border-none focus:ring-0 text-muted-foreground p-0 cursor-pointer hover:text-foreground text-right"
+                                                                                className="bg-transparent text-[10px] border-none focus:ring-0 text-q-text-muted p-0 cursor-pointer hover:text-foreground text-right"
                                                                             >
                                                                                 <option value="">{t('financeDashboard.items.uncategorized')}</option>
                                                                                 {Object.keys(CATEGORY_COLORS).map(cat => (
@@ -1349,17 +1349,17 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                                             })}
                                                         </div>
                                                     ) : (
-                                                        <div className="text-center py-4 text-muted-foreground text-xs italic">
+                                                        <div className="text-center py-4 text-q-text-muted text-xs italic">
                                                             {t('financeDashboard.items.noItems')}
                                                         </div>
                                                     )}
 
-                                                    <div className="mt-4 pt-3 border-t border-border/50 space-y-1">
-                                                        <div className="flex justify-between text-xs text-muted-foreground">
+                                                    <div className="mt-4 pt-3 border-t border-q-border/50 space-y-1">
+                                                        <div className="flex justify-between text-xs text-q-text-muted">
                                                             <span>{t('financeDashboard.subtotal')}</span>
                                                             <span>${selectedExpense.subtotal.toLocaleString()}</span>
                                                         </div>
-                                                        <div className="flex justify-between text-xs text-muted-foreground">
+                                                        <div className="flex justify-between text-xs text-q-text-muted">
                                                             <span>{t('financeDashboard.taxes')}</span>
                                                             <span>${selectedExpense.tax.toLocaleString()}</span>
                                                         </div>
@@ -1373,11 +1373,11 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
 
                                         {/* Footer Actions */}
-                                        <div className="p-4 border-t border-border bg-muted/10 grid grid-cols-2 gap-3">
+                                        <div className="p-4 border-t border-q-border bg-muted/10 grid grid-cols-2 gap-3">
                                             <button
                                                 onClick={() => recategorizarExpenseWithAI(selectedExpense.id)}
                                                 disabled={isRecategorizing}
-                                                className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border bg-background hover:bg-secondary text-xs font-bold transition-colors disabled:opacity-50"
+                                                className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-q-border bg-q-bg hover:bg-secondary text-xs font-bold transition-colors disabled:opacity-50"
                                             >
                                                 {isRecategorizing ? (
                                                     <Loader2 size={14} className="animate-spin text-purple-500" />
@@ -1409,7 +1409,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 bg-secondary/5 rounded-xl border border-dashed border-border/50 min-h-[400px]">
+                                    <div className="h-full flex flex-col items-center justify-center text-q-text-muted p-8 bg-secondary/5 rounded-xl border border-dashed border-q-border/50 min-h-[400px]">
                                         <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4">
                                             <Receipt className="w-8 h-8 opacity-40" />
                                         </div>
@@ -1433,7 +1433,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-lg mb-1">{t('financeDashboard.aiFinancialReport')}</h3>
-                                            <p className="text-sm text-muted-foreground">{t('financeDashboard.generateReport')}</p>
+                                            <p className="text-sm text-q-text-muted">{t('financeDashboard.generateReport')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -1462,7 +1462,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-lg mb-1">{t('financeDashboard.trendAnalysis')}</h3>
-                                            <p className="text-sm text-muted-foreground">{t('financeDashboard.analyzeDesc')}</p>
+                                            <p className="text-sm text-q-text-muted">{t('financeDashboard.analyzeDesc')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -1487,7 +1487,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* AI Report Output */}
                             {aiReport && (
-                                <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 dark:bg-card/70 backdrop-blur-xl p-6">
+                                <div className="relative overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 dark:bg-q-surface/70 backdrop-blur-xl p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
                                             <Zap className="w-5 h-5 text-primary" />
@@ -1495,12 +1495,12 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </h3>
                                         <button
                                             onClick={() => setAiReport(null)}
-                                            className="text-muted-foreground hover:text-foreground"
+                                            className="text-q-text-muted hover:text-foreground"
                                         >
                                             ✕
                                         </button>
                                     </div>
-                                    <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap bg-secondary/20 rounded-lg p-4 border border-border">
+                                    <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap bg-secondary/20 rounded-lg p-4 border border-q-border">
                                         {aiReport}
                                     </div>
                                 </div>
@@ -1508,7 +1508,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
 
                             {/* Trend Analysis Output */}
                             {trendAnalysis && (
-                                <div className="bg-card border border-purple-500/30 rounded-xl p-6">
+                                <div className="bg-q-surface border border-purple-500/30 rounded-xl p-6">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
                                             <TrendingDown className="w-5 h-5 text-purple-500" />
@@ -1516,7 +1516,7 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                                         </h3>
                                         <button
                                             onClick={() => setTrendAnalysis(null)}
-                                            className="text-muted-foreground hover:text-foreground"
+                                            className="text-q-text-muted hover:text-foreground"
                                         >
                                             ✕
                                         </button>
@@ -1528,10 +1528,10 @@ Responde SOLO con el nombre de la categoría sugerida, sin explicación ni puntu
                             )}
 
                             {expenses.length === 0 && (
-                                <div className="bg-card border border-dashed border-border rounded-xl p-12 text-center col-span-1 md:col-span-2">
-                                    <Brain className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
+                                <div className="bg-q-surface border border-dashed border-q-border rounded-xl p-12 text-center col-span-1 md:col-span-2">
+                                    <Brain className="w-16 h-16 mx-auto text-q-text-muted/40 mb-4" />
                                     <h3 className="text-lg font-bold mb-2">{t('financeDashboard.analysis.noDataTitle')}</h3>
-                                    <p className="text-sm text-muted-foreground">{t('financeDashboard.analysis.noDataDesc')}</p>
+                                    <p className="text-sm text-q-text-muted">{t('financeDashboard.analysis.noDataDesc')}</p>
                                 </div>
                             )}
                         </div>

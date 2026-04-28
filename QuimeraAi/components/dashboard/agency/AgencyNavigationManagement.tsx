@@ -279,7 +279,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // ==========================================================================
     if (isLoading) {
         return (
-            <div className="flex h-full items-center justify-center bg-background">
+            <div className="flex h-full items-center justify-center bg-q-bg">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
@@ -294,7 +294,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                         <MenuIcon className="h-6 w-6 text-primary" />
                         {t('agency.navigation', 'Enlaces del Menú')}
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-q-text-muted mt-1">
                         {t('agency.navigationDesc', 'Configura los enlaces de navegación del header, columnas del footer y redes sociales.')}
                     </p>
                 </div>
@@ -317,18 +317,18 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
             </div>
 
             {/* Tabs Card */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-6 py-0 border-b border-border bg-muted/30 flex gap-1">
+            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                <div className="px-6 py-0 border-b border-q-border bg-muted/30 flex gap-1">
                     <button
                         onClick={() => setActiveTab('header')}
-                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'header' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'header' ? 'border-primary text-primary' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
                     >
                         <MenuIcon size={14} />
                         Enlaces Header ({headerLinks.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('footer')}
-                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'footer' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'footer' ? 'border-primary text-primary' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
                     >
                         <Layout size={14} />
                         Columnas Footer ({footerColumns.length})
@@ -347,18 +347,18 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 onClick={() => setShowInstructions(!showInstructions)}
                                 className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                             >
-                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                <span className="text-sm font-medium text-q-text-muted flex items-center gap-2">
                                     📋 Guía rápida de configuración
                                 </span>
-                                {showInstructions ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                                {showInstructions ? <ChevronUp size={16} className="text-q-text-muted" /> : <ChevronDown size={16} className="text-q-text-muted" />}
                             </button>
 
                             {showInstructions && (
-                                <div className="text-sm text-muted-foreground space-y-2 pl-3 border-l-2 border-primary/20">
+                                <div className="text-sm text-q-text-muted space-y-2 pl-3 border-l-2 border-primary/20">
                                     <p><strong className="text-foreground">Secciones (#):</strong> Llevan a partes de tu página (ej. <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">#services</code>)</p>
                                     <p><strong className="text-foreground">Artículos (CMS):</strong> Contenido de tu blog. Se configuran automáticamente al seleccionarlos.</p>
                                     <p><strong className="text-foreground">Externos (https://):</strong> Enlaces a otras webs (ej. calendario, portafolio).</p>
-                                    <p className="text-xs text-muted-foreground/70">💡 Mantén tu menú limpio (máximo 5-6 elementos) para que se vea bien en todos los dispositivos.</p>
+                                    <p className="text-xs text-q-text-muted/70">💡 Mantén tu menú limpio (máximo 5-6 elementos) para que se vea bien en todos los dispositivos.</p>
                                 </div>
                             )}
 
@@ -370,26 +370,26 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 </h3>
 
                                 {headerLinks.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground py-4 text-center">
+                                    <p className="text-sm text-q-text-muted py-4 text-center">
                                         No hay enlaces configurados. Añade artículos del CMS o enlaces manuales.
                                     </p>
                                 ) : (
                                     <div className="space-y-2">
                                         {headerLinks.map((link, index) => (
                                             <div key={index} className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg group">
-                                                <GripVertical size={14} className="text-muted-foreground" />
+                                                <GripVertical size={14} className="text-q-text-muted" />
                                                 <input
                                                     type="text"
                                                     value={link.text}
                                                     onChange={(e) => updateHeaderLink(index, { text: e.target.value })}
-                                                    className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm"
+                                                    className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                     placeholder="Texto"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={link.href}
                                                     onChange={(e) => updateHeaderLink(index, { href: e.target.value })}
-                                                    className="flex-1 px-2 py-1 bg-background border border-border rounded text-sm font-mono text-xs"
+                                                    className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm font-mono text-xs"
                                                     placeholder="#section-leads"
                                                 />
                                                 <button
@@ -407,7 +407,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => addHeaderLink('Nuevo enlace', '#')}
-                                        className="flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium border border-dashed border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                                        className="flex-1 flex items-center justify-center gap-2 p-3 text-sm font-medium border border-dashed border-q-border rounded-lg hover:border-primary hover:text-primary transition-colors"
                                     >
                                         <Plus size={16} />
                                         Enlace manual
@@ -423,15 +423,15 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                             </div>
 
                             {/* CMS Articles */}
-                            <div className="pt-6 border-t border-border space-y-4">
+                            <div className="pt-6 border-t border-q-border space-y-4">
                                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                                     <FileText size={16} className="text-primary" />
                                     Artículos del CMS
-                                    <span className="text-xs text-muted-foreground">({publishedArticles.length} publicados)</span>
+                                    <span className="text-xs text-q-text-muted">({publishedArticles.length} publicados)</span>
                                 </h3>
 
                                 {publishedArticles.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground py-4 text-center">
+                                    <p className="text-sm text-q-text-muted py-4 text-center">
                                         No hay artículos publicados en el CMS.
                                     </p>
                                 ) : (
@@ -445,7 +445,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                     disabled={isAdded}
                                                     className={`flex items-center gap-2 p-3 text-left text-sm rounded-lg border transition-colors ${isAdded
                                                         ? 'border-green-500/30 bg-green-500/10 text-green-400 cursor-default'
-                                                        : 'border-border hover:border-primary hover:bg-primary/5'
+                                                        : 'border-q-border hover:border-primary hover:bg-primary/5'
                                                         }`}
                                                 >
                                                     <FileText size={14} className="shrink-0" />
@@ -470,24 +470,24 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 onClick={() => setShowInstructions(!showInstructions)}
                                 className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                             >
-                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                <span className="text-sm font-medium text-q-text-muted flex items-center gap-2">
                                     📋 Guía rápida del footer
                                 </span>
-                                {showInstructions ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+                                {showInstructions ? <ChevronUp size={16} className="text-q-text-muted" /> : <ChevronDown size={16} className="text-q-text-muted" />}
                             </button>
 
                             {showInstructions && (
-                                <div className="text-sm text-muted-foreground space-y-2 pl-3 border-l-2 border-primary/20">
+                                <div className="text-sm text-q-text-muted space-y-2 pl-3 border-l-2 border-primary/20">
                                     <p><strong className="text-foreground">Columnas:</strong> Organiza enlaces por categoría (ej. "Compañía", "Legal", "Recursos").</p>
                                     <p><strong className="text-foreground">Contenido:</strong> Añade enlaces manuales o artículos del CMS a cada columna.</p>
                                     <p><strong className="text-foreground">Redes Sociales:</strong> Aparecen al final del footer. Usa URLs completas.</p>
-                                    <p className="text-xs text-muted-foreground/70">💡 Un footer bien organizado genera confianza. Incluye contacto y enlaces legales.</p>
+                                    <p className="text-xs text-q-text-muted/70">💡 Un footer bien organizado genera confianza. Incluye contacto y enlaces legales.</p>
                                 </div>
                             )}
 
                             {/* Footer columns */}
                             {footerColumns.map((column, colIndex) => (
-                                <div key={colIndex} className="bg-card border border-border rounded-xl p-4 space-y-4">
+                                <div key={colIndex} className="bg-q-surface border border-q-border rounded-xl p-4 space-y-4">
                                     <div className="flex items-center gap-2">
                                         <Layout size={16} className="text-primary" />
                                         <input
@@ -513,14 +513,14 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                     type="text"
                                                     value={link.text}
                                                     onChange={(e) => updateFooterLink(colIndex, linkIndex, { text: e.target.value })}
-                                                    className="flex-1 px-2 py-1 bg-secondary/30 border border-border rounded text-xs"
+                                                    className="flex-1 px-2 py-1 bg-secondary/30 border border-q-border rounded text-xs"
                                                     placeholder="Texto"
                                                 />
                                                 <input
                                                     type="text"
                                                     value={link.href}
                                                     onChange={(e) => updateFooterLink(colIndex, linkIndex, { href: e.target.value })}
-                                                    className="flex-1 px-2 py-1 bg-secondary/30 border border-border rounded text-xs font-mono"
+                                                    className="flex-1 px-2 py-1 bg-secondary/30 border border-q-border rounded text-xs font-mono"
                                                     placeholder="URL"
                                                 />
                                                 <button
@@ -550,8 +550,8 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
 
                                     {/* Add article to this column */}
                                     {publishedArticles.length > 0 && (
-                                        <div className="pt-2 border-t border-border">
-                                            <p className="text-xs text-muted-foreground mb-2">Añadir artículo:</p>
+                                        <div className="pt-2 border-t border-q-border">
+                                            <p className="text-xs text-q-text-muted mb-2">Añadir artículo:</p>
                                             <div className="flex flex-wrap gap-1">
                                                 {publishedArticles.slice(0, 6).map(article => {
                                                     const isAdded = column.links.some(l => l.href.includes(article.slug));
@@ -578,14 +578,14 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                             {/* Add column */}
                             <button
                                 onClick={addFooterColumn}
-                                className="w-full flex items-center justify-center gap-2 p-4 text-sm font-medium border-2 border-dashed border-border rounded-xl hover:border-primary hover:text-primary transition-colors"
+                                className="w-full flex items-center justify-center gap-2 p-4 text-sm font-medium border-2 border-dashed border-q-border rounded-xl hover:border-primary hover:text-primary transition-colors"
                             >
                                 <Plus size={18} />
                                 Añadir columna al footer
                             </button>
 
                             {/* Social Links Section */}
-                            <div className="pt-6 border-t border-border space-y-4">
+                            <div className="pt-6 border-t border-q-border space-y-4">
                                 <h3 className="font-semibold text-foreground flex items-center gap-2">
                                     <LinkIcon size={16} className="text-primary" />
                                     Redes Sociales
@@ -598,7 +598,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                         const PlatformIcon = platform?.icon || LinkIcon;
                                         return (
                                             <div key={link.id} className="flex items-center gap-2 group">
-                                                <div className="flex items-center gap-2 w-28 text-sm text-muted-foreground">
+                                                <div className="flex items-center gap-2 w-28 text-sm text-q-text-muted">
                                                     <PlatformIcon size={16} />
                                                     {platform?.label || link.platform}
                                                 </div>
@@ -606,7 +606,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                     type="text"
                                                     value={link.url}
                                                     onChange={(e) => updateSocialLink(link.id, e.target.value)}
-                                                    className="flex-1 px-3 py-2 bg-secondary/30 border border-border rounded-lg text-sm"
+                                                    className="flex-1 px-3 py-2 bg-secondary/30 border border-q-border rounded-lg text-sm"
                                                     placeholder={`URL de ${platform?.label || link.platform}`}
                                                 />
                                                 <button

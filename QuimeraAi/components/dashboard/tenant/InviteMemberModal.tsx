@@ -128,11 +128,11 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
             {/* Modal */}
             <div className="flex min-h-full items-center justify-center p-4">
                 <div
-                    className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl transform transition-all"
+                    className="relative w-full max-w-lg bg-q-surface border border-q-border rounded-2xl shadow-2xl transform transition-all"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-border">
+                    <div className="flex items-center justify-between p-6 border-b border-q-border">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                 <UserPlus size={20} className="text-primary" />
@@ -141,14 +141,14 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                                 <h2 className="text-lg font-bold text-foreground">
                                     {t('invite.title', 'Invitar Miembro')}
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-q-text-muted">
                                     {currentTenant?.name}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="p-2 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -164,14 +164,14 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                             <div className="relative">
                                 <Mail
                                     size={18}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted"
                                 />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder={t('invite.emailPlaceholder', 'nombre@ejemplo.com')}
-                                    className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                    className="w-full pl-10 pr-4 py-3 bg-q-bg border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                     disabled={isLoading}
                                     required
                                 />
@@ -193,7 +193,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                                             w-full flex items-start gap-3 p-4 rounded-xl border transition-all
                                             ${selectedRole === role
                                                 ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                                                : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                                                : 'border-q-border hover:border-primary/50 hover:bg-secondary/50'
                                             }
                                         `}
                                         disabled={isLoading}
@@ -203,7 +203,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                                             <p className="font-medium text-foreground">
                                                 {AGENCY_ROLE_LABELS[role]}
                                             </p>
-                                            <p className="text-sm text-muted-foreground mt-0.5">
+                                            <p className="text-sm text-q-text-muted mt-0.5">
                                                 {AGENCY_ROLE_DESCRIPTIONS[role]}
                                             </p>
                                         </div>
@@ -229,7 +229,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-2">
                                 {t('invite.message', 'Mensaje personal')}
-                                <span className="text-muted-foreground font-normal ml-1">
+                                <span className="text-q-text-muted font-normal ml-1">
                                     ({t('common.optional', 'opcional')})
                                 </span>
                             </label>
@@ -238,7 +238,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                                 onChange={(e) => setMessage(e.target.value)}
                                 placeholder={t('invite.messagePlaceholder', 'Añade un mensaje personalizado para la invitación...')}
                                 rows={3}
-                                className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                                className="w-full px-4 py-3 bg-q-bg border border-q-border rounded-xl text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                                 disabled={isLoading}
                                 maxLength={500}
                             />
@@ -267,7 +267,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                                className="px-4 py-2.5 text-q-text-muted hover:text-foreground transition-colors"
                                 disabled={isLoading}
                             >
                                 {t('common.cancel', 'Cancelar')}

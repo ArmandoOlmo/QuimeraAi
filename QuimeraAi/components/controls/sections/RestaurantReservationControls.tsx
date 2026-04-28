@@ -24,8 +24,8 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
   const contentTab = (
     <div className="space-y-4">
       {/* Restaurant Link */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
           <CalendarCheck size={14} />
           {t('editor.restaurantReservationSection', 'Reservaciones')}
         </label>
@@ -34,14 +34,14 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
           value={rd.restaurantId || ''}
           onChange={(e) => setNestedData('restaurantReservation.restaurantId', e.target.value)}
         />
-        <p className="text-xs text-editor-text-secondary mt-1 italic">
+        <p className="text-xs text-q-text-secondary mt-1 italic">
           {t('restaurant.reservation.restaurantIdHelp', 'Vincula este formulario a un restaurante creado en el módulo de Restaurantes.')}
         </p>
       </div>
 
       {/* Content */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <FileText size={14} />
           {t('controls.content', 'Contenido')}
         </label>
@@ -74,8 +74,8 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
       </div>
 
       {/* Field Visibility */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <SlidersHorizontal size={14} />
           {t('restaurant.reservation.fieldVisibility', 'Campos del Formulario')}
         </label>
@@ -97,8 +97,8 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
       </div>
 
       {/* Capacity */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Users size={14} />
           {t('restaurant.reservation.capacitySettings', 'Capacidad')}
         </label>
@@ -125,8 +125,8 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
   const styleTab = (
     <div className="space-y-4">
       {/* Glass Effect */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> {t('controls.glassmorphismTransparencia', 'Efecto Cristal')}
         </label>
         <ToggleControl
@@ -139,15 +139,15 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
       <BackgroundImageControl sectionKey="restaurantReservation" data={data} setNestedData={setNestedData} />
 
       {/* Border Radius */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.borderRadius', 'Radio del Borde')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.borderRadius', 'Radio del Borde')}</label>
         <BorderRadiusSelector label={t('controls.cardRadius', 'Radio de Tarjeta')} value={rd.borderRadius || 'xl'} onChange={(v) => setNestedData('restaurantReservation.borderRadius', v)} />
         <BorderRadiusSelector label={t('controls.buttonRadius', 'Radio de Botón')} value={rd.buttonBorderRadius || 'md'} onChange={(v) => setNestedData('restaurantReservation.buttonBorderRadius', v)} />
       </div>
 
       {/* Spacing */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.spacing', 'Espaciado')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing', 'Espaciado')}</label>
         <div className="space-y-1">
           <PaddingSelector label={t('controls.vertical', 'Vertical')} value={rd.paddingY || 'md'} onChange={(v) => setNestedData('restaurantReservation.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal', 'Horizontal')} value={rd.paddingX || 'md'} onChange={(v) => setNestedData('restaurantReservation.paddingX', v)} />
@@ -155,8 +155,8 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
       </div>
 
       {/* Section Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.sectionColors', 'Colores de Sección')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors', 'Colores de Sección')}</label>
         <ColorControl label={t('editor.controls.common.background', 'Fondo')} value={rd.colors?.background || '#0f172a'} onChange={(v) => setNestedData('restaurantReservation.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title', 'Título')} value={rd.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('restaurantReservation.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.subtitle', 'Descripción')} value={rd.colors?.description || '#94a3b8'} onChange={(v) => setNestedData('restaurantReservation.colors.description', v)} />
@@ -177,23 +177,23 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
       </div>
 
       {/* Card Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.cardColors', 'Colores de Tarjeta')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.cardColors', 'Colores de Tarjeta')}</label>
         <ColorControl label={t('controls.cardBackground', 'Fondo de Tarjeta')} value={rd.colors?.cardBackground || '#1e293b'} onChange={(v) => setNestedData('restaurantReservation.colors.cardBackground', v)} />
         <ColorControl label={t('controls.labelText', 'Texto')} value={rd.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('restaurantReservation.colors.text', v)} />
       </div>
 
       {/* Input Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.inputColors', 'Colores de Input')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.inputColors', 'Colores de Input')}</label>
         <ColorControl label={t('controls.inputBackground', 'Fondo de Input')} value={rd.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('restaurantReservation.colors.inputBackground', v)} />
         <ColorControl label={t('controls.inputText', 'Texto de Input')} value={rd.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('restaurantReservation.colors.inputText', v)} />
         <ColorControl label={t('controls.inputBorder', 'Borde de Input')} value={rd.colors?.inputBorder || '#334155'} onChange={(v) => setNestedData('restaurantReservation.colors.inputBorder', v)} />
       </div>
 
       {/* Button Colors */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider">{t('controls.buttonGradient', 'Botón')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.buttonGradient', 'Botón')}</label>
         <ColorControl label={t('controls.fondoBotn', 'Fondo del Botón')} value={rd.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('restaurantReservation.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText', 'Texto del Botón')} value={rd.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('restaurantReservation.colors.buttonText', v)} />
       </div>

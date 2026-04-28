@@ -131,15 +131,15 @@ const TabletSlidePanel: React.FC<TabletSlidePanelProps> = ({
                 onTouchEnd={handleTouchEnd}
             >
                 <div
-                    className={`h-full bg-card shadow-2xl flex flex-col overflow-hidden ${position === 'left' ? 'border-r border-border' : 'border-l border-border'
+                    className={`h-full bg-q-surface shadow-2xl flex flex-col overflow-hidden ${position === 'left' ? 'border-r border-q-border' : 'border-l border-q-border'
                         }`}
                 >
                     {/* Header */}
-                    <div className="flex-shrink-0 px-4 py-3 border-b border-border flex items-center justify-between bg-card">
+                    <div className="flex-shrink-0 px-4 py-3 border-b border-q-border flex items-center justify-between bg-q-surface">
                         <h2 className="font-semibold text-base text-foreground">{title}</h2>
                         <button
                             onClick={onClose}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                            className="p-1.5 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
                             aria-label="Cerrar"
                         >
                             <X size={18} />

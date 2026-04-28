@@ -48,14 +48,14 @@ const LeadDestinationSection: React.FC<{
   const destination = data.signupFloat?.saveDestination || 'leads';
 
   return (
-    <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-      <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+    <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
         <Target size={14} />
         {t('controls.signupFloat.saveDestination', 'Destino del Lead')}
       </label>
 
       {/* Destination Selector */}
-      <div className="grid grid-cols-3 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border mb-3">
+      <div className="grid grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border mb-3">
         {([
           { value: 'leads', label: t('controls.signupFloat.saveToLeads', 'Leads'), icon: <Database size={12} /> },
           { value: 'audience', label: t('controls.signupFloat.saveToAudience', 'Audiencia'), icon: <Users size={12} /> },
@@ -65,8 +65,8 @@ const LeadDestinationSection: React.FC<{
             onClick={() => setNestedData('signupFloat.saveDestination', opt.value)}
             className={`py-2 px-1 text-[11px] font-medium rounded-sm transition-colors flex items-center justify-center gap-1.5 ${
               destination === opt.value
-                ? 'bg-editor-accent text-editor-bg'
-                : 'text-editor-text-secondary hover:bg-editor-border'
+                ? 'bg-q-accent text-q-bg'
+                : 'text-q-text-secondary hover:bg-q-surface-overlay'
             }`}
           >
             {opt.icon}
@@ -78,11 +78,11 @@ const LeadDestinationSection: React.FC<{
       {/* Audience Picker (visible when audience destination is selected) */}
       {(destination === 'audience' || destination === 'both') && (
         <div className="mt-2">
-          <label className="block text-xs font-bold text-editor-text-secondary mb-1.5 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-q-text-secondary mb-1.5 uppercase tracking-wider">
             {t('controls.signupFloat.selectAudience', 'Seleccionar Audiencia')}
           </label>
           {loadingAudiences ? (
-            <div className="flex items-center gap-2 py-3 text-editor-text-secondary text-xs">
+            <div className="flex items-center gap-2 py-3 text-q-text-secondary text-xs">
               <Loader2 size={14} className="animate-spin" />
               {t('common.loading', 'Cargando...')}
             </div>
@@ -103,18 +103,18 @@ const LeadDestinationSection: React.FC<{
                   }}
                   className={`w-full flex items-center gap-2.5 p-2.5 rounded-lg border transition-all text-left text-xs ${
                     data.signupFloat?.targetAudienceId === audience.id
-                      ? 'border-editor-accent bg-editor-accent/10 ring-1 ring-editor-accent/30'
-                      : 'border-editor-border hover:border-editor-accent/30 hover:bg-editor-border/50'
+                      ? 'border-q-accent bg-q-accent/10 ring-1 ring-q-accent/30'
+                      : 'border-q-border hover:border-q-accent/30 hover:bg-q-surface-overlay/50'
                   }`}
                 >
                   <div className={`w-2.5 h-2.5 rounded-full border-2 flex-shrink-0 ${
                     data.signupFloat?.targetAudienceId === audience.id
-                      ? 'border-editor-accent bg-editor-accent'
-                      : 'border-editor-text-secondary/50'
+                      ? 'border-q-accent bg-q-accent'
+                      : 'border-q-text-secondary/50'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-editor-text-primary truncate">{audience.name}</p>
-                    <p className="text-[10px] text-editor-text-secondary">
+                    <p className="font-medium text-q-text-primary truncate">{audience.name}</p>
+                    <p className="text-[10px] text-q-text-secondary">
                       {(audience.estimatedCount || 0) + (audience.staticMemberCount || 0)} {t('email.members', 'miembros')}
                     </p>
                   </div>
@@ -126,9 +126,9 @@ const LeadDestinationSection: React.FC<{
       )}
 
       {/* Info hint */}
-      <div className="mt-3 flex items-start gap-2 p-2 bg-editor-bg/50 rounded-md">
-        <Info size={13} className="text-editor-text-secondary shrink-0 mt-0.5" />
-        <p className="text-[10px] text-editor-text-secondary leading-relaxed">
+      <div className="mt-3 flex items-start gap-2 p-2 bg-q-bg/50 rounded-md">
+        <Info size={13} className="text-q-text-secondary shrink-0 mt-0.5" />
+        <p className="text-[10px] text-q-text-secondary leading-relaxed">
           {destination === 'leads' && t('controls.signupFloat.hintLeads', 'Los envíos se guardarán como leads en el CRM.')}
           {destination === 'audience' && t('controls.signupFloat.hintAudience', 'Los envíos se agregarán a la audiencia seleccionada en Email Marketing.')}
           {destination === 'both' && t('controls.signupFloat.hintBoth', 'Los envíos se guardarán como leads Y se agregarán a la audiencia de email.')}
@@ -145,8 +145,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const contentTab = (
     <div className="space-y-4">
       {/* ========== GLASSMORPHISM ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border space-y-2 mb-4">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
           <Layers size={14} /> Efecto Cristal
         </label>
         <ToggleControl
@@ -157,8 +157,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== IMAGE ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Image size={14} />
           {t('editor.controls.common.image')}
         </label>
@@ -169,17 +169,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
         {/* Image Placement */}
         <div className="mt-3">
-          <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">
             {t('controls.signupFloat.imagePlacement', 'Image Position')}
           </label>
-          <div className="grid grid-cols-4 gap-1 bg-editor-bg p-1 rounded-md border border-editor-border">
+          <div className="grid grid-cols-4 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
             {(['top', 'right', 'bottom', 'left'] as const).map((pos) => (
               <button type="button"                 key={pos}
                 onClick={() => setNestedData('signupFloat.imagePlacement', pos)}
                 className={`py-1.5 text-xs font-medium rounded-sm transition-colors flex items-center justify-center gap-1 ${
                   (data.signupFloat.imagePlacement || 'top') === pos
-                    ? 'bg-editor-accent text-editor-bg'
-                    : 'text-editor-text-secondary hover:bg-editor-border'
+                    ? 'bg-q-accent text-q-bg'
+                    : 'text-q-text-secondary hover:bg-q-surface-overlay'
                 }`}
               >
                 {pos === 'top' && <ChevronUp size={12} />}
@@ -194,8 +194,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== CONTENT ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Type size={14} />
           {t('controls.content', 'Content')}
         </label>
@@ -206,8 +206,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== FORM FIELDS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Mail size={14} />
           {t('controls.signupFloat.formFields', 'Form Fields')}
         </label>
@@ -236,8 +236,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <LeadDestinationSection data={data} setNestedData={setNestedData} t={t} />
 
       {/* ========== SOCIAL LINKS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Share2 size={14} />
           {t('controls.signupFloat.socialLinks', 'Social Links')}
         </label>
@@ -258,40 +258,40 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   const styleTab = (
     <div className="space-y-4">
       {/* ========== FLOAT POSITION ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Layout size={14} />
           {t('controls.signupFloat.floatPosition', 'Float Position')}
         </label>
-        <div className="grid grid-cols-3 gap-2 bg-editor-bg p-2 rounded-lg border border-editor-border">
+        <div className="grid grid-cols-3 gap-2 bg-q-bg p-2 rounded-lg border border-q-border">
           {/* Top row */}
           <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'top-left')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-left' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-left' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >↖ TL</button>
           <div /> {/* Empty center-top */}
           <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'top-right')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'top-right' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >↗ TR</button>
           {/* Middle row */}
           <div />
           <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'center')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${(data.signupFloat.floatPosition || 'center') === 'center' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${(data.signupFloat.floatPosition || 'center') === 'center' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >⊙ {t('controls.signupFloat.center', 'Center')}</button>
           <div />
           {/* Bottom row */}
           <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-left')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-left' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-left' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >↙ BL</button>
           <div />
           <button type="button"             onClick={() => setNestedData('signupFloat.floatPosition', 'bottom-right')}
-            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-right' ? 'bg-editor-accent text-editor-bg' : 'text-editor-text-secondary hover:bg-editor-border'}`}
+            className={`p-2 text-xs font-medium rounded transition-colors ${data.signupFloat.floatPosition === 'bottom-right' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
           >↘ BR</button>
         </div>
       </div>
 
       {/* ========== BEHAVIOR ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Settings size={14} />
           {t('controls.signupFloat.behavior', 'Behavior')}
         </label>
@@ -302,14 +302,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
         {data.signupFloat.minimizeOnClose !== false && (
           <div className="mt-3">
-            <label className="block text-xs font-bold text-editor-text-secondary mb-1 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
               {t('controls.signupFloat.minimizedLabel', 'Minimized Button Label')}
             </label>
             <input
               type="text"
               value={data.signupFloat.minimizedLabel || '✉️ Sign Up'}
               onChange={(e) => setNestedData('signupFloat.minimizedLabel', e.target.value)}
-              className="w-full px-3 py-2 rounded-md bg-editor-bg border border-editor-border text-sm text-editor-text-primary placeholder-editor-text-secondary focus:outline-none focus:ring-1 focus:ring-editor-accent"
+              className="w-full px-3 py-2 rounded-md bg-q-bg border border-q-border text-sm text-q-text-primary placeholder-editor-text-secondary focus:outline-none focus:ring-1 focus:ring-q-accent"
             />
           </div>
         )}
@@ -328,15 +328,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(v) => setNestedData('signupFloat.cooldownDays', v)}
             min={0} max={30} step={1} suffix="d"
           />
-          <p className="text-[10px] text-editor-text-secondary mt-1">
+          <p className="text-[10px] text-q-text-secondary mt-1">
             {t('controls.signupFloat.cooldownHint', '0 = always show. If > 0, it will stay minimized for returning visitors.')}
           </p>
         </div>
       </div>
 
       {/* ========== DIMENSIONS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Maximize2 size={14} />
           {t('controls.signupFloat.dimensions', 'Dimensions')}
         </label>
@@ -359,8 +359,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Palette size={14} />
           {t('editor.controls.common.colors')}
         </label>
@@ -373,8 +373,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== BUTTON COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">{t('controls.button')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">{t('controls.button')}</label>
         <div className="space-y-2">
           <ColorControl label={t('controls.fondoBotn')} value={data.signupFloat.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.common.buttonText')} value={data.signupFloat.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('signupFloat.colors.buttonText', v)} />
@@ -382,8 +382,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== INPUT COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">{t('controls.inputFields')}</label>
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">{t('controls.inputFields')}</label>
         <div className="space-y-2">
           <ColorControl label={t('controls.inputBackground')} value={data.signupFloat.colors?.inputBackground || '#0f172a'} onChange={(v) => setNestedData('signupFloat.colors.inputBackground', v)} />
           <ColorControl label={t('controls.inputText')} value={data.signupFloat.colors?.inputText || '#F9FAFB'} onChange={(v) => setNestedData('signupFloat.colors.inputText', v)} />
@@ -393,8 +393,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* ========== SOCIAL & OVERLAY COLORS ========== */}
-      <div className="bg-editor-panel-bg/50 p-4 rounded-lg border border-editor-border">
-        <label className="block text-xs font-bold text-editor-text-secondary uppercase tracking-wider mb-3">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">
           {t('controls.signupFloat.socialLinks', 'Social Links')} & Overlay
         </label>
         <div className="space-y-2">
