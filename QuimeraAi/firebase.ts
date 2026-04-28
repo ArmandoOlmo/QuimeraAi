@@ -21,7 +21,9 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithPopup,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "firebase/auth";
 import type { User } from "firebase/auth";
 import {
@@ -79,6 +81,8 @@ export const app: FirebaseApp = initializeApp(firebaseConfig);
 
 // Core services - initialized synchronously as they're needed immediately
 export const auth = getAuth(app);
+// Set persistence to localStorage so Playwright can properly capture the auth state
+setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 // Storage is only available in browser environment (not in SSR/Node.js)
 // Use getStorageInstance() for safe access in components that might run on server

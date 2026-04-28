@@ -92,7 +92,8 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 await userCredential.user.reload();
-                if (!userCredential.user.emailVerified) {
+                const isTestUser = email === 'test@quimera.ai' && window.location.hostname === 'localhost';
+                if (!userCredential.user.emailVerified && !isTestUser) {
                     await sendEmailVerification(userCredential.user);
                     await signOut(auth);
                     onVerificationEmailSent(email);
@@ -123,10 +124,16 @@ const ModernAuth: React.FC<ModernAuthProps> = ({ onVerificationEmailSent, initia
                     photoURL: '',
                 });
 
-                await sendEmailVerification(user);
-                await signOut(auth);
-
-                onVerificationEmailSent(email);
+                const isTestUser = email === 'test@quimera.ai' && window.location.hostname === 'localhost';
+                if (!isTestUser) {
+                    await sendEmailVerification(user);
+                    await signOut(auth);
+                    onVerificationEmailSent(email);
+                } else {
+                    // Si es usuario de prueba, redirigimos simulando que ya se verificó
+                    // Simplemente no cerramos la sesión para que AuthContext lo capture
+                    console.log('Bypassing verification for test user in localhost');
+                }
             } catch (err: any) {
                 if (err.code === 'auth/email-already-in-use') {
                     setError(t('auth.errors.emailInUse'));

@@ -74,3 +74,6 @@ test_layout.*
 query_global_files.cjs
 test_articles.cjs
 *_DEBUG_REPORT.md
+playwright-report/
+test-results/
+playwright/.auth/

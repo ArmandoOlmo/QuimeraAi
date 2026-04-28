@@ -50,31 +50,31 @@ const FeatureProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
     return (
         <AdminProvider>
             <ProjectProvider>
-                <EditorProvider>
-                    <FilesProvider>
-                        <CRMProvider>
-                            <CMSProvider>
-                                <DomainsProvider>
-                                    <AIProvider>
-                                        <AgencyProvider>
-                                            <AgencyContentProvider>
-                                                <NewsProvider>
-                                                    <UpgradeProvider>
-                                                        <UndoProvider>
-                                                            <BioPageProvider>
+                <FilesProvider>
+                    <CRMProvider>
+                        <CMSProvider>
+                            <DomainsProvider>
+                                <AIProvider>
+                                    <AgencyProvider>
+                                        <AgencyContentProvider>
+                                            <NewsProvider>
+                                                <UpgradeProvider>
+                                                    <UndoProvider>
+                                                        <BioPageProvider>
+                                                            <EditorProvider>
                                                                 {children}
-                                                            </BioPageProvider>
-                                                        </UndoProvider>
-                                                    </UpgradeProvider>
-                                                </NewsProvider>
-                                            </AgencyContentProvider>
-                                        </AgencyProvider>
-                                    </AIProvider>
-                                </DomainsProvider>
-                            </CMSProvider>
-                        </CRMProvider>
-                    </FilesProvider>
-                </EditorProvider>
+                                                            </EditorProvider>
+                                                        </BioPageProvider>
+                                                    </UndoProvider>
+                                                </UpgradeProvider>
+                                            </NewsProvider>
+                                        </AgencyContentProvider>
+                                    </AgencyProvider>
+                                </AIProvider>
+                            </DomainsProvider>
+                        </CMSProvider>
+                    </CRMProvider>
+                </FilesProvider>
             </ProjectProvider>
         </AdminProvider>
     );

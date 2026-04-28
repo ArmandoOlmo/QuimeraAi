@@ -341,8 +341,8 @@ const Header: React.FC<HeaderData & {
 
     // Use colors directly from props - colors.X (from controls) takes priority over root-level props (from palette application)
     const actualColors = {
-      background: colors?.background || backgroundColor || (isAnyTransparentStyle ? 'transparent' : colors?.accent),
-      text: colors?.text || textColor,
+      background: colors?.background || backgroundColor || (isAnyTransparentStyle ? 'transparent' : '#1a1a2e'),
+      text: colors?.text || textColor || '#ffffff',
       accent: colors?.accent,
     };
 
@@ -378,10 +378,10 @@ const Header: React.FC<HeaderData & {
     const bgColor = isTransparent ? 'transparent' : actualColors.background;
 
     // Ensure contrast on transparent backgrounds by falling back to white if text is the default dark
-    const finalTextColor = (isTransparent && actualColors.text.toLowerCase() === '#e2e8f0') ? '#FFFFFF' : actualColors.text;
+    const finalTextColor = (isTransparent && actualColors.text?.toLowerCase() === '#e2e8f0') ? '#FFFFFF' : actualColors.text;
 
     // Glass Effect
-    const glassClasses = (glassEffect && !isTransparent) ? 'backdrop-blur-md bg-opacity-80 border-b border-white/10' : '';
+    const glassClasses = (glassEffect && !isTransparent) ? 'border-b border-white/10' : '';
     const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
     const isFloatingLayout = style.startsWith('floating') || style === 'segmented-pill';
 
@@ -419,18 +419,18 @@ const Header: React.FC<HeaderData & {
         // --- FLOTANTES ---
         // Note: `top` is handled via inline style to account for topBarOffset
         case 'floating':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-2xl border border-white/10 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl border border-white/10 max-w-7xl mx-auto`;
         case 'floating-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 max-w-5xl mx-auto rounded-full border border-white/15 shadow-lg`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-5xl mx-auto rounded-full border border-white/15 shadow-lg`;
         case 'floating-glass':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-xl border border-white/20 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-xl border border-white/20 max-w-7xl mx-auto`;
         case 'floating-shadow':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 rounded-2xl max-w-7xl mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl max-w-7xl mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden`;
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
           return 'w-full tabbed-nav-container';
         case 'segmented-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-6 right-6 max-w-7xl mx-auto rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container`;
 
         // --- TRANSPARENTES ---
         case 'transparent':
@@ -454,13 +454,23 @@ const Header: React.FC<HeaderData & {
     // ESTILOS DE BACKGROUND SEGÚN VARIANTE
     // ============================================
     const getBackgroundStyle = (): React.CSSProperties => {
+      // When glass effect is active, override background to semi-transparent + blur
+      if (glassEffect && !isTransparent) {
+        return {
+          backgroundColor: `color-mix(in srgb, ${actualColors.background} 55%, transparent)`,
+          backdropFilter: 'blur(16px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+        };
+      }
+
       switch (style) {
         // --- EDGE-TO-EDGE ---
         case 'edge-solid':
           return { backgroundColor: actualColors.background };
         case 'edge-minimal':
           return { 
-            backgroundColor: `color-mix(in srgb, ${actualColors.background} 90%, transparent)`, // 90% opacity (fallback from E6)
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 90%, transparent)`,
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             borderBottom: '1px solid rgba(128, 128, 128, 0.15)',
@@ -477,12 +487,12 @@ const Header: React.FC<HeaderData & {
           return { backgroundColor: actualColors.background };
         case 'floating-pill':
           return {
-            backgroundColor: `color-mix(in srgb, ${actualColors.background} 94%, transparent)`, // 94% opacity (fallback from f0)
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 94%, transparent)`,
             backdropFilter: 'blur(8px)'
           };
         case 'floating-glass':
           return {
-            backgroundColor: `color-mix(in srgb, ${actualColors.background} 25%, transparent)`, // 25% opacity (fallback from 40)
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 25%, transparent)`,
             backdropFilter: 'blur(20px) saturate(180%)'
           };
         case 'floating-shadow':
@@ -505,7 +515,7 @@ const Header: React.FC<HeaderData & {
           };
         case 'transparent-bordered':
           return {
-            backgroundColor: `color-mix(in srgb, ${actualColors.background} 88%, transparent)`, // 88% opacity (fallback from e0)
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 88%, transparent)`,
             borderColor: 'rgba(255,255,255,0.2)'
           };
         case 'transparent-gradient': {
@@ -875,9 +885,8 @@ const Header: React.FC<HeaderData & {
         <header
           ref={headerRef}
           data-site-header="true"
-          className={`${positionClass} z-50 transition-all duration-500 ease-in-out ${style.includes('transparent') || style === 'sticky-transparent' ? 'w-full left-0 right-0' : ''
-            }`}
-          style={{ 
+          className={`${positionClass} w-full left-0 right-0 z-50 transition-all duration-500 ease-in-out`}
+          style={{
             height: shouldNotTakeSpace ? 0 : 'auto',
             top: `${activeTopBarOffset}px`,
             backgroundColor: forceSolid && isFloatingLayout ? `var(--property-detail-bg, var(--site-base-bg, ${actualColors.background || 'transparent'}))` : undefined,
@@ -911,7 +920,7 @@ const Header: React.FC<HeaderData & {
                   : `0 ${isScrolled ? '1.5rem' : '2rem'}`
             }}
           >
-            <div className={`container mx-auto h-full flex items-center justify-between relative ${style.startsWith('floating') || style === 'segmented-pill' ? '' : 'px-0'
+            <div className={`container mx-auto w-full h-full flex items-center justify-between relative ${style.startsWith('floating') || style === 'segmented-pill' ? '' : 'px-0'
               }`}>
 
               {/* Desktop Layouts */}

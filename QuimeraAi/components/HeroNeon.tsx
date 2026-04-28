@@ -148,13 +148,13 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
 
     return (
         <div 
-            className="w-full relative overflow-hidden flex items-center justify-center p-6 md:p-12 lg:p-24 bg-transparent"
+            className="w-full relative overflow-hidden flex items-center justify-center p-2 sm:p-6 md:p-12 lg:p-24 bg-transparent"
             style={{ minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '90vh' }}
         >
             {/* The Neon Card */}
             <div 
                 className={clsx(
-                    "w-full max-w-7xl min-h-[500px] relative flex flex-col p-8 md:p-12 lg:p-16 transition-all duration-500",
+                    "w-full max-w-7xl min-h-[500px] relative flex flex-col p-4 sm:p-8 md:p-12 lg:p-16 transition-all duration-500",
                     getBorderRadiusClass(data.cardBorderRadius),
                     data.glassEffect ? "backdrop-blur-xl bg-opacity-40" : "",
                     positionClasses,
@@ -240,7 +240,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                 )}>
                                     {currentSlide.primaryCta && (
                                         <button
-                                            className="px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
+                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
                                             onClick={() => props.onNavigate && currentSlide.primaryCtaLink && props.onNavigate(currentSlide.primaryCtaLink)}
                                             style={{
                                                 background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
@@ -251,13 +251,13 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                             }}
                                         >
                                             {currentSlide.primaryCta}
-                                            <ArrowRight className="w-5 h-5" />
+                                            <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                                         </button>
                                     )}
                                     
                                     {currentSlide.secondaryCta && (
                                         <button
-                                            className="px-8 py-4 rounded-full font-semibold text-lg border transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg border transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
                                             onClick={() => props.onNavigate && currentSlide.secondaryCtaLink && props.onNavigate(currentSlide.secondaryCtaLink)}
                                             style={{
                                                 borderColor: colors.buttonBackground || neonColor,
