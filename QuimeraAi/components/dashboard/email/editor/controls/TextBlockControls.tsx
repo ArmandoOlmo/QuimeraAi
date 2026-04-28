@@ -61,6 +61,10 @@ interface EmailRichTextEditorProps {
 }
 
 const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml, onChange, placeholder }) => {
+    const { t } = useTranslation();
+    const [linkModalOpen, setLinkModalOpen] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -99,17 +103,22 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
         }
     }, [value]);
 
-    const setLink = useCallback(() => {
+    const openLinkModal = useCallback(() => {
         if (!editor) return;
         const prev = editor.getAttributes('link').href;
-        const url = window.prompt('URL del enlace:', prev || 'https://');
-        if (url === null) return;
-        if (url === '') {
+        setLinkUrl(prev || 'https://');
+        setLinkModalOpen(true);
+    }, [editor]);
+
+    const applyLink = useCallback(() => {
+        if (!editor) return;
+        if (linkUrl.trim() === '') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run();
         } else {
-            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+            editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
         }
-    }, [editor]);
+        setLinkModalOpen(false);
+    }, [editor, linkUrl]);
 
     if (!editor) return null;
 
@@ -202,7 +211,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
 
                 <ToolbarBtn
                     active={editor.isActive('link')}
-                    onClick={setLink}
+                    onClick={openLinkModal}
                     title="Enlace"
                 >
                     <LinkIcon size={14} />
@@ -237,6 +246,45 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
             <div className="bg-q-surface border border-q-border rounded-b-md overflow-hidden [&_.ProseMirror]:min-h-[120px] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2 [&_.ProseMirror]:text-sm [&_.ProseMirror]:text-q-text [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-q-text-secondary/50 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_a]:text-blue-500 [&_.ProseMirror_a]:underline [&_.ProseMirror_code]:bg-q-surface-overlay/30 [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-xs">
                 <EditorContent editor={editor} />
             </div>
+
+            {/* Link Input Modal */}
+            {linkModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-[99999]" onClick={() => setLinkModalOpen(false)}>
+                    <div className="bg-q-surface w-full max-w-sm rounded-xl border border-q-border shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-q-text mb-4">
+                            {t('email.linkUrl', 'URL del enlace')}
+                        </h3>
+                        <input
+                            type="url"
+                            value={linkUrl}
+                            onChange={(e) => setLinkUrl(e.target.value)}
+                            placeholder="https://"
+                            className="w-full bg-q-bg border border-q-border rounded-lg px-3 py-2 text-sm text-q-text focus:outline-none focus:border-q-accent mb-4"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') applyLink();
+                                if (e.key === 'Escape') setLinkModalOpen(false);
+                            }}
+                        />
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setLinkModalOpen(false)}
+                                className="px-4 py-2 rounded-lg border border-q-border bg-q-bg hover:bg-q-surface-elevated text-q-text transition-colors text-sm font-medium"
+                            >
+                                {t('common.cancel', 'Cancelar')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={applyLink}
+                                className="px-4 py-2 rounded-lg bg-q-accent text-q-bg hover:opacity-90 transition-opacity text-sm font-medium"
+                            >
+                                {t('common.apply', 'Aplicar')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
