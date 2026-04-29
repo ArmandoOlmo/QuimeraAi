@@ -72,7 +72,7 @@ export function AgencyProjects() {
 
             {/* Search */}
             <div className="mb-6">
-                <div className="relative max-w-md">
+                <div className="relative w-full sm:max-w-md">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted" />
                     <input
                         type="text"

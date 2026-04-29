@@ -41,7 +41,7 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             draggable
             onDragStart={() => dragHandlers.handleDragStart(sectionId)}
             onDragEnd={dragHandlers.handleDragEnd}
-            className="opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 self-center mr-1"
+            className="hidden lg:flex opacity-0 group-hover/drag:opacity-100 focus-within:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing flex-shrink-0 self-center mr-1"
             title={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
             aria-label={t('dashboard.dragToReorder', 'Arrastra para reordenar')}
             role="button"
@@ -60,18 +60,18 @@ const DashboardDraggableSection: React.FC<DashboardDraggableSectionProps> = ({
             onDragLeave={dragHandlers.handleDragLeave}
         >
             <section className={sectionId === 'projects' ? 'relative z-[1]' : 'w-full'}>
-                <div className={`flex items-center justify-between ${isCollapsed ? 'mb-0' : 'mb-6'}`}>
+                <div className={`flex items-center justify-between ${isCollapsed ? 'mb-0' : 'mb-3 lg:mb-6'}`}>
                     <div className="flex items-center gap-0">
                         {dragHandle}
                         <button
                             onClick={onToggleCollapse}
-                            className="text-2xl font-bold text-foreground flex items-center gap-3 hover:text-primary/90 transition-colors"
+                            className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 hover:text-primary/90 transition-colors"
                             aria-expanded={!isCollapsed}
                         >
-                            <Icon className="text-primary" size={24} />
+                            <Icon className="text-primary" size={20} />
                             {title}
                             <ChevronDown
-                                size={20}
+                                size={18}
                                 className={`text-q-text-muted transition-transform duration-300 ${
                                     isCollapsed ? '-rotate-90' : 'rotate-0'
                                 }`}

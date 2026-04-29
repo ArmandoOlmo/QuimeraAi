@@ -92,6 +92,8 @@ import {
     Download,
     Wand2,
     User,
+    PanelRightOpen,
+    PanelRightClose,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
@@ -255,32 +257,29 @@ const MOCK_PROFILE: BioProfile = {
 };
 
 const DEFAULT_THEME: BioTheme = {
-    preset: 'default',
-    backgroundColor: '#0f0f0f',
+    preset: 'dark',
+    backgroundColor: '#1C0D28',
     backgroundType: 'solid',
-    gradientColor: '#1a1a2e',
+    gradientColor: '#2d1b4e',
     buttonStyle: 'fill',
-    buttonShape: 'rounded',
+    buttonShape: 'full',
     buttonShadow: 'none',
-    buttonColor: '#facc15',
+    buttonColor: '#FBB92B',
     buttonTextColor: '#000000',
-    textColor: '#ffffff',
-    titleFont: 'Inter',
+    textColor: '#F5F4F0',
+    titleFont: 'Ubuntu',
     titleColor: '#ffffff',
-    bodyFont: 'Inter',
-    bodyColor: '#ffffff',
+    bodyFont: 'Open Sans',
+    bodyColor: '#F5F4F0',
     profileLayout: 'circle',
     profileSize: 'small',
     titleStyle: 'text',
 };
 
 const THEME_PRESETS = [
-    { id: 'default', name: 'Quimera Dark', bg: '#0f0f0f', button: '#facc15', text: '#ffffff' },
-    { id: 'light', name: 'Clean Light', bg: '#ffffff', button: '#000000', text: '#000000' },
-    { id: 'ocean', name: 'Ocean Blue', bg: '#0c1929', button: '#3b82f6', text: '#ffffff' },
-    { id: 'forest', name: 'Forest Green', bg: '#0d1f12', button: '#22c55e', text: '#ffffff' },
-    { id: 'sunset', name: 'Sunset Glow', bg: '#1a0f0a', button: '#f97316', text: '#ffffff' },
-    { id: 'berry', name: 'Berry Purple', bg: '#1a0d1a', button: '#a855f7', text: '#ffffff' },
+    { id: 'light', name: 'Light (Warm Parchment)', bg: '#F5F4F0', button: '#FBB92B', text: '#1C0D28' },
+    { id: 'dark', name: 'Dark (Night Violet)', bg: '#1C0D28', button: '#FBB92B', text: '#F5F4F0' },
+    { id: 'oled', name: 'OLED (Black)', bg: '#000000', button: '#FBB92B', text: '#ffffff' },
 ];
 
 // Form Templates for form configuration modal
@@ -432,6 +431,7 @@ const BioPageBuilder: React.FC = () => {
     // Active view state
     const [activeTab, setActiveTab] = useState<ActiveTab>('links');
     const [designSubTab, setDesignSubTab] = useState<DesignSubTab>('header');
+    const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
 
     // ===== CONTEXT DATA (replaces mock data) =====
     const {
@@ -855,45 +855,22 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         </div>
     );
 
-    const renderDesignEditor = () => {
-        const DESIGN_SECTIONS = [
-            { id: 'header' as const, icon: User, label: t('bioPage.header', 'Header') },
-            { id: 'theme' as const, icon: Palette, label: t('bioPage.theme', 'Theme') },
-            { id: 'wallpaper' as const, icon: Image, label: t('bioPage.wallpaper', 'Wallpaper') },
-            { id: 'text' as const, icon: Type, label: t('bioPage.text', 'Text') },
-            { id: 'buttons' as const, icon: Square, label: t('bioPage.buttons', 'Buttons') },
-            { id: 'color' as const, icon: Palette, label: t('bioPage.colors', 'Colors') },
-        ];
+    const DESIGN_SECTIONS = [
+        { id: 'header' as const, icon: User, label: t('bioPage.header', 'Header') },
+        { id: 'theme' as const, icon: Palette, label: t('bioPage.theme', 'Theme') },
+        { id: 'wallpaper' as const, icon: Image, label: t('bioPage.wallpaper', 'Wallpaper') },
+        { id: 'text' as const, icon: Type, label: t('bioPage.text', 'Text') },
+        { id: 'buttons' as const, icon: Square, label: t('bioPage.buttons', 'Buttons') },
+        { id: 'color' as const, icon: Palette, label: t('bioPage.colors', 'Colors') },
+    ];
 
+    const renderDesignEditor = () => {
         const FONT_OPTIONS = [
-            'Inter', 'Roboto', 'Poppins', 'Montserrat', 'Playfair Display',
-            'Open Sans', 'Lato', 'Oswald', 'Raleway', 'Nunito'
+            'Ubuntu', 'Open Sans'
         ];
 
         return (
-            <div className="flex gap-4 h-full">
-                {/* Vertical Sidebar Navigation */}
-                <div className="w-16 shrink-0 flex flex-col gap-1 bg-muted/30 rounded-xl p-2">
-                    {DESIGN_SECTIONS.map((section) => {
-                        const Icon = section.icon;
-                        return (
-                            <button
-                                key={section.id}
-                                onClick={() => setDesignSubTab(section.id)}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${designSubTab === section.id
-                                    ? 'bg-q-bg text-primary shadow-sm'
-                                    : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
-                                    }`}
-                            >
-                                <Icon size={18} />
-                                <span className="text-[10px] font-medium">{section.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto">
+                <div>
                     {/* HEADER SECTION */}
                     {designSubTab === 'header' && (
                         <div className="space-y-6">
@@ -1624,8 +1601,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 <label className="text-sm font-medium text-foreground">
                                     {t('bioPage.cornerRoundness', 'Corner roundness')}
                                 </label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {(['square', 'rounded', 'rounder', 'pill'] as const).map((shape) => (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {(['lg', 'xl', 'full'] as const).map((shape) => (
                                         <button
                                             key={shape}
                                             onClick={() => contextUpdateTheme({ buttonShape: shape })}
@@ -1634,7 +1611,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                                 : 'border-q-border hover:border-muted-foreground'
                                                 }`}
                                             style={{
-                                                borderRadius: shape === 'square' ? '4px' : shape === 'rounded' ? '8px' : shape === 'rounder' ? '16px' : '9999px'
+                                                borderRadius: shape === 'lg' ? '0.5rem' : shape === 'xl' ? '0.75rem' : '9999px'
                                             }}
                                         >
                                             <span className="text-[10px] font-medium capitalize">{t(`bioPage.${shape}`, shape)}</span>
@@ -1856,7 +1833,6 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
                     )}
                 </div>
-            </div>
         );
     };
 
@@ -2236,9 +2212,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     <div className="space-y-3">
                         {links.filter(l => l.enabled).map((link) => {
                             const borderRadius =
-                                theme.buttonShape === 'square' ? '4px' :
-                                    theme.buttonShape === 'rounded' ? '12px' :
-                                        theme.buttonShape === 'rounder' ? '20px' : '9999px';
+                                theme.buttonShape === 'lg' ? '0.5rem' :
+                                    theme.buttonShape === 'xl' ? '0.75rem' : '9999px';
 
                             const textColor = theme.buttonTextColor || '#ffffff';
                             const shadow = getPreviewButtonShadow();
@@ -2615,27 +2590,89 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             </p>
                         </button>
 
-                        {/* Nav Items */}
+                        {/* Nav Items with Design sub-tree */}
                         {navItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id as ActiveTab)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
-                                    ? 'bg-primary/20 text-primary'
-                                    : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
-                                    }`}
-                            >
-                                <item.icon size={18} />
-                                {item.label}
-                            </button>
+                            <React.Fragment key={item.id}>
+                                <button
+                                    onClick={() => { setActiveTab(item.id as ActiveTab); setIsControlsPanelOpen(true); }}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
+                                        }`}
+                                >
+                                    <item.icon size={18} />
+                                    {item.label}
+                                </button>
+                                {/* Design sub-items — shown when Design tab is active */}
+                                {item.id === 'design' && activeTab === 'design' && (
+                                    <div className="ml-4 pl-3 border-l-2 border-primary/20 flex flex-col gap-0.5">
+                                        {DESIGN_SECTIONS.map((section) => {
+                                            const Icon = section.icon;
+                                            return (
+                                                <button
+                                                    key={section.id}
+                                                    onClick={() => { setDesignSubTab(section.id); setIsControlsPanelOpen(true); }}
+                                                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                                                        designSubTab === section.id
+                                                            ? 'bg-primary/15 text-primary'
+                                                            : 'text-q-text-muted hover:text-foreground hover:bg-muted/30'
+                                                    }`}
+                                                >
+                                                    <Icon size={14} />
+                                                    {section.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </React.Fragment>
                         ))}
                     </nav>
 
-                    {/* Config Panel */}
-                    <main className="flex-1 overflow-y-auto bg-muted/5 p-6 sm:p-8 pb-32">
-                        <div className="max-w-2xl mx-auto">
-                            {/* Mobile Nav - Grid sin scroll, todas las pestañas visibles */}
-                            <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+                    {/* CENTER: Live Preview */}
+                    <main className="flex-1 min-h-0 overflow-hidden hidden md:flex items-center justify-center bg-neutral-900/50 p-4 sm:p-8 relative">
+                        {renderMobilePreview()}
+                    </main>
+
+                    {/* Controls Panel Toggle - Desktop (matches Controls.tsx pattern) */}
+                    <button onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
+                        className={`fixed top-1/2 -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-q-surface-elevated transition-all duration-300 overflow-hidden rounded-lg hidden md:flex items-center justify-center ${
+                            isControlsPanelOpen ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-0 rounded-l-lg rounded-r-none'
+                        }`}
+                        title={isControlsPanelOpen ? t('bioPage.hideControls', 'Hide controls') : t('bioPage.showControls', 'Show controls')}
+                    >
+                        {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+                    </button>
+
+                    {/* RIGHT: Controls Panel - Desktop */}
+                    <div className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0 overflow-hidden'} border-l border-q-border bg-q-surface/50 flex-col overflow-hidden flex-shrink-0 order-last hidden md:flex transition-all duration-300`}>
+                        <div className="p-4 border-b border-q-border flex items-center justify-between">
+                            <h2 className="font-semibold text-sm flex items-center gap-2">
+                                <Settings size={16} className="text-primary" />
+                                {t('common.edit', 'Edit')}: <span className="capitalize">{activeTab === 'design'
+                                    ? DESIGN_SECTIONS.find(s => s.id === designSubTab)?.label || designSubTab
+                                    : activeTab}</span>
+                            </h2>
+                            <button onClick={() => setIsControlsPanelOpen(false)}
+                                className="p-1.5 rounded-md text-q-text-muted hover:text-foreground hover:bg-muted transition-colors"
+                                title={t('bioPage.closePanel', 'Close panel')}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
+                            {activeTab === 'links' && renderLinksEditor()}
+                            {activeTab === 'design' && renderDesignEditor()}
+                            {activeTab === 'shop' && renderShopEditor()}
+                            {activeTab === 'analytics' && renderAnalytics()}
+                            {activeTab === 'audience' && renderAudience()}
+                        </div>
+                    </div>
+
+                    {/* MOBILE: Full-screen controls overlay (no preview on mobile) */}
+                    <div className="md:hidden flex-1 flex flex-col overflow-hidden">
+                        {/* Mobile Nav */}
+                        <div className="p-4 border-b border-q-border/50 bg-q-surface/95 backdrop-blur-sm z-20 flex-shrink-0">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {navItems.map((item) => (
                                     <button
                                         key={item.id}
@@ -2650,20 +2687,15 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </button>
                                 ))}
                             </div>
-
-                            {/* Content */}
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                             {activeTab === 'links' && renderLinksEditor()}
                             {activeTab === 'design' && renderDesignEditor()}
                             {activeTab === 'shop' && renderShopEditor()}
                             {activeTab === 'analytics' && renderAnalytics()}
                             {activeTab === 'audience' && renderAudience()}
                         </div>
-                    </main>
-
-                    {/* Live Preview */}
-                    <aside className="hidden lg:flex w-[400px] border-l border-q-border/50 bg-neutral-900/50 items-center justify-center p-8">
-                        {renderMobilePreview()}
-                    </aside>
+                    </div>
                 </div>
             </div>
 

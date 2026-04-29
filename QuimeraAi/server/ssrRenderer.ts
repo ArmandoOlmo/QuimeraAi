@@ -59,6 +59,19 @@ export interface ProjectData {
 }
 
 /**
+ * Interface for SSR Cache
+ */
+interface CacheEntry {
+    html: string;
+    timestamp: number;
+    lastUpdated: number;
+}
+
+// In-memory cache for SSR rendered pages
+// Key format: `${projectId}:${url}`
+const ssrCache = new Map<string, CacheEntry>();
+
+/**
  * Render storefront with SSR
  */
 export async function renderStorefront(options: SSRRenderOptions): Promise<string> {
@@ -66,10 +79,9 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 
     console.log(`[SSR] renderStorefront called for project: ${projectId}, url: ${url}`);
 
+
     // =========================================================================
     // STEP 1: Fetch project data from Firestore (server-side, cached)
-    // This is the key value-add: the client gets data instantly via __INITIAL_DATA__
-    // without making its own Firestore call.
     // =========================================================================
     let projectData: ProjectData | null = null;
     try {
@@ -82,6 +94,31 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
     
     if (!projectData) {
         throw new Error(`Project ${projectId} not found`);
+    }
+
+    // =========================================================================
+    // CACHE CHECK: Check if we have a valid cached version
+    // =========================================================================
+    const cacheKey = `${projectId}:${url}`;
+    const cached = ssrCache.get(cacheKey);
+    // Assuming projectData has updatedAt or lastPublishedAt in its raw firestore doc, 
+    // but the ProjectData interface doesn't explicitly have it right now.
+    // If not, we just use a generic TTL (e.g., 5 minutes) or fallback to 0.
+    const projectLastUpdated = (projectData as any).updatedAt?.toMillis?.() || (projectData as any).lastPublishedAt?.toMillis?.() || 0;
+    
+    if (cached) {
+        // Cache is valid if project hasn't been updated since cache was created,
+        // or if we don't have update timestamps, use a 5-minute TTL.
+        const age = Date.now() - cached.timestamp;
+        const isFreshByTime = age < 5 * 60 * 1000; // 5 minutes TTL
+        const isFreshByUpdate = projectLastUpdated === 0 || cached.timestamp >= projectLastUpdated;
+        
+        if (isFreshByTime && isFreshByUpdate && cached.html) {
+            console.log(`[SSR] Serving from cache: ${cacheKey}`);
+            return cached.html;
+        } else {
+            console.log(`[SSR] Cache invalidated for: ${cacheKey}`);
+        }
     }
 
     // =========================================================================
@@ -109,8 +146,8 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
 
     // =========================================================================
     // STEP 4: Sanitize & serialize project data for client-side hydration
-    // PublicWebsitePreview.tsx reads window.__INITIAL_DATA__ and renders
-    // immediately without making a Firestore call.
+    // =========================================================================
+    // STEP 4: Sanitize & serialize project data for client-side hydration
     // =========================================================================
     let sanitizedData;
     try {
@@ -121,11 +158,50 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
     }
 
     // =========================================================================
-    // STEP 5: Generate branded skeleton HTML
-    // Uses the project's own theme colors and logo so the user sees
-    // their brand while React loads — instead of a blank screen or error.
+    // STEP 5: Perform True React SSR
     // =========================================================================
-    const skeletonHtml = generateBrandedSkeleton(projectData);
+    let appHtml = '';
+    let headTags = '';
+
+    try {
+        if (isProduction) {
+            // Import compiled SSR entry
+            const entryServerPath = path.resolve(__dirname, '../../dist/server/entry-server.js');
+            if (fs.existsSync(entryServerPath)) {
+                // Dynamically import the compiled SSR entry
+                const { render } = await import(`file://${entryServerPath}`);
+                const renderResult = await render({
+                    url,
+                    project: projectData,
+                    baseUrl: hostname ? `https://${hostname}` : undefined
+                });
+                appHtml = renderResult.html || '';
+                if (renderResult.head) headTags += renderResult.head;
+            } else {
+                console.warn('[SSR] entry-server.js not found, falling back to SEO fallback');
+            }
+        } else if (vite) {
+            // Development SSR via Vite
+            const { render } = await vite.ssrLoadModule('/entry-server.tsx');
+            const renderResult = await render({
+                url,
+                project: projectData,
+                baseUrl: hostname ? `https://${hostname}` : undefined
+            });
+            appHtml = renderResult.html || '';
+            if (renderResult.head) headTags += renderResult.head;
+        }
+    } catch (ssrError) {
+        console.error('[SSR] True SSR failed:', ssrError);
+    }
+
+    // SEO Fallback if SSR fails
+    if (!appHtml || appHtml.includes('<!-- SSR render skipped')) {
+        console.log(`[SSR] Using SEO fallback HTML for ${cacheKey}`);
+        appHtml = generateSeoFallbackHtml(projectData, url);
+        // Also inject the branded skeleton so the user sees something nice while React hydrates
+        appHtml = `${generateBrandedSkeleton(projectData)}\n<div id="seo-fallback" style="display:none;">\n${appHtml}\n</div>`;
+    }
 
     // =========================================================================
     // STEP 6: Assemble final HTML
@@ -143,15 +219,54 @@ export async function renderStorefront(options: SSRRenderOptions): Promise<strin
     const initialDataScript = `<script>window.__INITIAL_DATA__ = { project: ${JSON.stringify(sanitizedData).replace(/</g, '\\u003c')}, projectId: "${projectId}" };${domainConfig ? `\nwindow.__DOMAIN_CONFIG__ = ${domainConfig};` : ''}</script>`;
 
     const finalHtml = template
-        // Inject branded skeleton into the root element
-        .replace('<!--ssr-outlet-->', skeletonHtml)
+        // Inject SSR HTML into the root element
+        .replace('<!--ssr-outlet-->', appHtml)
         // Inject SEO tags in head
-        .replace('</head>', `${seoTags}\n</head>`)
+        .replace('</head>', `${seoTags}\n${headTags}\n</head>`)
         // Inject initial state for instant client-side hydration
         .replace('</body>', `${initialDataScript}\n</body>`);
     
-    console.log(`[SSR] SPA Shell generated with branded skeleton for "${projectData.name}"`);
+    console.log(`[SSR] HTML generated for "${projectData.name}"`);
+    
+    // Save to cache
+    ssrCache.set(cacheKey, {
+        html: finalHtml,
+        timestamp: Date.now(),
+        lastUpdated: projectLastUpdated
+    });
+
     return finalHtml;
+}
+
+/**
+ * Generate SEO Fallback HTML
+ * Used when true SSR fails so LLMs can still read content
+ */
+function generateSeoFallbackHtml(project: ProjectData, url: string): string {
+    const brand = project.brandIdentity || {};
+    const data = project.data || {};
+    
+    let html = `<main>`;
+    html += `<h1>${escapeHtml(project.name)}</h1>`;
+    
+    if (brand.tagline || project.seoConfig?.description) {
+        html += `<p>${escapeHtml(brand.tagline || project.seoConfig?.description)}</p>`;
+    }
+
+    // Attempt to extract text from components
+    if (project.componentOrder) {
+        project.componentOrder.forEach(comp => {
+            const compData = data[comp];
+            if (compData) {
+                if (compData.title) html += `<h2>${escapeHtml(compData.title)}</h2>`;
+                if (compData.subtitle) html += `<p>${escapeHtml(compData.subtitle)}</p>`;
+                if (compData.description) html += `<p>${escapeHtml(compData.description)}</p>`;
+            }
+        });
+    }
+
+    html += `</main>`;
+    return html;
 }
 
 /**
@@ -246,7 +361,7 @@ function generateBrandedSkeleton(project: ProjectData): string {
 /**
  * Fetch project data from Firestore
  */
-async function fetchProjectData(projectId: string): Promise<ProjectData | null> {
+export async function fetchProjectData(projectId: string): Promise<ProjectData | null> {
     try {
         const firestore = getFirestoreDb();
         

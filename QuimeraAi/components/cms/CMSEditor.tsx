@@ -29,6 +29,7 @@ import {
 import ImageGeneratorModal from '../ui/ImageGeneratorModal';
 import ImagePicker from '../ui/ImagePicker';
 import { logApiCall } from '../../services/apiLoggingService';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 interface CMSEditorProps {
     post: CMSPost | null;
@@ -533,10 +534,6 @@ IMPORTANT FORMATTING RULES:
             {/* --- Header --- */}
             <header className="h-16 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
                 <div className="flex items-center gap-4 w-1/3">
-                    <button onClick={onClose} className="p-2 -ml-2 rounded-full text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors">
-                        <ArrowLeft size={20} />
-                    </button>
-                    <div className="h-6 w-px bg-border"></div>
                     <input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -555,6 +552,7 @@ IMPORTANT FORMATTING RULES:
                     <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-q-text-muted hover:bg-secondary'}`}>
                         <MoreVertical size={20} />
                     </button>
+                    <HeaderBackButton onClick={onClose} />
                 </div>
             </header>
 

@@ -140,8 +140,8 @@ const Dashboard: React.FC = () => {
                     onNavigateBack={() => goBack()}
                 />
 
-                <main id="main-content" className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth" role="main">
-                    <div className="max-w-7xl mx-auto space-y-10">
+                <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 scroll-smooth" role="main">
+                    <div className="max-w-7xl mx-auto space-y-6 lg:space-y-10">
 
                         {/* ─── Dashboard Home View ─────────────────────────────────── */}
                         {isDashboard && (

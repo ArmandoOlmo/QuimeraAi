@@ -82,61 +82,63 @@ const AIWebsiteStudio: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
-            {/* Backdrop click */}
-            <div className="absolute inset-0" onClick={studio.isGenerating ? undefined : handleClose} />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 lg:backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
+            {/* Backdrop click — hidden on mobile since it's full-page */}
+            <div className="absolute inset-0 hidden lg:block" onClick={studio.isGenerating ? undefined : handleClose} />
 
-            {/* Modal Container */}
+            {/* Modal Container — full-page on mobile, floating card on desktop */}
             <div
-                className="relative z-10 w-[96vw] max-w-[1200px] bg-q-surface border border-q-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-                style={{ height: 'min(88vh, 840px)', animation: 'aws-slideUp 0.3s ease' }}
+                className="relative z-10 w-full h-full lg:w-[96vw] lg:max-w-[1200px] lg:h-[min(88vh,840px)] bg-q-surface border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-none lg:shadow-2xl flex flex-col overflow-hidden"
+                style={{ animation: 'aws-slideUp 0.3s ease' }}
             >
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-q-border bg-primary/5">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="bg-q-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
+                <div className="flex items-center justify-between px-3 lg:px-5 py-2.5 lg:py-3 border-b border-q-border bg-primary/5">
+                    <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+                        {/* Branding icon — condensed on mobile (no box), boxed on desktop */}
+                        <div className="relative flex-shrink-0">
+                            <div className="hidden lg:flex bg-q-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
                                 <Sparkles className="text-primary-foreground w-5 h-5" />
                             </div>
+                            <Sparkles className="lg:hidden w-5 h-5 text-q-accent" />
                             {studio.isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
-                                {t('aiWebsiteStudio.title')}
-                                <span className="text-[10px] font-mono bg-primary/15 text-q-accent px-2 py-0.5 rounded-full">
+                        <div className="min-w-0">
+                            <h2 className="text-sm lg:text-lg font-bold text-q-text flex items-center gap-1.5 lg:gap-2">
+                                <span className="truncate">{t('aiWebsiteStudio.title')}</span>
+                                <span className="hidden sm:inline text-[10px] font-mono bg-primary/15 text-q-accent px-2 py-0.5 rounded-full flex-shrink-0">
                                     Quimera AI
                                 </span>
                             </h2>
-                            <p className="text-xs text-q-text-secondary">{t('aiWebsiteStudio.poweredBy')}</p>
+                            <p className="text-[10px] lg:text-xs text-q-text-secondary hidden sm:block">{t('aiWebsiteStudio.poweredBy')}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {/* Mobile brief toggle */}
+                    <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
+                        {/* Mobile brief toggle — compact icon-only on small, label on med */}
                         <button
                             onClick={() => setIsMobileBriefOpen(!isMobileBriefOpen)}
-                            className="lg:hidden h-8 px-3 rounded-lg bg-q-surface-overlay/40 text-q-text-secondary text-xs hover:bg-q-surface-overlay/60 transition-colors flex items-center gap-1.5"
+                            className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-q-accent hover:bg-primary/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
                         >
-                            <LayoutTemplate size={14} />
-                            {t('aiWebsiteStudio.brief')}
+                            <LayoutTemplate size={15} />
+                            <span className="hidden sm:inline">{t('aiWebsiteStudio.brief')}</span>
                             {studio.businessBrief.readinessScore > 0 && (
-                                <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-q-accent text-[10px] font-bold">
+                                <span className="hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-q-accent text-[10px] font-bold">
                                     {studio.businessBrief.readinessScore}%
                                 </span>
                             )}
                         </button>
-                        {/* Import website */}
+                        {/* Import website — icon-only on mobile, label on desktop */}
                         <button
                             onClick={() => studio.setShowUrlModal(true)}
                             disabled={studio.isExtracting || studio.isGenerating}
-                            className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-primary/10 text-q-accent text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
+                            className="h-8 w-8 lg:w-auto lg:px-3 flex items-center justify-center lg:justify-start gap-1.5 rounded-lg text-q-accent hover:bg-primary/10 lg:bg-primary/10 text-xs font-medium lg:hover:bg-primary/20 transition-colors disabled:opacity-40"
                             title={t('aiWebsiteStudio.extraction.buttonLabel')}
                         >
-                            {studio.isExtracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
-                            <span className="hidden sm:inline">{t('aiWebsiteStudio.extraction.buttonLabel')}</span>
+                            {studio.isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                            <span className="hidden lg:inline">{t('aiWebsiteStudio.extraction.buttonLabel')}</span>
                         </button>
-                        {/* Reset */}
+                        {/* Reset — bare icon */}
                         <button
                             onClick={() => { studio.stopVoiceSession(); studio.initStudio(); }}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"
@@ -261,16 +263,30 @@ const AIWebsiteStudio: React.FC = () => {
                         <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
                     </div>
 
-                    {/* RIGHT: Business Brief Panel (mobile drawer) */}
+                    {/* RIGHT: Business Brief Panel (mobile bottom sheet) */}
                     {isMobileBriefOpen && (
-                        <div className="lg:hidden absolute inset-0 z-50 flex">
-                            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileBriefOpen(false)} />
-                            <div className="ml-auto relative w-[85%] max-w-[380px] bg-q-surface border-l border-q-border flex flex-col overflow-y-auto" style={{ animation: 'aws-slideInRight 0.3s ease' }}>
-                                <div className="flex items-center justify-between px-4 py-3 border-b border-q-border">
-                                    <span className="text-sm font-semibold text-q-text">{t('aiWebsiteStudio.briefPanel.title')}</span>
-                                    <button onClick={() => setIsMobileBriefOpen(false)} className="p-1 text-q-text-secondary hover:text-q-text"><X size={16} /></button>
+                        <div className="lg:hidden fixed inset-0 z-[60] flex flex-col justify-end">
+                            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileBriefOpen(false)} style={{ animation: 'aws-fadeIn 0.2s ease' }} />
+                            <div
+                                className="relative bg-q-surface border-t border-q-border rounded-t-2xl flex flex-col overflow-hidden"
+                                style={{ maxHeight: '75vh', animation: 'aws-slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)' }}
+                            >
+                                {/* Drag handle */}
+                                <div className="flex justify-center pt-3 pb-1">
+                                    <div className="w-10 h-1 rounded-full bg-q-text-secondary/30" />
                                 </div>
-                                <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-4 py-2 border-b border-q-border">
+                                    <span className="text-sm font-semibold text-q-text flex items-center gap-2">
+                                        <LayoutTemplate size={14} className="text-q-accent" />
+                                        {t('aiWebsiteStudio.briefPanel.title')}
+                                    </span>
+                                    <button onClick={() => setIsMobileBriefOpen(false)} className="p-1.5 rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"><X size={16} /></button>
+                                </div>
+                                {/* Content — scrollable */}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -291,7 +307,7 @@ const AIWebsiteStudio: React.FC = () => {
             <style>{`
                 @keyframes aws-fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes aws-slideUp { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-                @keyframes aws-slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                @keyframes aws-slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
                 @keyframes aws-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
             `}</style>
         </div>
@@ -701,7 +717,7 @@ const GenerationOverlay: React.FC<{ phase: GenerationPhase; businessName: string
 
     return (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md" style={{ animation: 'aws-fadeIn 0.4s ease' }}>
-            <div className="w-full max-w-3xl h-[600px] max-h-[calc(100%-2rem)] mx-4 flex flex-col rounded-2xl border border-q-border bg-q-surface shadow-2xl overflow-hidden">
+            <div className="w-full h-full lg:max-w-3xl lg:h-[600px] lg:max-h-[calc(100%-2rem)] lg:mx-4 flex flex-col rounded-none lg:rounded-2xl border-0 lg:border lg:border-q-border bg-q-surface shadow-none lg:shadow-2xl overflow-hidden">
 
                 {/* ── Header ── */}
                 <div className="px-6 pt-6 pb-4 border-b border-q-border">

@@ -91,6 +91,17 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     portfolioNeon: Briefcase,
     pricingNeon: DollarSign,
     faqNeon: HelpCircle,
+    // Quimera Suite
+    heroQuimera: MonitorPlay,
+    featuresQuimera: List,
+    pricingQuimera: DollarSign,
+    testimonialsQuimera: Star,
+    faqQuimera: HelpCircle,
+    ctaQuimera: MessageCircle,
+    platformShowcaseQuimera: Layout,
+    aiCapabilitiesQuimera: MessageSquare,
+    industrySolutionsQuimera: Building2,
+    agencyWhiteLabelQuimera: Users,
 
     // Ecommerce
     storeSettings: Store,
@@ -311,6 +322,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         ecommerce: false,
         luminaAdd: false,
         neonAdd: false,
+        quimeraAdd: false,
         legacyAdd: false,
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
@@ -375,6 +387,18 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         portfolioNeon: t('editor.portfolioNeon', 'Portfolio Neon'),
         pricingNeon: t('editor.pricingNeon', 'Pricing Neon'),
         faqNeon: t('editor.faqNeon', 'FAQ Neon'),
+
+        // Quimera Suite
+        heroQuimera: t('editor.heroQuimera', 'Hero Quimera'),
+        featuresQuimera: t('editor.featuresQuimera', 'Features Quimera'),
+        pricingQuimera: t('editor.pricingQuimera', 'Pricing Quimera'),
+        testimonialsQuimera: t('editor.testimonialsQuimera', 'Testimonials Quimera'),
+        faqQuimera: t('editor.faqQuimera', 'FAQ Quimera'),
+        ctaQuimera: t('editor.ctaQuimera', 'CTA Quimera'),
+        platformShowcaseQuimera: t('editor.platformShowcaseQuimera', 'Platform Showcase'),
+        aiCapabilitiesQuimera: t('editor.aiCapabilitiesQuimera', 'AI Capabilities'),
+        industrySolutionsQuimera: t('editor.industrySolutionsQuimera', 'Industry Solutions'),
+        agencyWhiteLabelQuimera: t('editor.agencyWhiteLabelQuimera', 'Agency White Label'),
 
         // Ecommerce sections
         storeSettings: 'Store Settings',
@@ -603,7 +627,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                         {/* Legacy Suite in Add Menu */}
-                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon')).length > 0 && (
+                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).length > 0 && (
                             <div className="mb-1">
                                 <button
                                     onClick={() => setExpandedGroups(prev => ({ ...prev, legacyAdd: !prev.legacyAdd }))}
@@ -617,7 +641,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                 
                                 {expandedGroups.legacyAdd && (
                                     <div className="pl-4 mt-1 space-y-1">
-                                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                        {availableComponents.filter(s => !s.toLowerCase().includes('lumina') && !s.toLowerCase().includes('neon') && !s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
                                             const Icon = sectionIcons[section] || Layout;
                                             return (
                                                 <button
@@ -704,6 +728,44 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                     className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#FBB92B]/50"
                                                 >
                                                     <Icon size={14} className="text-[#FBB92B]" />
+                                                    <span className="text-sm text-q-text font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Quimera Group in Add Menu */}
+                        {availableComponents.filter(s => s.toLowerCase().includes('quimera')).length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-q-border/50">
+                                <button
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, quimeraAdd: !prev.quimeraAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-[#D4AF37] hover:bg-q-bg rounded-md transition-colors"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Layers size={14} /> Quimera Suite
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.quimeraAdd ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {expandedGroups.quimeraAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {availableComponents.filter(s => s.toLowerCase().includes('quimera')).sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || Layout;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-q-bg transition-colors text-left border-l border-transparent hover:border-[#D4AF37]/50"
+                                                >
+                                                    <Icon size={14} className="text-[#D4AF37]" />
                                                     <span className="text-sm text-q-text font-medium">
                                                         {sectionLabels[section]}
                                                     </span>

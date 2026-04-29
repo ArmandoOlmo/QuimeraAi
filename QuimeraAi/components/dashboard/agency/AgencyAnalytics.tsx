@@ -249,13 +249,13 @@ export function AgencyAnalytics() {
 
                 <div className="flex items-center gap-3">
                     {/* Date range selector */}
-                    <div className="flex items-center gap-1 bg-q-surface border border-q-border rounded-lg p-1">
+                    <div className="flex items-center gap-1 h-10 bg-q-surface border border-q-border rounded-lg p-1">
                         {(['7d', '30d', '90d', '12m'] as DateRange[]).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setDateRange(range)}
-                                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${dateRange === range
-                                    ? 'bg-q-accent text-white'
+                                className={`px-3 h-full flex items-center justify-center text-sm rounded-md transition-colors ${dateRange === range
+                                    ? 'bg-q-accent text-white shadow-sm'
                                     : 'text-q-text-secondary hover:text-q-text'
                                     }`}
                             >
@@ -268,7 +268,7 @@ export function AgencyAnalytics() {
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="p-2 rounded-lg bg-q-surface border border-q-border text-q-text-secondary hover:text-q-text transition-colors"
+                        className="h-10 w-10 flex items-center justify-center rounded-lg bg-q-surface border border-q-border text-q-text-secondary hover:text-q-text transition-colors"
                         title={t('dashboard.agency.analyticsPage.refreshData')}
                     >
                         <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -276,7 +276,7 @@ export function AgencyAnalytics() {
 
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors"
+                        className="h-10 px-4 flex items-center justify-center gap-2 rounded-lg bg-q-accent text-white hover:opacity-90 transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         {t('dashboard.agency.analyticsPage.export')}
@@ -289,30 +289,38 @@ export function AgencyAnalytics() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
             >
-                <div className="bg-q-surface border border-q-border rounded-xl p-4">
-                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.mrrTotal')}</p>
-                    <p className="text-2xl font-bold text-emerald-400">
+                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-400 leading-none tracking-tight mb-1">
                         ${aggregatedMetrics.mrr.toLocaleString()}
                     </p>
+                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
+                        {t('dashboard.agency.analyticsPage.mrrTotal')}
+                    </p>
                 </div>
-                <div className="bg-q-surface border border-q-border rounded-xl p-4">
-                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.activeClients')}</p>
-                    <p className="text-2xl font-bold text-blue-400">
+                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-blue-400 leading-none tracking-tight mb-1">
                         {aggregatedMetrics.activeSubClients}
                     </p>
-                </div>
-                <div className="bg-q-surface border border-q-border rounded-xl p-4">
-                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.projects')}</p>
-                    <p className="text-2xl font-bold text-purple-400">
-                        {aggregatedMetrics.totalProjects}
+                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
+                        {t('dashboard.agency.analyticsPage.activeClients')}
                     </p>
                 </div>
-                <div className="bg-q-surface border border-q-border rounded-xl p-4">
-                    <p className="text-sm text-q-text-secondary">{t('dashboard.agency.analyticsPage.aiCreditsUsed')}</p>
-                    <p className="text-2xl font-bold text-orange-400">
+                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-purple-400 leading-none tracking-tight mb-1">
+                        {aggregatedMetrics.totalProjects}
+                    </p>
+                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
+                        {t('dashboard.agency.analyticsPage.projects')}
+                    </p>
+                </div>
+                <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
+                    <p className="text-xl sm:text-2xl font-bold text-orange-400 leading-none tracking-tight mb-1">
                         {aggregatedMetrics.aiCreditsUsed.toLocaleString()}
+                    </p>
+                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
+                        {t('dashboard.agency.analyticsPage.aiCreditsUsed')}
                     </p>
                 </div>
             </motion.div>

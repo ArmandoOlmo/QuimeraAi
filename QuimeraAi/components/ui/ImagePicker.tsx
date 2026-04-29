@@ -250,11 +250,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             {isLibraryOpen && (() => {
                 const modalContent = (
                     <div
-                        className="fixed inset-0 bg-black/60 z-[100010] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up"
+                        className="fixed inset-0 bg-black/60 z-[100010] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-fade-in-up"
                         onClick={handleClose}
                     >
                         <div
-                            className="bg-q-bg w-full max-w-4xl h-[85vh] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-q-border"
+                            className="bg-q-bg w-full max-w-4xl h-[100dvh] sm:h-[85vh] flex flex-col rounded-none sm:rounded-xl overflow-hidden shadow-2xl border-0 sm:border border-q-border"
                             onClick={(e) => e.stopPropagation()}
                         >
                         {/* Header */}
@@ -284,7 +284,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     <Zap size={14} /> Quimera.ai
                                 </button>
                             </div>
-                            <button type="button" onClick={handleClose} className="p-1 rounded-full hover:bg-q-surface-overlay"><X size={20} /></button>
+                            <button type="button" onClick={handleClose} className="w-9 h-9 rounded-lg hover:bg-q-surface-overlay flex items-center justify-center text-q-text-secondary hover:text-q-text transition-colors"><X size={20} /></button>
                         </div>
 
                         {/* Content */}

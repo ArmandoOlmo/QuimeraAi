@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAgencyContent } from '../../../contexts/agency/AgencyContentContext';
 import { useToast } from '../../../contexts/ToastContext';
 import {
@@ -151,16 +152,8 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
     return (
         <>
             <div className="flex flex-col h-screen bg-q-bg">
-                {/* Header */}
                 <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={onClose}
-                            className="flex items-center gap-2 text-q-text-secondary hover:text-q-text transition-colors"
-                        >
-                            <ArrowLeft size={18} />
-                            Volver
-                        </button>
                         <div className="flex items-center gap-2">
                             <Shield className="text-q-accent" size={20} />
                             <h1 className="text-lg font-semibold text-q-text">
@@ -168,9 +161,9 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                             </h1>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
                         {hasChanges && (
-                            <span className="text-xs text-orange-500 font-medium">Cambios sin guardar</span>
+                            <span className="text-xs text-orange-500 font-medium hidden sm:inline">Cambios sin guardar</span>
                         )}
                         <button
                             onClick={handleSave}
@@ -178,8 +171,9 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
                             className="flex items-center gap-2 px-4 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                         >
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                            Guardar
+                            <span className="hidden sm:inline">Guardar</span>
                         </button>
+                        <HeaderBackButton onClick={onClose} />
                     </div>
                 </header>
 

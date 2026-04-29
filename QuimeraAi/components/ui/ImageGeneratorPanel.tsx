@@ -535,7 +535,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="flex items-center justify-center rounded-lg w-10 h-10 hover:bg-q-surface text-q-text-secondary hover:text-q-text transition-colors"
+                            className="flex items-center justify-center rounded-lg w-9 h-9 hover:bg-q-surface text-q-text-secondary hover:text-q-text transition-colors"
                         >
                             <X size={20} />
                         </button>

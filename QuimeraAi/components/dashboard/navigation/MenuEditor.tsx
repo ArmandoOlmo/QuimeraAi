@@ -11,6 +11,7 @@ import { useClickOutside } from '../../../hooks/useClickOutside';
 import { usePublicProducts } from '../../../hooks/usePublicProducts';
 import { useRealEstateWebsiteNavigation } from '../../../hooks/useRealEstateWebsiteNavigation';
 import IconSelector from '../../ui/IconSelector';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface MenuEditorProps {
     menu: NavigationMenu;
@@ -605,9 +606,6 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                         <button onClick={() => setIsMobileMenuOpen(true)} className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-border/40 rounded-full transition-colors lg:hidden">
                             <MenuIcon className="w-4 h-4" />
                         </button>
-                        <button onClick={onClose} className="p-2 rounded-md text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
                         <h1 className="text-lg sm:text-xl font-bold truncate max-w-[120px] sm:max-w-none">
                             {isNew ? 'Add menu' : title}
                         </h1>
@@ -642,6 +640,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                             <span className="hidden sm:inline">Save</span>
                             {!isSaving && <Save size={18} className="sm:hidden" />}
                         </button>
+                        <HeaderBackButton onClick={onClose} />
                     </div>
                 </header>
 

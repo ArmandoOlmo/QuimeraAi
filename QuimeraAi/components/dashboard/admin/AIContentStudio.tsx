@@ -150,6 +150,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
     // --------------- Context State ---------------
     const [platformContext, setPlatformContext] = useState<DynamicPlatformContext | null>(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [isMobilePlanOpen, setIsMobilePlanOpen] = useState(false);
 
     // --------------- Refs ---------------
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -658,35 +659,47 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
 
     return (
         <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
-            <div className="bg-q-bg border border-q-border w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '90vh' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 lg:backdrop-blur-sm p-0 lg:p-4 animate-fade-in-up">
+            <div className="bg-q-bg border-0 lg:border lg:border-q-border w-full h-full lg:h-auto lg:max-w-5xl rounded-none lg:rounded-2xl shadow-none lg:shadow-2xl overflow-hidden flex flex-col lg:max-h-[90vh]">
 
                 {/* ===== HEADER ===== */}
-                <div className="p-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
+                <div className="px-3 lg:p-4 py-2.5 lg:py-4 border-b border-q-border flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-transparent">
+                    <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+                        {/* Branding icon — condensed on mobile (no box), boxed on desktop */}
+                        <div className="relative flex-shrink-0">
+                            <div className="hidden lg:flex bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-purple-500/20">
                                 <Sparkles className="text-white w-5 h-5" />
                             </div>
+                            <Sparkles className="lg:hidden w-5 h-5 text-purple-400" />
                             {isVoiceActive && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
+                                <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
                             )}
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-q-text flex items-center gap-2">
-                                AI Content Studio
-                                <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                        <div className="min-w-0">
+                            <h2 className="text-sm lg:text-lg font-bold text-q-text flex items-center gap-1.5 lg:gap-2">
+                                <span className="truncate">AI Content Studio</span>
+                                <span className="hidden sm:inline text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex-shrink-0">
                                     {isVoiceActive ? MODEL_VOICE.split('-').slice(-2).join('-') : MODEL_TEXT.split('-').slice(-2).join('-')}
                                 </span>
                             </h2>
-                            <p className="text-xs text-q-text-secondary">
+                            <p className="text-[10px] lg:text-xs text-q-text-secondary hidden sm:block">
                                 {isVoiceActive
                                     ? (language === 'es' ? '🎤 Sesión de voz activa — habla naturalmente' : '🎤 Voice session active — speak naturally')
                                     : (language === 'es' ? 'Planifica y genera contenido con IA' : 'Plan and generate content with AI')}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
+                        {/* Mobile Content Plan toggle */}
+                        <button
+                            onClick={() => setIsMobilePlanOpen(!isMobilePlanOpen)}
+                            className="lg:hidden h-8 w-8 sm:w-auto sm:px-3 rounded-lg text-q-text-secondary text-xs hover:text-purple-400 hover:bg-purple-500/10 transition-colors flex items-center justify-center sm:justify-start gap-1.5"
+                            title={language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
+                        >
+                            <FileText size={15} />
+                            <span className="hidden sm:inline">{language === 'es' ? 'Plan' : 'Plan'}</span>
+                        </button>
+                        {/* Settings — bare icon */}
                         <button
                             onClick={() => setShowSettings(!showSettings)}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"
@@ -694,6 +707,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         >
                             <Settings2 className="w-4 h-4" />
                         </button>
+                        {/* Close */}
                         <button
                             onClick={() => { stopVoiceSession(); onClose(); }}
                             className="h-8 w-8 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-colors"
@@ -704,7 +718,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                 </div>
 
                 {/* ===== BODY ===== */}
-                <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 flex overflow-hidden relative">
 
                     {/* ===== LEFT: CONVERSATION PANEL ===== */}
                     <div className="flex-1 flex flex-col min-w-0">
@@ -954,7 +968,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                         )}
                     </div>
 
-                    {/* ===== RIGHT: CONTENT PLAN PANEL ===== */}
+                    {/* ===== RIGHT: CONTENT PLAN PANEL (desktop) ===== */}
                     <div className="w-72 border-l border-q-border bg-q-surface/30 p-4 overflow-y-auto hidden lg:flex flex-col gap-4 custom-scrollbar">
 
                         {/* Content Parameters */}
@@ -1114,9 +1128,108 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
                             )}
                         </div>
                     </div>
+
+                    {/* ===== RIGHT: CONTENT PLAN PANEL (mobile bottom sheet) ===== */}
+                    {isMobilePlanOpen && (
+                        <div className="lg:hidden fixed inset-0 z-[60] flex flex-col justify-end">
+                            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobilePlanOpen(false)} style={{ animation: 'acs-fadeIn 0.2s ease' }} />
+                            <div
+                                className="relative bg-q-surface border-t border-q-border rounded-t-2xl flex flex-col overflow-hidden"
+                                style={{ maxHeight: '75vh', animation: 'acs-slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)' }}
+                            >
+                                {/* Drag handle */}
+                                <div className="flex justify-center pt-3 pb-1">
+                                    <div className="w-10 h-1 rounded-full bg-q-text-secondary/30" />
+                                </div>
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-4 py-2 border-b border-q-border">
+                                    <span className="text-sm font-semibold text-q-text flex items-center gap-2">
+                                        <FileText size={14} className="text-purple-400" />
+                                        {language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
+                                    </span>
+                                    <button onClick={() => setIsMobilePlanOpen(false)} className="p-1.5 rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 transition-colors"><X size={16} /></button>
+                                </div>
+                                {/* Content — scrollable */}
+                                <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto custom-scrollbar">
+                                    {/* Content Parameters */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <FileText className="w-4 h-4 text-purple-400" />
+                                            <h3 className="text-sm font-bold text-q-text">
+                                                {language === 'es' ? 'Parámetros' : 'Parameters'}
+                                            </h3>
+                                        </div>
+                                        {/* Category */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                                {language === 'es' ? 'Categoría' : 'Category'}
+                                            </label>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {CATEGORY_OPTIONS.map((cat) => (
+                                                    <button
+                                                        key={cat.value}
+                                                        onClick={() => setCategory(cat.value)}
+                                                        className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${category === cat.value
+                                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'
+                                                        }`}
+                                                    >
+                                                        {cat.fallback}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Language */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                                {language === 'es' ? 'Idioma' : 'Language'}
+                                            </label>
+                                            <div className="flex gap-1.5">
+                                                <button onClick={() => setLanguage('es')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>🇪🇸 Español</button>
+                                                <button onClick={() => setLanguage('en')} className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>🇺🇸 English</button>
+                                            </div>
+                                        </div>
+                                        {/* Audience */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                                {language === 'es' ? 'Audiencia' : 'Audience'}
+                                            </label>
+                                            <input type="text" value={audience} onChange={(e) => setAudience(e.target.value)} placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'} className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-purple-500/50 text-q-text placeholder:text-q-text-secondary/50" />
+                                        </div>
+                                        {/* Tone */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                                {language === 'es' ? 'Tono' : 'Tone'}
+                                            </label>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {TONE_OPTIONS.map((t) => (
+                                                    <button key={t} onClick={() => setTone(t)} className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-purple-500/30'}`}>{t}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Generate Button */}
+                                    <div className="pt-2">
+                                        <button
+                                            onClick={() => { setIsMobilePlanOpen(false); handleGenerate(); }}
+                                            disabled={messages.length < 2 || phase !== 'conversation' || isThinking}
+                                            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-500/20 transition-all disabled:opacity-40 disabled:hover:shadow-none text-sm"
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            {language === 'es' ? 'Generar Artículo' : 'Generate Article'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
+        <style>{`
+            @keyframes acs-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes acs-slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        `}</style>
             {/* Error Modal — replaces browser alert() */}
             <ConfirmationModal
                 isOpen={errorModal.open}

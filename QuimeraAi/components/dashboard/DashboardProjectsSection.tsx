@@ -41,7 +41,7 @@ const DashboardProjectsSection: React.FC<DashboardProjectsSectionProps> = ({
 
     if (isLoadingProjects) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                     <ProjectCardSkeleton key={i} />
                 ))}
@@ -51,7 +51,7 @@ const DashboardProjectsSection: React.FC<DashboardProjectsSectionProps> = ({
 
     if (userProjects.length > 0) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 animate-fade-in-up">
                 {userProjects.slice(0, 4).map((project) => (
                     <ProjectCard
                         key={project.id}

@@ -19,6 +19,7 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { useEditor as useEditorContext } from '../../../contexts/EditorContext';
 import { useCMS } from '../../../contexts/cms';
 import { CMSPost, CMSCategory } from '../../../types';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
@@ -1098,15 +1099,6 @@ IMPORTANT FORMATTING RULES:
                             </button>
                         )}
 
-                        {/* Back */}
-                        <button
-                            onClick={onClose}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
-                            title={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                        </button>
-
                         {/* Sidebar Toggle */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1115,6 +1107,9 @@ IMPORTANT FORMATTING RULES:
                         >
                             <MoreVertical size={16} />
                         </button>
+
+                        {/* Back */}
+                        <HeaderBackButton onClick={onClose} />
                     </div>
                 </header>
 

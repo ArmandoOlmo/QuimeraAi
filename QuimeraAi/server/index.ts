@@ -22,6 +22,8 @@ import {
 
 // Only import vite types - actual import is dynamic in development only
 type ViteDevServer = import('vite').ViteDevServer;
+import { seoMiddleware } from './seoRoutes';
+import { PLATFORM_ROUTES, generatePlatformMetaTags, generatePlatformFallbackHtml } from './platformSeoData';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 8080;
@@ -38,6 +40,12 @@ async function createServer() {
 
     // Parse JSON bodies
     app.use(express.json());
+
+    // ==========================================
+    // SEO and LLM dynamic files routes
+    // MUST be before static files / Vite middleware
+    // ==========================================
+    app.use(seoMiddleware);
 
     let vite: ViteDevServer | null = null;
 
@@ -92,7 +100,7 @@ async function createServer() {
                                    !hostname.includes(APP_DOMAIN) &&
                                    !hostname.includes('localhost');
 
-            let projectId: string | null = null;
+            let projectId: string | null = (req.query.projectId as string) || null;
             let domainInfo: DomainResolutionResult | null = null;
 
             // -----------------------------------------------------------
@@ -209,17 +217,48 @@ async function createServer() {
                 res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
             } else {
                 // Serve the main app (dashboard, etc.)
+                let indexPath: string;
+                let html: string;
+                
                 if (isProduction) {
-                    const indexPath = path.resolve(__dirname, '../../dist/client/index.html');
-                    const html = fs.readFileSync(indexPath, 'utf-8');
-                    res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+                    indexPath = path.resolve(__dirname, '../../dist/client/index.html');
+                    html = fs.readFileSync(indexPath, 'utf-8');
                 } else {
                     // In dev, let Vite handle it
-                    const indexPath = path.resolve(__dirname, '../index.html');
-                    let html = fs.readFileSync(indexPath, 'utf-8');
+                    indexPath = path.resolve(__dirname, '../index.html');
+                    html = fs.readFileSync(indexPath, 'utf-8');
                     html = await vite!.transformIndexHtml(url, html);
-                    res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
                 }
+
+                // ==============================================================
+                // PLATFORM SEO INJECTION
+                // If it's a public marketing route of the Quimera platform, 
+                // inject the SEO meta tags and Fallback HTML directly into the index.html
+                // ==============================================================
+                const isPlatformPublicRoute = PLATFORM_ROUTES.some(route => {
+                    if (route.path === '/') return url === '/' || url === '/?';
+                    return url.startsWith(route.path);
+                });
+
+                if (isPlatformPublicRoute) {
+                    const platformMetaTags = generatePlatformMetaTags(url);
+                    const platformFallbackHtml = generatePlatformFallbackHtml();
+                    
+                    // Inject into <head>
+                    if (html.includes('</head>')) {
+                        html = html.replace('</head>', `${platformMetaTags}\n</head>`);
+                    } else {
+                        // Fallback injection if no </head> tag (rare)
+                        html = html.replace('<head>', `<head>\n${platformMetaTags}`);
+                    }
+
+                    // Inject into <body> before <div id="root">
+                    if (html.includes('<div id="root">')) {
+                        html = html.replace('<div id="root">', `${platformFallbackHtml}\n<div id="root">`);
+                    }
+                }
+
+                res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
             }
 
         } catch (error) {

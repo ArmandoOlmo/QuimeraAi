@@ -9,6 +9,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, Minus, HardDrive, Zap, Users, Package, ChevronDown, ChevronUp, Info, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
+import QuimeraLoader from '@/components/ui/QuimeraLoader';
 
 interface AddonPricing {
   extraSubClients: number;
@@ -172,7 +173,7 @@ export function AddonsManager() {
   if (!pricing) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <QuimeraLoader size="md" />
       </div>
     );
   }

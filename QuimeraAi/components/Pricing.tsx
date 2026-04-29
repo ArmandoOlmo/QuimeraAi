@@ -74,7 +74,8 @@ const Pricing: React.FC<PricingProps> = ({
   enableCardAnimation = true,
   cornerGradient,
   glassEffect = false,
-  cardGlow
+  cardGlow,
+  cardsAlignment = 'center'
 }) => {
   // Get design tokens with fallback to component colors
   const { getColor, colors: tokenColors } = useDesignTokens();

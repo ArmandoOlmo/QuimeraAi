@@ -255,7 +255,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 {themeColors.map((color, index) => (
                   <div
                     key={index}
-                    className="w-3 h-3 rounded-full border border-white/20"
+                    className="w-3 h-3 flex-shrink-0 rounded-full border border-white/20"
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -263,18 +263,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             )}
 
             {/* Menu Button */}
-            <div ref={menuRef}>
+            {(!isTemplate || canDeleteTemplate()) && (
+              <div ref={menuRef} className="flex-shrink-0">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleMenu(e);
                 }}
-                className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors shadow-lg pointer-events-auto"
+                className="w-9 h-9 min-w-[36px] min-h-[36px] flex-shrink-0 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors shadow-lg pointer-events-auto"
                 aria-label={t('project.aria.optionsMenu')}
                 aria-expanded={showMenu}
                 aria-haspopup="true"
               >
-                <MoreVertical size={18} aria-hidden="true" />
+                <MoreVertical size={16} aria-hidden="true" />
               </button>
 
               {showMenu && (
@@ -328,6 +329,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
 

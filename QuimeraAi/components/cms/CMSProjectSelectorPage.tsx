@@ -34,6 +34,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import { ROUTES } from '../../routes/config';
+import HeaderBackButton from '../ui/HeaderBackButton';
 
 interface CMSProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
@@ -168,13 +169,7 @@ const CMSProjectSelectorPage: React.FC<CMSProjectSelectorPageProps> = ({
                         >
                             <Search size={20} />
                         </button>
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="text-q-text-muted hover:text-foreground transition-colors"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 

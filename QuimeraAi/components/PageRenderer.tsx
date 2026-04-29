@@ -68,6 +68,18 @@ import FaqLumina from './FaqLumina';
 // Import Neon components
 import HeroNeon from './HeroNeon';
 
+// Import Quimera components
+import HeroQuimera from './quimera/HeroQuimera';
+import FeaturesQuimera from './quimera/FeaturesQuimera';
+import PricingQuimera from './quimera/PricingQuimera';
+import TestimonialsQuimera from './quimera/TestimonialsQuimera';
+import FaqQuimera from './quimera/FaqQuimera';
+import CtaQuimera from './quimera/CtaQuimera';
+import PlatformShowcaseQuimera from './quimera/PlatformShowcaseQuimera';
+import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
+import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
+import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
+
 // Import ecommerce sections
 import FeaturedProducts from './ecommerce/sections/FeaturedProducts';
 import CategoryGrid from './ecommerce/sections/CategoryGrid';
@@ -1100,6 +1112,68 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         }}
                     />
                 );
+            }
+
+            // --- Quimera Suite ---
+            case 'heroQuimera': {
+                const data = (mergedData as any).heroQuimera;
+                return data ? (
+                    <HeroQuimera key={key} {...data} isPreviewMode={isPreview} />
+                ) : null;
+            }
+            case 'featuresQuimera': {
+                const data = (mergedData as any).featuresQuimera;
+                return data ? (
+                    <FeaturesQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'pricingQuimera': {
+                const data = (mergedData as any).pricingQuimera;
+                return data ? (
+                    <PricingQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'testimonialsQuimera': {
+                const data = (mergedData as any).testimonialsQuimera;
+                return data ? (
+                    <TestimonialsQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'faqQuimera': {
+                const data = (mergedData as any).faqQuimera;
+                return data ? (
+                    <FaqQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'ctaQuimera': {
+                const data = (mergedData as any).ctaQuimera;
+                return data ? (
+                    <CtaQuimera key={key} {...data} onNavigate={handleLinkNavigation} />
+                ) : null;
+            }
+            case 'platformShowcaseQuimera': {
+                const data = (mergedData as any).platformShowcaseQuimera;
+                return data ? (
+                    <PlatformShowcaseQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'aiCapabilitiesQuimera': {
+                const data = (mergedData as any).aiCapabilitiesQuimera;
+                return data ? (
+                    <AiCapabilitiesQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'industrySolutionsQuimera': {
+                const data = (mergedData as any).industrySolutionsQuimera;
+                return data ? (
+                    <IndustrySolutionsQuimera key={key} {...data} />
+                ) : null;
+            }
+            case 'agencyWhiteLabelQuimera': {
+                const data = (mergedData as any).agencyWhiteLabelQuimera;
+                return data ? (
+                    <AgencyWhiteLabelQuimera key={key} {...data} />
+                ) : null;
             }
 
             // Non-renderable sections (settings, colors, typography)

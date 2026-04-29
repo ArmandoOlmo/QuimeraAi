@@ -11,6 +11,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ModernCMSEditor from './modern/ModernCMSEditor';
 import CMSContentStudio from './CMSContentStudio';
 import CMSProjectSelectorPage from './CMSProjectSelectorPage';
+import HeaderBackButton from '../ui/HeaderBackButton';
 import { Menu, Plus, Search, FileText, Edit3, Trash2, Loader2, Calendar, Globe, PenTool, ArrowDown, ArrowUp, Grid, List, Eye, X as XIcon, Copy, Edit2, Download, Sparkles, ArrowLeft, ChevronDown, Check, Tag, FolderOpen, GripVertical, ArrowUpDown } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -506,15 +507,8 @@ const CMSDashboard: React.FC = () => {
                             <span className="hidden sm:inline">{t('cms.newPost', 'Nuevo Post')}</span>
                         </button>
 
-                        {/* Botón Volver - Icon only on mobile, full button on desktop */}
-                        <button
-                            onClick={() => navigate(ROUTES.DASHBOARD)}
-                            className="flex items-center justify-center gap-2 h-8 w-8 sm:w-auto sm:h-9 sm:px-3 rounded-md sm:rounded-lg sm:bg-secondary/50 sm:hover:bg-secondary text-sm font-medium transition-all text-q-text-muted hover:text-foreground"
-                            aria-label={t('common.back', 'Volver')}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                        </button>
+                        {/* Botón Volver */}
+                        <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 

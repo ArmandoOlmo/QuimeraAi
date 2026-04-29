@@ -19,7 +19,7 @@ const Modal: React.FC<ModalProps> = ({
   isOpen, 
   maxWidth = 'max-w-3xl', 
   className = '',
-  fullScreenMobile = false 
+  fullScreenMobile = true 
 }) => {
   const { themeMode } = useUI();
 

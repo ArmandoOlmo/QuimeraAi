@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /**
  * usePersistedState
@@ -39,6 +39,12 @@ export function usePersistedState<T>(
                         : valueOrUpdater;
                 try {
                     localStorage.setItem(key, serialize(next));
+                    // Dispatch custom event for same-window syncing
+                    window.dispatchEvent(
+                        new CustomEvent(`quimera_persisted_${key}`, {
+                            detail: next,
+                        })
+                    );
                 } catch {
                     // Silently fail if localStorage is full/unavailable
                 }
@@ -47,6 +53,28 @@ export function usePersistedState<T>(
         },
         [key, serialize],
     );
+
+    // Sync across components in the same window, and across tabs
+    useEffect(() => {
+        const handleCustomEvent = (e: Event) => {
+            const customEvent = e as CustomEvent<T>;
+            setValue(customEvent.detail);
+        };
+
+        const handleStorageEvent = (e: StorageEvent) => {
+            if (e.key === key && e.newValue !== null) {
+                setValue(deserialize(e.newValue));
+            }
+        };
+
+        window.addEventListener(`quimera_persisted_${key}`, handleCustomEvent);
+        window.addEventListener('storage', handleStorageEvent);
+
+        return () => {
+            window.removeEventListener(`quimera_persisted_${key}`, handleCustomEvent);
+            window.removeEventListener('storage', handleStorageEvent);
+        };
+    }, [key, deserialize]);
 
     return [value, setPersisted];
 }

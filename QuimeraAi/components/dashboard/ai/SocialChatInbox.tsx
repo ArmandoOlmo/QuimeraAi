@@ -9,9 +9,10 @@ import {
     MessageCircle, Phone, Instagram, Facebook, Search, Filter,
     Send, Loader2, MoreVertical, User, Clock, CheckCircle,
     AlertCircle, UserPlus, Tag, X, ChevronRight, Archive,
-    RefreshCw, Inbox, MessageSquare, Globe, ArrowLeft
+    RefreshCw, Inbox, MessageSquare, Globe
 } from 'lucide-react';
 import { useSocialChat, ConversationWithMessages } from '../../chat/hooks/useSocialChat';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { SocialChannel } from '../../../types/socialChat';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -145,14 +146,6 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
             <div className="p-4 border-t border-b border-q-border">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
-                            >
-                                <ArrowLeft size={18} />
-                            </button>
-                        )}
                         <h2 className="font-bold text-lg">Inbox</h2>
                         {stats.unreadMessages > 0 && (
                             <span className="px-2 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
@@ -160,12 +153,15 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                             </span>
                         )}
                     </div>
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'}`}
-                    >
-                        <Filter size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'}`}
+                        >
+                            <Filter size={16} />
+                        </button>
+                        {onBack && <HeaderBackButton onClick={onBack} />}
+                    </div>
                 </div>
 
                 {/* Search */}
@@ -332,12 +328,6 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                 {/* Chat Header */}
                 <div className="p-4 border-t border-b border-q-border flex items-center justify-between bg-q-surface">
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={clearActiveConversation}
-                            className="lg:hidden p-2 hover:bg-secondary rounded-lg"
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
                         <div className="relative">
                             <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
                                 {activeConversation.participantAvatar ? (
@@ -409,6 +399,9 @@ const SocialChatInbox: React.FC<SocialChatInboxProps> = ({
                                     </button>
                                 </div>
                             )}
+                        </div>
+                        <div className="lg:hidden">
+                            <HeaderBackButton onClick={clearActiveConversation} />
                         </div>
                     </div>
                 </div>

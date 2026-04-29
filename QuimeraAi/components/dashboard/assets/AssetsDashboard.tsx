@@ -13,6 +13,7 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
 import ImageGeneratorPanel from '../../ui/ImageGeneratorPanel';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     Zap,
     Menu,
@@ -109,14 +110,7 @@ const AssetsDashboard: React.FC = () => {
                     </div>
 
                     {/* Back Button */}
-                    <button
-                        onClick={() => setView('dashboard')}
-                        className="flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-secondary/50 hover:bg-secondary text-sm font-medium transition-all text-q-text-muted hover:text-foreground"
-                        aria-label={t('common.back', 'Volver')}
-                    >
-                        <ArrowLeft size={16} />
-                        <span className="hidden sm:inline">{t('common.back', 'Volver')}</span>
-                    </button>
+                    <HeaderBackButton onClick={() => setView('dashboard')} />
                 </header>
 
                 {/* Main Content - Single Card Container */}

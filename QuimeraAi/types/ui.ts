@@ -52,6 +52,9 @@ export type PageSection =
     | 'heroLumina' | 'featuresLumina' | 'ctaLumina' | 'portfolioLumina' | 'pricingLumina' | 'testimonialsLumina' | 'faqLumina'
     // Neon suite
     | 'heroNeon' | 'testimonialsNeon' | 'featuresNeon' | 'ctaNeon' | 'portfolioNeon' | 'pricingNeon' | 'faqNeon'
+    // Quimera suite (Platform Selling)
+    | 'heroQuimera' | 'featuresQuimera' | 'pricingQuimera' | 'testimonialsQuimera' | 'faqQuimera' | 'ctaQuimera'
+    | 'platformShowcaseQuimera' | 'aiCapabilitiesQuimera' | 'industrySolutionsQuimera' | 'agencyWhiteLabelQuimera'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)

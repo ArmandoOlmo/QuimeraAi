@@ -440,11 +440,7 @@ const SuperAdminDashboard = () => {
                             onClose={() => setIsMobileSearchOpen(false)}
                             placeholder={t('superadmin.searchFeatures')}
                         />
-                        <HeaderBackButton
-                            onClick={handleBackToDashboard}
-                            label={t('superadmin.backToDashboard', 'Volver al Dashboard')}
-                            className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25"
-                        />
+                        <HeaderBackButton onClick={handleBackToDashboard} />
                     </div>
                 </header>
 

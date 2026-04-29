@@ -131,7 +131,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
+            className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 animate-fade-in"
             style={{ zIndex: 99999 }}
             onClick={(e) => {
                 if (e.target === e.currentTarget && !isLoading) {
@@ -140,10 +140,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             }}
         >
             <div
-                className="bg-q-surface w-full max-w-md rounded-xl border border-q-border shadow-2xl overflow-hidden animate-scale-in"
+                className="bg-q-surface w-full sm:max-w-md rounded-t-2xl sm:rounded-xl border border-q-border shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-6">
+                <div className="p-6 pb-8 sm:pb-6">
                     {/* Icon */}
                     <div className={`w-12 h-12 rounded-full ${styles.iconBg} flex items-center justify-center mb-4 ${styles.iconColor} mx-auto`}>
                         {icon || <IconComponent size={24} />}

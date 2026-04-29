@@ -23,6 +23,7 @@ import {
     X,
     Save,
 } from 'lucide-react';
+import HeaderBackButton from '../../../ui/HeaderBackButton';
 import { useEmailAudiences } from '../../../../hooks/useEmailSettings';
 import { useCRM } from '../../../../contexts/crm/CRMContext';
 import { Lead } from '../../../../types';
@@ -188,15 +189,10 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
 
     return (
         <div className="space-y-6">
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={onBack}
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                    >
-                        <ArrowLeft size={20} className="text-q-text-muted" />
-                    </button>
                     <div>
                         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {audience.name}
@@ -206,13 +202,16 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
                         )}
                     </div>
                 </div>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                    <UserPlus size={18} />
-                    {t('email.addContact', 'Añadir Contacto')}
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                        <UserPlus size={18} />
+                        {t('email.addContact', 'Añadir Contacto')}
+                    </button>
+                    <HeaderBackButton onClick={onBack} />
+                </div>
             </div>
 
             {/* Stats Cards */}

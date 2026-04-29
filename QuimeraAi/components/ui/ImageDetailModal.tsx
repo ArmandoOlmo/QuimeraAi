@@ -66,13 +66,13 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({ file, isOpen, onClo
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
-            <div className="flex flex-col h-full max-h-[85vh] bg-q-surface rounded-xl overflow-hidden">
+            <div className="flex flex-col h-[100dvh] sm:h-full sm:max-h-[85vh] bg-q-surface rounded-none sm:rounded-xl overflow-hidden border-0 sm:border border-q-border/30">
                 {/* Header */}
                 <div className="p-4 border-b border-q-border flex justify-between items-center bg-q-surface z-10">
                     <h3 className="font-bold text-lg text-q-text truncate max-w-[70%]">{file.name}</h3>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
+                        className="w-9 h-9 rounded-lg hover:bg-q-surface-overlay flex items-center justify-center text-q-text-secondary hover:text-q-text transition-colors"
                     >
                         <X size={20} />
                     </button>

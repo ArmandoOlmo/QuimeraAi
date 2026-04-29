@@ -275,11 +275,7 @@ Personalidad:
     const excluded = isExcludedPath();
     console.log('[LandingChatbotWidget] isActive:', config.isActive, 'isExcludedPath:', excluded);
 
-    // Don't render if inactive or on excluded path
-    if (!config.isActive || excluded) {
-        console.log('[LandingChatbotWidget] Not rendering - isActive:', config.isActive, 'excluded:', excluded);
-        return null;
-    }
+    // Render check moved to the bottom to avoid hook order issues
 
     // Auto-scroll to bottom of messages
     const scrollToBottom = useCallback(() => {
@@ -1280,6 +1276,12 @@ Asistente:`;
     // =========================================================================
     // MAIN RENDER
     // =========================================================================
+    
+    // Don't render if inactive or on excluded path
+    if (!config.isActive || excluded) {
+        return null;
+    }
+
     return typeof document !== 'undefined'
         ? ReactDOM.createPortal(
             <>

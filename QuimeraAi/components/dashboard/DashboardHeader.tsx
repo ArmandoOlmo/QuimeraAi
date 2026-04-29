@@ -76,13 +76,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Right Section - Search */}
-                <div className="flex items-center gap-3 flex-shrink-0 mr-2.5">
+                {/* Right Section */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 mr-2.5">
                     {/* Search Icon */}
                     {(isDashboard || isWebsites) && (
                         <button
                             onClick={() => setShowMobileSearch(true)}
-                            className="text-q-text-muted hover:text-q-text transition-colors"
+                            className="h-9 w-9 flex items-center justify-center rounded-lg text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay/80 transition-colors"
                             aria-label="Open search"
                         >
                             <Search size={20} />

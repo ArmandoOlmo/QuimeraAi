@@ -1,0 +1,33 @@
+
+> quimera.ai@0.0.0 build
+> vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 2285 modules transformed.
+✗ Build failed in 5.15s
+error during build:
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] components/dashboard/BioPageBuilder.tsx (1928:38): There was an error during the build:
+  Transform failed with 1 error:
+/Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/components/dashboard/BioPageBuilder.tsx:1928:38: ERROR: Expected ")" but found "className"
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  Transform failed with 1 error:
+/Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/components/dashboard/BioPageBuilder.tsx:1928:38: ERROR: Expected ")" but found "className"
+file: /Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/components/dashboard/BioPageBuilder.tsx:1928:38
+
+Expected ")" but found "className"
+1926|                                  </div>
+1927|              </div>
+1928|                                  <span className="text-sm font-semibold text-primary">
+   |                                        ^
+1929|                                      {link.clicks.toLocaleString()}
+1930|                                  </span>
+
+    at getRollupError (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/rollup/dist/es/shared/node-entry.js:23347:39
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async catchUnfinishedHookActions (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/rollup/dist/es/shared/node-entry.js:22805:16)
+    at async rollupInternal (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/rollup/dist/es/shared/node-entry.js:23330:5)
+    at async buildEnvironment (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46235:14)
+    at async Object.defaultBuildApp [as buildApp] (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/vite/dist/node/chunks/dep-D4NMHUTW.js:46713:5)
+    at async CAC.<anonymous> (file:///Users/armandoolmo/Desktop/QuimeraAi/QuimeraAi/node_modules/vite/dist/node/cli.js:863:7)

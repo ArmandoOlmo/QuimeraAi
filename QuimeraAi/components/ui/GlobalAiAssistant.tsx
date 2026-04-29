@@ -886,7 +886,7 @@ const GlobalAiAssistant: React.FC = () => {
 
     const { user } = useAuth();
     const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
-    const { navigate } = useRouter();
+    const { navigate, path } = useRouter();
     const {
         projects,
         addNewProject,
@@ -917,6 +917,13 @@ const GlobalAiAssistant: React.FC = () => {
     const [isThinking, setIsThinking] = useState(false);
     const [isExecutingCommands, setIsExecutingCommands] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false); // New state for minimize mode
+
+    // Auto-minimize on mobile for specific routes (e.g., biopage)
+    useEffect(() => {
+        if (window.innerWidth < 768 && path.includes('/biopage')) {
+            setIsMinimized(true);
+        }
+    }, [path]);
 
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);

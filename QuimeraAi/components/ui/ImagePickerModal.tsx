@@ -137,15 +137,15 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative bg-q-surface border border-q-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[84vh] flex flex-col m-4 overflow-hidden">
+            <div className="relative bg-q-surface border-0 sm:border border-q-border rounded-none sm:rounded-xl shadow-2xl w-full max-w-3xl h-[100dvh] sm:h-auto sm:max-h-[84vh] flex flex-col m-0 overflow-hidden animate-fade-in-up">
                 {/* Header */}
                 <div className="flex items-center justify-between h-14 px-4 border-b border-q-border bg-q-surface/95">
                     <div className="flex items-center gap-2 min-w-0">
@@ -158,10 +158,10 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+                        className="w-9 h-9 rounded-lg hover:bg-muted flex items-center justify-center text-q-text-secondary hover:text-q-text transition-colors"
                         title={t('common.close', 'Cerrar')}
                     >
-                        <X size={18} />
+                        <X size={20} />
                     </button>
                 </div>
 

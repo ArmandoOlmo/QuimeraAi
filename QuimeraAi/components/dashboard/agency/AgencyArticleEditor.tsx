@@ -37,6 +37,7 @@ import EditorMenuBar from '../../cms/modern/EditorMenuBar';
 import EditorBubbleMenu from '../../cms/modern/EditorBubbleMenu';
 import SlashCommands from '../../cms/modern/SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
+import HeaderBackButton from '../../ui/HeaderBackButton';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../services/apiLoggingService';
 
@@ -526,10 +527,6 @@ Text to format:
                 {/* Editor Toolbar - Just below the main header */}
                 <div className="h-14 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 shadow-sm">
                     <div className="flex items-center gap-4 flex-1">
-                        <button onClick={onClose} className="p-2 -ml-2 rounded-full text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div className="h-6 w-px bg-border"></div>
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
@@ -554,6 +551,7 @@ Text to format:
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-q-text-muted hover:bg-secondary'}`}>
                             <MoreVertical size={20} />
                         </button>
+                        <HeaderBackButton onClick={onClose} />
                     </div>
                 </div>
 

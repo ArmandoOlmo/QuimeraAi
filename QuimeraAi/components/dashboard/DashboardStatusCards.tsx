@@ -208,7 +208,7 @@ const DashboardStatusCards: React.FC = () => {
                     opacity: isCollapsed ? 0 : 1,
                 }}
             >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                     {visibleCards.map((card, idx) => {
                         const Icon = card.icon;
                         const metric = getMetric(card.id);
@@ -217,9 +217,9 @@ const DashboardStatusCards: React.FC = () => {
                             <button
                                 key={card.id}
                                 onClick={() => navigate(card.route)}
-                                className="group relative overflow-hidden rounded-2xl border border-q-border/60
+                                className="group relative overflow-hidden rounded-xl sm:rounded-2xl border border-q-border/60
                                    bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
-                                   p-5 text-left min-h-[140px]
+                                   p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
                                    shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
                                    hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10
                                    hover:border-q-border transition-all duration-300 ease-out
@@ -238,8 +238,8 @@ const DashboardStatusCards: React.FC = () => {
 
 
                                 {/* ── Big number + label (right side, bottom-aligned) ──────── */}
-                                <div className="absolute right-4 bottom-3 flex items-end gap-1.5 select-none pointer-events-none">
-                                    <span className="text-xs font-semibold text-q-text-muted/80 dark:text-q-text-muted/50 mb-1">
+                                <div className="absolute right-2 sm:right-4 bottom-1 sm:bottom-3 flex items-end gap-1 sm:gap-1.5 select-none pointer-events-none">
+                                    <span className="text-[9px] sm:text-xs font-semibold text-q-text-muted/80 dark:text-q-text-muted/50 mb-0.5 sm:mb-1 hidden sm:inline">
                                         {metric.label}
                                     </span>
                                     <span
@@ -247,7 +247,7 @@ const DashboardStatusCards: React.FC = () => {
                                            text-foreground/[0.06] dark:text-white/[0.10]
                                            group-hover:text-foreground/[0.10] dark:group-hover:text-white/[0.16]
                                            transition-colors duration-500"
-                                        style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(5rem, 8vw, 9rem)' }}
+                                        style={{ fontFamily: "'Fira Sans Extra Condensed', sans-serif", fontWeight: 100, fontSize: 'clamp(3rem, 8vw, 9rem)' }}
                                     >
                                         {metric.value}
                                     </span>
@@ -256,26 +256,26 @@ const DashboardStatusCards: React.FC = () => {
                                 {/* ── Left content ─────────────────────────────────────────── */}
                                 <div className="relative z-10 flex flex-col h-full">
                                     {/* Header */}
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className={`flex items-center justify-center w-10 h-10 rounded-xl
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-3">
+                                        <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl
                                                 bg-gradient-to-br ${card.gradientFrom} ${card.gradientTo}
                                                 shadow-lg shadow-black/10`}>
-                                            <Icon className="w-5 h-5 text-white" strokeWidth={2} />
+                                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" strokeWidth={2} />
                                         </div>
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-bold text-foreground truncate">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
-                                            <span className="text-[11px] text-q-text-muted truncate">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
+                                            <span className="text-xs sm:text-sm font-bold text-foreground truncate">{t(card.titleKey, FB[card.id]?.title ?? card.id)}</span>
+                                            <span className="text-[9px] sm:text-[11px] text-q-text-muted truncate">{t(card.subtitleKey, FB[card.id]?.desc ?? '')}</span>
                                         </div>
                                     </div>
 
 
 
                                     {/* Action link */}
-                                    <div className="flex items-center gap-1 mt-auto pt-3">
-                                        <span className="text-xs font-semibold text-primary group-hover:underline">
+                                    <div className="flex items-center gap-1 mt-auto pt-1 sm:pt-3">
+                                        <span className="text-[10px] sm:text-xs font-semibold text-primary group-hover:underline">
                                             {t('dashboard.statusCards.viewDetails', 'Ver detalles')}
                                         </span>
-                                        <ArrowRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </div>
                             </button>

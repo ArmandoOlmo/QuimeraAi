@@ -153,8 +153,11 @@ const Router: React.FC<RouterProps> = ({
     if (isPreviewRoute) return;
 
     // Authenticated user on public routes (login/register) -> dashboard or superadmin
+    // IMPORTANT: Wait for userRole to be loaded before redirecting, otherwise
+    // superadmin users get sent to /dashboard before their role is known
     if (isAuthenticated && isEmailVerified && (path === '/login' || path === '/register')) {
-      if (userRole === 'superadmin') {
+      if (!userRole) return; // Wait for Firestore user doc to load
+      if (userRole === 'superadmin' || userRole === 'owner') {
         replace(ROUTES.SUPERADMIN);
       } else {
         replace(ROUTES.DASHBOARD);
@@ -175,14 +178,18 @@ const Router: React.FC<RouterProps> = ({
     }
 
     // Authenticated user without access to admin route -> dashboard
+    // IMPORTANT: Don't redirect if userRole hasn't loaded yet — canAccessRoute
+    // would incorrectly return false for superadmin users
     if (isAdminRoute && isAuthenticated && !canAccessRoute) {
+      if (!userRole) return; // Wait for role to load before kicking out
       replace(ROUTES.DASHBOARD);
       return;
     }
 
     // Default path handling - skip if preview mode
     if (path === '/' && isAuthenticated && isEmailVerified && !isLandingPreviewMode) {
-      if (userRole === 'superadmin') {
+      if (!userRole) return; // Wait for role to load
+      if (userRole === 'superadmin' || userRole === 'owner') {
         replace(ROUTES.SUPERADMIN);
       } else {
         replace(ROUTES.DASHBOARD);

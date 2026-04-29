@@ -96,3 +96,27 @@ When building UI components inside the Editor or Public Previews, text **must** 
 QuimeraAi heavily utilizes frosted glass effects, especially in section backgrounds and sticky headers.
 - Combine `bg-q-surface/80` (or `bg-black/40` over imagery) with `backdrop-blur-md` or `backdrop-blur-xl`.
 - Shadows should be kept minimal and soft (`shadow-sm`, `shadow-md`), relying more on subtle borders (`border-q-border`) to separate elevation layers.
+
+## 5. Mobile-First & Responsive Layouts
+
+All new components must be designed with mobile-first principles in mind, ensuring they look like native app experiences on smaller viewports.
+
+### Navigation & Tabs (Mobile)
+**NEVER** use dense, multi-row CSS grids for horizontal navigation menus or tabs on mobile.
+- **Scrollable Pill Navigation:** Always use a horizontally scrollable flex container for tabs.
+  - Apply `flex overflow-x-auto gap-2 items-center` along with scrollbar hiding utilities (`[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`).
+  - Use `whitespace-nowrap flex-shrink-0` on the tab items.
+  - Tab buttons must be pill-shaped (`rounded-full`) following the system geometry.
+  - Use a `sticky top-X z-10 bg-q-surface/80 backdrop-blur-md` container to provide context when scrolling.
+
+### Metric Cards & Dashboards (Mobile)
+**NEVER** stack large dashboard cards vertically (`grid-cols-1`) with excessive padding if multiple metrics exist.
+- **iOS Widget-Style Cards:** Dashboard metric cards must convert to a compact `grid-cols-2` layout on mobile.
+  - Reduce padding (`p-3.5` or `p-4`) and enforce a fixed height (e.g., `h-[85px]` or `h-[100px]`) for a uniform widget grid.
+  - Increase border radius (`rounded-[16px]`).
+  - Place icons/trends at the top, and large numeric values (`text-xl`) at the bottom.
+  - Aggressively truncate (`truncate`) or conditionally hide (`hidden sm:block`) non-essential subtitles.
+
+### Editor & Previews (Mobile)
+**NEVER** permanently hide the main preview area on mobile using hardcoded utilities like `hidden md:flex`.
+- Editor layouts must dynamically toggle the visibility of the preview area *only* when the mobile sidebar/bottom-sheet is actively open (e.g., `${isSidebarOpen ? 'hidden md:flex' : 'flex'}`).

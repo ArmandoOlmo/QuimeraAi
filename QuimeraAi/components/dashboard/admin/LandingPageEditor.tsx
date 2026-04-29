@@ -10,7 +10,7 @@ import {
     Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
     Smartphone, Loader2, Check, Image, Type, Layout,
-    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen
+    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText, Users
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
@@ -61,29 +61,90 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 // Available components for landing page (CONTENIDO section)
 const AVAILABLE_COMPONENTS = [
-    { type: 'hero', label: 'Hero Principal', icon: Layout },
-    { type: 'heroModern', label: 'Hero Moderno', icon: Layout },
-    { type: 'heroGradient', label: 'Hero Gradiente', icon: Layout },
-    { type: 'features', label: 'Características', icon: Layers },
-    { type: 'pricing', label: 'Precios', icon: Type },
-    { type: 'testimonials', label: 'Testimonios', icon: Type },
-    { type: 'faq', label: 'Preguntas Frecuentes', icon: Type },
-    { type: 'cta', label: 'Llamada a Acción', icon: Type },
-    { type: 'screenshotCarousel', label: 'Carrusel de Imágenes', icon: Image, isNew: true },
+    // Legacy Components
+    { type: 'hero', icon: Layout },
+    { type: 'heroSplit', icon: Layout },
+    { type: 'heroGallery', icon: Image },
+    { type: 'heroWave', icon: Layout },
+    { type: 'heroNova', icon: Layout },
+    { type: 'heroLead', icon: Type },
+    { type: 'features', icon: Layers },
+    { type: 'pricing', icon: Type },
+    { type: 'testimonials', icon: Type },
+    { type: 'faq', icon: Type },
+    { type: 'cta', icon: Type },
+    { type: 'screenshotCarousel', icon: Image },
+    
+    // Core Extended
+    { type: 'services', icon: Layout },
+    { type: 'team', icon: Users },
+    { type: 'portfolio', icon: Layout },
+    { type: 'leads', icon: Type },
+    { type: 'newsletter', icon: Type },
+    { type: 'slideshow', icon: Image },
+    { type: 'video', icon: Monitor },
+    { type: 'howItWorks', icon: Layout },
+    { type: 'map', icon: Layout },
+    { type: 'menu', icon: MenuIcon },
+    { type: 'banner', icon: Layout },
+    { type: 'topBar', icon: Layout },
+    { type: 'logoBanner', icon: Layout },
+    { type: 'chatbot', icon: Type },
+    { type: 'cmsFeed', icon: Layout },
+    { type: 'signupFloat', icon: Type },
+    { type: 'separator', icon: Layout },
+    { type: 'realEstateListings', icon: Layout },
+    { type: 'restaurantReservation', icon: Layout },
+
+    // Lumina Suite
+    { type: 'heroLumina', icon: Layout, isNew: true },
+    { type: 'featuresLumina', icon: Layers, isNew: true },
+    { type: 'ctaLumina', icon: Type, isNew: true },
+    { type: 'portfolioLumina', icon: Layout, isNew: true },
+    { type: 'pricingLumina', icon: Type, isNew: true },
+    { type: 'testimonialsLumina', icon: Type, isNew: true },
+    { type: 'faqLumina', icon: Type, isNew: true },
+
+    // Neon Suite
+    { type: 'heroNeon', icon: Layout, isNew: true },
+    { type: 'testimonialsNeon', icon: Type, isNew: true },
+    { type: 'featuresNeon', icon: Layers, isNew: true },
+    { type: 'ctaNeon', icon: Type, isNew: true },
+    { type: 'portfolioNeon', icon: Layout, isNew: true },
+    { type: 'pricingNeon', icon: Type, isNew: true },
+    { type: 'faqNeon', icon: Type, isNew: true },
+
+    // Quimera Suite
+    { type: 'heroQuimera', icon: Layout, isNew: true },
+    { type: 'featuresQuimera', icon: Layers, isNew: true },
+    { type: 'pricingQuimera', icon: Type, isNew: true },
+    { type: 'testimonialsQuimera', icon: Type, isNew: true },
+    { type: 'faqQuimera', icon: Type, isNew: true },
+    { type: 'ctaQuimera', icon: Type, isNew: true },
+    { type: 'platformShowcaseQuimera', icon: Layout, isNew: true },
+    { type: 'aiCapabilitiesQuimera', icon: Sparkles, isNew: true },
+    { type: 'industrySolutionsQuimera', icon: Layers, isNew: true },
+    { type: 'agencyWhiteLabelQuimera', icon: Layout, isNew: true },
 ];
 
 // Structure items for global settings (ESTRUCTURA section)
 const STRUCTURE_ITEMS = [
-    { id: 'colors', type: 'colors', label: 'Colores', icon: Palette },
-    { id: 'typography', type: 'typography', label: 'Tipografía', icon: Type },
-    { id: 'navigation', type: 'header', label: 'Navegación', icon: MenuIcon },
-    { id: 'footerGlobal', type: 'footer', label: 'Pie de Página', icon: Layout },
+    { id: 'colors', type: 'colors', icon: Palette },
+    { id: 'typography', type: 'typography', icon: Type },
+    { id: 'navigation', type: 'header', icon: MenuIcon },
+    { id: 'footerGlobal', type: 'footer', icon: Layout },
 ];
 
 const getLandingSectionIcon = (type: string) => {
     return AVAILABLE_COMPONENTS.find(component => component.type === type)?.icon
         || STRUCTURE_ITEMS.find(item => item.type === type)?.icon
         || Layout;
+};
+
+// Helper to get translated section label from translation keys
+const useSectionLabel = () => {
+    const { t } = useTranslation();
+    return (type: string) => t(`landingEditor.components.${type}`, type);
 };
 
 // Sortable Section Item Component
@@ -102,6 +163,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
     onToggleVisibility,
     onDelete,
 }) => {
+    const getSectionLabel = useSectionLabel();
     const {
         attributes,
         listeners,
@@ -141,7 +203,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
             <Icon size={16} className="text-q-text-muted flex-shrink-0" />
 
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate capitalize">{section.type}</p>
+                <p className="text-sm font-medium truncate">{getSectionLabel(section.type)}</p>
             </div>
 
             {/* Section actions */}
@@ -165,12 +227,13 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
 
 // Drag Overlay Item (shown while dragging)
 const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => {
+    const getSectionLabel = useSectionLabel();
     const Icon = getLandingSectionIcon(section.type);
     return (
     <div className="flex items-center gap-2 p-2.5 bg-q-surface border border-primary rounded-lg shadow-xl">
         <GripVertical size={14} className="text-primary" />
         <Icon size={16} className="text-primary" />
-        <span className="text-sm font-medium capitalize">{section.type}</span>
+        <span className="text-sm font-medium">{getSectionLabel(section.type)}</span>
     </div>
     );
 };
@@ -1135,8 +1198,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const currentStructureLabel = useMemo(() => {
         if (!selectedStructureItem) return '';
         const structureItem = STRUCTURE_ITEMS.find(i => i.id === selectedStructureItem);
-        return structureItem?.label || selectedStructureItem;
-    }, [selectedStructureItem]);
+        return structureItem ? t(`landingEditor.components.${structureItem.id}`, structureItem.id) : selectedStructureItem;
+    }, [selectedStructureItem, t]);
 
     // Scroll preview to section when selected
     const scrollToSection = useCallback((sectionId: string) => {
@@ -1321,7 +1384,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                                     }`}
                                             >
                                                 {React.createElement(item.icon, { size: 16, className: 'text-q-text-muted flex-shrink-0' })}
-                                                <span className="text-sm font-medium">{item.label}</span>
+                                                <span className="text-sm font-medium">{t(`landingEditor.components.${item.id}`, item.id)}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -1449,7 +1512,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                             </span>
                                         </h2>
                                     </div>
-                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto">
+                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
                                         <LandingPageControls
                                             key={currentStructureSection.id}
                                             section={currentStructureSection}
@@ -1466,10 +1529,10 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                     <div className="p-4 border-b border-q-border">
                                         <h2 className="font-semibold text-sm flex items-center gap-2 text-q-text">
                                             <Settings size={16} className="text-q-accent" />
-                                            {t('landingEditor.editSection', 'Editar')}: <span className="capitalize">{currentSection!.type}</span>
+                                            {t('landingEditor.editSection', 'Editar')}: <span>{t(`landingEditor.components.${currentSection!.type}`, currentSection!.type)}</span>
                                         </h2>
                                     </div>
-                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto">
+                                    <div className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">
                                         <LandingPageControls
                                             section={currentSection!}
                                             onUpdateSection={updateSectionData}
@@ -1510,11 +1573,11 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         {React.createElement(comp.icon, { size: 18 })}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="font-medium text-sm">{comp.label}</p>
+                                        <p className="font-medium text-sm">{t(`landingEditor.components.${comp.type}`, comp.type)}</p>
                                     </div>
                                     {comp.isNew && (
                                         <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 rounded-full">
-                                            Nuevo
+                                            {t('landingEditor.components.new', 'Nuevo')}
                                         </span>
                                     )}
                                 </button>

@@ -24,7 +24,7 @@ const DashboardTemplatesSection: React.FC<DashboardTemplatesSectionProps> = ({
     );
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-fade-in-up">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 animate-fade-in-up">
             {templates.slice(0, 4).map((template) => (
                 <ProjectCard key={template.id} project={template} compact={compactTemplates} />
             ))}
@@ -44,7 +44,7 @@ export const TemplatesSizeToggle: React.FC = () => {
 
     return (
         <div
-            className="flex items-center gap-1 bg-secondary/40 rounded-lg p-1"
+            className="hidden lg:flex items-center gap-1 bg-secondary/40 rounded-lg p-1"
             role="group"
             aria-label={t('dashboard.templateSize', 'Tamaño de plantillas')}
         >

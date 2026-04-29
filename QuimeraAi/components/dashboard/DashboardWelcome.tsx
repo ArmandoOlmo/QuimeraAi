@@ -70,16 +70,16 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     return (
         <section className="w-full">
-            <div className="flex flex-col justify-center py-6">
+            <div className="flex flex-col justify-center py-3 lg:py-6">
                 {/* Greeting Header with CTA */}
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-4">
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4">
+                    <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
                         {/* Logo - conditional: tenant logo > generic agency icon > Quimera logo */}
                         {tenantContext?.currentTenant?.branding?.logoUrl ? (
                             <img
                                 src={tenantContext.currentTenant.branding.logoUrl}
                                 alt={tenantContext.currentTenant.branding.companyName || 'Logo'}
-                                className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                className="w-9 h-9 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain mr-2 sm:mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
                                 width={64}
                                 height={64}
                                 loading="eager"
@@ -87,20 +87,20 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             />
                         ) : tenantContext?.currentTenant?.branding?.companyName ? (
                             <div
-                                className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-2xl mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                className="w-9 h-9 sm:w-12 sm:h-12 md:w-16 md:h-16 flex items-center justify-center rounded-xl sm:rounded-2xl mr-2 sm:mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
                                 style={{
                                     backgroundColor:
                                         (tenantContext.currentTenant.branding as any)?.primaryColor ||
                                         'hsl(var(--primary))',
                                 }}
                             >
-                                <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                                <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
                             </div>
                         ) : (
                             <img
                                 src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032"
                                 alt="Quimera Logo"
-                                className="w-12 h-12 md:w-16 md:h-16 object-contain mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
+                                className="w-9 h-9 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain mr-2 sm:mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
                                 width={64}
                                 height={64}
                                 loading="eager"
@@ -117,19 +117,19 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </h1>
 
                     {/* Right-side CTA buttons */}
-                    <div className="flex flex-col gap-3 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:gap-3 flex-shrink-0">
                         {/* Create with AI CTA - Opens AI Website Studio */}
                         <button
                             onClick={handleOpenAIStudio}
-                            className="group relative flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 hover:scale-105 hover:bg-right"
+                            className="group relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 lg:hover:scale-105 hover:bg-right flex-1 sm:flex-initial"
                             aria-label={t('dashboard.createWithAI')}
                         >
-                            <div className="flex items-center justify-center w-10 h-10 bg-white/30 rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors">
-                                <Sparkles className="w-6 h-6" aria-hidden="true" />
+                            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/30 rounded-lg sm:rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors flex-shrink-0">
+                                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
                             </div>
-                            <div className="flex flex-col items-start text-left">
-                                <span className="text-lg leading-tight">{t('dashboard.createWithAI')}</span>
-                                <span className="text-xs opacity-80 font-medium text-left">
+                            <div className="flex flex-col items-start text-left min-w-0">
+                                <span className="text-sm sm:text-lg leading-tight">{t('dashboard.createWithAI')}</span>
+                                <span className="text-[10px] sm:text-xs opacity-80 font-medium text-left truncate">
                                     {t('dashboard.createWithAIDesc')}
                                 </span>
                             </div>
@@ -183,7 +183,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </div>
                 </div>
 
-                <p className="text-lg text-q-text-muted max-w-3xl mb-8 leading-relaxed">
+                <p className="text-sm sm:text-lg text-q-text-muted max-w-3xl mb-4 lg:mb-8 leading-relaxed">
                     {t('dashboard.heroSubtitlePart1')}{' '}
                     <span className="text-q-text font-semibold">
                         {allUserProjectsCount} {t('dashboard.heroSubtitlePart2')}

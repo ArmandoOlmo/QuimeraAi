@@ -44,6 +44,36 @@ import { doc, getDoc, collection, getDocs } from '../firebase';
 import { db } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
 
+// Import Quimera Suite Components
+import HeroQuimera from './quimera/HeroQuimera';
+import FeaturesQuimera from './quimera/FeaturesQuimera';
+import PricingQuimera from './quimera/PricingQuimera';
+import TestimonialsQuimera from './quimera/TestimonialsQuimera';
+import FaqQuimera from './quimera/FaqQuimera';
+import CtaQuimera from './quimera/CtaQuimera';
+import PlatformShowcaseQuimera from './quimera/PlatformShowcaseQuimera';
+import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
+import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
+import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
+
+// Import Lumina components
+import HeroLumina from './HeroLumina';
+import FeaturesLumina from './FeaturesLumina';
+import CtaLumina from './CtaLumina';
+import PortfolioLumina from './PortfolioLumina';
+import PricingLumina from './PricingLumina';
+import TestimonialsLumina from './TestimonialsLumina';
+import FaqLumina from './FaqLumina';
+
+// Import Neon components
+import HeroNeon from './HeroNeon';
+import FeaturesNeon from './FeaturesNeon';
+import CtaNeon from './CtaNeon';
+import PortfolioNeon from './PortfolioNeon';
+import PricingNeon from './PricingNeon';
+import TestimonialsNeon from './TestimonialsNeon';
+import FaqNeon from './FaqNeon';
+
 // --- Brand Assets ---
 import { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../hooks/useAppLogo';
 
@@ -523,6 +553,64 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     const sectionType = section.type;
 
     switch (sectionType) {
+      // ── QUIMERA SUITE COMPONENTS ──
+      case 'heroQuimera':
+        return <HeroQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'platformShowcaseQuimera':
+        return <PlatformShowcaseQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'bentoShowcaseQuimera':
+        return <FeaturesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'agentDemonstrationQuimera':
+        return <AiCapabilitiesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'pricingQuimera':
+        return <PricingQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'testimonialsQuimera':
+        return <TestimonialsQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'faqQuimera':
+        return <FaqQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'metricsQuimera':
+      case 'industrySolutionsQuimera':
+        return <IndustrySolutionsQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'finalCtaQuimera':
+        return <CtaQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'aiCapabilitiesQuimera':
+        return <AiCapabilitiesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+      case 'agencyWhiteLabelQuimera':
+        return <AgencyWhiteLabelQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+
+      // ── LUMINA SUITE COMPONENTS ──
+      case 'heroLumina':
+        return <HeroLumina key={section.id} {...section.data} />;
+      case 'featuresLumina':
+        return <FeaturesLumina key={section.id} {...section.data} />;
+      case 'ctaLumina':
+        return <CtaLumina key={section.id} {...section.data} />;
+      case 'portfolioLumina':
+        return <PortfolioLumina key={section.id} {...section.data} />;
+      case 'pricingLumina':
+        return <PricingLumina key={section.id} {...section.data} />;
+      case 'testimonialsLumina':
+        return <TestimonialsLumina key={section.id} {...section.data} />;
+      case 'faqLumina':
+        return <FaqLumina key={section.id} {...section.data} />;
+
+      // ── NEON SUITE COMPONENTS ──
+      case 'heroNeon':
+        return <HeroNeon key={section.id} {...section.data} />;
+      case 'featuresNeon':
+        return <FeaturesNeon key={section.id} {...section.data} />;
+      case 'ctaNeon':
+        return <CtaNeon key={section.id} {...section.data} />;
+      case 'portfolioNeon':
+        return <PortfolioNeon key={section.id} {...section.data} />;
+      case 'pricingNeon':
+        return <PricingNeon key={section.id} {...section.data} />;
+      case 'testimonialsNeon':
+        return <TestimonialsNeon key={section.id} {...section.data} />;
+      case 'faqNeon':
+        return <FaqNeon key={section.id} {...section.data} />;
+
+      // ── LEGACY & CORE SECTIONS ──
       case 'hero':
       case 'heroModern':
       case 'heroGradient': {

@@ -45,43 +45,41 @@ function MetricCard({ title, value, subtitle, icon, trend, color }: MetricCardPr
     const colorClass = colorClasses[color];
 
     return (
-        <div className="bg-q-surface border border-q-border rounded-xl p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <p className="text-sm font-medium text-q-text-muted mb-1">
-                        {title}
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                        {value}
-                    </p>
-                    {subtitle && (
-                        <p className="text-sm text-q-text-muted mt-1">
-                            {subtitle}
-                        </p>
-                    )}
-                    {trend && (
-                        <div className="flex items-center gap-1 mt-2">
-                            {trend.value >= 0 ? (
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                            ) : (
-                                <TrendingDown className="h-4 w-4 text-red-500" />
-                            )}
-                            <span
-                                className={`text-sm font-medium ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'
-                                    }`}
-                            >
-                                {trend.value >= 0 ? '+' : ''}
-                                {trend.value}%
-                            </span>
-                            <span className="text-xs text-q-text-muted">{trend.label}</span>
-                        </div>
-                    )}
-                </div>
-                <div
-                    className={`flex items-center justify-center h-12 w-12 rounded-lg border ${colorClass}`}
-                >
+        <div className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-6 hover:shadow-lg transition-shadow flex flex-col justify-between h-[100px] sm:h-auto sm:aspect-auto">
+            {/* Top row: Icon and Trend */}
+            <div className="flex items-center justify-between mb-1 sm:mb-4">
+                <div className={`flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 rounded-[10px] sm:rounded-xl border shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-6 sm:[&>svg]:h-6 ${colorClass}`}>
                     {icon}
                 </div>
+                {trend && (
+                    <div className="flex items-center gap-0.5 sm:gap-1 bg-q-bg/50 px-1.5 py-0.5 rounded-full border border-q-border/50">
+                        {trend.value >= 0 ? (
+                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+                        ) : (
+                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                        )}
+                        <span className={`text-[10px] sm:text-sm font-bold ${trend.value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {trend.value >= 0 ? '+' : ''}{trend.value}%
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Bottom row: Value and Title */}
+            <div className="flex flex-col justify-end">
+                <div className="flex items-baseline gap-1.5">
+                    <p className="text-xl sm:text-3xl font-bold text-foreground leading-none tracking-tight">
+                        {value}
+                    </p>
+                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
+                        {title}
+                    </p>
+                </div>
+                {subtitle && (
+                    <p className="text-[10px] sm:text-sm text-q-text-muted/70 mt-1 truncate hidden sm:block">
+                        {subtitle}
+                    </p>
+                )}
             </div>
         </div>
     );
@@ -134,7 +132,7 @@ export function AgencyOverview() {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {/* MRR */}
             <MetricCard
                 title={t('dashboard.agency.overviewPage.mrr')}
