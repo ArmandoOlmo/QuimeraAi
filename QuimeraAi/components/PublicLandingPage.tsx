@@ -43,6 +43,7 @@ import { useLandingPlans } from '../hooks/useLandingPlans';
 import { doc, getDoc, collection, getDocs } from '../firebase';
 import { db } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
+import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fontLoader';
 
 // Import Quimera Suite Components
 import HeroQuimera from './quimera/HeroQuimera';
@@ -223,6 +224,51 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
     loadSavedConfiguration();
   }, []);
+
+  // Inject Typography settings from the "typography" section
+  useEffect(() => {
+    const typographySection = previewSections.find(s => s.type === 'typography');
+    const typographyData = typographySection?.data || {};
+
+    const headingsFont = typographyData.headingFont || 'inter';
+    const bodyFont = typographyData.bodyFont || 'inter';
+    const buttonsFont = typographyData.buttonFont || 'inter';
+
+    const headingsCaps = typographyData.headingsCaps || false;
+    const buttonsCaps = typographyData.buttonsCaps || false;
+    const navLinksCaps = typographyData.navLinksCaps || false;
+
+    const root = document.documentElement;
+    const resolvedHeader = resolveFontFamily(headingsFont);
+    const resolvedBody = resolveFontFamily(bodyFont);
+    const resolvedButton = resolveFontFamily(buttonsFont);
+
+    const headerFontStack = fontStacks[resolvedHeader];
+    const bodyFontStack = fontStacks[resolvedBody];
+    const buttonFontStack = fontStacks[resolvedButton];
+
+    root.style.setProperty('--font-header', headerFontStack);
+    root.style.setProperty('--font-body', bodyFontStack);
+    root.style.setProperty('--font-button', buttonFontStack);
+
+    root.style.setProperty('--headings-transform', headingsCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--headings-spacing', headingsCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--buttons-transform', buttonsCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--buttons-spacing', buttonsCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--navlinks-transform', navLinksCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--navlinks-spacing', navLinksCaps ? '0.05em' : 'normal');
+
+    // Set font weights and styles
+    root.style.setProperty('--font-weight-header', typographyData.fontWeightHeader || '700');
+    root.style.setProperty('--font-style-header', typographyData.fontStyleHeader || 'normal');
+    root.style.setProperty('--font-weight-body', typographyData.fontWeightBody || '400');
+    root.style.setProperty('--font-style-body', typographyData.fontStyleBody || 'normal');
+    root.style.setProperty('--font-weight-button', typographyData.fontWeightButton || '600');
+    root.style.setProperty('--font-style-button', typographyData.fontStyleButton || 'normal');
+
+    const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
+    loadGoogleFontsSync(fontsToLoad, 'public-landing-fonts');
+  }, [previewSections]);
 
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();

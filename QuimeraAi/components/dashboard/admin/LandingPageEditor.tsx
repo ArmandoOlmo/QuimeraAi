@@ -122,9 +122,13 @@ const AVAILABLE_COMPONENTS = [
     { type: 'faqQuimera', icon: Type, isNew: true },
     { type: 'ctaQuimera', icon: Type, isNew: true },
     { type: 'platformShowcaseQuimera', icon: Layout, isNew: true },
+    { type: 'bentoShowcaseQuimera', icon: Layout, isNew: true },
+    { type: 'agentDemonstrationQuimera', icon: Layout, isNew: true },
+    { type: 'metricsQuimera', icon: Layers, isNew: true },
     { type: 'aiCapabilitiesQuimera', icon: Sparkles, isNew: true },
     { type: 'industrySolutionsQuimera', icon: Layers, isNew: true },
     { type: 'agencyWhiteLabelQuimera', icon: Layout, isNew: true },
+    { type: 'finalCtaQuimera', icon: Type, isNew: true },
 ];
 
 // Structure items for global settings (ESTRUCTURA section)
