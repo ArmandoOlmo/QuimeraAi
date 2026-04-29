@@ -51,7 +51,7 @@ const TestimonialsLumina: React.FC<TestimonialsLuminaData> = ({
 
     return (
         <section 
-            className="relative w-full py-20 px-6 md:px-12"
+            className="relative w-full py-12 md:py-20 px-4 md:px-12"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -85,7 +85,7 @@ const TestimonialsLumina: React.FC<TestimonialsLuminaData> = ({
                         return (
                         <LuminaPanel 
                             key={idx} 
-                            className="p-8 flex flex-col justify-between space-y-6"
+                            className="p-6 md:p-8 flex flex-col justify-between space-y-6"
                             variant={glassEffect ? 'glass' : 'solid'}
                             customBgColor={colors?.panelBackground}
                             customBorderColor={colors?.panelBorder}

@@ -29,8 +29,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                 primaryCtaLink: data.primaryCtaLink,
                 primaryCtaLinkType: data.primaryCtaLinkType,
                 secondaryCtaLink: data.secondaryCtaLink,
-                secondaryCtaLinkType: data.secondaryCtaLinkType,
-            }
+                secondaryCtaLinkType: data.secondaryCtaLinkType }
         ];
     }, [data]);
 
@@ -65,8 +64,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
         neonGlow: '#FBB92B',
         cardBackground: 'rgba(20, 20, 20, 0.8)',
         buttonBackground: '#FBB92B',
-        buttonText: '#000000',
-    };
+        buttonText: '#000000' };
 
     const positionClasses = useMemo(() => {
         switch (textPosition) {
@@ -83,9 +81,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
     }, [textPosition]);
 
     // Fonts
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     // Map intensity 0-100 to a blur radius from 0px to 60px
@@ -107,8 +103,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
             'top-right': 'top-0 right-0',
             'top-left': 'top-0 left-0 -scale-x-100',
             'bottom-right': 'bottom-0 right-0 -scale-y-100',
-            'bottom-left': 'bottom-0 left-0 -scale-x-100 -scale-y-100',
-        };
+            'bottom-left': 'bottom-0 left-0 -scale-x-100 -scale-y-100' };
 
         const transformClass = positionClassesMap[neonLinePosition] || positionClassesMap['top-right'];
         const colorsArray = neonLineColors.length ? neonLineColors : ['#FF5F56', '#FFBD2E', '#27C93F', '#4A90E2', '#E14EAA'];
@@ -148,13 +143,16 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
 
     return (
         <div 
-            className="w-full relative overflow-hidden flex items-center justify-center p-2 sm:p-6 md:p-12 lg:p-24 bg-transparent"
-            style={{ minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '90vh' }}
+            className="w-full relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-12 lg:p-24 font-body"
+            style={{ 
+                minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '90vh',
+                backgroundColor: colors.background !== 'transparent' ? colors.background : undefined 
+            }}
         >
             {/* The Neon Card */}
             <div 
                 className={clsx(
-                    "w-full max-w-7xl min-h-[500px] relative flex flex-col p-4 sm:p-8 md:p-12 lg:p-16 transition-all duration-500",
+                    "w-full max-w-7xl min-h-[500px] relative flex flex-col p-6 sm:p-8 md:p-12 lg:p-16 transition-all duration-500",
                     getBorderRadiusClass(data.cardBorderRadius),
                     data.glassEffect ? "backdrop-blur-xl bg-opacity-40" : "",
                     positionClasses,
@@ -214,10 +212,9 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                             "flex flex-col gap-6 md:gap-8 w-full max-w-4xl z-10 relative"
                         )}>
                             <h1 
-                                className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-tight font-header drop-shadow-lg"
+                                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight leading-tight font-header drop-shadow-lg heading-caps"
                                 style={{ 
                                     color: colors.heading, 
-                                    fontFamily: headlineFontFamily,
                                     textTransform: 'var(--headings-transform, none)' as any,
                                     letterSpacing: 'var(--headings-spacing, normal)' 
                                 }}
@@ -227,7 +224,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                             
                             <p 
                                 className="text-lg md:text-xl lg:text-2xl leading-relaxed opacity-90 font-body drop-shadow-md max-w-2xl"
-                                style={{ color: colors.text, fontFamily: subheadlineFontFamily }}
+                                style={{ color: colors.text }}
                             >
                                 {currentSlide.subheadline}
                             </p>
@@ -240,7 +237,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                 )}>
                                     {currentSlide.primaryCta && (
                                         <button
-                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
+                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden button-caps"
                                             onClick={() => props.onNavigate && currentSlide.primaryCtaLink && props.onNavigate(currentSlide.primaryCtaLink)}
                                             style={{
                                                 background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
@@ -257,7 +254,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                                     
                                     {currentSlide.secondaryCta && (
                                         <button
-                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg border transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                                            className="px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold text-base md:text-lg border transition-transform hover:scale-105 active:scale-95 font-button shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md button-caps"
                                             onClick={() => props.onNavigate && currentSlide.secondaryCtaLink && props.onNavigate(currentSlide.secondaryCtaLink)}
                                             style={{
                                                 borderColor: colors.buttonBackground || neonColor,
@@ -282,7 +279,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
                     <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
                         <button 
                             onClick={prevSlide}
-                            className="p-2 rounded-full backdrop-blur-md bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20"
+                            className="p-2 rounded-full backdrop-blur-md bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20 font-button button-caps"
                             aria-label="Previous slide"
                         >
                             <ChevronLeft className="w-5 h-5" />
@@ -307,7 +304,7 @@ const HeroNeon: React.FC<HeroNeonProps> = (props) => {
 
                         <button 
                             onClick={nextSlide}
-                            className="p-2 rounded-full backdrop-blur-md bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20"
+                            className="p-2 rounded-full backdrop-blur-md bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20 font-button button-caps"
                             aria-label="Next slide"
                         >
                             <ChevronRight className="w-5 h-5" />

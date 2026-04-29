@@ -9,6 +9,11 @@ interface AgencyWhiteLabelQuimeraProps {
         background?: string;
         text?: string;
         accent?: string;
+        cardBackground?: string;
+        cardBorder?: string;
+        cardText?: string;
+        iconColor?: string;
+        secondaryText?: string;
     };
     features?: Array<{
         title: string;
@@ -19,24 +24,35 @@ interface AgencyWhiteLabelQuimeraProps {
 }
 
 const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
-    title = 'La Plataforma Definitiva para Agencias',
-    subtitle = 'Marca Blanca 100%. Revende nuestra tecnología bajo tu propia marca, establece tus propios precios y escala tu agencia sin límites.',
+    title,
+    subtitle,
     features = [
         { title: 'Sin Rastros de Quimera', description: 'Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.' },
         { title: 'Cobra lo que Quieras', description: 'Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.' },
         { title: 'Subcuentas Ilimitadas', description: 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.' },
         { title: 'Soporte Prioritario', description: 'Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.' }
     ],
-    buttonText = 'Ver Precios de Agencia',
+    buttonText,
     buttonLink = '#',
     colors = {}
 }) => {
+    const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
 
+    const cardBg = colors.cardBackground || 'rgba(255,255,255,0.05)';
+    const cardBorder = colors.cardBorder || 'rgba(212,175,55,0.3)';
+    const cardText = colors.cardText || textColor;
+    const iconColor = colors.iconColor || accentColor;
+    const secondaryColor = colors.secondaryText || '#9ca3af';
+
+    const displayTitle = title || t('editor.placeholder.title', 'La Plataforma Definitiva para Agencias');
+    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayBtn = buttonText || t('editor.placeholder.button', 'Ver Precios de Agencia');
+
     return (
-        <section className="py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
             
             {/* Background elements */}
             <div className="absolute inset-0 pointer-events-none">
@@ -87,7 +103,7 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                                 <div className="flex-1 p-6 h-80 bg-gradient-to-br from-[#0a0a0a] to-[#111]">
                                     <div className="flex justify-between items-center mb-6">
                                         <div className="h-6 w-32 bg-white/10 rounded"></div>
-                                        <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-xs">A</div>
+                                        <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-blue-400 text-xs font-body">A</div>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-4 mb-6">
@@ -128,33 +144,36 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                             <span>Plan Agencia</span>
                         </div>
 
-                        <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                            {title}
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                            {displayTitle}
                         </h2>
                         
-                        <p className="text-xl text-gray-400 font-light mb-10">
-                            {subtitle}
+                        <p className="text-xl font-light mb-10 font-body" style={{ color: secondaryColor }}>
+                            {displaySubtitle}
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {features.map((feature, i) => (
+                            {features.map((feature, i) => {
+                                const displayFeatureTitle = feature.title || t('editor.placeholder.title', 'Título');
+                                const displayFeatureDesc = feature.description || t('editor.placeholder.description', 'Descripción');
+                                return (
                                 <div key={i} className="flex gap-4">
-                                    <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                        <CheckCircle2 className="w-4 h-4 text-yellow-500" />
+                                    <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center border" style={{ backgroundColor: `${accentColor}1A`, borderColor: `${accentColor}33` }}>
+                                        <CheckCircle2 className="w-4 h-4" style={{ color: iconColor }} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-lg mb-1">{feature.title}</h4>
-                                        <p className="text-gray-400 text-sm">{feature.description}</p>
+                                        <h4 className="font-bold text-lg mb-1 font-header heading-caps" style={{ color: cardText }}>{displayFeatureTitle}</h4>
+                                        <p className="text-sm font-body" style={{ color: secondaryColor }}>{displayFeatureDesc}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
 
                         {buttonText && (
                             <div className="mt-10">
-                                <a href={buttonLink || '#'} className="group inline-flex px-8 py-4 bg-white/5 hover:bg-white/10 border border-yellow-500/30 text-white font-bold rounded-xl transition-all items-center gap-2">
-                                    <DollarSign className="w-5 h-5 text-yellow-500" />
-                                    {buttonText}
+                                <a href={buttonLink || '#'} className="group inline-flex px-8 py-4 rounded-xl transition-all items-center gap-2 font-button button-caps border" style={{ backgroundColor: cardBg, borderColor: cardBorder, color: textColor }}>
+                                    <DollarSign className="w-5 h-5" style={{ color: iconColor }} />
+                                    {displayBtn}
                                 </a>
                             </div>
                         )}

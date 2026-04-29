@@ -45,9 +45,9 @@ const getJustifyClass = (layoutStr: string = 'center'): string => {
 };
 
 const getVerticalClass = (layoutStr: string = 'center'): string => {
-    if (layoutStr.endsWith('-top') || layoutStr === 'center-top') return 'items-start pt-24 md:pt-32 pb-12';
-    if (layoutStr.endsWith('-bottom') || layoutStr === 'center-bottom') return 'items-end pb-12 pt-24';
-    return 'items-center py-12 md:py-20';
+    if (layoutStr.endsWith('-top') || layoutStr === 'center-top') return 'items-start pt-16 md:pt-32 pb-8 md:pb-12';
+    if (layoutStr.endsWith('-bottom') || layoutStr === 'center-bottom') return 'items-end pb-8 md:pb-12 pt-16 md:pt-24';
+    return 'items-center py-10 md:py-20';
 };
 
 const getAlignmentClass = (layoutStr: string = 'center') => {
@@ -99,10 +99,10 @@ const HeroLumina: React.FC<HeroLuminaProps> = ({
                 interactionStrength={luminaAnimation?.interactionStrength}
             />
             
-            <div className={`relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 flex flex-1 ${verticalClass} ${justifyClass}`}>
+            <div className={`relative z-10 w-full max-w-7xl mx-auto px-4 md:px-12 flex flex-1 ${verticalClass} ${justifyClass}`}>
                 <LuminaPanel 
                     variant={glassEffect ? 'glass' : 'solid'}
-                    className={`w-full max-w-xl p-8 md:p-16 flex flex-col space-y-6 md:space-y-8 animate-fade-in-up ${alignmentClass}`}
+                    className={`w-full max-w-xl p-6 md:p-16 flex flex-col space-y-6 md:space-y-8 animate-fade-in-up ${alignmentClass}`}
                     customBgColor={colors?.panelBackground}
                     customBorderColor={colors?.panelBorder}
                 >

@@ -22,9 +22,7 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
     const secondaryCta = data.secondaryCta || 'Contact Sales';
 
     const colors = data.colors || {};
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 60;
     const blurRadius = (intensity / 100) * 40;
@@ -52,7 +50,7 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative overflow-hidden py-24 px-6 md:px-12 flex items-center justify-center"
+            className="w-full relative overflow-hidden py-12 md:py-24 px-4 md:px-12 flex items-center justify-center"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '70vh'
@@ -61,7 +59,7 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
 
             <div 
                 className={clsx(
-                    "relative z-10 w-full max-w-5xl mx-auto text-center p-10 md:p-16 lg:p-20 transition-all duration-300",
+                    "relative z-10 w-full max-w-5xl mx-auto text-center p-6 md:p-16 lg:p-20 transition-all duration-300",
                     getBorderRadiusClass(data.cardBorderRadius),
                     data.glassEffect ? "backdrop-blur-2xl" : ""
                 )}
@@ -94,10 +92,9 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                 <div className="max-w-3xl mx-auto space-y-8">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl lg:text-6xl font-bold font-header leading-tight"
+                            className="text-4xl md:text-5xl lg:text-6xl font-bold font-header leading-tight heading-caps"
                             style={{ 
                                 color: colors.heading || '#ffffff',
-                                fontFamily: headlineFontFamily,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)'
                             }}
@@ -109,9 +106,7 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                         <p 
                             className="text-lg md:text-2xl font-body opacity-90 leading-relaxed"
                             style={{ 
-                                color: colors.text || '#a1a1aa',
-                                fontFamily: subheadlineFontFamily
-                            }}
+                                color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
                         />
                     )}
@@ -119,14 +114,13 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
                         {primaryCta && (
                                 <button 
-                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden"
+                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_15px_rgba(0,0,0,0.4)] relative overflow-hidden button-caps"
                                     onClick={(e) => handleNavigate(e, data.primaryCtaLink)}
                                     style={{
                                         background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
                                         color: colors.buttonText || '#000000',
                                         textTransform: 'var(--buttons-transform, none)' as any,
-                                        letterSpacing: 'var(--buttons-spacing, normal)',
-                                    }}
+                                        letterSpacing: 'var(--buttons-spacing, normal)' }}
                                 >
                                     {primaryCta}
                                 </button>
@@ -134,15 +128,14 @@ const CtaNeon: React.FC<CtaNeonProps> = (props) => {
                         
                         {secondaryCta && (
                                 <button 
-                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button border transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                                    className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg font-button border transition-transform hover:scale-105 active:scale-95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,0,0,0.3)] backdrop-blur-md button-caps"
                                     onClick={(e) => handleNavigate(e, data.secondaryCtaLink)}
                                     style={{
                                         borderColor: colors.buttonBackground || neonColor,
                                         color: colors.text || '#ffffff',
                                         background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
                                         textTransform: 'var(--buttons-transform, none)' as any,
-                                        letterSpacing: 'var(--buttons-spacing, normal)',
-                                    }}
+                                        letterSpacing: 'var(--buttons-spacing, normal)' }}
                                 >
                                     {secondaryCta}
                                 </button>

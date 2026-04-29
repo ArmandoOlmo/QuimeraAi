@@ -50,9 +50,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
     ];
 
     const colors = data.colors || {};
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     const blurRadius = (intensity / 100) * 30;
@@ -80,7 +78,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative overflow-hidden py-24 px-6 md:px-12 flex flex-col justify-center"
+            className="w-full relative overflow-hidden py-12 md:py-24 px-4 md:px-12 flex flex-col justify-center"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '75vh'
@@ -91,10 +89,9 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl font-bold font-header"
+                            className="text-4xl md:text-5xl font-bold font-header heading-caps"
                             style={{ 
                                 color: colors.heading || '#ffffff',
-                                fontFamily: headlineFontFamily,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)'
                             }}
@@ -105,16 +102,14 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                         <p 
                             className="text-lg md:text-xl font-body opacity-80"
                             style={{ 
-                                color: colors.text || '#a1a1aa',
-                                fontFamily: subheadlineFontFamily
-                            }}
+                                color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
                         />
                     )}
                 </div>
 
                 <div className={clsx(
-                    "flex flex-wrap gap-8",
+                    "flex flex-wrap gap-4 md:gap-8",
                     data.cardsAlignment === 'start' ? 'justify-start' : 
                     data.cardsAlignment === 'end' ? 'justify-end' : 'justify-center',
                     "max-w-7xl mx-auto"
@@ -125,7 +120,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                             <div 
                                 key={idx}
                                 className={clsx(
-                                    "flex flex-col p-8 transition-all duration-300 relative group overflow-hidden w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md",
+                                    "flex flex-col p-6 md:p-8 transition-all duration-300 relative group overflow-hidden w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md",
                                     getBorderRadiusClass(data.cardBorderRadius),
                                     data.glassEffect ? "backdrop-blur-xl" : "",
                                     isHighlight ? "scale-105 z-20" : "scale-100 z-10"
@@ -185,19 +180,16 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                 <div className={clsx("relative z-10 space-y-6", isHighlight ? "mt-4" : "")}>
                                     <div>
                                         <h3 
-                                            className="text-2xl font-bold font-header"
+                                            className="text-2xl font-bold font-header heading-caps"
                                             style={{ 
-                                                color: colors.cardHeading || colors.heading || '#ffffff',
-                                                fontFamily: headlineFontFamily
-                                            }}
+                                                color: colors.cardHeading || colors.heading || '#ffffff' }}
                                         >
                                             {tier.name}
                                         </h3>
                                         <p 
                                             className="text-sm font-body opacity-80 mt-1"
                                             style={{ 
-                                                color: colors.cardText || colors.text || '#a1a1aa',
-                                            }}
+                                                color: colors.cardText || colors.text || '#a1a1aa' }}
                                         >
                                             {tier.description}
                                         </p>
@@ -247,14 +239,12 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
                                                     background: `linear-gradient(135deg, ${colors.buttonBackground || neonColor} 0%, ${colors.buttonBackground || neonColor}cc 100%)`,
                                                     color: colors.buttonText || '#000000',
                                                     textTransform: 'var(--buttons-transform, none)' as any,
-                                                    letterSpacing: 'var(--buttons-spacing, normal)',
-                                                } : {
+                                                    letterSpacing: 'var(--buttons-spacing, normal)' } : {
                                                     borderColor: colors.buttonBackground || neonColor,
                                                     color: colors.text || '#ffffff',
                                                     background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)',
                                                     textTransform: 'var(--buttons-transform, none)' as any,
-                                                    letterSpacing: 'var(--buttons-spacing, normal)',
-                                                }}
+                                                    letterSpacing: 'var(--buttons-spacing, normal)' }}
                                             >
                                                 {tier.buttonText || 'Select Plan'}
                                             </button>

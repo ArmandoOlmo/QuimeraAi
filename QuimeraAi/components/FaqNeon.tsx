@@ -27,9 +27,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
     ];
 
     const colors = data.colors || {};
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     const neonColor = colors.neonGlow || '#FBB92B';
@@ -39,7 +37,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative overflow-hidden py-24 px-6 md:px-12 flex flex-col justify-center"
+            className="w-full relative overflow-hidden py-12 md:py-24 px-4 md:px-12 flex flex-col justify-center"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '70vh'
@@ -50,10 +48,9 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl font-bold font-header"
+                            className="text-4xl md:text-5xl font-bold font-header heading-caps"
                             style={{ 
                                 color: colors.heading || '#ffffff',
-                                fontFamily: headlineFontFamily,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)',
                                 textShadow: intensity > 0 ? `0 0 20px ${neonColor}40` : 'none'
@@ -65,9 +62,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                         <p 
                             className="text-lg md:text-xl font-body opacity-80"
                             style={{ 
-                                color: colors.text || '#a1a1aa',
-                                fontFamily: subheadlineFontFamily
-                            }}
+                                color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
                         />
                     )}
@@ -75,7 +70,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
 
                 <div 
                     className={clsx(
-                        "p-6 md:p-10 transition-all duration-300 relative",
+                        "p-4 md:p-10 transition-all duration-300 relative",
                         getBorderRadiusClass(data.cardBorderRadius),
                         data.glassEffect ? "backdrop-blur-xl" : ""
                     )}
@@ -112,14 +107,13 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                             return (
                                 <div key={idx} className="py-6 first:pt-0 last:pb-0">
                                     <button 
-                                        className="w-full flex items-center justify-between gap-4 text-left group"
+                                        className="w-full flex items-center justify-between gap-4 text-left group font-button button-caps"
                                         onClick={() => setOpenIndex(isOpen ? null : idx)}
                                     >
                                         <span 
                                             className="text-xl font-bold font-header transition-colors duration-300"
                                             style={{ 
                                                 color: isOpen ? neonColor : (colors.heading || '#ffffff'),
-                                                fontFamily: headlineFontFamily,
                                                 textShadow: isOpen && intensity > 0 ? `0 0 10px ${neonColor}80` : 'none'
                                             }}
                                         >
@@ -149,9 +143,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                                         <p 
                                             className="text-base font-body leading-relaxed pr-12"
                                             style={{ 
-                                                color: colors.text || '#a1a1aa',
-                                                fontFamily: subheadlineFontFamily
-                                            }}
+                                                color: colors.text || '#a1a1aa' }}
                                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(faq.answer) }}
                                         />
                                     </div>

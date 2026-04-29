@@ -79,13 +79,10 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
         heading: '#ffffff',
         neonGlow: '#FBB92B',
         cardBackground: 'rgba(20, 20, 20, 0.8)',
-        cardText: '#ffffff',
-    };
+        cardText: '#ffffff' };
 
     // Fonts
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Glow Logic
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     const blurRadius = (intensity / 100) * 30;
@@ -103,7 +100,7 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative overflow-hidden py-20 px-6 md:px-12 flex flex-col justify-center"
+            className="w-full relative overflow-hidden py-12 md:py-20 px-4 md:px-12 flex flex-col justify-center"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
@@ -115,14 +112,14 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                 {/* Header */}
                 <div className="text-center space-y-4 max-w-3xl mx-auto">
                     <h2 
-                        className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
-                        style={{ fontFamily: headlineFontFamily, color: colors.heading }}
+                        className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight font-header heading-caps"
+                        style={{ color: colors.heading }}
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(headline) }}
                     />
                     {subheadline && (
                         <p 
-                            className="text-lg md:text-xl opacity-90"
-                            style={{ fontFamily: subheadlineFontFamily, color: colors.text }}
+                            className="text-lg md:text-xl opacity-90 font-body"
+                            style={{ color: colors.text }}
                         >
                             {subheadline}
                         </p>
@@ -130,7 +127,7 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                 </div>
 
                 {/* Testimonials Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                     {testimonials.map((testimonial, idx) => {
                         const name = testimonial.authorName || 'Anonymous';
                         const role = testimonial.authorRole || '';
@@ -141,7 +138,7 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                             <div 
                                 key={idx}
                                 className={clsx(
-                                    "flex flex-col p-8 transition-all duration-300 relative",
+                                    "flex flex-col p-6 md:p-8 transition-all duration-300 relative",
                                     getBorderRadiusClass(data.cardBorderRadius),
                                     data.glassEffect ? "backdrop-blur-xl" : ""
                                 )}
@@ -181,8 +178,8 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                                 </div>
 
                                 <p 
-                                    className="flex-grow text-lg italic leading-relaxed mb-8 mt-2"
-                                    style={{ fontFamily: subheadlineFontFamily, color: colors.cardText }}
+                                    className="flex-grow text-lg italic leading-relaxed mb-8 mt-2 font-body"
+                                    style={{ color: colors.cardText }}
                                 >
                                     "{quoteText}"
                                 </p>
@@ -198,15 +195,15 @@ const TestimonialsNeon: React.FC<TestimonialsNeonProps> = (props) => {
                                     )}
                                     <div>
                                         <h4 
-                                            className="font-bold text-lg"
-                                            style={{ fontFamily: headlineFontFamily, color: colors.heading }}
+                                            className="font-bold text-lg font-header heading-caps"
+                                            style={{ color: colors.heading }}
                                         >
                                             {name}
                                         </h4>
                                         {role && (
                                             <p 
-                                                className="text-sm opacity-80"
-                                                style={{ fontFamily: subheadlineFontFamily, color: colors.text }}
+                                                className="text-sm opacity-80 font-body"
+                                                style={{ color: colors.text }}
                                             >
                                                 {role}
                                             </p>

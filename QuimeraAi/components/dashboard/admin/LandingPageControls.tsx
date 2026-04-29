@@ -519,10 +519,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'aiCapabilitiesQuimera': return renderAiCapabilitiesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
             case 'agencyWhiteLabelQuimera': return renderAgencyWhiteLabelQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
             case 'industrySolutionsQuimera': return renderIndustrySolutionsQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
-            case 'bentoShowcaseQuimera': 
-            case 'agentDemonstrationQuimera': 
-            case 'finalCtaQuimera': 
-                return renderGenericQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'finalCtaQuimera': return renderCtaQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'bentoShowcaseQuimera': return renderFeaturesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'agentDemonstrationQuimera': return renderAiCapabilitiesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
 
             default:
                 return (

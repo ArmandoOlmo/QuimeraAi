@@ -59,15 +59,13 @@ const headlineSizeClasses: Record<FontSize, string> = {
     sm: 'text-lg md:text-xl lg:text-2xl',
     md: 'text-xl md:text-2xl lg:text-3xl',
     lg: 'text-2xl md:text-3xl lg:text-4xl',
-    xl: 'text-3xl md:text-4xl lg:text-5xl',
-};
+    xl: 'text-3xl md:text-4xl lg:text-5xl' };
 
 const displaySizeMap: Record<FontSize, string> = {
     sm: 'text-3xl sm:text-4xl md:text-6xl lg:text-7xl',
     md: 'text-4xl sm:text-5xl md:text-7xl lg:text-8xl',
     lg: 'text-4xl sm:text-6xl md:text-8xl lg:text-9xl',
-    xl: 'text-5xl sm:text-7xl md:text-9xl lg:text-[11rem]',
-};
+    xl: 'text-5xl sm:text-7xl md:text-9xl lg:text-[11rem]' };
 
 // ─── Props ───
 interface HeroNovaProps extends HeroNovaData {
@@ -90,8 +88,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
     displayLetterSpacing = 0,
     colors,
     cornerGradient,
-    onNavigate,
-}) => {
+    onNavigate }) => {
     const { getColor } = useDesignTokens();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -106,8 +103,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
         primaryCtaLink: '/#products',
         mediaType: 'image' as const,
         backgroundImage: '',
-        backgroundColor: '#1a1a1a',
-    }];
+        backgroundColor: '#1a1a1a' }];
 
     // Filter out slides that have absolutely no media (common AI hallucination causing "disappearing" image)
     const validSlides = rawSlides.filter((s, i) => {
@@ -251,8 +247,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                         className="absolute inset-0 z-[1]"
                         style={{
                             opacity: isActive ? 1 : 0,
-                            transition: `opacity ${transitionDuration}ms ease-in-out`,
-                        }}
+                            transition: `opacity ${transitionDuration}ms ease-in-out` }}
                     >
                         {/* Video background */}
                         {mediaType === 'video' && bgVideo ? (
@@ -305,8 +300,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                             userSelect: 'none',
                             whiteSpace: 'nowrap',
                             transform: `scale(${displayScale})`,
-                            willChange: 'transform',
-                        }}
+                            willChange: 'transform' }}
                     >
                         {displayText}
                     </h2>
@@ -314,7 +308,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
             )}
 
             {/* ─── Bottom Content Bar ─── */}
-            <div className="absolute bottom-0 left-0 right-0 z-[10]">
+            <div className="absolute bottom-0 left-0 right-0 z-[10] font-header heading-caps">
                 {/* Bottom gradient for readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
 
@@ -332,13 +326,12 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                     textTransform: 'var(--headings-transform, uppercase)' as any,
                                     transform: `scale(${headlineScale})`,
                                     display: 'inline-block',
-                                    willChange: 'transform',
-                                }}
+                                    willChange: 'transform' }}
                                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSlide.headline || '') }}
                             />
                             {currentSlide.subheadline && (
                                 <p
-                                    className="text-sm md:text-base mt-2 opacity-80 font-body"
+                                    className="text-sm md:text-base mt-2 opacity-80 font-body font-header heading-caps"
                                     style={{ color: textColor }}
                                 >
                                     {currentSlide.subheadline}
@@ -352,13 +345,12 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                 <a
                                     href={currentSlide.primaryCtaLink || '/#cta'}
                                     onClick={(e) => handleNavigate(e, currentSlide.primaryCtaLink || '/#cta')}
-                                    className="inline-block px-8 py-3 md:px-10 md:py-3.5 rounded-full font-semibold text-sm md:text-base uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:shadow-2xl font-button"
+                                    className="inline-block px-8 py-3 md:px-10 md:py-3.5 rounded-full font-semibold text-sm md:text-base uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:shadow-2xl font-button button-caps"
                                     style={{
                                         backgroundColor: ctaBg,
                                         color: ctaText,
                                         textTransform: 'var(--buttons-transform, uppercase)' as any,
-                                        letterSpacing: 'var(--buttons-spacing, 0.1em)',
-                                    }}
+                                        letterSpacing: 'var(--buttons-spacing, 0.1em)' }}
                                 >
                                     {currentSlide.primaryCta}
                                 </a>
@@ -373,7 +365,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                             {showArrows ? (
                                 <button
                                     onClick={goToPrevious}
-                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors font-button button-caps"
                                     style={{ color: colors?.arrowColor || '#ffffff' }}
                                     title="Previous"
                                 >
@@ -389,7 +381,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                             key={i}
                                             title={`Slide ${i + 1}`}
                                             onClick={() => goToSlide(i)}
-                                            className="transition-all duration-300 no-min-touch"
+                                            className="transition-all duration-300 no-min-touch font-button button-caps"
                                             style={{
                                                 width: dotStyle === 'line'
                                                     ? (i === currentIndex ? '24px' : '12px')
@@ -398,8 +390,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                                                 borderRadius: '999px',
                                                 backgroundColor: i === currentIndex
                                                     ? (colors?.dotActive || '#ffffff')
-                                                    : (colors?.dotInactive || 'rgba(255,255,255,0.4)'),
-                                            }}
+                                                    : (colors?.dotInactive || 'rgba(255,255,255,0.4)') }}
                                         />
                                     ))}
                                 </div>
@@ -409,7 +400,7 @@ const HeroNova: React.FC<HeroNovaProps> = ({
                             {showArrows ? (
                                 <button
                                     onClick={goToNext}
-                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors font-button button-caps"
                                     style={{ color: colors?.arrowColor || '#ffffff' }}
                                     title="Next"
                                 >

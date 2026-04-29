@@ -47,7 +47,7 @@ const PortfolioLumina: React.FC<PortfolioLuminaData> = ({
 
     return (
         <section 
-            className="relative w-full py-20 px-6 md:px-12"
+            className="relative w-full py-12 md:py-20 px-4 md:px-12"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -71,14 +71,14 @@ const PortfolioLumina: React.FC<PortfolioLuminaData> = ({
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                     {projects.map((project, idx) => {
                         const imgSrc = project.image || project.imageUrl;
                         return (
                         <a 
                             key={idx} 
                             href={project.link || '#'} 
-                            className="group block relative rounded-[24px] overflow-hidden"
+                            className="group block relative rounded-[24px] overflow-hidden font-button button-caps"
                         >
                             <div className="aspect-[4/3] w-full relative">
                                 {imgSrc ? (

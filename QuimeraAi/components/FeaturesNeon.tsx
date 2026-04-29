@@ -20,22 +20,17 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
     const features = data.features && data.features.length > 0 ? data.features : [
         {
             title: 'High Performance',
-            description: 'Lightning fast load times and optimized delivery.',
-        },
+            description: 'Lightning fast load times and optimized delivery.' },
         {
             title: 'Secure by Design',
-            description: 'Enterprise-grade security built into the core.',
-        },
+            description: 'Enterprise-grade security built into the core.' },
         {
             title: '24/7 Support',
-            description: 'Our team is always here to help you out.',
-        }
+            description: 'Our team is always here to help you out.' }
     ];
 
     const colors = data.colors || {};
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     const blurRadius = (intensity / 100) * 30;
@@ -53,7 +48,7 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative overflow-hidden py-24 px-6 md:px-12 flex flex-col justify-center"
+            className="w-full relative overflow-hidden py-12 md:py-24 px-4 md:px-12 flex flex-col justify-center"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
@@ -64,10 +59,9 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl font-bold font-header"
+                            className="text-4xl md:text-5xl font-bold font-header heading-caps"
                             style={{ 
                                 color: colors.heading || '#ffffff',
-                                fontFamily: headlineFontFamily,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)'
                             }}
@@ -78,20 +72,18 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
                         <p 
                             className="text-lg md:text-xl font-body opacity-80"
                             style={{ 
-                                color: colors.text || '#a1a1aa',
-                                fontFamily: subheadlineFontFamily
-                            }}
+                                color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
                         />
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                     {features.map((feature, idx) => (
                         <div 
                             key={idx}
                             className={clsx(
-                                "flex flex-col p-8 transition-all duration-300 relative group overflow-hidden",
+                                "flex flex-col p-6 md:p-8 transition-all duration-300 relative group overflow-hidden",
                                 getBorderRadiusClass(data.cardBorderRadius),
                                 data.glassEffect ? "backdrop-blur-xl" : ""
                             )}
@@ -139,20 +131,16 @@ const FeaturesNeon: React.FC<FeaturesNeonProps> = (props) => {
                             
                             <div className="relative z-10 space-y-3">
                                 <h3 
-                                    className="text-2xl font-bold font-header"
+                                    className="text-2xl font-bold font-header heading-caps"
                                     style={{ 
-                                        color: colors.heading || '#ffffff',
-                                        fontFamily: headlineFontFamily
-                                    }}
+                                        color: colors.heading || '#ffffff' }}
                                 >
                                     {feature.title}
                                 </h3>
                                 <p 
                                     className="text-base font-body opacity-80 leading-relaxed"
                                     style={{ 
-                                        color: colors.text || '#a1a1aa',
-                                        fontFamily: subheadlineFontFamily
-                                    }}
+                                        color: colors.text || '#a1a1aa' }}
                                 >
                                     {feature.description}
                                 </p>

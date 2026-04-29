@@ -50,7 +50,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
 
     return (
         <section 
-            className="relative w-full py-20 px-6 md:px-12"
+            className="relative w-full py-12 md:py-20 px-4 md:px-12"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -87,7 +87,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                             >
                                 <button
                                     onClick={() => toggleFaq(idx)}
-                                    className="w-full text-left p-6 flex items-center justify-between focus:outline-none"
+                                    className="w-full text-left p-6 flex items-center justify-between focus:outline-none font-button button-caps"
                                 >
                                     <LuminaTypography variant="heading-sm" className="font-header" customColor={colors?.heading}>
                                         {faq.question}
@@ -102,7 +102,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                                 <div 
                                     className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                                 >
-                                    <div className="p-6 pt-0 border-t border-[#10B981]/10 mt-2">
+                                    <div className="p-6 pt-0 border-t border-[#10B981]/10 mt-2 font-body">
                                         <LuminaTypography variant="body-md" className="opacity-80 font-body leading-relaxed pt-4" customColor={colors?.text}>
                                             {faq.answer}
                                         </LuminaTypography>

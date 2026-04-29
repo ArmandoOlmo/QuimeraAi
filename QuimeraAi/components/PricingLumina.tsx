@@ -75,7 +75,7 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
 
     return (
         <section 
-            className="relative w-full py-24 px-6 md:px-12"
+            className="relative w-full py-12 md:py-24 px-4 md:px-12"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -100,7 +100,7 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
                 </div>
 
                 <div className={clsx(
-                    "flex flex-wrap gap-8 justify-center",
+                    "flex flex-wrap gap-4 md:gap-8 justify-center",
                     cardsAlignment === 'start' ? 'justify-start' : 
                     cardsAlignment === 'end' ? 'justify-end' : 'justify-center',
                     "max-w-5xl mx-auto"
@@ -116,7 +116,7 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
                             )}
                             <LuminaPanel 
                                 variant={glassEffect ? (isPopular ? 'solid' : 'glass') : 'solid'}
-                                className={`relative p-8 flex flex-col h-full flex-grow ${isPopular ? 'shadow-[0_20px_50px_rgba(16,185,129,0.3)]' : ''}`}
+                                className={`relative p-6 md:p-8 flex flex-col h-full flex-grow ${isPopular ? 'shadow-[0_20px_50px_rgba(16,185,129,0.3)]' : ''}`}
                                 customBgColor={colors?.panelBackground}
                                 customBorderColor={colors?.panelBorder}
                             >

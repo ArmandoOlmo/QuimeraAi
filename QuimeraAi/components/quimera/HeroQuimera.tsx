@@ -13,16 +13,21 @@ interface HeroQuimeraProps {
         background?: string;
         text?: string;
         accent?: string;
+        cardBackground?: string;
+        cardBorder?: string;
+        cardText?: string;
+        iconColor?: string;
+        secondaryText?: string;
     };
     isPreviewMode?: boolean;
 }
 
 const HeroQuimera: React.FC<HeroQuimeraProps> = ({
-    title = 'La plataforma definitiva para la era de la IA',
-    subtitle = 'Crea sitios web, tiendas y directorios inmobiliarios impulsados por IA en segundos. Todo en un solo lugar, con tu propia marca.',
-    buttonText = 'Comenzar Gratis',
+    title,
+    subtitle,
+    buttonText,
     buttonLink = '/register',
-    secondaryButtonText = 'Agendar Demo',
+    secondaryButtonText,
     secondaryButtonLink = '/contact',
     colors = {},
     isPreviewMode = false,
@@ -32,6 +37,13 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     const bgColor = colors.background || '#0A0A0A';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
+    const secondaryColor = colors.secondaryText || '#d1d5db'; // gray-300
+    const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.1)';
+    const cardBg = colors.cardBackground || 'rgba(255,255,255,0.05)';
+
+    const displayTitle = title || t('editor.placeholder.title', 'La plataforma definitiva para la era de la IA');
+    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Crea sitios web, tiendas y directorios inmobiliarios impulsados por IA en segundos.');
+    const displayBtn = buttonText || t('editor.placeholder.button', 'Comenzar Gratis');
 
     // Click handler that respects preview mode
     const handleButtonClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, link: string) => {
@@ -44,7 +56,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
 
     return (
         <section
-            className="min-h-screen flex flex-col justify-center pt-16 sm:pt-20 px-4 sm:px-6 relative overflow-hidden items-center text-center"
+            className="min-h-[80vh] md:min-h-screen flex flex-col justify-center py-20 md:pt-20 px-4 sm:px-6 relative overflow-hidden items-center text-center font-button button-caps"
             style={{ backgroundColor: bgColor, color: textColor }}
         >
             {/* Hero Background Animations (extracted from PublicLandingPage) */}
@@ -278,7 +290,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
             </div>
 
             {/* Content Layer */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
+            <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center font-body">
                 
                 {/* Agency Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium mb-8 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -289,30 +301,32 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                     QuimeraAi Agency OS 2.0
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight animate-fade-in-up leading-tight drop-shadow-2xl" style={{ animationDelay: '0.2s', maxWidth: '1000px' }}>
-                    <span dangerouslySetInnerHTML={{ __html: title.replace(/IA/g, '<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">IA</span>').replace(/AI/g, '<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">AI</span>') }} />
+                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight animate-fade-in-up leading-tight drop-shadow-2xl font-header heading-caps" style={{ animationDelay: '0.2s', maxWidth: '1000px' }}>
+                    <span dangerouslySetInnerHTML={{ __html: displayTitle.replace(/IA/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">IA</span>`).replace(/AI/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">AI</span>`) }} />
                 </h1>
 
-                <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl leading-relaxed animate-fade-in-up font-light" style={{ animationDelay: '0.3s' }}>
-                    {subtitle}
+                <p className="text-xl md:text-2xl mb-10 max-w-3xl leading-relaxed animate-fade-in-up font-light font-body" style={{ animationDelay: '0.3s', color: secondaryColor }}>
+                    {displaySubtitle}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                     <a
                         href={buttonLink}
                         onClick={(e) => handleButtonClick(e, buttonLink)}
-                        className="group relative px-8 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-all shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.5)] hover:-translate-y-1 flex items-center justify-center gap-2 text-lg overflow-hidden"
+                        className="group relative px-8 py-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-lg overflow-hidden font-button button-caps"
+                        style={{ backgroundColor: accentColor, color: '#000000', boxShadow: `0 0 40px ${accentColor}4D` }}
                     >
                         {/* Shimmer effect */}
                         <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                        {buttonText} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                        {displayBtn} <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </a>
                     
                     {secondaryButtonText && (
                         <a
                             href={secondaryButtonLink}
                             onClick={(e) => handleButtonClick(e, secondaryButtonLink)}
-                            className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-500/50 text-white font-medium rounded-xl transition-all flex items-center justify-center text-lg backdrop-blur-sm"
+                            className="px-8 py-4 font-medium rounded-xl transition-all flex items-center justify-center text-lg backdrop-blur-sm font-button button-caps border"
+                            style={{ backgroundColor: cardBg, borderColor: cardBorder, color: textColor }}
                         >
                             {secondaryButtonText}
                         </a>
@@ -321,7 +335,10 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
             </div>
             
             {/* Gradient Overlay at bottom for smooth transition to next section */}
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0A0A0A] to-transparent z-0 pointer-events-none" />
+            <div 
+                className="absolute bottom-0 left-0 w-full h-32 z-0 pointer-events-none" 
+                style={{ background: `linear-gradient(to top, ${bgColor}, transparent)` }}
+            />
         </section>
     );
 };

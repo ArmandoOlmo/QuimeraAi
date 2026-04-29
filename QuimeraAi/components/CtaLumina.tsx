@@ -59,7 +59,7 @@ const CtaLumina: React.FC<CtaLuminaProps> = ({
 
     return (
         <section 
-            className="relative w-full py-24 px-6 md:px-12"
+            className="relative w-full py-12 md:py-24 px-4 md:px-12"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -72,7 +72,7 @@ const CtaLumina: React.FC<CtaLuminaProps> = ({
             
             <div className="relative z-10 w-full max-w-5xl mx-auto">
                 <LuminaPanel 
-                    className="p-10 md:p-20 text-center flex flex-col items-center justify-center space-y-8 shadow-[0_20px_50px_rgba(2,44,34,0.6)]"
+                    className="p-6 md:p-20 text-center flex flex-col items-center justify-center space-y-8 shadow-[0_20px_50px_rgba(2,44,34,0.6)]"
                     variant={glassEffect ? 'glass' : 'solid'}
                     customBgColor={colors?.panelBackground}
                     customBorderColor={colors?.panelBorder}

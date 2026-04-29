@@ -45,7 +45,7 @@ const FeaturesLumina: React.FC<FeaturesLuminaData> = ({
 
     return (
         <section 
-            className="relative w-full py-20 px-6 md:px-12"
+            className="relative w-full py-12 md:py-20 px-4 md:px-12 font-body"
             style={{ backgroundColor: colors?.background }}
         >
             <LuminaBackground 
@@ -69,11 +69,11 @@ const FeaturesLumina: React.FC<FeaturesLuminaData> = ({
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {features.map((feature, idx) => (
                         <LuminaPanel 
                             key={idx} 
-                            className="p-8 space-y-4 hover:-translate-y-1 transition-transform"
+                            className="p-6 md:p-8 space-y-4 hover:-translate-y-1 transition-transform"
                             variant={glassEffect ? 'glass' : 'solid'}
                             customBgColor={colors?.panelBackground}
                             customBorderColor={colors?.panelBorder}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MetricsQuimeraProps {
     title?: string;
@@ -15,6 +16,11 @@ interface MetricsQuimeraProps {
         background?: string;
         text?: string;
         accent?: string;
+        cardBackground?: string;
+        cardBorder?: string;
+        cardText?: string;
+        iconColor?: string;
+        secondaryText?: string;
     };
     isPreviewMode?: boolean;
 }
@@ -39,21 +45,29 @@ const defaultMetrics = [
 ];
 
 const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
-    title = 'Impacto Demostrado',
-    subtitle = 'Nuestros resultados hablan por sí solos en la escala de operaciones.',
+    title,
+    subtitle,
     features,
     items,
     colors = {}
 }) => {
+    const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
 
+    const cardBg = colors.cardBackground || 'rgba(255,255,255,0.02)';
+    const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
+    const secondaryColor = colors.secondaryText || '#9ca3af';
+
     // In some components the data might be mapped as features or items
     const displayMetrics = features?.length ? features : (items?.length ? items : defaultMetrics);
+    
+    const displayTitle = title || t('editor.placeholder.title', 'Impacto Demostrado');
+    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
-        <section className="py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
             
             {/* Background elements */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none opacity-50">
@@ -61,38 +75,37 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto">
-                {(title || subtitle) && (
-                    <div className="text-center mb-16 max-w-3xl mx-auto">
-                        {title && (
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                                {title}
-                            </h2>
-                        )}
-                        {subtitle && (
-                            <p className="text-xl text-gray-400 font-light">
-                                {subtitle}
-                            </p>
-                        )}
-                    </div>
-                )}
+                <div className="text-center mb-16 max-w-3xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                        {displayTitle}
+                    </h2>
+                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                        {displaySubtitle}
+                    </p>
+                </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
-                    {displayMetrics.map((metric, index) => (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
+                    {displayMetrics.map((metric, index) => {
+                        const displayMetricTitle = metric.title || t('editor.placeholder.title', '100%');
+                        const displayMetricDesc = metric.description || t('editor.placeholder.description', 'Descripción de métrica');
+                        
+                        return (
                         <div 
                             key={index}
-                            className="group text-center relative p-8 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all duration-500"
+                            className="group text-center relative p-6 md:p-8 rounded-3xl transition-all duration-500 border"
+                            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
                         >
                             <h3 
-                                className="text-5xl md:text-6xl font-black mb-4 tracking-tighter"
+                                className="text-5xl md:text-6xl font-black mb-4 tracking-tighter font-header heading-caps"
                                 style={{ color: accentColor }}
                             >
-                                {metric.title}
+                                {displayMetricTitle}
                             </h3>
-                            <p className="text-lg text-gray-400 font-medium">
-                                {metric.description}
+                            <p className="text-lg font-medium font-body" style={{ color: secondaryColor }}>
+                                {displayMetricDesc}
                             </p>
                         </div>
-                    ))}
+                    )})}
                 </div>
             </div>
         </section>

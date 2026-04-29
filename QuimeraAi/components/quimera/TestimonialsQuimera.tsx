@@ -19,6 +19,11 @@ interface TestimonialsQuimeraProps {
         background?: string;
         text?: string;
         accent?: string;
+        cardBackground?: string;
+        cardBorder?: string;
+        cardText?: string;
+        iconColor?: string;
+        secondaryText?: string;
     };
 }
 
@@ -47,17 +52,27 @@ const defaultTestimonials: Testimonial[] = [
 ];
 
 const TestimonialsQuimera: React.FC<TestimonialsQuimeraProps> = ({
-    title = 'Historias de Éxito',
-    subtitle = 'Únete a miles de emprendedores y agencias que ya están escalando con QuimeraAi.',
+    title,
+    subtitle,
     testimonials = defaultTestimonials,
     colors = {}
 }) => {
+    const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
 
+    const cardBg = colors.cardBackground || 'rgba(255,255,255,0.02)';
+    const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
+    const cardText = colors.cardText || textColor;
+    const iconColor = colors.iconColor || accentColor;
+    const secondaryColor = colors.secondaryText || '#9ca3af';
+
+    const displayTitle = title || t('editor.placeholder.title', 'Historias de Éxito');
+    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+
     return (
-        <section className="py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
             
             {/* Background elements */}
             <div className="absolute inset-0 pointer-events-none">
@@ -70,53 +85,61 @@ const TestimonialsQuimera: React.FC<TestimonialsQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                        {title}
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                        {displayTitle}
                     </h2>
-                    <p className="text-xl text-gray-400 font-light">
-                        {subtitle}
+                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                        {displaySubtitle}
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {testimonials.map((testimonial, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+                    {testimonials.map((testimonial, index) => {
+                        const displayQuote = testimonial.quote || t('editor.placeholder.quote', 'Testimonio increíble.');
+                        const displayAuthor = testimonial.author || t('editor.placeholder.author', 'Nombre');
+                        const displayRole = testimonial.role || t('editor.placeholder.role', 'Rol');
+                        const displayCompany = testimonial.company || t('editor.placeholder.company', 'Empresa');
+
+                        return (
                         <div 
                             key={index}
-                            className="group relative p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-yellow-500/30 transition-all duration-500 flex flex-col"
+                            className="group relative p-6 md:p-8 rounded-2xl transition-all duration-500 flex flex-col border"
+                            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
                         >
-                            <Quote className="w-10 h-10 text-yellow-500/20 mb-6 group-hover:text-yellow-500/40 transition-colors" />
+                            <Quote className="w-10 h-10 mb-6 transition-colors" style={{ color: `${iconColor}33` }} />
                             
                             <div className="flex gap-1 mb-4">
-                                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                                {Array.from({ length: testimonial.rating || 5 }).map((_, i) => (
+                                    <Star key={i} className="w-4 h-4 fill-current" style={{ color: accentColor }} />
                                 ))}
                             </div>
 
-                            <p className="text-gray-300 leading-relaxed font-light mb-8 flex-grow">
-                                "{testimonial.quote}"
+                            <p className="leading-relaxed font-light mb-8 flex-grow font-body" style={{ color: cardText }}>
+                                "{displayQuote}"
                             </p>
 
                             <div className="flex items-center gap-4 mt-auto">
                                 {testimonial.avatarUrl ? (
                                     <img 
                                         src={testimonial.avatarUrl} 
-                                        alt={testimonial.author}
+                                        alt={displayAuthor}
                                         className="w-12 h-12 rounded-full border border-white/10 object-cover"
+                                        style={{ borderColor: cardBorder }}
                                     />
                                 ) : (
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 flex items-center justify-center text-yellow-500 font-bold">
-                                        {testimonial.author.charAt(0)}
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold border" style={{ backgroundColor: `${accentColor}1A`, borderColor: `${accentColor}33`, color: accentColor }}>
+                                        {displayAuthor.charAt(0)}
                                     </div>
                                 )}
                                 <div>
-                                    <h4 className="font-bold text-white">{testimonial.author}</h4>
-                                    <p className="text-sm text-gray-400">
-                                        {testimonial.role}, <span className="text-yellow-500/80">{testimonial.company}</span>
+                                    <h4 className="font-bold font-header heading-caps" style={{ color: cardText }}>{displayAuthor}</h4>
+                                    <p className="text-sm font-body" style={{ color: secondaryColor }}>
+                                        {displayRole}, <span style={{ color: `${accentColor}CC` }}>{displayCompany}</span>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             </div>
         </section>

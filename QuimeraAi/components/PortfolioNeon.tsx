@@ -38,9 +38,7 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
     ];
 
     const colors = data.colors || {};
-    const headlineFontFamily = data.headlineFont ? getFontStack(data.headlineFont) : 'var(--font-header)';
-    const subheadlineFontFamily = data.subheadlineFont ? getFontStack(data.subheadlineFont) : 'var(--font-body)';
-
+        
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
     const blurRadius = (intensity / 100) * 20;
@@ -58,7 +56,7 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
 
     return (
         <section 
-            className="w-full relative py-24 px-6 md:px-12"
+            className="w-full relative py-12 md:py-24 px-4 md:px-12"
             style={{ 
                 backgroundColor: colors.background,
                 minHeight: data.sectionHeight ? `${data.sectionHeight}vh` : '60vh'
@@ -69,10 +67,9 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl font-bold font-header"
+                            className="text-4xl md:text-5xl font-bold font-header heading-caps"
                             style={{ 
                                 color: colors.heading || '#ffffff',
-                                fontFamily: headlineFontFamily,
                                 textTransform: 'var(--headings-transform, none)' as any,
                                 letterSpacing: 'var(--headings-spacing, normal)'
                             }}
@@ -83,15 +80,13 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
                         <p 
                             className="text-lg md:text-xl font-body opacity-80"
                             style={{ 
-                                color: colors.text || '#a1a1aa',
-                                fontFamily: subheadlineFontFamily
-                            }}
+                                color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
                         />
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {images.map((item, idx) => (
                         <div 
                             key={idx}
@@ -152,7 +147,7 @@ const PortfolioNeon: React.FC<PortfolioNeonProps> = (props) => {
                                 <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-500 space-y-2">
                                     {item.title && (
                                         <h3 
-                                            className="text-2xl font-bold font-header"
+                                            className="text-2xl font-bold font-header heading-caps"
                                             style={{ 
                                                 color: colors.heading || '#ffffff',
                                                 textShadow: intensity > 0 ? `0 0 10px ${neonColor}` : 'none'

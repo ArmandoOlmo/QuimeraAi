@@ -1667,7 +1667,7 @@ Lo que Quimera puede hacer:
         category: 'tutorial',
         tags: ['appointments', 'citas', 'calendario', 'reservaciones', 'agendar'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Configurar sistema de citas
 
 El sistema de citas de Quimera permite que tus clientes agenden automáticamente sin necesidad de llamar o escribir.
@@ -1686,12 +1686,12 @@ El sistema de citas de Quimera permite que tus clientes agenden automáticamente
 3. Configura descansos (almuerzo, etc.)
 
 ### Ejemplo de configuración:
-\\\`\\\`\\\`
+\`\`\`
 Lunes - Viernes: 9:00 AM - 6:00 PM
 Descanso: 1:00 PM - 2:00 PM
 Sábado: 10:00 AM - 2:00 PM
 Domingo: Cerrado
-\\\`\\\`\\\`
+\`\`\`
 
 ## Paso 3: Crear tipos de citas
 
@@ -1748,7 +1748,7 @@ Campos que puedes pedir:
 - Reagendar
 - Cancelar con motivo
 - Agregar notas internas
-        \`
+        `
     },
     {
         title: 'Sincronizar citas con Google Calendar',
@@ -1760,7 +1760,7 @@ Campos que puedes pedir:
         category: 'guide',
         tags: ['appointments', 'google', 'calendar', 'sincronizar', 'integrar'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Sincronizar con Google Calendar
 
 ## Beneficios
@@ -1817,7 +1817,7 @@ Puedes:
 2. Haz clic en **Desconectar**
 3. Los eventos se mantienen en Google
 4. Puedes reconectar en cualquier momento
-        \`
+        `
     },
     {
         title: 'Gestionar cancelaciones y reprogramaciones',
@@ -1829,7 +1829,7 @@ Puedes:
         category: 'help',
         tags: ['appointments', 'cancel', 'reschedule', 'cancelar', 'reprogramar'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Gestionar cancelaciones y reprogramaciones
 
 ## Configurar políticas
@@ -1873,7 +1873,7 @@ Puedes:
 ## Notificaciones automáticas
 
 ### Al cancelar:
-\\\`\\\`\\\`
+\`\`\`
 Hola [Nombre],
 
 Tu cita del [fecha] ha sido cancelada.
@@ -1882,10 +1882,10 @@ Motivo: [motivo]
 Puedes agendar una nueva cita aquí: [link]
 
 Disculpa los inconvenientes.
-\\\`\\\`\\\`
+\`\`\`
 
 ### Al reprogramar:
-\\\`\\\`\\\`
+\`\`\`
 Hola [Nombre],
 
 Tu cita ha sido reprogramada:
@@ -1893,7 +1893,7 @@ Tu cita ha sido reprogramada:
 🕐 Nueva hora: [hora]
 
 Si tienes problemas, contáctanos.
-\\\`\\\`\\\`
+\`\`\`
 
 ## Reportes
 
@@ -1901,7 +1901,7 @@ Si tienes problemas, contáctanos.
 - Motivos más comunes
 - Horarios con más cancelaciones
 - Clientes frecuentes
-        \`
+        `
     },
 
     // =========================================================================
@@ -1917,7 +1917,7 @@ Si tienes problemas, contáctanos.
         category: 'tutorial',
         tags: ['seo', 'google', 'search', 'posicionamiento', 'optimización'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Optimizar tu sitio para Google
 
 ## ¿Qué es SEO?
@@ -1934,10 +1934,10 @@ SEO (Search Engine Optimization) es el proceso de mejorar tu sitio para aparecer
    - **Palabras clave**: términos relevantes
 
 ### Ejemplo:
-\\\`\\\`\\\`
+\`\`\`
 Título: Diseño Web Profesional en México | Mi Empresa
 Descripción: Creamos sitios web modernos y funcionales para tu negocio. 10+ años de experiencia. Cotización gratis.
-\\\`\\\`\\\`
+\`\`\`
 
 ## SEO por página
 
@@ -1994,7 +1994,7 @@ Quimera optimiza automáticamente:
 2. Agrega tu dominio
 3. Verifica propiedad
 4. Envía sitemap: tudominio.com/sitemap.xml
-        \`
+        `
     },
     {
         title: 'Configurar Google Analytics en tu sitio',
@@ -2006,7 +2006,7 @@ Quimera optimiza automáticamente:
         category: 'tutorial',
         tags: ['seo', 'analytics', 'google', 'metricas', 'trafico'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Configurar Google Analytics
 
 ## Crear cuenta de Analytics
@@ -2067,7 +2067,7 @@ Configura objetivos:
 2. **Compara períodos**: Este mes vs anterior
 3. **Filtra tu tráfico**: Excluye tu propia IP
 4. **Configura alertas**: Notificaciones de anomalías
-        \`
+        `
     },
 
     // =========================================================================
@@ -2083,7 +2083,7 @@ Configura objetivos:
         category: 'help',
         tags: ['security', 'seguridad', 'cuenta', 'password', 'proteger'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Seguridad de tu cuenta
 
 ## Contraseña segura
@@ -2095,15 +2095,15 @@ Configura objetivos:
 - Caracteres especiales (!@#$%^&*)
 
 ### Ejemplo seguro:
-\\\`\\\`\\\`
+\`\`\`
 MiEmpresa2024!Segura
-\\\`\\\`\\\`
+\`\`\`
 
 ### Ejemplo débil:
-\\\`\\\`\\\`
+\`\`\`
 password123 ❌
 miempresa ❌
-\\\`\\\`\\\`
+\`\`\`
 
 ## Cambiar contraseña
 
@@ -2155,7 +2155,7 @@ Recibirás email cuando:
 - Usa antivirus
 - No uses WiFi público sin VPN
 - No guardes contraseñas en navegadores públicos
-        \`
+        `
     },
     {
         title: 'Política de privacidad y GDPR',
@@ -2167,7 +2167,7 @@ Recibirás email cuando:
         category: 'help',
         tags: ['security', 'privacy', 'gdpr', 'privacidad', 'datos'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Política de privacidad y GDPR
 
 ## Nuestro compromiso
@@ -2231,7 +2231,7 @@ Quimera genera automáticamente:
 - Política de cookies
 
 Personalízalas en **Configuración > Legal**.
-        \`
+        `
     },
 
     // =========================================================================
@@ -2247,7 +2247,7 @@ Personalízalas en **Configuración > Legal**.
         category: 'help',
         tags: ['troubleshooting', 'error', 'problema', 'no-carga', 'ayuda'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Mi sitio no carga
 
 ## Diagnóstico rápido
@@ -2307,7 +2307,7 @@ Si nada funciona:
 2. Captura pantalla
 3. Indica URL afectada
 4. Contacta vía chat o email
-        \`
+        `
     },
     {
         title: 'Problemas con el editor: Guía de soluciones',
@@ -2319,7 +2319,7 @@ Si nada funciona:
         category: 'help',
         tags: ['troubleshooting', 'editor', 'bug', 'problema', 'error'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Problemas con el editor
 
 ## El editor no carga
@@ -2393,7 +2393,7 @@ Si nada funciona:
 - 4GB RAM
 - Procesador moderno
 - Conexión estable
-        \`
+        `
     },
     {
         title: 'Recuperar contenido eliminado',
@@ -2405,7 +2405,7 @@ Si nada funciona:
         category: 'help',
         tags: ['troubleshooting', 'recover', 'backup', 'recuperar', 'eliminar'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Recuperar contenido eliminado
 
 ## Papelera de reciclaje
@@ -2465,7 +2465,7 @@ Después de 30 días:
 2. **No elimines sin verificar**
 3. **Crea backups antes de cambios grandes**
 4. **Usa el historial** antes de cambios drásticos
-        \`
+        `
     },
 
     // =========================================================================
@@ -2481,7 +2481,7 @@ Después de 30 días:
         category: 'tutorial',
         tags: ['team', 'equipo', 'colaboradores', 'permisos', 'invitar'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Agregar miembros a tu equipo
 
 ## Requisitos
@@ -2554,7 +2554,7 @@ El miembro pierde acceso inmediatamente.
 | Starter | 2 |
 | Pro | 5 |
 | Business | Ilimitados |
-        \`
+        `
     },
     {
         title: 'Roles y permisos explicados',
@@ -2566,7 +2566,7 @@ El miembro pierde acceso inmediatamente.
         category: 'guide',
         tags: ['team', 'roles', 'permisos', 'acceso', 'equipo'],
         author: 'Equipo Quimera',
-        content: \`
+        content: `
 # Roles y permisos
 
 ## Matriz de permisos
@@ -2643,7 +2643,7 @@ Para clientes o stakeholders.
 ### No puede:
 - Editar nada
 - Configurar nada
-        \`
+        `
     },
 ];
 

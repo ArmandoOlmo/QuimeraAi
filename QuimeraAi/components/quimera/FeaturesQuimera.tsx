@@ -14,6 +14,11 @@ interface FeaturesQuimeraProps {
         background?: string;
         text?: string;
         accent?: string;
+        cardBackground?: string;
+        cardBorder?: string;
+        cardText?: string;
+        iconColor?: string;
+        secondaryText?: string;
     };
 }
 
@@ -63,17 +68,27 @@ const getIcon = (iconName: string) => {
 };
 
 const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
-    title = 'Características Principales',
-    subtitle = 'Todo lo que necesitas para construir una presencia digital potente',
+    title,
+    subtitle,
     features = defaultFeatures,
     colors = {}
 }) => {
+    const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
 
+    const cardBg = colors.cardBackground || 'rgba(255,255,255,0.02)';
+    const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
+    const cardText = colors.cardText || textColor;
+    const iconColor = colors.iconColor || accentColor;
+    const secondaryColor = colors.secondaryText || '#9ca3af';
+
+    const displayTitle = title || t('editor.placeholder.title', 'Escribe el título aquí...');
+    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+
     return (
-        <section className="py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
             
             {/* Background elements */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
@@ -83,36 +98,41 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-                        {title}
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                        {displayTitle}
                     </h2>
-                    <p className="text-xl text-gray-400 font-light">
-                        {subtitle}
+                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                        {displaySubtitle}
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {features.map((feature, index) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+                    {features.map((feature, index) => {
+                        const displayFeatureTitle = feature.title || t('editor.placeholder.title', 'Título');
+                        const displayFeatureDesc = feature.description || t('editor.placeholder.description', 'Descripción');
+
+                        return (
                         <div 
                             key={index}
-                            className="group relative p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-yellow-500/30 hover:bg-white/[0.04] transition-all duration-500 overflow-hidden"
+                            className="group relative p-6 md:p-8 rounded-2xl transition-all duration-500 overflow-hidden border"
+                            style={{ backgroundColor: cardBg, borderColor: cardBorder }}
                         >
                             {/* Hover gradient glow */}
-                            <div className="absolute -inset-px bg-gradient-to-br from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
+                            <div className="absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" style={{ background: `linear-gradient(to bottom right, ${accentColor}33, transparent)` }} />
                             
                             <div className="relative z-10">
-                                <div className="w-14 h-14 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-6 group-hover:scale-110 transition-transform duration-500 border border-yellow-500/20">
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 border" style={{ backgroundColor: `${accentColor}1A`, color: iconColor, borderColor: `${accentColor}33` }}>
                                     {getIcon(feature.icon)}
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 text-white">
-                                    {feature.title}
+                                <h3 className="text-xl font-bold mb-3 font-header heading-caps" style={{ color: cardText }}>
+                                    {displayFeatureTitle}
                                 </h3>
-                                <p className="text-gray-400 leading-relaxed font-light group-hover:text-gray-300 transition-colors">
-                                    {feature.description}
+                                <p className="leading-relaxed font-light transition-colors font-body" style={{ color: secondaryColor }}>
+                                    {displayFeatureDesc}
                                 </p>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             </div>
         </section>
