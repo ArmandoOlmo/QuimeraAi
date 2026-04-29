@@ -10,11 +10,25 @@ interface AgencyWhiteLabelQuimeraProps {
         text?: string;
         accent?: string;
     };
+    features?: Array<{
+        title: string;
+        description: string;
+    }>;
+    buttonText?: string;
+    buttonLink?: string;
 }
 
 const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     title = 'La Plataforma Definitiva para Agencias',
     subtitle = 'Marca Blanca 100%. Revende nuestra tecnología bajo tu propia marca, establece tus propios precios y escala tu agencia sin límites.',
+    features = [
+        { title: 'Sin Rastros de Quimera', description: 'Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.' },
+        { title: 'Cobra lo que Quieras', description: 'Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.' },
+        { title: 'Subcuentas Ilimitadas', description: 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.' },
+        { title: 'Soporte Prioritario', description: 'Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.' }
+    ],
+    buttonText = 'Ver Precios de Agencia',
+    buttonLink = '#',
     colors = {}
 }) => {
     const bgColor = colors.background || '#050505';
@@ -123,55 +137,27 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            
-                            <div className="flex gap-4">
-                                <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-4 h-4 text-yellow-500" />
+                            {features.map((feature, i) => (
+                                <div key={i} className="flex gap-4">
+                                    <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                                        <CheckCircle2 className="w-4 h-4 text-yellow-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg mb-1">{feature.title}</h4>
+                                        <p className="text-gray-400 text-sm">{feature.description}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-lg mb-1">Sin Rastros de Quimera</h4>
-                                    <p className="text-gray-400 text-sm">Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-4 h-4 text-yellow-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-lg mb-1">Cobra lo que Quieras</h4>
-                                    <p className="text-gray-400 text-sm">Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-4 h-4 text-yellow-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-lg mb-1">Subcuentas Ilimitadas</h4>
-                                    <p className="text-gray-400 text-sm">Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.</p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-4 h-4 text-yellow-500" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-lg mb-1">Soporte Prioritario</h4>
-                                    <p className="text-gray-400 text-sm">Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.</p>
-                                </div>
-                            </div>
-
+                            ))}
                         </div>
 
-                        <div className="mt-10">
-                            <button className="group px-8 py-4 bg-white/5 hover:bg-white/10 border border-yellow-500/30 text-white font-bold rounded-xl transition-all flex items-center gap-2">
-                                <DollarSign className="w-5 h-5 text-yellow-500" />
-                                Ver Precios de Agencia
-                            </button>
-                        </div>
+                        {buttonText && (
+                            <div className="mt-10">
+                                <a href={buttonLink || '#'} className="group inline-flex px-8 py-4 bg-white/5 hover:bg-white/10 border border-yellow-500/30 text-white font-bold rounded-xl transition-all items-center gap-2">
+                                    <DollarSign className="w-5 h-5 text-yellow-500" />
+                                    {buttonText}
+                                </a>
+                            </div>
+                        )}
                     </div>
 
                 </div>

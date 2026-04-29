@@ -24,6 +24,7 @@ import MobileBottomSheet from '../ui/MobileBottomSheet';
 import TabletSlidePanel from '../ui/TabletSlidePanel';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { useViewportType } from '../../hooks/use-mobile';
+import { useSafeUndo } from '../../contexts/undo';
 import {
   Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type,
@@ -103,6 +104,7 @@ const Controls: React.FC = () => {
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
     sectionVisibility: projectSectionVisibility,
     setSectionVisibility: setProjectSectionVisibility,
+    theme, pushProjectUndoAction
   } = useProject();
 
   const editorContext = useEditor();
@@ -117,6 +119,14 @@ const Controls: React.FC = () => {
     setProjectData(updater);
     editorContext.setData(updater);
   };
+
+  // Set active undo module
+  const undoContext = useSafeUndo();
+  useEffect(() => {
+    if (undoContext?.setActiveModule) {
+      undoContext.setActiveModule('project');
+    }
+  }, [undoContext?.setActiveModule]);
 
   const sectionVisibility = projectSectionVisibility;
   const setSectionVisibility = (updater: React.SetStateAction<Record<PageSection, boolean>>) => {
@@ -280,7 +290,19 @@ const Controls: React.FC = () => {
   const handleAiApply = (text: string) => { if (aiAssistField) { setNestedData(aiAssistField.path, text); setAiAssistField(null); } };
   const toggleVisibility = (section: PageSection | 'header') => {
     if (section === 'header') return;
-    setSectionVisibility(prev => ({ ...prev, [section]: !prev[section as PageSection] }));
+    const newVisibility = { ...sectionVisibility, [section as PageSection]: !sectionVisibility[section as PageSection] };
+    setSectionVisibility(newVisibility);
+    
+    pushProjectUndoAction(
+        newVisibility[section as PageSection] ? `Mostró la sección ${section}` : `Ocultó la sección ${section}`,
+        {
+            data,
+            theme,
+            componentOrder,
+            sectionVisibility: newVisibility,
+            pages
+        }
+    );
   };
   const toggleSection = (section: PageSection | 'header') => {
     if (activeSection === section) (onSectionSelect as any)(null);
@@ -387,6 +409,7 @@ const Controls: React.FC = () => {
     setComponentOrder(newOrder as PageSection[]);
     setEditorComponentOrder(newOrder as PageSection[]);
     const globalDefault = (componentStyles && componentStyles[section]) ? componentStyles[section] : {};
+    let newDataSnapshot: any = null;
     setData(prevData => {
       if (!prevData) return null;
       const newData = JSON.parse(JSON.stringify(prevData));
@@ -395,11 +418,22 @@ const Controls: React.FC = () => {
       newData[section] = { ...sectionDefaults, ...existingData, ...globalDefault,
         colors: { ...sectionDefaults?.colors, ...existingData?.colors, ...(globalDefault as any)?.colors },
       };
+      newDataSnapshot = newData;
       return newData;
     });
-    setSectionVisibility(prev => ({ ...prev, [section]: true }));
+    
+    const newVisibility = { ...sectionVisibility, [section]: true };
+    setSectionVisibility(newVisibility);
     setIsAddComponentOpen(false);
     onSectionSelect(section as any);
+    
+    pushProjectUndoAction(`Añadió la sección ${section}`, {
+        data: newDataSnapshot || data,
+        theme,
+        componentOrder: newOrder as PageSection[],
+        sectionVisibility: newVisibility,
+        pages
+    });
   };
 
   const handleRemoveComponent = (section: PageSection) => {
@@ -407,8 +441,17 @@ const Controls: React.FC = () => {
     if (activePage) updatePage(activePage.id, { sections: newOrder });
     setComponentOrder(newOrder);
     setEditorComponentOrder(newOrder);
-    setSectionVisibility(prev => ({ ...prev, [section]: false }));
+    const newVisibility = { ...sectionVisibility, [section]: false };
+    setSectionVisibility(newVisibility);
     if (activeSection === section) onSectionSelect(null as any);
+    
+    pushProjectUndoAction(`Eliminó la sección ${section}`, {
+        data,
+        theme,
+        componentOrder: newOrder,
+        sectionVisibility: newVisibility,
+        pages
+    });
   };
 
   // ─── Section label helper ─────────────────────────────────────────────────
@@ -522,6 +565,14 @@ const Controls: React.FC = () => {
     if (activePage) updatePage(activePage.id, { sections: newOrder });
     setComponentOrder(newOrder);
     setEditorComponentOrder(newOrder);
+    
+    pushProjectUndoAction(`Reordenó las secciones`, {
+        data,
+        theme,
+        componentOrder: newOrder,
+        sectionVisibility,
+        pages
+    });
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────

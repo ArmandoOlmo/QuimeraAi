@@ -9,16 +9,33 @@ interface AiCapabilitiesQuimeraProps {
         text?: string;
         accent?: string;
     };
+    capabilities?: Array<{
+        icon: string;
+        title: string;
+        description: string;
+    }>;
 }
 
 const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
     title = 'Impulsado por Inteligencia Artificial',
     subtitle = 'Deja que nuestra IA haga el trabajo pesado. Genera contenido, diseño y código con simples instrucciones.',
+    capabilities = [
+        { icon: 'MessageSquare', title: 'Asistente Global Integrado', description: 'Un chatbot inteligente en tu panel de control listo para generar secciones enteras, escribir copys o sugerir paletas de colores.' },
+        { icon: 'FileText', title: 'Copywriting Automatizado', description: 'Dile adiós al síndrome de la página en blanco. Nuestra IA redacta títulos persuasivos y descripciones de productos que convierten.' },
+        { icon: 'ImageIcon', title: 'Sugerencias Visuales', description: 'Selección inteligente de imágenes de stock y generación de estilos CSS para que tu sitio siempre luzca profesional.' }
+    ],
     colors = {}
 }) => {
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
+
+    // Helper to render lucide icons dynamically
+    const renderIcon = (iconName: string, className: string) => {
+        const IconComponent = { MessageSquare, FileText, ImageIcon: ImageIcon, Bot, Sparkles, Zap }[iconName as keyof typeof import('lucide-react')] || Zap;
+        // @ts-ignore
+        return <IconComponent className={className} />;
+    };
 
     return (
         <section className="py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -47,35 +64,17 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
                     </p>
 
                     <div className="space-y-6">
-                        <div className="flex gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-yellow-500">
-                                <MessageSquare className="w-6 h-6" />
+                        {capabilities.map((cap, i) => (
+                            <div key={i} className="flex gap-4">
+                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-yellow-500">
+                                    {renderIcon(cap.icon, "w-6 h-6")}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold mb-2">{cap.title}</h3>
+                                    <p className="text-gray-400">{cap.description}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-bold mb-2">Asistente Global Integrado</h3>
-                                <p className="text-gray-400">Un chatbot inteligente en tu panel de control listo para generar secciones enteras, escribir copys o sugerir paletas de colores.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-yellow-500">
-                                <FileText className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold mb-2">Copywriting Automatizado</h3>
-                                <p className="text-gray-400">Dile adiós al síndrome de la página en blanco. Nuestra IA redacta títulos persuasivos y descripciones de productos que convierten.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-yellow-500">
-                                <ImageIcon className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold mb-2">Sugerencias Visuales</h3>
-                                <p className="text-gray-400">Selección inteligente de imágenes de stock y generación de estilos CSS para que tu sitio siempre luzca profesional.</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 

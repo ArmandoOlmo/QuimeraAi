@@ -151,13 +151,22 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 }
               }}
             />
-            <div className="mt-3">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               <SliderControl
                 label={t('editor.controls.header.logoWidth')}
                 value={data.header.logoWidth}
                 onChange={(v) => setNestedData('header.logoWidth', v)}
                 min={40}
                 max={300}
+                step={5}
+                suffix="px"
+              />
+              <SliderControl
+                label={t('editor.controls.header.logoHeight', 'Altura')}
+                value={data.header.logoHeight || 0}
+                onChange={(v) => setNestedData('header.logoHeight', v)}
+                min={0}
+                max={150}
                 step={5}
                 suffix="px"
               />
@@ -502,62 +511,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 // ─── ─── ─── ─── ─── ─── ───
 
-export const renderHeaderControlsWithTabs = (deps: ControlsDeps) => {
+export const renderHeaderControlsWithTabs = (deps: ControlsDeps, hideNavigationLinks: boolean = false) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.header) return null;
   const activeMenuId = data.header.menuId || '';
 
   const contentTab = (
     <div className="space-y-4">
-      {/* ========== LOGO ========== */}
-      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Image size={14} />
-          Logo
-        </label>
-
-        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
-        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
-          {['text', 'image', 'both'].map(type => (
-            <button type="button"               key={type}
-              onClick={() => setNestedData('header.logoType', type)}
-              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary'}`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-
-        {(data.header.logoType === 'text' || data.header.logoType === 'both') && (
-          <Input label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(e) => setNestedData('header.logoText', e.target.value)} />
-        )}
-
-        {(data.header.logoType === 'image' || data.header.logoType === 'both') && (
-          <div className="space-y-3 mt-3">
-            <ImagePicker
-              label={t('editor.controls.header.logoImage')}
-              value={data.header.logoImageUrl}
-              onChange={(url) => {
-                setNestedData('header.logoImageUrl', url);
-                if (data.header.logoType === 'text') {
-                  setNestedData('header.logoType', 'image');
-                }
-              }}
-            />
-            <div className="mt-3">
-              <SliderControl
-                label={t('editor.controls.header.logoWidth')}
-                value={data.header.logoWidth}
-                onChange={(v) => setNestedData('header.logoWidth', v)}
-                min={40}
-                max={300}
-                step={5}
-                suffix="px"
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Logo controls moved to styleTab as requested */}
 
 
       {/* ========== FAVICON ========== */}
@@ -673,6 +634,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* ========== NAVIGATION LINKS ========== */}
+      {!hideNavigationLinks && (
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Link size={14} />
@@ -752,7 +714,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           )}
         </div>
       </div>
-
+      )}
 
       {/* ========== CTA BUTTON ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -820,6 +782,65 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">
+      {/* ========== LOGO ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Image size={14} />
+          Logo
+        </label>
+
+        <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.logoType')}</label>
+        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
+          {['text', 'image', 'both'].map(type => (
+            <button type="button"               key={type}
+              onClick={() => setNestedData('header.logoType', type)}
+              className={`flex-1 py-1 text-xs font-medium rounded-sm transition-colors capitalize ${data.header.logoType === type ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary'}`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+
+        {(data.header.logoType === 'text' || data.header.logoType === 'both') && (
+          <Input label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(e) => setNestedData('header.logoText', e.target.value)} />
+        )}
+
+        {(data.header.logoType === 'image' || data.header.logoType === 'both') && (
+          <div className="space-y-3 mt-3">
+            <ImagePicker
+              label={t('editor.controls.header.logoImage')}
+              value={data.header.logoImageUrl}
+              onChange={(url) => {
+                setNestedData('header.logoImageUrl', url);
+                if (data.header.logoType === 'text') {
+                  setNestedData('header.logoType', 'image');
+                }
+              }}
+            />
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <SliderControl
+                label={t('common.width', 'Ancho')}
+                value={data.header.logoWidth}
+                onChange={(v) => setNestedData('header.logoWidth', v)}
+                min={40}
+                max={300}
+                step={5}
+                suffix="px"
+              />
+              <SliderControl
+                label={t('common.height', 'Alto')}
+                value={data.header.logoHeight || 0}
+                onChange={(v) => setNestedData('header.logoHeight', v)}
+                min={0}
+                max={150}
+                step={5}
+                suffix="px"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ========== DESIGN (Layout & Style) ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -830,7 +851,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div>
             <Select
               label={t('editor.controls.header.layout')}
-              value={data.header.layout}
+              value={data.header.layout || 'minimal'}
               onChange={(val) => setNestedData('header.layout', val)}
               options={[
                 { value: 'minimal', label: t('editor.controls.header.minimal') },
@@ -844,7 +865,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div>
             <Select
               label={t('editor.controls.header.style')}
-              value={data.header.style}
+              value={data.header.style || 'floating-glass'}
               onChange={(val) => setNestedData('header.style', val)}
               groups={[
                 { label: t('editor.controls.header.classic'), options: [

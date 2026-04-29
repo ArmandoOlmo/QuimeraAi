@@ -14,6 +14,7 @@ import FontWeightPicker from '../../ui/FontWeightPicker';
 import { resolveFontFamily } from '../../../utils/fontLoader';
 import { storage, ref, uploadBytes, getDownloadURL } from '../../../firebase';
 import { ProjectContext } from '../../../contexts/project';
+import ColorControl from '../../ui/ColorControl';
 
 // Import all renderers from web editor
 import {
@@ -67,6 +68,21 @@ import { renderCtaNeonControls } from '../../controls/sections/renderCtaNeonCont
 import { renderPortfolioNeonControls } from '../../controls/sections/renderPortfolioNeonControls';
 import { renderPricingNeonControls } from '../../controls/sections/renderPricingNeonControls';
 import { renderFaqNeonControls } from '../../controls/sections/renderFaqNeonControls';
+
+import {
+    renderHeroQuimeraControls,
+    renderFeaturesQuimeraControls,
+    renderCtaQuimeraControls,
+    renderPricingQuimeraControls,
+    renderTestimonialsQuimeraControls,
+    renderFaqQuimeraControls,
+    renderMetricsQuimeraControls,
+    renderGenericQuimeraControls,
+    renderPlatformShowcaseQuimeraControls,
+    renderAiCapabilitiesQuimeraControls,
+    renderAgencyWhiteLabelQuimeraControls,
+    renderIndustrySolutionsQuimeraControls,
+} from '../../controls/landing/LandingQuimeraControls';
 
 interface LandingSection {
     id: string;
@@ -154,7 +170,9 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
         
         // Extract the property path (e.g., 'hero.headline' -> 'headline')
         const parts = path.split('.');
-        const propertyPath = parts.slice(1);
+        
+        // Safety check for empty paths if passed without prefix by accident
+        const propertyPath = parts.length > 1 ? parts.slice(1) : parts;
         
         onUpdateSection(section.id, (prevData: any) => {
             const newData = JSON.parse(JSON.stringify(prevData || {}));
@@ -167,6 +185,23 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             }
             
             current[propertyPath[propertyPath.length - 1]] = value;
+            return newData;
+        });
+    };
+
+    // Native exact setter for new Landing Page Controls that use exact paths
+    const setExactData = (path: string, value: any) => {
+        if (!section) return;
+        onUpdateSection(section.id, (prevData: any) => {
+            const newData = JSON.parse(JSON.stringify(prevData || {}));
+            const parts = path.split('.');
+            let current = newData;
+            for (let i = 0; i < parts.length - 1; i++) {
+                const key = parts[i];
+                if (!current[key]) current[key] = {};
+                current = current[key];
+            }
+            current[parts[parts.length - 1]] = value;
             return newData;
         });
     };
@@ -227,118 +262,190 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
 
     // Render structure items
     if (isStructureItem) {
-        // Since GlobalStylesControl requires ProjectContext, we will just render a placeholder 
-        // or a stripped down version, but wait, the landing page is not a project.
-        // For now, render standard global controls if possible or a message to use theme settings.
-        return (
-            <div className="w-full">
-                <p className="text-q-text-muted text-sm">
-                    {t('landingEditor.structureNote', 'Utilice las pestañas para editar la estructura y diseño.')}
-                </p>
-                {structureItemId === 'colors' && (
-                     <div className="space-y-4">
-                         <h3 className="text-sm font-semibold text-q-text">Colores Globales</h3>
-                         {/* To avoid crashing due to missing ProjectContext, we won't mount GlobalStylesControl directly */}
-                         <p className="text-xs text-q-text-muted">La edición de colores globales requiere integración del ProjectContext. (Pendiente)</p>
-                     </div>
-                )}
-                {structureItemId === 'typography' && (
-                     <div className="space-y-6">
-                         <div>
-                             <h3 className="text-sm font-semibold text-q-text mb-4">Tipografía Global</h3>
-                             <div className="space-y-4">
-                                 <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
-                                     <FontFamilyPicker
-                                         label="Fuente de Títulos"
-                                         value={resolveFontFamily(section?.data?.headingFont)}
-                                         onChange={(font) => onUpdateSection(section.id, (d: any) => ({ ...d, headingFont: font }))}
-                                     />
-                                     <div className="mt-2">
-                                         <FontWeightPicker
-                                             label="Estilo de Títulos"
-                                             weight={section?.data?.fontWeightHeader || 700}
-                                             style={section?.data?.fontStyleHeader || 'normal'}
-                                             onWeightChange={(w) => onUpdateSection(section.id, (d: any) => ({ ...d, fontWeightHeader: w }))}
-                                             onStyleChange={(s) => onUpdateSection(section.id, (d: any) => ({ ...d, fontStyleHeader: s }))}
-                                         />
-                                     </div>
-                                 </div>
-                                 
-                                 <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
-                                     <FontFamilyPicker
-                                         label="Fuente de Cuerpo"
-                                         value={resolveFontFamily(section?.data?.bodyFont)}
-                                         onChange={(font) => onUpdateSection(section.id, (d: any) => ({ ...d, bodyFont: font }))}
-                                     />
-                                     <div className="mt-2">
-                                         <FontWeightPicker
-                                             label="Estilo de Cuerpo"
-                                             weight={section?.data?.fontWeightBody || 400}
-                                             style={section?.data?.fontStyleBody || 'normal'}
-                                             onWeightChange={(w) => onUpdateSection(section.id, (d: any) => ({ ...d, fontWeightBody: w }))}
-                                             onStyleChange={(s) => onUpdateSection(section.id, (d: any) => ({ ...d, fontStyleBody: s }))}
-                                         />
-                                     </div>
-                                 </div>
+        if (structureItemId === 'navigation') {
+            return (
+                <div className="w-full">
+                    <div className="text-center p-6 bg-q-surface/50 border border-q-border rounded-xl mt-4 mb-6">
+                        <h3 className="text-lg font-semibold text-q-text mb-2">{t('editor.controls.navigation.globalManagementTitle', 'Gestión de Navegación Global')}</h3>
+                        <p className="text-q-text-muted text-sm mb-6">
+                            {t('editor.controls.navigation.globalManagementDesc', 'El menú principal, logotipo y botones se administran centralizadamente. Use los controles de estilo abajo para modificar su apariencia en esta landing page.')}
+                        </p>
+                        <button
+                            onClick={() => navigate('/admin/landing-navigation')}
+                            className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors w-full"
+                        >
+                            {t('editor.controls.navigation.openManager', 'Abrir Gestor de Navegación')}
+                        </button>
+                    </div>
+                    {renderHeaderControlsWithTabs(deps, true)}
+                </div>
+            );
+        }
+        
+        if (structureItemId === 'footerGlobal') {
+            return (
+                <div className="w-full text-center p-6 bg-q-surface/50 border border-q-border rounded-xl mt-4">
+                    <h3 className="text-lg font-semibold text-q-text mb-2">Gestión del Footer Global</h3>
+                    <p className="text-q-text-muted text-sm mb-6">
+                        El pie de página y enlaces sociales de la Landing Page pública ahora se administran desde el panel centralizado.
+                    </p>
+                    <button
+                        onClick={() => navigate('/admin/landing-navigation')}
+                        className="px-4 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition-colors w-full"
+                    >
+                        Abrir Gestor del Footer
+                    </button>
+                </div>
+            );
+        }
 
-                                 <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
-                                     <FontFamilyPicker
-                                         label="Fuente de Botones"
-                                         value={resolveFontFamily(section?.data?.buttonFont)}
-                                         onChange={(font) => onUpdateSection(section.id, (d: any) => ({ ...d, buttonFont: font }))}
-                                     />
-                                     <div className="mt-2">
-                                         <FontWeightPicker
-                                             label="Estilo de Botones"
-                                             weight={section?.data?.fontWeightButton || 600}
-                                             style={section?.data?.fontStyleButton || 'normal'}
-                                             onWeightChange={(w) => onUpdateSection(section.id, (d: any) => ({ ...d, fontWeightButton: w }))}
-                                             onStyleChange={(s) => onUpdateSection(section.id, (d: any) => ({ ...d, fontStyleButton: s }))}
-                                         />
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
-                         
-                         <div className="border-t border-q-border pt-4">
-                             <h4 className="text-sm font-semibold text-q-text mb-3">Estilos Todo Mayúsculas</h4>
-                             
-                             <div className="space-y-3">
-                                 <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
-                                     <span className="text-sm font-medium text-q-text">Títulos en Mayúsculas</span>
-                                     <input
-                                         type="checkbox"
-                                         checked={section?.data?.headingsCaps || false}
-                                         onChange={(e) => onUpdateSection(section.id, (d: any) => ({ ...d, headingsCaps: e.target.checked }))}
-                                         className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
-                                     />
-                                 </label>
-                                 
-                                 <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
-                                     <span className="text-sm font-medium text-q-text">Botones en Mayúsculas</span>
-                                     <input
-                                         type="checkbox"
-                                         checked={section?.data?.buttonsCaps || false}
-                                         onChange={(e) => onUpdateSection(section.id, (d: any) => ({ ...d, buttonsCaps: e.target.checked }))}
-                                         className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
-                                     />
-                                 </label>
-                                 
-                                 <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
-                                     <span className="text-sm font-medium text-q-text">Menú en Mayúsculas</span>
-                                     <input
-                                         type="checkbox"
-                                         checked={section?.data?.navLinksCaps || false}
-                                         onChange={(e) => onUpdateSection(section.id, (d: any) => ({ ...d, navLinksCaps: e.target.checked }))}
-                                         className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
-                                     />
-                                 </label>
-                             </div>
-                         </div>
-                     </div>
-                )}
-            </div>
-        );
+        if (structureItemId === 'colors' || structureItemId === 'typography') {
+             // Since GlobalStylesControl requires ProjectContext, we will just render a placeholder 
+             // or a stripped down version, but wait, the landing page is not a project.
+             // For now, render standard global controls if possible or a message to use theme settings.
+             return (
+                 <div className="w-full">
+                     <p className="text-q-text-muted text-sm">
+                         {t('landingEditor.structureNote', 'Utilice las pestañas para editar la estructura y diseño.')}
+                     </p>
+                     {structureItemId === 'colors' && (
+                          <div className="space-y-4">
+                              <h3 className="text-sm font-semibold text-q-text">Colores Globales</h3>
+                              <div className="space-y-3 bg-q-surface/50 p-3 rounded-lg border border-q-border">
+                                  <ColorControl
+                                      label="Color de Fondo (Background)"
+                                      value={section?.data?.backgroundColor || '#000000'}
+                                      onChange={(v) => onUpdateSection(section!.id, (d: any) => ({ ...d, backgroundColor: v }))}
+                                      portalContainer={portalContainer}
+                                  />
+                                  <ColorControl
+                                      label="Color de Texto Principal (Text)"
+                                      value={section?.data?.textColor || '#ffffff'}
+                                      onChange={(v) => onUpdateSection(section!.id, (d: any) => ({ ...d, textColor: v }))}
+                                      portalContainer={portalContainer}
+                                  />
+                                  <ColorControl
+                                      label="Color de Acento (Accent)"
+                                      value={section?.data?.accentColor || '#facc15'}
+                                      onChange={(v) => onUpdateSection(section!.id, (d: any) => ({ ...d, accentColor: v }))}
+                                      portalContainer={portalContainer}
+                                  />
+                                  <ColorControl
+                                      label="Color Secundario (Secondary)"
+                                      value={section?.data?.secondaryColor || '#3b82f6'}
+                                      onChange={(v) => onUpdateSection(section!.id, (d: any) => ({ ...d, secondaryColor: v }))}
+                                      portalContainer={portalContainer}
+                                  />
+                                  <ColorControl
+                                      label="Color Principal (Primary)"
+                                      value={section?.data?.mainColor || '#3b82f6'}
+                                      onChange={(v) => onUpdateSection(section!.id, (d: any) => ({ ...d, mainColor: v }))}
+                                      portalContainer={portalContainer}
+                                  />
+                              </div>
+                              <p className="text-xs text-q-text-muted mt-2">
+                                  Estos colores se aplicarán globalmente en todo el Landing Page, pero pueden sobrescribirse en las configuraciones específicas de cada sección.
+                              </p>
+                          </div>
+                     )}
+                     {structureItemId === 'typography' && (
+                          <div className="space-y-6">
+                              <div>
+                                  <h3 className="text-sm font-semibold text-q-text mb-4">Tipografía Global</h3>
+                                  <div className="space-y-4">
+                                      <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
+                                          <FontFamilyPicker
+                                              label="Fuente de Títulos"
+                                              value={resolveFontFamily(section?.data?.headingFont)}
+                                              onChange={(font) => onUpdateSection(section!.id, (d: any) => ({ ...d, headingFont: font }))}
+                                          />
+                                          <div className="mt-2">
+                                              <FontWeightPicker
+                                                  label="Estilo de Títulos"
+                                                  weight={section?.data?.fontWeightHeader || 700}
+                                                  style={section?.data?.fontStyleHeader || 'normal'}
+                                                  onWeightChange={(w) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontWeightHeader: w }))}
+                                                  onStyleChange={(s) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontStyleHeader: s }))}
+                                              />
+                                          </div>
+                                      </div>
+                                      
+                                      <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
+                                          <FontFamilyPicker
+                                              label="Fuente de Cuerpo"
+                                              value={resolveFontFamily(section?.data?.bodyFont)}
+                                              onChange={(font) => onUpdateSection(section!.id, (d: any) => ({ ...d, bodyFont: font }))}
+                                          />
+                                          <div className="mt-2">
+                                              <FontWeightPicker
+                                                  label="Estilo de Cuerpo"
+                                                  weight={section?.data?.fontWeightBody || 400}
+                                                  style={section?.data?.fontStyleBody || 'normal'}
+                                                  onWeightChange={(w) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontWeightBody: w }))}
+                                                  onStyleChange={(s) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontStyleBody: s }))}
+                                              />
+                                          </div>
+                                      </div>
+
+                                      <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
+                                          <FontFamilyPicker
+                                              label="Fuente de Botones"
+                                              value={resolveFontFamily(section?.data?.buttonFont)}
+                                              onChange={(font) => onUpdateSection(section!.id, (d: any) => ({ ...d, buttonFont: font }))}
+                                          />
+                                          <div className="mt-2">
+                                              <FontWeightPicker
+                                                  label="Estilo de Botones"
+                                                  weight={section?.data?.fontWeightButton || 600}
+                                                  style={section?.data?.fontStyleButton || 'normal'}
+                                                  onWeightChange={(w) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontWeightButton: w }))}
+                                                  onStyleChange={(s) => onUpdateSection(section!.id, (d: any) => ({ ...d, fontStyleButton: s }))}
+                                              />
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              
+                              <div className="border-t border-q-border pt-4">
+                                  <h4 className="text-sm font-semibold text-q-text mb-3">Estilos Todo Mayúsculas</h4>
+                                  
+                                  <div className="space-y-3">
+                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                          <span className="text-sm font-medium text-q-text">Títulos en Mayúsculas</span>
+                                          <input
+                                              type="checkbox"
+                                              checked={section?.data?.headingsCaps || false}
+                                              onChange={(e) => onUpdateSection(section!.id, (d: any) => ({ ...d, headingsCaps: e.target.checked }))}
+                                              className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
+                                          />
+                                      </label>
+                                      
+                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                          <span className="text-sm font-medium text-q-text">Botones en Mayúsculas</span>
+                                          <input
+                                              type="checkbox"
+                                              checked={section?.data?.buttonsCaps || false}
+                                              onChange={(e) => onUpdateSection(section!.id, (d: any) => ({ ...d, buttonsCaps: e.target.checked }))}
+                                              className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
+                                          />
+                                      </label>
+                                      
+                                      <label className="flex items-center justify-between p-3 border border-q-border rounded-lg hover:border-q-accent transition-colors cursor-pointer">
+                                          <span className="text-sm font-medium text-q-text">Menú en Mayúsculas</span>
+                                          <input
+                                              type="checkbox"
+                                              checked={section?.data?.navLinksCaps || false}
+                                              onChange={(e) => onUpdateSection(section!.id, (d: any) => ({ ...d, navLinksCaps: e.target.checked }))}
+                                              className="w-4 h-4 text-q-accent bg-q-bg border-q-border rounded focus:ring-q-accent"
+                                          />
+                                      </label>
+                                  </div>
+                              </div>
+                          </div>
+                     )}
+                 </div>
+             );
+        }
     }
 
     if (!section) return null;
@@ -401,20 +508,21 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'faqNeon': return renderFaqNeonControls(deps);
 
             // Quimera Suite
-            case 'heroQuimera': return renderHeroControlsWithTabs(deps);
-            case 'featuresQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'ctaQuimera': return renderCTAControlsWithTabs(deps);
-            case 'platformShowcaseQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'bentoShowcaseQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'agentDemonstrationQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'pricingQuimera': return renderPricingControlsWithTabs(deps);
-            case 'testimonialsQuimera': return renderTestimonialsControlsWithTabs(deps);
-            case 'faqQuimera': return renderFAQControlsWithTabs(deps);
-            case 'metricsQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'industrySolutionsQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'aiCapabilitiesQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'agencyWhiteLabelQuimera': return renderFeaturesControlsWithTabs(deps);
-            case 'finalCtaQuimera': return renderCTAControlsWithTabs(deps);
+            case 'heroQuimera': return renderHeroQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'featuresQuimera': return renderFeaturesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'ctaQuimera': return renderCtaQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'pricingQuimera': return renderPricingQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'testimonialsQuimera': return renderTestimonialsQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'faqQuimera': return renderFaqQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'metricsQuimera': return renderMetricsQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'platformShowcaseQuimera': return renderPlatformShowcaseQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'aiCapabilitiesQuimera': return renderAiCapabilitiesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'agencyWhiteLabelQuimera': return renderAgencyWhiteLabelQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'industrySolutionsQuimera': return renderIndustrySolutionsQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'bentoShowcaseQuimera': 
+            case 'agentDemonstrationQuimera': 
+            case 'finalCtaQuimera': 
+                return renderGenericQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
 
             default:
                 return (

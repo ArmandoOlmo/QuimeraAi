@@ -19,6 +19,16 @@ import {
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeTenant } from '../tenant';
+import { useUndoRedo } from '../../hooks/useUndoRedo';
+import { useSafeUndo } from '../undo/UndoContext';
+
+export interface BioPageUndoState {
+    links: BioLink[];
+    profile: BioProfile;
+    theme: BioTheme;
+    products: BioProduct[];
+    emailSignupEnabled: boolean;
+}
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -178,6 +188,10 @@ interface BioPageContextType {
 
     // Publish
     publishBioPage: () => Promise<boolean>;
+
+    // Undo support
+    pushBioPageUndoAction: (description: string, newState: BioPageUndoState, prevState?: BioPageUndoState) => void;
+    getCurrentBioPageState: () => BioPageUndoState;
 }
 
 const BioPageContext = createContext<BioPageContextType | undefined>(undefined);
@@ -242,6 +256,60 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, []);
 
+    // ==========================================================================
+    // UNDO / REDO INTEGRATION
+    // ==========================================================================
+    const { registerModule, unregisterModule } = useSafeUndo() || {};
+
+    const restoreBioPageState = useCallback((state: BioPageUndoState) => {
+        setLinks(state.links);
+        setProfile(state.profile);
+        setTheme(state.theme);
+        setProducts(state.products);
+        setEmailSignupEnabled(state.emailSignupEnabled);
+        markUnsaved();
+    }, [markUnsaved]);
+
+    const { pushAction, undo, redo, canUndo, canRedo, lastActionDescription, clear: clearHistory } = useUndoRedo<BioPageUndoState>({
+        moduleId: 'bio-page',
+        maxHistory: 50,
+        onUndo: (action) => restoreBioPageState(action.previousState),
+        onRedo: (action) => restoreBioPageState(action.newState),
+    });
+
+    const undoStateRef = useRef({ canUndo, canRedo, lastActionDescription });
+    useEffect(() => {
+        undoStateRef.current = { canUndo, canRedo, lastActionDescription };
+    }, [canUndo, canRedo, lastActionDescription]);
+
+    useEffect(() => {
+        if (registerModule) {
+            registerModule('bio-page', {
+                undo,
+                redo,
+                canUndo: () => undoStateRef.current.canUndo,
+                canRedo: () => undoStateRef.current.canRedo,
+                getLastActionDescription: () => undoStateRef.current.lastActionDescription
+            });
+            return () => {
+                if (unregisterModule) unregisterModule('bio-page');
+            };
+        }
+    }, [registerModule, unregisterModule, undo, redo]);
+
+    const getCurrentBioPageState = useCallback((): BioPageUndoState => {
+        return { links, profile, theme, products, emailSignupEnabled };
+    }, [links, profile, theme, products, emailSignupEnabled]);
+
+    const pushBioPageUndoAction = useCallback((description: string, newState: BioPageUndoState, prevState?: BioPageUndoState) => {
+        pushAction({
+            type: 'BIOPAGE_CHANGE',
+            description,
+            previousState: prevState || getCurrentBioPageState(),
+            newState
+        });
+    }, [pushAction, getCurrentBioPageState]);
+
     // Load bio page for a project
     const loadBioPage = useCallback(async (projectId: string) => {
         if (!user) return;
@@ -271,6 +339,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 setProducts([]);
                 setEmailSignupEnabled(false);
             }
+
+            clearHistory(); // Clear history when loading a new page
 
             isInitialLoadRef.current = true;
             setTimeout(() => {
@@ -312,6 +382,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         setTheme(DEFAULT_THEME);
         setProducts([]);
         setEmailSignupEnabled(false);
+
+        clearHistory(); // Clear history when creating a new page
 
         console.log('[BioPageContext] Created bio page:', username);
         return projectId;
@@ -375,9 +447,12 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             ...linkData,
         };
 
-        setLinks(prev => [newLink, ...prev]);
+        const newLinks = [newLink, ...links];
+        setLinks(newLinks);
+        
+        pushBioPageUndoAction('Añadió un enlace', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
-    }, [links.length, markUnsaved]);
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     const updateLink = useCallback((linkId: string, updates: Partial<BioLink>) => {
         setLinks(prev => prev.map(link =>
@@ -387,27 +462,32 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [markUnsaved]);
 
     const deleteLink = useCallback((linkId: string) => {
-        setLinks(prev => prev.filter(link => link.id !== linkId));
+        const newLinks = links.filter(link => link.id !== linkId);
+        setLinks(newLinks);
+        pushBioPageUndoAction('Eliminó un enlace', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
-    }, [markUnsaved]);
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     const reorderLinks = useCallback((linkIds: string[]) => {
-        setLinks(prev => {
-            const linkMap = new Map(prev.map(link => [link.id, link]));
-            return linkIds.map((id, index) => {
-                const link = linkMap.get(id);
-                return link ? { ...link, order: index } : null;
-            }).filter(Boolean) as BioLink[];
-        });
+        const linkMap = new Map(links.map(link => [link.id, link]));
+        const newLinks = linkIds.map((id, index) => {
+            const link = linkMap.get(id);
+            return link ? { ...link, order: index } : null;
+        }).filter(Boolean) as BioLink[];
+        
+        setLinks(newLinks);
+        pushBioPageUndoAction('Reordenó los enlaces', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
-    }, [markUnsaved]);
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     const toggleLink = useCallback((linkId: string) => {
-        setLinks(prev => prev.map(link =>
+        const newLinks = links.map(link =>
             link.id === linkId ? { ...link, enabled: !link.enabled } : link
-        ));
+        );
+        setLinks(newLinks);
+        pushBioPageUndoAction('Alternó visibilidad de enlace', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
-    }, [markUnsaved]);
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     // ==========================================================================
     // PROFILE OPERATIONS
@@ -423,9 +503,11 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     // ==========================================================================
 
     const updateTheme = useCallback((updates: Partial<BioTheme>) => {
-        setTheme(prev => ({ ...prev, ...updates }));
+        const newTheme = { ...theme, ...updates };
+        setTheme(newTheme);
+        pushBioPageUndoAction('Actualizó el tema visual', { ...getCurrentBioPageState(), theme: newTheme });
         markUnsaved();
-    }, [markUnsaved]);
+    }, [theme, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     // ==========================================================================
     // EMAIL SIGNUP
@@ -433,8 +515,9 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const handleSetEmailSignupEnabled = useCallback((enabled: boolean) => {
         setEmailSignupEnabled(enabled);
+        pushBioPageUndoAction(enabled ? 'Habilitó captura de leads' : 'Deshabilitó captura de leads', { ...getCurrentBioPageState(), emailSignupEnabled: enabled });
         markUnsaved();
-    }, [markUnsaved]);
+    }, [markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     // ==========================================================================
     // PUBLISH
@@ -575,6 +658,9 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         setEmailSignupEnabled: handleSetEmailSignupEnabled,
 
         publishBioPage,
+
+        pushBioPageUndoAction,
+        getCurrentBioPageState,
     };
 
     return (

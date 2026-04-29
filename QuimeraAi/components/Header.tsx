@@ -24,12 +24,13 @@ interface LogoProps {
   logoText: string;
   logoImageUrl: string;
   logoWidth: number;
+  logoHeight?: number;
   textColor: string;
   compact?: boolean; // For mobile header - smaller text
   onNavigate?: (href: string) => void;
 }
 
-const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, textColor, compact = false, onNavigate }) => {
+const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth, logoHeight, textColor, compact = false, onNavigate }) => {
   // Respect explicit logoType selection:
   // 'image' = show only image, 'text' = show only text, 'both' = show both
   // Fallback: if no explicit type but image URL exists, show image
@@ -52,7 +53,7 @@ const Logo: React.FC<LogoProps> = ({ logoType, logoText, logoImageUrl, logoWidth
         <img
           src={logoImageUrl}
           alt={logoText || 'Logo'}
-          style={{ width: `${logoWidth}px`, height: 'auto', maxHeight: '100%' }}
+          style={{ width: `${logoWidth}px`, height: logoHeight ? `${logoHeight}px` : 'auto', maxHeight: '100%' }}
           className="object-contain"
         />
       )}
@@ -211,7 +212,7 @@ const Header: React.FC<HeaderData & {
   transparent?: boolean;
 }> = ({
   style: rawStyle = 'sticky-solid', layout, isSticky, glassEffect, height,
-  logoType, logoText, logoImageUrl, logoWidth,
+  logoType, logoText, logoImageUrl, logoWidth, logoHeight,
   links = [], hoverStyle,
   ctaText, showCta, ctaUrl, buttonBorderRadius,
   showLogin, loginText, loginUrl,
@@ -726,7 +727,7 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className={`hidden nav:flex flex-1 justify-center ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
@@ -756,7 +757,7 @@ const Header: React.FC<HeaderData & {
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
                 {showSearch && (
@@ -780,7 +781,7 @@ const Header: React.FC<HeaderData & {
           return (
             <div className="flex flex-col w-full pt-4">
               <div className="flex justify-center mb-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className={`hidden nav:flex justify-center border-t border-white/10 pt-2 ${isSpecialStyle ? 'items-end h-full' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
@@ -806,7 +807,7 @@ const Header: React.FC<HeaderData & {
         default: // Classic
           return (
             <>
-              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} textColor={finalTextColor} onNavigate={onNavigate} /></div>
+              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} /></div>
               <div className={`hidden nav:flex flex-1 justify-end gap-8 ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`flex items-center ml-4 gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>

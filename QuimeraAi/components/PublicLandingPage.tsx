@@ -44,6 +44,7 @@ import { doc, getDoc, collection, getDocs } from '../firebase';
 import { db } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
 import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fontLoader';
+import Header from './Header';
 
 // Import Quimera Suite Components
 import HeroQuimera from './quimera/HeroQuimera';
@@ -56,6 +57,7 @@ import PlatformShowcaseQuimera from './quimera/PlatformShowcaseQuimera';
 import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
 import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
 import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
+import MetricsQuimera from './quimera/MetricsQuimera';
 
 // Import Lumina components
 import HeroLumina from './HeroLumina';
@@ -111,7 +113,6 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   onNavigateToArticle
 }) => {
   const { t } = useTranslation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAnnualBilling, setIsAnnualBilling] = useState(false);
 
   // Preview mode - listens for postMessage from Landing Page Editor
@@ -269,6 +270,41 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
     loadGoogleFontsSync(fontsToLoad, 'public-landing-fonts');
   }, [previewSections]);
+
+  // Handle clicking components in visualizer to focus them in editor
+  useEffect(() => {
+    if (!isPreviewMode) return;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      
+      // Find the closest parent with data-section-id
+      const sectionElement = target.closest('[data-section-id]');
+      
+      if (sectionElement) {
+        const sectionId = sectionElement.getAttribute('data-section-id');
+        if (sectionId) {
+          // Send message to parent editor to focus this section
+          window.parent.postMessage({
+            type: 'SECTION_FOCUS',
+            sectionId: sectionId
+          }, '*');
+        }
+      }
+      
+      // If we clicked a link or button that shouldn't actually navigate in preview mode, prevent default
+      if (anchor && anchor.getAttribute('href')?.startsWith('http') === false && !anchor.getAttribute('href')?.startsWith('#')) {
+         e.preventDefault();
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [isPreviewMode]);
 
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
@@ -472,14 +508,46 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   // Handle navigation item click
   const handleNavItemClick = (item: AppNavItem) => {
     if (item.type === 'anchor') {
-      // Scroll to anchor — try both #hash and #section-hash selectors
-      const href = item.href; // e.g. "#features"
+      const href = item.href;
       const anchorId = href.startsWith('#') ? href.slice(1) : href;
-      const element =
-        document.getElementById(`section-${anchorId}`) ||
-        document.getElementById(anchorId) ||
-        document.querySelector(href);
-      element?.scrollIntoView({ behavior: 'smooth' });
+      
+      if (isPreviewMode) {
+        // Find the mapped section type if using standard identifiers
+        const typeMap: Record<string, string> = {
+          'features': 'featuresQuimera',
+          'pricing': 'pricingQuimera',
+        };
+        const targetSection = typeMap[anchorId] || anchorId;
+        
+        window.parent.postMessage({
+          type: 'SECTION_FOCUS',
+          sectionId: targetSection
+        }, '*');
+      }
+
+      // Scroll to anchor - try multiple selectors to handle Quimera/Lumina suffixes
+      let element = null;
+      try {
+        element = document.getElementById(`section-${anchorId}`) ||
+                  document.getElementById(anchorId) ||
+                  document.querySelector(href);
+      } catch (e) {
+        // Ignore querySelector errors for invalid hrefs
+      }
+
+      if (!element) {
+        // Fallback 1: Match section ID containing the anchor name (e.g. section-featuresQuimera matches 'features')
+        const allSections = document.querySelectorAll('[id^="section-"]');
+        element = Array.from(allSections).find(el => el.id.toLowerCase().includes(anchorId.toLowerCase())) || null;
+      }
+
+      if (!element) {
+        // Fallback 2: Match data-section-id
+        const allDataSections = document.querySelectorAll('[data-section-id]');
+        element = Array.from(allDataSections).find(el => (el.getAttribute('data-section-id') || '').toLowerCase().includes(anchorId.toLowerCase())) || null;
+      }
+
+      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (item.type === 'article' && item.articleSlug && onNavigateToArticle) {
       onNavigateToArticle(item.articleSlug);
     } else if (item.href === '/blog' && onNavigateToBlog) {
@@ -601,60 +669,61 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     switch (sectionType) {
       // ── QUIMERA SUITE COMPONENTS ──
       case 'heroQuimera':
-        return <HeroQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'platformShowcaseQuimera':
-        return <PlatformShowcaseQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PlatformShowcaseQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'bentoShowcaseQuimera':
-        return <FeaturesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FeaturesQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'agentDemonstrationQuimera':
-        return <AiCapabilitiesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><AiCapabilitiesQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'pricingQuimera':
-        return <PricingQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PricingQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'testimonialsQuimera':
-        return <TestimonialsQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><TestimonialsQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'faqQuimera':
-        return <FaqQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FaqQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'metricsQuimera':
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><MetricsQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'industrySolutionsQuimera':
-        return <IndustrySolutionsQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><IndustrySolutionsQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'finalCtaQuimera':
-        return <CtaQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><CtaQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'aiCapabilitiesQuimera':
-        return <AiCapabilitiesQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><AiCapabilitiesQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
       case 'agencyWhiteLabelQuimera':
-        return <AgencyWhiteLabelQuimera key={section.id} {...section.data} isPreviewMode={isPreviewMode} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><AgencyWhiteLabelQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
 
       // ── LUMINA SUITE COMPONENTS ──
       case 'heroLumina':
-        return <HeroLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroLumina {...section.data} /></section>;
       case 'featuresLumina':
-        return <FeaturesLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FeaturesLumina {...section.data} /></section>;
       case 'ctaLumina':
-        return <CtaLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><CtaLumina {...section.data} /></section>;
       case 'portfolioLumina':
-        return <PortfolioLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PortfolioLumina {...section.data} /></section>;
       case 'pricingLumina':
-        return <PricingLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PricingLumina {...section.data} /></section>;
       case 'testimonialsLumina':
-        return <TestimonialsLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><TestimonialsLumina {...section.data} /></section>;
       case 'faqLumina':
-        return <FaqLumina key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FaqLumina {...section.data} /></section>;
 
       // ── NEON SUITE COMPONENTS ──
       case 'heroNeon':
-        return <HeroNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroNeon {...section.data} /></section>;
       case 'featuresNeon':
-        return <FeaturesNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FeaturesNeon {...section.data} /></section>;
       case 'ctaNeon':
-        return <CtaNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><CtaNeon {...section.data} /></section>;
       case 'portfolioNeon':
-        return <PortfolioNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PortfolioNeon {...section.data} /></section>;
       case 'pricingNeon':
-        return <PricingNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><PricingNeon {...section.data} /></section>;
       case 'testimonialsNeon':
-        return <TestimonialsNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><TestimonialsNeon {...section.data} /></section>;
       case 'faqNeon':
-        return <FaqNeon key={section.id} {...section.data} />;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><FaqNeon {...section.data} /></section>;
 
       // ── LEGACY & CORE SECTIONS ──
       case 'hero':
@@ -3055,132 +3124,53 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       }}
     >
       {/* === HEADER === */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm"
-        style={{
-          backgroundColor: `${headerBackgroundColor}f2`,
-          borderBottom: `1px solid ${headerTextColor}0d`,
+      <Header
+        style={headerPreview?.style || 'floating-glass'}
+        layout={headerPreview?.layout || 'minimal'}
+        isSticky={headerPreview?.isSticky ?? true}
+        glassEffect={headerPreview?.glassEffect ?? true}
+        links={navigation.header.items.map(item => ({
+          text: item.label,
+          href: item.href,
+        }))}
+        logoType={headerPreview?.logoType || (navigation.header.logo?.imageUrl ? 'both' : 'text')}
+        logoText={headerPreview?.logoText || navigation.header.logo?.text || 'Quimera.ai'}
+        logoImageUrl={headerPreview?.logoImageUrl || navigation.header.logo?.imageUrl || QUIMERA_FULL_LOGO}
+        logoWidth={headerPreview?.logoWidth || 120}
+        logoHeight={headerPreview?.logoHeight}
+        showLogin={headerPreview?.showLoginButton ?? true}
+        loginText={getTranslatedLabel(headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login'))}
+        showCta={headerPreview?.showRegisterButton ?? true}
+        ctaText={getTranslatedLabel(headerPreview?.registerText || navigation.header.cta?.registerText || t('landing.register'))}
+        ctaUrl="/register"
+        loginUrl="/login"
+        buttonBorderRadius={headerPreview?.buttonBorderRadius || 'md'}
+        hoverStyle={headerPreview?.hoverStyle || 'highlight'}
+        backgroundColor={`${headerBackgroundColor}f2`}
+        textColor={headerTextColor}
+        colors={{
+          background: `${headerBackgroundColor}f2`,
+          text: headerTextColor,
+          accent: headerAccentColor
         }}
-      >
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <a href="/" className="flex items-center">
-              <img
-                src={QUIMERA_FULL_LOGO}
-                alt="Quimera.ai"
-                className="h-8 sm:h-10 w-auto"
-              />
-            </a>
-
-            {/* Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navigation.header.items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavItemClick(item)}
-                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
-                  style={{
-                    textTransform: navLinksCaps ? 'uppercase' : 'none',
-                  }}
-                >
-                  {getTranslatedLabel(item.label)}
-                  {item.isNew && (
-                    <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
-                  )}
-                </button>
-              ))}
-            </nav>
-
-            {/* CTA Buttons - Desktop */}
-            <div className="hidden md:flex items-center gap-4">
-              <LanguageSelector variant="minimal" />
-              {(headerPreview?.showLoginButton ?? true) && (
-                <button
-                  onClick={onNavigateToLogin}
-                  className="text-sm text-gray-300 hover:text-white transition-colors"
-                  style={{ textTransform: buttonsCaps ? 'uppercase' : 'none' }}
-                >
-                  {getTranslatedLabel(headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login'))}
-                </button>
-              )}
-              {(headerPreview?.showRegisterButton ?? true) && (
-                <button
-                  onClick={onNavigateToRegister}
-                  className="px-5 py-2.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-                  style={{
-                    fontFamily: `var(--font-button)`,
-                    textTransform: buttonsCaps ? 'uppercase' : 'none',
-                  }}
-                >
-                  {getTranslatedLabel(headerPreview?.registerText || navigation.header.cta?.registerText || t('landing.register'))}
-                </button>
-              )}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="flex items-center gap-3 md:hidden">
-              <LanguageSelector variant="minimal" />
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-gray-300 hover:text-white transition-colors"
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4 animate-in slide-in-from-top duration-200">
-              <nav className="flex flex-col gap-4 mb-6">
-                {navigation.header.items.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavItemClick(item)}
-                    className="text-gray-300 hover:text-white transition-colors py-2 text-left flex items-center gap-2"
-                  >
-                    {getTranslatedLabel(item.label)}
-                    {item.isNew && (
-                      <span className="px-1.5 py-0.5 text-[10px] bg-yellow-400 text-black rounded-full font-bold">NEW</span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-              <div className="flex flex-col gap-3">
-                {(headerPreview?.showLoginButton ?? true) && (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      onNavigateToLogin();
-                    }}
-                    className="w-full py-3 text-center text-gray-300 hover:text-white border border-white/10 rounded-xl transition-colors"
-                    style={{ textTransform: buttonsCaps ? 'uppercase' : 'none' }}
-                  >
-                    {getTranslatedLabel(headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login'))}
-                  </button>
-                )}
-                {(headerPreview?.showRegisterButton ?? true) && (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      onNavigateToRegister();
-                    }}
-                    className="w-full py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-colors"
-                    style={{
-                      fontFamily: `var(--font-button)`,
-                      textTransform: buttonsCaps ? 'uppercase' : 'none',
-                    }}
-                  >
-                    {getTranslatedLabel(headerPreview?.registerText || navigation.header.cta?.registerText || t('landing.register'))}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+        onNavigate={(href) => {
+          const item = navigation.header.items.find((i: AppNavItem) => i.href === href);
+          if (item) {
+             handleNavItemClick(item);
+          } else {
+             if (href === '/login' || href === '#login') onNavigateToLogin();
+             else if (href === '/register' || href === '#register') onNavigateToRegister();
+             else {
+               if (href.startsWith('#')) {
+                 const el = document.getElementById(href.slice(1));
+                 if (el) el.scrollIntoView({ behavior: 'smooth' });
+               } else {
+                 window.location.href = href;
+               }
+             }
+          }
+        }}
+      />
 
       {/* === DYNAMICALLY ORDERED SECTIONS === */}
       {orderedSections.map(section => renderSection(section))}
@@ -3188,6 +3178,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       {/* === FOOTER === */}
       <footer
         id="section-footer"
+        data-section-id="footer"
         className="py-12 sm:py-16"
         style={{
           backgroundColor: footerBackgroundColor,

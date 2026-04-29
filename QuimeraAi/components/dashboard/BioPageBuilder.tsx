@@ -101,6 +101,7 @@ import { useAI } from '../../contexts/ai';
 import { useUI } from '../../contexts/core/UIContext';
 import { useRouter } from '../../hooks/useRouter';
 import { useBioPage, type BioLink as ContextBioLink, type BioProfile as ContextBioProfile, type BioTheme as ContextBioTheme, type BioProduct as ContextBioProduct } from '../../contexts/bioPage';
+import { useSafeUndo } from '../../contexts/undo';
 import { ROUTES } from '../../routes/config';
 import DashboardSidebar from './DashboardSidebar';
 import ImagePicker from '../ui/ImagePicker';
@@ -513,6 +514,14 @@ const BioPageBuilder: React.FC = () => {
             setIsDeletingSubscriber(null);
         }
     };
+
+    // Set active undo module
+    const undoContext = useSafeUndo();
+    useEffect(() => {
+        if (undoContext?.setActiveModule) {
+            undoContext.setActiveModule('bio-page');
+        }
+    }, [undoContext?.setActiveModule]);
 
     // ===== INITIALIZATION: Load or create bio page =====
     React.useEffect(() => {

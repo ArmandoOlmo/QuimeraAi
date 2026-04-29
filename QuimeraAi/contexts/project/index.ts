@@ -1,4 +1,4 @@
-export { ProjectProvider, useProject, useSafeProject } from './ProjectContext';
+export { ProjectProvider, useProject, useSafeProject, ProjectContext } from './ProjectContext';
 
 
 

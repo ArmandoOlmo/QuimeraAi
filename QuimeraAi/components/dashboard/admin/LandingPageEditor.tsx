@@ -369,6 +369,22 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         sections: sections
                     }, window.location.origin);
                 }
+            } else if (event.data?.type === 'SECTION_FOCUS' && event.data.sectionId) {
+                const targetId = event.data.sectionId;
+                
+                if (targetId === 'header') {
+                    setSelectedStructureItem('navigation');
+                    setSelectedSection(null);
+                } else if (targetId === 'footer') {
+                    setSelectedStructureItem('footerGlobal');
+                    setSelectedSection(null);
+                } else {
+                    const section = sections.find(s => s.type === targetId || s.id === targetId || s.id.includes(targetId));
+                    if (section) {
+                        setSelectedSection(section.id);
+                        setSelectedStructureItem(null);
+                    }
+                }
             }
         };
 
@@ -691,6 +707,80 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         setSectionToDelete(null);
     };
 
+    // Get initial defaults for new components
+    const getInitialDataForComponent = (type: string) => {
+        const defaults: Record<string, any> = {
+            colors: { background: '#0A0A0A', text: '#ffffff', accent: '#D4AF37' }
+        };
+
+        const typeLower = type.toLowerCase();
+        
+        if (typeLower.includes('hero') || typeLower.includes('cta')) {
+            return {
+                ...defaults,
+                title: 'La plataforma definitiva para la era de la IA',
+                subtitle: 'Construye y escala tu negocio digital en segundos. Todo en un solo lugar, con tu propia marca.',
+                buttonText: 'Comenzar Gratis',
+                secondaryButtonText: 'Agendar Demo',
+                headline: 'La plataforma definitiva para la era de la IA',
+                subheadline: 'Construye y escala tu negocio digital en segundos. Todo en un solo lugar, con tu propia marca.',
+                primaryCta: 'Comenzar Gratis',
+                secondaryCta: 'Agendar Demo',
+            };
+        }
+        
+        if (typeLower.includes('feature') || typeLower.includes('showcase') || typeLower.includes('metric') || typeLower.includes('solution') || typeLower.includes('capability') || typeLower.includes('agency')) {
+            return {
+                ...defaults,
+                title: 'Características Principales',
+                subtitle: 'Todo lo que necesitas para escalar tu negocio digital en un solo lugar',
+                headline: 'Características Principales',
+                subheadline: 'Todo lo que necesitas para escalar tu negocio digital en un solo lugar',
+            };
+        }
+
+        if (typeLower.includes('pricing')) {
+            return {
+                ...defaults,
+                title: 'Precios Simples y Transparentes',
+                subtitle: 'Elige el plan que mejor se adapte a tus necesidades. Sin costos ocultos.',
+                headline: 'Precios Simples y Transparentes',
+                subheadline: 'Elige el plan que mejor se adapte a tus necesidades. Sin costos ocultos.',
+            };
+        }
+
+        if (typeLower.includes('testimonial')) {
+            return {
+                ...defaults,
+                title: 'Historias de Éxito',
+                subtitle: 'Únete a miles de emprendedores y agencias que ya están escalando con QuimeraAi.',
+                headline: 'Historias de Éxito',
+                subheadline: 'Únete a miles de emprendedores y agencias que ya están escalando con QuimeraAi.',
+            };
+        }
+
+        if (typeLower.includes('faq')) {
+            return {
+                ...defaults,
+                title: 'Preguntas Frecuentes',
+                subtitle: 'Resolvemos tus dudas sobre la plataforma',
+                headline: 'Preguntas Frecuentes',
+                subheadline: 'Resolvemos tus dudas sobre la plataforma',
+            };
+        }
+
+        // Catch-all for any other components
+        return {
+            ...defaults,
+            title: 'Título de la Sección',
+            subtitle: 'Descripción breve de esta sección. Puedes editar este texto para que coincida con tu marca.',
+            buttonText: 'Saber más',
+            headline: 'Título de la Sección',
+            subheadline: 'Descripción breve de esta sección. Puedes editar este texto para que coincida con tu marca.',
+            primaryCta: 'Saber más',
+        };
+    };
+
     // Add new component
     const addComponent = (type: string) => {
         const newSection: LandingSection = {
@@ -698,7 +788,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             type,
             enabled: true,
             order: sections.length,
-            data: {}
+            data: getInitialDataForComponent(type)
         };
         const newSections = [...sections, newSection];
         updateSectionsWithUndo(
@@ -1226,7 +1316,13 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const handleStructureSelect = useCallback((itemId: string) => {
         setSelectedStructureItem(itemId);
         setSelectedSection(null); // Clear section selection
-    }, []);
+        
+        // Scroll to corresponding section if applicable
+        const structureItem = STRUCTURE_ITEMS.find(i => i.id === itemId);
+        if (structureItem && (structureItem.type === 'header' || structureItem.type === 'footer')) {
+            scrollToSection(structureItem.type);
+        }
+    }, [scrollToSection]);
 
     if (isLoading) {
         return (
@@ -1520,6 +1616,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                         <LandingPageControls
                                             key={currentStructureSection.id}
                                             section={currentStructureSection}
+                                            isStructureItem={true}
+                                            structureItemId={selectedStructureItem || undefined}
                                             onUpdateSection={updateSectionData}
                                             onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
                                             allSections={sections}

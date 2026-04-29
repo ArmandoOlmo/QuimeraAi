@@ -34,6 +34,16 @@ import { router } from '../../hooks/useRouter';
 import { useSafeTenant } from '../tenant';
 import { useSafeUpgrade } from '../UpgradeContext';
 import { useSafeAdmin } from '../admin';
+import { useUndoRedo } from '../../hooks/useUndoRedo';
+import { useSafeUndo } from '../undo/UndoContext';
+
+export interface ProjectUndoState {
+    data: PageData | null;
+    theme: ThemeData;
+    componentOrder: PageSection[];
+    sectionVisibility: Record<PageSection, boolean>;
+    pages: SitePage[];
+}
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -268,6 +278,10 @@ interface ProjectContextType {
 
     // Refresh
     refreshProjects: () => Promise<void>;
+
+    // Undo support
+    pushProjectUndoAction: (description: string, newState: ProjectUndoState, prevState?: ProjectUndoState) => void;
+    getCurrentProjectState: () => ProjectUndoState;
 }
 
 export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -342,6 +356,60 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // CRITICAL: Ref to track the active project ID synchronously for auto-save validation.
     // Unlike state, refs are updated immediately and avoid React batching issues.
     const activeProjectIdRef = useRef<string | null>(activeProjectId);
+
+    // ==========================================================================
+    // UNDO / REDO INTEGRATION
+    // ==========================================================================
+    const { registerModule, unregisterModule } = useSafeUndo() || {};
+
+    const restoreProjectState = useCallback((state: ProjectUndoState) => {
+        setData(state.data);
+        setTheme(state.theme);
+        setComponentOrder(state.componentOrder);
+        setSectionVisibility(state.sectionVisibility);
+        setPages(state.pages);
+    }, []);
+
+    const { pushAction, undo, redo, canUndo, canRedo, lastActionDescription } = useUndoRedo<ProjectUndoState>({
+        moduleId: 'project',
+        maxHistory: 50,
+        onUndo: (action) => restoreProjectState(action.previousState),
+        onRedo: (action) => restoreProjectState(action.newState),
+    });
+
+    // We need refs for the undo handlers so we don't re-register the module on every state change
+    const undoStateRef = useRef({ canUndo, canRedo, lastActionDescription });
+    useEffect(() => {
+        undoStateRef.current = { canUndo, canRedo, lastActionDescription };
+    }, [canUndo, canRedo, lastActionDescription]);
+
+    useEffect(() => {
+        if (registerModule) {
+            registerModule('project', {
+                undo,
+                redo,
+                canUndo: () => undoStateRef.current.canUndo,
+                canRedo: () => undoStateRef.current.canRedo,
+                getLastActionDescription: () => undoStateRef.current.lastActionDescription
+            });
+            return () => {
+                if (unregisterModule) unregisterModule('project');
+            };
+        }
+    }, [registerModule, unregisterModule, undo, redo]);
+
+    const getCurrentProjectState = useCallback((): ProjectUndoState => {
+        return { data, theme, componentOrder, sectionVisibility, pages };
+    }, [data, theme, componentOrder, sectionVisibility, pages]);
+
+    const pushProjectUndoAction = useCallback((description: string, newState: ProjectUndoState, prevState?: ProjectUndoState) => {
+        pushAction({
+            type: 'PROJECT_CHANGE',
+            description,
+            previousState: prevState || getCurrentProjectState(),
+            newState
+        });
+    }, [pushAction, getCurrentProjectState]);
 
     // Track deleted template IDs
     const getDeletedTemplateIds = (): Set<string> => {
@@ -1741,6 +1809,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Refresh
         refreshProjects,
+
+        // Undo support
+        pushProjectUndoAction,
+        getCurrentProjectState,
     };
 
     return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;

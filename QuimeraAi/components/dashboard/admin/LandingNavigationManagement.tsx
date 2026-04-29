@@ -82,10 +82,10 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
         try {
             await saveNavigation(localNav);
             setHasChanges(false);
-            showToast('Navigation saved successfully!', 'success');
+            showToast(t('landingNavigation.messages.saveSuccess', 'Navigation saved successfully!'), 'success');
         } catch (error) {
             console.error('Error saving navigation:', error);
-            showToast('Error saving navigation', 'error');
+            showToast(t('landingNavigation.messages.saveError', 'Error saving navigation'), 'error');
         } finally {
             setIsSaving(false);
         }
@@ -103,7 +103,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const addHeaderItem = () => {
         const newItem: AppNavItem = {
             id: `nav_${Date.now()}`,
-            label: 'New Link',
+            label: t('landingNavigation.common.newLink', 'New Link'),
             href: '/',
             type: 'link'
         };
@@ -142,7 +142,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const addFooterColumn = () => {
         const newColumn: AppFooterColumn = {
             id: `col_${Date.now()}`,
-            title: 'New Column',
+            title: t('landingNavigation.footer.newColumn', 'New Column'),
             items: []
         };
         updateLocalNav({
@@ -176,7 +176,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const addFooterItem = (columnId: string) => {
         const newItem: AppNavItem = {
             id: `item_${Date.now()}`,
-            label: 'New Link',
+            label: t('landingNavigation.common.newLink', 'New Link'),
             href: '/',
             type: 'link'
         };
@@ -265,7 +265,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
     const publishedArticles = articles.filter(a => a.status === 'published');
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -281,7 +281,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                         <div className="flex items-center gap-2">
                             <Layout className="text-q-accent w-5 h-5" />
                             <h1 className="text-lg font-semibold text-q-text">
-                                App Landing Navigation
+                                {t('landingNavigation.title', 'App Landing Navigation')}
                             </h1>
                         </div>
                         <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
@@ -290,7 +290,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                     </div>
                     <div className="flex items-center gap-3">
                         {hasChanges && (
-                            <span className="text-xs text-orange-500 font-medium">Unsaved changes</span>
+                            <span className="text-xs text-orange-500 font-medium">{t('landingNavigation.unsavedChanges', 'Unsaved changes')}</span>
                         )}
                         <button
                             onClick={handleSave}
@@ -298,13 +298,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             className="flex items-center gap-2 px-4 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                         >
                             {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                            Save Changes
+                            {t('landingNavigation.saveChanges', 'Save Changes')}
                         </button>
                         <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
                     </div>
                 </header>
 
-                <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-[#f6f6f7] dark:bg-q-bg">
+                <main className="flex-1 p-6 sm:p-8 overflow-y-auto bg-q-bg">
                     <div className="max-w-5xl mx-auto">
                         
                         {/* Info Banner */}
@@ -312,12 +312,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                             <div className="flex items-start gap-3">
                                 <Globe className="text-blue-500 flex-shrink-0 mt-0.5" size={20} />
                                 <div>
-                                    <h4 className="text-sm font-semibold text-foreground mb-1">
-                                        Public Landing Page Configuration
+                                    <h4 className="text-sm font-semibold text-q-text mb-1">
+                                        {t('landingNavigation.configTitle', 'Public Landing Page Configuration')}
                                     </h4>
                                     <p className="text-xs text-q-text-muted">
-                                        Configure the navigation and footer for the Quimera.ai public landing page. 
-                                        Changes will be visible to all visitors.
+                                        {t('landingNavigation.configDesc', 'Configure the navigation and footer for the Quimera.ai public landing page. Changes will be visible to all visitors.')}
                                     </p>
                                 </div>
                             </div>
@@ -330,33 +329,31 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'header'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-q-text-muted hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-q-text'
                                 }`}
                             >
                                 <Layout size={14} className="inline mr-2" />
-                                Header Navigation
+                                {t('landingNavigation.tabs.header', 'Header Navigation')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('footer')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'footer'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-q-text-muted hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-q-text'
                                 }`}
                             >
-                                <Settings size={14} className="inline mr-2" />
-                                Footer
-                            </button>
+                                <Settings size={14} className="inline mr-2" />{t('landingNavigation.tabs.footer', 'Footer')}</button>
                             <button
                                 onClick={() => setActiveTab('featured')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === 'featured'
                                         ? 'border-primary text-primary'
-                                        : 'border-transparent text-q-text-muted hover:text-foreground'
+                                        : 'border-transparent text-q-text-muted hover:text-q-text'
                                 }`}
                             >
                                 <Star size={14} className="inline mr-2" />
-                                Featured Articles
+                                {t('landingNavigation.tabs.featured', 'Featured Articles')}
                             </button>
                         </div>
 
@@ -369,13 +366,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 {/* Header Tab */}
                                 {activeTab === 'header' && (
                                     <div className="space-y-6">
-                                        {/* Logo Settings */}
+                                        {/* {t('landingNavigation.header.logoSettings', 'Logo Settings')} */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                            <h3 className="font-semibold mb-4">Logo Settings</h3>
+                                            <h3 className="font-semibold mb-4">{t('landingNavigation.header.logoSettings', 'Logo Settings')}</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                        Logo Text
+                                                        {t('landingNavigation.header.logoText', 'Logo Text')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -391,7 +388,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                        Logo Image URL
+                                                        {t('landingNavigation.header.logoImageUrl', 'Logo Image URL')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -411,13 +408,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                         {/* Navigation Items */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h3 className="font-semibold">Navigation Links</h3>
+                                                <h3 className="font-semibold">{t('landingNavigation.header.navigationLinks', 'Navigation Links')}</h3>
                                                 <button
                                                     onClick={addHeaderItem}
                                                     className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                 >
                                                     <Plus size={14} />
-                                                    Add Link
+                                                    {t('landingNavigation.common.addLink', 'Add Link')}
                                                 </button>
                                             </div>
 
@@ -433,23 +430,23 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             value={item.label}
                                                             onChange={(e) => updateHeaderItem(item.id, { label: e.target.value })}
                                                             className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
-                                                            placeholder="Label"
+                                                            placeholder={t('landingNavigation.common.labelPlaceholder', 'Label')}
                                                         />
                                                         <input
                                                             type="text"
                                                             value={item.href}
                                                             onChange={(e) => updateHeaderItem(item.id, { href: e.target.value })}
                                                             className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
-                                                            placeholder="URL or #section"
+                                                            placeholder={t('landingNavigation.header.urlPlaceholder', 'URL or #section')}
                                                         />
                                                         <select
                                                             value={item.type}
                                                             onChange={(e) => updateHeaderItem(item.id, { type: e.target.value as any })}
                                                             className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                         >
-                                                            <option value="link">Page Link</option>
-                                                            <option value="anchor">Anchor (#)</option>
-                                                            <option value="article">Article</option>
+                                                            <option value="link">{t('landingNavigation.header.typePage', 'Page Link')}</option>
+                                                            <option value="anchor">{t('landingNavigation.header.typeAnchor', 'Anchor (#)')}</option>
+                                                            <option value="article">{t('landingNavigation.header.typeArticle', 'Article')}</option>
                                                         </select>
                                                         {item.type === 'article' && (
                                                             <select
@@ -460,7 +457,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                 })}
                                                                 className="px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                             >
-                                                                <option value="">Select article</option>
+                                                                <option value="">{t('landingNavigation.header.selectArticle', 'Select article')}</option>
                                                                 {publishedArticles.map(a => (
                                                                     <option key={a.id} value={a.slug}>{a.title}</option>
                                                                 ))}
@@ -477,7 +474,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
                                                 {localNav.header.items.length === 0 && (
                                                     <p className="text-sm text-q-text-muted text-center py-8">
-                                                        No navigation items. Click "Add Link" to create one.
+                                                        No navigation items. Click "{t('landingNavigation.common.addLink', 'Add Link')}" to create one.
                                                     </p>
                                                 )}
                                             </div>
@@ -485,11 +482,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
                                         {/* CTA Buttons */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                            <h3 className="font-semibold mb-4">Call-to-Action Buttons</h3>
+                                            <h3 className="font-semibold mb-4">{t('landingNavigation.header.ctaButtons', 'Call-to-Action Buttons')}</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                        Login Button Text
+                                                        {t('landingNavigation.header.loginText', 'Login Button Text')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -505,7 +502,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                        Register Button Text
+                                                        {t('landingNavigation.header.registerText', 'Register Button Text')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -527,16 +524,16 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                 {/* Footer Tab */}
                                 {activeTab === 'footer' && (
                                     <div className="space-y-6">
-                                        {/* Footer Columns */}
+                                        {/* {t('landingNavigation.footer.columns', 'Footer Columns')} */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h3 className="font-semibold">Footer Columns</h3>
+                                                <h3 className="font-semibold">{t('landingNavigation.footer.columns', 'Footer Columns')}</h3>
                                                 <button
                                                     onClick={addFooterColumn}
                                                     className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                 >
                                                     <Plus size={14} />
-                                                    Add Column
+                                                    {t('landingNavigation.footer.addColumn', 'Add Column')}
                                                 </button>
                                             </div>
 
@@ -566,14 +563,14 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                                         value={item.label}
                                                                         onChange={(e) => updateFooterItem(column.id, item.id, { label: e.target.value })}
                                                                         className="flex-1 px-2 py-1 text-sm bg-q-bg border border-q-border rounded"
-                                                                        placeholder="Label"
+                                                                        placeholder={t('landingNavigation.common.labelPlaceholder', 'Label')}
                                                                     />
                                                                     <input
                                                                         type="text"
                                                                         value={item.href}
                                                                         onChange={(e) => updateFooterItem(column.id, item.id, { href: e.target.value })}
                                                                         className="flex-1 px-2 py-1 text-sm bg-q-bg border border-q-border rounded"
-                                                                        placeholder="URL"
+                                                                        placeholder={t('landingNavigation.common.urlPlaceholder', 'URL')}
                                                                     />
                                                                     <button
                                                                         onClick={() => deleteFooterItem(column.id, item.id)}
@@ -589,23 +586,23 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             onClick={() => addFooterItem(column.id)}
                                                             className="mt-3 w-full py-1.5 text-xs text-q-text-muted hover:text-primary border border-dashed border-q-border hover:border-primary rounded transition-colors"
                                                         >
-                                                            + Add Link
+                                                            + {t('landingNavigation.common.addLink', 'Add Link')}
                                                         </button>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        {/* Social Links */}
+                                        {/* {t('landingNavigation.footer.socialLinks', 'Social Links')} */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h3 className="font-semibold">Social Links</h3>
+                                                <h3 className="font-semibold">{t('landingNavigation.footer.socialLinks', 'Social Links')}</h3>
                                                 <button
                                                     onClick={addSocialLink}
                                                     className="flex items-center gap-2 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                 >
                                                     <Plus size={14} />
-                                                    Add Social
+                                                    {t('landingNavigation.footer.addSocial', 'Add Social')}
                                                 </button>
                                             </div>
 
@@ -647,11 +644,11 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
 
                                         {/* Footer Text */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                            <h3 className="font-semibold mb-4">Footer Settings</h3>
+                                            <h3 className="font-semibold mb-4">{t('landingNavigation.footer.settings', 'Footer Settings')}</h3>
                                             <div className="space-y-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                        Copyright Text
+                                                        {t('landingNavigation.footer.copyright', 'Copyright Text')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -673,14 +670,14 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             })}
                                                             className="rounded"
                                                         />
-                                                        <span className="text-sm">Show Newsletter Section</span>
+                                                        <span className="text-sm">{t('landingNavigation.footer.showNewsletter', 'Show Newsletter Section')}</span>
                                                     </label>
                                                 </div>
                                                 {localNav.footer.showNewsletter && (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
                                                         <div>
                                                             <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                                Newsletter Title
+                                                                {t('landingNavigation.footer.newsletterTitle', 'Newsletter Title')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -693,7 +690,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                         </div>
                                                         <div>
                                                             <label className="block text-sm font-medium text-q-text-muted mb-2">
-                                                                Newsletter Description
+                                                                {t('landingNavigation.footer.newsletterDescription', 'Newsletter Description')}
                                                             </label>
                                                             <input
                                                                 type="text"
@@ -711,22 +708,21 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                     </div>
                                 )}
 
-                                {/* Featured Articles Tab */}
+                                {/* {t('landingNavigation.tabs.featured', 'Featured Articles')} Tab */}
                                 {activeTab === 'featured' && (
                                     <div className="space-y-6">
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                            <h3 className="font-semibold mb-2">Featured Articles on Homepage</h3>
+                                            <h3 className="font-semibold mb-2">{t('landingNavigation.tabs.featured', 'Featured Articles')} on Homepage</h3>
                                             <p className="text-sm text-q-text-muted mb-6">
-                                                Articles marked as "Featured" will appear on the public landing page. 
-                                                Go to Content Management to edit articles.
+                                                {t('landingNavigation.featured.desc', 'Articles marked as "Featured" will appear on the public landing page. Go to Content Management to edit articles.')}
                                             </p>
 
                                             {featuredArticles.length === 0 ? (
                                                 <div className="text-center py-12 bg-secondary/20 rounded-lg">
                                                     <Star className="w-12 h-12 mx-auto text-q-text-muted opacity-30 mb-3" />
-                                                    <p className="text-q-text-muted mb-2">No featured articles</p>
+                                                    <p className="text-q-text-muted mb-2">{t('landingNavigation.featured.noArticles', 'No featured articles')}</p>
                                                     <p className="text-sm text-q-text-muted">
-                                                        Mark articles as "Featured" in Content Management to show them here.
+                                                        {t('landingNavigation.featured.noArticlesDesc', 'Mark articles as "Featured" in Content Management to show them here.')}
                                                     </p>
                                                 </div>
                                             ) : (
@@ -750,7 +746,7 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             <div className="p-4">
                                                                 <div className="flex items-center gap-2 mb-2">
                                                                     <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                                                                    <span className="text-xs text-yellow-600 font-medium">Featured</span>
+                                                                    <span className="text-xs text-yellow-600 font-medium">{t('landingNavigation.featured.featuredLabel', 'Featured')}</span>
                                                                 </div>
                                                                 <h4 className="font-medium text-sm line-clamp-2 mb-2">
                                                                     {article.title}
@@ -765,9 +761,9 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                             )}
                                         </div>
 
-                                        {/* All Published Articles */}
+                                        {/* {t('landingNavigation.featured.allPublished', 'All Published Articles')} */}
                                         <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                            <h3 className="font-semibold mb-4">All Published Articles</h3>
+                                            <h3 className="font-semibold mb-4">{t('landingNavigation.featured.allPublished', 'All Published Articles')}</h3>
                                             <div className="space-y-2">
                                                 {publishedArticles.map(article => (
                                                     <div
@@ -789,15 +785,13 @@ const LandingNavigationManagement: React.FC<LandingNavigationManagementProps> = 
                                                             rel="noopener noreferrer"
                                                             className="flex items-center gap-1 text-xs text-primary hover:underline"
                                                         >
-                                                            <Eye size={12} />
-                                                            Preview
-                                                        </a>
+                                                            <Eye size={12} />{t('landingNavigation.common.preview', 'Preview')}</a>
                                                     </div>
                                                 ))}
 
                                                 {publishedArticles.length === 0 && (
                                                     <p className="text-sm text-q-text-muted text-center py-8">
-                                                        No published articles yet.
+                                                        {t('landingNavigation.featured.noPublished', 'No published articles yet.')}
                                                     </p>
                                                 )}
                                             </div>
