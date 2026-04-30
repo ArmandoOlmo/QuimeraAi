@@ -559,6 +559,26 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
+            // Pre-save: Force token refresh to ensure Firestore write won't fail
+            // due to an expired token. A failed Firestore write with an invalid token
+            // can cascade into onAuthStateChanged firing with null, logging the user out.
+            const { auth: firebaseAuth } = await import('../../../firebase');
+            const currentUser = firebaseAuth.currentUser;
+            if (!currentUser) {
+                console.error('[LandingPageEditor] No authenticated user — cannot save');
+                alert(t('common.errorSaving', { defaultValue: '❌ Error saving. Please log in again.' }));
+                setIsSaving(false);
+                return;
+            }
+            
+            try {
+                await currentUser.getIdToken(true); // force refresh
+                console.log('[LandingPageEditor] Token refreshed successfully before save');
+            } catch (tokenError) {
+                console.error('[LandingPageEditor] Token refresh failed:', tokenError);
+                // Continue anyway — the cached token might still be valid
+            }
+
             const now = new Date().toISOString();
             const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
 
@@ -595,8 +615,9 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             clearHistory();
             setPreviewKey(prev => prev + 1);
             console.log('[LandingPageEditor] Saved to Firestore successfully (sub-collection strategy)');
-        } catch (error) {
-            console.error('Error saving landing page:', error);
+        } catch (error: any) {
+            console.error('[LandingPageEditor] Error saving landing page:', error);
+            console.error('[LandingPageEditor] Error code:', error?.code, 'message:', error?.message);
             alert(t('common.errorSaving', { defaultValue: '❌ Error saving. Please try again.' }));
         } finally {
             setIsSaving(false);
