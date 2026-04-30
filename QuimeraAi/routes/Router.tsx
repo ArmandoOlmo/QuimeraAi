@@ -142,28 +142,6 @@ const Router: React.FC<RouterProps> = ({
   }, [route, userRole, isAuthenticated, isEmailVerified]);
 
   // =========================================================================
-  // AUTH FLICKER GUARD
-  // Track if the user was previously authenticated to prevent false redirects
-  // when Firebase auth state briefly drops (token refresh, auth domain issues)
-  // =========================================================================
-
-  const wasAuthenticatedRef = React.useRef(false);
-  const logoutTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Track authentication state
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      wasAuthenticatedRef.current = true;
-      // Clear any pending logout redirect if user re-authenticates
-      if (logoutTimerRef.current) {
-        clearTimeout(logoutTimerRef.current);
-        logoutTimerRef.current = null;
-        console.log('[Router] Auth recovered — cancelled pending login redirect');
-      }
-    }
-  }, [isAuthenticated]);
-
-  // =========================================================================
   // REDIRECTS
   // =========================================================================
 
@@ -194,34 +172,21 @@ const Router: React.FC<RouterProps> = ({
     }
 
     // Unauthenticated user on private routes -> login
-    // If the user WAS authenticated before, wait briefly to allow Firebase to
-    // recover from auth state flickers (token refresh, auth domain mismatch, etc.)
     if (!isAuthenticated && (isPrivateRoute || isAdminRoute)) {
-      if (wasAuthenticatedRef.current && !logoutTimerRef.current) {
-        console.warn('[Router] Auth state dropped on', path, '— waiting 2s for recovery before redirecting');
-        logoutTimerRef.current = setTimeout(() => {
-          // Re-check auth state after the grace period
-          // If still unauthenticated, the next render cycle will redirect
-          logoutTimerRef.current = null;
-          wasAuthenticatedRef.current = false;
-          // Force re-evaluation by triggering a state update
-          replace(ROUTES.LOGIN);
-        }, 2000);
-        return; // Don't redirect yet — give auth time to recover
-      }
-      // If user was never authenticated (fresh page load), redirect immediately
-      if (!wasAuthenticatedRef.current) {
-        console.warn('[Router] Unauthenticated user on private route', path, '— redirecting to login');
-        replace(ROUTES.LOGIN);
-      }
+      console.warn('[Router] Unauthenticated user on private route', path, '— redirecting to login');
+      replace(ROUTES.LOGIN);
       return;
     }
 
     // Authenticated user without access to admin route -> dashboard
     // IMPORTANT: Don't redirect if userRole hasn't loaded yet — canAccessRoute
-    // would incorrectly return false for superadmin users
+    // would incorrectly return false for superadmin/owner users whose role
+    // is still being fetched from Firestore or Custom Claims
     if (isAdminRoute && isAuthenticated && !canAccessRoute) {
-      if (!userRole) return; // Wait for role to load before kicking out
+      if (!userRole) {
+        console.log('[Router] Waiting for userRole to load on admin route', path);
+        return; // Wait for role to load before kicking out
+      }
       console.warn('[Router] User lacks access to admin route', path, '— role:', userRole);
       replace(ROUTES.DASHBOARD);
       return;

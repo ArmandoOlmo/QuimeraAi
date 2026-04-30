@@ -111,16 +111,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     }
                 } catch (error) {
                     console.error('Error fetching user document:', error);
-                    // Fallback user document
-                    console.error('[AuthProvider] Using fallback user document — role will be undefined');
+                    // Fallback: try to get role from Custom Claims before giving up
+                    let fallbackRole: string | undefined;
+                    try {
+                        const tokenResult = await firebaseUser.getIdTokenResult();
+                        if (tokenResult.claims.isOwner === true) {
+                            setIsOwnerFromClaims(true);
+                            fallbackRole = 'owner';
+                        } else if (typeof tokenResult.claims.role === 'string') {
+                            fallbackRole = tokenResult.claims.role;
+                        }
+                        console.log('[AuthProvider] Recovered role from Custom Claims:', fallbackRole || 'none');
+                    } catch (claimsErr) {
+                        console.error('[AuthProvider] Custom Claims also failed:', claimsErr);
+                    }
+
                     const fallbackDoc: UserDocument = {
                         id: firebaseUser.uid,
                         name: firebaseUser.displayName || 'User',
                         email: firebaseUser.email || '',
                         photoURL: firebaseUser.photoURL || '',
+                        role: fallbackRole as any,
                     };
                     setUserDocument(fallbackDoc);
-                    setUserPermissions(getPermissions('user'));
+                    const effectiveRole = determineRole(firebaseUser.email!, fallbackRole || 'user');
+                    console.log('[AuthProvider] Using fallback doc with effectiveRole:', effectiveRole);
+                    setUserPermissions(getPermissions(effectiveRole));
                 }
             } else {
                 setUserDocument(null);
