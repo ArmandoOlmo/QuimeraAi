@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Check, X, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ToggleControl } from '../ui/EditorControlPrimitives';
+import { useLandingPlans, LandingPlan } from '../../hooks/useLandingPlans';
 
 interface PricingPlan {
     name: string;
     description: string;
     price: string;
+    annualPrice?: string;
     period: string;
     isPopular?: boolean;
     buttonText: string;
@@ -18,6 +20,8 @@ interface PricingQuimeraProps {
     title?: string;
     subtitle?: string;
     plans?: PricingPlan[];
+    /** When true, use plans from the admin panel (Firestore) instead of static props */
+    useAdminPlans?: boolean;
     colors?: {
         background?: string;
         text?: string;
@@ -28,6 +32,8 @@ interface PricingQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
+    isPreviewMode?: boolean;
 }
 
 const defaultPlans: PricingPlan[] = [
@@ -49,6 +55,7 @@ const defaultPlans: PricingPlan[] = [
         name: 'Pro',
         description: 'Para profesionales y pequeños negocios',
         price: '$29',
+        annualPrice: '$23',
         period: 'por mes',
         isPopular: true,
         buttonText: 'Empezar Pro',
@@ -64,6 +71,7 @@ const defaultPlans: PricingPlan[] = [
         name: 'Agencia',
         description: 'Para agencias y equipos grandes',
         price: '$99',
+        annualPrice: '$79',
         period: 'por mes',
         buttonText: 'Contactar Ventas',
         features: [
@@ -76,14 +84,60 @@ const defaultPlans: PricingPlan[] = [
     }
 ];
 
+/**
+ * Transform admin LandingPlan[] to the PricingPlan[] shape used by the component.
+ * All features from admin are treated as "included: true".
+ */
+function transformAdminPlans(adminPlans: LandingPlan[], t: (key: string, fallback: string) => string): PricingPlan[] {
+    return adminPlans.map(plan => ({
+        name: plan.name,
+        description: plan.description,
+        price: plan.price,
+        annualPrice: plan.annualPrice,
+        period: plan.period || (plan.priceValue === 0 ? '' : t('pricingQuimera.perMonth', '/mes')),
+        isPopular: plan.isPopular || plan.featured,
+        buttonText: plan.priceValue === 0
+            ? t('pricingQuimera.startFree', 'Empezar Gratis')
+            : t('pricingQuimera.getStarted', 'Comenzar'),
+        buttonLink: '/register',
+        features: plan.features.map(feature => ({
+            text: feature,
+            included: true,
+        })),
+    }));
+}
+
 const PricingQuimera: React.FC<PricingQuimeraProps> = ({
     title,
     subtitle,
-    plans = defaultPlans,
-    colors = {}
+    plans: propPlans,
+    useAdminPlans = true,
+    colors = {},
+    textDropShadow = false,
+    isPreviewMode = false,
 }) => {
     const { t } = useTranslation();
     const [annual, setAnnual] = useState(false);
+
+    // Fetch plans from admin (Firestore) via the useLandingPlans hook
+    const { plans: adminPlans, isLoading: isLoadingAdminPlans } = useLandingPlans();
+
+    // Transform admin plans to the component's format
+    const adminPricingPlans = useMemo(() => {
+        if (!adminPlans || adminPlans.length === 0) return null;
+        return transformAdminPlans(adminPlans, t);
+    }, [adminPlans, t]);
+
+    // Priority: admin plans > editor prop plans > hardcoded defaults
+    const plans = useMemo(() => {
+        if (useAdminPlans && adminPricingPlans && adminPricingPlans.length > 0) {
+            return adminPricingPlans;
+        }
+        if (propPlans && propPlans.length > 0) {
+            return propPlans;
+        }
+        return defaultPlans;
+    }, [useAdminPlans, adminPricingPlans, propPlans]);
     
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
@@ -106,35 +160,36 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light mb-10 font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light mb-10 font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                     
                     {/* Billing Toggle */}
                     <div className="flex items-center justify-center gap-4">
-                        <span className={`text-sm font-medium ${!annual ? 'text-white' : 'text-gray-400'}`}>Mensual</span>
+                        <span className={`text-sm font-medium ${!annual ? 'text-white' : 'text-gray-400'}`}>{t('pricingQuimera.monthly', 'Mensual')}</span>
                         <ToggleControl checked={annual} onChange={setAnnual} />
                         <span className={`text-sm font-medium ${annual ? 'text-white' : 'text-gray-400'}`}>
-                            Anual <span className="ml-1 text-xs text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full font-body">-20%</span>
+                            {t('pricingQuimera.annual', 'Anual')} <span className="ml-1 text-xs text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full font-body">{t('pricingQuimera.discount', '-20%')}</span>
                         </span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-center max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch max-w-6xl mx-auto">
                     {(plans || []).map((plan, index) => {
                         const displayPlanName = plan.name || t('editor.placeholder.planName', 'Plan');
                         const displayPlanDesc = plan.description || t('editor.placeholder.planDesc', 'Descripción del plan');
-                        const displayPrice = plan.price || '$0';
+                        const isFree = plan.price === 'Free' || plan.price === 'Gratis' || plan.price === '$0';
+                        const displayPrice = annual && plan.annualPrice && !isFree ? plan.annualPrice : (plan.price || '$0');
                         const displayPeriod = plan.period || '/mes';
                         const displayButtonText = plan.buttonText || t('editor.placeholder.button', 'Comenzar');
 
                         return (
                         <div 
                             key={index}
-                            className={`relative p-6 md:p-8 rounded-3xl transition-all duration-300 border ${plan.isPopular ? 'md:-translate-y-4' : ''}`}
+                            className={`relative p-6 md:p-8 rounded-3xl transition-all duration-300 border flex flex-col ${plan.isPopular ? 'md:-translate-y-4' : ''}`}
                             style={{ 
                                 backgroundColor: cardBg, 
                                 borderColor: plan.isPopular ? accentColor : cardBorder,
@@ -145,51 +200,25 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
                             {plan.isPopular && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                     <span className="text-black text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider" style={{ backgroundColor: accentColor }}>
-                                        Más Popular
+                                        {t('pricingQuimera.mostPopular', 'Más Popular')}
                                     </span>
                                 </div>
                             )}
 
                             <div className="mb-8">
                                 <h3 className="text-2xl font-bold mb-2 font-header heading-caps">{displayPlanName}</h3>
-                                <p className="text-sm h-10 font-body" style={{ color: secondaryColor }}>{displayPlanDesc}</p>
+                                <p className={`text-sm h-10 font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>{displayPlanDesc}</p>
                             </div>
 
                             <div className="mb-8 flex items-baseline gap-2">
                                 <span className="text-5xl font-black">{displayPrice}</span>
-                                {plan.price !== 'Free' && (
+                                {!isFree && (
                                     <span className="font-light" style={{ color: secondaryColor }}>{displayPeriod}</span>
                                 )}
                             </div>
 
-                            {plan.buttonLink ? (
-                                <a 
-                                    href={plan.buttonLink}
-                                    className="w-full block text-center py-4 rounded-xl font-bold transition-all duration-300 font-button button-caps border"
-                                    style={{
-                                        backgroundColor: plan.isPopular ? accentColor : 'transparent',
-                                        color: plan.isPopular ? '#000000' : textColor,
-                                        borderColor: plan.isPopular ? 'transparent' : cardBorder,
-                                        boxShadow: plan.isPopular ? `0 0 20px ${accentColor}50` : 'none'
-                                    }}
-                                >
-                                    {displayButtonText}
-                                </a>
-                            ) : (
-                                <button 
-                                    className="w-full py-4 rounded-xl font-bold transition-all duration-300 font-button button-caps border"
-                                    style={{
-                                        backgroundColor: plan.isPopular ? accentColor : 'transparent',
-                                        color: plan.isPopular ? '#000000' : textColor,
-                                        borderColor: plan.isPopular ? 'transparent' : cardBorder,
-                                        boxShadow: plan.isPopular ? `0 0 20px ${accentColor}50` : 'none'
-                                    }}
-                                >
-                                    {displayButtonText}
-                                </button>
-                            )}
-
-                            <div className="mt-8 space-y-4 font-button button-caps">
+                            {/* Features list — flex-1 pushes button to bottom */}
+                            <div className="flex-1 space-y-4 font-body">
                                 {(plan.features || []).map((feature, idx) => (
                                     <div key={idx} className="flex items-start gap-3">
                                         {feature.included ? (
@@ -207,6 +236,34 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
                                     </div>
                                 ))}
                             </div>
+
+                            {/* CTA Button — pinned at bottom */}
+                            {plan.buttonLink ? (
+                                <a 
+                                    href={plan.buttonLink}
+                                    className="w-full block text-center py-4 rounded-xl font-bold transition-all duration-300 font-button button-caps border mt-8"
+                                    style={{
+                                        backgroundColor: plan.isPopular ? accentColor : 'transparent',
+                                        color: plan.isPopular ? '#000000' : textColor,
+                                        borderColor: plan.isPopular ? 'transparent' : cardBorder,
+                                        boxShadow: plan.isPopular ? `0 0 20px ${accentColor}50` : 'none'
+                                    }}
+                                >
+                                    {displayButtonText}
+                                </a>
+                            ) : (
+                                <button 
+                                    className="w-full py-4 rounded-xl font-bold transition-all duration-300 font-button button-caps border mt-8"
+                                    style={{
+                                        backgroundColor: plan.isPopular ? accentColor : 'transparent',
+                                        color: plan.isPopular ? '#000000' : textColor,
+                                        borderColor: plan.isPopular ? 'transparent' : cardBorder,
+                                        boxShadow: plan.isPopular ? `0 0 20px ${accentColor}50` : 'none'
+                                    }}
+                                >
+                                    {displayButtonText}
+                                </button>
+                            )}
                         </div>
                     )})}
                 </div>

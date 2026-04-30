@@ -16,6 +16,7 @@ interface HeroQuimeraProps {
         accent?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     // Background image
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
@@ -25,6 +26,7 @@ interface HeroQuimeraProps {
     glassEffect?: boolean;
     // Decoration
     showDecoration?: boolean;
+    showParticles?: boolean;
     // Layout
     sectionHeight?: number;
     textAlign?: 'left' | 'center' | 'right';
@@ -40,6 +42,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     secondaryButtonLink = '/contact',
     badgeText,
     colors = {},
+    textDropShadow = false,
     backgroundImageUrl,
     backgroundOverlayEnabled = true,
     backgroundOverlayColor,
@@ -47,6 +50,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     backgroundPosition = 'center center',
     glassEffect = false,
     showDecoration = true,
+    showParticles = true,
     sectionHeight = 80,
     textAlign = 'center',
     isPreviewMode = false,
@@ -123,7 +127,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
 
             {/* Hero Background Animations — only shown when showDecoration is true */}
             {showDecoration && (
-                <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 z-0 pointer-events-none -translate-y-20">
                     {/* Deep warm ambient glow layers */}
                     <div className="absolute inset-0" style={{
                         background: 'radial-gradient(ellipse 120% 80% at 50% 55%, rgba(160, 120, 20, 0.12) 0%, rgba(120, 80, 10, 0.06) 40%, transparent 70%)',
@@ -142,37 +146,10 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                         animation: 'heroPulse 8s ease-in-out infinite',
                     }} />
 
-                    {/* Floating gold particles */}
-                    {[
-                        { left: '10%', top: '15%', size: 4, dur: '14s', delay: '0s' },
-                        { left: '25%', top: '25%', size: 3, dur: '18s', delay: '2s' },
-                        { left: '45%', top: '10%', size: 5, dur: '16s', delay: '4s' },
-                        { left: '60%', top: '20%', size: 3, dur: '20s', delay: '1s' },
-                        { left: '75%', top: '30%', size: 4, dur: '15s', delay: '3s' },
-                        { left: '85%', top: '12%', size: 3, dur: '17s', delay: '5s' },
-                        { left: '35%', top: '35%', size: 2, dur: '22s', delay: '6s' },
-                        { left: '55%', top: '5%', size: 3, dur: '19s', delay: '7s' },
-                    ].map((p, i) => (
-                        <div key={`particle-${i}`} className="absolute rounded-full" style={{
-                            left: p.left, top: p.top, width: `${p.size}px`, height: `${p.size}px`,
-                            background: 'radial-gradient(circle, rgba(255,220,80,0.8), rgba(218,165,32,0.3))',
-                            boxShadow: '0 0 8px rgba(218,165,32,0.4)',
-                            animation: `heroParticle ${p.dur} ease-in-out ${p.delay} infinite`,
-                        }} />
-                    ))}
-
                     <style>{`
                       @keyframes heroPulse {
                         0%, 100% { opacity: 0.3; transform: scale(1); }
                         50% { opacity: 0.6; transform: scale(1.08); }
-                      }
-                      @keyframes heroParticle {
-                        0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
-                        20%  { transform: translate(15px, -25px) scale(1.3); opacity: 0.7; }
-                        40%  { transform: translate(-10px, -40px) scale(0.8); opacity: 0.4; }
-                        60%  { transform: translate(20px, -15px) scale(1.1); opacity: 0.6; }
-                        80%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
-                        100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
                       }
                     `}</style>
 
@@ -353,6 +330,64 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                 </div>
             )}
 
+            {/* Particles Effect Layer */}
+            {showParticles && (
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    {/* Floating gold particles */}
+                    {[
+                        { left: '10%', top: '15%', size: 4, dur: '14s', delay: '0s' },
+                        { left: '25%', top: '25%', size: 3, dur: '18s', delay: '2s' },
+                        { left: '45%', top: '10%', size: 5, dur: '16s', delay: '4s' },
+                        { left: '60%', top: '20%', size: 3, dur: '20s', delay: '1s' },
+                        { left: '75%', top: '30%', size: 4, dur: '15s', delay: '3s' },
+                        { left: '85%', top: '12%', size: 3, dur: '17s', delay: '5s' },
+                        { left: '35%', top: '35%', size: 2, dur: '22s', delay: '6s' },
+                        { left: '55%', top: '5%', size: 3, dur: '19s', delay: '7s' },
+                        { left: '15%', top: '45%', size: 3, dur: '15s', delay: '1s' },
+                        { left: '5%', top: '65%', size: 4, dur: '21s', delay: '4s' },
+                        { left: '30%', top: '85%', size: 2, dur: '17s', delay: '2s' },
+                        { left: '50%', top: '55%', size: 5, dur: '19s', delay: '8s' },
+                        { left: '65%', top: '75%', size: 3, dur: '14s', delay: '3s' },
+                        { left: '80%', top: '90%', size: 4, dur: '23s', delay: '7s' },
+                        { left: '95%', top: '40%', size: 2, dur: '16s', delay: '5s' },
+                        { left: '90%', top: '60%', size: 3, dur: '20s', delay: '0s' },
+                        { left: '40%', top: '95%', size: 4, dur: '18s', delay: '9s' },
+                        { left: '20%', top: '80%', size: 3, dur: '22s', delay: '6s' },
+                        { left: '70%', top: '50%', size: 2, dur: '15s', delay: '2s' },
+                        { left: '8%', top: '85%', size: 5, dur: '24s', delay: '1s' },
+                        { left: '88%', top: '25%', size: 3, dur: '19s', delay: '4s' },
+                        { left: '42%', top: '65%', size: 4, dur: '17s', delay: '8s' },
+                        { left: '58%', top: '40%', size: 2, dur: '21s', delay: '3s' },
+                        { left: '28%', top: '55%', size: 3, dur: '16s', delay: '5s' },
+                        { left: '78%', top: '70%', size: 4, dur: '20s', delay: '7s' },
+                        { left: '52%', top: '90%', size: 3, dur: '18s', delay: '2s' },
+                        { left: '12%', top: '50%', size: 2, dur: '14s', delay: '6s' },
+                        { left: '92%', top: '85%', size: 4, dur: '22s', delay: '0s' },
+                        { left: '38%', top: '20%', size: 3, dur: '15s', delay: '4s' },
+                        { left: '68%', top: '15%', size: 2, dur: '19s', delay: '1s' },
+                        { left: '82%', top: '45%', size: 5, dur: '23s', delay: '9s' },
+                        { left: '18%', top: '70%', size: 3, dur: '17s', delay: '3s' },
+                    ].map((p, i) => (
+                        <div key={`particle-${i}`} className="absolute rounded-full" style={{
+                            left: p.left, top: p.top, width: `${p.size}px`, height: `${p.size}px`,
+                            background: 'radial-gradient(circle, rgba(255,220,80,0.8), rgba(218,165,32,0.3))',
+                            boxShadow: '0 0 8px rgba(218,165,32,0.4)',
+                            animation: `heroParticle ${p.dur} ease-in-out ${p.delay} infinite`,
+                        }} />
+                    ))}
+                    <style>{`
+                      @keyframes heroParticle {
+                        0%   { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                        20%  { transform: translate(15px, -25px) scale(1.3); opacity: 0.7; }
+                        40%  { transform: translate(-10px, -40px) scale(0.8); opacity: 0.4; }
+                        60%  { transform: translate(20px, -15px) scale(1.1); opacity: 0.6; }
+                        80%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
+                        100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                      }
+                    `}</style>
+                </div>
+            )}
+
             {/* Content Layer */}
             <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col ${alignItems} font-body`}>
                 
@@ -365,11 +400,11 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                     {displayBadge}
                 </div>
 
-                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight animate-fade-in-up leading-tight drop-shadow-2xl font-header heading-caps" style={{ animationDelay: '0.2s', maxWidth: '1000px', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                <h1 className={`text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight animate-fade-in-up leading-tight ${textDropShadow ? 'drop-shadow-2xl' : ''} font-header heading-caps`} style={{ animationDelay: '0.2s', maxWidth: '1000px', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     <span dangerouslySetInnerHTML={{ __html: displayTitle.replace(/IA/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">IA</span>`).replace(/AI/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">AI</span>`) }} />
                 </h1>
 
-                <p className="text-xl md:text-2xl mb-10 max-w-3xl leading-relaxed animate-fade-in-up font-light font-body" style={{ animationDelay: '0.3s', color: secondaryColor }}>
+                <p className={`text-xl md:text-2xl mb-10 max-w-3xl leading-relaxed animate-fade-in-up font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ animationDelay: '0.3s', color: secondaryColor }}>
                     {displaySubtitle}
                 </p>
 

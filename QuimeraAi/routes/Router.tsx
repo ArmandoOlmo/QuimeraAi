@@ -142,6 +142,28 @@ const Router: React.FC<RouterProps> = ({
   }, [route, userRole, isAuthenticated, isEmailVerified]);
 
   // =========================================================================
+  // AUTH FLICKER GUARD
+  // Track if the user was previously authenticated to prevent false redirects
+  // when Firebase auth state briefly drops (token refresh, auth domain issues)
+  // =========================================================================
+
+  const wasAuthenticatedRef = React.useRef(false);
+  const logoutTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track authentication state
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      wasAuthenticatedRef.current = true;
+      // Clear any pending logout redirect if user re-authenticates
+      if (logoutTimerRef.current) {
+        clearTimeout(logoutTimerRef.current);
+        logoutTimerRef.current = null;
+        console.log('[Router] Auth recovered — cancelled pending login redirect');
+      }
+    }
+  }, [isAuthenticated]);
+
+  // =========================================================================
   // REDIRECTS
   // =========================================================================
 
@@ -153,10 +175,10 @@ const Router: React.FC<RouterProps> = ({
     if (isPreviewRoute) return;
 
     // Authenticated user on public routes (login/register) -> dashboard or superadmin
-    // IMPORTANT: Wait for userRole to be loaded before redirecting, otherwise
-    // superadmin users get sent to /dashboard before their role is known
+    // Redirect immediately once auth resolves. If userRole hasn't loaded yet,
+    // default to dashboard; the effect will re-run when userRole arrives.
     if (isAuthenticated && isEmailVerified && (path === '/login' || path === '/register')) {
-      if (!userRole) return; // Wait for Firestore user doc to load
+      console.log('[Router] Authenticated user on', path, '— userRole:', userRole, '— redirecting');
       if (userRole === 'superadmin' || userRole === 'owner') {
         replace(ROUTES.SUPERADMIN);
       } else {
@@ -172,8 +194,26 @@ const Router: React.FC<RouterProps> = ({
     }
 
     // Unauthenticated user on private routes -> login
+    // If the user WAS authenticated before, wait briefly to allow Firebase to
+    // recover from auth state flickers (token refresh, auth domain mismatch, etc.)
     if (!isAuthenticated && (isPrivateRoute || isAdminRoute)) {
-      replace(ROUTES.LOGIN);
+      if (wasAuthenticatedRef.current && !logoutTimerRef.current) {
+        console.warn('[Router] Auth state dropped on', path, '— waiting 2s for recovery before redirecting');
+        logoutTimerRef.current = setTimeout(() => {
+          // Re-check auth state after the grace period
+          // If still unauthenticated, the next render cycle will redirect
+          logoutTimerRef.current = null;
+          wasAuthenticatedRef.current = false;
+          // Force re-evaluation by triggering a state update
+          replace(ROUTES.LOGIN);
+        }, 2000);
+        return; // Don't redirect yet — give auth time to recover
+      }
+      // If user was never authenticated (fresh page load), redirect immediately
+      if (!wasAuthenticatedRef.current) {
+        console.warn('[Router] Unauthenticated user on private route', path, '— redirecting to login');
+        replace(ROUTES.LOGIN);
+      }
       return;
     }
 
@@ -182,13 +222,13 @@ const Router: React.FC<RouterProps> = ({
     // would incorrectly return false for superadmin users
     if (isAdminRoute && isAuthenticated && !canAccessRoute) {
       if (!userRole) return; // Wait for role to load before kicking out
+      console.warn('[Router] User lacks access to admin route', path, '— role:', userRole);
       replace(ROUTES.DASHBOARD);
       return;
     }
 
     // Default path handling - skip if preview mode
     if (path === '/' && isAuthenticated && isEmailVerified && !isLandingPreviewMode) {
-      if (!userRole) return; // Wait for role to load
       if (userRole === 'superadmin' || userRole === 'owner') {
         replace(ROUTES.SUPERADMIN);
       } else {
@@ -405,13 +445,17 @@ const Router: React.FC<RouterProps> = ({
   // Landing page (for unauthenticated users OR when preview=landing param is present)
   // The preview=landing param allows the Landing Page Editor to show the landing page in an iframe
   if (path === '/' && (!isAuthenticated || isLandingPreviewMode)) {
+    // In preview mode, pass no-op callbacks to prevent the iframe from navigating away.
+    // Navigation inside the preview iframe would load the login/register page inside the
+    // iframe, breaking the editor and potentially causing auth state confusion.
+    const noOp = () => {};
     return (
       <Suspense fallback={<LoadingScreen />}>
         <PublicLandingPage
-          onNavigateToLogin={() => navigate(ROUTES.LOGIN)}
-          onNavigateToRegister={() => navigate(ROUTES.REGISTER)}
-          onNavigateToBlog={() => navigate(ROUTES.BLOG)}
-          onNavigateToArticle={(slug) => navigate(`/blog/${slug}`)}
+          onNavigateToLogin={isLandingPreviewMode ? noOp : () => navigate(ROUTES.LOGIN)}
+          onNavigateToRegister={isLandingPreviewMode ? noOp : () => navigate(ROUTES.REGISTER)}
+          onNavigateToBlog={isLandingPreviewMode ? noOp : () => navigate(ROUTES.BLOG)}
+          onNavigateToArticle={isLandingPreviewMode ? noOp : (slug) => navigate(`/blog/${slug}`)}
         />
       </Suspense>
     );
@@ -643,6 +687,13 @@ const Router: React.FC<RouterProps> = ({
     );
   }
 
+  // Private/admin routes should never fall through to the public landing while
+  // Firebase auth is recovering from a transient null state. The redirect effect
+  // above owns the final decision; render a stable loader meanwhile.
+  if (!isAuthenticated && (isPrivateRoute || isAdminRoute)) {
+    return <LoadingScreen />;
+  }
+
   // =========================================================================
   // AUTHENTICATED ROUTES
   // =========================================================================
@@ -673,7 +724,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

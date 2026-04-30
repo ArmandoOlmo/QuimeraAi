@@ -8,9 +8,9 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import {
     Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
-    GripVertical, Trash2, ChevronDown, ChevronUp, Monitor, Tablet,
-    Smartphone, Loader2, Check, Image, Type, Layout,
-    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText, Users
+    GripVertical, Trash2, ChevronDown, ChevronUp, Monitor,
+    Smartphone, Loader2, Check, Type, Layout,
+    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
@@ -61,74 +61,21 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
 // Available components for landing page (CONTENIDO section)
 const AVAILABLE_COMPONENTS = [
-    // Legacy Components
-    { type: 'hero', icon: Layout },
-    { type: 'heroSplit', icon: Layout },
-    { type: 'heroGallery', icon: Image },
-    { type: 'heroWave', icon: Layout },
-    { type: 'heroNova', icon: Layout },
-    { type: 'heroLead', icon: Type },
-    { type: 'features', icon: Layers },
-    { type: 'pricing', icon: Type },
-    { type: 'testimonials', icon: Type },
-    { type: 'faq', icon: Type },
-    { type: 'cta', icon: Type },
-    { type: 'screenshotCarousel', icon: Image },
-    
-    // Core Extended
-    { type: 'services', icon: Layout },
-    { type: 'team', icon: Users },
-    { type: 'portfolio', icon: Layout },
-    { type: 'leads', icon: Type },
-    { type: 'newsletter', icon: Type },
-    { type: 'slideshow', icon: Image },
-    { type: 'video', icon: Monitor },
-    { type: 'howItWorks', icon: Layout },
-    { type: 'map', icon: Layout },
-    { type: 'menu', icon: MenuIcon },
-    { type: 'banner', icon: Layout },
-    { type: 'topBar', icon: Layout },
-    { type: 'logoBanner', icon: Layout },
-    { type: 'chatbot', icon: Type },
-    { type: 'cmsFeed', icon: Layout },
-    { type: 'signupFloat', icon: Type },
-    { type: 'separator', icon: Layout },
-    { type: 'realEstateListings', icon: Layout },
-    { type: 'restaurantReservation', icon: Layout },
-
-    // Lumina Suite
-    { type: 'heroLumina', icon: Layout, isNew: true },
-    { type: 'featuresLumina', icon: Layers, isNew: true },
-    { type: 'ctaLumina', icon: Type, isNew: true },
-    { type: 'portfolioLumina', icon: Layout, isNew: true },
-    { type: 'pricingLumina', icon: Type, isNew: true },
-    { type: 'testimonialsLumina', icon: Type, isNew: true },
-    { type: 'faqLumina', icon: Type, isNew: true },
-
-    // Neon Suite
-    { type: 'heroNeon', icon: Layout, isNew: true },
-    { type: 'testimonialsNeon', icon: Type, isNew: true },
-    { type: 'featuresNeon', icon: Layers, isNew: true },
-    { type: 'ctaNeon', icon: Type, isNew: true },
-    { type: 'portfolioNeon', icon: Layout, isNew: true },
-    { type: 'pricingNeon', icon: Type, isNew: true },
-    { type: 'faqNeon', icon: Type, isNew: true },
-
     // Quimera Suite
-    { type: 'heroQuimera', icon: Layout, isNew: true },
-    { type: 'featuresQuimera', icon: Layers, isNew: true },
-    { type: 'pricingQuimera', icon: Type, isNew: true },
-    { type: 'testimonialsQuimera', icon: Type, isNew: true },
-    { type: 'faqQuimera', icon: Type, isNew: true },
-    { type: 'ctaQuimera', icon: Type, isNew: true },
-    { type: 'platformShowcaseQuimera', icon: Layout, isNew: true },
-    { type: 'bentoShowcaseQuimera', icon: Layout, isNew: true },
-    { type: 'agentDemonstrationQuimera', icon: Layout, isNew: true },
-    { type: 'metricsQuimera', icon: Layers, isNew: true },
-    { type: 'aiCapabilitiesQuimera', icon: Sparkles, isNew: true },
-    { type: 'industrySolutionsQuimera', icon: Layers, isNew: true },
-    { type: 'agencyWhiteLabelQuimera', icon: Layout, isNew: true },
-    { type: 'finalCtaQuimera', icon: Type, isNew: true },
+    { type: 'heroQuimera', icon: Layout },
+    { type: 'platformShowcaseQuimera', icon: Layout },
+    { type: 'bentoShowcaseQuimera', icon: Layout },
+    { type: 'agentDemonstrationQuimera', icon: Layout },
+    { type: 'featuresQuimera', icon: Layers },
+    { type: 'pricingQuimera', icon: Type },
+    { type: 'testimonialsQuimera', icon: Type },
+    { type: 'faqQuimera', icon: Type },
+    { type: 'metricsQuimera', icon: Layers },
+    { type: 'aiCapabilitiesQuimera', icon: Sparkles },
+    { type: 'industrySolutionsQuimera', icon: Layers },
+    { type: 'agencyWhiteLabelQuimera', icon: Layout },
+    { type: 'ctaQuimera', icon: Type },
+    { type: 'finalCtaQuimera', icon: Type },
 ];
 
 // Structure items for global settings (ESTRUCTURA section)
@@ -714,6 +661,17 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         };
 
         const typeLower = type.toLowerCase();
+
+        if (type === 'bentoShowcaseQuimera') {
+            return {
+                ...defaults,
+                title: 'Características Principales',
+                subtitle: 'Todo lo que necesitas para escalar tu negocio digital en un solo lugar',
+                headline: 'Características Principales',
+                subheadline: 'Todo lo que necesitas para escalar tu negocio digital en un solo lugar',
+                glassEffect: true,
+            };
+        }
         
         if (typeLower.includes('hero') || typeLower.includes('cta')) {
             return {
@@ -1576,7 +1534,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 <iframe
                                     ref={iframeRef}
                                     key={previewKey}
-                                    src="/?preview=landing"
+                                    src="/landing-editor-preview"
+                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                                     className="flex-1 w-full border-0"
                                     title={t('landingEditor.landingPreview')}
                                 />

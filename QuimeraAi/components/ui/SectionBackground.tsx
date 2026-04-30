@@ -14,6 +14,8 @@ interface SectionBackgroundProps {
     backgroundColor?: string;
     /** Background image focal position (CSS background-position value). Defaults to 'center' */
     backgroundPosition?: string;
+    /** Applies a frosted glass layer over the background image */
+    glassEffect?: boolean;
     /** Children (the actual section component) */
     children: React.ReactNode;
 }
@@ -37,6 +39,7 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     backgroundOverlayColor,
     backgroundColor,
     backgroundPosition = 'center',
+    glassEffect = false,
     children,
 }) => {
     const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl);
@@ -80,8 +83,19 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
                     }}
                 />
             )}
+            {glassEffect && (
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        backdropFilter: 'blur(22px) saturate(1.45)',
+                        WebkitBackdropFilter: 'blur(22px) saturate(1.45)',
+                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        zIndex: 2,
+                    }}
+                />
+            )}
             {/* Content with z-10 stacking */}
-            <div className="relative" style={{ zIndex: 2 }}>
+            <div className="relative" style={{ zIndex: 3 }}>
                 {children}
             </div>
         </div>

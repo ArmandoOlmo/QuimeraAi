@@ -15,6 +15,7 @@ interface AgencyWhiteLabelQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     features?: Array<{
         title: string;
         description: string;
@@ -34,7 +35,8 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     ],
     buttonText,
     buttonLink = '#',
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -144,11 +146,11 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                             <span>Plan Agencia</span>
                         </div>
 
-                        <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                        <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                             {displayTitle}
                         </h2>
                         
-                        <p className="text-xl font-light mb-10 font-body" style={{ color: secondaryColor }}>
+                        <p className={`text-xl font-light mb-10 font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                             {displaySubtitle}
                         </p>
 
@@ -163,7 +165,7 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-lg mb-1 font-header heading-caps" style={{ color: cardText }}>{displayFeatureTitle}</h4>
-                                        <p className="text-sm font-body" style={{ color: secondaryColor }}>{displayFeatureDesc}</p>
+                                        <p className={`text-sm font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>{displayFeatureDesc}</p>
                                     </div>
                                 </div>
                             )})}

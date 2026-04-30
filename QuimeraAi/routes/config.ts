@@ -1035,6 +1035,17 @@ export const routeConfigs: RouteConfig[] = [
     parent: ROUTES.SUPERADMIN,
   },
   {
+    path: ROUTES.ADMIN_SUBDOMAINS,
+    view: 'superadmin',
+    adminView: 'subdomains',
+    type: 'admin',
+    title: 'Subdomain Management',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
     path: ROUTES.ADMIN_LEADS,
     view: 'superadmin',
     adminView: 'admin-leads',
@@ -1141,6 +1152,8 @@ export function hasRouteAccess(
   isAuthenticated: boolean = false,
   isEmailVerified: boolean = false
 ): boolean {
+  const normalizedRole = userRole?.toLowerCase();
+
   // Public routes
   if (!route.requiresAuth) return true;
 
@@ -1152,7 +1165,7 @@ export function hasRouteAccess(
 
   // Check role permissions
   if (route.roles && route.roles.length > 0) {
-    return route.roles.includes(userRole || '');
+    return route.roles.map(role => role.toLowerCase()).includes(normalizedRole || '');
   }
 
   return true;
@@ -1162,10 +1175,12 @@ export function hasRouteAccess(
  * Get nav items for sidebar
  */
 export function getNavItems(userRole?: string): RouteConfig[] {
+  const normalizedRole = userRole?.toLowerCase();
+
   return routeConfigs.filter(route => {
     if (!route.showInNav) return false;
     if (route.roles && route.roles.length > 0) {
-      return route.roles.includes(userRole || '');
+      return route.roles.map(role => role.toLowerCase()).includes(normalizedRole || '');
     }
     return route.requiresAuth;
   });
@@ -1175,13 +1190,13 @@ export function getNavItems(userRole?: string): RouteConfig[] {
  * Get admin sub-routes
  */
 export function getAdminSubRoutes(userRole?: string): RouteConfig[] {
+  const normalizedRole = userRole?.toLowerCase();
+
   return routeConfigs.filter(route => {
     if (route.parent !== ROUTES.SUPERADMIN) return false;
     if (route.roles && route.roles.length > 0) {
-      return route.roles.includes(userRole || '');
+      return route.roles.map(role => role.toLowerCase()).includes(normalizedRole || '');
     }
     return true;
   });
 }
-
-

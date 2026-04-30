@@ -23,6 +23,7 @@ interface IndustrySolutionsQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
 }
 
 const IndustrySolutionsQuimera: React.FC<IndustrySolutionsQuimeraProps> = ({
@@ -62,7 +63,8 @@ const IndustrySolutionsQuimera: React.FC<IndustrySolutionsQuimeraProps> = ({
             imageColor: 'from-emerald-900 to-black'
         }
     ],
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -95,10 +97,10 @@ const IndustrySolutionsQuimera: React.FC<IndustrySolutionsQuimeraProps> = ({
             <div className="relative z-10 max-w-7xl mx-auto">
                 
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                 </div>

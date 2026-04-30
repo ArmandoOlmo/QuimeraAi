@@ -40,6 +40,7 @@ export const useLightAuthState = (): LightAuthState => {
 
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             clearTimeout(timeout);
+            console.log('[useLightAuthState] Auth state changed:', firebaseUser ? `authenticated (${firebaseUser.email})` : 'null (signed out)');
             setUser(firebaseUser);
             setIsLoading(false);
         });

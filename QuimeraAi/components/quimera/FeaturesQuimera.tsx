@@ -20,6 +20,7 @@ interface FeaturesQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
 }
 
 const defaultFeatures = [
@@ -71,7 +72,8 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
     title,
     subtitle,
     features = defaultFeatures,
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -98,10 +100,10 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                 </div>
@@ -124,10 +126,10 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
                                 <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 border" style={{ backgroundColor: `${accentColor}1A`, color: iconColor, borderColor: `${accentColor}33` }}>
                                     {getIcon(feature.icon)}
                                 </div>
-                                <h3 className="text-xl font-bold mb-3 font-header heading-caps" style={{ color: cardText }}>
+                                <h3 className={`text-xl font-bold mb-3 font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: cardText }}>
                                     {displayFeatureTitle}
                                 </h3>
-                                <p className="leading-relaxed font-light transition-colors font-body" style={{ color: secondaryColor }}>
+                                <p className={`leading-relaxed font-light transition-colors font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>
                                     {displayFeatureDesc}
                                 </p>
                             </div>

@@ -21,6 +21,7 @@ interface FaqQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
 }
 
 const defaultFaqs: FaqItem[] = [
@@ -50,7 +51,8 @@ const FaqQuimera: React.FC<FaqQuimeraProps> = ({
     title,
     subtitle,
     faqs = defaultFaqs,
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -78,10 +80,10 @@ const FaqQuimera: React.FC<FaqQuimeraProps> = ({
 
             <div className="relative z-10 max-w-4xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                 </div>

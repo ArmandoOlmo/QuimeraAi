@@ -385,6 +385,25 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         const cardBorderRadius = theme.cardBorderRadius || 'xl';
         const buttonBorderRadius = theme.buttonBorderRadius || 'xl';
 
+        // Helper for Quimera sections to automatically get background image support
+        const renderQuimeraSection = (key: string, data: any, Component: any, extraProps: any = {}) => {
+            if (!data) return null;
+            return (
+                <SectionBackground 
+                    key={key}
+                    backgroundImageUrl={data.backgroundImageUrl} 
+                    backgroundColor={data.colors?.background || data.backgroundColor} 
+                    backgroundOverlayEnabled={data.backgroundOverlayEnabled} 
+                    backgroundOverlayOpacity={data.backgroundOverlayOpacity} 
+                    backgroundOverlayColor={data.backgroundOverlayColor} 
+                    backgroundPosition={data.backgroundPosition}
+                    glassEffect={data.glassEffect}
+                >
+                    <Component {...data} isPreviewMode={isPreview} {...extraProps} />
+                </SectionBackground>
+            );
+        };
+
         switch (section) {
             case 'header':
                 return (
@@ -1121,60 +1140,24 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     <HeroQuimera key={key} {...data} isPreviewMode={isPreview} />
                 ) : null;
             }
-            case 'featuresQuimera': {
-                const data = (mergedData as any).featuresQuimera;
-                return data ? (
-                    <FeaturesQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'pricingQuimera': {
-                const data = (mergedData as any).pricingQuimera;
-                return data ? (
-                    <PricingQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'testimonialsQuimera': {
-                const data = (mergedData as any).testimonialsQuimera;
-                return data ? (
-                    <TestimonialsQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'faqQuimera': {
-                const data = (mergedData as any).faqQuimera;
-                return data ? (
-                    <FaqQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'ctaQuimera': {
-                const data = (mergedData as any).ctaQuimera;
-                return data ? (
-                    <CtaQuimera key={key} {...data} onNavigate={handleLinkNavigation} />
-                ) : null;
-            }
-            case 'platformShowcaseQuimera': {
-                const data = (mergedData as any).platformShowcaseQuimera;
-                return data ? (
-                    <PlatformShowcaseQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'aiCapabilitiesQuimera': {
-                const data = (mergedData as any).aiCapabilitiesQuimera;
-                return data ? (
-                    <AiCapabilitiesQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'industrySolutionsQuimera': {
-                const data = (mergedData as any).industrySolutionsQuimera;
-                return data ? (
-                    <IndustrySolutionsQuimera key={key} {...data} />
-                ) : null;
-            }
-            case 'agencyWhiteLabelQuimera': {
-                const data = (mergedData as any).agencyWhiteLabelQuimera;
-                return data ? (
-                    <AgencyWhiteLabelQuimera key={key} {...data} />
-                ) : null;
-            }
+            case 'featuresQuimera':
+                return renderQuimeraSection(key, (mergedData as any).featuresQuimera, FeaturesQuimera);
+            case 'pricingQuimera':
+                return renderQuimeraSection(key, (mergedData as any).pricingQuimera, PricingQuimera);
+            case 'testimonialsQuimera':
+                return renderQuimeraSection(key, (mergedData as any).testimonialsQuimera, TestimonialsQuimera);
+            case 'faqQuimera':
+                return renderQuimeraSection(key, (mergedData as any).faqQuimera, FaqQuimera);
+            case 'ctaQuimera':
+                return renderQuimeraSection(key, (mergedData as any).ctaQuimera, CtaQuimera, { onNavigate: handleLinkNavigation });
+            case 'platformShowcaseQuimera':
+                return renderQuimeraSection(key, (mergedData as any).platformShowcaseQuimera, PlatformShowcaseQuimera);
+            case 'aiCapabilitiesQuimera':
+                return renderQuimeraSection(key, (mergedData as any).aiCapabilitiesQuimera, AiCapabilitiesQuimera);
+            case 'industrySolutionsQuimera':
+                return renderQuimeraSection(key, (mergedData as any).industrySolutionsQuimera, IndustrySolutionsQuimera);
+            case 'agencyWhiteLabelQuimera':
+                return renderQuimeraSection(key, (mergedData as any).agencyWhiteLabelQuimera, AgencyWhiteLabelQuimera);
 
             // Non-renderable sections (settings, colors, typography)
             case 'colors':

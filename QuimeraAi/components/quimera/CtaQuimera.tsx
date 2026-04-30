@@ -20,6 +20,7 @@ interface CtaQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     onNavigate?: (href: string) => void;
 }
 
@@ -32,6 +33,7 @@ const CtaQuimera: React.FC<CtaQuimeraProps> = ({
     secondaryButtonText,
     secondaryButtonLink = '/demo',
     colors = {},
+    textDropShadow = false,
     onNavigate
 }) => {
     const { t } = useTranslation();
@@ -78,11 +80,11 @@ const CtaQuimera: React.FC<CtaQuimeraProps> = ({
                     <span>{displayBadge}</span>
                 </div>
 
-                <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tight font-header heading-caps">
+                <h2 className={`text-5xl md:text-6xl font-black mb-8 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                     {displayTitle}
                 </h2>
                 
-                <p className="text-xl md:text-2xl font-light mb-12 max-w-3xl mx-auto leading-relaxed font-body" style={{ color: secondaryColor }}>
+                <p className={`text-xl md:text-2xl font-light mb-12 max-w-3xl mx-auto leading-relaxed font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                     {displaySubtitle}
                 </p>
 

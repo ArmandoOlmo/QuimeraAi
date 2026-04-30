@@ -7,7 +7,7 @@ import { useProject } from './contexts/project';
 import { useSafeAdmin } from './contexts/admin';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
-import { ROUTES } from './routes/config';
+import { ROUTES, getRouteConfig } from './routes/config';
 import GlobalSEO from './components/GlobalSEO';
 import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -29,6 +29,7 @@ const GlobalAiAssistant = lazyWithRetry(() => import('./components/ui/GlobalAiAs
 const OnboardingModal = lazyWithRetry(() => import('./components/onboarding/OnboardingModal'));
 const AIWebsiteStudio = lazyWithRetry(() => import('./components/onboarding/AIWebsiteStudio'));
 const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
+const PublicLandingPage = lazyWithRetry(() => import('./components/PublicLandingPage'));
 const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
@@ -59,6 +60,13 @@ const GlobalAdPixels: React.FC = () => {
 const isPreviewRoute = () => {
   const path = window.location.pathname;
   return path.startsWith('/preview/');
+};
+
+const isLandingEditorPreviewRoute = () => {
+  return (
+    window.location.pathname === '/landing-editor-preview' ||
+    (window.location.pathname === '/' && new URLSearchParams(window.location.search).get('preview') === 'landing')
+  );
 };
 
 // Temporary diagnostic tool route
@@ -150,7 +158,7 @@ const AppContent: React.FC<AppContentProps> = ({
 // =============================================================================
 
 const AuthGate: React.FC = () => {
-  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument } = useAuth();
+  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument, isUserOwner } = useAuth();
   const { navigate } = useRouter();
 
   useEffect(() => {
@@ -178,7 +186,7 @@ const AuthGate: React.FC = () => {
 
       <Router
         user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
-        userRole={userDocument?.role}
+        userRole={isUserOwner ? 'owner' : userDocument?.role}
         loadingAuth={loadingAuth}
         onVerificationEmailSent={setVerificationEmail}
         verificationEmail={verificationEmail}
@@ -210,6 +218,7 @@ const App: React.FC = () => {
   // ALL HOOKS MUST BE CALLED AT THE TOP - React Rules of Hooks
   // ==========================================================================
   const [isPreview, setIsPreview] = useState(isPreviewRoute());
+  const [isLandingEditorPreview, setIsLandingEditorPreview] = useState(isLandingEditorPreviewRoute());
   const customDomain = useCustomDomain();
 
   // Subdomain detection for user subdomains (username.quimera.ai)
@@ -225,7 +234,10 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleNavigation = () => setIsPreview(isPreviewRoute());
+    const handleNavigation = () => {
+      setIsPreview(isPreviewRoute());
+      setIsLandingEditorPreview(isLandingEditorPreviewRoute());
+    };
     window.addEventListener('popstate', handleNavigation);
     return () => window.removeEventListener('popstate', handleNavigation);
   }, []);
@@ -242,6 +254,26 @@ const App: React.FC = () => {
         <Suspense fallback={<MinimalLoader />}>
           <PublicWebsitePreview />
         </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // Landing editor iframe preview: keep it out of AuthGate/Router and heavy app providers.
+  // It receives live state from the editor via postMessage and must not redirect the parent app.
+  if (isLandingEditorPreview) {
+    const noOp = () => {};
+    return (
+      <ErrorBoundary>
+        <LightProviders>
+          <Suspense fallback={<MinimalLoader />}>
+            <PublicLandingPage
+              onNavigateToLogin={noOp}
+              onNavigateToRegister={noOp}
+              onNavigateToBlog={noOp}
+              onNavigateToArticle={noOp}
+            />
+          </Suspense>
+        </LightProviders>
       </ErrorBoundary>
     );
   }
@@ -341,9 +373,25 @@ const App: React.FC = () => {
     return <MinimalLoader />;
   }
 
-  // Unauthenticated users get LightProviders (5 contexts instead of 17+)
-  // This significantly reduces initial load time for login/register pages
-  if (!lightAuth.isAuthenticated) {
+  // Determine if the current path is a private/admin route that requires auth.
+  // If so, always use AppProviders to prevent provider tree destruction during
+  // auth state resolution (lightAuth can briefly report isAuthenticated=false
+  // before Firebase resolves, which would mount LightProviders then switch to
+  // AppProviders — destroying the entire provider tree and causing a logout redirect).
+  const currentPath = window.location.pathname;
+  const currentRouteConfig = getRouteConfig(currentPath);
+  const isKnownAuthRoute =
+    currentRouteConfig?.type === 'private' ||
+    currentRouteConfig?.type === 'admin' ||
+    currentPath === '/admin' ||
+    currentPath.startsWith('/admin/') ||
+    currentPath.startsWith('/editor/');
+
+  // Unauthenticated users on public routes get LightProviders (5 contexts instead of 17+)
+  // This significantly reduces initial load time for login/register pages.
+  // BUT: if on a known auth route, always use AppProviders — the Router inside will
+  // handle the redirect to login if needed, without provider tree switching.
+  if (!lightAuth.isAuthenticated && !isKnownAuthRoute) {
     return (
       <ErrorBoundary>
         <LightProviders>
@@ -353,7 +401,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Authenticated users get full AppProviders with all feature contexts
+  // Authenticated users (or reloading on auth routes) get full AppProviders
   return (
     <ErrorBoundary>
       <AppProviders>

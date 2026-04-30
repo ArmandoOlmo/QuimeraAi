@@ -15,6 +15,7 @@ interface PlatformShowcaseQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     features?: Array<{
         icon: string;
         title: string;
@@ -31,7 +32,8 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
         { icon: 'Search', title: 'SEO Automático', description: 'Sitemaps, meta tags y robots.txt generados y actualizados automáticamente (SSR).' },
         { icon: 'Smartphone', title: 'Mobile First', description: 'Previsualizador móvil en tiempo real y componentes nativamente responsivos.' }
     ],
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -63,10 +65,10 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                 </div>
@@ -85,8 +87,8 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: `${iconColor}1A`, color: iconColor }}>
                                         {renderIcon(feature.icon, "w-6 h-6")}
                                     </div>
-                                    <h3 className="text-3xl font-bold mb-4 font-header heading-caps" style={{ color: cardText }}>{displayFeatureTitle}</h3>
-                                    <p className="text-lg mb-8 max-w-md font-body" style={{ color: secondaryColor }}>
+                                    <h3 className={`text-3xl font-bold mb-4 font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: cardText }}>{displayFeatureTitle}</h3>
+                                    <p className={`text-lg mb-8 max-w-md font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>
                                         {displayFeatureDesc}
                                     </p>
                                     <div className="mt-auto relative w-full h-48 rounded-xl border overflow-hidden group-hover:scale-[1.02] transition-transform duration-500" style={{ backgroundColor: '#0a0a0a', borderColor: 'rgba(255,255,255,0.1)' }}>
@@ -118,8 +120,8 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
                                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: `${iconColor}1A`, color: iconColor }}>
                                         {renderIcon(feature.icon, "w-6 h-6")}
                                     </div>
-                                    <h3 className="text-2xl font-bold mb-3 font-header heading-caps" style={{ color: cardText }}>{displayFeatureTitle}</h3>
-                                    <p className="font-body" style={{ color: secondaryColor }}>
+                                    <h3 className={`text-2xl font-bold mb-3 font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: cardText }}>{displayFeatureTitle}</h3>
+                                    <p className={`font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>
                                         {displayFeatureDesc}
                                     </p>
                                 </div>
@@ -131,8 +133,8 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-6 group-hover:-translate-y-1 transition-transform" style={{ backgroundColor: `${iconColor}1A`, color: iconColor }}>
                                     {renderIcon(feature.icon, "w-5 h-5")}
                                 </div>
-                                <h3 className="text-xl font-bold mb-2 font-header heading-caps" style={{ color: cardText }}>{displayFeatureTitle}</h3>
-                                <p className="text-sm font-body" style={{ color: secondaryColor }}>
+                                <h3 className={`text-xl font-bold mb-2 font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: cardText }}>{displayFeatureTitle}</h3>
+                                <p className={`text-sm font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>
                                     {displayFeatureDesc}
                                 </p>
                             </div>

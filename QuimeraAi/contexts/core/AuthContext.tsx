@@ -62,6 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             clearTimeout(timeout);
+            console.log('[AuthProvider] onAuthStateChanged fired:', firebaseUser ? `uid=${firebaseUser.uid}, email=${firebaseUser.email}` : 'null (signed out)');
             setUser(firebaseUser);
 
             if (firebaseUser) {
@@ -96,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
                     setUserDocument({ ...finalUserDoc, id: firebaseUser.uid });
                     const effectiveRole = determineRole(firebaseUser.email!, finalUserDoc.role || 'user');
+                    console.log('[AuthProvider] User doc loaded. role:', finalUserDoc.role, 'effectiveRole:', effectiveRole, 'tenantId:', finalUserDoc.tenantId);
                     setUserPermissions(getPermissions(effectiveRole));
 
                     // Read isOwner from Custom Claims (set by server-side Cloud Function)
@@ -110,6 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 } catch (error) {
                     console.error('Error fetching user document:', error);
                     // Fallback user document
+                    console.error('[AuthProvider] Using fallback user document — role will be undefined');
                     const fallbackDoc: UserDocument = {
                         id: firebaseUser.uid,
                         name: firebaseUser.displayName || 'User',
@@ -124,6 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUserPermissions(getPermissions('user'));
             }
 
+            console.log('[AuthProvider] Auth state resolved. loadingAuth -> false');
             setLoadingAuth(false);
         });
 

@@ -4114,6 +4114,7 @@
       "enableOverlay": "Enable Overlay",
       "sectionColors": "Section",
       "textColors": "Text",
+      "textShadow": "Text Drop Shadow",
       "secondaryText": "Subtitle",
       "cardColors": "Cards",
       "cardBorder": "Card Border",
@@ -6413,6 +6414,15 @@
       "trialQ": "Is there a free trial?",
       "trialA": "The Starter plan is completely free and requires no credit card. You can use it as long as you need before deciding to upgrade."
     }
+  },
+  "pricingQuimera": {
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "discount": "-20%",
+    "mostPopular": "Most Popular",
+    "perMonth": "/mo",
+    "startFree": "Start Free",
+    "getStarted": "Get Started"
   },
   "blog": {
     "title": "Quimera",

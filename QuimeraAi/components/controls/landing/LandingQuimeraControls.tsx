@@ -222,97 +222,7 @@ const renderCommonTextControls = (deps: ControlsDeps, defaultTitle?: string, def
     );
 };
 
-// ─── Quimera Style Tab (shared across all Quimera components) ───────────────
-// Produces a proper Style Tab with: BackgroundImage, Overlay, Colors
-const renderQuimeraStyleTab = (
-    deps: ControlsDeps & { portalContainer?: HTMLElement | null },
-    options: { hasCards?: boolean; hasIcons?: boolean } = { hasCards: true, hasIcons: true }
-) => {
-    const { data, setNestedData, t } = deps;
-    const { hasCards = true, hasIcons = true } = options;
 
-    return (
-        <div className="space-y-4">
-            {/* Background Image */}
-            <BackgroundImageControl sectionKey="" data={{ '': data }} setNestedData={(path, value) => {
-                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
-                setNestedData(cleanPath, value);
-            }} />
-
-            {/* Overlay Controls */}
-            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
-                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
-                    <Layers size={14} />
-                    {t('editor.quimeraControls.overlay', 'Overlay')}
-                </label>
-                <ColorControl label={t('editor.quimeraControls.overlayColor', 'Color de Overlay')} value={data.backgroundOverlayColor || data.colors?.background || '#000000'} onChange={(v) => setNestedData('backgroundOverlayColor', v)} />
-                <SliderControl
-                    label={t('editor.quimeraControls.overlayOpacity', 'Opacidad del Overlay')}
-                    value={data.backgroundOverlayOpacity ?? 60}
-                    onChange={(v) => setNestedData('backgroundOverlayOpacity', v)}
-                    min={0} max={100} step={5} suffix="%"
-                />
-                <ToggleControl
-                    label={t('editor.quimeraControls.enableOverlay', 'Activar Overlay')}
-                    checked={data.backgroundOverlayEnabled !== false}
-                    onChange={(v) => setNestedData('backgroundOverlayEnabled', v)}
-                />
-            </div>
-
-            {/* Colors */}
-            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
-                    <Settings size={14} />
-                    {t('editor.controls.common.colors', 'Colores')}
-                </label>
-                <div className="space-y-4">
-                    {/* Section */}
-                    <div className="space-y-2">
-                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.quimeraControls.sectionColors', 'Sección')}</p>
-                        <ColorControl label={t('editor.controls.common.background', 'Fondo')} value={data.colors?.background} onChange={(v) => setNestedData('colors.background', v)} />
-                    </div>
-                    {/* Text */}
-                    <div className="space-y-2 pt-2 border-t border-q-border/50">
-                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.quimeraControls.textColors', 'Texto')}</p>
-                        <ColorControl label={t('editor.controls.common.title', 'Título')} value={data.colors?.text} onChange={(v) => setNestedData('colors.text', v)} />
-                        <ColorControl label={t('editor.quimeraControls.secondaryText', 'Subtítulo')} value={data.colors?.secondaryText} onChange={(v) => setNestedData('colors.secondaryText', v)} />
-                    </div>
-                    {/* Cards (conditional) */}
-                    {hasCards && (
-                        <div className="space-y-2 pt-2 border-t border-q-border/50">
-                            <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.quimeraControls.cardColors', 'Tarjetas')}</p>
-                            <ColorControl label={t('editor.controls.common.cardBackground', 'Fondo Tarjeta')} value={data.colors?.cardBackground} onChange={(v) => setNestedData('colors.cardBackground', v)} />
-                            <ColorControl label={t('editor.quimeraControls.cardBorder', 'Borde Tarjeta')} value={data.colors?.cardBorder} onChange={(v) => setNestedData('colors.cardBorder', v)} />
-                            <ColorControl label={t('editor.controls.common.cardText', 'Texto Tarjeta')} value={data.colors?.cardText} onChange={(v) => setNestedData('colors.cardText', v)} />
-                            {hasIcons && (
-                                <ColorControl label={t('editor.quimeraControls.iconColor', 'Color de Ícono')} value={data.colors?.iconColor} onChange={(v) => setNestedData('colors.iconColor', v)} />
-                            )}
-                        </div>
-                    )}
-                    {/* Accent */}
-                    <div className="space-y-2 pt-2 border-t border-q-border/50">
-                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">{t('editor.quimeraControls.accentColors', 'Acento & Botones')}</p>
-                        <ColorControl label={t('editor.controls.common.accent', 'Color de Acento')} value={data.colors?.accent} onChange={(v) => setNestedData('colors.accent', v)} />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Helper to wrap content with the standard Quimera style tab
-const withQuimeraTabs = (
-    contentControls: React.ReactNode,
-    deps: ControlsDeps & { portalContainer?: HTMLElement | null },
-    options: { hasCards?: boolean; hasIcons?: boolean } = { hasCards: true, hasIcons: true }
-) => {
-    return (
-        <TabbedControls
-            contentTab={<div className="space-y-4 pt-4">{contentControls}</div>}
-            styleTab={<div className="space-y-4 pt-4">{renderQuimeraStyleTab(deps, options)}</div>}
-        />
-    );
-};
 
 // Hero Quimera
 export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null, allSections?: any[] }) => {
@@ -404,6 +314,21 @@ export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer
                     checked={data.showDecoration ?? true}
                     onChange={(v) => setNestedData('showDecoration', v)}
                 />
+                <ToggleControl
+                    label={t('editor.heroQuimeraControls.showParticles', 'Mostrar Partículas')}
+                    checked={data.showParticles ?? true}
+                    onChange={(v) => setNestedData('showParticles', v)}
+                />
+                <ToggleControl
+                    label={t('editor.heroQuimeraControls.glassEffect', 'Efecto Cristal (Glassmorphism)')}
+                    checked={data.glassEffect ?? false}
+                    onChange={(v) => setNestedData('glassEffect', v)}
+                />
+                <ToggleControl
+                    label={t('editor.heroQuimeraControls.textDropShadow', 'Sombra en Textos (Drop Shadow)')}
+                    checked={data.textDropShadow ?? false}
+                    onChange={(v) => setNestedData('textDropShadow', v)}
+                />
             </div>
 
             {/* Colors */}
@@ -479,7 +404,71 @@ export const renderFeaturesQuimeraControls = (deps: ControlsDeps & { portalConta
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+                <ToggleControl
+                    label={t('editor.heroQuimeraControls.glassEffect', 'Efecto Cristal (Glassmorphism)')}
+                    checked={deps.data.glassEffect !== false}
+                    onChange={(v) => deps.setNestedData('glassEffect', v)}
+                />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // CTA Quimera
@@ -516,7 +505,55 @@ export const renderCtaQuimeraControls = (deps: ControlsDeps & { portalContainer?
             </div>
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: false, hasIcons: false });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Pricing Quimera
@@ -547,7 +584,64 @@ export const renderPricingQuimeraControls = (deps: ControlsDeps & { portalContai
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: false });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Testimonials Quimera
@@ -576,7 +670,66 @@ export const renderTestimonialsQuimeraControls = (deps: ControlsDeps & { portalC
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // FAQ Quimera
@@ -603,7 +756,66 @@ export const renderFaqQuimeraControls = (deps: ControlsDeps & { portalContainer?
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Metrics Quimera
@@ -631,7 +843,64 @@ export const renderMetricsQuimeraControls = (deps: ControlsDeps & { portalContai
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: false });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Platform Showcase Quimera
@@ -660,7 +929,66 @@ export const renderPlatformShowcaseQuimeraControls = (deps: ControlsDeps & { por
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // AI Capabilities Quimera
@@ -688,7 +1016,66 @@ export const renderAiCapabilitiesQuimeraControls = (deps: ControlsDeps & { porta
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Agency White Label Quimera
@@ -723,7 +1110,66 @@ export const renderAgencyWhiteLabelQuimeraControls = (deps: ControlsDeps & { por
             <AnchorLinkControl label="Enlace del Botón" fieldKey="buttonLink" deps={deps} />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Industry Solutions Quimera
@@ -754,14 +1200,128 @@ export const renderIndustrySolutionsQuimeraControls = (deps: ControlsDeps & { po
             />
         </>
     );
-    return withQuimeraTabs(content, deps, { hasCards: true, hasIcons: true });
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
+
 };
 
 // Generic fallback for Quimera suite components that share title/subtitle/colors
 export const renderGenericQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
-    return withQuimeraTabs(
-        <>{renderCommonTextControls(deps)}</>,
-        deps,
-        { hasCards: true, hasIcons: true }
+    const content = <>{renderCommonTextControls(deps)}</>;
+    
+    const styleTab = (
+        <div className="space-y-4">
+            {/* 1. Background Image (shared component) */}
+            <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
+                const cleanPath = path.startsWith('.') ? path.slice(1) : path;
+                deps.setNestedData(cleanPath, value);
+            }} />
+
+            {/* 2. Overlay Controls (always visible, not gated by image) */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
+                </label>
+                <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
+                <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
+                <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* 3. Colors */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
+                    <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
+                </label>
+                <div className="space-y-4">
+                    {/* Section colors */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
+                        <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
+                    </div>
+                    {/* Text */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
+                        <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
+                        <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
+                    </div>
+                    
+                    {/* Cards */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
+                        <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
+                        <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
+                        <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
+                        
+                        <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
+                        
+                    </div>
+                    
+                    {/* Accent */}
+                    <div className="space-y-2 pt-2 border-t border-q-border/50">
+                        <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
+                        <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
+                    </div>
+                </div>
+            </div>
+        </div>
     );
+
+    return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
 };

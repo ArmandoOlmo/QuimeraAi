@@ -7,6 +7,59 @@ import React, { createContext, useState, useContext, useRef, ReactNode } from 'r
 import { View, AdminView, PreviewDevice, PreviewOrientation, PageSection, ThemeMode, AppTokens } from '../../types';
 import { applyAppTokensToCSS, defaultAppTokens } from '../../utils/appTokenApplier';
 
+/**
+ * Derive the initial View and AdminView from the current URL path.
+ * This avoids a flash of the default 'main' admin view on page reload
+ * when the URL already points to a specific admin sub-view (e.g. /admin/landing-editor).
+ */
+const deriveInitialViewState = (): { view: View; adminView: AdminView } => {
+    if (typeof window === 'undefined') return { view: 'dashboard', adminView: 'main' };
+
+    const path = window.location.pathname;
+
+    // Admin routes: /admin or /admin/{sub-view}
+    if (path.startsWith('/admin')) {
+        const segments = path.split('/').filter(Boolean); // ['admin', 'landing-editor']
+        const subView = segments[1] || 'main';
+        return { view: 'superadmin', adminView: subView as AdminView };
+    }
+
+    // Editor route: /editor/:projectId
+    if (path.startsWith('/editor/')) return { view: 'editor', adminView: 'main' };
+
+    // Dashboard feature routes
+    const featureMap: Record<string, View> = {
+        '/dashboard': 'dashboard',
+        '/websites': 'websites',
+        '/cms': 'cms',
+        '/navigation': 'navigation',
+        '/ai-assistant': 'ai-assistant',
+        '/leads': 'leads',
+        '/appointments': 'appointments',
+        '/domains': 'domains',
+        '/seo': 'seo',
+        '/finance': 'finance',
+        '/ecommerce': 'ecommerce',
+        '/restaurants': 'restaurants',
+        '/email': 'email',
+        '/assets': 'assets',
+        '/templates': 'templates',
+        '/settings': 'settings',
+        '/agency': 'agency',
+        '/biopage': 'biopage',
+        '/blog-hub': 'blog-hub',
+        '/real-estate': 'real-estate',
+    };
+
+    for (const [routePath, viewName] of Object.entries(featureMap)) {
+        if (path === routePath || path.startsWith(routePath + '/')) {
+            return { view: viewName, adminView: 'main' };
+        }
+    }
+
+    return { view: 'dashboard', adminView: 'main' };
+};
+
 export interface ActiveSectionItem {
     section: PageSection;
     /**
@@ -73,9 +126,9 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDashboardSidebarCollapsed, setIsDashboardSidebarCollapsed] = useState(false);
 
-    // View Management
-    const [view, setView] = useState<View>('dashboard');
-    const [adminView, setAdminView] = useState<AdminView>('main');
+    // View Management — derive from URL to prevent flash of wrong view on reload
+    const [view, setView] = useState<View>(() => deriveInitialViewState().view);
+    const [adminView, setAdminView] = useState<AdminView>(() => deriveInitialViewState().adminView);
 
     // Preview
     const previewRef = useRef<HTMLDivElement>(null);

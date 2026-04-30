@@ -15,6 +15,7 @@ interface AiCapabilitiesQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     capabilities?: Array<{
         icon: string;
         title: string;
@@ -30,7 +31,8 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
         { icon: 'FileText', title: 'Copywriting Automatizado', description: 'Dile adiós al síndrome de la página en blanco. Nuestra IA redacta títulos persuasivos y descripciones de productos que convierten.' },
         { icon: 'ImageIcon', title: 'Sugerencias Visuales', description: 'Selección inteligente de imágenes de stock y generación de estilos CSS para que tu sitio siempre luzca profesional.' }
     ],
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -71,11 +73,11 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
                         <span>Quimera AI Assistant</span>
                     </div>
 
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight leading-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight leading-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
                     
-                    <p className="text-xl font-light mb-10 font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light mb-10 font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
 
@@ -89,8 +91,8 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
                                     {renderIcon(cap.icon, "w-6 h-6")}
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold mb-2 font-header heading-caps" style={{ color: cardText }}>{displayCapTitle}</h3>
-                                    <p className="font-body" style={{ color: secondaryColor }}>{displayCapDesc}</p>
+                                    <h3 className={`text-xl font-bold mb-2 font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: cardText }}>{displayCapTitle}</h3>
+                                    <p className={`font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>{displayCapDesc}</p>
                                 </div>
                             </div>
                         )})}

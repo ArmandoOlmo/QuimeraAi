@@ -22,6 +22,7 @@ interface MetricsQuimeraProps {
         iconColor?: string;
         secondaryText?: string;
     };
+    textDropShadow?: boolean;
     isPreviewMode?: boolean;
 }
 
@@ -49,7 +50,8 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
     subtitle,
     features,
     items,
-    colors = {}
+    colors = {},
+    textDropShadow = false
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -76,10 +78,10 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps">
+                    <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
                         {displayTitle}
                     </h2>
-                    <p className="text-xl font-light font-body" style={{ color: secondaryColor }}>
+                    <p className={`text-xl font-light font-body ${textDropShadow ? 'drop-shadow-md' : ''}`} style={{ color: secondaryColor }}>
                         {displaySubtitle}
                     </p>
                 </div>
@@ -96,12 +98,12 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
                             style={{ backgroundColor: cardBg, borderColor: cardBorder }}
                         >
                             <h3 
-                                className="text-5xl md:text-6xl font-black mb-4 tracking-tighter font-header heading-caps"
+                                className={`text-5xl md:text-6xl font-black mb-4 tracking-tighter font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`}
                                 style={{ color: accentColor }}
                             >
                                 {displayMetricTitle}
                             </h3>
-                            <p className="text-lg font-medium font-body" style={{ color: secondaryColor }}>
+                            <p className={`text-lg font-medium font-body ${textDropShadow ? 'drop-shadow-sm' : ''}`} style={{ color: secondaryColor }}>
                                 {displayMetricDesc}
                             </p>
                         </div>

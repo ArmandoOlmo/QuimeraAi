@@ -515,8 +515,8 @@ const Features: React.FC<FeaturesProps> = ({
     description: colors?.description || colors?.text,
     cardBackground: colors?.cardBackground || primaryColor,
     // Separate card colors
-    cardHeading: (colors as any).cardHeading,
-    cardText: (colors as any).cardText,
+    cardHeading: (colors as any)?.cardHeading,
+    cardText: (colors as any)?.cardText,
   };
 
   // Use user-selected colors directly - respect their choices
