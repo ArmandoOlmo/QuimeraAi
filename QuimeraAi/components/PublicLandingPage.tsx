@@ -65,6 +65,17 @@ import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
 import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
 import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
 import MetricsQuimera from './quimera/MetricsQuimera';
+import WhatIsQuimeraSection from './quimera/WhatIsQuimeraSection';
+import TemplatesPreviewQuimera from './quimera/TemplatesPreviewQuimera';
+import AiWebStudioQuimera from './quimera/AiWebStudioQuimera';
+import ContentManagerQuimera from './quimera/ContentManagerQuimera';
+import ImageGeneratorQuimera from './quimera/ImageGeneratorQuimera';
+import ChatbotWorkflowQuimera from './quimera/ChatbotWorkflowQuimera';
+import ChatbotBuilderQuimera from './quimera/ChatbotBuilderQuimera';
+import LeadsManagerQuimera from './quimera/LeadsManagerQuimera';
+import AppointmentsQuimera from './quimera/AppointmentsQuimera';
+import BioPageQuimera from './quimera/BioPageQuimera';
+import EmailMarketingQuimera from './quimera/EmailMarketingQuimera';
 
 // Import Lumina components
 import HeroLumina from './HeroLumina';
@@ -739,6 +750,29 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         return renderSuiteSection(section, AiCapabilitiesQuimera);
       case 'agencyWhiteLabelQuimera':
         return renderSuiteSection(section, AgencyWhiteLabelQuimera);
+      case 'whatIsQuimera':
+        return renderSuiteSection(section, WhatIsQuimeraSection);
+      case 'templatesPreviewQuimera':
+        return renderSuiteSection(section, TemplatesPreviewQuimera);
+      case 'aiWebStudioQuimera':
+        return renderSuiteSection(section, AiWebStudioQuimera);
+      case 'contentManagerQuimera':
+        return renderSuiteSection(section, ContentManagerQuimera);
+      case 'imageGeneratorQuimera':
+        return renderSuiteSection(section, ImageGeneratorQuimera);
+      case 'chatbotWorkflowQuimera':
+        return renderSuiteSection(section, ChatbotWorkflowQuimera);
+      case 'chatbotBuilderQuimera':
+        return renderSuiteSection(section, ChatbotBuilderQuimera);
+      case 'leadsManagerQuimera':
+        return renderSuiteSection(section, LeadsManagerQuimera);
+      case 'appointmentsQuimera':
+        return renderSuiteSection(section, AppointmentsQuimera);
+      case 'bioPageQuimera':
+        return renderSuiteSection(section, BioPageQuimera);
+      case 'emailMarketingQuimera':
+        return renderSuiteSection(section, EmailMarketingQuimera);
+
 
       // ── LUMINA SUITE COMPONENTS ──
       case 'heroLumina':

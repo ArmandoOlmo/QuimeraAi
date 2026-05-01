@@ -94,11 +94,11 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
                         return (
                         <div 
                             key={index}
-                            className="group text-center relative p-6 md:p-8 rounded-3xl transition-all duration-500 border"
+                            className="group text-center relative p-4 sm:p-6 md:p-8 rounded-3xl transition-all duration-500 border"
                             style={{ backgroundColor: cardBg, borderColor: cardBorder }}
                         >
                             <h3 
-                                className={`text-5xl md:text-6xl font-black mb-4 tracking-tighter font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`}
+                                className={`text-4xl md:text-6xl font-black mb-2 md:mb-4 tracking-tighter font-header heading-caps ${textDropShadow ? 'drop-shadow-md' : ''}`}
                                 style={{ color: accentColor }}
                             >
                                 {displayMetricTitle}

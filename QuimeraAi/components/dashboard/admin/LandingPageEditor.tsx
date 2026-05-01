@@ -10,7 +10,7 @@ import {
     Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor,
     Smartphone, Loader2, Check, Type, Layout,
-    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText
+    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText, LayoutTemplate, MessageSquareCode, Image as ImageIcon, Workflow, Globe, ExternalLink, Moon, Wand2, PaintBucket, Users, CalendarCheck, Link as LinkIcon, Send
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
@@ -63,6 +63,17 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 const AVAILABLE_COMPONENTS = [
     // Quimera Suite
     { type: 'heroQuimera', icon: Layout },
+    { type: 'whatIsQuimera', icon: FileText },
+    { type: 'templatesPreviewQuimera', icon: LayoutTemplate },
+    { type: 'aiWebStudioQuimera', icon: MessageSquareCode },
+    { type: 'contentManagerQuimera', icon: FileText },
+    { type: 'imageGeneratorQuimera', icon: ImageIcon },
+    { type: 'chatbotWorkflowQuimera', icon: Workflow },
+    { type: 'chatbotBuilderQuimera', icon: PaintBucket },
+    { type: 'leadsManagerQuimera', icon: Users },
+    { type: 'appointmentsQuimera', icon: CalendarCheck },
+    { type: 'bioPageQuimera', icon: LinkIcon },
+    { type: 'emailMarketingQuimera', icon: Send },
     { type: 'platformShowcaseQuimera', icon: Layout },
     { type: 'bentoShowcaseQuimera', icon: Layout },
     { type: 'agentDemonstrationQuimera', icon: Layout },
@@ -662,6 +673,48 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         };
 
         const typeLower = type.toLowerCase();
+
+        if (type === 'whatIsQuimera') {
+            return {
+                ...defaults,
+                title: 'Todo lo que tu negocio necesita para crecer en internet, impulsado por AI.',
+                subtitle: 'Quimera AI combina creación de websites, contenido, automatización, ecommerce, leads y asistentes inteligentes en una sola plataforma.',
+                introText: 'Quimera AI es una plataforma inteligente que convierte la información de tu negocio en una presencia digital completa.',
+                differentiatorTitle: 'No es solo crear una página. Es construir el sistema digital de tu negocio.',
+                differentiatorText: 'Mientras otras herramientas se enfocan únicamente en diseño o publicación, Quimera AI conecta las partes esenciales del negocio.',
+                primaryButtonText: 'Comienza con Quimera AI',
+                secondaryButtonText: 'Ver cómo funciona',
+                footnote: 'Diseñado para pequeños negocios, creadores, profesionales, realtors, restaurantes, tiendas online y agencias.',
+            };
+        }
+
+        if (type === 'templatesPreviewQuimera') {
+            return {
+                ...defaults,
+                title: 'Comienza con un template profesional y hazlo tuyo.',
+                subtitle: 'Elige una base visual diseñada para tu industria y conviértela en un website único con la ayuda de Quimera AI.',
+                introText: 'Los templates de Quimera AI no son páginas rígidas. Son puntos de partida inteligentes con estructura, diseño y secciones listas para personalizar. Cambia textos, colores, imágenes, llamadas a la acción y funcionalidades sin comenzar desde una página en blanco.',
+                differentiatorTitle: 'No empiezas desde cero. Empiezas desde una ventaja.',
+                differentiatorText: 'Los templates funcionan como una base inteligente: tienen estructura, diseño y secciones esenciales listas para adaptar a tu industria, tu marca y tus objetivos.',
+                primaryButtonText: 'Explorar templates',
+                secondaryButtonText: 'Generar con AI',
+                flowText: 'Choose template → Customize with AI → Launch website'
+            };
+        }
+
+        if (type === 'aiWebStudioQuimera') {
+            return {
+                ...defaults,
+                title: 'Construye tu website conversando con AI Web Studio.',
+                subtitle: 'Responde preguntas simples sobre tu negocio y Quimera AI genera una página web inicial con estructura, textos y secciones listas para personalizar.',
+                introText: 'AI Web Studio funciona como un estratega, copywriter y diseñador inicial dentro de Quimera AI. Te guía paso a paso, entiende lo que vendes, quién es tu cliente y qué quieres lograr, y luego crea una primera versión de tu website para que puedas editar, mejorar y publicar más rápido.',
+                differentiatorTitle: 'Tu website empieza con una conversación.',
+                differentiatorText: 'AI Web Studio convierte ideas sueltas en una estructura clara: títulos, secciones, textos, llamadas a la acción y contenido inicial adaptado al tipo de negocio.',
+                primaryButtonText: 'Crear con AI Web Studio',
+                secondaryButtonText: 'Explorar templates',
+                flowText: 'Chat → Website Draft → Edit → Publish'
+            };
+        }
 
         if (type === 'bentoShowcaseQuimera') {
             return {

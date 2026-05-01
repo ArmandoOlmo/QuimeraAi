@@ -9,7 +9,7 @@ import {
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
     ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus,
-    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check, CalendarCheck, MessageSquareHeart
+    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check, CalendarCheck, MessageSquareHeart, Workflow, PaintBucket, Users, Link as LinkIcon, Send
 } from 'lucide-react';
 import {
     DndContext,
@@ -102,6 +102,14 @@ const sectionIcons: Record<PageSection, React.ElementType> = {
     aiCapabilitiesQuimera: MessageSquare,
     industrySolutionsQuimera: Building2,
     agencyWhiteLabelQuimera: Users,
+    contentManagerQuimera: FileText,
+    imageGeneratorQuimera: Image,
+    chatbotWorkflowQuimera: Workflow,
+    chatbotBuilderQuimera: PaintBucket,
+    leadsManagerQuimera: Users,
+    appointmentsQuimera: CalendarCheck,
+    bioPageQuimera: LinkIcon,
+    emailMarketingQuimera: Send,
 
     // Ecommerce
     storeSettings: Store,
@@ -399,6 +407,14 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         aiCapabilitiesQuimera: t('editor.aiCapabilitiesQuimera', 'AI Capabilities'),
         industrySolutionsQuimera: t('editor.industrySolutionsQuimera', 'Industry Solutions'),
         agencyWhiteLabelQuimera: t('editor.agencyWhiteLabelQuimera', 'Agency White Label'),
+        contentManagerQuimera: t('editor.contentManagerQuimera', 'Content Manager'),
+        imageGeneratorQuimera: t('editor.imageGeneratorQuimera', 'Image Generator'),
+        chatbotWorkflowQuimera: t('editor.chatbotWorkflowQuimera', 'Chatbot & CRM Flow'),
+        chatbotBuilderQuimera: t('editor.chatbotBuilderQuimera', 'Chatbot Builder'),
+        leadsManagerQuimera: t('editor.leadsManagerQuimera', 'Leads CRM'),
+        appointmentsQuimera: t('editor.appointmentsQuimera', 'Appointments'),
+        bioPageQuimera: t('editor.bioPageQuimera', 'Smart Bio Page'),
+        emailMarketingQuimera: t('editor.emailMarketingQuimera', 'AI Newsletters'),
 
         // Ecommerce sections
         storeSettings: 'Store Settings',

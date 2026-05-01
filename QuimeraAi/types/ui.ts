@@ -55,6 +55,7 @@ export type PageSection =
     // Quimera suite (Platform Selling)
     | 'heroQuimera' | 'featuresQuimera' | 'pricingQuimera' | 'testimonialsQuimera' | 'faqQuimera' | 'ctaQuimera'
     | 'platformShowcaseQuimera' | 'aiCapabilitiesQuimera' | 'industrySolutionsQuimera' | 'agencyWhiteLabelQuimera'
+    | 'metricsQuimera' | 'whatIsQuimera' | 'templatesPreviewQuimera' | 'aiWebStudioQuimera' | 'contentManagerQuimera' | 'imageGeneratorQuimera' | 'chatbotWorkflowQuimera' | 'chatbotBuilderQuimera' | 'leadsManagerQuimera' | 'appointmentsQuimera' | 'bioPageQuimera' | 'emailMarketingQuimera'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)

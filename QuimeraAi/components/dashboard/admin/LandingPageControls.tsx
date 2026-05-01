@@ -82,6 +82,14 @@ import {
     renderAiCapabilitiesQuimeraControls,
     renderAgencyWhiteLabelQuimeraControls,
     renderIndustrySolutionsQuimeraControls,
+    renderContentManagerQuimeraControls,
+    renderImageGeneratorQuimeraControls,
+    renderChatbotWorkflowQuimeraControls,
+    renderChatbotBuilderQuimeraControls,
+    renderLeadsManagerQuimeraControls,
+    renderAppointmentsQuimeraControls,
+    renderBioPageQuimeraControls,
+    renderEmailMarketingQuimeraControls,
 } from '../../controls/landing/LandingQuimeraControls';
 
 interface LandingSection {
@@ -154,6 +162,18 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'finalCtaQuimera': return 'cta';
             case 'aiCapabilitiesQuimera': return 'features';
             case 'agencyWhiteLabelQuimera': return 'features';
+            case 'whatIsQuimera': return 'features';
+            case 'templatesPreviewQuimera': return 'features';
+            case 'aiWebStudioQuimera': return 'features';
+            case 'contentManagerQuimera': return 'features';
+            case 'imageGeneratorQuimera': return 'features';
+            case 'chatbotWorkflowQuimera': return 'features';
+            case 'chatbotBuilderQuimera': return 'features';
+            case 'leadsManagerQuimera': return 'features';
+            case 'appointmentsQuimera': return 'features';
+            case 'bioPageQuimera': return 'features';
+            case 'emailMarketingQuimera': return 'features';
+
             
             // Legacy / Fallbacks
             case 'screenshotCarousel': return 'features';
@@ -522,6 +542,17 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'finalCtaQuimera': return renderCtaQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
             case 'bentoShowcaseQuimera': return renderFeaturesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
             case 'agentDemonstrationQuimera': return renderAiCapabilitiesQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'whatIsQuimera': return renderGenericQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'templatesPreviewQuimera': return renderGenericQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'aiWebStudioQuimera': return renderGenericQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'contentManagerQuimera': return renderContentManagerQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'imageGeneratorQuimera': return renderImageGeneratorQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'chatbotWorkflowQuimera': return renderChatbotWorkflowQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'chatbotBuilderQuimera': return renderChatbotBuilderQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'leadsManagerQuimera': return renderLeadsManagerQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'appointmentsQuimera': return renderAppointmentsQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'bioPageQuimera': return renderBioPageQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
+            case 'emailMarketingQuimera': return renderEmailMarketingQuimeraControls({ ...deps, data: section.data, setNestedData: setExactData, portalContainer, allSections } as any);
 
             default:
                 return (

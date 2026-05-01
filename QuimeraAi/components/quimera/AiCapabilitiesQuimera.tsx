@@ -21,6 +21,7 @@ interface AiCapabilitiesQuimeraProps {
         title: string;
         description: string;
     }>;
+    imagePosition?: 'left' | 'right';
 }
 
 const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
@@ -32,7 +33,8 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
         { icon: 'ImageIcon', title: 'Sugerencias Visuales', description: 'Selección inteligente de imágenes de stock y generación de estilos CSS para que tu sitio siempre luzca profesional.' }
     ],
     colors = {},
-    textDropShadow = false
+    textDropShadow = false,
+    imagePosition = 'right'
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -64,7 +66,7 @@ const AiCapabilitiesQuimera: React.FC<AiCapabilitiesQuimeraProps> = ({
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.1)_0%,transparent_70%)] blur-[50px]"></div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 md:gap-16">
+            <div className={`relative z-10 max-w-7xl mx-auto flex flex-col ${imagePosition === 'left' ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-10 md:gap-16`}>
                 
                 {/* Left Side: Text and Features */}
                 <div className="lg:w-1/2">

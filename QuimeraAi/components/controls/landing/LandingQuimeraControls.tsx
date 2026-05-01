@@ -1035,6 +1035,22 @@ export const renderAiCapabilitiesQuimeraControls = (deps: ControlsDeps & { porta
                 <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
             </div>
 
+            {/* Layout Controls */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layout size={14} /> {deps.t('editor.controls.common.layout', 'Diseño')}
+                </label>
+                <Select 
+                    label={deps.t('editor.imagePosition', 'Posición de Imagen/Mockup')}
+                    value={deps.data.imagePosition || 'right'}
+                    options={[
+                        { label: deps.t('editor.positionLeft', 'Izquierda'), value: 'left' },
+                        { label: deps.t('editor.positionRight', 'Derecha'), value: 'right' }
+                    ]}
+                    onChange={(val) => deps.setNestedData('imagePosition', val)}
+                />
+            </div>
+
             {/* 3. Colors */}
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                 <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
@@ -1127,6 +1143,22 @@ export const renderAgencyWhiteLabelQuimeraControls = (deps: ControlsDeps & { por
                 <ColorControl label="Color de Overlay" value={deps.data.backgroundOverlayColor || deps.data.colors?.background || '#000000'} onChange={(v) => deps.setNestedData('backgroundOverlayColor', v)} />
                 <SliderControl label="Opacidad" value={deps.data.backgroundOverlayOpacity ?? 60} onChange={(v) => deps.setNestedData('backgroundOverlayOpacity', v)} min={0} max={100} step={5} suffix="%" />
                 <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
+            </div>
+
+            {/* Layout Controls */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layout size={14} /> {deps.t('editor.controls.common.layout', 'Diseño')}
+                </label>
+                <Select 
+                    label={deps.t('editor.imagePosition', 'Posición de Imagen/Mockup')}
+                    value={deps.data.imagePosition || 'right'}
+                    options={[
+                        { label: deps.t('editor.positionLeft', 'Izquierda'), value: 'left' },
+                        { label: deps.t('editor.positionRight', 'Derecha'), value: 'right' }
+                    ]}
+                    onChange={(val) => deps.setNestedData('imagePosition', val)}
+                />
             </div>
 
             {/* 3. Colors */}
@@ -1265,16 +1297,254 @@ export const renderIndustrySolutionsQuimeraControls = (deps: ControlsDeps & { po
 // Generic fallback for Quimera suite components that share title/subtitle/colors
 export const renderGenericQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
     const content = <>{renderCommonTextControls(deps)}</>;
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// --- Custom Quimera Feature Controls ---
+
+// Content Manager Quimera
+export const renderContentManagerQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Bot', title: t('contentManagerQuimera.feat1Title', 'Asistente de Escritura IA'), description: t('contentManagerQuimera.feat1Desc', 'Expande ideas, mejora la gramática o genera artículos completos desde un simple comando dentro del editor.') },
+        { icon: 'Globe', title: t('contentManagerQuimera.feat2Title', 'Optimización SEO Automática'), description: t('contentManagerQuimera.feat2Desc', 'La IA sugiere meta títulos, descripciones y palabras clave basándose en el contenido de tu publicación.') },
+        { icon: 'ImageIcon', title: t('contentManagerQuimera.feat3Title', 'Gestión Multimedia'), description: t('contentManagerQuimera.feat3Desc', 'Sube, recorta y organiza tus imágenes y videos en una galería centralizada lista para usar.') },
+        { icon: 'Layout', title: t('contentManagerQuimera.feat4Title', 'Tipos de Contenido Dinámico'), description: t('contentManagerQuimera.feat4Desc', 'Crea blogs, portafolios, menús de restaurantes o listados inmobiliarios sin tocar código.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('contentManagerQuimera.title', 'Gestor de Contenidos con IA Integrada'), t('contentManagerQuimera.subtitle', 'Centraliza tus artículos, portafolios y servicios en un editor avanzado que escribe, traduce y optimiza por ti.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Bot, Globe, ImageIcon, Layout)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
     
+    // We can reuse the generic style tab from renderGenericQuimeraControls
+    // For simplicity, we just copy the logic.
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Image Generator Quimera
+export const renderImageGeneratorQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Sparkles', title: t('imageGeneratorQuimera.feat1Title', 'Generación desde Texto'), description: t('imageGeneratorQuimera.feat1Desc', 'Solo escribe un prompt detallado y la inteligencia artificial creará imágenes fotorrealistas, ilustraciones o logos únicos.') },
+        { icon: 'ImageIcon', title: t('imageGeneratorQuimera.feat2Title', 'Sin Derechos de Autor'), description: t('imageGeneratorQuimera.feat2Desc', 'Úsalas libremente en tus artículos, productos y anuncios sin preocuparte por licencias de stock.') },
+        { icon: 'Paintbrush', title: t('imageGeneratorQuimera.feat3Title', 'Variaciones y Estilos'), description: t('imageGeneratorQuimera.feat3Desc', 'Cambia el estilo visual fácilmente: 3D, acuarela, minimalista, realista o cyberpunk con un clic.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('imageGeneratorQuimera.title', 'Crea Imágenes Increíbles con IA'), t('imageGeneratorQuimera.subtitle', 'Describe lo que imaginas y deja que Quimera genere visuales profesionales, sin derechos de autor y listos para tu website o redes sociales en segundos.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Sparkles, ImageIcon, Paintbrush)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Chatbot Workflow Quimera
+export const renderChatbotWorkflowQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'MessageSquare', title: t('chatbotWorkflowQuimera.feat1Title', 'Atención Inmediata'), description: t('chatbotWorkflowQuimera.feat1Desc', 'Responde al instante con el tono y personalidad de tu marca, resolviendo dudas frecuentes.') },
+        { icon: 'UserPlus', title: t('chatbotWorkflowQuimera.feat2Title', 'Captura de Leads (CRM)'), description: t('chatbotWorkflowQuimera.feat2Desc', 'Identifica oportunidades y solicita datos clave (email, teléfono) guardándolos automáticamente en tu base de contactos.') },
+        { icon: 'CalendarCheck', title: t('chatbotWorkflowQuimera.feat3Title', 'Agendamiento Inteligente'), description: t('chatbotWorkflowQuimera.feat3Desc', 'Se sincroniza con tus servicios y disponibilidad para agendar reuniones y enviar confirmaciones.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('chatbotWorkflowQuimera.title', 'El Recepcionista Perfecto: 24/7'), t('chatbotWorkflowQuimera.subtitle', 'Tu asistente virtual impulsado por IA no solo responde dudas; perfila clientes, guarda datos en tu CRM y agenda citas automáticamente sin que tengas que intervenir.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. MessageSquare, UserPlus, CalendarCheck)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Chatbot Builder Quimera
+export const renderChatbotBuilderQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Database', title: t('chatbotBuilderQuimera.feat1Title', 'Base de Conocimiento'), description: t('chatbotBuilderQuimera.feat1Desc', 'Sube PDFs, pega URLs o escribe texto plano para que tu chatbot conozca todo sobre tu negocio al instante.') },
+        { icon: 'PaintBucket', title: t('chatbotBuilderQuimera.feat2Title', 'Identidad Visual'), description: t('chatbotBuilderQuimera.feat2Desc', 'Cambia colores, tipografía, logo y posición para que el chat se integre perfectamente con tu página web.') },
+        { icon: 'Settings', title: t('chatbotBuilderQuimera.feat3Title', 'Personalidad y Comportamiento'), description: t('chatbotBuilderQuimera.feat3Desc', 'Configura instrucciones detalladas (prompts) para definir el tono de voz, el rol del bot y sus reglas de atención.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('chatbotBuilderQuimera.title', 'Crea un Chatbot a tu Medida'), t('chatbotBuilderQuimera.subtitle', 'Personaliza cada aspecto de tu asistente. Entrénalo con tus propios documentos, define su personalidad y adapta su diseño visual a tu marca corporativa en segundos.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Database, PaintBucket, Settings)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Leads Manager Quimera
+export const renderLeadsManagerQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Users', title: t('leadsManagerQuimera.feat1Title', 'Bandeja Centralizada'), description: t('leadsManagerQuimera.feat1Desc', 'Todos los contactos generados por formularios y chatbots se guardan automáticamente en tu panel principal.') },
+        { icon: 'TrendingUp', title: t('leadsManagerQuimera.feat2Title', 'Enriquecimiento Automático'), description: t('leadsManagerQuimera.feat2Desc', 'La IA perfila a los prospectos y añade etiquetas según sus respuestas e intereses detectados.') },
+        { icon: 'CheckCircle2', title: t('leadsManagerQuimera.feat3Title', 'Seguimiento Eficaz'), description: t('leadsManagerQuimera.feat3Desc', 'Añade notas, marca estados de negociación y no dejes que ningún contacto se enfríe.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('leadsManagerQuimera.title', 'Convierte Visitas en Clientes'), t('leadsManagerQuimera.subtitle', 'Centraliza todos tus contactos en un CRM nativo. Captura leads desde tu web, chatbot o enlaces externos y haz seguimiento sin perder ninguna oportunidad.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Users, TrendingUp, CheckCircle2)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Appointments Quimera
+export const renderAppointmentsQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'CalendarClock', title: t('appointmentsQuimera.feat1Title', 'Sincronización Bidireccional'), description: t('appointmentsQuimera.feat1Desc', 'Se conecta con tu Google Calendar o Outlook para que nunca haya cruces de horarios.') },
+        { icon: 'Clock', title: t('appointmentsQuimera.feat2Title', 'Recordatorios Automáticos'), description: t('appointmentsQuimera.feat2Desc', 'Envía notificaciones por email y SMS para reducir drásticamente las ausencias (no-shows).') },
+        { icon: 'CalendarCheck', title: t('appointmentsQuimera.feat3Title', 'Tipos de Reunión Customizables'), description: t('appointmentsQuimera.feat3Desc', 'Configura duraciones, formularios previos y ubicación (Zoom, Meet, o presencial) por cada servicio.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('appointmentsQuimera.title', 'Agendamiento Inteligente'), t('appointmentsQuimera.subtitle', 'Olvídate de los correos interminables. Permite a tus clientes reservar reuniones, consultas o servicios directamente en tu sitio web según tu disponibilidad.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. CalendarClock, Clock, CalendarCheck)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Bio Page Quimera
+export const renderBioPageQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Wand2', title: t('bioPageQuimera.feat1Title', 'Generación Automática'), description: t('bioPageQuimera.feat1Desc', 'La IA extrae tu información de Instagram o TikTok y crea tu página en 10 segundos con tu identidad visual.') },
+        { icon: 'Sparkles', title: t('bioPageQuimera.feat2Title', 'Enlaces Inteligentes'), description: t('bioPageQuimera.feat2Desc', 'Destaca automáticamente el enlace más importante (como tu último video o producto) usando algoritmos de atención.') },
+        { icon: 'Share2', title: t('bioPageQuimera.feat3Title', 'Analítica Predictiva'), description: t('bioPageQuimera.feat3Desc', 'Descubre de dónde vienen tus seguidores y qué enlace convierte mejor, con sugerencias de la IA para mejorar.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('bioPageQuimera.title', 'Tu Enlace en Bio potenciado por IA'), t('bioPageQuimera.subtitle', 'Reúne toda tu presencia online en una sola página optimizada. Solo dinos tus redes y la Inteligencia Artificial diseñará y ordenará tus enlaces para maximizar clics.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Wand2, Sparkles, Share2)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Email Marketing Quimera
+export const renderEmailMarketingQuimeraControls = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }) => {
+    const { t } = deps;
+    const defaultFeatures = [
+        { icon: 'Edit3', title: t('emailMarketingQuimera.feat1Title', 'Redacción Asistida'), description: t('emailMarketingQuimera.feat1Desc', 'Dile a la IA qué quieres promocionar y obtén múltiples opciones de correos con el tono de voz de tu marca.') },
+        { icon: 'Zap', title: t('emailMarketingQuimera.feat2Title', 'Asuntos de Alta Conversión'), description: t('emailMarketingQuimera.feat2Desc', 'Genera títulos optimizados psicológicamente para evitar la carpeta de spam y maximizar los clics.') },
+        { icon: 'Target', title: t('emailMarketingQuimera.feat3Title', 'Segmentación Dinámica'), description: t('emailMarketingQuimera.feat3Desc', 'La IA agrupa automáticamente a tus leads según su comportamiento e intereses para enviar mensajes personalizados.') }
+    ];
+
+    const content = (
+        <>
+            {renderCommonTextControls(deps, t('emailMarketingQuimera.title', 'Campañas de Email que se Escriben Solas'), t('emailMarketingQuimera.subtitle', 'Aumenta tus tasas de apertura con la IA. Genera asuntos irresistibles, redacta newsletters completos y segmenta a tus suscriptores en un par de clics.'))}
+            <QuimeraListControl
+                arrayKey="features"
+                itemLabel={t('editor.feature', 'Característica')}
+                defaultItems={defaultFeatures}
+                fields={[
+                    { key: 'icon', label: t('editor.icon', 'Ícono (ej. Edit3, Zap, Target)'), type: 'input' },
+                    { key: 'title', label: t('editor.title', 'Título'), type: 'input' },
+                    { key: 'description', label: t('editor.description', 'Descripción'), type: 'textarea' }
+                ]}
+                deps={deps}
+            />
+        </>
+    );
+    
+    return renderGenericQuimeraControlsWithContent(deps, content);
+};
+
+// Helper for generic style tabs
+const renderGenericQuimeraControlsWithContent = (deps: ControlsDeps & { portalContainer?: HTMLElement | null }, content: React.ReactNode) => {
     const styleTab = (
         <div className="space-y-4">
-            {/* 1. Background Image (shared component) */}
             <BackgroundImageControl sectionKey="" data={{ '': deps.data }} setNestedData={(path, value) => {
                 const cleanPath = path.startsWith('.') ? path.slice(1) : path;
                 deps.setNestedData(cleanPath, value);
             }} />
-
-            {/* 2. Overlay Controls (always visible, not gated by image) */}
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
                 <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
                     <Layers size={14} /> {deps.t('editor.heroQuimeraControls.overlayColors', 'Overlay')}
@@ -1284,36 +1554,42 @@ export const renderGenericQuimeraControls = (deps: ControlsDeps & { portalContai
                 <ToggleControl label="Activar Overlay" checked={deps.data.backgroundOverlayEnabled !== false} onChange={(v) => deps.setNestedData('backgroundOverlayEnabled', v)} />
             </div>
 
-            {/* 3. Colors */}
+            {/* Layout Controls */}
+            <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+                    <Layout size={14} /> {deps.t('editor.controls.common.layout', 'Diseño')}
+                </label>
+                <Select 
+                    label={deps.t('editor.imagePosition', 'Posición de Imagen/Mockup')}
+                    value={deps.data.imagePosition || 'right'}
+                    options={[
+                        { label: deps.t('editor.positionLeft', 'Izquierda'), value: 'left' },
+                        { label: deps.t('editor.positionRight', 'Derecha'), value: 'right' }
+                    ]}
+                    onChange={(val) => deps.setNestedData('imagePosition', val)}
+                />
+            </div>
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                 <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-3">
                     <Settings size={14} /> {deps.t('editor.controls.common.colors', 'Colores')}
                 </label>
                 <div className="space-y-4">
-                    {/* Section colors */}
                     <div className="space-y-2">
                         <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Sección</p>
                         <ColorControl label="Fondo" value={deps.data.colors?.background} onChange={(v) => deps.setNestedData('colors.background', v)} />
                     </div>
-                    {/* Text */}
                     <div className="space-y-2 pt-2 border-t border-q-border/50">
                         <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Texto</p>
                         <ColorControl label="Título" value={deps.data.colors?.text} onChange={(v) => deps.setNestedData('colors.text', v)} />
                         <ColorControl label="Subtítulo" value={deps.data.colors?.secondaryText} onChange={(v) => deps.setNestedData('colors.secondaryText', v)} />
                     </div>
-                    
-                    {/* Cards */}
                     <div className="space-y-2 pt-2 border-t border-q-border/50">
                         <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Tarjetas</p>
                         <ColorControl label="Fondo Tarjeta" value={deps.data.colors?.cardBackground} onChange={(v) => deps.setNestedData('colors.cardBackground', v)} />
                         <ColorControl label="Borde Tarjeta" value={deps.data.colors?.cardBorder} onChange={(v) => deps.setNestedData('colors.cardBorder', v)} />
                         <ColorControl label="Texto Tarjeta" value={deps.data.colors?.cardText} onChange={(v) => deps.setNestedData('colors.cardText', v)} />
-                        
                         <ColorControl label="Ícono" value={deps.data.colors?.iconColor} onChange={(v) => deps.setNestedData('colors.iconColor', v)} />
-                        
                     </div>
-                    
-                    {/* Accent */}
                     <div className="space-y-2 pt-2 border-t border-q-border/50">
                         <p className="text-[10px] uppercase font-bold text-q-text-secondary/70 mb-1">Acento</p>
                         <ColorControl label="Color de Acento" value={deps.data.colors?.accent} onChange={(v) => deps.setNestedData('colors.accent', v)} />
@@ -1322,6 +1598,5 @@ export const renderGenericQuimeraControls = (deps: ControlsDeps & { portalContai
             </div>
         </div>
     );
-
     return <TabbedControls contentTab={<div className="space-y-4 pt-4">{content}</div>} styleTab={<div className="space-y-4 pt-4">{styleTab}</div>} />;
 };

@@ -22,6 +22,7 @@ interface AgencyWhiteLabelQuimeraProps {
     }>;
     buttonText?: string;
     buttonLink?: string;
+    imagePosition?: 'left' | 'right';
 }
 
 const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
@@ -36,7 +37,8 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     buttonText,
     buttonLink = '#',
     colors = {},
-    textDropShadow = false
+    textDropShadow = false,
+    imagePosition = 'right'
 }) => {
     const { t } = useTranslation();
     const bgColor = colors.background || '#050505';
@@ -70,7 +72,7 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto">
-                <div className="flex flex-col lg:flex-row items-center gap-16">
+                <div className={`flex flex-col ${imagePosition === 'left' ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-16`}>
                     
                     {/* Visual Side */}
                     <div className="w-full lg:w-1/2 relative">

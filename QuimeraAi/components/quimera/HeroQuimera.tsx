@@ -84,7 +84,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
 
     return (
         <section
-            className={`flex flex-col justify-center py-20 md:pt-20 px-4 sm:px-6 relative overflow-hidden ${alignItems} ${textAlignClass} font-button button-caps`}
+            className={`flex flex-col justify-center py-16 md:py-20 px-4 sm:px-6 relative overflow-hidden ${alignItems} ${textAlignClass} font-button button-caps`}
             style={{
                 backgroundColor: bgColor,
                 color: textColor,
@@ -400,7 +400,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
                     {displayBadge}
                 </div>
 
-                <h1 className={`text-4xl md:text-5xl lg:text-7xl font-black mb-6 tracking-tight animate-fade-in-up leading-tight ${textDropShadow ? 'drop-shadow-2xl' : ''} font-header heading-caps`} style={{ animationDelay: '0.2s', maxWidth: '1000px', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                <h1 className={`text-4xl sm:text-5xl lg:text-[5.5rem] font-black mb-6 tracking-tight animate-fade-in-up leading-tight ${textDropShadow ? 'drop-shadow-2xl' : ''} font-header heading-caps`} style={{ animationDelay: '0.2s', maxWidth: '1000px', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     <span dangerouslySetInnerHTML={{ __html: displayTitle.replace(/IA/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">IA</span>`).replace(/AI/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">AI</span>`) }} />
                 </h1>
 
