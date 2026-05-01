@@ -36,6 +36,7 @@ import { useSafeUpgrade } from '../UpgradeContext';
 import { useSafeAdmin } from '../admin';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { useSafeUndo } from '../undo/UndoContext';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -44,6 +45,15 @@ export interface ProjectUndoState {
     sectionVisibility: Record<PageSection, boolean>;
     pages: SitePage[];
 }
+
+// Helper to normalize project.name from i18n object {en, es} to plain string
+// This prevents crashes in ALL downstream components that do project.name.toLowerCase(), etc.
+const normalizeProject = (project: Project): Project => {
+    if (project.name && typeof project.name === 'object') {
+        return { ...project, name: resolveProjectName(project.name) };
+    }
+    return project;
+};
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
@@ -447,11 +457,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(docSnap.id)) {
                     deletedIds.add(docSnap.id);
                 } else {
-                    activeTemplates.push({
+                    activeTemplates.push(normalizeProject({
                         ...docData,
                         id: docSnap.id,
                         status: 'Template' as const
-                    } as Project);
+                    } as Project));
                 }
             });
 
@@ -482,7 +492,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const userProjectsCol = collection(db, ...userPathSegments);
                 const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
                 const userSnapshot = await getDocs(userQuery);
-                const personalProjects = userSnapshot.docs.map(docSnap => ({
+                const personalProjects = userSnapshot.docs.map(docSnap => normalizeProject({
                     ...docSnap.data(),
                     id: docSnap.id
                 } as Project));
@@ -498,7 +508,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const tenantProjectsCol = collection(db, ...tenantPathSegments);
                     const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
                     const tenantSnapshot = await getDocs(tenantQuery);
-                    const tenantProjects = tenantSnapshot.docs.map(docSnap => ({
+                    const tenantProjects = tenantSnapshot.docs.map(docSnap => normalizeProject({
                         ...docSnap.data(),
                         id: docSnap.id
                     } as Project));
@@ -675,7 +685,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 const projectSnap = await getDoc(projectRef);
 
                 if (projectSnap.exists()) {
-                    project = { id: projectSnap.id, ...projectSnap.data() } as Project;
+                    project = normalizeProject({ id: projectSnap.id, ...projectSnap.data() } as Project);
                     console.log('[ProjectContext] Loaded project from Firebase:', project.name);
                     // Add to local state
                     setProjects(prev => {
@@ -687,7 +697,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const templateRef = doc(db, 'templates', projectId);
                     const templateSnap = await getDoc(templateRef);
                     if (templateSnap.exists()) {
-                        project = { id: templateSnap.id, ...templateSnap.data() } as Project;
+                        project = normalizeProject({ id: templateSnap.id, ...templateSnap.data() } as Project);
                         console.log('[ProjectContext] Loaded template from Firebase:', project.name);
                         setProjects(prev => {
                             if (prev.find(p => p.id === projectId)) return prev;

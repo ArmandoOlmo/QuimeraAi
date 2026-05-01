@@ -1,6 +1,8 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, ToggleControl
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
@@ -28,7 +30,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.testimonialsLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'testimonialsLumina.headline', value: data.testimonialsLumina.headline, context: 'Testimonials Lumina Headline' })}
           >
-            <I18nInput 
+            <Input 
               label=""
               value={data.testimonialsLumina.headline || ''} 
               onChange={(val) => setNestedData('testimonialsLumina.headline', val)} 
@@ -39,7 +41,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.testimonialsLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'testimonialsLumina.subheadline', value: data.testimonialsLumina.subheadline || '', context: 'Testimonials Lumina Subheadline' })}
           >
-            <I18nTextArea 
+            <TextArea 
               value={data.testimonialsLumina.subheadline || ''} 
               onChange={(val) => setNestedData('testimonialsLumina.subheadline', val)} 
               rows={2}
@@ -69,7 +71,7 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Testimonial #{idx + 1}</span>
 
-            <I18nTextArea 
+            <TextArea 
               label={t('editor.testimonialsLumina.quote', 'Quote')} 
               value={test.quote || ''} 
               onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.quote`, val)} 
@@ -77,12 +79,12 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             />
 
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <I18nInput 
+              <Input 
                 label={t('editor.testimonialsLumina.authorName', 'Author Name')} 
                 value={test.authorName || ''} 
                 onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorName`, val)} 
               />
-              <I18nInput 
+              <Input 
                 label={t('editor.testimonialsLumina.authorRole', 'Author Role')} 
                 value={test.authorRole || ''} 
                 onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorRole`, val)} 

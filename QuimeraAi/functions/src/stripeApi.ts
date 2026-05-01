@@ -565,88 +565,136 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
  * Handles successful payment
  */
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
-    const { userId, storeId, orderId } = paymentIntent.metadata;
+    const { userId, ownerId, storeId, orderId } = paymentIntent.metadata;
+    const resolvedUserId = ownerId || userId;
 
-    if (!userId || !orderId) {
+    if (!resolvedUserId || !orderId) {
         console.error('Missing metadata in payment intent:', paymentIntent.id);
         return;
     }
 
     const ordersPath = storeId
-        ? `users/${userId}/stores/${storeId}/orders`
-        : `users/${userId}/orders`;
+        ? `users/${resolvedUserId}/stores/${storeId}/orders`
+        : `users/${resolvedUserId}/orders`;
 
     const orderRef = db.doc(`${ordersPath}/${orderId}`);
-    const orderDoc = await orderRef.get();
 
-    if (!orderDoc.exists) {
-        console.error('Order not found:', orderId);
-        return;
-    }
+    try {
+        const paidOrderData = await db.runTransaction(async (transaction) => {
+            const orderDoc = await transaction.get(orderRef);
 
-    // Update order status
-    await orderRef.update({
-        status: 'paid',
-        paymentStatus: 'paid',
-        paidAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+            if (!orderDoc.exists) {
+                console.error('Order not found:', orderId);
+                return null; // Nothing to update
+            }
 
-    // Update customer stats
-    const orderData = orderDoc.data();
-    if (orderData?.customerId) {
-        const customersPath = storeId
-            ? `users/${userId}/stores/${storeId}/customers`
-            : `users/${userId}/customers`;
+            const orderData = orderDoc.data();
 
-        await db.doc(`${customersPath}/${orderData.customerId}`).update({
-            totalOrders: admin.firestore.FieldValue.increment(1),
-            totalSpent: admin.firestore.FieldValue.increment(orderData.total || 0),
-            lastOrderAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-    }
+            // Idempotency check
+            if (orderData?.paymentStatus === 'paid' || orderData?.status === 'paid') {
+                console.log('Order already marked as paid. Idempotent webhook ignored for:', orderId);
+                return null;
+            }
 
-    // Update product inventory
-    if (orderData?.items) {
-        const productsPath = storeId
-            ? `users/${userId}/stores/${storeId}/products`
-            : `users/${userId}/products`;
-
-        const batch = db.batch();
-
-        for (const item of orderData.items) {
-            const productRef = db.doc(`${productsPath}/${item.productId}`);
-            batch.update(productRef, {
-                quantity: admin.firestore.FieldValue.increment(-item.quantity),
+            // Update order status
+            transaction.update(orderRef, {
+                status: 'paid',
+                paymentStatus: 'paid',
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+
+            // Update customer stats
+            if (orderData?.customerId) {
+                const customersPath = storeId
+                    ? `users/${resolvedUserId}/stores/${storeId}/customers`
+                    : `users/${resolvedUserId}/customers`;
+
+                const customerRef = db.doc(`${customersPath}/${orderData.customerId}`);
+                transaction.set(customerRef, {
+                    totalOrders: admin.firestore.FieldValue.increment(1),
+                    totalSpent: admin.firestore.FieldValue.increment(orderData.total || 0),
+                    lastOrderAt: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+            }
+
+            // Update product inventory
+            if (orderData?.items) {
+                const productsPath = storeId
+                    ? `users/${resolvedUserId}/stores/${storeId}/products`
+                    : `users/${resolvedUserId}/products`;
+
+                for (const item of orderData.items) {
+                    const productRef = db.doc(`${productsPath}/${item.productId}`);
+                    transaction.set(productRef, {
+                        quantity: admin.firestore.FieldValue.increment(-item.quantity),
+                    }, { merge: true });
+                }
+            }
+
+            return orderData;
+        });
+
+        if (paidOrderData && storeId) {
+            if (paidOrderData.customerEmail) {
+                const safeCustomerId = Buffer.from(String(paidOrderData.customerEmail).toLowerCase()).toString('base64url');
+                await db.doc(`users/${resolvedUserId}/stores/${storeId}/customers/${safeCustomerId}`).set({
+                    email: paidOrderData.customerEmail,
+                    firstName: paidOrderData.shippingAddress?.firstName || '',
+                    lastName: paidOrderData.shippingAddress?.lastName || '',
+                    phone: paidOrderData.customerPhone || paidOrderData.shippingAddress?.phone || '',
+                    totalOrders: admin.firestore.FieldValue.increment(1),
+                    totalSpent: admin.firestore.FieldValue.increment(paidOrderData.total || 0),
+                    lastOrderDate: admin.firestore.FieldValue.serverTimestamp(),
+                    addresses: paidOrderData.shippingAddress ? admin.firestore.FieldValue.arrayUnion(paidOrderData.shippingAddress) : [],
+                    tags: admin.firestore.FieldValue.arrayUnion('customer'),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    createdAt: paidOrderData.createdAt || admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+
+                const trackingCode = `${paidOrderData.orderNumber}-${String(paidOrderData.customerEmail).split('@')[0]}`.toLowerCase();
+                await db.doc(`orderTracking/${trackingCode}`).set({
+                    orderId,
+                    storeId,
+                    orderNumber: paidOrderData.orderNumber,
+                    status: 'paid',
+                    paymentStatus: 'paid',
+                    fulfillmentStatus: paidOrderData.fulfillmentStatus || 'unfulfilled',
+                    trackingNumber: paidOrderData.trackingNumber || null,
+                    trackingUrl: paidOrderData.trackingUrl || null,
+                    createdAt: paidOrderData.createdAt || admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+            }
         }
-
-        await batch.commit();
+        
+        console.log('Payment succeeded and inventory updated for order:', orderId);
+    } catch (error) {
+        console.error('Transaction failed for handlePaymentIntentSucceeded:', error);
     }
-
-    console.log('Payment succeeded for order:', orderId);
 }
 
 /**
  * Handles failed payment
  */
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
-    const { userId, storeId, orderId } = paymentIntent.metadata;
+    const { userId, ownerId, storeId, orderId } = paymentIntent.metadata;
+    const resolvedUserId = ownerId || userId;
 
-    if (!userId || !orderId) {
+    if (!resolvedUserId || !orderId) {
         console.error('Missing metadata in payment intent:', paymentIntent.id);
         return;
     }
 
     const ordersPath = storeId
-        ? `users/${userId}/stores/${storeId}/orders`
-        : `users/${userId}/orders`;
+        ? `users/${resolvedUserId}/stores/${storeId}/orders`
+        : `users/${resolvedUserId}/orders`;
 
     await db.doc(`${ordersPath}/${orderId}`).update({
         paymentStatus: 'failed',
         paymentError: paymentIntent.last_payment_error?.message || 'Payment failed',
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    }).catch(error => console.error('Error updating order on payment failure:', error));
 
     console.log('Payment failed for order:', orderId);
 }
@@ -1637,6 +1685,5 @@ export const getPaymentStatus = functions.https.onCall(
         }
     }
 );
-
 
 

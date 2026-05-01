@@ -13,6 +13,7 @@ import {
     SubscriptionPlanId,
     SubscriptionPlan
 } from '../types/subscription';
+import { resolveProjectName } from '../utils/resolveProjectName';
 
 // =============================================================================
 // TYPES
@@ -148,8 +149,8 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
                             loadedPlans[doc.id] = {
                                 id: doc.id as SubscriptionPlanId,
-                                name: data.name || doc.id,
-                                description: data.description || '',
+                                name: resolveProjectName(data.name) || doc.id,
+                                description: resolveProjectName(data.description) || '',
                                 price: data.price || { monthly: 0, annually: 0 },
                                 features: data.features || SUBSCRIPTION_PLANS.free.features,
                                 limits: data.limits || SUBSCRIPTION_PLANS.free.limits,

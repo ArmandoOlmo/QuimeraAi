@@ -99,6 +99,8 @@ type StoreView =
 // Import useSafeEditor
 import { useSafeEditor } from '../contexts/EditorContext';
 import { useSafeTenant } from '../contexts/tenant';
+import { sanitizeI18nObject } from '../utils/sanitizeData';
+import { useTranslation } from 'react-i18next';
 
 // ... (rest of imports)
 
@@ -115,15 +117,21 @@ const LandingPageContent: React.FC = () => {
   const projectContext = useProject();
 
   const isEditorMode = editorContext?.view === 'editor' && !!editorContext?.data;
+  
+  const { i18n } = useTranslation();
+  const preferredLanguage = i18n.language?.startsWith('es') ? 'es' : 'en';
 
-  const data = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
+  const rawData = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
+  const data = useMemo(() => sanitizeI18nObject(rawData, preferredLanguage), [rawData, preferredLanguage]);
+  
   const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
   const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
   const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext;
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
-  const { componentStatus, customComponents, componentStyles } = useAdmin();
+  const { componentStatus, customComponents, componentStyles: rawComponentStyles } = useAdmin();
+  const componentStyles = useMemo(() => sanitizeI18nObject(rawComponentStyles, preferredLanguage), [rawComponentStyles, preferredLanguage]);
   const [activePost, setActivePost] = useState<CMSPost | null>(null);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [isRouting, setIsRouting] = useState(false);

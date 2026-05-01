@@ -25,6 +25,12 @@ import {
     getPaymentStatus
 } from './stripeApi';
 
+import { 
+    createStoreCheckoutIntent,
+    getStoreOrderStatus,
+    refundStoreOrder
+} from './ecommerceCheckout';
+
 import {
     createConnectAccount,
     createConnectOnboardingLink,
@@ -82,6 +88,7 @@ import {
     onOrderCreate,
     onOrderUpdate,
     onStoreSettingsWrite,
+    onStoreMainSettingsWrite,
     onProductUpdateCheckStock,
     validateDiscount,
     trackOrder
@@ -254,7 +261,6 @@ export const voice = {
     chat: voiceChat
 };
 
-// Export Stripe/Ecommerce functions
 export const stripe = {
     createPaymentIntent,
     createCheckoutSession,
@@ -262,6 +268,13 @@ export const stripe = {
     webhook: stripeWebhook,
     createRefund,
     getPaymentStatus
+};
+
+// Export new Ecommerce functions at root for httpsCallable
+export {
+    createStoreCheckoutIntent,
+    getStoreOrderStatus,
+    refundStoreOrder
 };
 
 // Export Stripe Connect functions (Multi-tenant)
@@ -300,6 +313,7 @@ export const ecommerce = {
     onOrderCreate,
     onOrderUpdate,
     onStoreSettingsWrite,
+    onStoreMainSettingsWrite,
     validateDiscount,
     trackOrder
 };
@@ -503,6 +517,7 @@ export {
     onOrderCreate,
     onOrderUpdate,
     onStoreSettingsWrite,
+    onStoreMainSettingsWrite,
     onProductUpdateCheckStock,
     validateDiscount,
     trackOrder,

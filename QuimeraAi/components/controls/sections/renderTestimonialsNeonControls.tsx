@@ -3,7 +3,9 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  ToggleControl, SliderControl, Input, TextArea, Select
+} from '../../ui/EditorControlPrimitives';
 import ImagePicker from '../../ui/ImagePicker';
 
 export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
@@ -14,12 +16,12 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
 
     const contentTab = (
         <div className="space-y-4">
-            <I18nInput
+            <Input
                 label={t('editor.controls.headline', 'Titular')}
                 value={sectionData.headline || ''}
                 onChange={(val) => setNestedData('testimonialsNeon.headline', val)}
             />
-            <I18nTextArea
+            <TextArea
                 label={t('editor.controls.subheadline', 'Subtitular')}
                 value={sectionData.subheadline || ''}
                 onChange={(val) => setNestedData('testimonialsNeon.subheadline', val)}
@@ -44,17 +46,17 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                         >
                             &times;
                         </button>
-                        <I18nInput
+                        <Input
                             label={t('editor.controls.name', 'Nombre')}
                             value={test.authorName || ''}
                             onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.authorName`, val)}
                         />
-                        <I18nInput
+                        <Input
                             label={t('editor.controls.role', 'Cargo')}
                             value={test.authorRole || ''}
                             onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.authorRole`, val)}
                         />
-                        <I18nTextArea
+                        <TextArea
                             label={t('editor.controls.quote', 'Cita')}
                             value={test.quote || ''}
                             onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.quote`, val)}

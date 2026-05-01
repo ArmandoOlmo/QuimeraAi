@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, getDocs, Timestamp } from 'firebase/firestore';
 import type { Tenant, TenantUsage, TenantStatus } from '../types/multiTenant';
+import { resolveProjectName } from '../utils/resolveProjectName';
 
 // =============================================================================
 // TYPES
@@ -243,9 +244,11 @@ export function useAgencyMetrics(agencyTenantId: string) {
             (snapshot) => {
                 const clients: Tenant[] = [];
                 snapshot.forEach((doc) => {
+                    const data = doc.data();
                     clients.push({
                         id: doc.id,
-                        ...doc.data(),
+                        ...data,
+                        name: resolveProjectName(data.name)
                     } as Tenant);
                 });
 
@@ -356,7 +359,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
                         id: doc.id,
                         type: data.type,
                         clientId: data.clientTenantId,
-                        clientName: data.clientName,
+                        clientName: resolveProjectName(data.clientName),
                         description: data.description || getActivityDescription(data),
                         timestamp: data.timestamp?.toDate() || new Date(),
                         userId: data.createdBy,

@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -129,10 +131,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Title & Description */}
-      <I18nInput label={t('editor.controls.common.title')} value={data?.portfolio?.title} onChange={(val) => setNestedData('portfolio.title', val)} />
+      <Input label={t('editor.controls.common.title')} value={data?.portfolio?.title} onChange={(val) => setNestedData('portfolio.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.portfolio?.titleFontSize || 'md'} onChange={(v) => setNestedData('portfolio.titleFontSize', v)} />
 
-      <I18nTextArea label={t('editor.controls.common.description')} value={data?.portfolio?.description} onChange={(val) => setNestedData('portfolio.description', val)} rows={2} />
+      <TextArea label={t('editor.controls.common.description')} value={data?.portfolio?.description} onChange={(val) => setNestedData('portfolio.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.portfolio?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('portfolio.descriptionFontSize', v)} />
 
 
@@ -151,7 +153,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <Trash2 size={14} />
             </button>
           </div>
-          <I18nInput
+          <Input
             placeholder="Title"
             value={item.title}
             onChange={(val) => setNestedData(`portfolio.items.${index}.title`, val)}
@@ -173,7 +175,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {/* Link Controls */}
           <div className="mt-3 pt-3 border-t border-q-border/50">
             <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.link')}</label>
-            <I18nInput
+            <Input
               placeholder="Link Text (e.g. View Project)"
               value={item.linkText || ''}
               onChange={(val) => setNestedData(`portfolio.items.${index}.linkText`, val)}
@@ -199,7 +201,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
             {(item.linkType === 'manual' || !item.linkType) && (
               <>
-                <I18nInput
+                <Input
                   placeholder="https://example.com or #section"
                   value={item.linkUrl || ''}
                   onChange={(val) => setNestedData(`portfolio.items.${index}.linkUrl`, val)}

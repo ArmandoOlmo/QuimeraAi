@@ -3,7 +3,9 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, List, CreditCard } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select, I18nInput, I18nTextArea, I18nStringArrayEditor } from '../../ui/EditorControlPrimitives';
+import {
+  ToggleControl, SliderControl, Input, TextArea, Select, I18nStringArrayEditor
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
@@ -34,7 +36,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
               {label}
             </label>
             
-            <I18nInput 
+            <Input 
               label={t('editor.pricingNeon.buttonText', 'Texto del Botón')} 
               value={tiers[tierIndex]?.[textKey] || ''} 
               onChange={(val) => setNestedData(`pricingNeon.tiers.${tierIndex}.${textKey}`, val)} 
@@ -71,7 +73,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
     
             {/* Manual URL Input */}
             {linkType === 'manual' && (
-              <I18nInput
+              <Input
                 label=""
                 value={tiers[tierIndex]?.[linkKey] || ''}
                 onChange={(v) => setNestedData(`pricingNeon.tiers.${tierIndex}.${linkKey}`, v)}
@@ -125,7 +127,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         context: 'Pricing Neon Headline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('pricingNeon.headline', val)}
                         rows={2}
@@ -140,7 +142,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         context: 'Pricing Neon Subheadline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('pricingNeon.subheadline', val)}
                         rows={2}
@@ -177,7 +179,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                             onChange={(checked) => setNestedData(`pricingNeon.tiers.${index}.isPopular`, checked)}
                         />
 
-                        <I18nInput
+                        <Input
                             label={t('editor.controls.tierName', 'Nombre del Plan')}
                             value={tier.name || ''}
                             onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.name`, val)}
@@ -185,14 +187,14 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         
                         <div className="flex gap-2">
                             <div className="flex-1">
-                                <I18nInput
+                                <Input
                                     label={t('editor.controls.price', 'Precio')}
                                     value={tier.price || ''}
                                     onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.price`, val)}
                                 />
                             </div>
                             <div className="flex-1">
-                                <I18nInput
+                                <Input
                                     label={t('editor.controls.billingPeriod', 'Período')}
                                     value={tier.billingPeriod || ''}
                                     onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.billingPeriod`, val)}
@@ -200,7 +202,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                             </div>
                         </div>
 
-                        <I18nTextArea
+                        <TextArea
                             label={t('editor.controls.description', 'Descripción')}
                             value={tier.description || ''}
                             onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.description`, val)}

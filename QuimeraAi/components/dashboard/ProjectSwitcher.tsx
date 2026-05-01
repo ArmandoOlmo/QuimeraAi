@@ -19,6 +19,7 @@ import {
 import { useProject } from '../../contexts/project';
 import { Project } from '../../types/components';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
+import { resolveProjectName as _resolveProjectName } from '../../utils/resolveProjectName';
 
 interface ProjectSwitcherProps {
     collapsed?: boolean;
@@ -31,7 +32,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
     className = '',
     onCreateProject,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const {
         projects,
         activeProject,
@@ -39,6 +40,8 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         isLoadingProjects,
         loadProject,
     } = useProject();
+
+    const resolveProjectName = (name: unknown) => _resolveProjectName(name, i18n.language);
 
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -56,9 +59,9 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         if (!searchQuery.trim()) return userProjects;
         const query = searchQuery.toLowerCase();
         return userProjects.filter(p =>
-            p.name.toLowerCase().includes(query)
+            resolveProjectName(p.name).toLowerCase().includes(query)
         );
-    }, [userProjects, searchQuery]);
+    }, [userProjects, searchQuery, resolveProjectName]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -200,18 +203,18 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                 `}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
-                title={collapsed ? (activeProject?.name || t('project.noProject', 'Sin proyecto')) : undefined}
+                title={collapsed ? (resolveProjectName(activeProject?.name) || t('project.noProject', 'Sin proyecto')) : undefined}
             >
                 {/* Project avatar */}
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
                     {getDynamicThumbnailUrl(activeProject) ? (
                         <img
                             src={getDynamicThumbnailUrl(activeProject)}
-                            alt={activeProject.name}
+                            alt={resolveProjectName(activeProject.name)}
                             className="w-full h-full object-cover"
                         />
                     ) : activeProject ? (
-                        getProjectInitials(activeProject.name)
+                        getProjectInitials(resolveProjectName(activeProject.name))
                     ) : (
                         <FolderKanban size={16} />
                     )}
@@ -221,7 +224,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                     <>
                         <div className="flex-1 min-w-0 text-left">
                             <p className="text-sm font-semibold text-q-text truncate">
-                                {activeProject?.name || t('project.noProject', 'Sin proyecto')}
+                                {resolveProjectName(activeProject?.name) || t('project.noProject', 'Sin proyecto')}
                             </p>
                             {activeProject && getStatusBadge(activeProject.status)}
                         </div>
@@ -313,11 +316,11 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                             {getDynamicThumbnailUrl(project) ? (
                                                 <img
                                                     src={getDynamicThumbnailUrl(project)}
-                                                    alt={project.name}
+                                                    alt={resolveProjectName(project.name)}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                getProjectInitials(project.name)
+                                                getProjectInitials(resolveProjectName(project.name))
                                             )}
                                         </div>
 
@@ -325,7 +328,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                         <div className="flex-1 min-w-0 text-left">
                                             <p className={`text-sm font-medium truncate ${isActive ? 'text-q-accent' : 'text-q-text'
                                                 }`}>
-                                                {project.name}
+                                                {resolveProjectName(project.name)}
                                             </p>
                                             {getStatusBadge(project.status)}
                                         </div>

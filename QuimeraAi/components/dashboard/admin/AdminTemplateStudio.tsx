@@ -539,9 +539,9 @@ const BriefPanel: React.FC<{
             {/* Components — Toggleable */}
             <BriefSection title={`${t('aiTemplateStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
                 <div className="flex flex-wrap gap-1">
-                    {brief.suggestedComponents.map(comp => (
+                    {brief.suggestedComponents.map((comp, idx) => (
                         <button
-                            key={comp}
+                            key={`${comp}-${idx}`}
                             onClick={() => onToggleComponent(comp as PageSection)}
                             className="group/chip flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/15 text-q-accent text-[10px] border border-primary/20 hover:bg-red-500/15 hover:border-red-500/30 hover:text-red-400 transition-colors cursor-pointer"
                             title={`Remove ${comp}`}

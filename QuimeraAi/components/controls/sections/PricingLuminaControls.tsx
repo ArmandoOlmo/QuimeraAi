@@ -1,6 +1,8 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl, I18nInput, I18nTextArea, I18nStringArrayEditor } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, I18nStringArrayEditor
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -28,7 +30,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.headline', value: data.pricingLumina.headline, context: 'Pricing Lumina Headline' })}
           >
-            <I18nInput 
+            <Input 
               label=""
               value={data.pricingLumina.headline || ''} 
               onChange={(val) => setNestedData('pricingLumina.headline', val)} 
@@ -39,7 +41,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.subheadline', value: data.pricingLumina.subheadline || '', context: 'Pricing Lumina Subheadline' })}
           >
-            <I18nTextArea 
+            <TextArea 
               value={data.pricingLumina.subheadline || ''} 
               onChange={(val) => setNestedData('pricingLumina.subheadline', val)} 
               rows={2}
@@ -70,7 +72,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Tier #{idx + 1}</span>
 
             <div className="grid grid-cols-2 gap-2">
-              <I18nInput 
+              <Input 
                 label={t('editor.pricingLumina.tierName', 'Name')} 
                 value={tier.name || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.name`, val)} 
@@ -83,12 +85,12 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <I18nInput 
+              <Input 
                 label={t('editor.pricingLumina.tierPrice', 'Price')} 
                 value={tier.price || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.price`, val)} 
               />
-              <I18nInput 
+              <Input 
                 label={t('editor.pricingLumina.tierPeriod', 'Period')} 
                 value={tier.period || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.period`, val)} 
@@ -96,7 +98,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
               />
             </div>
 
-            <I18nInput 
+            <Input 
               label={t('editor.pricingLumina.tierDescription', 'Description')} 
               value={tier.description || ''} 
               onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.description`, val)} 
@@ -111,7 +113,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             />
 
             <div className="mt-2">
-              <I18nInput 
+              <Input 
                 label={t('editor.pricingLumina.buttonText', 'Button Text')} 
                 value={tier.buttonText || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.buttonText`, val)} 
@@ -145,7 +147,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
               </div>
               {(tier.buttonLinkType === 'manual' || !tier.buttonLinkType) && (
                 <>
-                  <I18nInput
+                  <Input
                     placeholder="https://example.com or #section"
                     value={tier.buttonLink || ''}
                     onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.buttonLink`, val)}

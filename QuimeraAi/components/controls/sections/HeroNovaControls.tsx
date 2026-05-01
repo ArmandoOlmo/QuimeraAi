@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -39,7 +41,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Type size={14} />
           Display Text (centered)
         </label>
-        <I18nInput
+        <Input
           label=""
           value={data.heroNova.displayText || ''}
           onChange={(val) => setNestedData('heroNova.displayText', val)}
@@ -79,12 +81,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
               {/* Headline */}
               <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: `heroNova.slides.${slideIndex}.headline`, value: slide.headline, context: 'Hero Nova Headline' })}>
-                <I18nTextArea value={slide.headline || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.headline`, val)} rows={2} />
+                <TextArea value={slide.headline || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.headline`, val)} rows={2} />
               </AIFormControl>
 
               {/* Subheadline */}
               <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: `heroNova.slides.${slideIndex}.subheadline`, value: slide.subheadline || '', context: 'Hero Nova Subheadline' })}>
-                <I18nInput label="" value={slide.subheadline || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.subheadline`, val)} />
+                <Input label="" value={slide.subheadline || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.subheadline`, val)} />
               </AIFormControl>
 
               {/* CTA */}
@@ -94,8 +96,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   Call to Action
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <I18nInput label={t('controls.textoBotn')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, val)} />
-                  <I18nInput label={t('controls.enlaceDelBotn')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, val)} />
+                  <Input label={t('controls.textoBotn')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, val)} />
+                  <Input label={t('controls.enlaceDelBotn')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, val)} />
                 </div>
               </div>
 
@@ -135,7 +137,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       <MonitorPlay size={12} />
                       Video URL
                     </label>
-                    <I18nInput
+                    <Input
                       label=""
                       value={slide.backgroundVideo || ''}
                       onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.backgroundVideo`, val)}

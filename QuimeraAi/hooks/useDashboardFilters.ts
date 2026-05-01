@@ -7,6 +7,7 @@ import {
     trackSortChanged,
     trackViewModeChanged,
 } from '../utils/analytics';
+import { resolveProjectName } from '../utils/resolveProjectName';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type FilterStatus = 'all' | 'Published' | 'Draft';
@@ -70,7 +71,7 @@ export function useDashboardFilters(): DashboardFiltersHook {
         let filtered = projects.filter(
             (p) =>
                 p.status !== 'Template' &&
-                p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                resolveProjectName(p.name).toLowerCase().includes(searchQuery.toLowerCase()),
         );
 
         if (filterStatus !== 'all') {
@@ -80,7 +81,7 @@ export function useDashboardFilters(): DashboardFiltersHook {
         filtered.sort((a, b) => {
             let comparison = 0;
             if (sortBy === 'name') {
-                comparison = a.name.localeCompare(b.name);
+                comparison = resolveProjectName(a.name).localeCompare(resolveProjectName(b.name));
             } else {
                 comparison =
                     new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime();

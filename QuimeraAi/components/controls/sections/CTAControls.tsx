@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -36,7 +38,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <I18nInput label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(val) => setNestedData('cta.title', val)} />
+        <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(val) => setNestedData('cta.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
         
         <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50 my-3">
@@ -46,7 +48,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(v) => setNestedData('cta.showAccent', v)}
           />
           {(data?.cta.showAccent !== false) && (
-            <I18nInput 
+            <Input 
               label={t('controls.textoDeAcento')} 
               value={data?.cta.accentText || 'Limited Time Offer'} 
               onChange={(val) => setNestedData('cta.accentText', val)} 
@@ -55,10 +57,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           )}
         </div>
 
-        <I18nTextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(val) => setNestedData('cta.description', val)} rows={2} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(val) => setNestedData('cta.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
-        <I18nInput label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(val) => setNestedData('cta.buttonText', val)} />
-        <I18nInput label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(val) => setNestedData('cta.secondaryText', val)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(val) => setNestedData('cta.buttonText', val)} />
+        <Input label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(val) => setNestedData('cta.secondaryText', val)} />
       </div>
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -88,7 +90,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {(data?.cta.linkType === 'manual' || !data?.cta.linkType) && (
         <>
-          <I18nInput
+          <Input
             label={t('editor.controls.common.buttonLink')}
             value={data?.cta.buttonUrl || ''}
             onChange={(val) => setNestedData('cta.buttonUrl', val)}

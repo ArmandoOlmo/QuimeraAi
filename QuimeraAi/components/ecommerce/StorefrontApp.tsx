@@ -70,7 +70,7 @@ function parseUrl(url: string): RouteState {
     // Order confirmation: /order/:orderId
     const orderMatch = path.match(/^order\/([^\/]+)/);
     if (orderMatch) {
-        return { view: 'order-confirmation', params: { orderId: orderMatch[1] } };
+        return { view: 'order-confirmation', params: { orderId: orderMatch[1].split('?')[0] } };
     }
 
     // Default: home
@@ -140,7 +140,9 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const navigateToProduct = (slug: string) => navigate(`/product/${slug}`);
     const navigateToCategory = (slug: string) => navigate(`/category/${slug}`);
     const navigateToCheckout = () => navigate('/checkout');
-    const navigateToOrder = (orderId: string) => navigate(`/order/${orderId}`);
+    const navigateToOrder = (orderId: string, orderAccessToken?: string) => {
+        navigate(`/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`);
+    };
 
     // Loading state
     if (isLoading) {

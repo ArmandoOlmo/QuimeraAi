@@ -3,7 +3,9 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, MessageCircle } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  ToggleControl, SliderControl, Input, TextArea, Select
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 
 export const renderFaqNeonControls = (deps: ControlsDeps) => {
@@ -34,7 +36,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                         context: 'FAQ Neon Headline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('faqNeon.headline', val)}
                         rows={2}
@@ -49,7 +51,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                         context: 'FAQ Neon Subheadline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('faqNeon.subheadline', val)}
                         rows={2}
@@ -88,7 +90,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                                 context: `FAQ Neon Question ${index}` 
                             })}
                         >
-                            <I18nInput
+                            <Input
                                 value={faq.question || ''}
                                 onChange={(val) => setNestedData(`faqNeon.faqs.${index}.question`, val)}
                             />
@@ -102,7 +104,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                                 context: `FAQ Neon Answer ${index}` 
                             })}
                         >
-                            <I18nTextArea
+                            <TextArea
                                 value={faq.answer || ''}
                                 onChange={(val) => setNestedData(`faqNeon.faqs.${index}.answer`, val)}
                                 rows={3}

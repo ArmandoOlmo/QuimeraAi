@@ -5,7 +5,9 @@
 import React from 'react';
 import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select
+} from '../../ui/EditorControlPrimitives';
 import { ControlsDeps } from '../ControlsShared';
 import { MessageSquare, Settings, Palette , Layers } from 'lucide-react';
 
@@ -34,19 +36,19 @@ export const renderChatbotControlsWithTabs = (deps: ControlsDeps) => {
           {t('controls.content', 'Contenido')}
         </label>
         
-        <I18nInput 
+        <Input 
           label={t('controls.welcomeMessage', 'Mensaje de Bienvenida')} 
           value={data?.chatbot?.welcomeMessage} 
           onChange={(val) => setNestedData('chatbot.welcomeMessage', val)} 
         />
         
-        <I18nInput 
+        <Input 
           label={t('controls.placeholderText', 'Texto de Placeholder')} 
           value={data?.chatbot?.placeholderText} 
           onChange={(val) => setNestedData('chatbot.placeholderText', val)} 
         />
         
-        <I18nTextArea 
+        <TextArea 
           label={t('controls.knowledgeBase', 'Base de Conocimiento')} 
           value={data?.chatbot?.knowledgeBase} 
           onChange={(val) => setNestedData('chatbot.knowledgeBase', val)} 

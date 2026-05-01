@@ -3,7 +3,9 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2, Trash2, Plus, List } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  ToggleControl, SliderControl, Input, TextArea, Select
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 
@@ -35,7 +37,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Headline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('featuresNeon.headline', val)}
                         rows={2}
@@ -50,7 +52,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Subheadline' 
                     })}
                 >
-                    <I18nTextArea
+                    <TextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('featuresNeon.subheadline', val)}
                         rows={2}
@@ -89,7 +91,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Title` 
                             })}
                         >
-                            <I18nInput
+                            <Input
                                 value={feature.title || ''}
                                 onChange={(val) => setNestedData(`featuresNeon.features.${index}.title`, val)}
                             />
@@ -103,7 +105,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Description` 
                             })}
                         >
-                            <I18nTextArea
+                            <TextArea
                                 value={feature.description || ''}
                                 onChange={(val) => setNestedData(`featuresNeon.features.${index}.description`, val)}
                                 rows={2}

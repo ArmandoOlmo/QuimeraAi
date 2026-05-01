@@ -9,7 +9,7 @@ import {
     HelpCircle, ChevronDown, Eye, EyeOff, FileText,
     GripVertical, Plus, Search, X, MapPin, Trash2, UtensilsCrossed, Palette, Columns,
     ShoppingBag, Clock, Shield, Package, Megaphone, Store, Waves, Bell, Layers, Minus,
-    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check, CalendarCheck, MessageSquareHeart, Workflow, PaintBucket, Users, Link as LinkIcon, Send
+    Home, Building2, ShoppingCart, CreditCard, Newspaper, Check, CalendarCheck, MessageSquareHeart, Workflow, PaintBucket, Link as LinkIcon
 } from 'lucide-react';
 import {
     DndContext,

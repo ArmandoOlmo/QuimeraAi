@@ -39,6 +39,7 @@ import {
     Timestamp,
 } from '../../firebase';
 import { useAuth } from '../core/AuthContext';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 // =============================================================================
 // CONTEXT TYPES
@@ -121,7 +122,15 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 // Fetch the tenant
                 const tenantDoc = await getDoc(doc(db, 'tenants', membershipData.tenantId));
                 if (tenantDoc.exists()) {
-                    const tenant = { id: tenantDoc.id, ...tenantDoc.data() } as Tenant;
+                    const rawTenant = { id: tenantDoc.id, ...tenantDoc.data() } as any;
+                    const tenant = {
+                        ...rawTenant,
+                        name: resolveProjectName(rawTenant.name),
+                        branding: rawTenant.branding ? {
+                            ...rawTenant.branding,
+                            companyName: rawTenant.branding.companyName ? resolveProjectName(rawTenant.branding.companyName) : resolveProjectName(rawTenant.name)
+                        } : undefined
+                    } as Tenant;
                     memberships.push({
                         ...membershipData,
                         id: docSnap.id,
@@ -151,7 +160,15 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 throw new Error('Tenant not found');
             }
 
-            const tenant = { id: tenantDoc.id, ...tenantDoc.data() } as Tenant;
+            const rawTenant = { id: tenantDoc.id, ...tenantDoc.data() } as any;
+            const tenant = {
+                ...rawTenant,
+                name: resolveProjectName(rawTenant.name),
+                branding: rawTenant.branding ? {
+                    ...rawTenant.branding,
+                    companyName: rawTenant.branding.companyName ? resolveProjectName(rawTenant.branding.companyName) : resolveProjectName(rawTenant.name)
+                } : undefined
+            } as Tenant;
             setCurrentTenant(tenant);
 
             // Find membership for current user
@@ -678,7 +695,17 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         );
 
         const snapshot = await getDocs(subClientsQuery);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant));
+        return snapshot.docs.map(doc => {
+            const raw = { id: doc.id, ...doc.data() } as any;
+            return {
+                ...raw,
+                name: resolveProjectName(raw.name),
+                branding: raw.branding ? {
+                    ...raw.branding,
+                    companyName: raw.branding.companyName ? resolveProjectName(raw.branding.companyName) : resolveProjectName(raw.name)
+                } : undefined
+            } as Tenant;
+        });
     }, [currentTenant]);
 
     // ==========================================================================

@@ -244,7 +244,7 @@ const Router: React.FC<RouterProps> = ({
           >
             <CheckoutPageEnhanced
               storeId={storeId}
-              onSuccess={(orderId) => navigate(`/store/${storeId}/order/${orderId}`)}
+              onSuccess={(orderId, orderAccessToken) => navigate(`/store/${storeId}/order/${orderId}${orderAccessToken ? `?token=${encodeURIComponent(orderAccessToken)}` : ''}`)}
               onBack={() => navigate(`/store/${storeId}`)}
               onNavigateToStore={() => navigate(`/store/${storeId}`)}
             />
@@ -689,7 +689,6 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 
 

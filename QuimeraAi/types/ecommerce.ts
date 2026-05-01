@@ -178,6 +178,29 @@ export interface Order {
     total: number;
     currency: string;
     
+    // Canonical MVP Pricing
+    pricing?: {
+        subtotal: number;
+        discountTotal: number;
+        shippingTotal: number;
+        taxTotal: number;
+        platformFeeTotal: number;
+        total: number;
+    };
+    
+    // Idempotency and Integrity
+    checkoutIdempotencyKey?: string;
+    cartHash?: string;
+    
+    // Stripe Connect Details
+    stripe?: {
+        paymentIntentId?: string;
+        connectedAccountId?: string;
+        clientSecret?: string;
+        chargeId?: string;
+        applicationFeeAmount?: number;
+    };
+    
     // Addresses
     shippingAddress: Address;
     billingAddress?: Address;

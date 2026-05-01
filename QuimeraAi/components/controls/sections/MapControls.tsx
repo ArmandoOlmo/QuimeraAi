@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -112,10 +114,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
-      <I18nInput label={t('editor.controls.common.title')} value={data?.map.title} onChange={(val) => setNestedData('map.title', val)} />
+      <Input label={t('editor.controls.common.title')} value={data?.map.title} onChange={(val) => setNestedData('map.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.map.titleFontSize || 'md'} onChange={(v) => setNestedData('map.titleFontSize', v)} />
 
-      <I18nTextArea label={t('editor.controls.common.description')} value={data?.map.description} onChange={(val) => setNestedData('map.description', val)} rows={2} />
+      <TextArea label={t('editor.controls.common.description')} value={data?.map.description} onChange={(val) => setNestedData('map.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.map.descriptionFontSize || 'md'} onChange={(v) => setNestedData('map.descriptionFontSize', v)} />
 
       {/* ── Location ── */}
@@ -128,7 +130,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.map.address', 'Address')}</label>
         <div className="flex gap-2">
-          <I18nInput
+          <Input
             type="text"
             value={data?.map.address || ''}
             onChange={(val) => setNestedData('map.address', val)}
@@ -178,8 +180,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {t('controls.map.manualCoordinates', 'Manual coordinates (advanced)')}
         </summary>
         <div className="grid grid-cols-2 gap-3 mt-2 pl-2 border-l-2 border-q-border">
-          <I18nInput label={t('controls.map.latitude', 'Latitude')} type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
-          <I18nInput label={t('controls.map.longitude', 'Longitude')} type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
+          <Input label={t('controls.map.latitude', 'Latitude')} type="number" step="0.0001" value={data?.map.lat} onChange={(e) => setNestedData('map.lat', parseFloat(e.target.value))} />
+          <Input label={t('controls.map.longitude', 'Longitude')} type="number" step="0.0001" value={data?.map.lng} onChange={(e) => setNestedData('map.lng', parseFloat(e.target.value))} />
         </div>
       </details>
 
@@ -198,13 +200,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Phone size={14} />
           {t('controls.map.contactInfo', 'Contact Info')}
         </label>
-        <I18nInput label={t('controls.map.phone', 'Phone')} value={data?.map.phone || ''} onChange={(val) => setNestedData('map.phone', val)} placeholder={t('controls.map.phonePlaceholder', 'e.g. +1 (555) 123-4567')} />
-        <I18nInput label={t('controls.map.email', 'Email')} value={data?.map.email || ''} onChange={(val) => setNestedData('map.email', val)} placeholder={t('controls.map.emailPlaceholder', 'e.g. info@business.com')} />
-        <I18nInput label={t('controls.map.businessHours', 'Business Hours')} value={data?.map.businessHours || ''} onChange={(val) => setNestedData('map.businessHours', val)} placeholder={t('controls.map.hoursPlaceholder', 'e.g. Mon-Fri 9:00-18:00')} />
+        <Input label={t('controls.map.phone', 'Phone')} value={data?.map.phone || ''} onChange={(val) => setNestedData('map.phone', val)} placeholder={t('controls.map.phonePlaceholder', 'e.g. +1 (555) 123-4567')} />
+        <Input label={t('controls.map.email', 'Email')} value={data?.map.email || ''} onChange={(val) => setNestedData('map.email', val)} placeholder={t('controls.map.emailPlaceholder', 'e.g. info@business.com')} />
+        <Input label={t('controls.map.businessHours', 'Business Hours')} value={data?.map.businessHours || ''} onChange={(val) => setNestedData('map.businessHours', val)} placeholder={t('controls.map.hoursPlaceholder', 'e.g. Mon-Fri 9:00-18:00')} />
       </div>
 
       {/* ── Button Text ── */}
-      <I18nInput label={t('controls.map.buttonText', 'Button Text')} value={data?.map.buttonText || ''} onChange={(val) => setNestedData('map.buttonText', val)} placeholder={t('components.map.getDirections', 'Get Directions')} />
+      <Input label={t('controls.map.buttonText', 'Button Text')} value={data?.map.buttonText || ''} onChange={(val) => setNestedData('map.buttonText', val)} placeholder={t('components.map.getDirections', 'Get Directions')} />
     </div>
   );
 

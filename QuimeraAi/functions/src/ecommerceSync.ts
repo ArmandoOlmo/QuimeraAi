@@ -258,6 +258,11 @@ export const onOrderCreate = functions.firestore
 
         console.log(`Processing new order ${orderId} for store ${storeId}`);
 
+        if (order.paymentStatus !== 'paid' && order.status !== 'paid') {
+            console.log(`Skipping unpaid order ${orderId}; paymentStatus=${order.paymentStatus || 'unknown'}`);
+            return;
+        }
+
         // 1. Update product inventory
         if (order.items && order.items.length > 0) {
             const batch = db.batch();
@@ -499,19 +504,135 @@ export const onOrderUpdate = functions.firestore
 
         if (statusChanged && after.orderNumber && after.customerEmail) {
             const trackingCode = `${after.orderNumber}-${after.customerEmail.split('@')[0]}`.toLowerCase();
-            await db.doc(`orderTracking/${trackingCode}`).update({
+            await db.doc(`orderTracking/${trackingCode}`).set({
                 status: after.status,
                 paymentStatus: after.paymentStatus,
                 fulfillmentStatus: after.fulfillmentStatus,
                 trackingNumber: after.trackingNumber || null,
                 trackingUrl: after.trackingUrl || null,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            }, { merge: true });
         }
 
         // Get settings for email notifications
         const storeSettings = await getStoreSettings(userId, storeId);
         const emailSettings = await getEmailSettings(userId, storeId);
+
+        if (before.paymentStatus !== 'paid' && after.paymentStatus === 'paid') {
+            if (storeSettings?.sendOrderConfirmation !== false && after.customerEmail) {
+                try {
+                    const currencySymbol = storeSettings?.currencySymbol || '$';
+                    const orderDate = formatDate(after.paidAt || after.createdAt || new Date());
+
+                    const emailHtml = getOrderConfirmationTemplate({
+                        storeName: storeSettings?.storeName || 'Tu Tienda',
+                        logoUrl: emailSettings?.logoUrl,
+                        primaryColor: emailSettings?.primaryColor || '#4f46e5',
+                        customerName: after.customerName || after.shippingAddress?.firstName || 'Cliente',
+                        orderNumber: after.orderNumber,
+                        orderDate,
+                        items: (after.items || []).map((item: any) => ({
+                            name: item.name,
+                            variantName: item.variantName,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice?.toFixed(2) || '0.00',
+                            totalPrice: item.totalPrice?.toFixed(2) || '0.00',
+                            imageUrl: item.imageUrl,
+                        })),
+                        subtotal: (after.subtotal || 0).toFixed(2),
+                        shipping: (after.shippingCost || 0).toFixed(2),
+                        discount: after.discount ? after.discount.toFixed(2) : undefined,
+                        tax: (after.taxAmount || 0).toFixed(2),
+                        total: (after.total || 0).toFixed(2),
+                        currencySymbol,
+                        shippingAddress: after.shippingAddress,
+                        footerText: emailSettings?.footerText,
+                        socialLinks: emailSettings?.socialLinks,
+                    });
+
+                    const fromEmail = emailSettings?.fromEmail || storeSettings?.storeEmail || 'orders@quimera.ai';
+                    const fromName = emailSettings?.fromName || storeSettings?.storeName || 'Tu Tienda';
+
+                    const result = await sendEmail({
+                        to: after.customerEmail,
+                        subject: `Confirmacion de Pedido #${after.orderNumber}`,
+                        html: emailHtml,
+                        from: `${fromName} <${fromEmail}>`,
+                        tags: [
+                            { name: 'type', value: 'order-confirmation' },
+                            { name: 'store', value: storeId },
+                            { name: 'order', value: orderId },
+                        ],
+                    });
+
+                    await logEmailSent(userId, storeId, {
+                        type: 'transactional',
+                        templateId: 'order-confirmation',
+                        recipientEmail: after.customerEmail,
+                        recipientName: after.customerName,
+                        subject: `Confirmacion de Pedido #${after.orderNumber}`,
+                        status: result.success ? 'sent' : 'failed',
+                        providerMessageId: result.messageId,
+                        errorMessage: result.error,
+                        orderId,
+                    });
+                } catch (emailError) {
+                    console.error('Error sending paid order confirmation email:', emailError);
+                }
+            }
+
+            if (storeSettings?.notifyOnNewOrder !== false) {
+                const adminEmail = storeSettings?.orderNotificationEmail || storeSettings?.storeEmail;
+                if (adminEmail) {
+                    try {
+                        const currencySymbol = storeSettings?.currencySymbol || '$';
+                        const dashboardUrl = `https://quimera.ai/dashboard/ecommerce/orders/${orderId}`;
+                        const emailHtml = getNewOrderAdminTemplate({
+                            storeName: storeSettings?.storeName || 'Tu Tienda',
+                            logoUrl: emailSettings?.logoUrl,
+                            primaryColor: emailSettings?.primaryColor || '#4f46e5',
+                            orderNumber: after.orderNumber,
+                            orderDate: formatDate(after.paidAt || after.createdAt || new Date()),
+                            customerName: after.customerName || `${after.shippingAddress?.firstName || ''} ${after.shippingAddress?.lastName || ''}`.trim(),
+                            customerEmail: after.customerEmail,
+                            customerPhone: after.customerPhone || after.shippingAddress?.phone,
+                            items: (after.items || []).map((item: any) => ({
+                                name: item.name,
+                                variantName: item.variantName,
+                                quantity: item.quantity,
+                                unitPrice: item.unitPrice?.toFixed(2) || '0.00',
+                                totalPrice: item.totalPrice?.toFixed(2) || '0.00',
+                                sku: item.sku,
+                            })),
+                            subtotal: (after.subtotal || 0).toFixed(2),
+                            shipping: (after.shippingCost || 0).toFixed(2),
+                            discount: after.discount ? after.discount.toFixed(2) : undefined,
+                            tax: (after.taxAmount || 0).toFixed(2),
+                            total: (after.total || 0).toFixed(2),
+                            currencySymbol,
+                            paymentMethod: after.paymentMethod || 'Tarjeta',
+                            shippingAddress: after.shippingAddress,
+                            customerNotes: after.customerNotes,
+                            dashboardUrl,
+                        });
+
+                        await sendEmail({
+                            to: adminEmail,
+                            subject: `Nueva Orden #${after.orderNumber} - ${currencySymbol}${(after.total || 0).toFixed(2)}`,
+                            html: emailHtml,
+                            from: `${storeSettings?.storeName || 'Quimera'} <noreply@quimera.ai>`,
+                            tags: [
+                                { name: 'type', value: 'new-order-admin' },
+                                { name: 'store', value: storeId },
+                                { name: 'order', value: orderId },
+                            ],
+                        });
+                    } catch (emailError) {
+                        console.error('Error sending paid order admin notification:', emailError);
+                    }
+                }
+            }
+        }
 
         // Send shipping notification email
         if (before.status !== 'shipped' && after.status === 'shipped') {
@@ -864,6 +985,4 @@ export const trackOrder = functions.https.onCall(async (data: TrackOrderRequest)
         order: trackingDoc.data(),
     };
 });
-
-
 

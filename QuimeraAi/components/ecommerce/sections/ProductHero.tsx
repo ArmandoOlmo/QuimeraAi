@@ -172,9 +172,9 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 )}
 
                 {/* Features */}
-                {data.showFeatures !== false && featuredProduct.features && featuredProduct.features.length > 0 && (
+                {data.showFeatures !== false && (featuredProduct as any).features && (featuredProduct as any).features.length > 0 && (
                     <ul className="mb-6 space-y-2">
-                        {featuredProduct.features.slice(0, 4).map((feature, idx) => (
+                        {(featuredProduct as any).features.slice(0, 4).map((feature: any, idx: number) => (
                             <li key={idx} className="flex items-center gap-2" style={{ color: colors?.text }}>
                                 <Check size={16} style={{ color: colors?.accent || colors?.buttonBackground }} />
                                 <span className="text-sm">{feature}</span>
@@ -218,8 +218,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                             onClick={handleAddToCart}
                             className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
                             style={{
-                                backgroundColor: colors?.addToCartBackground || colors?.accent || '#10B981',
-                                color: colors?.addToCartText || colors?.buttonText || '#ffffff',
+                                backgroundColor: (colors as any)?.addToCartBackground || colors?.accent || '#10B981',
+                                color: (colors as any)?.addToCartText || colors?.buttonText || '#ffffff',
                             }}
                         >
                             <ShoppingCart size={20} />
@@ -338,7 +338,7 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                 <div
                     className="absolute inset-0"
                     style={{
-                        background: `linear-gradient(to right, ${colors?.overlayColor || colors?.background}dd, ${colors?.overlayColor || colors?.background}66)`,
+                        background: `linear-gradient(to right, ${(colors as any)?.overlayColor || colors?.background}dd, ${(colors as any)?.overlayColor || colors?.background}66)`,
                     }}
                 />
 
@@ -436,8 +436,8 @@ const ProductHero: React.FC<ProductHeroProps> = ({
                                         onClick={handleAddToCart}
                                         className={`inline-flex items-center gap-2 px-6 py-3 ${getBorderRadius()} font-semibold transition-all hover:opacity-90`}
                                         style={{
-                                            backgroundColor: colors?.addToCartBackground || colors?.accent || '#10B981',
-                                            color: colors?.addToCartText || colors?.buttonText || '#ffffff',
+                                            backgroundColor: (colors as any)?.addToCartBackground || colors?.accent || '#10B981',
+                                            color: (colors as any)?.addToCartText || colors?.buttonText || '#ffffff',
                                         }}
                                     >
                                         <ShoppingCart size={20} />

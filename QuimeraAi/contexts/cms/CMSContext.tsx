@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -112,6 +113,22 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             return;
         }
 
+        // Helper to normalize i18n objects
+        const normalizeMenu = (menu: any): Menu => ({
+            ...menu,
+            title: resolveProjectName(menu.title),
+            items: menu.items?.map((item: any) => ({
+                ...item,
+                text: resolveProjectName(item.text)
+            })) || []
+        });
+
+        const normalizeCategory = (category: any): CMSCategory => ({
+            ...category,
+            name: resolveProjectName(category.name),
+            description: resolveProjectName(category.description)
+        });
+
         // Load menus from project document
         const loadMenus = async () => {
             try {
@@ -123,7 +140,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     const projectData = projectSnap.data();
                     if (projectData.menus && Array.isArray(projectData.menus)) {
                         console.log('[CMSContext] ✅ Loaded menus from project:', projectData.menus.length);
-                        setMenus(projectData.menus);
+                        setMenus(projectData.menus.map(normalizeMenu));
                     } else {
                         console.log('[CMSContext] No menus found in project, using defaults');
                         setMenus(defaultMenus);
@@ -131,7 +148,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     // Load categories
                     if (projectData.categories && Array.isArray(projectData.categories)) {
                         console.log('[CMSContext] ✅ Loaded categories from project:', projectData.categories.length);
-                        setCategories(projectData.categories);
+                        setCategories(projectData.categories.map(normalizeCategory));
                     } else {
                         setCategories([]);
                     }

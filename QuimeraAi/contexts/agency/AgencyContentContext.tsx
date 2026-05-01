@@ -36,6 +36,7 @@ import {
     getDoc,
 } from '../../firebase';
 import { useTenant } from '../tenant/TenantContext';
+import { resolveProjectName } from '../../utils/resolveProjectName';
 
 // =============================================================================
 // CONTEXT
@@ -92,10 +93,15 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const articlesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AgencyArticle[];
+            const articlesData = snapshot.docs.map(docSnapshot => {
+                const data = docSnapshot.data();
+                return {
+                    id: docSnapshot.id,
+                    ...data,
+                    title: resolveProjectName(data.title),
+                    excerpt: data.excerpt ? resolveProjectName(data.excerpt) : undefined
+                };
+            }) as AgencyArticle[];
             setArticles(articlesData);
             setIsLoadingArticles(false);
         }, (error) => {
@@ -125,10 +131,15 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                 orderBy('createdAt', 'desc')
             );
             const snapshot = await getDocs(q);
-            const articlesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AgencyArticle[];
+            const articlesData = snapshot.docs.map(docSnapshot => {
+                const data = docSnapshot.data();
+                return {
+                    id: docSnapshot.id,
+                    ...data,
+                    title: resolveProjectName(data.title),
+                    excerpt: data.excerpt ? resolveProjectName(data.excerpt) : undefined
+                };
+            }) as AgencyArticle[];
             setArticles(articlesData);
         } catch (error) {
             console.error("Error loading agency articles:", error);

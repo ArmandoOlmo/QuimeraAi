@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -30,10 +32,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   if (!data?.video) return null;
   return (
     <div className="space-y-4">
-      <I18nInput label={t('editor.controls.common.title')} value={data.video.title} onChange={(val) => setNestedData('video.title', val)} />
+      <Input label={t('editor.controls.common.title')} value={data.video.title} onChange={(val) => setNestedData('video.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
 
-      <I18nTextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(val) => setNestedData('video.description', val)} rows={2} />
+      <TextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(val) => setNestedData('video.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
       <div>
@@ -50,9 +52,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
       {data.video.source === 'upload' ? (
-        <I18nInput label={t('controls.videoUrl')} value={data.video.videoUrl} onChange={(val) => setNestedData('video.videoUrl', val)} />
+        <Input label={t('controls.videoUrl')} value={data.video.videoUrl} onChange={(val) => setNestedData('video.videoUrl', val)} />
       ) : (
-        <I18nInput
+        <Input
           label={data.video.source === 'youtube' ? 'YouTube URL or Video ID' : 'Vimeo URL or Video ID'}
           value={data.video.videoId}
           onChange={(e) => setNestedData('video.videoId', extractVideoId(e.target.value, data.video.source))}
@@ -104,10 +106,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
-      <I18nInput label={t('editor.controls.common.title')} value={data.video.title} onChange={(val) => setNestedData('video.title', val)} />
+      <Input label={t('editor.controls.common.title')} value={data.video.title} onChange={(val) => setNestedData('video.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.video.titleFontSize || 'md'} onChange={(v) => setNestedData('video.titleFontSize', v)} />
 
-      <I18nTextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(val) => setNestedData('video.description', val)} rows={2} />
+      <TextArea label={t('editor.controls.common.description')} value={data.video.description} onChange={(val) => setNestedData('video.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.video.descriptionFontSize || 'md'} onChange={(v) => setNestedData('video.descriptionFontSize', v)} />
 
 
@@ -125,9 +127,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
       {data.video.source === 'upload' ? (
-        <I18nInput label={t('controls.videoUrl')} value={data.video.videoUrl} onChange={(val) => setNestedData('video.videoUrl', val)} />
+        <Input label={t('controls.videoUrl')} value={data.video.videoUrl} onChange={(val) => setNestedData('video.videoUrl', val)} />
       ) : (
-        <I18nInput
+        <Input
           label={data.video.source === 'youtube' ? 'YouTube URL or Video ID' : 'Vimeo URL or Video ID'}
           value={data.video.videoId}
           onChange={(e) => setNestedData('video.videoId', extractVideoId(e.target.value, data.video.source))}

@@ -50,7 +50,7 @@ import { CartItem, Address, Order, StoreSettings } from '../../types/ecommerce';
 
 interface CheckoutPageEnhancedProps {
     storeId: string;
-    onSuccess: (orderId: string) => void;
+    onSuccess: (orderId: string, orderAccessToken?: string) => void;
     onBack: () => void;
     onNavigateToStore: () => void;
 }
@@ -105,7 +105,7 @@ interface StripeCheckoutFormProps {
     onRemoveDiscount: () => void;
     onUpdateQuantity: (productId: string, quantity: number, variantId?: string) => void;
     onRemoveItem: (productId: string, variantId?: string) => void;
-    onSuccess: (orderId: string) => void;
+    onSuccess: (orderId: string, orderAccessToken?: string) => void;
     onBack: () => void;
 }
 
@@ -147,6 +147,24 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
     const currencySymbol = storeSettings?.currencySymbol || '$';
     const storeName = storeSettings?.storeName || 'Tienda';
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const getCheckoutIdempotencyKey = useCallback(() => {
+        const cartSignature = JSON.stringify({
+            storeId,
+            items: cartItems.map((item) => ({
+                productId: item.productId,
+                variantId: item.variantId || null,
+                quantity: item.quantity,
+            })),
+            shippingMethodId: selectedShipping?.id || null,
+        });
+        const storageKey = `checkout_idempotency_${btoa(unescape(encodeURIComponent(cartSignature))).slice(0, 80)}`;
+        const existingKey = sessionStorage.getItem(storageKey);
+        if (existingKey) return existingKey;
+
+        const nextKey = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+        sessionStorage.setItem(storageKey, nextKey);
+        return nextKey;
+    }, [cartItems, selectedShipping?.id, storeId]);
 
     const steps: { id: CheckoutStep; label: string; icon: React.ElementType }[] = [
         { id: 'information', label: 'Informacion', icon: User },
@@ -198,14 +216,60 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         setError(null);
 
         try {
-            // Create order first
-            const orderId = await createOrder('express');
+            if (!validateInformation()) {
+                throw new Error('Completa tu informacion de contacto y envio antes de usar pago express');
+            }
+
+            // 1. Submit elements
+            const { error: submitError } = await (elements as any).submit();
+            if (submitError) {
+                setError(submitError.message || 'Por favor verifica la informacion de pago');
+                setIsProcessing(false);
+                return;
+            }
+
+            // 2. Call backend to create Order and PaymentIntent securely
+            const createStoreCheckoutIntentFn = httpsCallable(functions, 'createStoreCheckoutIntent');
+            const idempotencyKey = getCheckoutIdempotencyKey();
+
+            const checkoutData = {
+                storeId,
+                items: cartItems.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId || undefined,
+                    quantity: item.quantity
+                })),
+                customerEmail: formData.email,
+                customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+                customerPhone: formData.phone || undefined,
+                shippingAddress: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address1: formData.address1,
+                    address2: formData.address2 || undefined,
+                    city: formData.city,
+                    state: formData.state,
+                    zipCode: formData.zipCode,
+                    country: formData.country,
+                },
+                shippingMethodId: selectedShipping?.id,
+                idempotencyKey,
+                notes: formData.notes || undefined
+            };
+
+            const result = await createStoreCheckoutIntentFn(checkoutData);
+            const { clientSecret, orderId, orderAccessToken } = result.data as any;
+
+            if (!clientSecret) {
+                throw new Error('Error al generar la intencion de pago');
+            }
             
             // Confirm with express checkout
-            const { error: confirmError } = await stripe.confirmPayment({
+            const { error: confirmError } = await (stripe.confirmPayment as any)({
                 elements,
+                clientSecret,
                 confirmParams: {
-                    return_url: `${window.location.origin}/store/${storeId}/order/${orderId}`,
+                    return_url: `${window.location.origin}/store/${storeId}/order/${orderId}?token=${encodeURIComponent(orderAccessToken || '')}`,
                 },
             });
 
@@ -219,87 +283,11 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         }
     };
 
-    const createOrder = async (paymentMethod: string): Promise<string> => {
-        // Get the owner of this store from publicStores (for multi-tenant)
-        const publicStoreRef = doc(db, 'publicStores', storeId);
-        const publicStoreDoc = await getDoc(publicStoreRef);
-        const storeOwnerId = publicStoreDoc.data()?.userId;
-
-        if (!storeOwnerId) {
-            throw new Error('Store not found');
-        }
-
-        // Create order in public collection for guest checkout
-        const ordersRef = collection(db, `publicStores/${storeId}/customerOrders`);
+    const handleSubmitPayment = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         
-        const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-        
-        const orderData = {
-            orderNumber,
-            customerId: null,
-            customerEmail: formData.email,
-            customerName: `${formData.firstName} ${formData.lastName}`,
-            customerPhone: formData.phone || null,
-            items: cartItems.map((item) => ({
-                id: `${item.productId}-${item.variantId || 'default'}`,
-                productId: item.productId,
-                variantId: item.variantId || null,
-                name: item.productName || item.name || 'Product',
-                productName: item.productName || item.name || 'Product',
-                variantName: item.variantName || null,
-                imageUrl: item.image || item.imageUrl || null,
-                image: item.image || item.imageUrl || null,
-                quantity: item.quantity,
-                unitPrice: item.price,
-                price: item.price,
-                totalPrice: item.price * item.quantity,
-            })),
-            subtotal,
-            discount: discountAmount,
-            discountCode: discountCode || null,
-            discountAmount,
-            shippingCost,
-            shippingMethod: selectedShipping?.name || 'Standard',
-            taxAmount,
-            total,
-            currency: storeSettings?.currency || 'USD',
-            shippingAddress: {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                address1: formData.address1,
-                address2: formData.address2 || null,
-                city: formData.city,
-                state: formData.state,
-                zipCode: formData.zipCode,
-                country: formData.country,
-                phone: formData.phone || null,
-            },
-            billingAddress: formData.sameAsBilling ? null : {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                address1: formData.address1,
-                address2: formData.address2 || null,
-                city: formData.city,
-                state: formData.state,
-                zipCode: formData.zipCode,
-                country: formData.country,
-            },
-            status: 'pending',
-            paymentStatus: 'pending',
-            fulfillmentStatus: 'unfulfilled',
-            paymentMethod,
-            notes: formData.notes || null,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
-
-        const orderRef = await addDoc(ordersRef, orderData);
-        return orderRef.id;
-    };
-
-    const handleSubmitPayment = async () => {
         if (!stripe || !elements) {
-            setError('Stripe no esta inicializado');
+            setError('El sistema de pagos no esta inicializado');
             return;
         }
 
@@ -307,14 +295,66 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         setError(null);
 
         try {
-            // Create order first
-            const orderId = await createOrder('stripe');
+            // 1. Submit elements (validates form data)
+            const { error: submitError } = await (elements as any).submit();
+            if (submitError) {
+                setError(submitError.message || 'Por favor verifica la informacion de pago');
+                setIsProcessing(false);
+                return;
+            }
 
-            // Confirm payment
-            const { error: confirmError } = await stripe.confirmPayment({
+            // 2. Call backend to create Order and PaymentIntent securely
+            const createStoreCheckoutIntentFn = httpsCallable(functions, 'createStoreCheckoutIntent');
+            const idempotencyKey = getCheckoutIdempotencyKey();
+
+            const checkoutData = {
+                storeId,
+                items: cartItems.map(item => ({
+                    productId: item.productId,
+                    variantId: item.variantId || undefined,
+                    quantity: item.quantity
+                })),
+                customerEmail: formData.email,
+                customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+                customerPhone: formData.phone || undefined,
+                shippingAddress: {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address1: formData.address1,
+                    address2: formData.address2 || undefined,
+                    city: formData.city,
+                    state: formData.state,
+                    zipCode: formData.zipCode,
+                    country: formData.country,
+                },
+                billingAddress: formData.sameAsBilling ? undefined : {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    address1: formData.address1,
+                    address2: formData.address2 || undefined,
+                    city: formData.city,
+                    state: formData.state,
+                    zipCode: formData.zipCode,
+                    country: formData.country,
+                },
+                shippingMethodId: selectedShipping?.id,
+                idempotencyKey,
+                notes: formData.notes || undefined
+            };
+
+            const result = await createStoreCheckoutIntentFn(checkoutData);
+            const { clientSecret, orderId, orderAccessToken } = result.data as any;
+
+            if (!clientSecret) {
+                throw new Error('Error al generar la intencion de pago');
+            }
+
+            // 3. Confirm payment with Stripe
+            const { error: confirmError } = await (stripe.confirmPayment as any)({
                 elements,
+                clientSecret,
                 confirmParams: {
-                    return_url: `${window.location.origin}/store/${storeId}/order/${orderId}`,
+                    return_url: `${window.location.origin}/store/${storeId}/order/${orderId}?token=${encodeURIComponent(orderAccessToken || '')}`,
                 },
                 redirect: 'if_required',
             });
@@ -324,7 +364,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                 setIsProcessing(false);
             } else {
                 // Payment successful without redirect
-                onSuccess(orderId);
+                onSuccess(orderId, orderAccessToken);
             }
         } catch (err: any) {
             console.error('Payment error:', err);
@@ -968,6 +1008,28 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 
     // Default shipping options
     const shippingOptions: ShippingOption[] = useMemo(() => {
+        const configuredRates = ((storeSettings as any)?.shippingZones || [])
+            .flatMap((zone: any) => zone.rates || [])
+            .filter((rate: any) => rate?.id && typeof rate.price === 'number')
+            .map((rate: any) => ({
+                id: rate.id,
+                name: rate.name || 'Envio',
+                description: rate.description || rate.estimatedDays || 'Metodo de envio',
+                price: rate.price,
+                estimatedDays: rate.estimatedDays || '',
+            }));
+
+        if (configuredRates.length > 0) {
+            const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const freeThreshold = storeSettings?.freeShippingThreshold;
+            return configuredRates.map((option, index) => {
+                if (index === 0 && freeThreshold && subtotal >= freeThreshold) {
+                    return { ...option, name: 'Envio Gratis', price: 0 };
+                }
+                return option;
+            });
+        }
+
         const options: ShippingOption[] = [
             {
                 id: 'standard',
@@ -993,10 +1055,10 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
         ];
 
         // Check for free shipping threshold
-        const freeThreshold = storeSettings?.freeShippingThreshold || 500;
+        const freeThreshold = storeSettings?.freeShippingThreshold;
         const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-        if (subtotal >= freeThreshold) {
+        if (freeThreshold && subtotal >= freeThreshold) {
             options[0].price = 0;
             options[0].name = 'Envio Gratis';
         }
@@ -1041,12 +1103,13 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                 const settingsRef = doc(db, `publicStores/${storeId}/settings/store`);
                 const settingsDoc = await getDoc(settingsRef);
                 
-                if (settingsDoc.exists()) {
-                    setStoreSettings(settingsDoc.data() as StoreSettings);
-                }
+                const publicStoreData = publicStoreDoc.data();
+                const settingsData = settingsDoc.exists() ? settingsDoc.data() : {};
+                setStoreSettings({ ...publicStoreData, ...settingsData } as StoreSettings);
 
                 // Initialize Stripe
-                const publishableKey = settingsDoc.data()?.stripePublishableKey || 
+                const publishableKey = settingsData?.stripePublishableKey || 
+                    publicStoreData?.stripePublishableKey ||
                     import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
                 if (publishableKey) {
@@ -1061,40 +1124,7 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                     setCartItems(cart.items || []);
                 }
 
-                // Create payment intent
-                if (publishableKey) {
-                    try {
-                        const createPaymentIntentFn = httpsCallable(functions, 'createPaymentIntent');
-                        
-                        // Calculate initial total
-                        const cart = savedCart ? JSON.parse(savedCart) : { items: [] };
-                        const items = cart.items || [];
-                        const initialSubtotal = items.reduce((sum: number, item: CartItem) => 
-                            sum + item.price * item.quantity, 0
-                        );
-
-                        if (initialSubtotal > 0) {
-                            const response = await createPaymentIntentFn({
-                                userId: storeOwnerId,
-                                storeId,
-                                orderId: `temp-${Date.now()}`,
-                                amount: Math.round(initialSubtotal * 100),
-                                currency: settingsDoc.data()?.currency?.toLowerCase() || 'mxn',
-                                customerEmail: 'pending@checkout.com',
-                                customerName: 'Pending Customer',
-                            });
-
-                            const data = response.data as any;
-                            if (data?.clientSecret) {
-                                setClientSecret(data.clientSecret);
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Error creating payment intent:', err);
-                        // Continue anyway - we'll create it when needed
-                    }
-                }
-
+                // Create payment intent is now done in handleSubmitPayment using Deferred Intent flow.
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error loading checkout data:', error);
@@ -1117,17 +1147,9 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
     }, []);
 
     const handleApplyDiscount = useCallback(async (code: string) => {
-        // Validate discount code (simplified - should call backend)
-        if (code === 'WELCOME10') {
-            setDiscountCode(code);
-            setDiscountAmount(subtotal * 0.1);
-        } else if (code === 'SAVE20') {
-            setDiscountCode(code);
-            setDiscountAmount(subtotal * 0.2);
-        } else {
-            throw new Error('Codigo de descuento invalido');
-        }
-    }, [subtotal]);
+        // Feature disabled for MVP to ensure security
+        throw new Error('Los códigos de descuento no están disponibles temporalmente');
+    }, []);
 
     const handleRemoveDiscount = useCallback(() => {
         setDiscountCode('');
@@ -1285,10 +1307,6 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
 };
 
 export default CheckoutPageEnhanced;
-
-
-
-
 
 
 

@@ -84,26 +84,43 @@ interface NavLinksProps {
 }
 
 const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hoverStyle, className, isMobile, onLinkClick, onNavigate, linkFontSize = 14, showIcons = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const renderIcon = (link: NavLink) => {
     if (link.icon) {
       return getIconComponent(link.icon, isMobile ? 20 : 16);
     }
-    const normalized = link.text.trim().toLowerCase();
-    if (normalized.includes('home')) return <Home size={isMobile ? 20 : 16} strokeWidth={2.5} />;
-    if (normalized.includes('about')) return <FileText size={isMobile ? 20 : 16} strokeWidth={2.5} />;
-    if (normalized.includes('career') || normalized.includes('job') || normalized.includes('work')) return <Briefcase size={isMobile ? 20 : 16} strokeWidth={2.5} />;
-    if (normalized.includes('portfolio') || normalized.includes('project')) return <Lightbulb size={isMobile ? 20 : 16} strokeWidth={2.5} />;
-    if (normalized.includes('news') || normalized.includes('event')) return <Calendar size={isMobile ? 20 : 16} strokeWidth={2.5} />;
-    if (normalized.includes('contact')) return <Mail size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    
+    // Extract string value if it's an i18n object
+    let labelText = link.text as unknown;
+    if (typeof labelText === 'object' && labelText !== null) {
+      const obj = labelText as Record<string, string>;
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      labelText = obj[preferred] || obj.es || obj.en || Object.values(obj)[0] || '';
+    }
+    
+    const normalized = String(labelText || '').trim().toLowerCase();
+    if (normalized.includes('home') || normalized.includes('inicio')) return <Home size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('about') || normalized.includes('nosotros')) return <FileText size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('career') || normalized.includes('job') || normalized.includes('work') || normalized.includes('carrera') || normalized.includes('trabajo')) return <Briefcase size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('portfolio') || normalized.includes('project') || normalized.includes('proyecto')) return <Lightbulb size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('news') || normalized.includes('event') || normalized.includes('noticia') || normalized.includes('evento')) return <Calendar size={isMobile ? 20 : 16} strokeWidth={2.5} />;
+    if (normalized.includes('contact') || normalized.includes('contacto')) return <Mail size={isMobile ? 20 : 16} strokeWidth={2.5} />;
     return <Info size={isMobile ? 20 : 16} strokeWidth={2.5} />;
   };
 
   // Helper to translate navigation labels dynamically
-  const getTranslatedLabel = (label: string) => {
-    if (!label) return label;
-    const normalized = label.trim().toLowerCase();
+  const getTranslatedLabel = (label: any) => {
+    if (!label) return '';
+    
+    let stringLabel = label;
+    if (typeof label === 'object' && label !== null) {
+      const obj = label as Record<string, string>;
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      stringLabel = obj[preferred] || obj.es || obj.en || Object.values(obj)[0] || '';
+    }
+    
+    const normalized = String(stringLabel).trim().toLowerCase();
     switch (normalized) {
       case 'features': return t('landing.navFeatures', 'Características');
       case 'pricing': return t('landing.navPricing', 'Precios');
@@ -118,7 +135,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
       case 'resources': return t('landing.navResources', 'Recursos');
       case 'company': return t('landing.navCompany', 'Empresa');
       case 'legal': return t('landing.navLegal', 'Legal');
-      default: return label;
+      default: return String(stringLabel);
     }
   };
 
@@ -244,11 +261,25 @@ const Header: React.FC<HeaderData & {
   transparent,
   showLanguageSelector = false,
 }) => {
+    const { i18n } = useTranslation();
+    const resolveText = (text: any) => {
+      if (!text) return '';
+      if (typeof text === 'string') return text;
+      if (typeof text === 'object' && text !== null) {
+        const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+        return text[preferred] || text.es || text.en || Object.values(text)[0] || '';
+      }
+      return String(text);
+    };
+
     // Use alternative prop names if original ones are not provided
     const actualLogoImageUrl = logoImageUrl || logoImage;
+    const resolvedLogoText = resolveText(logoText);
     const actualShowLogin = showLogin ?? showLoginButton;
     const actualShowCta = showCta ?? showRegisterButton;
-    const actualCtaText = ctaText || registerText;
+    const actualCtaText = resolveText(ctaText || registerText);
+    const resolvedLoginText = resolveText(loginText);
+    const resolvedSearchPlaceholder = resolveText(searchPlaceholder);
     const actualIsSticky = isSticky ?? sticky;
     let style = transparent ? 'sticky-transparent' : rawStyle;
     if (style === 'transparent') style = 'sticky-transparent'; // Map legacy transparent style
@@ -579,7 +610,7 @@ const Header: React.FC<HeaderData & {
         className="text-sm font-bold transition-colors hover:opacity-70 mr-6 whitespace-nowrap"
         style={{ color: finalTextColor }}
       >
-        {loginText}
+        {resolvedLoginText}
       </a>
     );
 
@@ -729,7 +760,7 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className="flex-shrink-0 mr-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className={`hidden nav:flex flex-1 justify-center ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
@@ -740,7 +771,7 @@ const Header: React.FC<HeaderData & {
                     storeId={storeId}
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
-                    placeholder={searchPlaceholder}
+                    placeholder={resolvedSearchPlaceholder}
                     primaryColor={colors?.accent}
                     textColor={finalTextColor}
                     sections={searchableSections}
@@ -760,7 +791,7 @@ const Header: React.FC<HeaderData & {
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
                 {showSearch && (
@@ -768,7 +799,7 @@ const Header: React.FC<HeaderData & {
                     storeId={storeId}
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
-                    placeholder={searchPlaceholder}
+                    placeholder={resolvedSearchPlaceholder}
                     primaryColor={colors?.accent}
                     textColor={finalTextColor}
                     sections={searchableSections}
@@ -785,7 +816,7 @@ const Header: React.FC<HeaderData & {
           return (
             <div className="flex flex-col w-full pt-4">
               <div className="flex justify-center mb-4">
-                <Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
+                <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className={`hidden nav:flex justify-center border-t border-white/10 pt-2 ${isSpecialStyle ? 'items-end h-full' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
@@ -795,7 +826,7 @@ const Header: React.FC<HeaderData & {
                       storeId={storeId}
                       onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
-                      placeholder={searchPlaceholder}
+                      placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={finalTextColor}
                       sections={searchableSections}
@@ -812,7 +843,7 @@ const Header: React.FC<HeaderData & {
         default: // Classic
           return (
             <>
-              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={logoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} /></div>
+              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} /></div>
               <div className={`hidden nav:flex flex-1 justify-end gap-8 ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`flex items-center ml-4 gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
@@ -821,7 +852,7 @@ const Header: React.FC<HeaderData & {
                       storeId={storeId}
                       onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
-                      placeholder={searchPlaceholder}
+                      placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={finalTextColor}
                       sections={searchableSections}
@@ -1212,7 +1243,7 @@ const Header: React.FC<HeaderData & {
                           className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
                           style={{ color: colors?.text }}
                         >
-                          {link.text}
+                          {resolveText(link.text)}
                         </a>
                       </li>
                     ))}

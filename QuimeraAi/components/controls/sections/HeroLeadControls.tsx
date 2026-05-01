@@ -8,7 +8,9 @@ import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
 import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, ControlsDeps } from '../ControlsShared';
 import {
   Type, Layout, Palette, Layers, FormInput, Eye,
@@ -32,16 +34,16 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
         </label>
 
         <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'heroLead.headline', value: hl.headline, context: 'Hero Lead Headline' })}>
-          <I18nTextArea value={hl.headline} onChange={(val) => setNestedData('heroLead.headline', val)} rows={2} />
+          <TextArea value={hl.headline} onChange={(val) => setNestedData('heroLead.headline', val)} rows={2} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.headlineSize')} value={hl.headlineFontSize || 'lg'} onChange={(v) => setNestedData('heroLead.headlineFontSize', v)} />
 
         <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'heroLead.subheadline', value: hl.subheadline, context: 'Hero Lead Subheadline' })}>
-          <I18nTextArea value={hl.subheadline} onChange={(val) => setNestedData('heroLead.subheadline', val)} rows={3} />
+          <TextArea value={hl.subheadline} onChange={(val) => setNestedData('heroLead.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.subheadlineSize')} value={hl.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroLead.subheadlineFontSize', v)} />
 
-        <I18nInput label="Badge" value={hl.badgeText || ''} onChange={(val) => setNestedData('heroLead.badgeText', val)} />
+        <Input label="Badge" value={hl.badgeText || ''} onChange={(val) => setNestedData('heroLead.badgeText', val)} />
       </div>
 
       {/* Form Content */}
@@ -51,19 +53,19 @@ export const renderHeroLeadControls = (deps: ControlsDeps) => {
           {t('controls.form', 'Formulario')}
         </label>
 
-        <I18nInput label={t('controls.formTitle', 'Título del formulario')} value={hl.formTitle || ''} onChange={(val) => setNestedData('heroLead.formTitle', val)} />
+        <Input label={t('controls.formTitle', 'Título del formulario')} value={hl.formTitle || ''} onChange={(val) => setNestedData('heroLead.formTitle', val)} />
         <FontSizeSelector label={t('controls.formTitleSize', 'Tamaño del título')} value={hl.formTitleFontSize || 'sm'} onChange={(v) => setNestedData('heroLead.formTitleFontSize', v)} />
         
-        <I18nTextArea label={t('controls.formDescription', 'Descripción del formulario')} value={hl.formDescription || ''} onChange={(val) => setNestedData('heroLead.formDescription', val)} rows={2} />
+        <TextArea label={t('controls.formDescription', 'Descripción del formulario')} value={hl.formDescription || ''} onChange={(val) => setNestedData('heroLead.formDescription', val)} rows={2} />
         <FontSizeSelector label={t('controls.formDescriptionSize', 'Tamaño de la descripción')} value={hl.formDescriptionFontSize || 'sm'} onChange={(v) => setNestedData('heroLead.formDescriptionFontSize', v)} />
 
-        <I18nInput label={t('controls.namePlaceholder', 'Placeholder: Nombre')} value={hl.namePlaceholder || ''} onChange={(val) => setNestedData('heroLead.namePlaceholder', val)} />
-        <I18nInput label={t('controls.emailPlaceholder', 'Placeholder: Email')} value={hl.emailPlaceholder || ''} onChange={(val) => setNestedData('heroLead.emailPlaceholder', val)} />
-        <I18nInput label={t('controls.companyPlaceholder', 'Placeholder: Empresa')} value={hl.companyPlaceholder || ''} onChange={(val) => setNestedData('heroLead.companyPlaceholder', val)} />
-        <I18nInput label={t('controls.phonePlaceholder', 'Placeholder: Teléfono')} value={hl.phonePlaceholder || ''} onChange={(val) => setNestedData('heroLead.phonePlaceholder', val)} />
-        <I18nInput label={t('controls.messagePlaceholder', 'Placeholder: Mensaje')} value={hl.messagePlaceholder || ''} onChange={(val) => setNestedData('heroLead.messagePlaceholder', val)} />
-        <I18nInput label={t('editor.controls.common.buttonText')} value={hl.buttonText} onChange={(val) => setNestedData('heroLead.buttonText', val)} />
-        <I18nInput label={t('controls.successMessage', 'Mensaje de éxito')} value={hl.successMessage || ''} onChange={(val) => setNestedData('heroLead.successMessage', val)} />
+        <Input label={t('controls.namePlaceholder', 'Placeholder: Nombre')} value={hl.namePlaceholder || ''} onChange={(val) => setNestedData('heroLead.namePlaceholder', val)} />
+        <Input label={t('controls.emailPlaceholder', 'Placeholder: Email')} value={hl.emailPlaceholder || ''} onChange={(val) => setNestedData('heroLead.emailPlaceholder', val)} />
+        <Input label={t('controls.companyPlaceholder', 'Placeholder: Empresa')} value={hl.companyPlaceholder || ''} onChange={(val) => setNestedData('heroLead.companyPlaceholder', val)} />
+        <Input label={t('controls.phonePlaceholder', 'Placeholder: Teléfono')} value={hl.phonePlaceholder || ''} onChange={(val) => setNestedData('heroLead.phonePlaceholder', val)} />
+        <Input label={t('controls.messagePlaceholder', 'Placeholder: Mensaje')} value={hl.messagePlaceholder || ''} onChange={(val) => setNestedData('heroLead.messagePlaceholder', val)} />
+        <Input label={t('editor.controls.common.buttonText')} value={hl.buttonText} onChange={(val) => setNestedData('heroLead.buttonText', val)} />
+        <Input label={t('controls.successMessage', 'Mensaje de éxito')} value={hl.successMessage || ''} onChange={(val) => setNestedData('heroLead.successMessage', val)} />
       </div>
 
       {/* Field Visibility */}

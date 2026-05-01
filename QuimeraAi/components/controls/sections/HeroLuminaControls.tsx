@@ -1,6 +1,8 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl
+} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -28,7 +30,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <I18nInput 
+            <Input 
               label={t('editor.heroLumina.buttonText', 'Texto del Botón')} 
               value={data.heroLumina[textKey] || ''} 
               onChange={(val) => setNestedData(`heroLumina.${textKey}`, val)} 
@@ -97,7 +99,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
 
         {/* Manual URL Input */}
         {linkType === 'manual' && (
-          <I18nInput
+          <Input
             label=""
             value={data.heroLumina[linkKey] || ''}
             onChange={(val) => setNestedData(`heroLumina.${linkKey}`, val)}
@@ -211,7 +213,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.headline', value: data.heroLumina.headline, context: 'Hero Lumina Headline' })}
           >
-            <I18nTextArea 
+            <TextArea 
               value={data.heroLumina.headline || ''} 
               onChange={(val) => setNestedData('heroLumina.headline', val)} 
               rows={2} 
@@ -222,7 +224,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.subheadline', value: data.heroLumina.subheadline || '', context: 'Hero Lumina Subheadline' })}
           >
-            <I18nTextArea 
+            <TextArea 
               value={data.heroLumina.subheadline || ''} 
               onChange={(val) => setNestedData('heroLumina.subheadline', val)} 
               rows={3} 

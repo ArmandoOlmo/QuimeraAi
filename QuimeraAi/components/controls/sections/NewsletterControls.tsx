@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -36,11 +38,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <I18nInput label={t('editor.controls.common.title')} value={data?.newsletter.title} onChange={(val) => setNestedData('newsletter.title', val)} />
+        <Input label={t('editor.controls.common.title')} value={data?.newsletter.title} onChange={(val) => setNestedData('newsletter.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.newsletter.titleFontSize || 'md'} onChange={(v) => setNestedData('newsletter.titleFontSize', v)} />
-        <I18nTextArea label={t('editor.controls.common.description')} value={data?.newsletter.description} onChange={(val) => setNestedData('newsletter.description', val)} rows={2} />
+        <TextArea label={t('editor.controls.common.description')} value={data?.newsletter.description} onChange={(val) => setNestedData('newsletter.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.newsletter.descriptionFontSize || 'md'} onChange={(v) => setNestedData('newsletter.descriptionFontSize', v)} />
-        <I18nInput label={t('editor.controls.common.buttonText')} value={data?.newsletter.buttonText} onChange={(val) => setNestedData('newsletter.buttonText', val)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data?.newsletter.buttonText} onChange={(val) => setNestedData('newsletter.buttonText', val)} />
       </div>
     </div>
   );

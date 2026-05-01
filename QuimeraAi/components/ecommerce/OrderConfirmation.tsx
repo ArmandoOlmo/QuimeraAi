@@ -18,7 +18,8 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db, functions } from '../../firebase';
+import { httpsCallable } from 'firebase/functions';
 import { Order, StoreSettings } from '../../types/ecommerce';
 
 // Props for direct order display
@@ -35,6 +36,7 @@ interface OrderConfirmationDirectProps {
 interface OrderConfirmationFetchProps {
     storeId: string;
     orderId: string;
+    orderAccessToken?: string;
     onContinueShopping: () => void;
     onViewOrders?: () => void;
 }
@@ -336,6 +338,9 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
         const fetchOrder = async () => {
             try {
                 const { storeId, orderId } = props;
+                const orderAccessToken = props.orderAccessToken ||
+                    new URLSearchParams(window.location.search).get('token') ||
+                    undefined;
 
                 // Get store owner ID from publicStores
                 const publicStoreRef = doc(db, 'publicStores', storeId);
@@ -354,17 +359,25 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                     setStoreSettings(settingsDoc.data() as StoreSettings);
                 }
 
-                // Get order from public collection
-                const orderRef = doc(db, `publicStores/${storeId}/customerOrders`, orderId);
-                const orderDoc = await getDoc(orderRef);
+                // Get order securely from backend
+                const getStoreOrderStatusFn = httpsCallable(functions, 'getStoreOrderStatus');
+                const result = await getStoreOrderStatusFn({ storeId, orderId, orderAccessToken });
+                const orderData = result.data as any;
 
-                if (!orderDoc.exists()) {
+                if (!orderData || !orderData.id) {
                     setError('Pedido no encontrado');
                     setIsLoading(false);
                     return;
                 }
 
-                setOrder({ id: orderDoc.id, ...orderDoc.data() } as Order);
+                // Convert ISO date back to a mock timestamp for the UI if necessary
+                if (orderData.createdAt && typeof orderData.createdAt === 'string') {
+                    orderData.createdAt = {
+                        seconds: Math.floor(new Date(orderData.createdAt).getTime() / 1000)
+                    };
+                }
+
+                setOrder(orderData as Order);
                 setIsLoading(false);
             } catch (err: any) {
                 console.error('Error fetching order:', err);

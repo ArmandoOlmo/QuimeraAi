@@ -34,6 +34,7 @@ interface SitePageNav {
 interface MenuItemNav {
     text: string;
     href: string;
+    icon?: any;
 }
 
 interface MenuNav {

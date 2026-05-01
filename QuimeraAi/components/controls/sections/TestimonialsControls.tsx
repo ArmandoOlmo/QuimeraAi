@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -30,10 +32,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   if (!data?.testimonials) return null;
   return (
     <div className="space-y-4">
-      <I18nInput label={t('editor.controls.common.title')} value={data.testimonials.title} onChange={(val) => setNestedData('testimonials.title', val)} />
+      <Input label={t('editor.controls.common.title')} value={data.testimonials.title} onChange={(val) => setNestedData('testimonials.title', val)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={data.testimonials.titleFontSize || 'md'} onChange={(v) => setNestedData('testimonials.titleFontSize', v)} />
 
-      <I18nTextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(val) => setNestedData('testimonials.description', val)} rows={2} />
+      <TextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(val) => setNestedData('testimonials.description', val)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
 
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.testimonials.cardStyling')}</label>
@@ -180,20 +182,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(url) => setNestedData(`testimonials.items.${index}.imageUrl`, url)}
             onRemove={() => setNestedData(`testimonials.items.${index}.imageUrl`, '')}
           />
-          <I18nTextArea
+          <TextArea
             placeholder="Quote"
             value={item.quote}
             onChange={(val) => setNestedData(`testimonials.items.${index}.quote`, val)}
             rows={2}
             className="mb-2"
           />
-          <I18nInput
+          <Input
             placeholder="Name"
             value={item.name}
             onChange={(val) => setNestedData(`testimonials.items.${index}.name`, val)}
             className="mb-2"
           />
-          <I18nInput
+          <Input
             placeholder="Role"
             value={item.title}
             onChange={(val) => setNestedData(`testimonials.items.${index}.title`, val)}
@@ -227,9 +229,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           Section Header
         </label>
-        <I18nInput label={t('editor.controls.common.title')} value={data.testimonials.title} onChange={(val) => setNestedData('testimonials.title', val)} />
+        <Input label={t('editor.controls.common.title')} value={data.testimonials.title} onChange={(val) => setNestedData('testimonials.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.testimonials.titleFontSize || 'md'} onChange={(v) => setNestedData('testimonials.titleFontSize', v)} />
-        <I18nTextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(val) => setNestedData('testimonials.description', val)} rows={2} />
+        <TextArea label={t('editor.controls.common.description')} value={data.testimonials.description} onChange={(val) => setNestedData('testimonials.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.testimonials.descriptionFontSize || 'md'} onChange={(v) => setNestedData('testimonials.descriptionFontSize', v)} />
       </div>
 
@@ -258,15 +260,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               onChange={(url) => setNestedData(`testimonials.items.${index}.imageUrl`, url)}
               onRemove={() => setNestedData(`testimonials.items.${index}.imageUrl`, '')}
             />
-            <I18nTextArea
+            <TextArea
               placeholder="Quote"
               value={item.quote}
               onChange={(val) => setNestedData(`testimonials.items.${index}.quote`, val)}
               rows={3}
               className="mb-2"
             />
-            <I18nInput placeholder="Name" value={item.name} onChange={(val) => setNestedData(`testimonials.items.${index}.name`, val)} className="mb-2" />
-            <I18nInput placeholder="Title/Role" value={item.title} onChange={(val) => setNestedData(`testimonials.items.${index}.title`, val)} className="mb-2" />
+            <Input placeholder="Name" value={item.name} onChange={(val) => setNestedData(`testimonials.items.${index}.name`, val)} className="mb-2" />
+            <Input placeholder="Title/Role" value={item.title} onChange={(val) => setNestedData(`testimonials.items.${index}.title`, val)} className="mb-2" />
           </div>
         ))}
         <button type="button"           onClick={() => {

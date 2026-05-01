@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -145,18 +147,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <AIFormControl label={t('editor.controls.hero.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
-          <I18nTextArea value={data.hero.headline} onChange={(val) => setNestedData('hero.headline', val)} rows={2} />
+          <TextArea value={data.hero.headline} onChange={(val) => setNestedData('hero.headline', val)} rows={2} />
         </AIFormControl>
         <FontSizeSelector label={`${t('editor.controls.hero.headline')} ${t('editor.controls.common.size', { defaultValue: 'Size' })}`} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
 
         <AIFormControl label={t('editor.controls.hero.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
-          <I18nTextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
+          <TextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={`${t('editor.controls.hero.subheadline')} ${t('editor.controls.common.size', { defaultValue: 'Size' })}`} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
 
         <div className="grid grid-cols-2 gap-4">
-          <I18nInput label={t('editor.controls.hero.primaryCta')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
-          <I18nInput label={t('editor.controls.hero.secondaryCta')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
+          <Input label={t('editor.controls.hero.primaryCta')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
+          <Input label={t('editor.controls.hero.secondaryCta')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
         </div>
       </div>
 
@@ -247,18 +249,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'hero.headline', value: data.hero.headline, context: 'Hero Headline' })}>
-          <I18nTextArea value={data.hero.headline} onChange={(val) => setNestedData('hero.headline', val)} rows={2} />
+          <TextArea value={data.hero.headline} onChange={(val) => setNestedData('hero.headline', val)} rows={2} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.headlineSize')} value={data.hero.headlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.headlineFontSize', v)} />
 
         <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'hero.subheadline', value: data.hero.subheadline, context: 'Hero Subheadline' })}>
-          <I18nTextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
+          <TextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
 
         <div className="grid grid-cols-2 gap-4">
-          <I18nInput label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
-          <I18nInput label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
+          <Input label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
+          <Input label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
         </div>
       </div>
 
@@ -352,7 +354,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Manual URL Input */}
         {data.hero.primaryCtaLinkType === 'manual' && (
-          <I18nInput
+          <Input
             label=""
             value={data.hero.primaryCtaLink || ''}
             onChange={(val) => setNestedData('hero.primaryCtaLink', val)}
@@ -479,7 +481,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Manual URL Input */}
         {data.hero.secondaryCtaLinkType === 'manual' && (
-          <I18nInput
+          <Input
             label=""
             value={data.hero.secondaryCtaLink || ''}
             onChange={(val) => setNestedData('hero.secondaryCtaLink', val)}

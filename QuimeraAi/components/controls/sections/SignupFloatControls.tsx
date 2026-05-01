@@ -11,7 +11,9 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
+import {
+  Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
+} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -199,9 +201,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Type size={14} />
           {t('controls.content', 'Content')}
         </label>
-        <I18nInput label={t('controls.signupFloat.headerText', 'Header Text')} value={data.signupFloat.headerText || ''} onChange={(val) => setNestedData('signupFloat.headerText', val)} />
+        <Input label={t('controls.signupFloat.headerText', 'Header Text')} value={data.signupFloat.headerText || ''} onChange={(val) => setNestedData('signupFloat.headerText', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.signupFloat.headerFontSize || 'lg'} onChange={(v) => setNestedData('signupFloat.headerFontSize', v)} />
-        <I18nTextArea label={t('editor.controls.common.description')} value={data.signupFloat.descriptionText || ''} onChange={(val) => setNestedData('signupFloat.descriptionText', val)} rows={3} />
+        <TextArea label={t('editor.controls.common.description')} value={data.signupFloat.descriptionText || ''} onChange={(val) => setNestedData('signupFloat.descriptionText', val)} rows={3} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.signupFloat.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('signupFloat.descriptionFontSize', v)} />
       </div>
 
@@ -218,18 +220,18 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ToggleControl label={t('controls.signupFloat.showMessage', 'Show Message Field')} checked={data.signupFloat.showMessageField === true} onChange={(v) => setNestedData('signupFloat.showMessageField', v)} />
         </div>
         {data.signupFloat.showNameField !== false && (
-          <I18nInput label={t('controls.signupFloat.namePlaceholder', 'Name Placeholder')} value={data.signupFloat.namePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.namePlaceholder', val)} />
+          <Input label={t('controls.signupFloat.namePlaceholder', 'Name Placeholder')} value={data.signupFloat.namePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.namePlaceholder', val)} />
         )}
         {data.signupFloat.showEmailField !== false && (
-          <I18nInput label={t('controls.signupFloat.emailPlaceholder', 'Email Placeholder')} value={data.signupFloat.emailPlaceholder || ''} onChange={(val) => setNestedData('signupFloat.emailPlaceholder', val)} />
+          <Input label={t('controls.signupFloat.emailPlaceholder', 'Email Placeholder')} value={data.signupFloat.emailPlaceholder || ''} onChange={(val) => setNestedData('signupFloat.emailPlaceholder', val)} />
         )}
         {data.signupFloat.showPhoneField && (
-          <I18nInput label={t('controls.signupFloat.phonePlaceholder', 'Phone Placeholder')} value={data.signupFloat.phonePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.phonePlaceholder', val)} />
+          <Input label={t('controls.signupFloat.phonePlaceholder', 'Phone Placeholder')} value={data.signupFloat.phonePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.phonePlaceholder', val)} />
         )}
         {data.signupFloat.showMessageField && (
-          <I18nInput label={t('controls.signupFloat.messagePlaceholder', 'Message Placeholder')} value={data.signupFloat.messagePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.messagePlaceholder', val)} />
+          <Input label={t('controls.signupFloat.messagePlaceholder', 'Message Placeholder')} value={data.signupFloat.messagePlaceholder || ''} onChange={(val) => setNestedData('signupFloat.messagePlaceholder', val)} />
         )}
-        <I18nInput label={t('editor.controls.common.buttonText')} value={data.signupFloat.buttonText || ''} onChange={(val) => setNestedData('signupFloat.buttonText', val)} />
+        <Input label={t('editor.controls.common.buttonText')} value={data.signupFloat.buttonText || ''} onChange={(val) => setNestedData('signupFloat.buttonText', val)} />
       </div>
 
       {/* ========== LEAD DESTINATION ========== */}
@@ -305,7 +307,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">
               {t('controls.signupFloat.minimizedLabel', 'Minimized Button Label')}
             </label>
-            <I18nInput
+            <Input
               type="text"
               value={data.signupFloat.minimizedLabel || '✉️ Sign Up'}
               onChange={(val) => setNestedData('signupFloat.minimizedLabel', val)}
