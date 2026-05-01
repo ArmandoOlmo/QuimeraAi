@@ -134,8 +134,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     .catch(err => console.error("Error creating default language config:", err));
             }
             setLoading(false);
-        }, (error) => {
-            console.error("Error listening to language config:", error);
+        }, (error: any) => {
+            if (error.code === 'permission-denied') {
+                console.warn("No permission to read language config, using defaults.");
+            } else {
+                console.error("Error listening to language config:", error);
+            }
             setLoading(false);
         });
 

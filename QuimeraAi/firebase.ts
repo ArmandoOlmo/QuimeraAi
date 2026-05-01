@@ -205,9 +205,18 @@ export const getFunctionsInstance = async () => {
  * Analytics is not critical for app functionality, so we defer its initialization
  */
 export const getAnalyticsInstance = async () => {
-  if (!_analytics) {
-    const { getAnalytics } = await import("firebase/analytics");
-    _analytics = getAnalytics(app);
+  if (!_analytics && typeof window !== 'undefined') {
+    try {
+      const { getAnalytics, isSupported } = await import("firebase/analytics");
+      const supported = await isSupported();
+      if (supported && firebaseConfig.measurementId) {
+        _analytics = getAnalytics(app);
+      } else {
+        console.warn("Firebase Analytics is not supported or measurementId is missing.");
+      }
+    } catch (e) {
+      console.warn("Analytics initialization failed", e);
+    }
   }
   return _analytics;
 };

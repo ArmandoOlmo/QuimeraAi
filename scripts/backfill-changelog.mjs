@@ -28,15 +28,28 @@ const sinceArg = args.find(a => a.startsWith('--since='));
 const SINCE = sinceArg ? sinceArg.split('=')[1] : '2025-03-01';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-// Read Gemini key from .env
+// Read API keys from .env files
 const envPath = resolve(ROOT, 'QuimeraAi', '.env');
 const envFile = readFileSync(envPath, 'utf-8');
-const geminiKeyMatch = envFile.match(/VITE_GEMINI_API_KEY=(.+)/);
-const GEMINI_API_KEY = geminiKeyMatch?.[1]?.trim();
+const geminiKeyMatch = envFile.match(/^VITE_GEMINI_API_KEY=(.+)/m);
+const googleKeyMatch = envFile.match(/^VITE_GOOGLE_API_KEY=(.+)/m);
+const GEMINI_API_KEY = geminiKeyMatch?.[1]?.trim() || googleKeyMatch?.[1]?.trim();
 
-if (!GEMINI_API_KEY) {
-  console.error('❌ Could not find VITE_GEMINI_API_KEY in QuimeraAi/.env');
+// Read OpenRouter key from functions/.env (fallback provider)
+let OPENROUTER_API_KEY = '';
+try {
+  const fnEnvPath = resolve(ROOT, 'QuimeraAi', 'functions', '.env');
+  const fnEnvFile = readFileSync(fnEnvPath, 'utf-8');
+  const orMatch = fnEnvFile.match(/^OPENROUTER_API_KEY=(.+)/m);
+  OPENROUTER_API_KEY = orMatch?.[1]?.trim() || '';
+} catch {}
+
+if (!GEMINI_API_KEY && !OPENROUTER_API_KEY) {
+  console.error('❌ No API keys found. Need VITE_GEMINI_API_KEY/VITE_GOOGLE_API_KEY in QuimeraAi/.env or OPENROUTER_API_KEY in functions/.env');
   process.exit(1);
+}
+if (OPENROUTER_API_KEY) {
+  console.log('🔑 OpenRouter fallback available');
 }
 
 const FIRESTORE_PROJECT_ID = 'quimeraai';
@@ -145,8 +158,8 @@ function groupByWeek(commits) {
   return filtered;
 }
 
-// ─── Call Gemini ─────────────────────────────────────────────────────────────
-async function generateWithGemini(commits, weekDate, attempt = 1) {
+// ─── Call AI (Gemini → OpenRouter fallback) ─────────────────────────────────
+async function generateWithAI(commits, weekDate, attempt = 1) {
   // Truncate to top 30 commits for very prolific weeks
   const limited = commits.length > 30 
     ? commits.slice(0, 30) 
@@ -188,42 +201,97 @@ Rules:
 - Both languages must convey the same meaning
 - Summarize related commits into single features`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  // ── Try Gemini first ──────────────────────────────────────────────────
+  let geminiError = null;
+  if (GEMINI_API_KEY) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1024,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 1024,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini API error ${response.status}: ${errorText}`);
+      }
 
-  if (!response.ok) {
-    throw new Error(`Gemini API error ${response.status}: ${await response.text()}`);
-  }
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Gemini returned empty response');
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Gemini returned empty response');
-
-  const parsed = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
-
-  // Validate required fields
-  if (!parsed.title_es || !parsed.title_en || !parsed.tag) {
-    if (attempt < 2) {
-      console.log('   ⚠️ Incomplete response, retrying...');
-      await new Promise(r => setTimeout(r, 1500));
-      return generateWithGemini(commits, weekDate, attempt + 1);
+      const parsed = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+      if (parsed.title_es && parsed.title_en && parsed.tag) {
+        console.log('   ✅ Generated via Gemini');
+        return parsed;
+      }
+      throw new Error('Incomplete response from Gemini');
+    } catch (err) {
+      geminiError = err;
+      console.log(`   ⚠️ Gemini failed: ${err.message?.substring(0, 80)}`);
     }
-    throw new Error('Gemini returned incomplete entry after retry');
   }
 
-  return parsed;
+  // ── Fallback to OpenRouter ────────────────────────────────────────────
+  if (OPENROUTER_API_KEY) {
+    console.log('   🔄 Falling back to OpenRouter...');
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://quimera.ai',
+          'X-Title': 'Quimera AI Changelog',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'user', content: prompt + '\n\nRespond ONLY with the JSON object, no markdown fences.' }],
+          temperature: 0.3,
+          max_tokens: 1024,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error ${response.status}: ${await response.text()}`);
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content || '';
+      if (!text) throw new Error('OpenRouter returned empty response');
+
+      const parsed = JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
+      if (parsed.title_es && parsed.title_en && parsed.tag) {
+        console.log('   ✅ Generated via OpenRouter');
+        return parsed;
+      }
+      throw new Error('Incomplete response from OpenRouter');
+    } catch (err) {
+      console.log(`   ⚠️ OpenRouter failed: ${err.message?.substring(0, 80)}`);
+      // If both failed, throw the last error
+      throw err;
+    }
+  }
+
+  // ── Both failed or unavailable ────────────────────────────────────────
+  if (geminiError) throw geminiError;
+
+  // Retry once with backoff
+  if (attempt < 2) {
+    console.log('   ⏳ Retrying in 3s...');
+    await new Promise(r => setTimeout(r, 3000));
+    return generateWithAI(commits, weekDate, attempt + 1);
+  }
+
+  throw new Error('No AI provider available or all attempts failed');
 }
 
 // ─── Write to Firestore ──────────────────────────────────────────────────────
@@ -337,7 +405,7 @@ async function main() {
       }
 
       console.log('   🤖 Generating with Gemini...');
-      const entry = await generateWithGemini(commits, weekDate);
+      const entry = await generateWithAI(commits, weekDate);
       
       console.log(`   📋 Tag: ${entry.tag}`);
       console.log(`   📋 ES: ${entry.title_es}`);

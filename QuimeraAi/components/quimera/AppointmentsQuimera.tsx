@@ -131,8 +131,8 @@ const AppointmentsQuimera: React.FC<AppointmentsQuimeraProps> = ({
                                     
                                     {/* Mini Calendar Mock */}
                                     <div className="grid grid-cols-7 gap-1 text-center mb-4">
-                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => (
-                                            <div key={d} className="text-[10px] text-gray-500 font-bold">{d}</div>
+                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, index) => (
+                                            <div key={`${d}-${index}`} className="text-[10px] text-gray-500 font-bold">{d}</div>
                                         ))}
                                         {[...Array(14)].map((_, i) => (
                                             <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs mx-auto
