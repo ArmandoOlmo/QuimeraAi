@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
@@ -29,10 +29,10 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.portfolioLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'portfolioLumina.headline', value: data.portfolioLumina.headline, context: 'Portfolio Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.portfolioLumina.headline || ''} 
-              onChange={(e) => setNestedData('portfolioLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('portfolioLumina.headline', val)} 
             />
           </AIFormControl>
 
@@ -40,9 +40,9 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.portfolioLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'portfolioLumina.subheadline', value: data.portfolioLumina.subheadline || '', context: 'Portfolio Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.portfolioLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('portfolioLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('portfolioLumina.subheadline', val)} 
               rows={2}
             />
           </AIFormControl>
@@ -78,15 +78,15 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             />
 
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.portfolioLumina.projectTitle', 'Title')} 
                 value={project.title || ''} 
-                onChange={(e) => setNestedData(`portfolioLumina.projects.${idx}.title`, e.target.value)} 
+                onChange={(val) => setNestedData(`portfolioLumina.projects.${idx}.title`, val)} 
               />
-              <Input 
+              <I18nInput 
                 label={t('editor.portfolioLumina.projectCategory', 'Category')} 
                 value={project.category || ''} 
-                onChange={(e) => setNestedData(`portfolioLumina.projects.${idx}.category`, e.target.value)} 
+                onChange={(val) => setNestedData(`portfolioLumina.projects.${idx}.category`, val)} 
               />
             </div>
 
@@ -117,10 +117,10 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
               </div>
               {(project.linkType === 'manual' || !project.linkType) && (
                 <>
-                  <input
+                  <I18nInput
                     placeholder="https://example.com or #section"
                     value={project.link || ''}
-                    onChange={(e) => setNestedData(`portfolioLumina.projects.${idx}.link`, e.target.value)}
+                    onChange={(val) => setNestedData(`portfolioLumina.projects.${idx}.link`, val)}
                     className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                   />
                   <p className="text-xs text-q-text-secondary mt-1">

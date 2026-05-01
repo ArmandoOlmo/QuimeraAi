@@ -48,28 +48,28 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('emailMarketingQuimera.title', 'Campañas de Email que se Escriben Solas');
-    const displaySubtitle = subtitle || t('emailMarketingQuimera.subtitle', 'Aumenta tus tasas de apertura con la IA. Genera asuntos irresistibles, redacta newsletters completos y segmenta a tus suscriptores en un par de clics.');
+    const displayTitle = title || t('quimera.emailmarketing.title', 'Campañas de Email que se Escriben Solas');
+    const displaySubtitle = subtitle || t('quimera.emailmarketing.subtitle', 'Aumenta tus tasas de apertura con la IA. Genera asuntos irresistibles, redacta newsletters completos y segmenta a tus suscriptores en un par de clics.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('emailMarketingQuimera.feat1Title', 'Redacción Asistida'),
-            description: t('emailMarketingQuimera.feat1Desc', 'Dile a la IA qué quieres promocionar y obtén múltiples opciones de correos con el tono de voz de tu marca.'),
+            title: t('quimera.emailmarketing.feat1.title', 'Redacción Asistida'),
+            description: t('quimera.emailmarketing.feat1.desc', 'Dile a la IA qué quieres promocionar y obtén múltiples opciones de correos con el tono de voz de tu marca.'),
             icon: 'Edit3'
         },
         {
-            title: t('emailMarketingQuimera.feat2Title', 'Asuntos de Alta Conversión'),
-            description: t('emailMarketingQuimera.feat2Desc', 'Genera títulos optimizados psicológicamente para evitar la carpeta de spam y maximizar los clics.'),
+            title: t('quimera.emailmarketing.feat2.title', 'Asuntos de Alta Conversión'),
+            description: t('quimera.emailmarketing.feat2.desc', 'Genera títulos optimizados psicológicamente para evitar la carpeta de spam y maximizar los clics.'),
             icon: 'Zap'
         },
         {
-            title: t('emailMarketingQuimera.feat3Title', 'Segmentación Dinámica'),
-            description: t('emailMarketingQuimera.feat3Desc', 'La IA agrupa automáticamente a tus leads según su comportamiento e intereses para enviar mensajes personalizados.'),
+            title: t('quimera.emailmarketing.feat3.title', 'Segmentación Dinámica'),
+            description: t('quimera.emailmarketing.feat3.desc', 'La IA agrupa automáticamente a tus leads según su comportamiento e intereses para enviar mensajes personalizados.'),
             icon: 'Target'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     const targetSubject = "Oferta Exclusiva: 50% en tu Próximo Proyecto 🚀";
 
@@ -126,12 +126,12 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                                 <TrendingUp className="w-4 h-4" style={{ color: accentColor }} />
                             </div>
                             <div>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Open Rate</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('quimera.emailmarketing.openRate', 'Open Rate')}</p>
                                 <p className="text-xl font-black text-white">48.2%</p>
                             </div>
                         </div>
                         <div className="text-xs text-green-400 font-medium flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" /> +12% vs. industry avg
+                            <TrendingUp className="w-3 h-3" /> {t('quimera.emailmarketing.industryAvg', '+12% vs. industry avg')}
                         </div>
                     </div>
 
@@ -151,11 +151,11 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
                             </div>
                             <div className="text-xs font-semibold text-gray-400 flex items-center gap-2">
-                                <Mail className="w-3 h-3" /> New Campaign
+                                <Mail className="w-3 h-3" /> {t('quimera.emailmarketing.newCampaign', 'New Campaign')}
                             </div>
                             <div className="ml-auto">
                                 <button className="px-4 py-1.5 rounded text-xs font-bold text-white flex items-center gap-2" style={{ backgroundColor: accentColor }}>
-                                    <Send className="w-3 h-3" /> Send
+                                    <Send className="w-3 h-3" /> {t('quimera.emailmarketing.send', 'Send')}
                                 </button>
                             </div>
                         </div>
@@ -165,15 +165,15 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                             
                             {/* To Field */}
                             <div className="flex items-center border-b pb-2" style={{ borderColor: '#222' }}>
-                                <span className="text-xs text-gray-500 w-16">To:</span>
+                                <span className="text-xs text-gray-500 w-16">{t('quimera.emailmarketing.to', 'To:')}</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-300 bg-[#222] px-2 py-1 rounded border border-[#333]">VIP Customers (1,240)</span>
+                                    <span className="text-xs text-gray-300 bg-[#222] px-2 py-1 rounded border border-[#333]">{t('quimera.emailmarketing.vipCustomers', 'VIP Customers (1,240)')}</span>
                                 </div>
                             </div>
 
                             {/* Subject Field with AI typing */}
                             <div className="flex items-center border-b pb-2 relative" style={{ borderColor: '#222' }}>
-                                <span className="text-xs text-gray-500 w-16">Subject:</span>
+                                <span className="text-xs text-gray-500 w-16">{t('quimera.emailmarketing.subject', 'Subject:')}</span>
                                 <div className="flex-1 text-sm text-white font-medium">
                                     {typingText}
                                     <span className={`inline-block w-0.5 h-4 ml-0.5 align-middle ${animationStep === 0 ? 'animate-pulse bg-white' : 'bg-transparent'}`}></span>
@@ -183,7 +183,7 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                                 <div className="absolute right-0 top-0">
                                     <button className="flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold border transition-colors"
                                         style={{ backgroundColor: `${accentColor}10`, color: accentColor, borderColor: `${accentColor}30` }}>
-                                        <Sparkles className="w-3 h-3" /> AI Optimize
+                                        <Sparkles className="w-3 h-3" /> {t('quimera.emailmarketing.aiOptimize', 'AI Optimize')}
                                     </button>
                                 </div>
                             </div>
@@ -207,7 +207,7 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                                 </div>
                                 <div className="mt-6">
                                     <div className="w-24 h-8 rounded border flex items-center justify-center text-[10px] font-bold" style={{ borderColor: accentColor, color: accentColor }}>
-                                        REDEEM OFFER
+                                        {t('quimera.emailmarketing.redeemOffer', 'REDEEM OFFER')}
                                     </div>
                                 </div>
                             </div>
@@ -221,7 +221,7 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
                     <div className="mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                             <Mail className="w-4 h-4" />
-                            {t('emailMarketingQuimera.badge', 'AI Newsletters')}
+                            {t('quimera.emailmarketing.badge', 'AI Newsletters')}
                         </div>
                         <h2 className={`text-4xl md:text-5xl lg:text-[3.5rem] font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                             style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>

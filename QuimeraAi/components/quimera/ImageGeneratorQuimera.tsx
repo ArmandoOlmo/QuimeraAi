@@ -51,28 +51,28 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('imageGeneratorQuimera.title', 'Crea Imágenes Increíbles con IA');
-    const displaySubtitle = subtitle || t('imageGeneratorQuimera.subtitle', 'Describe lo que imaginas y deja que Quimera genere visuales profesionales, sin derechos de autor y listos para tu website o redes sociales en segundos.');
+    const displayTitle = title || t('quimera.imagegenerator.title', 'Crea Imágenes Increíbles con IA');
+    const displaySubtitle = subtitle || t('quimera.imagegenerator.subtitle', 'Describe lo que imaginas y deja que Quimera genere visuales profesionales, sin derechos de autor y listos para tu website o redes sociales en segundos.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('imageGeneratorQuimera.feat1Title', 'Generación desde Texto'),
-            description: t('imageGeneratorQuimera.feat1Desc', 'Solo escribe un prompt detallado y la inteligencia artificial creará imágenes fotorrealistas, ilustraciones o logos únicos.'),
+            title: t('quimera.imagegenerator.feat1.title', 'Generación desde Texto'),
+            description: t('quimera.imagegenerator.feat1.desc', 'Solo escribe un prompt detallado y la inteligencia artificial creará imágenes fotorrealistas, ilustraciones o logos únicos.'),
             icon: 'Sparkles'
         },
         {
-            title: t('imageGeneratorQuimera.feat2Title', 'Sin Derechos de Autor'),
-            description: t('imageGeneratorQuimera.feat2Desc', 'Úsalas libremente en tus artículos, productos y anuncios sin preocuparte por licencias de stock.'),
+            title: t('quimera.imagegenerator.feat2.title', 'Sin Derechos de Autor'),
+            description: t('quimera.imagegenerator.feat2.desc', 'Úsalas libremente en tus artículos, productos y anuncios sin preocuparte por licencias de stock.'),
             icon: 'ImageIcon'
         },
         {
-            title: t('imageGeneratorQuimera.feat3Title', 'Variaciones y Estilos'),
-            description: t('imageGeneratorQuimera.feat3Desc', 'Cambia el estilo visual fácilmente: 3D, acuarela, minimalista, realista o cyberpunk con un clic.'),
+            title: t('quimera.imagegenerator.feat3.title', 'Variaciones y Estilos'),
+            description: t('quimera.imagegenerator.feat3.desc', 'Cambia el estilo visual fácilmente: 3D, acuarela, minimalista, realista o cyberpunk con un clic.'),
             icon: 'Paintbrush'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     const prompts = [
         "A hyperrealistic photo of a futuristic coffee shop in neon Tokyo...",
@@ -181,10 +181,10 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
                             <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: cardBorder, backgroundColor: '#1A1A1A' }}>
                                 <div className="flex items-center gap-2">
                                     <Wand2 className="w-5 h-5" style={{ color: accentColor }} />
-                                    <span className="font-semibold text-sm">AI Image Studio</span>
+                                    <span className="font-semibold text-sm">{t('quimera.imagegenerator.studio', 'AI Image Studio')}</span>
                                 </div>
                                 <div className="px-3 py-1 text-xs rounded-full bg-white/5 text-white/50 border border-white/10">
-                                    Beta
+                                    {t('quimera.imagegenerator.beta', 'Beta')}
                                 </div>
                             </div>
 
@@ -197,14 +197,14 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
                                     {!showImage && !isGenerating && (
                                         <div className="text-gray-600 flex flex-col items-center gap-3">
                                             <ImageIcon className="w-12 h-12 opacity-50" />
-                                            <span className="text-sm">Describe tu imagen para comenzar</span>
+                                            <span className="text-sm">{t('quimera.imagegenerator.placeholder', 'Describe tu imagen para comenzar')}</span>
                                         </div>
                                     )}
 
                                     {isGenerating && (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-10">
                                             <Sparkles className="w-10 h-10 animate-spin mb-4" style={{ color: accentColor }} />
-                                            <div className="text-sm font-medium animate-pulse" style={{ color: accentColor }}>Generando visuales...</div>
+                                            <div className="text-sm font-medium animate-pulse" style={{ color: accentColor }}>{t('quimera.imagegenerator.generating', 'Generando visuales...')}</div>
                                             <div className="w-48 h-1.5 bg-gray-800 rounded-full mt-4 overflow-hidden">
                                                 <div className="h-full bg-purple-500 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
                                             </div>
@@ -242,7 +242,7 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
 
                                 {/* Style Chips */}
                                 <div className="flex gap-2 overflow-hidden mt-2">
-                                    {['Fotorealista', '3D Render', 'Ilustración', 'Cyberpunk'].map((style, i) => (
+                                    {[t('quimera.imagegenerator.style.photo', 'Fotorealista'), t('quimera.imagegenerator.style.3d', '3D Render'), t('quimera.imagegenerator.style.illustration', 'Ilustración'), t('quimera.imagegenerator.style.cyberpunk', 'Cyberpunk')].map((style, i) => (
                                         <div key={i} className="px-3 py-1 text-xs rounded-full border border-white/10 bg-white/5 text-gray-400 whitespace-nowrap">
                                             {style}
                                         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -28,9 +28,9 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.featuresLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'featuresLumina.headline', value: data.featuresLumina.headline, context: 'Features Lumina Headline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.featuresLumina.headline || ''} 
-              onChange={(e) => setNestedData('featuresLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('featuresLumina.headline', val)} 
               rows={2} 
             />
           </AIFormControl>
@@ -39,10 +39,10 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.featuresLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'featuresLumina.subheadline', value: data.featuresLumina.subheadline || '', context: 'Features Lumina Subheadline' })}
           >
-            <Input 
+            <I18nInput 
               label="" 
               value={data.featuresLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('featuresLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('featuresLumina.subheadline', val)} 
             />
           </AIFormControl>
         </div>
@@ -79,15 +79,15 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
                 />
             </div>
 
-            <Input 
+            <I18nInput 
               label={t('editor.featuresLumina.itemTitle', 'Title')} 
               value={feature.title || ''} 
-              onChange={(e) => setNestedData(`featuresLumina.features.${idx}.title`, e.target.value)} 
+              onChange={(val) => setNestedData(`featuresLumina.features.${idx}.title`, val)} 
             />
             
-            <TextArea 
+            <I18nTextArea 
               value={feature.description || ''} 
-              onChange={(e) => setNestedData(`featuresLumina.features.${idx}.description`, e.target.value)} 
+              onChange={(val) => setNestedData(`featuresLumina.features.${idx}.description`, val)} 
               rows={2}
               placeholder={t('editor.featuresLumina.itemDesc', 'Description')}
             />

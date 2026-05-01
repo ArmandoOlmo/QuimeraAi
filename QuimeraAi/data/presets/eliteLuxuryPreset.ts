@@ -44,13 +44,28 @@ export const elitePageData: PageData = {
         logoImageUrl: '',
         logoWidth: 140,
         links: [
-            { text: 'Menú', href: '#menu' },
-            { text: 'Servicios', href: '#services' },
-            { text: 'Equipo', href: '#team' },
-            { text: 'Reservas', href: '#leads' },
+            { text: {
+                        es: "Menú",
+                        en: "Menu"
+                    }, href: '#menu' },
+            { text: {
+                        es: "Servicios",
+                        en: "Services"
+                    }, href: '#services' },
+            { text: {
+                        es: "Equipo",
+                        en: "Team"
+                    }, href: '#team' },
+            { text: {
+                        es: "Reservas",
+                        en: "Reservations"
+                    }, href: '#leads' },
         ] as NavLink[],
         hoverStyle: 'simple',
-        ctaText: 'Reservar Mesa',
+        ctaText: {
+                es: "Reservar Mesa",
+                en: "Book a Table"
+            },
         showCta: true,
         showLogin: false,
         loginText: '',
@@ -67,10 +82,22 @@ export const elitePageData: PageData = {
         heroVariant: 'modern',
         paddingY: 'xl',
         paddingX: 'lg',
-        headline: `Una Experiencia <span class="text-transparent bg-clip-text" style="-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #d4a373, #e0b68a)">Sensorial Inolvidable</span>`,
-        subheadline: 'Donde la gastronomía se encuentra con el arte. Una experiencia culinaria diseñada para los paladares más exigentes, en un entorno de sofisticación absoluta.',
-        primaryCta: 'Reservar Mesa',
-        secondaryCta: 'Ver Menú',
+        headline: {
+                es: "Una Experiencia <span class=\"text-transparent bg-clip-text\" style=\"-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #d4a373, #e0b68a)\">Sensorial Inolvidable</span>",
+                en: "An Unforgettable <span class=\"text-transparent bg-clip-text\" style=\"-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #d4a373, #e0b68a)\">Sensory Experience</span>"
+            },
+        subheadline: {
+                es: "Donde la gastronomía se encuentra con el arte. Una experiencia culinaria diseñada para los paladares más exigentes, en un entorno de sofisticación absoluta.",
+                en: "Where gastronomy meets art. A culinary experience designed for the most discerning palates, in an environment of absolute sophistication."
+            },
+        primaryCta: {
+                es: "Reservar Mesa",
+                en: "Book a Table"
+            },
+        secondaryCta: {
+                es: "Ver Menú",
+                en: "View Menu"
+            },
         imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&q=80&w=2670',
         imageStyle: 'default',
         imageDropShadow: false,
@@ -100,7 +127,10 @@ export const elitePageData: PageData = {
         secondaryButtonStyle: 'outline',
         secondaryButtonOpacity: 100,
         showBadge: true,
-        badgeText: '✦ Fine Dining Experience',
+        badgeText: {
+                es: "✦ Fine Dining Experience",
+                en: "✦ Fine Dining Experience"
+            },
         badgeIcon: 'sparkles',
         badgeColor: COLORS.accent,
         badgeBackgroundColor: `${COLORS.accent}15`,
@@ -114,9 +144,18 @@ export const elitePageData: PageData = {
         subheadlineFontSize: 'md',
     },
     heroSplit: {
-        headline: 'Una Experiencia Sensorial Inolvidable',
-        subheadline: 'Donde la gastronomía se encuentra con el arte.',
-        buttonText: 'Reservar Mesa',
+        headline: {
+                es: "Una Experiencia Sensorial Inolvidable",
+                en: "An Unforgettable Sensory Experience"
+            },
+        subheadline: {
+                es: "Donde la gastronomía se encuentra con el arte.",
+                en: "Where gastronomy meets art."
+            },
+        buttonText: {
+                es: "Reservar Mesa",
+                en: "Book a Table"
+            },
         buttonUrl: '#leads',
         imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&q=80&w=2670',
         imagePosition: 'right',
@@ -138,22 +177,46 @@ export const elitePageData: PageData = {
         featuresVariant: 'bento-premium',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Nuestra Esencia',
-        description: 'Tres pilares que definen la experiencia L\'Élite: ingredientes excepcionales, maestría culinaria y una bodega incomparable.',
+        title: {
+                es: "Nuestra Esencia",
+                en: "Our Essence"
+            },
+        description: {
+                es: "Tres pilares que definen la experiencia L'Élite: ingredientes excepcionales, maestría culinaria y una bodega incomparable.",
+                en: "Three pillars define the L'Élite experience: exceptional ingredients, culinary mastery, and an unparalleled wine cellar."
+            },
         items: [
             {
-                title: 'Ingredientes Orgánicos',
-                description: 'Seleccionados diariamente de nuestros huertos locales para garantizar la máxima frescura y sabor.',
+                title: {
+                        es: "Ingredientes Orgánicos",
+                        en: "Organic Ingredients"
+                    },
+                description: {
+                        es: "Seleccionados diariamente de nuestros huertos locales para garantizar la máxima frescura y sabor.",
+                        en: "Selected daily from our local gardens to ensure maximum freshness and flavor."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Chef de Estrella Michelin',
-                description: 'Liderado por el visionario Jean-Luc Dubois, transformando ingredientes en obras de arte culinario.',
+                title: {
+                        es: "Chef de Estrella Michelin",
+                        en: "Michelin Star Chef"
+                    },
+                description: {
+                        es: "Liderado por el visionario Jean-Luc Dubois, transformando ingredientes en obras de arte culinario.",
+                        en: "Led by visionary Jean-Luc Dubois, transforming ingredients into culinary works of art."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Cava Privada',
-                description: 'Una colección exclusiva de más de 500 etiquetas de los viñedos más prestigiosos del mundo.',
+                title: {
+                        es: "Cava Privada",
+                        en: "Private Cellar"
+                    },
+                description: {
+                        es: "Una colección exclusiva de más de 500 etiquetas de los viñedos más prestigiosos del mundo.",
+                        en: "An exclusive collection of over 500 labels from the world's most prestigious vineyards."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1516594798947-e65505dbb29d?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -177,8 +240,14 @@ export const elitePageData: PageData = {
         testimonialsVariant: 'glassmorphism',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Voces de L\'Élite',
-        description: 'Lo que dicen quienes han vivido la experiencia.',
+        title: {
+                es: "Voces de L'Élite",
+                en: "Voices of L'Élite"
+            },
+        description: {
+                es: "Lo que dicen quienes han vivido la experiencia.",
+                en: "What those who have experienced it say."
+            },
         titleFontSize: 'md',
         descriptionFontSize: 'md',
         borderRadius: 'lg',
@@ -189,19 +258,46 @@ export const elitePageData: PageData = {
         enableCardAnimation: true,
         items: [
             {
-                quote: '"Una sinfonía de sabores que desafía la imaginación. El maridaje fue exquisito y el servicio, simplemente de otro mundo."',
-                name: 'Carlos Mendoza',
-                title: 'Crítico Gastronómico',
+                quote: {
+                        es: "\"Una sinfonía de sabores que desafía la imaginación. El maridaje fue exquisito y el servicio, simplemente de otro mundo.\"",
+                        en: "\"A symphony of flavors that defies imagination. The wine pairing was exquisite, and the service, simply out of this world.\""
+                    },
+                name: {
+                        es: "Carlos Mendoza",
+                        en: "Carlos Mendoza"
+                    },
+                title: {
+                        es: "Crítico Gastronómico",
+                        en: "Gastronomic Critic"
+                    },
             },
             {
-                quote: '"El ambiente es la definición de lujo discreto. Celebrar nuestro aniversario aquí convirtió una noche especial en un recuerdo eterno."',
-                name: 'Sofía Valderrama',
-                title: 'Empresaria',
+                quote: {
+                        es: "\"El ambiente es la definición de lujo discreto. Celebrar nuestro aniversario aquí convirtió una noche especial en un recuerdo eterno.\"",
+                        en: "\"The ambiance is the definition of discreet luxury. Celebrating our anniversary here turned a special night into an everlasting memory.\""
+                    },
+                name: {
+                        es: "Sofía Valderrama",
+                        en: "Sofía Valderrama"
+                    },
+                title: {
+                        es: "Empresaria",
+                        en: "Entrepreneur"
+                    },
             },
             {
-                quote: '"La atención al detalle es obsesiva. Desde la cristalería hasta la presentación del postre, todo en L\'Élite respira perfección."',
-                name: 'David Alarcón',
-                title: 'Sommelier Internacional',
+                quote: {
+                        es: "\"La atención al detalle es obsesiva. Desde la cristalería hasta la presentación del postre, todo en L'Élite respira perfección.\"",
+                        en: "\"The attention to detail is obsessive. From the glassware to the dessert presentation, everything at L'Élite breathes perfection.\""
+                    },
+                name: {
+                        es: "David Alarcón",
+                        en: "David Alarcón"
+                    },
+                title: {
+                        es: "Sommelier Internacional",
+                        en: "International Sommelier"
+                    },
             },
         ],
         colors: {
@@ -215,7 +311,10 @@ export const elitePageData: PageData = {
     },
     slideshow: {
         slideshowVariant: 'classic',
-        title: 'El Espacio',
+        title: {
+                es: "El Espacio",
+                en: "The Space"
+            },
         showTitle: true,
         fullWidth: true,
         paddingY: 'lg',
@@ -251,8 +350,14 @@ export const elitePageData: PageData = {
     },
     pricing: {
         pricingVariant: 'gradient',
-        title: 'Menús Degustación',
-        description: 'Tres experiencias gastronómicas diseñadas para transportarle a un viaje sensorial único.',
+        title: {
+                es: "Menús Degustación",
+                en: "Tasting Menus"
+            },
+        description: {
+                es: "Tres experiencias gastronómicas diseñadas para transportarle a un viaje sensorial único.",
+                en: "Three gastronomic experiences designed to transport you on a unique sensory journey."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         titleFontSize: 'md',
@@ -260,25 +365,46 @@ export const elitePageData: PageData = {
         cardBorderRadius: 'lg',
         tiers: [
             {
-                name: 'Experiencia Esencial',
-                price: '€120',
+                name: {
+                        es: "Experiencia Esencial",
+                        en: "Essential Experience"
+                    },
+                price: {
+                        es: "€120",
+                        en: "€120"
+                    },
                 frequency: '/persona',
-                description: '5 pases de temporada con aperitivo de bienvenida.',
+                description: {
+                        es: "5 pases de temporada con aperitivo de bienvenida.",
+                        en: "5 seasonal courses with a welcome aperitif."
+                    },
                 features: [
                     '5 Pases de temporada',
                     'Aperitivo de bienvenida',
                     'Café y Petit Fours',
                     'Pan artesanal de la casa',
                 ],
-                buttonText: 'Reservar',
+                buttonText: {
+                        es: "Reservar",
+                        en: "Book"
+                    },
                 buttonLink: '#leads',
                 featured: false,
             },
             {
-                name: 'Gran Degustación',
-                price: '€195',
+                name: {
+                        es: "Gran Degustación",
+                        en: "Grand Tasting"
+                    },
+                price: {
+                        es: "€195",
+                        en: "€195"
+                    },
                 frequency: '/persona',
-                description: '8 pases exclusivos con maridaje de vinos.',
+                description: {
+                        es: "8 pases exclusivos con maridaje de vinos.",
+                        en: "8 exclusive courses with wine pairing."
+                    },
                 features: [
                     '8 Pases exclusivos',
                     'Maridaje de vinos locales',
@@ -286,15 +412,27 @@ export const elitePageData: PageData = {
                     'Café y Petit Fours Premium',
                     'Aperitivo especial del Chef',
                 ],
-                buttonText: 'Reservar',
+                buttonText: {
+                        es: "Reservar",
+                        en: "Book"
+                    },
                 buttonLink: '#leads',
                 featured: true,
             },
             {
-                name: 'Elite Signature',
-                price: '€320',
+                name: {
+                        es: "Elite Signature",
+                        en: "Elite Signature"
+                    },
+                price: {
+                        es: "€320",
+                        en: "€320"
+                    },
                 frequency: '/persona',
-                description: 'La experiencia completa de 12 pases con servicio premium.',
+                description: {
+                        es: "La experiencia completa de 12 pases con servicio premium.",
+                        en: "The complete 12-course experience with premium service."
+                    },
                 features: [
                     '12 Pases — Menú Completo',
                     'Maridaje Internacional Premium',
@@ -303,7 +441,10 @@ export const elitePageData: PageData = {
                     'Servicio de sommelier dedicado',
                     'Digestivo exclusivo',
                 ],
-                buttonText: 'Reservar',
+                buttonText: {
+                        es: "Reservar",
+                        en: "Book"
+                    },
                 buttonLink: '#leads',
                 featured: false,
             },
@@ -325,8 +466,14 @@ export const elitePageData: PageData = {
         enableCardAnimation: true,
     },
     faq: {
-        title: 'Preguntas Frecuentes',
-        description: 'Todo lo que necesita saber para disfrutar de su visita a L\'Élite.',
+        title: {
+                es: "Preguntas Frecuentes",
+                en: "Frequently Asked Questions"
+            },
+        description: {
+                es: "Todo lo que necesita saber para disfrutar de su visita a L'Élite.",
+                en: "Everything you need to know to enjoy your visit to L'Élite."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         items: [
@@ -357,13 +504,22 @@ export const elitePageData: PageData = {
     },
     leads: {
         leadsVariant: 'classic',
-        title: 'Reserve su Mesa',
-        description: 'Déjenos saber sus preferencias y nos encargaremos de preparar una velada inolvidable para usted.',
+        title: {
+                es: "Reserve su Mesa",
+                en: "Reserve Your Table"
+            },
+        description: {
+                es: "Déjenos saber sus preferencias y nos encargaremos de preparar una velada inolvidable para usted.",
+                en: "Let us know your preferences and we'll craft an unforgettable evening for you."
+            },
         namePlaceholder: 'Nombre completo',
         emailPlaceholder: 'su@email.com',
         companyPlaceholder: 'Número de comensales',
         messagePlaceholder: 'Ocasión especial, preferencias dietéticas, peticiones...',
-        buttonText: 'Solicitar Reserva',
+        buttonText: {
+                es: "Solicitar Reserva",
+                en: "Request Reservation"
+            },
         paddingY: 'lg',
         paddingX: 'md',
         cardBorderRadius: 'lg',
@@ -387,10 +543,19 @@ export const elitePageData: PageData = {
         },
     },
     newsletter: {
-        title: 'La Gazette de L\'Élite',
-        description: 'Reciba en primicia menús de temporada, eventos exclusivos e invitaciones especiales.',
+        title: {
+                es: "La Gazette de L'Élite",
+                en: "The Gazette of L'Élite"
+            },
+        description: {
+                es: "Reciba en primicia menús de temporada, eventos exclusivos e invitaciones especiales.",
+                en: "Be the first to receive seasonal menus, exclusive events, and special invitations."
+            },
         placeholderText: 'su@email.com',
-        buttonText: 'Suscribirse',
+        buttonText: {
+                es: "Suscribirse",
+                en: "Subscribe"
+            },
         paddingY: 'lg',
         paddingX: 'md',
         colors: {
@@ -410,9 +575,18 @@ export const elitePageData: PageData = {
     cta: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: '¿Listo para una Experiencia Inolvidable?',
-        description: 'Reserve su mesa y permítanos crear un momento que recordará por siempre.',
-        buttonText: 'Reservar Ahora',
+        title: {
+                es: "¿Listo para una Experiencia Inolvidable?",
+                en: "Ready for an Unforgettable Experience?"
+            },
+        description: {
+                es: "Reserve su mesa y permítanos crear un momento que recordará por siempre.",
+                en: "Reserve your table and let us create a moment you'll cherish forever."
+            },
+        buttonText: {
+                es: "Reservar Ahora",
+                en: "Book Now"
+            },
         titleFontSize: 'lg',
         descriptionFontSize: 'md',
         colors: {
@@ -428,22 +602,46 @@ export const elitePageData: PageData = {
     portfolio: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Nuestras Creaciones',
-        description: 'Una selección de los platos que definen nuestra propuesta culinaria.',
+        title: {
+                es: "Nuestras Creaciones",
+                en: "Our Creations"
+            },
+        description: {
+                es: "Una selección de los platos que definen nuestra propuesta culinaria.",
+                en: "A selection of dishes that define our culinary vision."
+            },
         items: [
             {
-                title: 'Carpaccio de Wagyu',
-                description: 'Trufa negra, parmesano reggiano 24 meses, aceite de oliva virgen.',
+                title: {
+                        es: "Carpaccio de Wagyu",
+                        en: "Wagyu Carpaccio"
+                    },
+                description: {
+                        es: "Trufa negra, parmesano reggiano 24 meses, aceite de oliva virgen.",
+                        en: "Black truffle, 24-month Parmigiano Reggiano, extra virgin olive oil."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Vieiras Braseadas',
-                description: 'Puré de coliflor, espuma de cítricos, caviar de beluga.',
+                title: {
+                        es: "Vieiras Braseadas",
+                        en: "Seared Scallops"
+                    },
+                description: {
+                        es: "Puré de coliflor, espuma de cítricos, caviar de beluga.",
+                        en: "Cauliflower purée, citrus foam, beluga caviar."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Solomillo Rossini',
-                description: 'Foie gras, reducción de Pedro Ximénez, gratín dauphinois.',
+                title: {
+                        es: "Solomillo Rossini",
+                        en: "Rossini Tenderloin"
+                    },
+                description: {
+                        es: "Foie gras, reducción de Pedro Ximénez, gratín dauphinois.",
+                        en: "Foie gras, Pedro Ximénez reduction, gratin dauphinois."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -461,23 +659,47 @@ export const elitePageData: PageData = {
         servicesVariant: 'cards',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Nuestros Servicios',
-        description: 'Experiencias diseñadas para cada ocasión, con el sello inconfundible de L\'Élite.',
+        title: {
+                es: "Nuestros Servicios",
+                en: "Our Services"
+            },
+        description: {
+                es: "Experiencias diseñadas para cada ocasión, con el sello inconfundible de L'Élite.",
+                en: "Experiences crafted for every occasion, with L'Élite's unmistakable signature."
+            },
         items: [
             {
                 icon: 'utensils',
-                title: 'Cenas Privadas',
-                description: 'Espacios íntimos diseñados para celebraciones exclusivas con menús personalizados a su gusto.',
+                title: {
+                        es: "Cenas Privadas",
+                        en: "Private Dining"
+                    },
+                description: {
+                        es: "Espacios íntimos diseñados para celebraciones exclusivas con menús personalizados a su gusto.",
+                        en: "Intimate spaces designed for exclusive celebrations with personalized menus."
+                    },
             },
             {
                 icon: 'building',
-                title: 'Eventos Corporativos',
-                description: 'Impresione a sus socios y clientes con un servicio impecable en un entorno de sofisticación absoluta.',
+                title: {
+                        es: "Eventos Corporativos",
+                        en: "Corporate Events"
+                    },
+                description: {
+                        es: "Impresione a sus socios y clientes con un servicio impecable en un entorno de sofisticación absoluta.",
+                        en: "Impress your partners and clients with impeccable service in a setting of absolute sophistication."
+                    },
             },
             {
                 icon: 'wine',
-                title: 'Cata de Vinos',
-                description: 'Sesiones guiadas por nuestros expertos sommeliers para descubrir los secretos de las mejores añadas.',
+                title: {
+                        es: "Cata de Vinos",
+                        en: "Wine Tasting"
+                    },
+                description: {
+                        es: "Sesiones guiadas por nuestros expertos sommeliers para descubrir los secretos de las mejores añadas.",
+                        en: "Guided sessions with our expert sommeliers to discover the secrets of the finest vintages."
+                    },
             },
         ],
         animationType: 'fade-in-up',
@@ -493,22 +715,46 @@ export const elitePageData: PageData = {
     team: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Maestros de la Excelencia',
-        description: 'El talento detrás de cada experiencia en L\'Élite.',
+        title: {
+                es: "Maestros de la Excelencia",
+                en: "Masters of Excellence"
+            },
+        description: {
+                es: "El talento detrás de cada experiencia en L'Élite.",
+                en: "The talent behind every experience at L'Élite."
+            },
         items: [
             {
-                name: 'Jean-Luc Dubois',
-                role: 'Chef Ejecutivo',
+                name: {
+                        es: "Jean-Luc Dubois",
+                        en: "Jean-Luc Dubois"
+                    },
+                role: {
+                        es: "Chef Ejecutivo",
+                        en: "Executive Chef"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                name: 'Elena Rostova',
-                role: 'Head Sommelier',
+                name: {
+                        es: "Elena Rostova",
+                        en: "Elena Rostova"
+                    },
+                role: {
+                        es: "Head Sommelier",
+                        en: "Head Sommelier"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                name: 'Alessandro Ricci',
-                role: 'Maître D\'',
+                name: {
+                        es: "Alessandro Ricci",
+                        en: "Alessandro Ricci"
+                    },
+                role: {
+                        es: "Maître D'",
+                        en: "Maître D'"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -523,8 +769,14 @@ export const elitePageData: PageData = {
     video: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Detrás de Escena',
-        description: 'Descubra la pasión y el arte que hay detrás de cada plato.',
+        title: {
+                es: "Detrás de Escena",
+                en: "Behind the Scenes"
+            },
+        description: {
+                es: "Descubra la pasión y el arte que hay detrás de cada plato.",
+                en: "Discover the passion and artistry behind every dish."
+            },
         source: 'youtube',
         videoId: 'dQw4w9WgXcQ',
         videoUrl: '',
@@ -540,14 +792,44 @@ export const elitePageData: PageData = {
     howItWorks: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'Su Experiencia',
-        description: 'Cuatro pasos hacia una velada inolvidable.',
+        title: {
+                es: "Su Experiencia",
+                en: "Your Experience"
+            },
+        description: {
+                es: "Cuatro pasos hacia una velada inolvidable.",
+                en: "Four steps to an unforgettable evening."
+            },
         steps: 4,
         items: [
-            { icon: 'upload', title: 'Reserve', description: 'Solicite su mesa y comparta sus preferencias con nosotros.' },
-            { icon: 'process', title: 'Confirmación', description: 'Nuestro equipo confirmará su reserva y atenderá sus peticiones.' },
-            { icon: 'download', title: 'Bienvenida', description: 'Un aperitivo de cortesía le recibirá a su llegada.' },
-            { icon: 'share', title: 'Disfrute', description: 'Relájese y déjese llevar por una experiencia gastronómica única.' },
+            { icon: 'upload', title: {
+                        es: "Reserve",
+                        en: "Reserve"
+                    }, description: {
+                        es: "Solicite su mesa y comparta sus preferencias con nosotros.",
+                        en: "Request your table and share your preferences with us."
+                    } },
+            { icon: 'process', title: {
+                        es: "Confirmación",
+                        en: "Confirmation"
+                    }, description: {
+                        es: "Nuestro equipo confirmará su reserva y atenderá sus peticiones.",
+                        en: "Our team will confirm your reservation and address your requests."
+                    } },
+            { icon: 'download', title: {
+                        es: "Bienvenida",
+                        en: "Welcome"
+                    }, description: {
+                        es: "Un aperitivo de cortesía le recibirá a su llegada.",
+                        en: "A complimentary aperitif awaits your arrival."
+                    } },
+            { icon: 'share', title: {
+                        es: "Disfrute",
+                        en: "Enjoy"
+                    }, description: {
+                        es: "Relájese y déjese llevar por una experiencia gastronómica única.",
+                        en: "Relax and indulge in a unique gastronomic experience."
+                    } },
         ],
         colors: {
             background: COLORS.bgAlt,
@@ -568,9 +850,18 @@ export const elitePageData: PageData = {
         },
     },
     map: {
-        title: 'Encuéntrenos',
-        description: 'Av. de la Libertad 45, Madrid. Aparcamiento privado disponible para nuestros comensales.',
-        address: 'Av. de la Libertad 45, Madrid, 28013',
+        title: {
+                es: "Encuéntrenos",
+                en: "Find Us"
+            },
+        description: {
+                es: "Av. de la Libertad 45, Madrid. Aparcamiento privado disponible para nuestros comensales.",
+                en: "Av. de la Libertad 45, Madrid. Private parking available for our guests."
+            },
+        address: {
+                es: "Av. de la Libertad 45, Madrid, 28013",
+                en: "Av. de la Libertad 45, Madrid, 28013"
+            },
         lat: 40.4168,
         lng: -3.7038,
         zoom: 16,
@@ -592,57 +883,135 @@ export const elitePageData: PageData = {
     },
     menu: {
         menuVariant: 'classic',
-        title: 'Menú de Temporada',
-        description: 'Nuestra selección de platos de temporada, cuidadosamente elaborados con ingredientes de la más alta calidad.',
+        title: {
+                es: "Menú de Temporada",
+                en: "Seasonal Menu"
+            },
+        description: {
+                es: "Nuestra selección de platos de temporada, cuidadosamente elaborados con ingredientes de la más alta calidad.",
+                en: "Our selection of seasonal dishes, carefully prepared with the highest quality ingredients."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         items: [
             {
-                name: 'Carpaccio de Wagyu',
-                description: 'Trufa negra, parmesano reggiano 24 meses, aceite de oliva virgen.',
-                price: '€38',
+                name: {
+                        es: "Carpaccio de Wagyu",
+                        en: "Wagyu Carpaccio"
+                    },
+                description: {
+                        es: "Trufa negra, parmesano reggiano 24 meses, aceite de oliva virgen.",
+                        en: "Black truffle, 24-month aged Parmigiano Reggiano, extra virgin olive oil."
+                    },
+                price: {
+                        es: "€38",
+                        en: "€38"
+                    },
                 imageUrl: '',
-                category: 'Entrantes',
+                category: {
+                        es: "Entrantes",
+                        en: "Starters"
+                    },
                 isSpecial: true,
             },
             {
-                name: 'Vieiras Braseadas',
-                description: 'Puré de coliflor, espuma de cítricos, caviar de beluga.',
-                price: '€42',
+                name: {
+                        es: "Vieiras Braseadas",
+                        en: "Seared Scallops"
+                    },
+                description: {
+                        es: "Puré de coliflor, espuma de cítricos, caviar de beluga.",
+                        en: "Cauliflower puree, citrus foam, beluga caviar."
+                    },
+                price: {
+                        es: "€42",
+                        en: "€42"
+                    },
                 imageUrl: '',
-                category: 'Entrantes',
+                category: {
+                        es: "Entrantes",
+                        en: "Starters"
+                    },
                 isSpecial: false,
             },
             {
-                name: 'Lubina Salvaje',
-                description: 'Risotto de azafrán, espárragos trigueros, salsa beurre blanc.',
-                price: '€48',
+                name: {
+                        es: "Lubina Salvaje",
+                        en: "Wild Sea Bass"
+                    },
+                description: {
+                        es: "Risotto de azafrán, espárragos trigueros, salsa beurre blanc.",
+                        en: "Saffron risotto, wild asparagus, beurre blanc sauce."
+                    },
+                price: {
+                        es: "€48",
+                        en: "€48"
+                    },
                 imageUrl: '',
-                category: 'Platos Principales',
+                category: {
+                        es: "Platos Principales",
+                        en: "Main Courses"
+                    },
                 isSpecial: false,
             },
             {
-                name: 'Solomillo Rossini',
-                description: 'Foie gras, reducción de Pedro Ximénez, gratín dauphinois.',
-                price: '€56',
+                name: {
+                        es: "Solomillo Rossini",
+                        en: "Rossini Tenderloin"
+                    },
+                description: {
+                        es: "Foie gras, reducción de Pedro Ximénez, gratín dauphinois.",
+                        en: "Foie gras, Pedro Ximénez reduction, dauphinois gratin."
+                    },
+                price: {
+                        es: "€56",
+                        en: "€56"
+                    },
                 imageUrl: '',
-                category: 'Platos Principales',
+                category: {
+                        es: "Platos Principales",
+                        en: "Main Courses"
+                    },
                 isSpecial: true,
             },
             {
-                name: 'Esfera de Chocolate',
-                description: 'Oro comestible, frutos rojos, salsa de caramelo salado caliente.',
-                price: '€22',
+                name: {
+                        es: "Esfera de Chocolate",
+                        en: "Chocolate Sphere"
+                    },
+                description: {
+                        es: "Oro comestible, frutos rojos, salsa de caramelo salado caliente.",
+                        en: "Edible gold, red berries, warm salted caramel sauce."
+                    },
+                price: {
+                        es: "€22",
+                        en: "€22"
+                    },
                 imageUrl: '',
-                category: 'Postres',
+                category: {
+                        es: "Postres",
+                        en: "Desserts"
+                    },
                 isSpecial: true,
             },
             {
-                name: 'Soufflé de Grand Marnier',
-                description: 'Helado de vainilla de Madagascar, zest de naranja confitada.',
-                price: '€24',
+                name: {
+                        es: "Soufflé de Grand Marnier",
+                        en: "Grand Marnier Soufflé"
+                    },
+                description: {
+                        es: "Helado de vainilla de Madagascar, zest de naranja confitada.",
+                        en: "Madagascar vanilla ice cream, candied orange zest."
+                    },
+                price: {
+                        es: "€24",
+                        en: "€24"
+                    },
                 imageUrl: '',
-                category: 'Postres',
+                category: {
+                        es: "Postres",
+                        en: "Desserts"
+                    },
                 isSpecial: false,
             },
         ],
@@ -663,34 +1032,85 @@ export const elitePageData: PageData = {
         enableCardAnimation: true,
     },
     footer: {
-        title: "L'ÉLITE",
-        description: 'Donde la gastronomía se encuentra con el arte. Una experiencia diseñada para los paladares más exigentes.',
+        title: {
+                es: "L'ÉLITE",
+                en: "L'ÉLITE"
+            },
+        description: {
+                es: "Donde la gastronomía se encuentra con el arte. Una experiencia diseñada para los paladares más exigentes.",
+                en: "Where gastronomy meets art. An experience crafted for the most discerning palates."
+            },
         linkColumns: [
             {
-                title: 'Descubrir',
+                title: {
+                        es: "Descubrir",
+                        en: "Discover"
+                    },
                 links: [
-                    { text: 'Nuestra Historia', href: '/about' },
-                    { text: 'El Chef', href: '#team' },
-                    { text: 'Filosofía Sostenible', href: '/about' },
-                    { text: 'Blog Culinario', href: '/blog' },
+                    { text: {
+                                es: "Nuestra Historia",
+                                en: "Our Story"
+                            }, href: '/about' },
+                    { text: {
+                                es: "El Chef",
+                                en: "The Chef"
+                            }, href: '#team' },
+                    { text: {
+                                es: "Filosofía Sostenible",
+                                en: "Sustainable Philosophy"
+                            }, href: '/about' },
+                    { text: {
+                                es: "Blog Culinario",
+                                en: "Culinary Blog"
+                            }, href: '/blog' },
                 ],
             },
             {
-                title: 'Experiencia',
+                title: {
+                        es: "Experiencia",
+                        en: "Experience"
+                    },
                 links: [
-                    { text: 'Menú Degustación', href: '#pricing' },
-                    { text: 'Carta de Vinos', href: '#menu' },
-                    { text: 'Eventos Privados', href: '#services' },
-                    { text: 'Tarjetas Regalo', href: '/contact' },
+                    { text: {
+                                es: "Menú Degustación",
+                                en: "Tasting Menu"
+                            }, href: '#pricing' },
+                    { text: {
+                                es: "Carta de Vinos",
+                                en: "Wine List"
+                            }, href: '#menu' },
+                    { text: {
+                                es: "Eventos Privados",
+                                en: "Private Events"
+                            }, href: '#services' },
+                    { text: {
+                                es: "Tarjetas Regalo",
+                                en: "Gift Cards"
+                            }, href: '/contact' },
                 ],
             },
             {
-                title: 'Horario',
+                title: {
+                        es: "Horario",
+                        en: "Hours"
+                    },
                 links: [
-                    { text: 'Mar - Jue: 19:00 - 23:00', href: '/contact' },
-                    { text: 'Vie - Sáb: 19:00 - 00:00', href: '/contact' },
-                    { text: 'Dom: 13:00 - 16:00', href: '/contact' },
-                    { text: 'Cerrado los Lunes', href: '/contact' },
+                    { text: {
+                                es: "Mar - Jue: 19:00 - 23:00",
+                                en: "Tue - Thu: 7:00 PM - 11:00 PM"
+                            }, href: '/contact' },
+                    { text: {
+                                es: "Vie - Sáb: 19:00 - 00:00",
+                                en: "Fri - Sat: 7:00 PM - 12:00 AM"
+                            }, href: '/contact' },
+                    { text: {
+                                es: "Dom: 13:00 - 16:00",
+                                en: "Sun: 1:00 PM - 4:00 PM"
+                            }, href: '/contact' },
+                    { text: {
+                                es: "Cerrado los Lunes",
+                                en: "Closed on Mondays"
+                            }, href: '/contact' },
                 ],
             },
         ],
@@ -709,9 +1129,18 @@ export const elitePageData: PageData = {
     },
     banner: {
         bannerVariant: 'classic',
-        headline: 'Velada Especial de San Valentín',
-        subheadline: 'Menú exclusivo de 8 pases con maridaje premium y música en vivo. Plazas limitadas.',
-        buttonText: 'Reservar Ahora',
+        headline: {
+                es: "Velada Especial de San Valentín",
+                en: "Valentine's Special Evening"
+            },
+        subheadline: {
+                es: "Menú exclusivo de 8 pases con maridaje premium y música en vivo. Plazas limitadas.",
+                en: "Exclusive 8-course menu with premium wine pairing and live music. Limited seating."
+            },
+        buttonText: {
+                es: "Reservar Ahora",
+                en: "Book Now"
+            },
         buttonUrl: '#leads',
         showButton: true,
         backgroundImageUrl: '',
@@ -765,7 +1194,10 @@ export const eliteTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const eliteBrandIdentity: BrandIdentity = {
-    name: "L'Élite Restaurant",
+    name: {
+            es: "L'Élite Restaurant",
+            en: "L'Élite Restaurant"
+        },
     industry: 'restaurant-bar',
     targetAudience: 'Personas exigentes que buscan experiencias gastronómicas de alta cocina, celebraciones especiales y eventos corporativos de lujo',
     toneOfVoice: 'Luxury',
@@ -814,15 +1246,24 @@ export const eliteSectionVisibility = eliteComponentOrder.reduce((acc, section) 
 // FULL TEMPLATE PRESET (ready for Firestore insertion)
 // =============================================================================
 export const eliteLuxuryPreset = {
-    name: "L'Élite Landing Page de Lujo",
+    name: {
+            es: "L'Élite Landing Page de Lujo",
+            en: "L'Élite Luxury Landing Page"
+        },
     data: elitePageData,
     theme: eliteTheme,
     brandIdentity: eliteBrandIdentity,
     componentOrder: eliteComponentOrder,
     sectionVisibility: eliteSectionVisibility,
     status: 'Template' as const,
-    description: 'Elegante landing page para restaurante de alta cocina con estética oscura y acentos dorados. Incluye menú de temporada, secciones de servicios, equipo, precios de menú degustación y reservas.',
-    category: 'restaurant',
+    description: {
+            es: "Elegante landing page para restaurante de alta cocina con estética oscura y acentos dorados. Incluye menú de temporada, secciones de servicios, equipo, precios de menú degustación y reservas.",
+            en: "Elegant landing page for a high-end restaurant with a dark aesthetic and gold accents. Features seasonal menu, service sections, team, tasting menu prices, and reservations."
+        },
+    category: {
+            es: "restaurant",
+            en: "restaurant"
+        },
     tags: ['luxury', 'restaurant', 'fine-dining', 'dark', 'gold', 'elegant', 'gastronomía'],
     industries: ['restaurant-bar'],
     thumbnailUrl: '',

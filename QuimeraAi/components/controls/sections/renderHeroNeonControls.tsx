@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Link, Settings, Layout, Layers, RotateCcw, Trash2, Plus, Image as ImageIcon, Maximize2 } from 'lucide-react';
@@ -48,10 +48,10 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <Input 
+            <I18nInput 
               label={t('editor.heroNeonControls.buttonText', 'Texto del Botón')} 
               value={slide[textKey] || ''} 
-              onChange={(e) => setNestedData(`heroNeon.slides.${index}.${textKey}`, e.target.value)} 
+              onChange={(val) => setNestedData(`heroNeon.slides.${index}.${textKey}`, val)} 
             />
         </div>
 
@@ -108,7 +108,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
 
         {/* Manual URL Input */}
         {linkType === 'manual' && (
-          <Input
+          <I18nInput
             label=""
             value={slide[linkKey] || ''}
             onChange={(v) => setNestedData(`heroNeon.slides.${index}.${linkKey}`, v)}
@@ -272,9 +272,9 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               label={t('editor.heroNeonControls.headline', 'Headline')} 
               onAssistClick={() => setAiAssistField({ path: `heroNeon.slides.${index}.headline`, value: slide.headline, context: 'Hero Neon Headline' })}
             >
-              <TextArea 
+              <I18nTextArea 
                 value={slide.headline || ''} 
-                onChange={(e) => setNestedData(`heroNeon.slides.${index}.headline`, e.target.value)} 
+                onChange={(val) => setNestedData(`heroNeon.slides.${index}.headline`, val)} 
                 rows={2} 
               />
             </AIFormControl>
@@ -283,9 +283,9 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               label={t('editor.heroNeonControls.subheadline', 'Subheadline')} 
               onAssistClick={() => setAiAssistField({ path: `heroNeon.slides.${index}.subheadline`, value: slide.subheadline || '', context: 'Hero Neon Subheadline' })}
             >
-              <TextArea 
+              <I18nTextArea 
                 value={slide.subheadline || ''} 
-                onChange={(e) => setNestedData(`heroNeon.slides.${index}.subheadline`, e.target.value)} 
+                onChange={(val) => setNestedData(`heroNeon.slides.${index}.subheadline`, val)} 
                 rows={3} 
               />
             </AIFormControl>
@@ -327,7 +327,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
           <Select
             label={t('editor.controls.cardBorderRadius', 'Curvatura de Tarjeta')}
             value={sectionData.cardBorderRadius || '3xl'}
-            onChange={(e) => setNestedData('heroNeon.cardBorderRadius', e.target.value)}
+            onChange={(val) => setNestedData('heroNeon.cardBorderRadius', val)}
             options={[
               { value: 'none', label: 'Cuadrada (None)' },
               { value: 'md', label: 'Suave (MD)' },

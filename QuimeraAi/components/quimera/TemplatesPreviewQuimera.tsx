@@ -54,24 +54,24 @@ const TemplatesPreviewQuimera: React.FC<TemplatesPreviewQuimeraProps> = ({
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
     // ── Content Resolution (props → i18n fallback) ──
-    const displayTitle = title || t('templatesPreviewQuimera.title', 'Comienza con un template profesional y hazlo tuyo.');
-    const displaySubtitle = subtitle || t('templatesPreviewQuimera.subtitle', 'Elige una base visual diseñada para tu industria y conviértela en un website único con la ayuda de Quimera AI.');
-    const displayIntro = introText || t('templatesPreviewQuimera.introText', 'Los templates de Quimera AI no son páginas rígidas. Son puntos de partida inteligentes con estructura, diseño y secciones listas para personalizar. Cambia textos, colores, imágenes, llamadas a la acción y funcionalidades sin comenzar desde una página en blanco.');
+    const displayTitle = title || t('quimera.templates.title', 'Comienza con un template profesional y hazlo tuyo.');
+    const displaySubtitle = subtitle || t('quimera.templates.subtitle', 'Elige una base visual diseñada para tu industria y conviértela en un website único con la ayuda de Quimera AI.');
+    const displayIntro = introText || t('quimera.templates.introText', 'Los templates de Quimera AI no son páginas rígidas. Son puntos de partida inteligentes con estructura, diseño y secciones listas para personalizar. Cambia textos, colores, imágenes, llamadas a la acción y funcionalidades sin comenzar desde una página en blanco.');
 
-    const displayDiffTitle = differentiatorTitle || t('templatesPreviewQuimera.diffTitle', 'No empiezas desde cero. Empiezas desde una ventaja.');
-    const displayDiffText = differentiatorText || t('templatesPreviewQuimera.diffText', 'Los templates funcionan como una base inteligente: tienen estructura, diseño y secciones esenciales listas para adaptar a tu industria, tu marca y tus objetivos.');
+    const displayDiffTitle = differentiatorTitle || t('quimera.templates.diffTitle', 'No empiezas desde cero. Empiezas desde una ventaja.');
+    const displayDiffText = differentiatorText || t('quimera.templates.diffText', 'Los templates funcionan como una base inteligente: tienen estructura, diseño y secciones esenciales listas para adaptar a tu industria, tu marca y tus objetivos.');
 
-    const displayPrimaryBtn = primaryButtonText || t('templatesPreviewQuimera.primaryBtn', 'Explorar templates');
-    const displaySecondaryBtn = secondaryButtonText || t('templatesPreviewQuimera.secondaryBtn', 'Generar con AI');
-    const displayFlowText = flowText || t('templatesPreviewQuimera.flowText', 'Choose template → Customize with AI → Launch website');
+    const displayPrimaryBtn = primaryButtonText || t('quimera.templates.primaryBtn', 'Explorar templates');
+    const displaySecondaryBtn = secondaryButtonText || t('quimera.templates.secondaryBtn', 'Generar con AI');
+    const displayFlowText = flowText || t('quimera.templates.flowText', 'Choose template → Customize with AI → Launch website');
 
     // Badges translations
-    const badgeColors = t('templatesPreviewQuimera.badgeColors', 'Change colors');
-    const badgeCopy = t('templatesPreviewQuimera.badgeCopy', 'Rewrite copy');
-    const badgeSections = t('templatesPreviewQuimera.badgeSections', 'Add sections');
-    const badgeImages = t('templatesPreviewQuimera.badgeImages', 'Replace images');
-    const badgePublish = t('templatesPreviewQuimera.badgePublish', 'Publish faster');
-    const explainerText = t('templatesPreviewQuimera.explainerText', 'Puedes comenzar desde un template o generar tu website desde cero con inteligencia artificial.');
+    const badgeColors = t('quimera.templates.badgeColors', 'Change colors');
+    const badgeCopy = t('quimera.templates.badgeCopy', 'Rewrite copy');
+    const badgeSections = t('quimera.templates.badgeSections', 'Add sections');
+    const badgeImages = t('quimera.templates.badgeImages', 'Replace images');
+    const badgePublish = t('quimera.templates.badgePublish', 'Publish faster');
+    const explainerText = t('quimera.templates.explainerText', 'Puedes comenzar desde un template o generar tu website desde cero con inteligencia artificial.');
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
         if (isPreviewMode) {
@@ -107,7 +107,7 @@ const TemplatesPreviewQuimera: React.FC<TemplatesPreviewQuimeraProps> = ({
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-6 backdrop-blur-sm" style={{ backgroundColor: `${accentColor}10`, borderColor: `${accentColor}25`, color: accentColor }}>
                                 <LayoutTemplate className="w-4 h-4" />
-                                <span className="text-sm font-semibold tracking-wide uppercase font-body">Premium Templates</span>
+                                <span className="text-sm font-semibold tracking-wide uppercase font-body">{t('quimera.templates.badge', 'Premium Templates')}</span>
                             </div>
 
                             <h2

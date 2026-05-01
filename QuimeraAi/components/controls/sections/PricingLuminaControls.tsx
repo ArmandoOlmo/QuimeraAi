@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, I18nInput, I18nTextArea, I18nStringArrayEditor } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -28,10 +28,10 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.headline', value: data.pricingLumina.headline, context: 'Pricing Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.pricingLumina.headline || ''} 
-              onChange={(e) => setNestedData('pricingLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('pricingLumina.headline', val)} 
             />
           </AIFormControl>
 
@@ -39,9 +39,9 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.subheadline', value: data.pricingLumina.subheadline || '', context: 'Pricing Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.pricingLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('pricingLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('pricingLumina.subheadline', val)} 
               rows={2}
             />
           </AIFormControl>
@@ -70,10 +70,10 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Tier #{idx + 1}</span>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierName', 'Name')} 
                 value={tier.name || ''} 
-                onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.name`, e.target.value)} 
+                onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.name`, val)} 
               />
               <ToggleControl 
                 label={t('editor.pricingLumina.isPopular', 'Most Popular')} 
@@ -83,38 +83,38 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierPrice', 'Price')} 
                 value={tier.price || ''} 
-                onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.price`, e.target.value)} 
+                onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.price`, val)} 
               />
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierPeriod', 'Period')} 
                 value={tier.period || ''} 
-                onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.period`, e.target.value)} 
+                onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.period`, val)} 
                 placeholder="/mo"
               />
             </div>
 
-            <Input 
+            <I18nInput 
               label={t('editor.pricingLumina.tierDescription', 'Description')} 
               value={tier.description || ''} 
-              onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.description`, e.target.value)} 
+              onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.description`, val)} 
             />
 
-            {/* Features (comma separated for simplicity in generic control) */}
-            <TextArea 
+            {/* Features */}
+            <I18nStringArrayEditor 
               label={t('editor.pricingLumina.tierFeatures', 'Features (one per line)')} 
-              value={(tier.features || []).join('\n')} 
-              onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.features`, e.target.value.split('\n').filter(Boolean))} 
-              rows={4}
+              value={tier.features} 
+              onChange={(newFeatures) => setNestedData(`pricingLumina.tiers.${idx}.features`, newFeatures)} 
+              placeholder="Feature"
             />
 
             <div className="mt-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.buttonText', 'Button Text')} 
                 value={tier.buttonText || ''} 
-                onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.buttonText`, e.target.value)} 
+                onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.buttonText`, val)} 
               />
             </div>
 
@@ -145,10 +145,10 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
               </div>
               {(tier.buttonLinkType === 'manual' || !tier.buttonLinkType) && (
                 <>
-                  <input
+                  <I18nInput
                     placeholder="https://example.com or #section"
                     value={tier.buttonLink || ''}
-                    onChange={(e) => setNestedData(`pricingLumina.tiers.${idx}.buttonLink`, e.target.value)}
+                    onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.buttonLink`, val)}
                     className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                   />
                   <p className="text-xs text-q-text-secondary mt-1">

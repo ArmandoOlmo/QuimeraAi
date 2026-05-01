@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 
@@ -35,9 +35,9 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                         context: 'Portfolio Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
-                        onChange={(e) => setNestedData('portfolioNeon.headline', e.target.value)}
+                        onChange={(val) => setNestedData('portfolioNeon.headline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -50,9 +50,9 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                         context: 'Portfolio Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
-                        onChange={(e) => setNestedData('portfolioNeon.subheadline', e.target.value)}
+                        onChange={(val) => setNestedData('portfolioNeon.subheadline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -95,9 +95,9 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                                 context: `Portfolio Neon Image ${index} Title` 
                             })}
                         >
-                            <Input
+                            <I18nInput
                                 value={item.title || ''}
-                                onChange={(e) => setNestedData(`portfolioNeon.images.${index}.title`, e.target.value)}
+                                onChange={(val) => setNestedData(`portfolioNeon.images.${index}.title`, val)}
                             />
                         </AIFormControl>
 
@@ -109,9 +109,9 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                                 context: `Portfolio Neon Image ${index} Description` 
                             })}
                         >
-                            <TextArea
+                            <I18nTextArea
                                 value={item.description || ''}
-                                onChange={(e) => setNestedData(`portfolioNeon.images.${index}.description`, e.target.value)}
+                                onChange={(val) => setNestedData(`portfolioNeon.images.${index}.description`, val)}
                                 rows={2}
                             />
                         </AIFormControl>

@@ -45,10 +45,10 @@ const CtaQuimera: React.FC<CtaQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.1)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', '¿Listo para escalar tu negocio digital?');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
-    const displayBtn = buttonText || t('editor.placeholder.button', 'Empezar Gratis');
-    const displayBadge = badgeText || t('editor.placeholder.badge', 'Sin tarjeta de crédito requerida');
+    const displayTitle = title || t('quimera.cta.title', '¿Listo para escalar tu negocio digital?');
+    const displaySubtitle = subtitle || t('quimera.cta.subtitle', 'Escribe el subtítulo aquí...');
+    const displayBtn = buttonText || t('quimera.cta.button', 'Empezar Gratis');
+    const displayBadge = badgeText || t('quimera.cta.badge', 'Sin tarjeta de crédito requerida');
 
     const handleNavigate = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         if (onNavigate) {

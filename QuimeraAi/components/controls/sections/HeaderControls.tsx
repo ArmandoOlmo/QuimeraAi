@@ -12,7 +12,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, I18nInput, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -135,7 +135,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         {(data.header.logoType === 'text' || data.header.logoType === 'both') && (
-          <Input label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(e) => setNestedData('header.logoText', e.target.value)} />
+          <I18nInput label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(val) => setNestedData('header.logoText', val)} />
         )}
 
         {(data.header.logoType === 'image' || data.header.logoType === 'both') && (
@@ -210,7 +210,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
 
-          <input
+          <I18nInput
             ref={faviconInputRef}
             type="file"
             accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
@@ -258,8 +258,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {data.header.showLogin !== false && (
           <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-            <Input label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(e) => setNestedData('header.loginText', e.target.value)} className="mb-0" />
-            <Input label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(e) => setNestedData('header.loginUrl', e.target.value)} className="mb-0" />
+            <I18nInput label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(val) => setNestedData('header.loginText', val)} className="mb-0" />
+            <I18nInput label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(val) => setNestedData('header.loginUrl', val)} className="mb-0" />
           </div>
         )}
       </div>
@@ -271,7 +271,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {data.header.showSearch === true && (
           <div className="animate-fade-in-up">
-            <Input label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(e) => setNestedData('header.searchPlaceholder', e.target.value)} className="mb-0" />
+            <I18nInput label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(val) => setNestedData('header.searchPlaceholder', val)} className="mb-0" />
           </div>
         )}
       </div>
@@ -320,12 +320,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     fullWidthModal={true}
                   />
                 </div>
-                <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" placeholder="Title" value={link.text} onChange={(e) => {
-                  setNestedData(`header.links.${i}.text`, e.target.value);
+                <I18nInput className="flex-1 min-w-0 mb-0" placeholder="Title" value={link.text} onChange={(val) => {
+                  setNestedData(`header.links.${i}.text`, val);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
-                <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" placeholder="URL" value={link.href} onChange={(e) => {
-                  setNestedData(`header.links.${i}.href`, e.target.value);
+                <I18nInput className="flex-1 min-w-0 mb-0" placeholder="URL" value={link.href} onChange={(val) => {
+                  setNestedData(`header.links.${i}.href`, val);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
                 <button type="button"                   onClick={() => {
@@ -401,8 +401,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ToggleControl label={t('editor.controls.navigation.showCta')} checked={data.header.showCta !== false} onChange={(v) => setNestedData('header.showCta', v)} />
 
       {data.header.showCta !== false && (
-        <div className="space-y-3 animate-fade-in-up">
-          <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
+        <div className="space-y-4 animate-fade-in-up">
+          <I18nInput label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(val) => setNestedData('header.ctaText', val)} />
           <div>
             <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.navigation.buttonRadius')}</label>
             <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
@@ -438,7 +438,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
 
           {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
-            <Input label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+            <I18nInput label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(val) => setNestedData('header.ctaUrl', val)} placeholder="https://example.com o #seccion" />
           )}
           {data.header.ctaLinkType === 'product' && (
             <SingleProductSelector
@@ -564,7 +564,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
 
-          <input
+          <I18nInput
             ref={faviconInputRef}
             type="file"
             accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
@@ -616,8 +616,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ToggleControl label={t('editor.controls.navigation.showLogin')} checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
           {data.header.showLogin !== false && (
             <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-              <Input label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(e) => setNestedData('header.loginText', e.target.value)} className="mb-0" />
-              <Input label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(e) => setNestedData('header.loginUrl', e.target.value)} className="mb-0" />
+              <I18nInput label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(val) => setNestedData('header.loginText', val)} className="mb-0" />
+              <I18nInput label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(val) => setNestedData('header.loginUrl', val)} className="mb-0" />
             </div>
           )}
         </div>
@@ -626,9 +626,13 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ToggleControl label={t('editor.controls.navigation.showSearch')} checked={data.header.showSearch === true} onChange={(v) => setNestedData('header.showSearch', v)} />
           {data.header.showSearch === true && (
             <div className="animate-fade-in-up">
-              <Input label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(e) => setNestedData('header.searchPlaceholder', e.target.value)} className="mb-0" />
+              <I18nInput label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(val) => setNestedData('header.searchPlaceholder', val)} className="mb-0" />
             </div>
           )}
+        </div>
+
+        <div className="space-y-3 mt-3">
+          <ToggleControl label={t('editor.controls.navigation.showLanguageSelector', 'Selector de Idioma')} checked={data.header.showLanguageSelector !== false} onChange={(v) => setNestedData('header.showLanguageSelector', v)} />
         </div>
       </div>
 
@@ -683,12 +687,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       fullWidthModal={true}
                     />
                   </div>
-                  <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" value={link.text} onChange={(e) => {
-                    setNestedData(`header.links.${i}.text`, e.target.value);
+                  <I18nInput className="flex-1 min-w-0 mb-0" placeholder="Title" value={link.text} onChange={(val) => {
+                    setNestedData(`header.links.${i}.text`, val);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
-                  <input className="flex-1 min-w-0 bg-q-bg border border-q-border rounded px-2 py-1 text-sm text-q-text-primary" value={link.href} onChange={(e) => {
-                    setNestedData(`header.links.${i}.href`, e.target.value);
+                  <I18nInput className="flex-1 min-w-0 mb-0" placeholder="URL" value={link.href} onChange={(val) => {
+                    setNestedData(`header.links.${i}.href`, val);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
                   <button type="button"                     onClick={() => {
@@ -727,7 +731,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {data.header.showCta !== false && (
           <div className="space-y-3 animate-fade-in-up mt-3">
-            <Input label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(e) => setNestedData('header.ctaText', e.target.value)} />
+            <I18nInput label={t('editor.controls.navigation.buttonText')} value={data.header.ctaText || 'Get Started'} onChange={(val) => setNestedData('header.ctaText', val)} />
 
             <div>
               <label className="block text-xs font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.enlaceDelBotn')}</label>
@@ -748,7 +752,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
 
             {(data.header.ctaLinkType === 'manual' || !data.header.ctaLinkType) && (
-              <Input label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(e) => setNestedData('header.ctaUrl', e.target.value)} placeholder="https://example.com o #seccion" />
+              <I18nInput label={t('controls.url')} value={data.header.ctaUrl || ''} onChange={(val) => setNestedData('header.ctaUrl', val)} placeholder="https://example.com o #seccion" />
             )}
             {data.header.ctaLinkType === 'product' && (
               <SingleProductSelector
@@ -802,7 +806,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
 
         {(data.header.logoType === 'text' || data.header.logoType === 'both') && (
-          <Input label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(e) => setNestedData('header.logoText', e.target.value)} />
+          <I18nInput label={t('editor.controls.header.logoText')} value={data.header.logoText} onChange={(val) => setNestedData('header.logoText', val)} />
         )}
 
         {(data.header.logoType === 'image' || data.header.logoType === 'both') && (

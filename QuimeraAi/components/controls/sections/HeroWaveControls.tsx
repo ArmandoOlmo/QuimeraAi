@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -62,12 +62,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Headline */}
             <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: `heroWave.slides.${slideIndex}.headline`, value: slide.headline, context: 'Hero Wave Headline' })}>
-              <TextArea value={slide.headline || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.headline`, e.target.value)} rows={2} />
+              <I18nTextArea value={slide.headline || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.headline`, val)} rows={2} />
             </AIFormControl>
 
             {/* Subheadline */}
             <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: `heroWave.slides.${slideIndex}.subheadline`, value: slide.subheadline || '', context: 'Hero Wave Subheadline' })}>
-              <Input label="" value={slide.subheadline || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.subheadline`, e.target.value)} />
+              <I18nInput label="" value={slide.subheadline || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.subheadline`, val)} />
             </AIFormControl>
 
             {/* CTAs */}
@@ -77,12 +77,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Call to Actions
               </label>
               <div className="grid grid-cols-2 gap-2 mb-2">
-                <Input label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCta`, e.target.value)} />
-                <Input label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.primaryCtaLink`, e.target.value)} />
+                <I18nInput label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.primaryCta`, val)} />
+                <I18nInput label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.primaryCtaLink`, val)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCta`, e.target.value)} />
-                <Input label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(e) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCtaLink`, e.target.value)} />
+                <I18nInput label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCta`, val)} />
+                <I18nInput label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(val) => setNestedData(`heroWave.slides.${slideIndex}.secondaryCtaLink`, val)} />
               </div>
             </div>
 

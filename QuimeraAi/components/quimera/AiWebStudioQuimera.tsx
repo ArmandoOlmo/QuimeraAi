@@ -54,31 +54,31 @@ const AiWebStudioQuimera: React.FC<AiWebStudioQuimeraProps> = ({
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
     // ── Content Resolution (props → i18n fallback) ──
-    const displayTitle = title || t('aiWebStudioQuimera.title', 'Construye tu website conversando con AI Web Studio.');
-    const displaySubtitle = subtitle || t('aiWebStudioQuimera.subtitle', 'Responde preguntas simples sobre tu negocio y Quimera AI genera una página web inicial con estructura, textos y secciones listas para personalizar.');
-    const displayIntro = introText || t('aiWebStudioQuimera.introText', 'AI Web Studio funciona como un estratega, copywriter y diseñador inicial dentro de Quimera AI. Te guía paso a paso, entiende lo que vendes, quién es tu cliente y qué quieres lograr, y luego crea una primera versión de tu website para que puedas editar, mejorar y publicar más rápido.');
+    const displayTitle = title || t('quimera.aiwebstudio.title', 'Construye tu website conversando con AI Web Studio.');
+    const displaySubtitle = subtitle || t('quimera.aiwebstudio.subtitle', 'Responde preguntas simples sobre tu negocio y Quimera AI genera una página web inicial con estructura, textos y secciones listas para personalizar.');
+    const displayIntro = introText || t('quimera.aiwebstudio.introText', 'AI Web Studio funciona como un estratega, copywriter y diseñador inicial dentro de Quimera AI. Te guía paso a paso, entiende lo que vendes, quién es tu cliente y qué quieres lograr, y luego crea una primera versión de tu website para que puedas editar, mejorar y publicar más rápido.');
 
-    const displayDiffTitle = differentiatorTitle || t('aiWebStudioQuimera.diffTitle', 'Tu website empieza con una conversación.');
-    const displayDiffText = differentiatorText || t('aiWebStudioQuimera.diffText', 'AI Web Studio convierte ideas sueltas en una estructura clara: títulos, secciones, textos, llamadas a la acción y contenido inicial adaptado al tipo de negocio.');
+    const displayDiffTitle = differentiatorTitle || t('quimera.aiwebstudio.diffTitle', 'Tu website empieza con una conversación.');
+    const displayDiffText = differentiatorText || t('quimera.aiwebstudio.diffText', 'AI Web Studio convierte ideas sueltas en una estructura clara: títulos, secciones, textos, llamadas a la acción y contenido inicial adaptado al tipo de negocio.');
 
-    const displayPrimaryBtn = primaryButtonText || t('aiWebStudioQuimera.primaryBtn', 'Crear con AI Web Studio');
-    const displaySecondaryBtn = secondaryButtonText || t('aiWebStudioQuimera.secondaryBtn', 'Explorar templates');
-    const displayFlowText = flowText || t('aiWebStudioQuimera.flowText', 'Chat → Website Draft → Edit → Publish');
+    const displayPrimaryBtn = primaryButtonText || t('quimera.aiwebstudio.primaryBtn', 'Crear con AI Web Studio');
+    const displaySecondaryBtn = secondaryButtonText || t('quimera.aiwebstudio.secondaryBtn', 'Explorar templates');
+    const displayFlowText = flowText || t('quimera.aiwebstudio.flowText', 'Chat → Website Draft → Edit → Publish');
 
     // Bullet points translations
-    const bullet1 = t('aiWebStudioQuimera.bullet1', 'Te hace las preguntas correctas.');
-    const bullet2 = t('aiWebStudioQuimera.bullet2', 'Organiza la información de tu negocio.');
-    const bullet3 = t('aiWebStudioQuimera.bullet3', 'Genera una primera versión de tu website.');
+    const bullet1 = t('quimera.aiwebstudio.bullet1', 'Te hace las preguntas correctas.');
+    const bullet2 = t('quimera.aiwebstudio.bullet2', 'Organiza la información de tu negocio.');
+    const bullet3 = t('quimera.aiwebstudio.bullet3', 'Genera una primera versión de tu website.');
 
     // Chat mockup translations
-    const chatMsg1 = t('aiWebStudioQuimera.chatMsg1', 'Tell me about your business. What do you offer and who do you serve?');
-    const chatMsg2 = t('aiWebStudioQuimera.chatMsg2', 'I run a local service business and need a website to explain my services, capture leads and book appointments.');
-    const chatMsg3 = t('aiWebStudioQuimera.chatMsg3', 'Great. I’ll create a homepage with your services, benefits, testimonials and a contact section.');
+    const chatMsg1 = t('quimera.aiwebstudio.chatMsg1', 'Tell me about your business. What do you offer and who do you serve?');
+    const chatMsg2 = t('quimera.aiwebstudio.chatMsg2', 'I run a local service business and need a website to explain my services, capture leads and book appointments.');
+    const chatMsg3 = t('quimera.aiwebstudio.chatMsg3', 'Great. I’ll create a homepage with your services, benefits, testimonials and a contact section.');
     
     // Website preview mockup labels
-    const genStatus = t('aiWebStudioQuimera.genStatus', 'Generating website...');
-    const badgeDraft = t('aiWebStudioQuimera.badgeDraft', 'AI Draft Ready');
-    const badgeEditable = t('aiWebStudioQuimera.badgeEditable', 'Editable in Quimera');
+    const genStatus = t('quimera.aiwebstudio.genStatus', 'Generating website...');
+    const badgeDraft = t('quimera.aiwebstudio.badgeDraft', 'AI Draft Ready');
+    const badgeEditable = t('quimera.aiwebstudio.badgeEditable', 'Editable in Quimera');
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
         if (isPreviewMode) {

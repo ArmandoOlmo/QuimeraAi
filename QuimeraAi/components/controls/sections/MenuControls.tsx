@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -122,10 +122,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {/* Restaurant ID — only visible when dataSource is 'restaurant' */}
         {data?.menu?.dataSource === 'restaurant' && (
           <div className="mt-3 pt-3 border-t border-q-border/50 animate-fade-in-up">
-            <Input
+            <I18nInput
               label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
               value={data?.menu?.restaurantId || ''}
-              onChange={(e) => setNestedData('menu.restaurantId', e.target.value)}
+              onChange={(val) => setNestedData('menu.restaurantId', val)}
             />
             <p className="text-xs text-q-text-secondary mt-1 italic">
               {t('restaurant.reservation.restaurantIdHelp', 'Vincula este menú al restaurante creado en el módulo de Restaurantes.')}
@@ -138,9 +138,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Content Controls */}
       <div className="space-y-3">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
-        <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(e) => setNestedData('menu.title', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(val) => setNestedData('menu.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(e) => setNestedData('menu.description', e.target.value)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(val) => setNestedData('menu.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
       </div>
 

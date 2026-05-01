@@ -47,28 +47,28 @@ const BioPageQuimera: React.FC<BioPageQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('bioPageQuimera.title', 'Tu Enlace en Bio potenciado por IA');
-    const displaySubtitle = subtitle || t('bioPageQuimera.subtitle', 'Reúne toda tu presencia online en una sola página optimizada. Solo dinos tus redes y la Inteligencia Artificial diseñará y ordenará tus enlaces para maximizar clics.');
+    const displayTitle = title || t('quimera.biopage.title', 'Tu Enlace en Bio potenciado por IA');
+    const displaySubtitle = subtitle || t('quimera.biopage.subtitle', 'Reúne toda tu presencia online en una sola página optimizada. Solo dinos tus redes y la Inteligencia Artificial diseñará y ordenará tus enlaces para maximizar clics.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('bioPageQuimera.feat1Title', 'Generación Automática'),
-            description: t('bioPageQuimera.feat1Desc', 'La IA extrae tu información de Instagram o TikTok y crea tu página en 10 segundos con tu identidad visual.'),
+            title: t('quimera.biopage.feat1.title', 'Generación Automática'),
+            description: t('quimera.biopage.feat1.desc', 'La IA extrae tu información de Instagram o TikTok y crea tu página en 10 segundos con tu identidad visual.'),
             icon: 'Wand2'
         },
         {
-            title: t('bioPageQuimera.feat2Title', 'Enlaces Inteligentes'),
-            description: t('bioPageQuimera.feat2Desc', 'Destaca automáticamente el enlace más importante (como tu último video o producto) usando algoritmos de atención.'),
+            title: t('quimera.biopage.feat2.title', 'Enlaces Inteligentes'),
+            description: t('quimera.biopage.feat2.desc', 'Destaca automáticamente el enlace más importante (como tu último video o producto) usando algoritmos de atención.'),
             icon: 'Sparkles'
         },
         {
-            title: t('bioPageQuimera.feat3Title', 'Analítica Predictiva'),
-            description: t('bioPageQuimera.feat3Desc', 'Descubre de dónde vienen tus seguidores y qué enlace convierte mejor, con sugerencias de la IA para mejorar.'),
+            title: t('quimera.biopage.feat3.title', 'Analítica Predictiva'),
+            description: t('quimera.biopage.feat3.desc', 'Descubre de dónde vienen tus seguidores y qué enlace convierte mejor, con sugerencias de la IA para mejorar.'),
             icon: 'Share2'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Simulate AI building the bio page
     useEffect(() => {
@@ -100,7 +100,7 @@ const BioPageQuimera: React.FC<BioPageQuimeraProps> = ({
                         <div className="mb-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                                 <Smartphone className="w-4 h-4" />
-                                {t('bioPageQuimera.badge', 'Smart Bio Page')}
+                                {t('quimera.biopage.badge', 'Smart Bio Page')}
                             </div>
                             <h2 className={`text-4xl md:text-5xl lg:text-[3.5rem] font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                                 style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>

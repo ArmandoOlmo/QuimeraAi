@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CardGlowControl } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -70,19 +70,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       )}
 
-      <Input label={t('editor.controls.common.title')} value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
+      <I18nInput label={t('editor.controls.common.title')} value={data.footer.title} onChange={(val) => setNestedData('footer.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.footer.titleFontSize || 'sm'} onChange={(v) => setNestedData('footer.titleFontSize', v)} />
 
-      <TextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
+      <I18nTextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(val) => setNestedData('footer.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.footer.descriptionFontSize || 'sm'} onChange={(v) => setNestedData('footer.descriptionFontSize', v)} />
 
-      <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
+      <I18nInput label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(val) => setNestedData('footer.copyrightText', val)} />
       <div className="space-y-4">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('controls.linkColumns')}</label>
         {(data.footer.linkColumns || []).map((col, colIndex) => (
           <div key={colIndex} className="bg-q-bg p-3 rounded border border-q-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-q-border focus:border-q-accent flex-1 text-sm font-bold text-q-text-primary px-1 min-w-0 focus:outline-none" />
+              <I18nInput placeholder="Column Title" value={col.title} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.title`, val)} className="flex-1 mb-0" />
               <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
@@ -107,8 +107,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <>
                 {(col.links || []).map((link, linkIndex) => (
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
-                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
-                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
+                    <I18nInput placeholder="Text" value={link.text} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, val)} className="flex-1 mb-0" />
+                    <I18nInput placeholder="Href" value={link.href} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, val)} className="flex-1 mb-0" />
                     <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
@@ -138,50 +138,50 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <MapPin size={14} className="text-q-accent" />
           Contact Information
         </label>
-        <Input
+        <I18nInput
           label={t('editor.controls.common.address')}
           value={data.footer.contactInfo?.address || ''}
-          onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)}
+          onChange={(val) => setNestedData('footer.contactInfo.address', val)}
           placeholder="123 Main Street"
         />
         <div className="grid grid-cols-2 gap-2">
-          <Input
+          <I18nInput
             label={t('editor.controls.common.city')}
             value={data.footer.contactInfo?.city || ''}
-            onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)}
+            onChange={(val) => setNestedData('footer.contactInfo.city', val)}
             placeholder="City"
           />
-          <Input
+          <I18nInput
             label={t('editor.controls.common.state')}
             value={data.footer.contactInfo?.state || ''}
-            onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)}
+            onChange={(val) => setNestedData('footer.contactInfo.state', val)}
             placeholder="State"
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Input
+          <I18nInput
             label={t('editor.controls.common.zipCode')}
             value={data.footer.contactInfo?.zipCode || ''}
-            onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)}
+            onChange={(val) => setNestedData('footer.contactInfo.zipCode', val)}
             placeholder="12345"
           />
-          <Input
+          <I18nInput
             label={t('editor.controls.common.country')}
             value={data.footer.contactInfo?.country || ''}
-            onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)}
+            onChange={(val) => setNestedData('footer.contactInfo.country', val)}
             placeholder="Country"
           />
         </div>
-        <Input
+        <I18nInput
           label={t('editor.controls.common.phone')}
           value={data.footer.contactInfo?.phone || ''}
-          onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)}
+          onChange={(val) => setNestedData('footer.contactInfo.phone', val)}
           placeholder="+1 (555) 123-4567"
         />
-        <Input
+        <I18nInput
           label={t('editor.controls.common.email')}
           value={data.footer.contactInfo?.email || ''}
-          onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)}
+          onChange={(val) => setNestedData('footer.contactInfo.email', val)}
           placeholder="contact@example.com"
         />
       </div>
@@ -270,14 +270,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     <input
                       type="time"
                       value={dayHours.openTime || '09:00'}
-                      onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)}
+                      onChange={(val) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, val)}
                       className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary"
                     />
                     <span className="text-q-text-secondary text-xs">-</span>
                     <input
                       type="time"
                       value={dayHours.closeTime || '17:00'}
-                      onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)}
+                      onChange={(val) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, val)}
                       className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary"
                     />
                   </div>
@@ -465,9 +465,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Type size={14} />
           Contenido
         </label>
-        <Input label={t('editor.controls.common.title')} value={data.footer.title} onChange={(e) => setNestedData('footer.title', e.target.value)} />
-        <TextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(e) => setNestedData('footer.description', e.target.value)} rows={2} />
-        <Input label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(e) => setNestedData('footer.copyrightText', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data.footer.title} onChange={(val) => setNestedData('footer.title', val)} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(val) => setNestedData('footer.description', val)} rows={2} />
+        <I18nInput label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(val) => setNestedData('footer.copyrightText', val)} />
       </div>
 
 
@@ -481,7 +481,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {(data.footer.linkColumns || []).map((col, colIndex) => (
           <div key={colIndex} className="bg-q-bg p-3 rounded border border-q-border space-y-2">
             <div className="flex items-center gap-2 mb-2">
-              <input placeholder="Column Title" value={col.title} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.title`, e.target.value)} className="bg-transparent border-b border-q-border focus:border-q-accent flex-1 text-sm font-bold text-q-text-primary px-1 min-w-0 focus:outline-none" />
+              <I18nInput placeholder="Column Title" value={col.title} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.title`, val)} className="flex-1 mb-0" />
               <button type="button" onClick={() => {
                 const newCols = (data.footer.linkColumns || []).filter((_, i) => i !== colIndex);
                 setNestedData('footer.linkColumns', newCols);
@@ -504,8 +504,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <>
                 {(col.links || []).map((link, linkIndex) => (
                   <div key={linkIndex} className="flex gap-2 items-center mb-1">
-                    <input placeholder="Text" value={link.text} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
-                    <input placeholder="Href" value={link.href} onChange={(e) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, e.target.value)} className="flex-1 bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary min-w-0 focus:outline-none focus:ring-1 focus:ring-q-accent" />
+                    <I18nInput placeholder="Text" value={link.text} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.text`, val)} className="flex-1 mb-0" />
+                    <I18nInput placeholder="Href" value={link.href} onChange={(val) => setNestedData(`footer.linkColumns.${colIndex}.links.${linkIndex}.href`, val)} className="flex-1 mb-0" />
                     <button type="button" onClick={() => {
                       const newLinks = (col.links || []).filter((_, i) => i !== linkIndex);
                       setNestedData(`footer.linkColumns.${colIndex}.links`, newLinks);
@@ -546,17 +546,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Contact Information
         </label>
         <div className="space-y-3">
-          <Input label={t('editor.controls.common.address')} value={data.footer.contactInfo?.address || ''} onChange={(e) => setNestedData('footer.contactInfo.address', e.target.value)} placeholder="123 Main Street" />
+          <I18nInput label={t('editor.controls.common.address')} value={data.footer.contactInfo?.address || ''} onChange={(val) => setNestedData('footer.contactInfo.address', val)} placeholder="123 Main Street" />
           <div className="grid grid-cols-2 gap-2">
-            <Input label={t('editor.controls.common.city')} value={data.footer.contactInfo?.city || ''} onChange={(e) => setNestedData('footer.contactInfo.city', e.target.value)} placeholder="City" />
-            <Input label={t('editor.controls.common.state')} value={data.footer.contactInfo?.state || ''} onChange={(e) => setNestedData('footer.contactInfo.state', e.target.value)} placeholder="State" />
+            <I18nInput label={t('editor.controls.common.city')} value={data.footer.contactInfo?.city || ''} onChange={(val) => setNestedData('footer.contactInfo.city', val)} placeholder="City" />
+            <I18nInput label={t('editor.controls.common.state')} value={data.footer.contactInfo?.state || ''} onChange={(val) => setNestedData('footer.contactInfo.state', val)} placeholder="State" />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Input label={t('editor.controls.common.zipCode')} value={data.footer.contactInfo?.zipCode || ''} onChange={(e) => setNestedData('footer.contactInfo.zipCode', e.target.value)} placeholder="12345" />
-            <Input label={t('editor.controls.common.country')} value={data.footer.contactInfo?.country || ''} onChange={(e) => setNestedData('footer.contactInfo.country', e.target.value)} placeholder="Country" />
+            <I18nInput label={t('editor.controls.common.zipCode')} value={data.footer.contactInfo?.zipCode || ''} onChange={(val) => setNestedData('footer.contactInfo.zipCode', val)} placeholder="12345" />
+            <I18nInput label={t('editor.controls.common.country')} value={data.footer.contactInfo?.country || ''} onChange={(val) => setNestedData('footer.contactInfo.country', val)} placeholder="Country" />
           </div>
-          <Input label={t('editor.controls.common.phone')} value={data.footer.contactInfo?.phone || ''} onChange={(e) => setNestedData('footer.contactInfo.phone', e.target.value)} placeholder="+1 (555) 123-4567" />
-          <Input label={t('editor.controls.common.email')} value={data.footer.contactInfo?.email || ''} onChange={(e) => setNestedData('footer.contactInfo.email', e.target.value)} placeholder="contact@example.com" />
+          <I18nInput label={t('editor.controls.common.phone')} value={data.footer.contactInfo?.phone || ''} onChange={(val) => setNestedData('footer.contactInfo.phone', val)} placeholder="+1 (555) 123-4567" />
+          <I18nInput label={t('editor.controls.common.email')} value={data.footer.contactInfo?.email || ''} onChange={(val) => setNestedData('footer.contactInfo.email', val)} placeholder="contact@example.com" />
         </div>
       </div>
 
@@ -630,9 +630,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 </button>
                 {dayHours.isOpen ? (
                   <div className="flex items-center gap-1 flex-1">
-                    <input type="time" value={dayHours.openTime || '09:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, e.target.value)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
+                    <input type="time" value={dayHours.openTime || '09:00'} onChange={(val) => setNestedData(`footer.contactInfo.businessHours.${key}.openTime`, val)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
                     <span className="text-q-text-secondary text-xs">-</span>
-                    <input type="time" value={dayHours.closeTime || '17:00'} onChange={(e) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, e.target.value)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
+                    <input type="time" value={dayHours.closeTime || '17:00'} onChange={(val) => setNestedData(`footer.contactInfo.businessHours.${key}.closeTime`, val)} className="w-[90px] bg-q-surface border border-q-border rounded px-1.5 py-0.5 text-xs text-q-text-primary" />
                   </div>
                 ) : (
                   <span className="text-xs text-q-text-secondary italic">Closed</span>

@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -97,8 +97,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
 
-          <Input label={t('controls.text')} value={msg.text || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.text`, e.target.value)} />
-          <Input label={t('controls.linkText')} value={msg.linkText || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.linkText`, e.target.value)} placeholder="Shop Now" />
+          <I18nInput label={t('controls.text')} value={msg.text || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.text`, val)} />
+          <I18nInput label={t('controls.linkText')} value={msg.linkText || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.linkText`, val)} placeholder="Shop Now" />
 
           {/* Link Type Selector */}
           <div>
@@ -120,7 +120,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ))}
             </div>
             {(msg.linkType === 'manual' || !msg.linkType) && (
-              <Input label={t('controls.linkUrl')} value={msg.link || ''} onChange={(e) => setNestedData(`topBar.messages.${idx}.link`, e.target.value)} placeholder="#section or /page or https://..." />
+              <I18nInput label={t('controls.linkUrl')} value={msg.link || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.link`, val)} placeholder="#section or /page or https://..." />
             )}
             {msg.linkType === 'content' && (
               <SingleContentSelector

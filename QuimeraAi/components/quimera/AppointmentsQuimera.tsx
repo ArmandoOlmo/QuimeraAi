@@ -47,28 +47,28 @@ const AppointmentsQuimera: React.FC<AppointmentsQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('appointmentsQuimera.title', 'Agendamiento Inteligente');
-    const displaySubtitle = subtitle || t('appointmentsQuimera.subtitle', 'Olvídate de los correos interminables. Permite a tus clientes reservar reuniones, consultas o servicios directamente en tu sitio web según tu disponibilidad.');
+    const displayTitle = title || t('quimera.appointments.title', 'Agendamiento Inteligente');
+    const displaySubtitle = subtitle || t('quimera.appointments.subtitle', 'Olvídate de los correos interminables. Permite a tus clientes reservar reuniones, consultas o servicios directamente en tu sitio web según tu disponibilidad.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('appointmentsQuimera.feat1Title', 'Sincronización Bidireccional'),
-            description: t('appointmentsQuimera.feat1Desc', 'Se conecta con tu Google Calendar o Outlook para que nunca haya cruces de horarios.'),
+            title: t('quimera.appointments.feat1.title', 'Sincronización Bidireccional'),
+            description: t('quimera.appointments.feat1.desc', 'Se conecta con tu Google Calendar o Outlook para que nunca haya cruces de horarios.'),
             icon: 'CalendarClock'
         },
         {
-            title: t('appointmentsQuimera.feat2Title', 'Recordatorios Automáticos'),
-            description: t('appointmentsQuimera.feat2Desc', 'Envía notificaciones por email y SMS para reducir drásticamente las ausencias (no-shows).'),
+            title: t('quimera.appointments.feat2.title', 'Recordatorios Automáticos'),
+            description: t('quimera.appointments.feat2.desc', 'Envía notificaciones por email y SMS para reducir drásticamente las ausencias (no-shows).'),
             icon: 'Clock'
         },
         {
-            title: t('appointmentsQuimera.feat3Title', 'Tipos de Reunión Customizables'),
-            description: t('appointmentsQuimera.feat3Desc', 'Configura duraciones, formularios previos y ubicación (Zoom, Meet, o presencial) por cada servicio.'),
+            title: t('quimera.appointments.feat3.title', 'Tipos de Reunión Customizables'),
+            description: t('quimera.appointments.feat3.desc', 'Configura duraciones, formularios previos y ubicación (Zoom, Meet, o presencial) por cada servicio.'),
             icon: 'CalendarCheck'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Simulate booking flow
     useEffect(() => {
@@ -217,7 +217,7 @@ const AppointmentsQuimera: React.FC<AppointmentsQuimeraProps> = ({
                     <div className="mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                             <CalendarIcon className="w-4 h-4" />
-                            {t('appointmentsQuimera.badge', 'Reservas & Citas')}
+                            {t('quimera.appointments.badge', 'Reservas & Citas')}
                         </div>
                         <h2 className={`text-4xl md:text-5xl lg:text-[3.5rem] font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                             style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>

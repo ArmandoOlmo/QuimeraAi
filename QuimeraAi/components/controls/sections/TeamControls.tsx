@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -56,10 +56,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Content */}
-      <Input label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(e) => setNestedData('team.title', e.target.value)} />
+      <I18nInput label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(val) => setNestedData('team.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
 
-      <TextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(e) => setNestedData('team.description', e.target.value)} rows={2} />
+      <I18nTextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(val) => setNestedData('team.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
 
 
@@ -77,9 +77,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               setNestedData('team.items', newItems);
             }}
           />
-          <Input label={t('controls.name')} value={member.name} onChange={(e) => setNestedData(`team.items.${index}.name`, e.target.value)} className="mt-2" />
-          <Input label={t('controls.role')} value={member.role} onChange={(e) => setNestedData(`team.items.${index}.role`, e.target.value)} />
-          <Input label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(e) => setNestedData(`team.items.${index}.bio`, e.target.value)} placeholder="Short bio shown on hover" />
+          <I18nInput label={t('controls.name')} value={member.name} onChange={(val) => setNestedData(`team.items.${index}.name`, val)} className="mt-2" />
+          <I18nInput label={t('controls.role')} value={member.role} onChange={(val) => setNestedData(`team.items.${index}.role`, val)} />
+          <I18nInput label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(val) => setNestedData(`team.items.${index}.bio`, val)} placeholder="Short bio shown on hover" />
 
           {/* Link Controls */}
           <div className="mt-3 pt-3 border-t border-q-border/50">
@@ -104,10 +104,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               ))}
             </div>
             {(member.linkType === 'manual' || !member.linkType) && (
-              <input
+              <I18nInput
                 placeholder="https://... o /pagina"
                 value={member.linkUrl || ''}
-                onChange={(e) => setNestedData(`team.items.${index}.linkUrl`, e.target.value)}
+                onChange={(val) => setNestedData(`team.items.${index}.linkUrl`, val)}
                 className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
               />
             )}

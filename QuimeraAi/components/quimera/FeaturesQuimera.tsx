@@ -23,36 +23,36 @@ interface FeaturesQuimeraProps {
     textDropShadow?: boolean;
 }
 
-const defaultFeatures = [
+const getDefaultFeatures = (t: any) => [
     {
         icon: 'Bot',
-        title: 'Generación por IA',
-        description: 'Sitios web completos, copys persuasivos y diseño impecable generados en segundos por nuestra IA avanzada.'
+        title: t('quimera.features.item1.title', 'Generación por IA'),
+        description: t('quimera.features.item1.desc', 'Sitios web completos, copys persuasivos y diseño impecable generados en segundos por nuestra IA avanzada.')
     },
     {
         icon: 'Palette',
-        title: 'Editor Visual Intuitivo',
-        description: 'Personaliza cada detalle con nuestro potente editor drag & drop. Sin necesidad de escribir código.'
+        title: t('quimera.features.item2.title', 'Editor Visual Intuitivo'),
+        description: t('quimera.features.item2.desc', 'Personaliza cada detalle con nuestro potente editor drag & drop. Sin necesidad de escribir código.')
     },
     {
         icon: 'Globe',
-        title: 'Dominios Personalizados',
-        description: 'Conecta tu propio dominio fácilmente para mantener una presencia de marca profesional.'
+        title: t('quimera.features.item3.title', 'Dominios Personalizados'),
+        description: t('quimera.features.item3.desc', 'Conecta tu propio dominio fácilmente para mantener una presencia de marca profesional.')
     },
     {
         icon: 'Zap',
-        title: 'Rendimiento Extremo',
-        description: 'Optimización automática de imágenes y código para tiempos de carga ultrarrápidos y mejor SEO.'
+        title: t('quimera.features.item4.title', 'Rendimiento Extremo'),
+        description: t('quimera.features.item4.desc', 'Optimización automática de imágenes y código para tiempos de carga ultrarrápidos y mejor SEO.')
     },
     {
         icon: 'Shield',
-        title: 'Seguridad Empresarial',
-        description: 'Certificados SSL gratuitos, protección DDoS y copias de seguridad automáticas de tu sitio.'
+        title: t('quimera.features.item5.title', 'Seguridad Empresarial'),
+        description: t('quimera.features.item5.desc', 'Certificados SSL gratuitos, protección DDoS y copias de seguridad automáticas de tu sitio.')
     },
     {
         icon: 'Sparkles',
-        title: 'Marca Blanca',
-        description: 'Agencias y freelancers pueden revender la plataforma bajo su propia marca sin menciones de Quimera.'
+        title: t('quimera.features.item6.title', 'Marca Blanca'),
+        description: t('quimera.features.item6.desc', 'Agencias y freelancers pueden revender la plataforma bajo su propia marca sin menciones de Quimera.')
     }
 ];
 
@@ -71,11 +71,12 @@ const getIcon = (iconName: string) => {
 const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
     title,
     subtitle,
-    features = defaultFeatures,
+    features,
     colors = {},
     textDropShadow = false
 }) => {
     const { t } = useTranslation();
+    const displayFeatures = features || getDefaultFeatures(t);
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
@@ -86,8 +87,8 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
     const iconColor = colors.iconColor || accentColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', 'Escribe el título aquí...');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.features.title', 'Escribe el título aquí...');
+    const displaySubtitle = subtitle || t('quimera.features.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -109,9 +110,9 @@ const FeaturesQuimera: React.FC<FeaturesQuimeraProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-                    {features.map((feature, index) => {
-                        const displayFeatureTitle = feature.title || t('editor.placeholder.title', 'Título');
-                        const displayFeatureDesc = feature.description || t('editor.placeholder.description', 'Descripción');
+                    {displayFeatures.map((feature, index) => {
+                        const displayFeatureTitle = feature.title || t('quimera.features.item.title', 'Título');
+                        const displayFeatureDesc = feature.description || t('quimera.features.item.desc', 'Descripción');
 
                         return (
                         <div 

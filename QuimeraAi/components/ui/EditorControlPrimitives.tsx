@@ -5,6 +5,8 @@ import { ChevronDown, Check, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, Circ
 // --- Editor Control Primitives ---
 // Extracted from Controls.tsx for reusability across the editor
 
+import { mergeI18nValue } from '../../utils/i18nContent';
+
 export const Input = ({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string }) => (
   <div className={`mb-4 ${className || ''}`}>
     {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
@@ -24,6 +26,115 @@ export const TextArea = ({ label, className, ...props }: React.TextareaHTMLAttri
     />
   </div>
 );
+
+export const I18nInput = ({ label, value, onChange, className, ...props }: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & { label?: string, value: string | Record<string, string> | undefined | null, onChange: (val: Record<string, string>) => void }) => {
+  const [activeLang, setActiveLang] = useState<'es' | 'en'>('es');
+  
+  const currentValue = typeof value === 'object' && value !== null
+    ? (value[activeLang] || '')
+    : (activeLang === 'es' ? ((value as string) || '') : '');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(mergeI18nValue(value, e.target.value, activeLang));
+  };
+
+  return (
+    <div className={`mb-4 ${className || ''}`}>
+      <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
+        {label ? (
+          <label className="block text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">{label}</label>
+        ) : <div />}
+        <div className="flex bg-q-surface rounded overflow-hidden border border-q-border/60">
+          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>ES</button>
+          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>EN</button>
+        </div>
+      </div>
+      <input
+        {...props}
+        value={currentValue}
+        onChange={handleChange}
+        className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 transition-all placeholder:text-q-text-secondary/50"
+      />
+    </div>
+  );
+};
+
+export const I18nTextArea = ({ label, value, onChange, className, ...props }: Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'> & { label?: string, value: string | Record<string, string> | undefined | null, onChange: (val: Record<string, string>) => void }) => {
+  const [activeLang, setActiveLang] = useState<'es' | 'en'>('es');
+  
+  const currentValue = typeof value === 'object' && value !== null
+    ? (value[activeLang] || '')
+    : (activeLang === 'es' ? ((value as string) || '') : '');
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(mergeI18nValue(value, e.target.value, activeLang));
+  };
+
+  return (
+    <div className={`mb-4 ${className || ''}`}>
+      <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
+        {label ? (
+          <label className="block text-[11px] font-semibold text-q-text-secondary uppercase tracking-wider">{label}</label>
+        ) : <div />}
+        <div className="flex bg-q-surface rounded overflow-hidden border border-q-border/60">
+          <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>ES</button>
+          <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-0.5 text-[10px] font-medium transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-bg'}`}>EN</button>
+        </div>
+      </div>
+      <textarea
+        {...props}
+        value={currentValue}
+        onChange={handleChange}
+        className="w-full bg-q-bg/80 border border-q-border/80 rounded-md px-3 py-2.5 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/25 focus:border-q-accent/70 resize-y min-h-[88px] transition-all placeholder:text-q-text-secondary/50"
+      />
+    </div>
+  );
+};
+
+export const I18nStringArrayEditor = ({ label, value, onChange, placeholder, className }: { label?: string, value: any[], onChange: (val: any[]) => void, placeholder?: string, className?: string }) => {
+  const items = Array.isArray(value) ? value : [];
+  return (
+    <div className={`mb-4 ${className || ''}`}>
+      {label && <label className="block text-[11px] font-semibold text-q-text-secondary mb-1.5 uppercase tracking-wider">{label}</label>}
+      <div className="space-y-2">
+        {items.map((item, index) => (
+          <div key={index} className="flex gap-2 items-start">
+            <div className="flex-1">
+              <I18nInput
+                value={item}
+                onChange={(val) => {
+                  const newItems = [...items];
+                  newItems[index] = val;
+                  onChange(newItems);
+                }}
+                className="mb-0"
+                placeholder={placeholder}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const newItems = items.filter((_, i) => i !== index);
+                onChange(newItems);
+              }}
+              className="mt-1 p-1.5 text-q-text-secondary hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange([...items, { es: '', en: '' }])}
+          className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-xs font-medium mt-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Item
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export interface SelectGroup {
   label: string;

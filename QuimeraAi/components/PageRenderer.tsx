@@ -14,6 +14,8 @@ import { PageData, ThemeData, PageSection } from '../types';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { initialData } from '../data/initialData';
+import { useTranslation } from 'react-i18next';
+import { resolveI18nSectionData } from '../utils/i18nContent';
 
 // Import section components
 import Header from './Header';
@@ -141,6 +143,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     onNavigate,
     contentOnly = false,
 }) => {
+    const { i18n } = useTranslation();
+    
     // Get component styles from project (published with the project)
     const componentStyles = project.componentStyles || {};
 
@@ -169,9 +173,9 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         // If neither exists, return the component data or undefined
         if (!componentData && !styles) return undefined;
         // If only styles exist (no user data), use styles as base
-        if (!componentData && styles) return styles;
+        if (!componentData && styles) return resolveI18nSectionData(styles, i18n.language);
         // If only data exists (no default styles), return data
-        if (!styles) return componentData;
+        if (!styles) return resolveI18nSectionData(componentData, i18n.language);
 
         // First merge the colors: defaults, then user/template colors
         const mergedColors = {
@@ -189,13 +193,16 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             ...componentData.cornerGradient,    // user cornerGradient changes override
         } : componentData.cornerGradient;
 
-        return {
+        const mergedResult = {
             ...styles,              // defaults first
             ...componentData,       // user changes override defaults
             colors: derivedColors,  // Use derived colors with all missing values filled in
             ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
         };
-    }, [baseData, componentStyles]);
+
+        // Resolve i18n data
+        return resolveI18nSectionData(mergedResult, i18n.language);
+    }, [baseData, componentStyles, i18n.language]);
 
     // Create merged data for all components
     const mergedData = useMemo((): PageData => {

@@ -26,22 +26,22 @@ interface MetricsQuimeraProps {
     isPreviewMode?: boolean;
 }
 
-const defaultMetrics = [
+const getDefaultMetrics = (t: any) => [
     {
-        title: '10x',
-        description: 'Más rápido que el desarrollo tradicional'
+        title: t('quimera.metrics.item1.title', '10x'),
+        description: t('quimera.metrics.item1.desc', 'Más rápido que el desarrollo tradicional')
     },
     {
-        title: '99.9%',
-        description: 'Uptime garantizado en todos los proyectos'
+        title: t('quimera.metrics.item2.title', '99.9%'),
+        description: t('quimera.metrics.item2.desc', 'Uptime garantizado en todos los proyectos')
     },
     {
-        title: '+5k',
-        description: 'Usuarios activos diariamente'
+        title: t('quimera.metrics.item3.title', '+5k'),
+        description: t('quimera.metrics.item3.desc', 'Usuarios activos diariamente')
     },
     {
-        title: '24/7',
-        description: 'Soporte técnico ininterrumpido'
+        title: t('quimera.metrics.item4.title', '24/7'),
+        description: t('quimera.metrics.item4.desc', 'Soporte técnico ininterrumpido')
     }
 ];
 
@@ -63,10 +63,10 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
     // In some components the data might be mapped as features or items
-    const displayMetrics = features?.length ? features : (items?.length ? items : defaultMetrics);
+    const displayMetrics = features?.length ? features : (items?.length ? items : getDefaultMetrics(t));
     
-    const displayTitle = title || t('editor.placeholder.title', 'Impacto Demostrado');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.metrics.title', 'Impacto Demostrado');
+    const displaySubtitle = subtitle || t('quimera.metrics.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -88,8 +88,8 @@ const MetricsQuimera: React.FC<MetricsQuimeraProps> = ({
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
                     {displayMetrics.map((metric, index) => {
-                        const displayMetricTitle = metric.title || t('editor.placeholder.title', '100%');
-                        const displayMetricDesc = metric.description || t('editor.placeholder.description', 'Descripción de métrica');
+                        const displayMetricTitle = metric.title || t('quimera.metrics.item.title', '100%');
+                        const displayMetricDesc = metric.description || t('quimera.metrics.item.desc', 'Descripción de métrica');
                         
                         return (
                         <div 

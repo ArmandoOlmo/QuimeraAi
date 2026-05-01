@@ -36,50 +36,50 @@ interface PricingQuimeraProps {
     isPreviewMode?: boolean;
 }
 
-const defaultPlans: PricingPlan[] = [
+const getDefaultPlans = (t: any): PricingPlan[] => [
     {
-        name: 'Starter',
-        description: 'Ideal para individuos empezando',
-        price: 'Free',
-        period: 'para siempre',
-        buttonText: 'Empezar Gratis',
+        name: t('quimera.pricing.plan1.name', 'Starter'),
+        description: t('quimera.pricing.plan1.desc', 'Ideal para individuos empezando'),
+        price: t('quimera.pricing.plan1.price', 'Free'),
+        period: t('quimera.pricing.plan1.period', 'para siempre'),
+        buttonText: t('quimera.pricing.plan1.button', 'Empezar Gratis'),
         features: [
-            { text: '1 Sitio web básico', included: true },
-            { text: 'Asistente de IA (10 creditos)', included: true },
-            { text: 'Soporte de la comunidad', included: true },
-            { text: 'Dominio personalizado', included: false },
-            { text: 'Marca blanca', included: false },
+            { text: t('quimera.pricing.plan1.feat1', '1 Sitio web básico'), included: true },
+            { text: t('quimera.pricing.plan1.feat2', 'Asistente de IA (10 creditos)'), included: true },
+            { text: t('quimera.pricing.plan1.feat3', 'Soporte de la comunidad'), included: true },
+            { text: t('quimera.pricing.plan1.feat4', 'Dominio personalizado'), included: false },
+            { text: t('quimera.pricing.plan1.feat5', 'Marca blanca'), included: false },
         ]
     },
     {
-        name: 'Pro',
-        description: 'Para profesionales y pequeños negocios',
+        name: t('quimera.pricing.plan2.name', 'Pro'),
+        description: t('quimera.pricing.plan2.desc', 'Para profesionales y pequeños negocios'),
         price: '$29',
         annualPrice: '$23',
-        period: 'por mes',
+        period: t('quimera.pricing.plan2.period', 'por mes'),
         isPopular: true,
-        buttonText: 'Empezar Pro',
+        buttonText: t('quimera.pricing.plan2.button', 'Empezar Pro'),
         features: [
-            { text: 'Sitios web ilimitados', included: true },
-            { text: 'Asistente de IA (Ilimitado)', included: true },
-            { text: 'Soporte prioritario', included: true },
-            { text: 'Dominio personalizado', included: true },
-            { text: 'Marca blanca', included: false },
+            { text: t('quimera.pricing.plan2.feat1', 'Sitios web ilimitados'), included: true },
+            { text: t('quimera.pricing.plan2.feat2', 'Asistente de IA (Ilimitado)'), included: true },
+            { text: t('quimera.pricing.plan2.feat3', 'Soporte prioritario'), included: true },
+            { text: t('quimera.pricing.plan2.feat4', 'Dominio personalizado'), included: true },
+            { text: t('quimera.pricing.plan2.feat5', 'Marca blanca'), included: false },
         ]
     },
     {
-        name: 'Agencia',
-        description: 'Para agencias y equipos grandes',
+        name: t('quimera.pricing.plan3.name', 'Agencia'),
+        description: t('quimera.pricing.plan3.desc', 'Para agencias y equipos grandes'),
         price: '$99',
         annualPrice: '$79',
-        period: 'por mes',
-        buttonText: 'Contactar Ventas',
+        period: t('quimera.pricing.plan3.period', 'por mes'),
+        buttonText: t('quimera.pricing.plan3.button', 'Contactar Ventas'),
         features: [
-            { text: 'Sitios web ilimitados', included: true },
-            { text: 'Asistente de IA (Ilimitado)', included: true },
-            { text: 'Soporte 24/7', included: true },
-            { text: 'Dominio personalizado', included: true },
-            { text: 'Marca blanca completa', included: true },
+            { text: t('quimera.pricing.plan3.feat1', 'Sitios web ilimitados'), included: true },
+            { text: t('quimera.pricing.plan3.feat2', 'Asistente de IA (Ilimitado)'), included: true },
+            { text: t('quimera.pricing.plan3.feat3', 'Soporte 24/7'), included: true },
+            { text: t('quimera.pricing.plan3.feat4', 'Dominio personalizado'), included: true },
+            { text: t('quimera.pricing.plan3.feat5', 'Marca blanca completa'), included: true },
         ]
     }
 ];
@@ -94,11 +94,11 @@ function transformAdminPlans(adminPlans: LandingPlan[], t: (key: string, fallbac
         description: plan.description,
         price: plan.price,
         annualPrice: plan.annualPrice,
-        period: plan.period || (plan.priceValue === 0 ? '' : t('pricingQuimera.perMonth', '/mes')),
+        period: plan.period || (plan.priceValue === 0 ? '' : t('quimera.pricing.perMonth', '/mes')),
         isPopular: plan.isPopular || plan.featured,
         buttonText: plan.priceValue === 0
-            ? t('pricingQuimera.startFree', 'Empezar Gratis')
-            : t('pricingQuimera.getStarted', 'Comenzar'),
+            ? t('quimera.pricing.startFree', 'Empezar Gratis')
+            : t('quimera.pricing.getStarted', 'Comenzar'),
         buttonLink: '/register',
         features: plan.features.map(feature => ({
             text: feature,
@@ -136,8 +136,8 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
         if (propPlans && propPlans.length > 0) {
             return propPlans;
         }
-        return defaultPlans;
-    }, [useAdminPlans, adminPricingPlans, propPlans]);
+        return getDefaultPlans(t);
+    }, [useAdminPlans, adminPricingPlans, propPlans, t]);
     
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
@@ -148,8 +148,8 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
     const cardText = colors.cardText || textColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
     
-    const displayTitle = title || t('editor.placeholder.title', 'Escribe el título aquí...');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.pricing.title', 'Escribe el título aquí...');
+    const displaySubtitle = subtitle || t('quimera.pricing.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -169,22 +169,22 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
                     
                     {/* Billing Toggle */}
                     <div className="flex items-center justify-center gap-4">
-                        <span className={`text-sm font-medium ${!annual ? 'text-white' : 'text-gray-400'}`}>{t('pricingQuimera.monthly', 'Mensual')}</span>
+                        <span className={`text-sm font-medium ${!annual ? 'text-white' : 'text-gray-400'}`}>{t('quimera.pricing.monthly', 'Mensual')}</span>
                         <ToggleControl checked={annual} onChange={setAnnual} />
                         <span className={`text-sm font-medium ${annual ? 'text-white' : 'text-gray-400'}`}>
-                            {t('pricingQuimera.annual', 'Anual')} <span className="ml-1 text-xs text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full font-body">{t('pricingQuimera.discount', '-20%')}</span>
+                            {t('quimera.pricing.annual', 'Anual')} <span className="ml-1 text-xs text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full font-body">{t('quimera.pricing.discount', '-20%')}</span>
                         </span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-stretch max-w-6xl mx-auto">
                     {(plans || []).map((plan, index) => {
-                        const displayPlanName = plan.name || t('editor.placeholder.planName', 'Plan');
-                        const displayPlanDesc = plan.description || t('editor.placeholder.planDesc', 'Descripción del plan');
+                        const displayPlanName = plan.name || t('quimera.pricing.plan.name', 'Plan');
+                        const displayPlanDesc = plan.description || t('quimera.pricing.plan.desc', 'Descripción del plan');
                         const isFree = plan.price === 'Free' || plan.price === 'Gratis' || plan.price === '$0';
                         const displayPrice = annual && plan.annualPrice && !isFree ? plan.annualPrice : (plan.price || '$0');
                         const displayPeriod = plan.period || '/mes';
-                        const displayButtonText = plan.buttonText || t('editor.placeholder.button', 'Comenzar');
+                        const displayButtonText = plan.buttonText || t('quimera.pricing.plan.button', 'Comenzar');
 
                         return (
                         <div 
@@ -200,7 +200,7 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
                             {plan.isPopular && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                     <span className="text-black text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider" style={{ backgroundColor: accentColor }}>
-                                        {t('pricingQuimera.mostPopular', 'Más Popular')}
+                                        {t('quimera.pricing.mostPopular', 'Más Popular')}
                                     </span>
                                 </div>
                             )}
@@ -231,7 +231,7 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
                                             </div>
                                         )}
                                         <span className="text-sm" style={{ color: feature.included ? textColor : secondaryColor }}>
-                                            {feature.text || t('editor.placeholder.feature', 'Escribe tu característica aquí...')}
+                                            {feature.text || t('quimera.pricing.plan.feature', 'Escribe tu característica aquí...')}
                                         </span>
                                     </div>
                                 ))}

@@ -6,6 +6,7 @@ import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle 
 import { useSafeProject } from '../contexts/project';
 import { getIconComponent } from './ui/IconSelector';
 import { Menu, X, ArrowRight, ShoppingCart, Home, FileText, Briefcase, Lightbulb, Calendar, Mail, Info } from 'lucide-react';
+import LanguageSelector from './ui/LanguageSelector';
 
 import { GlobalSearch } from './ecommerce/search';
 
@@ -241,6 +242,7 @@ const Header: React.FC<HeaderData & {
   registerText,
   sticky,
   transparent,
+  showLanguageSelector = false,
 }) => {
     // Use alternative prop names if original ones are not provided
     const actualLogoImageUrl = logoImageUrl || logoImage;
@@ -745,6 +747,7 @@ const Header: React.FC<HeaderData & {
                   />
                 )}
                 {showCart && <CartButton />}
+                {showLanguageSelector && <LanguageSelector variant="minimal" />}
                 {actualShowLogin && <LoginButton />}
                 {actualShowCta && <CtaButton />}
               </div>
@@ -772,6 +775,7 @@ const Header: React.FC<HeaderData & {
                   />
                 )}
                 {showCart && <CartButton />}
+                {showLanguageSelector && <LanguageSelector variant="minimal" />}
                 {actualShowLogin && <LoginButton />}
                 {actualShowCta && <CtaButton />}
               </div>
@@ -798,6 +802,7 @@ const Header: React.FC<HeaderData & {
                     />
                   )}
                   {showCart && <CartButton />}
+                  {showLanguageSelector && <LanguageSelector variant="minimal" />}
                   {actualShowLogin && <LoginButton />}
                   {actualShowCta && <CtaButton />}
                 </div>
@@ -823,6 +828,7 @@ const Header: React.FC<HeaderData & {
                     />
                   )}
                   {showCart && <CartButton />}
+                  {showLanguageSelector && <LanguageSelector variant="minimal" />}
                   {actualShowLogin && <LoginButton />}
                   {actualShowCta && <CtaButton />}
                 </div>
@@ -1230,6 +1236,11 @@ const Header: React.FC<HeaderData & {
                     >
                       {loginText}
                     </a>
+                  )}
+                  {showLanguageSelector && (
+                    <div className="flex justify-center py-2">
+                      <LanguageSelector variant="minimal" />
+                    </div>
                   )}
                   {actualShowCta && <CtaButton fullWidth />}
                 </div>

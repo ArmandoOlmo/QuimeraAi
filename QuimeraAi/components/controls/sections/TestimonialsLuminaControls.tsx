@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
@@ -28,10 +28,10 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.testimonialsLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'testimonialsLumina.headline', value: data.testimonialsLumina.headline, context: 'Testimonials Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.testimonialsLumina.headline || ''} 
-              onChange={(e) => setNestedData('testimonialsLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('testimonialsLumina.headline', val)} 
             />
           </AIFormControl>
 
@@ -39,9 +39,9 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.testimonialsLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'testimonialsLumina.subheadline', value: data.testimonialsLumina.subheadline || '', context: 'Testimonials Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.testimonialsLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('testimonialsLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('testimonialsLumina.subheadline', val)} 
               rows={2}
             />
           </AIFormControl>
@@ -69,23 +69,23 @@ export const renderTestimonialsLuminaControls = (deps: ControlsDeps) => {
             
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Testimonial #{idx + 1}</span>
 
-            <TextArea 
+            <I18nTextArea 
               label={t('editor.testimonialsLumina.quote', 'Quote')} 
               value={test.quote || ''} 
-              onChange={(e) => setNestedData(`testimonialsLumina.testimonials.${idx}.quote`, e.target.value)} 
+              onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.quote`, val)} 
               rows={3}
             />
 
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.testimonialsLumina.authorName', 'Author Name')} 
                 value={test.authorName || ''} 
-                onChange={(e) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorName`, e.target.value)} 
+                onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorName`, val)} 
               />
-              <Input 
+              <I18nInput 
                 label={t('editor.testimonialsLumina.authorRole', 'Author Role')} 
                 value={test.authorRole || ''} 
-                onChange={(e) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorRole`, e.target.value)} 
+                onChange={(val) => setNestedData(`testimonialsLumina.testimonials.${idx}.authorRole`, val)} 
               />
             </div>
 

@@ -24,37 +24,38 @@ interface FaqQuimeraProps {
     textDropShadow?: boolean;
 }
 
-const defaultFaqs: FaqItem[] = [
+const getDefaultFaqs = (t: any): FaqItem[] => [
     {
-        question: '¿Necesito conocimientos de programación?',
-        answer: 'Absolutamente no. QuimeraAi está diseñado para que cualquier persona pueda crear sitios web profesionales, tiendas y plataformas complejas utilizando nuestro editor visual intuitivo y la ayuda de nuestra IA.'
+        question: t('quimera.faq.item1.question', '¿Necesito conocimientos de programación?'),
+        answer: t('quimera.faq.item1.answer', 'Absolutamente no. QuimeraAi está diseñado para que cualquier persona pueda crear sitios web profesionales, tiendas y plataformas complejas utilizando nuestro editor visual intuitivo y la ayuda de nuestra IA.')
     },
     {
-        question: '¿Puedo conectar mi propio dominio?',
-        answer: 'Sí. Todos nuestros planes de pago incluyen la posibilidad de conectar tu propio dominio personalizado. También proporcionamos certificados SSL gratuitos para todos los dominios.'
+        question: t('quimera.faq.item2.question', '¿Puedo conectar mi propio dominio?'),
+        answer: t('quimera.faq.item2.answer', 'Sí. Todos nuestros planes de pago incluyen la posibilidad de conectar tu propio dominio personalizado. También proporcionamos certificados SSL gratuitos para todos los dominios.')
     },
     {
-        question: '¿Cómo funciona la marca blanca para agencias?',
-        answer: 'El plan Agencia te permite eliminar toda la marca de QuimeraAi del editor y del sitio final. Tus clientes verán tu logo, tus colores y tu dominio en el panel de control, permitiéndote ofrecer la plataforma como un servicio propio.'
+        question: t('quimera.faq.item3.question', '¿Cómo funciona la marca blanca para agencias?'),
+        answer: t('quimera.faq.item3.answer', 'El plan Agencia te permite eliminar toda la marca de QuimeraAi del editor y del sitio final. Tus clientes verán tu logo, tus colores y tu dominio en el panel de control, permitiéndote ofrecer la plataforma como un servicio propio.')
     },
     {
-        question: '¿Están los sitios web optimizados para SEO y móviles?',
-        answer: 'Sí, todas las páginas generadas por QuimeraAi son 100% responsivas y están optimizadas técnicamente para SEO, incluyendo renderizado en el servidor (SSR), etiquetas automáticas y velocidades de carga ultrarrápidas.'
+        question: t('quimera.faq.item4.question', '¿Están los sitios web optimizados para SEO y móviles?'),
+        answer: t('quimera.faq.item4.answer', 'Sí, todas las páginas generadas por QuimeraAi son 100% responsivas y están optimizadas técnicamente para SEO, incluyendo renderizado en el servidor (SSR), etiquetas automáticas y velocidades de carga ultrarrápidas.')
     },
     {
-        question: '¿Puedo exportar mi código?',
-        answer: 'QuimeraAi es una plataforma gestionada. No permitimos la exportación directa del código fuente, pero aseguramos que tus datos siempre te pertenezcan y puedes exportar tu contenido.'
+        question: t('quimera.faq.item5.question', '¿Puedo exportar mi código?'),
+        answer: t('quimera.faq.item5.answer', 'QuimeraAi es una plataforma gestionada. No permitimos la exportación directa del código fuente, pero aseguramos que tus datos siempre te pertenezcan y puedes exportar tu contenido.')
     }
 ];
 
 const FaqQuimera: React.FC<FaqQuimeraProps> = ({
     title,
     subtitle,
-    faqs = defaultFaqs,
+    faqs,
     colors = {},
     textDropShadow = false
 }) => {
     const { t } = useTranslation();
+    const displayFaqs = faqs || getDefaultFaqs(t);
     const [openIndex, setOpenIndex] = useState<number | null>(0);
     
     const bgColor = colors.background || '#050505';
@@ -67,8 +68,8 @@ const FaqQuimera: React.FC<FaqQuimeraProps> = ({
     const iconColor = colors.iconColor || accentColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', 'Preguntas Frecuentes');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.faq.title', 'Preguntas Frecuentes');
+    const displaySubtitle = subtitle || t('quimera.faq.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -89,9 +90,9 @@ const FaqQuimera: React.FC<FaqQuimeraProps> = ({
                 </div>
 
                 <div className="space-y-4">
-                    {faqs.map((faq, index) => {
-                        const displayQuestion = faq.question || t('editor.placeholder.question', '¿Pregunta?');
-                        const displayAnswer = faq.answer || t('editor.placeholder.answer', 'Respuesta detallada.');
+                    {displayFaqs.map((faq, index) => {
+                        const displayQuestion = faq.question || t('quimera.faq.item.question', '¿Pregunta?');
+                        const displayAnswer = faq.answer || t('quimera.faq.item.answer', 'Respuesta detallada.');
 
                         return (
                         <div 

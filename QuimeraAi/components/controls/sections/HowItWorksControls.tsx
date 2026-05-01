@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -37,9 +37,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <Input label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(e) => setNestedData('howItWorks.title', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(val) => setNestedData('howItWorks.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(e) => setNestedData('howItWorks.description', e.target.value)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(val) => setNestedData('howItWorks.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
       </div>
 
@@ -75,16 +75,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <Trash2 size={14} />
             </button>
           </div>
-          <input
+          <I18nInput
             placeholder="Title"
             value={item.title}
-            onChange={(e) => setNestedData(`howItWorks.items.${index}.title`, e.target.value)}
+            onChange={(val) => setNestedData(`howItWorks.items.${index}.title`, val)}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />
           <textarea
             placeholder="Description"
             value={item.description}
-            onChange={(e) => setNestedData(`howItWorks.items.${index}.description`, e.target.value)}
+            onChange={(val) => setNestedData(`howItWorks.items.${index}.description`, val)}
             rows={2}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mb-2"
           />

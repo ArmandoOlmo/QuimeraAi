@@ -47,28 +47,28 @@ const ChatbotBuilderQuimera: React.FC<ChatbotBuilderQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('chatbotBuilderQuimera.title', 'Crea un Chatbot a tu Medida');
-    const displaySubtitle = subtitle || t('chatbotBuilderQuimera.subtitle', 'Personaliza cada aspecto de tu asistente. Entrénalo con tus propios documentos, define su personalidad y adapta su diseño visual a tu marca corporativa en segundos.');
+    const displayTitle = title || t('quimera.chatbotbuilder.title', 'Crea un Chatbot a tu Medida');
+    const displaySubtitle = subtitle || t('quimera.chatbotbuilder.subtitle', 'Personaliza cada aspecto de tu asistente. Entrénalo con tus propios documentos, define su personalidad y adapta su diseño visual a tu marca corporativa en segundos.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('chatbotBuilderQuimera.feat1Title', 'Base de Conocimiento'),
-            description: t('chatbotBuilderQuimera.feat1Desc', 'Sube PDFs, pega URLs o escribe texto plano para que tu chatbot conozca todo sobre tu negocio al instante.'),
+            title: t('quimera.chatbotbuilder.feat1.title', 'Base de Conocimiento'),
+            description: t('quimera.chatbotbuilder.feat1.desc', 'Sube PDFs, pega URLs o escribe texto plano para que tu chatbot conozca todo sobre tu negocio al instante.'),
             icon: 'Database'
         },
         {
-            title: t('chatbotBuilderQuimera.feat2Title', 'Identidad Visual'),
-            description: t('chatbotBuilderQuimera.feat2Desc', 'Cambia colores, tipografía, logo y posición para que el chat se integre perfectamente con tu página web.'),
+            title: t('quimera.chatbotbuilder.feat2.title', 'Identidad Visual'),
+            description: t('quimera.chatbotbuilder.feat2.desc', 'Cambia colores, tipografía, logo y posición para que el chat se integre perfectamente con tu página web.'),
             icon: 'PaintBucket'
         },
         {
-            title: t('chatbotBuilderQuimera.feat3Title', 'Personalidad y Comportamiento'),
-            description: t('chatbotBuilderQuimera.feat3Desc', 'Configura instrucciones detalladas (prompts) para definir el tono de voz, el rol del bot y sus reglas de atención.'),
+            title: t('quimera.chatbotbuilder.feat3.title', 'Personalidad y Comportamiento'),
+            description: t('quimera.chatbotbuilder.feat3.desc', 'Configura instrucciones detalladas (prompts) para definir el tono de voz, el rol del bot y sus reglas de atención.'),
             icon: 'Settings'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Auto-cycle tabs if not interacted
     useEffect(() => {
@@ -238,7 +238,7 @@ const ChatbotBuilderQuimera: React.FC<ChatbotBuilderQuimeraProps> = ({
                         <div className="mb-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                                 <Settings className="w-4 h-4 animate-[spin_4s_linear_infinite]" />
-                                {t('chatbotBuilderQuimera.badge', 'Chatbot Studio')}
+                                {t('quimera.chatbotbuilder.badge', 'Chatbot Studio')}
                             </div>
                             <h2 className={`text-4xl md:text-5xl lg:text-[3.5rem] font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                                 style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>

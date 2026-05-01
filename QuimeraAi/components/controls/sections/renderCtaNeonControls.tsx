@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Link, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
@@ -27,10 +27,10 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             </label>
             
             <div className="mb-4">
-                <Input 
+                <I18nInput 
                   label={t('editor.ctaNeon.buttonText', 'Texto del Botón')} 
                   value={sectionData[textKey] || ''} 
-                  onChange={(e) => setNestedData(`ctaNeon.${textKey}`, e.target.value)} 
+                  onChange={(val) => setNestedData(`ctaNeon.${textKey}`, val)} 
                 />
             </div>
     
@@ -97,7 +97,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
     
             {/* Manual URL Input */}
             {linkType === 'manual' && (
-              <Input
+              <I18nInput
                 label=""
                 value={sectionData[linkKey] || ''}
                 onChange={(v) => setNestedData(`ctaNeon.${linkKey}`, v)}
@@ -151,9 +151,9 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                         context: 'CTA Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
-                        onChange={(e) => setNestedData('ctaNeon.headline', e.target.value)}
+                        onChange={(val) => setNestedData('ctaNeon.headline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -166,9 +166,9 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                         context: 'CTA Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
-                        onChange={(e) => setNestedData('ctaNeon.subheadline', e.target.value)}
+                        onChange={(val) => setNestedData('ctaNeon.subheadline', val)}
                         rows={2}
                     />
                 </AIFormControl>

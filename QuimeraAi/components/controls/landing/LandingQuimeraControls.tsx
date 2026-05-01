@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ColorControl from '../../ui/ColorControl';
-import { Input, TextArea, Select, ToggleControl, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, SliderControl, I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { Type, Settings, Link as LinkIcon, Image, Layout, CheckSquare, Plus, Trash2, Palette, Box, FolderOpen, FileText, Layers, Maximize2 } from 'lucide-react';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
@@ -68,10 +68,10 @@ const AnchorLinkControl: React.FC<{ label: string, fieldKey: string, deps: Contr
 
             {/* Manual URL Input */}
             {linkType === 'manual' && (
-                <Input
+                <I18nInput
                     label=""
                     value={data[fieldKey] || ''}
-                    onChange={(e) => setNestedData(fieldKey, e.target.value)}
+                    onChange={(val) => setNestedData(fieldKey, val)}
                     placeholder="https://... o /pagina"
                     className="mb-0"
                 />
@@ -142,10 +142,10 @@ const QuimeraListControl: React.FC<{
                         {fields.map(field => {
                             if (field.type === 'textarea') {
                                 return (
-                                    <TextArea
+                                    <I18nTextArea
                                         key={field.key}
                                         value={item[field.key] || ''}
-                                        onChange={(e) => handleChange(index, field.key, e.target.value)}
+                                        onChange={(val) => handleChange(index, field.key, val)}
                                         placeholder={field.label}
                                         rows={2}
                                     />
@@ -175,10 +175,10 @@ const QuimeraListControl: React.FC<{
                                 );
                             }
                             return (
-                                <Input
+                                <I18nInput
                                     key={field.key}
                                     value={item[field.key] || ''}
-                                    onChange={(e) => handleChange(index, field.key, e.target.value)}
+                                    onChange={(val) => handleChange(index, field.key, val)}
                                     placeholder={field.label}
                                     label=""
                                 />
@@ -213,10 +213,10 @@ const renderCommonTextControls = (deps: ControlsDeps, defaultTitle?: string, def
                 {t('controls.content', 'Contenido')}
             </label>
             <AIFormControl label="Título" onAssistClick={() => setAiAssistField?.({ path: 'title', value: data.title, context: 'Section Title' })}>
-                <TextArea value={data.title || ''} onChange={(e) => setNestedData('title', e.target.value)} rows={2} placeholder={defaultTitle || "Escribe el título aquí..."} />
+                <I18nTextArea value={data.title || ''} onChange={(val) => setNestedData('title', val)} rows={2} placeholder={defaultTitle || "Escribe el título aquí..."} />
             </AIFormControl>
             <AIFormControl label="Subtítulo" onAssistClick={() => setAiAssistField?.({ path: 'subtitle', value: data.subtitle, context: 'Section Subtitle' })}>
-                <TextArea value={data.subtitle || ''} onChange={(e) => setNestedData('subtitle', e.target.value)} rows={3} placeholder={defaultSubtitle || "Escribe el subtítulo aquí..."} />
+                <I18nTextArea value={data.subtitle || ''} onChange={(val) => setNestedData('subtitle', val)} rows={3} placeholder={defaultSubtitle || "Escribe el subtítulo aquí..."} />
             </AIFormControl>
         </div>
     );
@@ -237,13 +237,13 @@ export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer
                     {t('editor.heroQuimeraControls.content', 'Contenido')}
                 </label>
                 <AIFormControl label={t('editor.heroQuimeraControls.badgeText', 'Texto del Badge')} onAssistClick={() => setAiAssistField?.({ path: 'badgeText', value: data.badgeText, context: 'Hero Badge' })}>
-                    <Input value={data.badgeText || ''} onChange={(e) => setNestedData('badgeText', e.target.value)} placeholder="QuimeraAi Agency OS 2.0" label="" />
+                    <I18nInput value={data.badgeText || ''} onChange={(val) => setNestedData('badgeText', val)} placeholder="QuimeraAi Agency OS 2.0" label="" />
                 </AIFormControl>
                 <AIFormControl label={t('editor.heroQuimeraControls.title', 'Título')} onAssistClick={() => setAiAssistField?.({ path: 'title', value: data.title, context: 'Hero Title' })}>
-                    <TextArea value={data.title || ''} onChange={(e) => setNestedData('title', e.target.value)} rows={2} placeholder="Diseña tu futuro digital" />
+                    <I18nTextArea value={data.title || ''} onChange={(val) => setNestedData('title', val)} rows={2} placeholder="Diseña tu futuro digital" />
                 </AIFormControl>
                 <AIFormControl label={t('editor.heroQuimeraControls.subtitle', 'Subtítulo')} onAssistClick={() => setAiAssistField?.({ path: 'subtitle', value: data.subtitle, context: 'Hero Subtitle' })}>
-                    <TextArea value={data.subtitle || ''} onChange={(e) => setNestedData('subtitle', e.target.value)} rows={3} placeholder="Crea sitios web impresionantes..." />
+                    <I18nTextArea value={data.subtitle || ''} onChange={(val) => setNestedData('subtitle', val)} rows={3} placeholder="Crea sitios web impresionantes..." />
                 </AIFormControl>
             </div>
 
@@ -253,10 +253,10 @@ export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer
                     <Layout size={14} />
                     {t('editor.heroQuimeraControls.buttons', 'Botones')}
                 </label>
-                <Input label={t('editor.heroQuimeraControls.primaryButtonText', 'Texto Botón Principal')} value={data.buttonText || ''} onChange={(e) => setNestedData('buttonText', e.target.value)} placeholder="Ej. Empezar Gratis" />
+                <I18nInput label={t('editor.heroQuimeraControls.primaryButtonText', 'Texto Botón Principal')} value={data.buttonText || ''} onChange={(val) => setNestedData('buttonText', val)} placeholder="Ej. Empezar Gratis" />
                 <AnchorLinkControl label={t('editor.heroQuimeraControls.primaryButtonLink', 'Enlace Botón Principal')} fieldKey="buttonLink" deps={deps} />
                 <div className="mt-4 border-t border-q-border pt-4">
-                    <Input label={t('editor.heroQuimeraControls.secondaryButtonText', 'Texto Botón Secundario')} value={data.secondaryButtonText || ''} onChange={(e) => setNestedData('secondaryButtonText', e.target.value)} placeholder="Ej. Ver Demo" />
+                    <I18nInput label={t('editor.heroQuimeraControls.secondaryButtonText', 'Texto Botón Secundario')} value={data.secondaryButtonText || ''} onChange={(val) => setNestedData('secondaryButtonText', val)} placeholder="Ej. Ver Demo" />
                     <AnchorLinkControl label={t('editor.heroQuimeraControls.secondaryButtonLink', 'Enlace Botón Secundario')} fieldKey="secondaryButtonLink" deps={deps} />
                 </div>
             </div>
@@ -482,24 +482,24 @@ export const renderCtaQuimeraControls = (deps: ControlsDeps & { portalContainer?
                     {t('controls.content', 'Contenido')}
                 </label>
                 <AIFormControl label="Etiqueta Superior (Badge)" onAssistClick={() => setAiAssistField?.({ path: 'badgeText', value: data.badgeText, context: 'CTA Badge' })}>
-                    <Input value={data.badgeText || ''} onChange={(e) => setNestedData('badgeText', e.target.value)} placeholder="Ej. Sin tarjeta de crédito requerida" label="" />
+                    <I18nInput value={data.badgeText || ''} onChange={(val) => setNestedData('badgeText', val)} placeholder="Ej. Sin tarjeta de crédito requerida" label="" />
                 </AIFormControl>
                 <AIFormControl label="Título" onAssistClick={() => setAiAssistField?.({ path: 'title', value: data.title, context: 'Section Title' })}>
-                    <TextArea value={data.title || ''} onChange={(e) => setNestedData('title', e.target.value)} rows={2} placeholder="¿Listo para escalar tu negocio digital?" />
+                    <I18nTextArea value={data.title || ''} onChange={(val) => setNestedData('title', val)} rows={2} placeholder="¿Listo para escalar tu negocio digital?" />
                 </AIFormControl>
                 <AIFormControl label="Subtítulo" onAssistClick={() => setAiAssistField?.({ path: 'subtitle', value: data.subtitle, context: 'Section Subtitle' })}>
-                    <TextArea value={data.subtitle || ''} onChange={(e) => setNestedData('subtitle', e.target.value)} rows={3} placeholder="Escribe el subtítulo aquí..." />
+                    <I18nTextArea value={data.subtitle || ''} onChange={(val) => setNestedData('subtitle', val)} rows={3} placeholder="Escribe el subtítulo aquí..." />
                 </AIFormControl>
             </div>
             <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border mb-4">
                 <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                     <Layout size={14} /> Botones
                 </label>
-                <Input label="Texto Botón Principal" value={data.buttonText || ''} onChange={(e) => setNestedData('buttonText', e.target.value)} placeholder="Ej. Empezar Gratis" />
+                <I18nInput label="Texto Botón Principal" value={data.buttonText || ''} onChange={(val) => setNestedData('buttonText', val)} placeholder="Ej. Empezar Gratis" />
                 <AnchorLinkControl label="Enlace Botón Principal" fieldKey="buttonLink" deps={deps} />
                 
                 <div className="mt-4 border-t border-q-border pt-4">
-                    <Input label="Texto Botón Secundario (Opcional)" value={data.secondaryButtonText || ''} onChange={(e) => setNestedData('secondaryButtonText', e.target.value)} placeholder="Ej. Ver Demo" />
+                    <I18nInput label="Texto Botón Secundario (Opcional)" value={data.secondaryButtonText || ''} onChange={(val) => setNestedData('secondaryButtonText', val)} placeholder="Ej. Ver Demo" />
                     <AnchorLinkControl label="Enlace Botón Secundario" fieldKey="secondaryButtonLink" deps={deps} />
                 </div>
             </div>
@@ -1120,7 +1120,7 @@ export const renderAgencyWhiteLabelQuimeraControls = (deps: ControlsDeps & { por
                 <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
                     <Layout size={14} /> Botón de Acción
                 </label>
-                <Input label="Texto del Botón" value={data.buttonText || ''} onChange={(e) => setNestedData('buttonText', e.target.value)} placeholder="Ej. Ser Partner" />
+                <I18nInput label="Texto del Botón" value={data.buttonText || ''} onChange={(val) => setNestedData('buttonText', val)} placeholder="Ej. Ser Partner" />
             </div>
             {/* Anchor Link Component */}
             <AnchorLinkControl label="Enlace del Botón" fieldKey="buttonLink" deps={deps} />

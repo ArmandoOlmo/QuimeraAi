@@ -83,29 +83,29 @@ const WhatIsQuimeraSection: React.FC<WhatIsQuimeraSectionProps> = ({
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
     // ── Content Resolution (props → i18n fallback) ──
-    const displayTitle = title || t('whatIsQuimera.title', 'Todo lo que tu negocio necesita para crecer en internet, impulsado por AI.');
-    const displaySubtitle = subtitle || t('whatIsQuimera.subtitle', 'Quimera AI combina creación de websites, contenido, automatización, ecommerce, leads y asistentes inteligentes en una sola plataforma diseñada para que cualquier negocio pueda lanzar, vender y operar más rápido.');
-    const displayIntro = introText || t('whatIsQuimera.introText', 'Quimera AI es una plataforma inteligente que convierte la información de tu negocio en una presencia digital completa. Desde un website profesional hasta herramientas de ventas, contenido, automatización y atención al cliente — todo trabaja conectado en un mismo ecosistema.');
+    const displayTitle = title || t('quimera.whatis.title', 'Todo lo que tu negocio necesita para crecer en internet, impulsado por AI.');
+    const displaySubtitle = subtitle || t('quimera.whatis.subtitle', 'Quimera AI combina creación de websites, contenido, automatización, ecommerce, leads y asistentes inteligentes en una sola plataforma diseñada para que cualquier negocio pueda lanzar, vender y operar más rápido.');
+    const displayIntro = introText || t('quimera.whatis.introText', 'Quimera AI es una plataforma inteligente que convierte la información de tu negocio en una presencia digital completa. Desde un website profesional hasta herramientas de ventas, contenido, automatización y atención al cliente — todo trabaja conectado en un mismo ecosistema.');
 
-    const defaultBenefits: BenefitCard[] = [
-        { icon: 'Globe', title: t('whatIsQuimera.benefit1Title', 'Websites generados con AI'), description: t('whatIsQuimera.benefit1Desc', 'Crea páginas profesionales a partir de una descripción simple de tu negocio, con estructura, textos y secciones listas para publicar.') },
-        { icon: 'Paintbrush', title: t('whatIsQuimera.benefit2Title', 'Editor visual fácil de usar'), description: t('whatIsQuimera.benefit2Desc', 'Ajusta textos, colores, imágenes, secciones y estilo sin depender de procesos complicados.') },
-        { icon: 'FileText', title: t('whatIsQuimera.benefit3Title', 'Contenido inteligente'), description: t('whatIsQuimera.benefit3Desc', 'Genera textos para páginas, productos, campañas, blogs, emails y redes sociales directamente desde la plataforma.') },
-        { icon: 'Bot', title: t('whatIsQuimera.benefit4Title', 'Chatbot y asistentes integrados'), description: t('whatIsQuimera.benefit4Desc', 'Atiende visitantes, captura leads, responde preguntas frecuentes y guía clientes usando asistentes conectados a la información del negocio.') },
-        { icon: 'Users', title: t('whatIsQuimera.benefit5Title', 'Leads, citas y clientes'), description: t('whatIsQuimera.benefit5Desc', 'Centraliza contactos, formularios, solicitudes, reservaciones y oportunidades para dar seguimiento desde un solo lugar.') },
-        { icon: 'ShoppingBag', title: t('whatIsQuimera.benefit6Title', 'Ecommerce y servicios'), description: t('whatIsQuimera.benefit6Desc', 'Vende productos, servicios, membresías o recursos digitales con una experiencia integrada al website.') },
-        { icon: 'Workflow', title: t('whatIsQuimera.benefit7Title', 'Automatización de procesos'), description: t('whatIsQuimera.benefit7Desc', 'Reduce tareas repetitivas con flujos automáticos para mensajes, seguimiento, contenido y operaciones internas.') },
-        { icon: 'Building2', title: t('whatIsQuimera.benefit8Title', 'Preparada para agencias'), description: t('whatIsQuimera.benefit8Desc', 'Administra múltiples clientes, proyectos y websites desde una base escalable pensada para crecimiento.') },
+    const getDefaultBenefits = (t: any): BenefitCard[] => [
+        { icon: 'Globe', title: t('quimera.whatis.benefit1.title', 'Websites generados con AI'), description: t('quimera.whatis.benefit1.desc', 'Crea páginas profesionales a partir de una descripción simple de tu negocio, con estructura, textos y secciones listas para publicar.') },
+        { icon: 'Paintbrush', title: t('quimera.whatis.benefit2.title', 'Editor visual fácil de usar'), description: t('quimera.whatis.benefit2.desc', 'Ajusta textos, colores, imágenes, secciones y estilo sin depender de procesos complicados.') },
+        { icon: 'FileText', title: t('quimera.whatis.benefit3.title', 'Contenido inteligente'), description: t('quimera.whatis.benefit3.desc', 'Genera textos para páginas, productos, campañas, blogs, emails y redes sociales directamente desde la plataforma.') },
+        { icon: 'Bot', title: t('quimera.whatis.benefit4.title', 'Chatbot y asistentes integrados'), description: t('quimera.whatis.benefit4.desc', 'Atiende visitantes, captura leads, responde preguntas frecuentes y guía clientes usando asistentes conectados a la información del negocio.') },
+        { icon: 'Users', title: t('quimera.whatis.benefit5.title', 'Leads, citas y clientes'), description: t('quimera.whatis.benefit5.desc', 'Centraliza contactos, formularios, solicitudes, reservaciones y oportunidades para dar seguimiento desde un solo lugar.') },
+        { icon: 'ShoppingBag', title: t('quimera.whatis.benefit6.title', 'Ecommerce y servicios'), description: t('quimera.whatis.benefit6.desc', 'Vende productos, servicios, membresías o recursos digitales con una experiencia integrada al website.') },
+        { icon: 'Workflow', title: t('quimera.whatis.benefit7.title', 'Automatización de procesos'), description: t('quimera.whatis.benefit7.desc', 'Reduce tareas repetitivas con flujos automáticos para mensajes, seguimiento, contenido y operaciones internas.') },
+        { icon: 'Building2', title: t('quimera.whatis.benefit8.title', 'Preparada para agencias'), description: t('quimera.whatis.benefit8.desc', 'Administra múltiples clientes, proyectos y websites desde una base escalable pensada para crecimiento.') },
     ];
 
-    const displayBenefits = benefits && benefits.length > 0 ? benefits : defaultBenefits;
+    const displayBenefits = benefits && benefits.length > 0 ? benefits : getDefaultBenefits(t);
 
-    const displayDiffTitle = differentiatorTitle || t('whatIsQuimera.diffTitle', 'No es solo crear una página. Es construir el sistema digital de tu negocio.');
-    const displayDiffText = differentiatorText || t('whatIsQuimera.diffText', 'Mientras otras herramientas se enfocan únicamente en diseño o publicación, Quimera AI conecta las partes esenciales del negocio: presencia online, generación de contenido, captación de clientes, ventas, comunicación y automatización.');
+    const displayDiffTitle = differentiatorTitle || t('quimera.whatis.diffTitle', 'No es solo crear una página. Es construir el sistema digital de tu negocio.');
+    const displayDiffText = differentiatorText || t('quimera.whatis.diffText', 'Mientras otras herramientas se enfocan únicamente en diseño o publicación, Quimera AI conecta las partes esenciales del negocio: presencia online, generación de contenido, captación de clientes, ventas, comunicación y automatización.');
 
-    const displayPrimaryBtn = primaryButtonText || t('whatIsQuimera.primaryBtn', 'Comienza con Quimera AI');
-    const displaySecondaryBtn = secondaryButtonText || t('whatIsQuimera.secondaryBtn', 'Ver cómo funciona');
-    const displayFootnote = footnote || t('whatIsQuimera.footnote', 'Diseñado para pequeños negocios, creadores, profesionales, realtors, restaurantes, tiendas online y agencias.');
+    const displayPrimaryBtn = primaryButtonText || t('quimera.whatis.primaryBtn', 'Comienza con Quimera AI');
+    const displaySecondaryBtn = secondaryButtonText || t('quimera.whatis.secondaryBtn', 'Ver cómo funciona');
+    const displayFootnote = footnote || t('quimera.whatis.footnote', 'Diseñado para pequeños negocios, creadores, profesionales, realtors, restaurantes, tiendas online y agencias.');
 
     // Click handler that respects preview mode
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
@@ -178,8 +178,8 @@ const WhatIsQuimeraSection: React.FC<WhatIsQuimeraSectionProps> = ({
                    ═══════════════════════════════════════════════════════ */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-16 md:mb-20">
                     {displayBenefits.map((benefit, index) => {
-                        const bTitle = benefit.title || t('editor.placeholder.title', 'Título');
-                        const bDesc = benefit.description || t('editor.placeholder.description', 'Descripción');
+                        const bTitle = benefit.title || t('quimera.whatis.item.title', 'Título');
+                        const bDesc = benefit.description || t('quimera.whatis.item.desc', 'Descripción');
 
                         return (
                             <div

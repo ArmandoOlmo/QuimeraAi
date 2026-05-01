@@ -28,26 +28,26 @@ interface TestimonialsQuimeraProps {
     textDropShadow?: boolean;
 }
 
-const defaultTestimonials: Testimonial[] = [
+const getDefaultTestimonials = (t: any): Testimonial[] => [
     {
-        quote: "QuimeraAi nos permitió lanzar nuestra plataforma de cursos en días, no meses. La IA generó copys que convirtieron desde el día uno.",
-        author: "Laura Gómez",
-        role: "Fundadora",
-        company: "EduDigital",
+        quote: t('quimera.testimonials.item1.quote', "QuimeraAi nos permitió lanzar nuestra plataforma de cursos en días, no meses. La IA generó copys que convirtieron desde el día uno."),
+        author: t('quimera.testimonials.item1.author', "Laura Gómez"),
+        role: t('quimera.testimonials.item1.role', "Fundadora"),
+        company: t('quimera.testimonials.item1.company', "EduDigital"),
         rating: 5
     },
     {
-        quote: "Como agencia, la opción de marca blanca nos ha permitido ofrecer sitios web premium a nuestros clientes cobrando 3 veces más que antes. El editor es increíblemente fluido.",
-        author: "Carlos Mendoza",
-        role: "Director Creativo",
-        company: "Elevate Agency",
+        quote: t('quimera.testimonials.item2.quote', "Como agencia, la opción de marca blanca nos ha permitido ofrecer sitios web premium a nuestros clientes cobrando 3 veces más que antes. El editor es increíblemente fluido."),
+        author: t('quimera.testimonials.item2.author', "Carlos Mendoza"),
+        role: t('quimera.testimonials.item2.role', "Director Creativo"),
+        company: t('quimera.testimonials.item2.company', "Elevate Agency"),
         rating: 5
     },
     {
-        quote: "El sistema de inmobiliarias cambió nuestro negocio. Podemos listar propiedades automáticamente y la interfaz luce como un sitio de medio millón de dólares.",
-        author: "Elena Silva",
-        role: "Broker",
-        company: "Silva Real Estate",
+        quote: t('quimera.testimonials.item3.quote', "El sistema de inmobiliarias cambió nuestro negocio. Podemos listar propiedades automáticamente y la interfaz luce como un sitio de medio millón de dólares."),
+        author: t('quimera.testimonials.item3.author', "Elena Silva"),
+        role: t('quimera.testimonials.item3.role', "Broker"),
+        company: t('quimera.testimonials.item3.company', "Silva Real Estate"),
         rating: 5
     }
 ];
@@ -55,11 +55,12 @@ const defaultTestimonials: Testimonial[] = [
 const TestimonialsQuimera: React.FC<TestimonialsQuimeraProps> = ({
     title,
     subtitle,
-    testimonials = defaultTestimonials,
+    testimonials,
     colors = {},
     textDropShadow = false
 }) => {
     const { t } = useTranslation();
+    const displayTestimonials = testimonials || getDefaultTestimonials(t);
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
@@ -70,8 +71,8 @@ const TestimonialsQuimera: React.FC<TestimonialsQuimeraProps> = ({
     const iconColor = colors.iconColor || accentColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', 'Historias de Éxito');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.testimonials.title', 'Historias de Éxito');
+    const displaySubtitle = subtitle || t('quimera.testimonials.subtitle', 'Escribe el subtítulo aquí...');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -96,11 +97,11 @@ const TestimonialsQuimera: React.FC<TestimonialsQuimeraProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-                    {testimonials.map((testimonial, index) => {
-                        const displayQuote = testimonial.quote || t('editor.placeholder.quote', 'Testimonio increíble.');
-                        const displayAuthor = testimonial.author || t('editor.placeholder.author', 'Nombre');
-                        const displayRole = testimonial.role || t('editor.placeholder.role', 'Rol');
-                        const displayCompany = testimonial.company || t('editor.placeholder.company', 'Empresa');
+                    {displayTestimonials.map((testimonial, index) => {
+                        const displayQuote = testimonial.quote || t('quimera.testimonials.item.quote', 'Testimonio increíble.');
+                        const displayAuthor = testimonial.author || t('quimera.testimonials.item.author', 'Nombre');
+                        const displayRole = testimonial.role || t('quimera.testimonials.item.role', 'Rol');
+                        const displayCompany = testimonial.company || t('quimera.testimonials.item.company', 'Empresa');
 
                         return (
                         <div 

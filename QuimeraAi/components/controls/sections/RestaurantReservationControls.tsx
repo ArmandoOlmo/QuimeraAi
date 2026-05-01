@@ -7,7 +7,7 @@ import React from 'react';
 import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
-import { Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, ControlsDeps } from '../ControlsShared';
 import { SliderControl } from '../../ui/EditorControlPrimitives';
 import {
@@ -29,10 +29,10 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
           <CalendarCheck size={14} />
           {t('editor.restaurantReservationSection', 'Reservaciones')}
         </label>
-        <Input
+        <I18nInput
           label={t('restaurant.reservation.restaurantIdLabel', 'Restaurant ID')}
           value={rd.restaurantId || ''}
-          onChange={(e) => setNestedData('restaurantReservation.restaurantId', e.target.value)}
+          onChange={(val) => setNestedData('restaurantReservation.restaurantId', val)}
         />
         <p className="text-xs text-q-text-secondary mt-1 italic">
           {t('restaurant.reservation.restaurantIdHelp', 'Vincula este formulario a un restaurante creado en el módulo de Restaurantes.')}
@@ -45,20 +45,20 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
           <FileText size={14} />
           {t('controls.content', 'Contenido')}
         </label>
-        <Input
+        <I18nInput
           label={t('editor.controls.common.title', 'Título')}
           value={rd.title || ''}
-          onChange={(e) => setNestedData('restaurantReservation.title', e.target.value)}
+          onChange={(val) => setNestedData('restaurantReservation.title', val)}
         />
         <FontSizeSelector
           label={t('editor.controls.common.titleSize', 'Tamaño del Título')}
           value={rd.titleFontSize || 'md'}
           onChange={(v) => setNestedData('restaurantReservation.titleFontSize', v)}
         />
-        <TextArea
+        <I18nTextArea
           label={t('editor.controls.common.description', 'Descripción')}
           value={rd.description || ''}
-          onChange={(e) => setNestedData('restaurantReservation.description', e.target.value)}
+          onChange={(val) => setNestedData('restaurantReservation.description', val)}
           rows={2}
         />
         <FontSizeSelector
@@ -66,10 +66,10 @@ export const renderRestaurantReservationControlsWithTabs = (deps: ControlsDeps) 
           value={rd.descriptionFontSize || 'md'}
           onChange={(v) => setNestedData('restaurantReservation.descriptionFontSize', v)}
         />
-        <Input
+        <I18nInput
           label={t('editor.controls.common.buttonText', 'Texto del Botón')}
           value={rd.buttonText || ''}
-          onChange={(e) => setNestedData('restaurantReservation.buttonText', e.target.value)}
+          onChange={(val) => setNestedData('restaurantReservation.buttonText', val)}
         />
       </div>
 

@@ -52,28 +52,28 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('leadsManagerQuimera.title', 'Convierte Visitas en Clientes');
-    const displaySubtitle = subtitle || t('leadsManagerQuimera.subtitle', 'Centraliza todos tus contactos en un CRM nativo. Captura leads desde tu web, chatbot o enlaces externos y haz seguimiento sin perder ninguna oportunidad.');
+    const displayTitle = title || t('quimera.leadsmanager.title', 'Convierte Visitas en Clientes');
+    const displaySubtitle = subtitle || t('quimera.leadsmanager.subtitle', 'Centraliza todos tus contactos en un CRM nativo. Captura leads desde tu web, chatbot o enlaces externos y haz seguimiento sin perder ninguna oportunidad.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('leadsManagerQuimera.feat1Title', 'Bandeja Centralizada'),
-            description: t('leadsManagerQuimera.feat1Desc', 'Todos los contactos generados por formularios y chatbots se guardan automáticamente en tu panel principal.'),
+            title: t('quimera.leadsmanager.feat1.title', 'Bandeja Centralizada'),
+            description: t('quimera.leadsmanager.feat1.desc', 'Todos los contactos generados por formularios y chatbots se guardan automáticamente en tu panel principal.'),
             icon: 'Users'
         },
         {
-            title: t('leadsManagerQuimera.feat2Title', 'Enriquecimiento Automático'),
-            description: t('leadsManagerQuimera.feat2Desc', 'La IA perfila a los prospectos y añade etiquetas según sus respuestas e intereses detectados.'),
+            title: t('quimera.leadsmanager.feat2.title', 'Enriquecimiento Automático'),
+            description: t('quimera.leadsmanager.feat2.desc', 'La IA perfila a los prospectos y añade etiquetas según sus respuestas e intereses detectados.'),
             icon: 'TrendingUp'
         },
         {
-            title: t('leadsManagerQuimera.feat3Title', 'Seguimiento Eficaz'),
-            description: t('leadsManagerQuimera.feat3Desc', 'Añade notas, marca estados de negociación y no dejes que ningún contacto se enfríe.'),
+            title: t('quimera.leadsmanager.feat3.title', 'Seguimiento Eficaz'),
+            description: t('quimera.leadsmanager.feat3.desc', 'Añade notas, marca estados de negociación y no dejes que ningún contacto se enfríe.'),
             icon: 'CheckCircle2'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Simulate new lead coming in
     useEffect(() => {
@@ -110,7 +110,7 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
                         <div className="mb-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                                 <Users className="w-4 h-4" />
-                                {t('leadsManagerQuimera.badge', 'CRM & Leads')}
+                                {t('quimera.leadsmanager.badge', 'CRM & Leads')}
                             </div>
                             <h2 className={`text-4xl md:text-5xl lg:text-[3.5rem] font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                                 style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
@@ -172,8 +172,8 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
                             {/* Toolbar */}
                             <div className="h-14 border-b flex items-center justify-between px-6" style={{ backgroundColor: '#111111', borderColor: cardBorder }}>
                                 <div className="flex items-center gap-2">
-                                    <h3 className="text-sm font-bold text-gray-200">Leads Pipeline</h3>
-                                    <span className="bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full">{mockLeads.length} Total</span>
+                                    <h3 className="text-sm font-bold text-gray-200">{t('quimera.leadsmanager.pipeline', 'Leads Pipeline')}</h3>
+                                    <span className="bg-gray-800 text-gray-400 text-[10px] px-2 py-0.5 rounded-full">{mockLeads.length} {t('quimera.leadsmanager.total', 'Total')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-md bg-[#222] flex items-center justify-center border border-[#333]">
@@ -183,17 +183,17 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
                                         <Filter className="w-4 h-4 text-gray-400" />
                                     </div>
                                     <div className="px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-2 text-white" style={{ backgroundColor: accentColor }}>
-                                        <Plus className="w-3 h-3" /> Add Lead
+                                        <Plus className="w-3 h-3" /> {t('quimera.leadsmanager.addLead', 'Add Lead')}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Column Headers */}
                             <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b text-[10px] uppercase font-bold text-gray-500 tracking-wider" style={{ backgroundColor: '#0F0F0F', borderColor: cardBorder }}>
-                                <div className="col-span-4">Contact</div>
-                                <div className="col-span-3">Source</div>
-                                <div className="col-span-3">Status</div>
-                                <div className="col-span-2 text-right">Actions</div>
+                                <div className="col-span-4">{t('quimera.leadsmanager.col.contact', 'Contact')}</div>
+                                <div className="col-span-3">{t('quimera.leadsmanager.col.source', 'Source')}</div>
+                                <div className="col-span-3">{t('quimera.leadsmanager.col.status', 'Status')}</div>
+                                <div className="col-span-2 text-right">{t('quimera.leadsmanager.col.actions', 'Actions')}</div>
                             </div>
 
                             {/* Lead Rows */}
@@ -223,9 +223,9 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
                                             </span>
                                         </div>
                                         <div className="col-span-3">
-                                            {lead.status === 'new' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">NEW</span>}
-                                            {lead.status === 'contacted' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">CONTACTED</span>}
-                                            {lead.status === 'qualified' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">QUALIFIED</span>}
+                                            {lead.status === 'new' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">{t('quimera.leadsmanager.status.new', 'NEW')}</span>}
+                                            {lead.status === 'contacted' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">{t('quimera.leadsmanager.status.contacted', 'CONTACTED')}</span>}
+                                            {lead.status === 'qualified' && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">{t('quimera.leadsmanager.status.qualified', 'QUALIFIED')}</span>}
                                         </div>
                                         <div className="col-span-2 flex justify-end gap-2">
                                             <button className="p-1.5 rounded-md hover:bg-[#222] text-gray-400 hover:text-white transition-colors">
@@ -243,7 +243,7 @@ const LeadsManagerQuimera: React.FC<LeadsManagerQuimeraProps> = ({
                             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-[#222] border shadow-2xl rounded-lg px-4 py-3 flex items-center gap-3 animate-bounce"
                                  style={{ borderColor: `${accentColor}50` }}>
                                 <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: accentColor }}></div>
-                                <p className="text-xs font-semibold text-white">AI Assistant just captured a new lead!</p>
+                                <p className="text-xs font-semibold text-white">{t('quimera.leadsmanager.alert', 'AI Assistant just captured a new lead!')}</p>
                             </div>
                         </div>
                     </div>

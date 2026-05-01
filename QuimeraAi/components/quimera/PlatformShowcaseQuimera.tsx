@@ -26,16 +26,20 @@ interface PlatformShowcaseQuimeraProps {
 const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
     title,
     subtitle,
-    features = [
-        { icon: 'Layout', title: 'Web Editor Avanzado', description: 'Crea sitios impresionantes con nuestro editor drag & drop. Diseños premium pre-construidos y personalización total sin código.' },
-        { icon: 'Database', title: 'Gestión de Leads (CRM)', description: 'Captura, gestiona y nutre a tus clientes potenciales desde un dashboard centralizado. Formularios dinámicos integrados.' },
-        { icon: 'Search', title: 'SEO Automático', description: 'Sitemaps, meta tags y robots.txt generados y actualizados automáticamente (SSR).' },
-        { icon: 'Smartphone', title: 'Mobile First', description: 'Previsualizador móvil en tiempo real y componentes nativamente responsivos.' }
-    ],
+    features,
     colors = {},
     textDropShadow = false
 }) => {
     const { t } = useTranslation();
+
+    const getDefaultFeatures = (t: any) => [
+        { icon: 'Layout', title: t('quimera.showcase.item1.title', 'Web Editor Avanzado'), description: t('quimera.showcase.item1.desc', 'Crea sitios impresionantes con nuestro editor drag & drop. Diseños premium pre-construidos y personalización total sin código.') },
+        { icon: 'Database', title: t('quimera.showcase.item2.title', 'Gestión de Leads (CRM)'), description: t('quimera.showcase.item2.desc', 'Captura, gestiona y nutre a tus clientes potenciales desde un dashboard centralizado. Formularios dinámicos integrados.') },
+        { icon: 'Search', title: t('quimera.showcase.item3.title', 'SEO Automático'), description: t('quimera.showcase.item3.desc', 'Sitemaps, meta tags y robots.txt generados y actualizados automáticamente (SSR).') },
+        { icon: 'Smartphone', title: t('quimera.showcase.item4.title', 'Mobile First'), description: t('quimera.showcase.item4.desc', 'Previsualizador móvil en tiempo real y componentes nativamente responsivos.') }
+    ];
+
+    const displayFeatures = features || getDefaultFeatures(t);
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
@@ -46,8 +50,8 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
     const iconColor = colors.iconColor || accentColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', 'Plataforma Todo en Uno');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
+    const displayTitle = title || t('quimera.showcase.title', 'Plataforma Todo en Uno');
+    const displaySubtitle = subtitle || t('quimera.showcase.subtitle', 'Escribe el subtítulo aquí...');
 
     // Helper to render lucide icons dynamically (mocked here by mapping string to icon components if needed, or we just keep the hardcoded ones if string matches)
     const renderIcon = (iconName: string, className: string) => {
@@ -76,9 +80,9 @@ const PlatformShowcaseQuimera: React.FC<PlatformShowcaseQuimeraProps> = ({
                 {/* Bento Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[300px]">
                     
-                    {features.map((feature, index) => {
-                        const displayFeatureTitle = feature.title || t('editor.placeholder.title', 'Título de característica');
-                        const displayFeatureDesc = feature.description || t('editor.placeholder.description', 'Descripción de la característica');
+                    {displayFeatures.map((feature, index) => {
+                        const displayFeatureTitle = feature.title || t('quimera.showcase.item.title', 'Título de característica');
+                        const displayFeatureDesc = feature.description || t('quimera.showcase.item.desc', 'Descripción de la característica');
 
                         if (index === 0) {
                             return (

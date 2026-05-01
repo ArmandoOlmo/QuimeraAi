@@ -2,7 +2,7 @@ import React from 'react';
 import { Building2, Eye, Layout, Palette, Type , Layers } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, Select, TextArea, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, Select, TextArea, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { ControlsDeps } from '../ControlsShared';
 
 const SectionHeader = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) => (
@@ -35,23 +35,23 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <SectionHeader icon={Type} title={t('controls.content')} />
-        <Input
+        <I18nInput
           label={t('editor.controls.common.title')}
           value={sectionData.title || ''}
-          onChange={(e) => setNestedData('realEstateListings.title', e.target.value)}
+          onChange={(val) => setNestedData('realEstateListings.title', val)}
           placeholder={t('realEstate.websiteListings.defaultTitle')}
         />
-        <TextArea
+        <I18nTextArea
           label={t('editor.controls.common.subtitle')}
           value={sectionData.subtitle || ''}
-          onChange={(e) => setNestedData('realEstateListings.subtitle', e.target.value)}
+          onChange={(val) => setNestedData('realEstateListings.subtitle', val)}
           rows={2}
           placeholder={t('realEstate.websiteListings.defaultSubtitle')}
         />
-        <Input
+        <I18nInput
           label={t('realEstate.websiteListings.controls.buttonText')}
           value={sectionData.buttonText || ''}
-          onChange={(e) => setNestedData('realEstateListings.buttonText', e.target.value)}
+          onChange={(val) => setNestedData('realEstateListings.buttonText', val)}
           placeholder={t('realEstate.websiteListings.requestInfo')}
         />
       </div>

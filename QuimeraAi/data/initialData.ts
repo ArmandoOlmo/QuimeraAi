@@ -15,15 +15,30 @@ const pageData: PageData = {
     logoImageUrl: '',
     logoWidth: 120,
     links: [
-      { text: 'Features', href: '#features' },
-      { text: 'About', href: '#about' },
-      { text: 'Contact', href: '#contact' },
+      { text: {
+                  es: "Features",
+                  en: "Features"
+              }, href: '#features' },
+      { text: {
+                  es: "About",
+                  en: "About"
+              }, href: '#about' },
+      { text: {
+                  es: "Contact",
+                  en: "Contact"
+              }, href: '#contact' },
     ] as NavLink[],
     hoverStyle: 'simple',
-    ctaText: 'Get Started',
+    ctaText: {
+            es: "Get Started",
+            en: "Get Started"
+        },
     showCta: true,
     showLogin: true,
-    loginText: 'Log In',
+    loginText: {
+            es: "Log In",
+            en: "Log In"
+        },
     loginUrl: '#',
     colors: {
       background: '#4f46e5', // Solid brand color
@@ -37,10 +52,22 @@ const pageData: PageData = {
     heroVariant: 'modern',
     paddingY: 'lg',
     paddingX: 'md',
-    headline: "Transforma tu Visión en una <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600\">Experiencia Digital</span>",
-    subheadline: "Crea, personaliza y despliega sitios web de alto impacto impulsados por Inteligencia Artificial. Sin código, sin límites.",
-    primaryCta: "Empezar Gratis",
-    secondaryCta: "Ver Funciones",
+    headline: {
+            es: "Transforma tu Visión en una <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600\">Experiencia Digital</span>",
+            en: "Transform Your Vision into a <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600\">Digital Experience</span>"
+        },
+    subheadline: {
+            es: "Crea, personaliza y despliega sitios web de alto impacto impulsados por Inteligencia Artificial. Sin código, sin límites.",
+            en: "Create, customize, and deploy high-impact websites powered by Artificial Intelligence. No code, no limits."
+        },
+    primaryCta: {
+            es: "Empezar Gratis",
+            en: "Start Free"
+        },
+    secondaryCta: {
+            es: "Ver Funciones",
+            en: "View Features"
+        },
     imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3",
     imageStyle: 'default',
     imageDropShadow: true,
@@ -70,7 +97,10 @@ const pageData: PageData = {
     secondaryButtonStyle: 'solid',
     secondaryButtonOpacity: 100,
     showBadge: true,
-    badgeText: '✨ Welcome',
+    badgeText: {
+            es: "✨ Welcome",
+            en: "✨ Welcome"
+        },
     badgeIcon: 'sparkles',
     badgeColor: '#4f46e5',
     badgeBackgroundColor: '#4f46e515',
@@ -82,9 +112,18 @@ const pageData: PageData = {
     secondaryCtaLinkType: 'section',
   },
   heroSplit: {
-    headline: "Transform Your Vision",
-    subheadline: "Experience the perfect blend of innovation and design. Our solutions help you stand out in a competitive market.",
-    buttonText: "Get Started",
+    headline: {
+              es: "Transform Your Vision",
+              en: "Transform Your Vision"
+          },
+    subheadline: {
+              es: "Experience the perfect blend of innovation and design. Our solutions help you stand out in a competitive market.",
+              en: "Experience the perfect blend of innovation and design. Our solutions help you stand out in a competitive market."
+          },
+    buttonText: {
+            es: "Get Started",
+            en: "Get Started"
+        },
     buttonUrl: "#cta",
     imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect fill='%23111827' width='800' height='600'/%3E%3Ctext fill='%236B7280' font-family='system-ui,sans-serif' font-size='32' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E800 × 600%3C/text%3E%3C/svg%3E",
     imagePosition: 'right',
@@ -105,11 +144,23 @@ const pageData: PageData = {
   heroGallery: {
     slides: [
       {
-        headline: 'Curated Collection for Modern Living',
-        subheadline: 'In Store and Online',
-        primaryCta: 'SHOP COLLECTION',
+        headline: {
+                  es: "Curated Collection for Modern Living",
+                  en: "Curated Collection for Modern Living"
+              },
+        subheadline: {
+                  es: "In Store and Online",
+                  en: "In Store and Online"
+              },
+        primaryCta: {
+                es: "SHOP COLLECTION",
+                en: "SHOP COLLECTION"
+            },
         primaryCtaLink: '/#products',
-        secondaryCta: 'MORE DETAILS',
+        secondaryCta: {
+                es: "MORE DETAILS",
+                en: "MORE DETAILS"
+            },
         secondaryCtaLink: '/#features',
         backgroundImage: '',
         backgroundColor: '#8B6F5C',
@@ -139,11 +190,23 @@ const pageData: PageData = {
   heroWave: {
     slides: [
       {
-        headline: 'Something Bold & Beautiful',
-        subheadline: 'Your next big thing starts here',
-        primaryCta: 'GET STARTED',
+        headline: {
+                  es: "Something Bold & Beautiful",
+                  en: "Something Bold & Beautiful"
+              },
+        subheadline: {
+                  es: "Your next big thing starts here",
+                  en: "Your next big thing starts here"
+              },
+        primaryCta: {
+                es: "GET STARTED",
+                en: "GET STARTED"
+            },
         primaryCtaLink: '/#cta',
-        secondaryCta: 'LEARN MORE',
+        secondaryCta: {
+                es: "LEARN MORE",
+                en: "LEARN MORE"
+            },
         secondaryCtaLink: '/#features',
         backgroundImage: '',
         backgroundColor: '#ff006e',
@@ -179,9 +242,15 @@ const pageData: PageData = {
   heroNova: {
     slides: [
       {
-        headline: 'Comfort, Style, Durability: Our Seating Collection',
+        headline: {
+                  es: "Comfort, Style, Durability: Our Seating Collection",
+                  en: "Comfort, Style, Durability: Our Seating Collection"
+              },
         subheadline: '',
-        primaryCta: 'SHOP SEATING',
+        primaryCta: {
+                es: "SHOP SEATING",
+                en: "SHOP SEATING"
+            },
         primaryCtaLink: '/#products',
         mediaType: 'image',
         backgroundImage: '',
@@ -214,9 +283,18 @@ const pageData: PageData = {
     buttonBorderRadius: 'full',
   },
   heroLead: {
-    headline: 'Transform Your Business Today',
-    subheadline: 'Get started with our premium services and take your company to the next level.',
-    badgeText: 'Limited Offer',
+    headline: {
+              es: "Transform Your Business Today",
+              en: "Transform Your Business Today"
+          },
+    subheadline: {
+              es: "Get started with our premium services and take your company to the next level.",
+              en: "Get started with our premium services and take your company to the next level."
+          },
+    badgeText: {
+            es: "Limited Offer",
+            en: "Limited Offer"
+        },
     formTitle: 'Request a Consultation',
     formDescription: 'Fill out the form below and our team will get back to you within 24 hours.',
     namePlaceholder: 'Your Name',
@@ -224,7 +302,10 @@ const pageData: PageData = {
     companyPlaceholder: 'Your Company',
     phonePlaceholder: 'Your Phone',
     messagePlaceholder: 'How can we help you?',
-    buttonText: 'Submit Request',
+    buttonText: {
+            es: "Submit Request",
+            en: "Submit Request"
+        },
     successMessage: 'Thank you! We will be in touch shortly.',
     showCompanyField: true,
     showPhoneField: false,
@@ -256,11 +337,23 @@ const pageData: PageData = {
     },
   },
   heroLumina: {
-    headline: 'Welcome to Lumina',
-    subheadline: 'Experience the next generation of web design.',
-    primaryCta: 'Get Started',
+    headline: {
+              es: "Welcome to Lumina",
+              en: "Welcome to Lumina"
+          },
+    subheadline: {
+              es: "Experience the next generation of web design.",
+              en: "Experience the next generation of web design."
+          },
+    primaryCta: {
+            es: "Get Started",
+            en: "Get Started"
+        },
     primaryCtaLink: '#',
-    secondaryCta: 'Learn More',
+    secondaryCta: {
+            es: "Learn More",
+            en: "Learn More"
+        },
     secondaryCtaLink: '#',
   },
   heroNeon: {
@@ -268,10 +361,22 @@ const pageData: PageData = {
     textPosition: 'bottom-left',
     slides: [
       {
-        headline: 'INNOVATION MEETS DESIGN',
-        subheadline: 'Experience the next generation of web interfaces.',
-        primaryCta: 'Explore Now',
-        secondaryCta: 'Learn More',
+        headline: {
+                  es: "INNOVATION MEETS DESIGN",
+                  en: "INNOVATION MEETS DESIGN"
+              },
+        subheadline: {
+                  es: "Experience the next generation of web interfaces.",
+                  en: "Experience the next generation of web interfaces."
+              },
+        primaryCta: {
+                es: "Explore Now",
+                en: "Explore Now"
+            },
+        secondaryCta: {
+                es: "Learn More",
+                en: "Learn More"
+            },
         primaryCtaLink: '#',
         primaryCtaLinkType: 'section',
         secondaryCtaLink: '#',
@@ -280,10 +385,22 @@ const pageData: PageData = {
       }
     ],
     // Legacy support fields
-    headline: 'INNOVATION MEETS DESIGN',
-    subheadline: 'Experience the next generation of web interfaces.',
-    primaryCta: 'Explore Now',
-    secondaryCta: 'Learn More',
+    headline: {
+            es: "INNOVATION MEETS DESIGN",
+            en: "INNOVATION MEETS DESIGN"
+        },
+    subheadline: {
+            es: "Experience the next generation of web interfaces.",
+            en: "Experience the next generation of web interfaces."
+        },
+    primaryCta: {
+            es: "Explore Now",
+            en: "Explore Now"
+        },
+    secondaryCta: {
+            es: "Learn More",
+            en: "Learn More"
+        },
     primaryCtaLink: '#',
     secondaryCtaLink: '#',
     headlineFont: 'inter',
@@ -308,16 +425,28 @@ const pageData: PageData = {
     buttonBorderRadius: 'full',
   },
   testimonialsNeon: {
-    headline: 'LO QUE DICEN',
-    subheadline: 'Opiniones de clientes que confían en nosotros.',
+    headline: {
+              es: "LO QUE DICEN",
+              en: "WHAT THEY SAY"
+          },
+    subheadline: {
+              es: "Opiniones de clientes que confían en nosotros.",
+              en: "Testimonials from clients who trust us."
+          },
     testimonials: [
         {
-            quote: 'El mejor servicio que hemos contratado. El diseño es increíble.',
+            quote: {
+                    es: "El mejor servicio que hemos contratado. El diseño es increíble.",
+                    en: "The best service we have ever hired. The design is incredible."
+                },
             authorName: 'Ana García',
             authorRole: 'Directora Creativa',
         },
         {
-            quote: 'La atención al detalle es excepcional. Muy recomendados.',
+            quote: {
+                    es: "La atención al detalle es excepcional. Muy recomendados.",
+                    en: "The attention to detail is exceptional. Highly recommended."
+                },
             authorName: 'Carlos Ruiz',
             authorRole: 'CEO de TechGroup',
         }
@@ -336,12 +465,36 @@ const pageData: PageData = {
   },
 
   featuresNeon: {
-    headline: 'CARACTERÍSTICAS',
-    subheadline: 'Innovación y diseño en cada detalle',
+    headline: {
+              es: "CARACTERÍSTICAS",
+              en: "FEATURES"
+          },
+    subheadline: {
+              es: "Innovación y diseño en cada detalle",
+              en: "Innovation and design in every detail"
+          },
     features: [
-        { title: 'Velocidad', description: 'Rendimiento optimizado para la mejor experiencia.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
-        { title: 'Seguridad', description: 'Protección avanzada de datos.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
-        { title: 'Alcance Global', description: 'Preparado para escalar internacionalmente.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
+        { title: {
+                    es: "Velocidad",
+                    en: "Speed"
+                }, description: {
+                    es: "Rendimiento optimizado para la mejor experiencia.",
+                    en: "Optimized performance for the best experience."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
+        { title: {
+                    es: "Seguridad",
+                    en: "Security"
+                }, description: {
+                    es: "Protección avanzada de datos.",
+                    en: "Advanced data protection."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
+        { title: {
+                    es: "Alcance Global",
+                    en: "Global Reach"
+                }, description: {
+                    es: "Preparado para escalar internacionalmente.",
+                    en: "Engineered for global scalability."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
     ],
     glassEffect: true,
     glowIntensity: 50,
@@ -357,9 +510,18 @@ const pageData: PageData = {
   },
 
   ctaNeon: {
-    headline: '¿LISTO PARA COMENZAR?',
-    subheadline: 'Únete a nuestra plataforma y transforma tu negocio hoy mismo.',
-    buttonText: 'Empezar Ahora',
+    headline: {
+              es: "¿LISTO PARA COMENZAR?",
+              en: "READY TO START?"
+          },
+    subheadline: {
+              es: "Únete a nuestra plataforma y transforma tu negocio hoy mismo.",
+              en: "Join our platform and transform your business today."
+          },
+    buttonText: {
+            es: "Empezar Ahora",
+            en: "Get Started Now"
+        },
     glassEffect: true,
     glowIntensity: 50,
     cardBorderRadius: '3xl',
@@ -375,17 +537,35 @@ const pageData: PageData = {
   },
 
   portfolioNeon: {
-    headline: 'NUESTRO TRABAJO',
-    subheadline: 'Proyectos recientes que destacan por su innovación.',
+    headline: {
+              es: "NUESTRO TRABAJO",
+              en: "OUR WORK"
+          },
+    subheadline: {
+              es: "Proyectos recientes que destacan por su innovación.",
+              en: "Recent projects showcasing our innovation."
+          },
     projects: [
         {
-            title: 'Proyecto Alpha',
-            category: 'Diseño Web',
+            title: {
+                    es: "Proyecto Alpha",
+                    en: "Project Alpha"
+                },
+            category: {
+                    es: "Diseño Web",
+                    en: "Web Design"
+                },
             imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'
         },
         {
-            title: 'Proyecto Beta',
-            category: 'Desarrollo App',
+            title: {
+                    es: "Proyecto Beta",
+                    en: "Project Beta"
+                },
+            category: {
+                    es: "Desarrollo App",
+                    en: "App Development"
+                },
             imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
         }
     ],
@@ -403,22 +583,40 @@ const pageData: PageData = {
   },
 
   pricingNeon: {
-    headline: 'PLANES Y PRECIOS',
-    subheadline: 'Opciones flexibles para cada necesidad.',
+    headline: {
+              es: "PLANES Y PRECIOS",
+              en: "PLANS AND PRICING"
+          },
+    subheadline: {
+              es: "Opciones flexibles para cada necesidad.",
+              en: "Flexible options for every need."
+          },
     tiers: [
         {
             planName: 'Básico',
-            price: '$29',
+            price: {
+                    es: "$29",
+                    en: "$29"
+                },
             frequency: '/mes',
             features: ['Soporte estándar', '1 Proyecto', 'Actualizaciones'],
-            buttonText: 'Elegir Básico'
+            buttonText: {
+                    es: "Elegir Básico",
+                    en: "Choose Basic"
+                }
         },
         {
             planName: 'Pro',
-            price: '$99',
+            price: {
+                    es: "$99",
+                    en: "$99"
+                },
             frequency: '/mes',
             features: ['Soporte 24/7', 'Proyectos ilimitados', 'Analíticas avanzadas'],
-            buttonText: 'Elegir Pro',
+            buttonText: {
+                    es: "Elegir Pro",
+                    en: "Choose Pro"
+                },
             isFeatured: true
         }
     ],
@@ -438,8 +636,14 @@ const pageData: PageData = {
   },
 
   faqNeon: {
-    headline: 'PREGUNTAS FRECUENTES',
-    subheadline: 'Resolvemos tus dudas principales.',
+    headline: {
+              es: "PREGUNTAS FRECUENTES",
+              en: "FREQUENTLY ASKED QUESTIONS"
+          },
+    subheadline: {
+              es: "Resolvemos tus dudas principales.",
+              en: "Get answers to your main questions."
+          },
     questions: [
         {
             question: '¿Tienen soporte técnico?',
@@ -462,95 +666,236 @@ const pageData: PageData = {
         cardText: '#ffffff',
     }
   },  featuresLumina: {
-    headline: 'Core Features',
-    subheadline: 'Everything you need to succeed',
+    headline: {
+              es: "Core Features",
+              en: "Core Features"
+          },
+    subheadline: {
+              es: "Everything you need to succeed",
+              en: "Everything you need to succeed"
+          },
     features: [
-        { title: 'Lightning Fast', description: 'Optimized for performance and speed.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
-        { title: 'Secure Design', description: 'Built with modern security practices.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
-        { title: 'Global Scale', description: 'Ready for users around the world.', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
+        { title: {
+                    es: "Lightning Fast",
+                    en: "Lightning Fast"
+                }, description: {
+                    es: "Optimized for performance and speed.",
+                    en: "Optimized for performance and speed."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 9.81h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14.19H4z"/></svg>' },
+        { title: {
+                    es: "Secure Design",
+                    en: "Secure Design"
+                }, description: {
+                    es: "Built with modern security practices.",
+                    en: "Built with modern security practices."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>' },
+        { title: {
+                    es: "Global Scale",
+                    en: "Global Scale"
+                }, description: {
+                    es: "Ready for users around the world.",
+                    en: "Ready for users around the world."
+                }, icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>' }
     ]
   },
   ctaLumina: {
-    headline: 'Ready to Transform Your Business?',
-    subheadline: 'Join thousands of satisfied customers who are already using our platform to grow their business and achieve their goals.',
-    primaryCta: 'Get Started Now',
+    headline: {
+              es: "Ready to Transform Your Business?",
+              en: "Ready to Transform Your Business?"
+          },
+    subheadline: {
+              es: "Join thousands of satisfied customers who are already using our platform to grow their business and achieve their goals.",
+              en: "Join thousands of satisfied customers who are already using our platform to grow their business and achieve their goals."
+          },
+    primaryCta: {
+            es: "Get Started Now",
+            en: "Get Started Now"
+        },
     primaryCtaLink: '#',
-    secondaryCta: 'Talk to Sales',
+    secondaryCta: {
+            es: "Talk to Sales",
+            en: "Talk to Sales"
+        },
     secondaryCtaLink: '#',
   },
   portfolioLumina: {
-    headline: 'Our Recent Work',
-    subheadline: 'Explore some of the amazing projects we have delivered for our clients.',
+    headline: {
+              es: "Our Recent Work",
+              en: "Our Recent Work"
+          },
+    subheadline: {
+              es: "Explore some of the amazing projects we have delivered for our clients.",
+              en: "Explore some of the amazing projects we have delivered for our clients."
+          },
     projects: [
-        { title: 'Project Alpha', category: 'Web Development', imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3' },
-        { title: 'Project Beta', category: 'Mobile App', imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3' },
-        { title: 'Project Gamma', category: 'UI/UX Design', imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&q=80&w=2000&ixlib=rb-4.0.3' }
+        { title: {
+                    es: "Project Alpha",
+                    en: "Project Alpha"
+                }, category: {
+                    es: "Web Development",
+                    en: "Web Development"
+                }, imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3' },
+        { title: {
+                    es: "Project Beta",
+                    en: "Project Beta"
+                }, category: {
+                    es: "Mobile App",
+                    en: "Mobile App"
+                }, imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3' },
+        { title: {
+                    es: "Project Gamma",
+                    en: "Project Gamma"
+                }, category: {
+                    es: "UI/UX Design",
+                    en: "UI/UX Design"
+                }, imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&q=80&w=2000&ixlib=rb-4.0.3' }
     ]
   },
   pricingLumina: {
-    headline: 'Simple, Transparent Pricing',
-    subheadline: 'Choose the plan that best fits your needs.',
+    headline: {
+              es: "Simple, Transparent Pricing",
+              en: "Simple, Transparent Pricing"
+          },
+    subheadline: {
+              es: "Choose the plan that best fits your needs.",
+              en: "Choose the plan that best fits your needs."
+          },
     billingToggle: true,
     tiers: [
         {
-            name: 'Starter',
-            price: '$29',
+            name: {
+                    es: "Starter",
+                    en: "Starter"
+                },
+            price: {
+                    es: "$29",
+                    en: "$29"
+                },
             period: '/mo',
-            description: 'Perfect for small businesses just getting started.',
+            description: {
+                    es: "Perfect for small businesses just getting started.",
+                    en: "Perfect for small businesses just getting started."
+                },
             features: ['Up to 5 Projects', 'Basic Analytics', '24/7 Support', 'Custom Domain'],
-            buttonText: 'Start Free Trial',
+            buttonText: {
+                    es: "Start Free Trial",
+                    en: "Start Free Trial"
+                },
             buttonLink: '#',
             highlighted: false
         },
         {
-            name: 'Professional',
-            price: '$99',
+            name: {
+                    es: "Professional",
+                    en: "Professional"
+                },
+            price: {
+                    es: "$99",
+                    en: "$99"
+                },
             period: '/mo',
-            description: 'Ideal for growing companies with more demands.',
+            description: {
+                    es: "Ideal for growing companies with more demands.",
+                    en: "Ideal for growing companies with more demands."
+                },
             features: ['Unlimited Projects', 'Advanced Analytics', 'Priority Support', 'Custom Domain', 'Team Collaboration'],
-            buttonText: 'Get Started',
+            buttonText: {
+                    es: "Get Started",
+                    en: "Get Started"
+                },
             buttonLink: '#',
             highlighted: true
         },
         {
-            name: 'Enterprise',
-            price: '$299',
+            name: {
+                    es: "Enterprise",
+                    en: "Enterprise"
+                },
+            price: {
+                    es: "$299",
+                    en: "$299"
+                },
             period: '/mo',
-            description: 'For large-scale organizations requiring dedicated resources.',
+            description: {
+                    es: "For large-scale organizations requiring dedicated resources.",
+                    en: "For large-scale organizations requiring dedicated resources."
+                },
             features: ['Everything in Pro', 'Dedicated Account Manager', 'Custom Integration', 'SLA Guarantee', 'On-premise Options'],
-            buttonText: 'Contact Sales',
+            buttonText: {
+                    es: "Contact Sales",
+                    en: "Contact Sales"
+                },
             buttonLink: '#',
             highlighted: false
         }
     ]
   },
   testimonialsLumina: {
-    headline: 'What Our Clients Say',
-    subheadline: 'Don\'t just take our word for it. Hear from some of our satisfied customers.',
+    headline: {
+              es: "What Our Clients Say",
+              en: "What Our Clients Say"
+          },
+    subheadline: {
+              es: "Don't just take our word for it. Hear from some of our satisfied customers.",
+              en: "Don't just take our word for it. Hear from some of our satisfied customers."
+          },
     testimonials: [
         {
-            quote: 'This platform has completely transformed how we do business. The results have been incredible and the support is top-notch.',
-            author: 'Sarah Johnson',
-            role: 'CEO, TechCorp',
+            quote: {
+                    es: "This platform has completely transformed how we do business. The results have been incredible and the support is top-notch.",
+                    en: "This platform has completely transformed how we do business. The results have been incredible and the support is top-notch."
+                },
+            author: {
+                    es: "Sarah Johnson",
+                    en: "Sarah Johnson"
+                },
+            role: {
+                    es: "CEO, TechCorp",
+                    en: "CEO, TechCorp"
+                },
             avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
         },
         {
-            quote: 'We saw a 200% increase in productivity within the first month. I couldn\'t recommend this solution enough to other agencies.',
-            author: 'Michael Chen',
-            role: 'Director, CreateDesign',
+            quote: {
+                    es: "We saw a 200% increase in productivity within the first month. I couldn't recommend this solution enough to other agencies.",
+                    en: "We saw a 200% increase in productivity within the first month. I couldn't recommend this solution enough to other agencies."
+                },
+            author: {
+                    es: "Michael Chen",
+                    en: "Michael Chen"
+                },
+            role: {
+                    es: "Director, CreateDesign",
+                    en: "Director, CreateDesign"
+                },
             avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
         },
         {
-            quote: 'The ease of use and powerful features make it the best tool in our stack. It paid for itself in a matter of days.',
-            author: 'Emily Davis',
-            role: 'Founder, StartupInc',
+            quote: {
+                    es: "The ease of use and powerful features make it the best tool in our stack. It paid for itself in a matter of days.",
+                    en: "The ease of use and powerful features make it the best tool in our stack. It paid for itself in a matter of days."
+                },
+            author: {
+                    es: "Emily Davis",
+                    en: "Emily Davis"
+                },
+            role: {
+                    es: "Founder, StartupInc",
+                    en: "Founder, StartupInc"
+                },
             avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&ixlib=rb-4.0.3'
         }
     ]
   },
   faqLumina: {
-    headline: 'Frequently Asked Questions',
-    subheadline: 'Find answers to common questions about our platform and services.',
+    headline: {
+              es: "Frequently Asked Questions",
+              en: "Frequently Asked Questions"
+          },
+    subheadline: {
+              es: "Find answers to common questions about our platform and services.",
+              en: "Find answers to common questions about our platform and services."
+          },
     faqs: [
         { question: 'What payment methods do you accept?', answer: 'We accept all major credit cards, PayPal, and bank transfers for annual plans.' },
         { question: 'Can I cancel my subscription at any time?', answer: 'Yes, you can cancel your subscription at any time. Your access will remain active until the end of your current billing period.' },
@@ -562,22 +907,46 @@ const pageData: PageData = {
     featuresVariant: 'bento-premium',
     paddingY: 'lg',
     paddingX: 'md',
-    title: "Why Choose Us",
-    description: "Discover the key benefits and features that set us apart from the competition.",
+    title: {
+            es: "Why Choose Us",
+            en: "Why Choose Us"
+        },
+    description: {
+            es: "Discover the key benefits and features that set us apart from the competition.",
+            en: "Discover the key benefits and features that set us apart from the competition."
+        },
     items: [
       {
-        title: 'Diseño Inteligente',
-        description: 'Nuestra IA analiza tu marca y genera automáticamente una estructura optimizada para conversiones.',
+        title: {
+                  es: "Diseño Inteligente",
+                  en: "Intelligent Design"
+              },
+        description: {
+                  es: "Nuestra IA analiza tu marca y genera automáticamente una estructura optimizada para conversiones.",
+                  en: "Our AI analyzes your brand and automatically generates a conversion-optimized structure."
+              },
         imageUrl: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=2670&ixlib=rb-4.0.3",
       },
       {
-        title: 'SEO Automatizado',
-        description: 'Cada página se construye siguiendo las mejores prácticas de SEO para asegurar la máxima visibilidad.',
+        title: {
+                  es: "SEO Automatizado",
+                  en: "Automated SEO"
+              },
+        description: {
+                  es: "Cada página se construye siguiendo las mejores prácticas de SEO para asegurar la máxima visibilidad.",
+                  en: "Every page is built following SEO best practices to ensure maximum visibility."
+              },
         imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3",
       },
       {
-        title: 'Ecommerce Integrado',
-        description: 'Vende productos físicos o digitales con una plataforma de pagos robusta y fácil de configurar.',
+        title: {
+                  es: "Ecommerce Integrado",
+                  en: "Integrated Ecommerce"
+              },
+        description: {
+                  es: "Vende productos físicos o digitales con una plataforma de pagos robusta y fácil de configurar.",
+                  en: "Sell physical or digital products with a robust and easy-to-configure payment platform."
+              },
         imageUrl: "https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=2664&ixlib=rb-4.0.3",
       },
     ],
@@ -601,8 +970,14 @@ const pageData: PageData = {
     testimonialsVariant: 'glassmorphism',
     paddingY: 'lg',
     paddingX: 'md',
-    title: "What Our Customers Say",
-    description: "Hear from satisfied customers about their experience working with us.",
+    title: {
+            es: "What Our Customers Say",
+            en: "What Our Customers Say"
+        },
+    description: {
+            es: "Hear from satisfied customers about their experience working with us.",
+            en: "Hear from satisfied customers about their experience working with us."
+        },
     titleFontSize: 'md',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
@@ -613,19 +988,46 @@ const pageData: PageData = {
     enableCardAnimation: true,
     items: [
       {
-        quote: "This is an example testimonial. Replace it with a real quote from one of your satisfied customers to build trust and credibility.",
-        name: 'Customer Name',
-        title: 'Position, Company Name',
+        quote: {
+                  es: "This is an example testimonial. Replace it with a real quote from one of your satisfied customers to build trust and credibility.",
+                  en: "This is an example testimonial. Replace it with a real quote from one of your satisfied customers to build trust and credibility."
+              },
+        name: {
+                  es: "Customer Name",
+                  en: "Customer Name"
+              },
+        title: {
+                es: "Position, Company Name",
+                en: "Position, Company Name"
+            },
       },
       {
-        quote: "Add another customer testimonial here. Specific results and benefits mentioned by customers are most effective.",
-        name: 'Another Customer',
-        title: 'Their Role, Their Company',
+        quote: {
+                  es: "Add another customer testimonial here. Specific results and benefits mentioned by customers are most effective.",
+                  en: "Add another customer testimonial here. Specific results and benefits mentioned by customers are most effective."
+              },
+        name: {
+                  es: "Another Customer",
+                  en: "Another Customer"
+              },
+        title: {
+                es: "Their Role, Their Company",
+                en: "Their Role, Their Company"
+            },
       },
       {
-        quote: "Include a third testimonial to showcase diverse experiences. Consider featuring customers from different segments.",
-        name: 'Third Customer',
-        title: 'Job Title, Organization',
+        quote: {
+                  es: "Include a third testimonial to showcase diverse experiences. Consider featuring customers from different segments.",
+                  en: "Include a third testimonial to showcase diverse experiences. Consider featuring customers from different segments."
+              },
+        name: {
+                  es: "Third Customer",
+                  en: "Third Customer"
+              },
+        title: {
+                es: "Job Title, Organization",
+                en: "Job Title, Organization"
+            },
       },
     ],
     colors: {
@@ -639,7 +1041,10 @@ const pageData: PageData = {
   },
   slideshow: {
     slideshowVariant: 'classic',
-    title: "Our Gallery",
+    title: {
+              es: "Our Gallery",
+              en: "Our Gallery"
+          },
     showTitle: true,
     fullWidth: false,
     paddingY: 'lg',
@@ -675,8 +1080,14 @@ const pageData: PageData = {
   },
   pricing: {
     pricingVariant: 'gradient',
-    title: "Our Plans",
-    description: "Choose the plan that best fits your needs. All plans include our core features.",
+    title: {
+              es: "Our Plans",
+              en: "Our Plans"
+          },
+    description: {
+            es: "Choose the plan that best fits your needs. All plans include our core features.",
+            en: "Choose the plan that best fits your needs. All plans include our core features."
+        },
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'md',
@@ -684,32 +1095,68 @@ const pageData: PageData = {
     cardBorderRadius: 'xl',
     tiers: [
       {
-        name: 'Basic',
-        price: '$29',
+        name: {
+                  es: "Basic",
+                  en: "Basic"
+              },
+        price: {
+                  es: "$29",
+                  en: "$29"
+              },
         frequency: '/mes',
-        description: 'Ideal para emprendedores que inician su viaje digital.',
+        description: {
+                es: "Ideal para emprendedores que inician su viaje digital.",
+                en: "Ideal for entrepreneurs starting their digital journey."
+            },
         features: ['Hasta 5 páginas', 'Dominio personalizado', 'IA Básica', 'Soporte por email'],
-        buttonText: 'Empezar ahora',
+        buttonText: {
+                es: "Empezar ahora",
+                en: "Get Started"
+            },
         buttonLink: '#pricing',
         featured: false,
       },
       {
-        name: 'Pro',
-        price: '$79',
+        name: {
+                  es: "Pro",
+                  en: "Pro"
+              },
+        price: {
+                  es: "$79",
+                  en: "$79"
+              },
         frequency: '/mes',
-        description: 'Para negocios en crecimiento que buscan escalar.',
+        description: {
+                es: "Para negocios en crecimiento que buscan escalar.",
+                en: "For growing businesses looking to scale."
+            },
         features: ['Páginas ilimitadas', 'Ecommerce completo', 'IA Avanzada', 'Soporte prioritario'],
-        buttonText: 'Elegir Pro',
+        buttonText: {
+                es: "Elegir Pro",
+                en: "Choose Pro"
+            },
         buttonLink: '#pricing',
         featured: true,
       },
       {
-        name: 'Enterprise',
-        price: 'Personalizado',
+        name: {
+                  es: "Enterprise",
+                  en: "Enterprise"
+              },
+        price: {
+                  es: "Personalizado",
+                  en: "Custom"
+              },
         frequency: '',
-        description: 'Soluciones a medida para grandes organizaciones.',
+        description: {
+                es: "Soluciones a medida para grandes organizaciones.",
+                en: "Tailored solutions for large organizations."
+            },
         features: ['Infraestructura dedicada', 'API de Quimera', 'Soporte 24/7', 'Contrato SLA'],
-        buttonText: 'Contactar Ventas',
+        buttonText: {
+                es: "Contactar Ventas",
+                en: "Contact Sales"
+            },
         buttonLink: 'https://quimera.ai/contact',
         featured: false,
       },
@@ -731,8 +1178,14 @@ const pageData: PageData = {
     enableCardAnimation: true,
   },
   faq: {
-    title: "Frequently Asked Questions",
-    description: "Find answers to common questions. If you don't find what you're looking for, feel free to contact us.",
+    title: {
+              es: "Frequently Asked Questions",
+              en: "Frequently Asked Questions"
+          },
+    description: {
+              es: "Find answers to common questions. If you don't find what you're looking for, feel free to contact us.",
+              en: "Find answers to common questions. If you don't find what you're looking for, feel free to contact us."
+          },
     paddingY: 'lg',
     paddingX: 'md',
     items: [
@@ -763,13 +1216,22 @@ const pageData: PageData = {
   },
   leads: {
     leadsVariant: 'classic',
-    title: "Get in Touch",
-    description: "Have questions? We'd love to hear from you. Fill out the form and we'll get back to you soon.",
+    title: {
+              es: "Get in Touch",
+              en: "Get in Touch"
+          },
+    description: {
+            es: "Have questions? We'd love to hear from you. Fill out the form and we'll get back to you soon.",
+            en: "Have questions? We'd love to hear from you. Fill out the form and we'll get back to you soon."
+        },
     namePlaceholder: "Your Name",
     emailPlaceholder: "your@email.com",
     companyPlaceholder: "Your Company",
     messagePlaceholder: "How can we help you?",
-    buttonText: "Send Message",
+    buttonText: {
+            es: "Send Message",
+            en: "Send Message"
+        },
     paddingY: 'lg',
     paddingX: 'md',
     cardBorderRadius: 'xl',
@@ -793,10 +1255,19 @@ const pageData: PageData = {
     },
   },
   newsletter: {
-    title: "Stay Updated",
-    description: "Subscribe to our newsletter for the latest updates, tips, and exclusive offers.",
+    title: {
+              es: "Stay Updated",
+              en: "Stay Updated"
+          },
+    description: {
+              es: "Subscribe to our newsletter for the latest updates, tips, and exclusive offers.",
+              en: "Subscribe to our newsletter for the latest updates, tips, and exclusive offers."
+          },
     placeholderText: "Enter your email",
-    buttonText: "Subscribe",
+    buttonText: {
+            es: "Subscribe",
+            en: "Subscribe"
+        },
     paddingY: 'lg',
     paddingX: 'md',
     colors: {
@@ -816,9 +1287,18 @@ const pageData: PageData = {
   cta: {
     paddingY: 'lg',
     paddingX: 'md',
-    title: "Ready to Get Started?",
-    description: "Take the next step. Join our community and start your journey today.",
-    buttonText: "Start Now",
+    title: {
+            es: "Ready to Get Started?",
+            en: "Ready to Get Started?"
+        },
+    description: {
+            es: "Take the next step. Join our community and start your journey today.",
+            en: "Take the next step. Join our community and start your journey today."
+        },
+    buttonText: {
+            es: "Start Now",
+            en: "Start Now"
+        },
     secondaryText: "No credit card required • Cancel anytime",
     titleFontSize: 'md',
     descriptionFontSize: 'md',
@@ -826,7 +1306,10 @@ const pageData: PageData = {
         background: '#0f172a',
         gradientStart: '#4f46e5',
         gradientEnd: '#10b981',
-        text: 'rgba(255, 255, 255, 0.8)',
+        text: {
+                es: "rgba(255, 255, 255, 0.8)",
+                en: "rgba(255, 255, 255, 0.8)"
+            },
         heading: '#FFFFFF',
         buttonBackground: '#ffffff',
         buttonText: '#4f46e5',
@@ -836,22 +1319,46 @@ const pageData: PageData = {
   portfolio: {
     paddingY: 'lg',
     paddingX: 'md',
-    title: "Our Work",
-    description: "Take a look at some of our recent projects. We're proud of the work we do for our clients.",
+    title: {
+            es: "Our Work",
+            en: "Our Work"
+        },
+    description: {
+            es: "Take a look at some of our recent projects. We're proud of the work we do for our clients.",
+            en: "Take a look at some of our recent projects. We're proud of the work we do for our clients."
+        },
     items: [
       {
-        title: 'Project One',
-        description: 'Brief description of this project and its goals.',
+        title: {
+                  es: "Project One",
+                  en: "Project One"
+              },
+        description: {
+                  es: "Brief description of this project and its goals.",
+                  en: "Brief description of this project and its goals."
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Crect fill='%234B5563' width='500' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E500 × 400%3C/text%3E%3C/svg%3E",
       },
       {
-        title: 'Project Two',
-        description: 'Highlight the key aspects of this project.',
+        title: {
+                  es: "Project Two",
+                  en: "Project Two"
+              },
+        description: {
+                  es: "Highlight the key aspects of this project.",
+                  en: "Highlight the key aspects of this project."
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Crect fill='%234B5563' width='500' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E500 × 400%3C/text%3E%3C/svg%3E",
       },
       {
-        title: 'Project Three',
-        description: 'Showcase another successful project.',
+        title: {
+                  es: "Project Three",
+                  en: "Project Three"
+              },
+        description: {
+                  es: "Showcase another successful project.",
+                  en: "Showcase another successful project."
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Crect fill='%234B5563' width='500' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E500 × 400%3C/text%3E%3C/svg%3E",
       },
     ],
@@ -869,23 +1376,47 @@ const pageData: PageData = {
     servicesVariant: 'cards',
     paddingY: 'lg',
     paddingX: 'md',
-    title: "Our Services",
-    description: "We offer a range of services to help you achieve your goals.",
+    title: {
+            es: "Our Services",
+            en: "Our Services"
+        },
+    description: {
+            es: "We offer a range of services to help you achieve your goals.",
+            en: "We offer a range of services to help you achieve your goals."
+        },
     items: [
       {
         icon: 'code',
-        title: 'Service One',
-        description: 'Describe your first service offering and how it helps your customers.',
+        title: {
+                  es: "Service One",
+                  en: "Service One"
+              },
+        description: {
+                es: "Describe your first service offering and how it helps your customers.",
+                en: "Describe your first service offering and how it helps your customers."
+            },
       },
       {
         icon: 'brush',
-        title: 'Service Two',
-        description: 'Explain your second service and the value it provides.',
+        title: {
+                  es: "Service Two",
+                  en: "Service Two"
+              },
+        description: {
+                es: "Explain your second service and the value it provides.",
+                en: "Explain your second service and the value it provides."
+            },
       },
       {
         icon: 'megaphone',
-        title: 'Service Three',
-        description: 'Highlight your third service offering and its benefits.',
+        title: {
+                  es: "Service Three",
+                  en: "Service Three"
+              },
+        description: {
+                es: "Highlight your third service offering and its benefits.",
+                en: "Highlight your third service offering and its benefits."
+            },
       },
     ],
     animationType: 'fade-in-up',
@@ -901,27 +1432,57 @@ const pageData: PageData = {
   team: {
     paddingY: 'lg',
     paddingX: 'md',
-    title: "Meet Our Team",
-    description: "Get to know the people behind our success.",
+    title: {
+            es: "Meet Our Team",
+            en: "Meet Our Team"
+        },
+    description: {
+            es: "Get to know the people behind our success.",
+            en: "Get to know the people behind our success."
+        },
     items: [
       {
-        name: 'Team Member',
-        role: 'Position',
+        name: {
+                  es: "Team Member",
+                  en: "Team Member"
+              },
+        role: {
+                  es: "Position",
+                  en: "Position"
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%234B5563' width='400' height='400'/%3E%3Ccircle cx='200' cy='140' r='60' fill='%236B7280'/%3E%3Cellipse cx='200' cy='300' rx='90' ry='70' fill='%236B7280'/%3E%3C/svg%3E",
       },
       {
-        name: 'Team Member',
-        role: 'Position',
+        name: {
+                  es: "Team Member",
+                  en: "Team Member"
+              },
+        role: {
+                  es: "Position",
+                  en: "Position"
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%234B5563' width='400' height='400'/%3E%3Ccircle cx='200' cy='140' r='60' fill='%236B7280'/%3E%3Cellipse cx='200' cy='300' rx='90' ry='70' fill='%236B7280'/%3E%3C/svg%3E",
       },
       {
-        name: 'Team Member',
-        role: 'Position',
+        name: {
+                  es: "Team Member",
+                  en: "Team Member"
+              },
+        role: {
+                  es: "Position",
+                  en: "Position"
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%234B5563' width='400' height='400'/%3E%3Ccircle cx='200' cy='140' r='60' fill='%236B7280'/%3E%3Cellipse cx='200' cy='300' rx='90' ry='70' fill='%236B7280'/%3E%3C/svg%3E",
       },
       {
-        name: 'Team Member',
-        role: 'Position',
+        name: {
+                  es: "Team Member",
+                  en: "Team Member"
+              },
+        role: {
+                  es: "Position",
+                  en: "Position"
+              },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%234B5563' width='400' height='400'/%3E%3Ccircle cx='200' cy='140' r='60' fill='%236B7280'/%3E%3Cellipse cx='200' cy='300' rx='90' ry='70' fill='%236B7280'/%3E%3C/svg%3E",
       },
     ],
@@ -936,8 +1497,14 @@ const pageData: PageData = {
   video: {
     paddingY: 'lg',
     paddingX: 'md',
-    title: "See It In Action",
-    description: "Watch this short video to learn more about what we offer.",
+    title: {
+            es: "See It In Action",
+            en: "See It In Action"
+        },
+    description: {
+            es: "Watch this short video to learn more about what we offer.",
+            en: "Watch this short video to learn more about what we offer."
+        },
     source: 'youtube',
     videoId: 'dQw4w9WgXcQ',
     videoUrl: '',
@@ -953,14 +1520,44 @@ const pageData: PageData = {
   howItWorks: {
     paddingY: 'lg',
     paddingX: 'md',
-    title: "How It Works",
-    description: "Follow these simple steps to get started.",
+    title: {
+            es: "How It Works",
+            en: "How It Works"
+        },
+    description: {
+            es: "Follow these simple steps to get started.",
+            en: "Follow these simple steps to get started."
+        },
     steps: 3,
     items: [
-        { icon: 'upload', title: 'Step 1', description: 'Describe the first step of your process.' },
-        { icon: 'process', title: 'Step 2', description: 'Explain what happens next.' },
-        { icon: 'download', title: 'Step 3', description: 'Detail the third step.' },
-        { icon: 'share', title: 'Step 4', description: 'Final step or outcome.' },
+        { icon: 'upload', title: {
+                    es: "Step 1",
+                    en: "Step 1"
+                }, description: {
+                    es: "Describe the first step of your process.",
+                    en: "Describe the first step of your process."
+                } },
+        { icon: 'process', title: {
+                    es: "Step 2",
+                    en: "Step 2"
+                }, description: {
+                    es: "Explain what happens next.",
+                    en: "Explain what happens next."
+                } },
+        { icon: 'download', title: {
+                    es: "Step 3",
+                    en: "Step 3"
+                }, description: {
+                    es: "Detail the third step.",
+                    en: "Detail the third step."
+                } },
+        { icon: 'share', title: {
+                    es: "Step 4",
+                    en: "Step 4"
+                }, description: {
+                    es: "Final step or outcome.",
+                    en: "Final step or outcome."
+                } },
     ],
     colors: {
         background: '#0f172a',
@@ -981,9 +1578,18 @@ const pageData: PageData = {
     }
   },
   map: {
-    title: "Find Us",
-    description: "Visit our location. We're conveniently located and easy to find.",
-    address: "123 Main Street, City, State 12345",
+    title: {
+              es: "Find Us",
+              en: "Find Us"
+          },
+    description: {
+              es: "Visit our location. We're conveniently located and easy to find.",
+              en: "Visit Our Location. Conveniently located and easy to find."
+          },
+    address: {
+            es: "123 Main Street, City, State 12345",
+            en: "123 Main Street, City, State 12345"
+        },
     lat: 40.7128,
     lng: -74.0060,
     zoom: 14,
@@ -1005,57 +1611,135 @@ const pageData: PageData = {
   },
   menu: {
     menuVariant: 'classic',
-    title: "Our Menu",
-    description: "Explore our offerings.",
+    title: {
+              es: "Our Menu",
+              en: "Our Menu"
+          },
+    description: {
+            es: "Explore our offerings.",
+            en: "Explore our offerings."
+        },
     paddingY: 'lg',
     paddingX: 'md',
     items: [
       {
-        name: 'Item One',
-        description: 'Description of your first menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item One",
+                  en: "Item One"
+              },
+        description: {
+                  es: "Description of your first menu item.",
+                  en: "Description of your first menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: true,
       },
       {
-        name: 'Item Two',
-        description: 'Description of your second menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item Two",
+                  en: "Item Two"
+              },
+        description: {
+                  es: "Description of your second menu item.",
+                  en: "Description of your second menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: false,
       },
       {
-        name: 'Item Three',
-        description: 'Description of your third menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item Three",
+                  en: "Item Three"
+              },
+        description: {
+                  es: "Description of your third menu item.",
+                  en: "Description of your third menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: true,
       },
       {
-        name: 'Item Four',
-        description: 'Description of your fourth menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item Four",
+                  en: "Item Four"
+              },
+        description: {
+                  es: "Description of your fourth menu item.",
+                  en: "Description of your fourth menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: false,
       },
       {
-        name: 'Item Five',
-        description: 'Description of your fifth menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item Five",
+                  en: "Item Five"
+              },
+        description: {
+                  es: "Description of your fifth menu item.",
+                  en: "Description of your fifth menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: true,
       },
       {
-        name: 'Item Six',
-        description: 'Description of your sixth menu item.',
-        price: '$XX.XX',
+        name: {
+                  es: "Item Six",
+                  en: "Item Six"
+              },
+        description: {
+                  es: "Description of your sixth menu item.",
+                  en: "Description of your sixth menu item."
+              },
+        price: {
+                es: "$XX.XX",
+                en: "$XX.XX"
+            },
         imageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%234B5563' width='600' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='24' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E600 × 400%3C/text%3E%3C/svg%3E",
-        category: 'Category',
+        category: {
+                es: "Category",
+                en: "Category"
+            },
         isSpecial: false,
       },
     ],
@@ -1076,31 +1760,73 @@ const pageData: PageData = {
     enableCardAnimation: true,
   },
   footer: {
-    title: 'Your Brand',
-    description: 'A brief description of your business goes here.',
+    title: {
+              es: "Your Brand",
+              en: "Your Brand"
+          },
+    description: {
+              es: "A brief description of your business goes here.",
+              en: "A brief description of your business goes here."
+          },
     linkColumns: [
       {
-        title: 'Quick Links',
+        title: {
+                  es: "Quick Links",
+                  en: "Quick Links"
+              },
         links: [
-          { text: 'Home', href: '/' },
-          { text: 'About', href: '#about' },
-          { text: 'Contact', href: '#contact' },
+          { text: {
+                      es: "Home",
+                      en: "Home"
+                  }, href: '/' },
+          { text: {
+                      es: "About",
+                      en: "About"
+                  }, href: '#about' },
+          { text: {
+                      es: "Contact",
+                      en: "Contact"
+                  }, href: '#contact' },
         ],
       },
       {
-        title: 'Resources',
+        title: {
+                  es: "Resources",
+                  en: "Resources"
+              },
         links: [
-          { text: 'FAQ', href: '#faq' },
-          { text: 'Support', href: '/contact' },
-          { text: 'Blog', href: '/blog' },
-          { text: 'Changelog', href: '/changelog' },
+          { text: {
+                      es: "FAQ",
+                      en: "FAQ"
+                  }, href: '#faq' },
+          { text: {
+                      es: "Support",
+                      en: "Support"
+                  }, href: '/contact' },
+          { text: {
+                      es: "Blog",
+                      en: "Blog"
+                  }, href: '/blog' },
+          { text: {
+                      es: "Changelog",
+                      en: "Changelog"
+                  }, href: '/changelog' },
         ],
       },
       {
-        title: 'Legal',
+        title: {
+                  es: "Legal",
+                  en: "Legal"
+              },
         links: [
-          { text: 'Privacy Policy', href: '/privacy-policy' },
-          { text: 'Terms of Service', href: '/terms-of-service' },
+          { text: {
+                      es: "Privacy Policy",
+                      en: "Privacy Policy"
+                  }, href: '/privacy-policy' },
+          { text: {
+                      es: "Terms of Service",
+                      en: "Terms of Service"
+                  }, href: '/terms-of-service' },
         ],
       },
     ],
@@ -1120,9 +1846,18 @@ const pageData: PageData = {
   },
   banner: {
     bannerVariant: 'classic',
-    headline: 'Discover Something Amazing',
-    subheadline: 'Join thousands of customers who have transformed their experience with our solution.',
-    buttonText: 'Get Started',
+    headline: {
+              es: "Discover Something Amazing",
+              en: "Discover Something Amazing"
+          },
+    subheadline: {
+            es: "Join thousands of customers who have transformed their experience with our solution.",
+            en: "Join thousands of customers who have transformed their experience with our solution."
+        },
+    buttonText: {
+            es: "Get Started",
+            en: "Get Started"
+        },
     buttonUrl: '#cta',
     showButton: true,
     backgroundImageUrl: '',
@@ -1144,8 +1879,14 @@ const pageData: PageData = {
   },
   topBar: {
     messages: [
-      { text: '🚀 Free shipping on orders over $50', icon: 'truck', link: '#products', linkText: 'Shop Now' },
-      { text: '⚡ New collection just dropped!', icon: 'sparkles', link: '#features', linkText: 'Explore' },
+      { text: {
+                  es: "🚀 Free shipping on orders over $50",
+                  en: "🚀 Free shipping on orders over $50"
+              }, icon: 'truck', link: '#products', linkText: 'Shop Now' },
+      { text: {
+                  es: "⚡ New collection just dropped!",
+                  en: "⚡ New collection just dropped!"
+              }, icon: 'sparkles', link: '#features', linkText: 'Explore' },
     ],
     scrollEnabled: false,
     scrollSpeed: 30,
@@ -1166,7 +1907,10 @@ const pageData: PageData = {
     aboveHeader: true,
   },
   logoBanner: {
-    title: 'Trusted by industry leaders',
+    title: {
+              es: "Trusted by industry leaders",
+              en: "Trusted by industry leaders"
+          },
     subtitle: '',
     logos: [
       { imageUrl: '', alt: 'Brand 1', link: '', linkText: '' },
@@ -1192,8 +1936,14 @@ const pageData: PageData = {
     dividerColor: '#e2e8f0',
   },
   products: {
-    title: 'Nuestros Productos',
-    subtitle: 'Descubre nuestra selección de productos de alta calidad',
+    title: {
+              es: "Nuestros Productos",
+              en: "Our Products"
+          },
+    subtitle: {
+              es: "Descubre nuestra selección de productos de alta calidad",
+              en: "Discover our selection of high-quality products"
+          },
     products: [], // Se cargan dinámicamente desde el ecommerce
     columns: 4,
     showFilters: true,
@@ -1247,8 +1997,14 @@ const pageData: PageData = {
     },
   },
   cmsFeed: {
-    title: 'Latest Articles',
-    description: 'Stay up to date with our latest content',
+    title: {
+              es: "Latest Articles",
+              en: "Latest Articles"
+          },
+    description: {
+              es: "Stay up to date with our latest content",
+              en: "Stay up to date with our latest content"
+          },
     titleFontSize: 'md',
     descriptionFontSize: 'md',
     layout: 'grid',
@@ -1297,7 +2053,10 @@ const pageData: PageData = {
     emailPlaceholder: 'your@email.com',
     phonePlaceholder: '+1 (555) 000-0000',
     messagePlaceholder: 'Tell us about yourself...',
-    buttonText: 'Sign Up',
+    buttonText: {
+            es: "Sign Up",
+            en: "Sign Up"
+        },
     socialLinks: [
       { platform: 'instagram' as const, href: '#' },
       { platform: 'twitter' as const, href: '#' },
@@ -1342,8 +2101,14 @@ const pageData: PageData = {
   },
   productBundle: {
     variant: 'horizontal',
-    title: '🎁 Pack Especial',
-    description: 'Compra estos productos juntos y ahorra',
+    title: {
+              es: "🎁 Pack Especial",
+              en: "🎁 Special Pack"
+          },
+    description: {
+            es: "Compra estos productos juntos y ahorra",
+            en: "Buy these products together and save"
+        },
     productIds: [], // Se seleccionan desde el editor
     discountPercent: 15,
     bundlePrice: 0, // Se calcula automáticamente
@@ -1351,10 +2116,16 @@ const pageData: PageData = {
     showSavings: true,
     savingsText: 'Ahorra',
     showIndividualPrices: true,
-    buttonText: 'Agregar Bundle al Carrito',
+    buttonText: {
+            es: "Agregar Bundle al Carrito",
+            en: "Add Bundle to Cart"
+        },
     buttonUrl: '',
     showBadge: true,
-    badgeText: 'Mejor Precio',
+    badgeText: {
+            es: "Mejor Precio",
+            en: "Best Price"
+        },
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -1380,8 +2151,14 @@ const pageData: PageData = {
   // ==========================================================================
   featuredProducts: {
     variant: 'carousel',
-    title: 'Productos Destacados',
-    description: 'Descubre nuestra selección de productos más populares',
+    title: {
+              es: "Productos Destacados",
+              en: "Featured Products"
+          },
+    description: {
+            es: "Descubre nuestra selección de productos más populares",
+            en: "Discover our selection of most popular products"
+        },
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -1423,8 +2200,14 @@ const pageData: PageData = {
   // ==========================================================================
   categoryGrid: {
     variant: 'cards',
-    title: 'Compra por Categoría',
-    description: 'Explora nuestras colecciones',
+    title: {
+              es: "Compra por Categoría",
+              en: "Shop by Category"
+          },
+    description: {
+            es: "Explora nuestras colecciones",
+            en: "Explore our collections"
+        },
     categories: [], // Se cargan dinámicamente
     paddingY: 'lg',
     paddingX: 'md',
@@ -1454,9 +2237,18 @@ const pageData: PageData = {
   productHero: {
     variant: 'featured',
     layout: 'single',
-    headline: 'Descubre Nuestra Colección',
-    subheadline: 'Productos de alta calidad diseñados para ti',
-    buttonText: 'Explorar Ahora',
+    headline: {
+            es: "Descubre Nuestra Colección",
+            en: "Discover Our Collection"
+        },
+    subheadline: {
+            es: "Productos de alta calidad diseñados para ti",
+            en: "High-quality products designed for you"
+        },
+    buttonText: {
+            es: "Explorar Ahora",
+            en: "Explore Now"
+        },
     buttonUrl: '',  // Empty = navigate to featured product automatically
     backgroundImageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%231e293b' width='1200' height='600'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='32' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E1200 × 600%3C/text%3E%3C/svg%3E",
     productId: '',
@@ -1470,7 +2262,10 @@ const pageData: PageData = {
     textAlignment: 'left',
     contentPosition: 'left',
     showBadge: true,
-    badgeText: '✨ Nuevo',
+    badgeText: {
+            es: "✨ Nuevo",
+            en: "✨ New"
+        },
     buttonBorderRadius: 'xl',
     animationType: 'fade-in-up',
     showAddToCartButton: false,
@@ -1493,8 +2288,14 @@ const pageData: PageData = {
   // ==========================================================================
   saleCountdown: {
     variant: 'banner',
-    title: '🔥 ¡Oferta Especial!',
-    description: 'No te pierdas nuestras ofertas exclusivas por tiempo limitado',
+    title: {
+              es: "🔥 ¡Oferta Especial!",
+              en: "🔥 Special Offer!"
+          },
+    description: {
+            es: "No te pierdas nuestras ofertas exclusivas por tiempo limitado",
+            en: "Don't miss our exclusive limited-time offers"
+        },
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 días desde ahora
     paddingY: 'md',
     paddingX: 'md',
@@ -1508,7 +2309,10 @@ const pageData: PageData = {
     showProducts: false,
     productsToShow: 4,
     productIds: [],
-    badgeText: '🎉 Oferta',
+    badgeText: {
+            es: "🎉 Oferta",
+            en: "🎉 Offer"
+        },
     discountText: 'Hasta 50% OFF',
     borderRadius: 'xl',
     animationType: 'fade-in',
@@ -1530,12 +2334,39 @@ const pageData: PageData = {
   // ==========================================================================
   trustBadges: {
     variant: 'horizontal',
-    title: '¿Por Qué Elegirnos?',
+    title: {
+              es: "¿Por Qué Elegirnos?",
+              en: "Why Choose Us?"
+          },
     badges: [
-      { icon: 'truck', title: 'Envío Gratis', description: 'En pedidos superiores a $50' },
-      { icon: 'shield', title: 'Pago Seguro', description: 'Transacciones 100% protegidas' },
-      { icon: 'refresh-cw', title: 'Devoluciones', description: '30 días de garantía' },
-      { icon: 'headphones', title: 'Soporte 24/7', description: 'Atención personalizada' },
+      { icon: 'truck', title: {
+                  es: "Envío Gratis",
+                  en: "Free Shipping"
+              }, description: {
+                  es: "En pedidos superiores a $50",
+                  en: "On orders over $50"
+              } },
+      { icon: 'shield', title: {
+                  es: "Pago Seguro",
+                  en: "Secure Payment"
+              }, description: {
+                  es: "Transacciones 100% protegidas",
+                  en: "100% protected transactions"
+              } },
+      { icon: 'refresh-cw', title: {
+                  es: "Devoluciones",
+                  en: "Returns"
+              }, description: {
+                  es: "30 días de garantía",
+                  en: "30-day guarantee"
+              } },
+      { icon: 'headphones', title: {
+                  es: "Soporte 24/7",
+                  en: "24/7 Support"
+              }, description: {
+                  es: "Atención personalizada",
+                  en: "Personalized attention"
+              } },
     ],
     paddingY: 'md',
     paddingX: 'md',
@@ -1556,8 +2387,14 @@ const pageData: PageData = {
   // ==========================================================================
   recentlyViewed: {
     variant: 'carousel',
-    title: 'Vistos Recientemente',
-    description: 'Productos que has explorado',
+    title: {
+              es: "Vistos Recientemente",
+              en: "Recently Viewed"
+          },
+    description: {
+            es: "Productos que has explorado",
+            en: "Products you've explored"
+        },
     paddingY: 'lg',
     paddingX: 'md',
     titleFontSize: 'lg',
@@ -1585,8 +2422,14 @@ const pageData: PageData = {
   // ==========================================================================
   productReviews: {
     variant: 'cards',
-    title: 'Lo Que Dicen Nuestros Clientes',
-    description: 'Opiniones verificadas de compradores reales',
+    title: {
+              es: "Lo Que Dicen Nuestros Clientes",
+              en: "What Our Customers Say"
+          },
+    description: {
+            es: "Opiniones verificadas de compradores reales",
+            en: "Verified reviews from real buyers"
+        },
     reviews: [], // Se cargan dinámicamente
     paddingY: 'lg',
     paddingX: 'md',
@@ -1616,10 +2459,19 @@ const pageData: PageData = {
   // ==========================================================================
   collectionBanner: {
     variant: 'hero',
-    title: 'Nueva Colección',
-    description: 'Descubre lo último en tendencias y estilo',
+    title: {
+              es: "Nueva Colección",
+              en: "New Collection"
+          },
+    description: {
+            es: "Descubre lo último en tendencias y estilo",
+            en: "Discover the latest in trends and style"
+        },
     backgroundImageUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='400' viewBox='0 0 1200 400'%3E%3Crect fill='%231e293b' width='1200' height='400'/%3E%3Ctext fill='%239CA3AF' font-family='system-ui,sans-serif' font-size='32' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3E1200 × 400%3C/text%3E%3C/svg%3E",
-    buttonText: 'Ver Colección',
+    buttonText: {
+            es: "Ver Colección",
+            en: "View Collection"
+        },
     buttonUrl: '#products',
     collectionId: '',
     paddingY: 'lg',
@@ -1649,8 +2501,14 @@ const pageData: PageData = {
   announcementBar: {
     variant: 'static',
     messages: [
-      { text: '🚚 ¡Envío gratis en pedidos superiores a $50!', linkText: 'Ver productos', link: '/tienda' },
-      { text: '🎁 Usa el código WELCOME10 para 10% de descuento', linkText: 'Comprar ahora', link: '/tienda' },
+      { text: {
+                  es: "🚚 ¡Envío gratis en pedidos superiores a $50!",
+                  en: "🚚 Free shipping on orders over $50!"
+              }, linkText: 'Ver productos', link: '/tienda' },
+      { text: {
+                  es: "🎁 Usa el código WELCOME10 para 10% de descuento",
+                  en: "🎁 Use code WELCOME10 for 10% off"
+              }, linkText: 'Comprar ahora', link: '/tienda' },
     ],
     paddingY: 'sm',
     paddingX: 'md',
@@ -1734,8 +2592,14 @@ const pageData: PageData = {
     },
   },
   productGrid: {
-    title: 'Todos los Productos',
-    description: 'Explora nuestra colección completa',
+    title: {
+              es: "Todos los Productos",
+              en: "All Products"
+          },
+    description: {
+              es: "Explora nuestra colección completa",
+              en: "Explore our complete collection"
+          },
     sourceType: 'all',
     productsPerPage: 12,
     columns: 4,
@@ -1845,7 +2709,10 @@ const theme: ThemeData = {
 };
 
 const brandIdentity: BrandIdentity = {
-    name: 'Your Business',
+    name: {
+            es: "Your Business",
+            en: "Your Business"
+        },
     industry: 'General',
     targetAudience: 'Your target customers',
     toneOfVoice: 'Professional',

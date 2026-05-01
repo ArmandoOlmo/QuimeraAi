@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, I18nInput, I18nTextArea, I18nStringArrayEditor, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -60,10 +60,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'end', label: 'Derecha' }
           ]}
         />
-      </div>      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
+      </div>      <I18nInput label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(val) => setNestedData('pricing.title', val)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
-      <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
+      <I18nTextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(val) => setNestedData('pricing.description', val)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
@@ -162,42 +162,40 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder={t('editor.controls.pricing.planName')} value={tier.name} onChange={(e) => setNestedData(`pricing.tiers.${index}.name`, e.target.value)} className="mb-0" />
-              <Input placeholder={t('editor.controls.pricing.price')} value={tier.price} onChange={(e) => setNestedData(`pricing.tiers.${index}.price`, e.target.value)} className="mb-0" />
+              <I18nInput placeholder={t('editor.controls.pricing.planName')} value={tier.name} onChange={(val) => setNestedData(`pricing.tiers.${index}.name`, val)} className="mb-0" />
+              <I18nInput placeholder={t('editor.controls.pricing.price')} value={tier.price} onChange={(val) => setNestedData(`pricing.tiers.${index}.price`, val)} className="mb-0" />
             </div>
 
-            <Input placeholder={t('editor.controls.pricing.frequency')} value={tier.frequency} onChange={(e) => setNestedData(`pricing.tiers.${index}.frequency`, e.target.value)} className="mb-0" />
+            <I18nInput placeholder={t('editor.controls.pricing.frequency')} value={tier.frequency} onChange={(val) => setNestedData(`pricing.tiers.${index}.frequency`, val)} className="mb-0" />
 
-            <TextArea
+            <I18nTextArea
               placeholder={`${t('editor.controls.common.description')} (${t('editor.controls.common.optional') || 'Optional'})`}
               value={tier.description || ''}
-              onChange={(e) => setNestedData(`pricing.tiers.${index}.description`, e.target.value)}
+              onChange={(val) => setNestedData(`pricing.tiers.${index}.description`, val)}
               rows={2}
               className="mb-0"
             />
 
             <div>
               <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.pricing.featuresHelp')}</label>
-              <textarea
-                value={tier.features.join('\n')}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.features`, e.target.value.split('\n').filter(f => f.trim()))}
-                rows={4}
-                placeholder={t('editor.controls.pricing.featurePlaceholder')}
-                className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
+              <I18nStringArrayEditor
+                value={tier.features}
+                onChange={(newFeatures) => setNestedData(`pricing.tiers.${index}.features`, newFeatures)}
+                placeholder={t('editor.controls.pricing.featurePlaceholder') || "Feature"}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input
+              <I18nInput
                 placeholder="Button Text"
                 value={tier.buttonText}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.buttonText`, e.target.value)}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonText`, val)}
                 className="mb-0"
               />
-              <Input
+              <I18nInput
                 placeholder="Button Link"
                 value={tier.buttonLink || ''}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.buttonLink`, e.target.value)}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonLink`, val)}
                 className="mb-0"
               />
             </div>
@@ -285,10 +283,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             { value: 'end', label: 'Derecha' }
           ]}
         />
-      </div>      <Input label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(e) => setNestedData('pricing.title', e.target.value)} />
+      </div>      <I18nInput label={t('editor.controls.common.title')} value={data.pricing.title} onChange={(val) => setNestedData('pricing.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.pricing.titleFontSize || 'md'} onChange={(v) => setNestedData('pricing.titleFontSize', v)} />
 
-      <TextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(e) => setNestedData('pricing.description', e.target.value)} rows={2} />
+      <I18nTextArea label={t('editor.controls.common.description')} value={data.pricing.description} onChange={(val) => setNestedData('pricing.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data.pricing.descriptionFontSize || 'md'} onChange={(v) => setNestedData('pricing.descriptionFontSize', v)} />
 
 
@@ -310,42 +308,40 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Plan Name" value={tier.name} onChange={(e) => setNestedData(`pricing.tiers.${index}.name`, e.target.value)} className="mb-0" />
-              <Input placeholder="Price" value={tier.price} onChange={(e) => setNestedData(`pricing.tiers.${index}.price`, e.target.value)} className="mb-0" />
+              <I18nInput placeholder="Plan Name" value={tier.name} onChange={(val) => setNestedData(`pricing.tiers.${index}.name`, val)} className="mb-0" />
+              <I18nInput placeholder="Price" value={tier.price} onChange={(val) => setNestedData(`pricing.tiers.${index}.price`, val)} className="mb-0" />
             </div>
 
-            <Input placeholder="Frequency (e.g. /month)" value={tier.frequency} onChange={(e) => setNestedData(`pricing.tiers.${index}.frequency`, e.target.value)} className="mb-0" />
+            <I18nInput placeholder="Frequency (e.g. /month)" value={tier.frequency} onChange={(val) => setNestedData(`pricing.tiers.${index}.frequency`, val)} className="mb-0" />
 
-            <TextArea
+            <I18nTextArea
               placeholder="Description (optional)"
               value={tier.description || ''}
-              onChange={(e) => setNestedData(`pricing.tiers.${index}.description`, e.target.value)}
+              onChange={(val) => setNestedData(`pricing.tiers.${index}.description`, val)}
               rows={2}
               className="mb-0"
             />
 
             <div>
               <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.featuresOnePerLine')}</label>
-              <textarea
-                value={tier.features.join('\n')}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.features`, e.target.value.split('\n').filter((f: string) => f.trim()))}
-                rows={4}
-                placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                className="w-full bg-q-surface border border-q-border rounded px-3 py-2 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
+              <I18nStringArrayEditor
+                value={tier.features}
+                onChange={(newFeatures) => setNestedData(`pricing.tiers.${index}.features`, newFeatures)}
+                placeholder="Feature"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input
+              <I18nInput
                 placeholder="Button Text"
                 value={tier.buttonText}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.buttonText`, e.target.value)}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonText`, val)}
                 className="mb-0"
               />
-              <Input
+              <I18nInput
                 placeholder="Button Link"
                 value={tier.buttonLink || ''}
-                onChange={(e) => setNestedData(`pricing.tiers.${index}.buttonLink`, e.target.value)}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonLink`, val)}
                 className="mb-0"
               />
             </div>

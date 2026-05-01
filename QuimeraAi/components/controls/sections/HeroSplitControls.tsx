@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -39,16 +39,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: 'heroSplit.headline', value: data.heroSplit.headline, context: 'Hero Split Headline' })}>
-          <TextArea value={data.heroSplit.headline} onChange={(e) => setNestedData('heroSplit.headline', e.target.value)} rows={2} />
+          <I18nTextArea value={data.heroSplit.headline} onChange={(val) => setNestedData('heroSplit.headline', val)} rows={2} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.headlineSize')} value={data.heroSplit.headlineFontSize || 'lg'} onChange={(v) => setNestedData('heroSplit.headlineFontSize', v)} />
 
         <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: 'heroSplit.subheadline', value: data.heroSplit.subheadline, context: 'Hero Split Description' })}>
-          <TextArea value={data.heroSplit.subheadline} onChange={(e) => setNestedData('heroSplit.subheadline', e.target.value)} rows={3} />
+          <I18nTextArea value={data.heroSplit.subheadline} onChange={(val) => setNestedData('heroSplit.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.subheadlineSize')} value={data.heroSplit.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('heroSplit.subheadlineFontSize', v)} />
 
-        <Input label={t('editor.controls.common.buttonText')} value={data.heroSplit.buttonText} onChange={(e) => setNestedData('heroSplit.buttonText', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.buttonText')} value={data.heroSplit.buttonText} onChange={(val) => setNestedData('heroSplit.buttonText', val)} />
 
         {/* Link Type Selector */}
         <div className="mb-3">
@@ -75,7 +75,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         {/* Conditional Inputs based on Link Type */}
         {(data.heroSplit.linkType === 'manual' || !data.heroSplit.linkType) && (
-          <Input label={t('editor.controls.common.url')} value={data.heroSplit.buttonUrl || '#cta'} onChange={(e) => setNestedData('heroSplit.buttonUrl', e.target.value)} />
+          <I18nInput label={t('editor.controls.common.url')} value={data.heroSplit.buttonUrl || '#cta'} onChange={(val) => setNestedData('heroSplit.buttonUrl', val)} />
         )}
 
         {data.heroSplit.linkType === 'product' && (

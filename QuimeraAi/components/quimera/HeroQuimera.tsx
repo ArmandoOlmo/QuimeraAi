@@ -62,10 +62,10 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     const accentColor = colors.accent || '#D4AF37';
     const secondaryColor = colors.secondaryText || '#d1d5db'; // gray-300
 
-    const displayTitle = title || t('editor.placeholder.title', 'La plataforma definitiva para la era de la IA');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Crea sitios web, tiendas y directorios inmobiliarios impulsados por IA en segundos.');
-    const displayBtn = buttonText || t('editor.placeholder.button', 'Comenzar Gratis');
-    const displayBadge = badgeText || 'QuimeraAi Agency OS 2.0';
+    const displayTitle = title || t('quimera.hero.title', 'La plataforma definitiva para la era de la IA');
+    const displaySubtitle = subtitle || t('quimera.hero.subtitle', 'Crea sitios web, tiendas y directorios inmobiliarios impulsados por IA en segundos.');
+    const displayBtn = buttonText || t('quimera.hero.button', 'Comenzar Gratis');
+    const displayBadge = badgeText || t('quimera.hero.badge', 'QuimeraAi Agency OS 2.0');
 
     // Text alignment classes
     const alignItems = textAlign === 'left' ? 'items-start' : textAlign === 'right' ? 'items-end' : 'items-center';

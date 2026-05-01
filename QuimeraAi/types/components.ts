@@ -140,6 +140,8 @@ export interface HeaderData {
     isPreviewMode?: boolean;
     linkFontSize?: number;
     gradientFadeSize?: number;
+    // Language selector
+    showLanguageSelector?: boolean;
 }
 
 // =============================================================================

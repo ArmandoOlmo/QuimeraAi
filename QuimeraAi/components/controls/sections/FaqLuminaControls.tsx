@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -27,10 +27,10 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.faqLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'faqLumina.headline', value: data.faqLumina.headline, context: 'FAQ Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.faqLumina.headline || ''} 
-              onChange={(e) => setNestedData('faqLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('faqLumina.headline', val)} 
             />
           </AIFormControl>
 
@@ -38,9 +38,9 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.faqLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'faqLumina.subheadline', value: data.faqLumina.subheadline || '', context: 'FAQ Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.faqLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('faqLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('faqLumina.subheadline', val)} 
               rows={2}
             />
           </AIFormControl>
@@ -68,16 +68,16 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Question #{idx + 1}</span>
 
-            <Input 
+            <I18nInput 
               label={t('editor.faqLumina.question', 'Question')} 
               value={faq.question || ''} 
-              onChange={(e) => setNestedData(`faqLumina.faqs.${idx}.question`, e.target.value)} 
+              onChange={(val) => setNestedData(`faqLumina.faqs.${idx}.question`, val)} 
             />
             
-            <TextArea 
+            <I18nTextArea 
               label={t('editor.faqLumina.answer', 'Answer')} 
               value={faq.answer || ''} 
-              onChange={(e) => setNestedData(`faqLumina.faqs.${idx}.answer`, e.target.value)} 
+              onChange={(val) => setNestedData(`faqLumina.faqs.${idx}.answer`, val)} 
               rows={3}
             />
           </div>

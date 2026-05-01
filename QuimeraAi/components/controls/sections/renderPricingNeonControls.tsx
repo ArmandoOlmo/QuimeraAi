@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, List, CreditCard } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select, I18nInput, I18nTextArea, I18nStringArrayEditor } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
@@ -34,10 +34,10 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
               {label}
             </label>
             
-            <Input 
+            <I18nInput 
               label={t('editor.pricingNeon.buttonText', 'Texto del Botón')} 
               value={tiers[tierIndex]?.[textKey] || ''} 
-              onChange={(e) => setNestedData(`pricingNeon.tiers.${tierIndex}.${textKey}`, e.target.value)} 
+              onChange={(val) => setNestedData(`pricingNeon.tiers.${tierIndex}.${textKey}`, val)} 
             />
     
             {/* Link Type Selector */}
@@ -71,7 +71,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
     
             {/* Manual URL Input */}
             {linkType === 'manual' && (
-              <Input
+              <I18nInput
                 label=""
                 value={tiers[tierIndex]?.[linkKey] || ''}
                 onChange={(v) => setNestedData(`pricingNeon.tiers.${tierIndex}.${linkKey}`, v)}
@@ -125,9 +125,9 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         context: 'Pricing Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
-                        onChange={(e) => setNestedData('pricingNeon.headline', e.target.value)}
+                        onChange={(val) => setNestedData('pricingNeon.headline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -140,9 +140,9 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                         context: 'Pricing Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
-                        onChange={(e) => setNestedData('pricingNeon.subheadline', e.target.value)}
+                        onChange={(val) => setNestedData('pricingNeon.subheadline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -177,33 +177,33 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                             onChange={(checked) => setNestedData(`pricingNeon.tiers.${index}.isPopular`, checked)}
                         />
 
-                        <Input
+                        <I18nInput
                             label={t('editor.controls.tierName', 'Nombre del Plan')}
                             value={tier.name || ''}
-                            onChange={(e) => setNestedData(`pricingNeon.tiers.${index}.name`, e.target.value)}
+                            onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.name`, val)}
                         />
                         
                         <div className="flex gap-2">
                             <div className="flex-1">
-                                <Input
+                                <I18nInput
                                     label={t('editor.controls.price', 'Precio')}
                                     value={tier.price || ''}
-                                    onChange={(e) => setNestedData(`pricingNeon.tiers.${index}.price`, e.target.value)}
+                                    onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.price`, val)}
                                 />
                             </div>
                             <div className="flex-1">
-                                <Input
+                                <I18nInput
                                     label={t('editor.controls.billingPeriod', 'Período')}
                                     value={tier.billingPeriod || ''}
-                                    onChange={(e) => setNestedData(`pricingNeon.tiers.${index}.billingPeriod`, e.target.value)}
+                                    onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.billingPeriod`, val)}
                                 />
                             </div>
                         </div>
 
-                        <TextArea
+                        <I18nTextArea
                             label={t('editor.controls.description', 'Descripción')}
                             value={tier.description || ''}
-                            onChange={(e) => setNestedData(`pricingNeon.tiers.${index}.description`, e.target.value)}
+                            onChange={(val) => setNestedData(`pricingNeon.tiers.${index}.description`, val)}
                             rows={2}
                         />
 
@@ -211,14 +211,10 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
                             <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                                 Características (1 por línea)
                             </label>
-                            <TextArea
-                                value={(tier.features || []).join('\n')}
-                                onChange={(e) => {
-                                    const featuresArray = e.target.value.split('\n').filter((f: string) => f.trim() !== '');
-                                    setNestedData(`pricingNeon.tiers.${index}.features`, featuresArray);
-                                }}
-                                rows={4}
-                                placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                            <I18nStringArrayEditor
+                                value={tier.features}
+                                onChange={(newFeatures) => setNestedData(`pricingNeon.tiers.${index}.features`, newFeatures)}
+                                placeholder="Feature 1"
                             />
                         </div>
 

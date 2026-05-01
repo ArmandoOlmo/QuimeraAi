@@ -43,6 +43,7 @@ import { doc, getDoc, collection, getDocs } from '../firebase';
 import { db } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
 import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fontLoader';
+import { resolveI18nSectionData } from '../utils/i18nContent';
 import Header from './Header';
 import SectionBackground from './ui/SectionBackground';
 import Hero from './Hero';
@@ -130,7 +131,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   onNavigateToBlog,
   onNavigateToArticle
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isAnnualBilling, setIsAnnualBilling] = useState(false);
 
   // Preview mode - listens for postMessage from Landing Page Editor
@@ -349,8 +350,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   const isLoadingContent = appContent?.isLoadingNavigation || false;
 
   // Helper to translate well-known navigation labels dynamically
-  const getTranslatedLabel = (label: string) => {
-    if (!label) return label;
+  // Also supports multilingual label maps: { es: "...", en: "..." }
+  const getTranslatedLabel = (label: string | Record<string, string>) => {
+    if (!label) return '';
+    // If label is an i18n map, resolve it
+    if (typeof label === 'object') {
+      return label[i18n.language] || label['es'] || Object.values(label)[0] || '';
+    }
     const normalized = label.trim().toLowerCase();
     switch (normalized) {
       case 'features': return t('landing.navFeatures', 'Características');
@@ -368,6 +374,10 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'legal': return t('landing.navLegal', 'Legal');
       case 'login': return t('landing.login', 'Iniciar Sesión');
       case 'get started': return t('landing.register', 'Registrarse');
+      case 'sign up': return t('landing.register', 'Registrarse');
+      case 'registrarse': return t('landing.register', 'Registrarse');
+      case 'iniciar sesión': return t('landing.login', 'Iniciar Sesión');
+      case 'log in': return t('landing.login', 'Iniciar Sesión');
       default: return label;
     }
   };
@@ -701,6 +711,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       ? section.data?.glassEffect !== false
       : section.data?.glassEffect;
 
+    // Resolve multilingual content based on current i18n language
+    const resolvedData = resolveI18nSectionData(section.data, i18n.language);
+
     return (
       <section key={section.id} id={`section-${section.type}`} data-section-id={section.id}>
         <SectionBackground 
@@ -712,7 +725,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           backgroundPosition={section.data?.backgroundPosition}
           glassEffect={glassEffect}
         >
-          <Component {...section.data} isPreviewMode={isPreviewMode} />
+          <Component {...resolvedData} isPreviewMode={isPreviewMode} />
         </SectionBackground>
       </section>
     );
@@ -727,7 +740,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     switch (sectionType) {
       // ── QUIMERA SUITE COMPONENTS ──
       case 'heroQuimera':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroQuimera {...section.data} isPreviewMode={isPreviewMode} /></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroQuimera {...resolveI18nSectionData(section.data, i18n.language)} isPreviewMode={isPreviewMode} /></section>;
       case 'platformShowcaseQuimera':
         return renderSuiteSection(section, PlatformShowcaseQuimera);
       case 'bentoShowcaseQuimera':
@@ -890,7 +903,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         isSticky={headerPreview?.isSticky ?? true}
         glassEffect={headerPreview?.glassEffect ?? true}
         links={navigation.header.items.map(item => ({
-          text: item.label,
+          text: getTranslatedLabel(item.label),
           href: item.href,
         }))}
         logoType={headerPreview?.logoType || (navigation.header.logo?.imageUrl ? 'both' : 'text')}
@@ -906,6 +919,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         loginUrl="/login"
         buttonBorderRadius={headerPreview?.buttonBorderRadius || 'md'}
         hoverStyle={headerPreview?.hoverStyle || 'highlight'}
+        showLanguageSelector={headerPreview?.showLanguageSelector ?? true}
         backgroundColor={`${headerBackgroundColor}f2`}
         textColor={headerTextColor}
         colors={{
@@ -1094,6 +1108,13 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                 </button>
               ))}
             </div>
+            )}
+
+            {/* Language Selector in footer */}
+            {(headerPreview?.showLanguageSelector ?? true) && (
+              <div className="flex justify-center mt-2 md:mt-0">
+                <LanguageSelector variant="minimal" />
+              </div>
             )}
           </div>
         </div>

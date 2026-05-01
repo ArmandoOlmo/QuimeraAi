@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2 } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import ImagePicker from '../../ui/ImagePicker';
 
 export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
@@ -14,15 +14,15 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
 
     const contentTab = (
         <div className="space-y-4">
-            <Input
+            <I18nInput
                 label={t('editor.controls.headline', 'Titular')}
                 value={sectionData.headline || ''}
-                onChange={(e) => setNestedData('testimonialsNeon.headline', e.target.value)}
+                onChange={(val) => setNestedData('testimonialsNeon.headline', val)}
             />
-            <TextArea
+            <I18nTextArea
                 label={t('editor.controls.subheadline', 'Subtitular')}
                 value={sectionData.subheadline || ''}
-                onChange={(e) => setNestedData('testimonialsNeon.subheadline', e.target.value)}
+                onChange={(val) => setNestedData('testimonialsNeon.subheadline', val)}
                 rows={3}
             />
 
@@ -44,20 +44,20 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                         >
                             &times;
                         </button>
-                        <Input
+                        <I18nInput
                             label={t('editor.controls.name', 'Nombre')}
                             value={test.authorName || ''}
-                            onChange={(e) => setNestedData(`testimonialsNeon.testimonials.${index}.authorName`, e.target.value)}
+                            onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.authorName`, val)}
                         />
-                        <Input
+                        <I18nInput
                             label={t('editor.controls.role', 'Cargo')}
                             value={test.authorRole || ''}
-                            onChange={(e) => setNestedData(`testimonialsNeon.testimonials.${index}.authorRole`, e.target.value)}
+                            onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.authorRole`, val)}
                         />
-                        <TextArea
+                        <I18nTextArea
                             label={t('editor.controls.quote', 'Cita')}
                             value={test.quote || ''}
-                            onChange={(e) => setNestedData(`testimonialsNeon.testimonials.${index}.quote`, e.target.value)}
+                            onChange={(val) => setNestedData(`testimonialsNeon.testimonials.${index}.quote`, val)}
                         />
                         <ImagePicker
                             label={t('editor.controls.authorImage', 'Imagen del Autor')}
@@ -189,13 +189,13 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                 />
                 <ColorControl
                     label={t('editor.controls.cardBackground', 'Fondo de Tarjeta')}
-                    color={colors.cardBackground}
-                    onChange={(color) => setNestedData('testimonialsNeon.colors.cardBackground', color)}
+                    value={colors.cardBackground}
+                    onChange={(val) => setNestedData('testimonialsNeon.colors.cardBackground', val)}
                 />
                 <ColorControl
                     label={t('editor.controls.cardText', 'Texto de Tarjeta')}
-                    color={colors.cardText}
-                    onChange={(color) => setNestedData('testimonialsNeon.colors.cardText', color)}
+                    value={colors.cardText}
+                    onChange={(val) => setNestedData('testimonialsNeon.colors.cardText', val)}
                 />
             </div>
         </div>

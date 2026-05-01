@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -36,7 +36,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <Input label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(e) => setNestedData('cta.title', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.cta.title} onChange={(val) => setNestedData('cta.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.cta.titleFontSize || 'md'} onChange={(v) => setNestedData('cta.titleFontSize', v)} />
         
         <div className="bg-q-surface/30 p-3 rounded-lg border border-q-border/50 my-3">
@@ -46,19 +46,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             onChange={(v) => setNestedData('cta.showAccent', v)}
           />
           {(data?.cta.showAccent !== false) && (
-            <Input 
+            <I18nInput 
               label={t('controls.textoDeAcento')} 
               value={data?.cta.accentText || 'Limited Time Offer'} 
-              onChange={(e) => setNestedData('cta.accentText', e.target.value)} 
+              onChange={(val) => setNestedData('cta.accentText', val)} 
               className="mt-3 mb-0"
             />
           )}
         </div>
 
-        <TextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(e) => setNestedData('cta.description', e.target.value)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.cta.description} onChange={(val) => setNestedData('cta.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.cta.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cta.descriptionFontSize', v)} />
-        <Input label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(e) => setNestedData('cta.buttonText', e.target.value)} />
-        <Input label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(e) => setNestedData('cta.secondaryText', e.target.value)} />
+        <I18nInput label={t('editor.controls.common.buttonText')} value={data?.cta.buttonText} onChange={(val) => setNestedData('cta.buttonText', val)} />
+        <I18nInput label="Texto Secundario" value={data?.cta.secondaryText !== undefined ? data?.cta.secondaryText : 'No credit card required • Cancel anytime'} onChange={(val) => setNestedData('cta.secondaryText', val)} />
       </div>
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -88,10 +88,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       {(data?.cta.linkType === 'manual' || !data?.cta.linkType) && (
         <>
-          <Input
+          <I18nInput
             label={t('editor.controls.common.buttonLink')}
             value={data?.cta.buttonUrl || ''}
-            onChange={(e) => setNestedData('cta.buttonUrl', e.target.value)}
+            onChange={(val) => setNestedData('cta.buttonUrl', val)}
             placeholder="https://example.com or #section"
           />
           <p className="text-xs text-q-text-secondary -mt-2">

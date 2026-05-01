@@ -11,7 +11,7 @@ import AIFormControl from '../../ui/AIFormControl';
 import TabbedControls from '../../ui/TabbedControls';
 import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
-import { Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, I18nInput, I18nTextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector } from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -55,12 +55,12 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           onChange={(v) => setNestedData(`${sectionKey}.glassEffect`, v)}
         />
       </div>
-      <Input label={t('editor.controls.common.title')} value={sectionData.title} onChange={(e) => setNestedData(`${sectionKey}.title`, e.target.value)} />
+      <I18nInput label={t('editor.controls.common.title')} value={sectionData.title} onChange={(val) => setNestedData(`${sectionKey}.title`, val)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={sectionData.titleFontSize || 'md'} onChange={(v) => setNestedData(`${sectionKey}.titleFontSize`, v)} />
 
       {sectionData.description !== undefined && (
         <>
-          <TextArea label={t('editor.controls.common.description')} value={sectionData.description} onChange={(e) => setNestedData(`${sectionKey}.description`, e.target.value)} rows={2} />
+          <I18nTextArea label={t('editor.controls.common.description')} value={sectionData.description} onChange={(val) => setNestedData(`${sectionKey}.description`, val)} rows={2} />
           <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={sectionData.descriptionFontSize || 'md'} onChange={(v) => setNestedData(`${sectionKey}.descriptionFontSize`, v)} />
         </>
       )}
@@ -114,12 +114,11 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           {fields.map(field => (
             <div key={field.key} className="mb-2 last:mb-0">
               {field.type === 'textarea' ? (
-                <textarea
+                <I18nTextArea
                   placeholder={field.label}
                   value={item[field.key]}
-                  onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)}
+                  onChange={(val) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, val)}
                   rows={2}
-                  className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
                 />
               ) : field.type === 'icon-selector' ? (
                 <IconSelector
@@ -142,11 +141,10 @@ const { data, setNestedData, t, setAiAssistField } = deps;
                   onChange={(url) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, url)}
                 />
               ) : (
-                <input
+                <I18nInput
                   placeholder={field.label}
                   value={item[field.key]}
-                  onChange={(e) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, e.target.value)}
-                  className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent"
+                  onChange={(val) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, val)}
                 />
               )}
             </div>

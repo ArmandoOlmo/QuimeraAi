@@ -1,6 +1,6 @@
 import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
-import { Input, TextArea, Select, ToggleControl } from '../../ui/EditorControlPrimitives';
+import { Input, TextArea, Select, ToggleControl , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -28,10 +28,10 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <Input 
+            <I18nInput 
               label={t('editor.heroLumina.buttonText', 'Texto del Botón')} 
               value={data.heroLumina[textKey] || ''} 
-              onChange={(e) => setNestedData(`heroLumina.${textKey}`, e.target.value)} 
+              onChange={(val) => setNestedData(`heroLumina.${textKey}`, val)} 
             />
         </div>
 
@@ -67,7 +67,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         {linkType === 'section' && (
             <Select
               value={data.heroLumina[linkKey] || '/#cta'}
-              onChange={(e) => setNestedData(`heroLumina.${linkKey}`, e.target.value)}
+              onChange={(val) => setNestedData(`heroLumina.${linkKey}`, val)}
               options={[
                 { value: '/', label: 'Inicio' },
                 { value: '/#features', label: 'Features' },
@@ -97,10 +97,10 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
 
         {/* Manual URL Input */}
         {linkType === 'manual' && (
-          <Input
+          <I18nInput
             label=""
             value={data.heroLumina[linkKey] || ''}
-            onChange={(e) => setNestedData(`heroLumina.${linkKey}`, e.target.value)}
+            onChange={(val) => setNestedData(`heroLumina.${linkKey}`, val)}
             placeholder="https://... o /pagina"
             className="mb-0"
           />
@@ -211,9 +211,9 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.headline', value: data.heroLumina.headline, context: 'Hero Lumina Headline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.heroLumina.headline || ''} 
-              onChange={(e) => setNestedData('heroLumina.headline', e.target.value)} 
+              onChange={(val) => setNestedData('heroLumina.headline', val)} 
               rows={2} 
             />
           </AIFormControl>
@@ -222,9 +222,9 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.subheadline', value: data.heroLumina.subheadline || '', context: 'Hero Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.heroLumina.subheadline || ''} 
-              onChange={(e) => setNestedData('heroLumina.subheadline', e.target.value)} 
+              onChange={(val) => setNestedData('heroLumina.subheadline', val)} 
               rows={3} 
             />
           </AIFormControl>

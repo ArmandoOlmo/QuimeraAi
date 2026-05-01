@@ -43,13 +43,28 @@ export const gymPageData: PageData = {
         logoImageUrl: '',
         logoWidth: 160,
         links: [
-            { text: 'MANIFESTO', href: '#features' },
-            { text: 'PROGRAMS', href: '#services' },
-            { text: 'TEAM', href: '#team' },
-            { text: 'PLANS', href: '#pricing' },
+            { text: {
+                        es: "MANIFESTO",
+                        en: "MANIFESTO"
+                    }, href: '#features' },
+            { text: {
+                        es: "PROGRAMS",
+                        en: "PROGRAMS"
+                    }, href: '#services' },
+            { text: {
+                        es: "TEAM",
+                        en: "TEAM"
+                    }, href: '#team' },
+            { text: {
+                        es: "PLANS",
+                        en: "PLANS"
+                    }, href: '#pricing' },
         ] as NavLink[],
         hoverStyle: 'simple',
-        ctaText: 'ACCESS PORTAL',
+        ctaText: {
+                es: "ACCESS PORTAL",
+                en: "ACCESS PORTAL"
+            },
         showCta: true,
         showLogin: false,
         loginText: '',
@@ -66,10 +81,22 @@ export const gymPageData: PageData = {
         heroVariant: 'fitness',
         paddingY: 'xl',
         paddingX: 'lg',
-        headline: "RECONSTRUCT <span class=\"text-transparent bg-clip-text\" style=\"-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #f2330d, #ff6644)\">YOURSELF</span>",
-        subheadline: "We don't build bodies. We engineer machines. Raw iron. Zero compromise. Every rep is a declaration of war against mediocrity.",
-        primaryCta: 'BEGIN PROTOCOL',
-        secondaryCta: 'VIEW PROGRAMS',
+        headline: {
+                es: "RECONSTRUCT <span class=\"text-transparent bg-clip-text\" style=\"-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #f2330d, #ff6644)\">YOURSELF</span>",
+                en: "RECONSTRUCT <span class=\"text-transparent bg-clip-text\" style=\"-webkit-text-fill-color: transparent; background-image: linear-gradient(135deg, #f2330d, #ff6644)\">YOURSELF</span>"
+            },
+        subheadline: {
+                es: "We don't build bodies. We engineer machines. Raw iron. Zero compromise. Every rep is a declaration of war against mediocrity.",
+                en: "We don't build bodies. We engineer machines. Raw iron. Zero compromise. Every rep is a declaration of war against mediocrity."
+            },
+        primaryCta: {
+                es: "BEGIN PROTOCOL",
+                en: "BEGIN PROTOCOL"
+            },
+        secondaryCta: {
+                es: "VIEW PROGRAMS",
+                en: "VIEW PROGRAMS"
+            },
         imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=2670',
         imageStyle: 'default',
         imageDropShadow: false,
@@ -99,7 +126,10 @@ export const gymPageData: PageData = {
         secondaryButtonStyle: 'solid',
         secondaryButtonOpacity: 100,
         showBadge: true,
-        badgeText: '⚡ NO EXCUSES',
+        badgeText: {
+                es: "⚡ NO EXCUSES",
+                en: "⚡ NO EXCUSES"
+            },
         badgeIcon: 'zap',
         badgeColor: COLORS.accent,
         badgeBackgroundColor: `${COLORS.accent}15`,
@@ -113,9 +143,18 @@ export const gymPageData: PageData = {
         subheadlineFontSize: 'md',
     },
     heroSplit: {
-        headline: 'RECONSTRUCT YOURSELF',
-        subheadline: 'Raw iron. Zero compromise.',
-        buttonText: 'BEGIN PROTOCOL',
+        headline: {
+                es: "RECONSTRUCT YOURSELF",
+                en: "RECONSTRUCT YOURSELF"
+            },
+        subheadline: {
+                es: "Raw iron. Zero compromise.",
+                en: "Raw iron. Zero compromise."
+            },
+        buttonText: {
+                es: "BEGIN PROTOCOL",
+                en: "BEGIN PROTOCOL"
+            },
         buttonUrl: '#pricing',
         imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=2670',
         imagePosition: 'right',
@@ -137,22 +176,46 @@ export const gymPageData: PageData = {
         featuresVariant: 'bento-premium',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'THE MANIFESTO',
-        description: "This isn't a fitness center. This is a reconstruction facility. We believe in the relentless pursuit of physical excellence through discipline, science, and raw determination.",
+        title: {
+                es: "THE MANIFESTO",
+                en: "THE MANIFESTO"
+            },
+        description: {
+                es: "This isn't a fitness center. This is a reconstruction facility. We believe in the relentless pursuit of physical excellence through discipline, science, and raw determination.",
+                en: "This isn't a fitness center. This is a reconstruction facility. We believe in the relentless pursuit of physical excellence through discipline, science, and raw determination."
+            },
         items: [
             {
-                title: 'RAW DISCIPLINE',
-                description: 'Every session is engineered for maximum output. No distractions. No shortcuts. Only controlled aggression toward your goals.',
+                title: {
+                        es: "RAW DISCIPLINE",
+                        en: "RAW DISCIPLINE"
+                    },
+                description: {
+                        es: "Every session is engineered for maximum output. No distractions. No shortcuts. Only controlled aggression toward your goals.",
+                        en: "Every session is engineered for maximum output. No distractions. No shortcuts. Only controlled aggression toward your goals."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'SCIENTIFIC APPROACH',
-                description: 'Periodized programming backed by sports science. Every variable—volume, intensity, frequency—optimized for your transformation.',
+                title: {
+                        es: "SCIENTIFIC APPROACH",
+                        en: "SCIENTIFIC APPROACH"
+                    },
+                description: {
+                        es: "Periodized programming backed by sports science. Every variable—volume, intensity, frequency—optimized for your transformation.",
+                        en: "Periodized programming backed by sports science. Every variable—volume, intensity, frequency—optimized for your transformation."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'ZERO COMPROMISE',
-                description: 'We don\'t do half measures. Premium equipment, elite coaching, and an environment engineered for intensity.',
+                title: {
+                        es: "ZERO COMPROMISE",
+                        en: "ZERO COMPROMISE"
+                    },
+                description: {
+                        es: "We don't do half measures. Premium equipment, elite coaching, and an environment engineered for intensity.",
+                        en: "We don't do half measures. Premium equipment, elite coaching, and an environment engineered for intensity."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -176,8 +239,14 @@ export const gymPageData: PageData = {
         testimonialsVariant: 'glassmorphism',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'RESULTS SPEAK',
-        description: 'Real athletes. Real transformations. No filters.',
+        title: {
+                es: "RESULTS SPEAK",
+                en: "RESULTS SPEAK"
+            },
+        description: {
+                es: "Real athletes. Real transformations. No filters.",
+                en: "Real athletes. Real transformations. No filters."
+            },
         titleFontSize: 'md',
         descriptionFontSize: 'md',
         borderRadius: 'none',
@@ -188,19 +257,46 @@ export const gymPageData: PageData = {
         enableCardAnimation: true,
         items: [
             {
-                quote: '"I came in as a beginner. 6 months later I deadlifted 200kg. The programming here is surgical."',
-                name: 'Marcus Kaine',
-                title: 'Powerlifter, 2 years',
+                quote: {
+                        es: "\"I came in as a beginner. 6 months later I deadlifted 200kg. The programming here is surgical.\"",
+                        en: "\"I came in as a beginner. 6 months later I deadlifted 200kg. The programming here is surgical.\""
+                    },
+                name: {
+                        es: "Marcus Kaine",
+                        en: "Marcus Kaine"
+                    },
+                title: {
+                        es: "Powerlifter, 2 years",
+                        en: "Powerlifter, 2 years"
+                    },
             },
             {
-                quote: '"No BS, no gimmicks. Just pure training science and an environment that pushes you beyond limits."',
-                name: 'Sarah Voss',
-                title: 'CrossFit Competitor',
+                quote: {
+                        es: "\"No BS, no gimmicks. Just pure training science and an environment that pushes you beyond limits.\"",
+                        en: "\"No BS, no gimmicks. Just pure training science and an environment that pushes you beyond limits.\""
+                    },
+                name: {
+                        es: "Sarah Voss",
+                        en: "Sarah Voss"
+                    },
+                title: {
+                        es: "CrossFit Competitor",
+                        en: "CrossFit Competitor"
+                    },
             },
             {
-                quote: '"The coaches don\'t let you settle. Every session is calculated progression. This place changed my life."',
-                name: 'Dmitri Volkov',
-                title: 'Bodybuilder, 3 years',
+                quote: {
+                        es: "\"The coaches don't let you settle. Every session is calculated progression. This place changed my life.\"",
+                        en: "\"The coaches don't let you settle. Every session is calculated progression. This place changed my life.\""
+                    },
+                name: {
+                        es: "Dmitri Volkov",
+                        en: "Dmitri Volkov"
+                    },
+                title: {
+                        es: "Bodybuilder, 3 years",
+                        en: "Bodybuilder, 3 years"
+                    },
             },
         ],
         colors: {
@@ -214,7 +310,10 @@ export const gymPageData: PageData = {
     },
     slideshow: {
         slideshowVariant: 'classic',
-        title: 'THE FACILITY',
+        title: {
+                es: "THE FACILITY",
+                en: "THE FACILITY"
+            },
         showTitle: true,
         fullWidth: true,
         paddingY: 'lg',
@@ -250,8 +349,14 @@ export const gymPageData: PageData = {
     },
     pricing: {
         pricingVariant: 'gradient',
-        title: 'MEMBERSHIP PLANS',
-        description: 'Select your protocol. All memberships include facility access, locker rooms, and basic programming.',
+        title: {
+                es: "MEMBERSHIP PLANS",
+                en: "MEMBERSHIP PLANS"
+            },
+        description: {
+                es: "Select your protocol. All memberships include facility access, locker rooms, and basic programming.",
+                en: "Select your protocol. All memberships include facility access, locker rooms, and basic programming."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         titleFontSize: 'md',
@@ -259,25 +364,46 @@ export const gymPageData: PageData = {
         cardBorderRadius: 'none',
         tiers: [
             {
-                name: 'BASIC ACCESS',
-                price: '$49',
+                name: {
+                        es: "BASIC ACCESS",
+                        en: "BASIC ACCESS"
+                    },
+                price: {
+                        es: "$49",
+                        en: "$49"
+                    },
                 frequency: '/mo',
-                description: 'Open gym access during standard hours.',
+                description: {
+                        es: "Open gym access during standard hours.",
+                        en: "Open gym access during standard hours."
+                    },
                 features: [
                     'Full facility access (6AM-10PM)',
                     'Locker room & showers',
                     'Basic equipment orientation',
                     'Community Discord access',
                 ],
-                buttonText: 'SELECT PLAN',
+                buttonText: {
+                        es: "SELECT PLAN",
+                        en: "SELECT PLAN"
+                    },
                 buttonLink: '#leads',
                 featured: false,
             },
             {
-                name: 'FULL PROTOCOL',
-                price: '$99',
+                name: {
+                        es: "FULL PROTOCOL",
+                        en: "FULL PROTOCOL"
+                    },
+                price: {
+                        es: "$99",
+                        en: "$99"
+                    },
                 frequency: '/mo',
-                description: 'Complete training system with coaching.',
+                description: {
+                        es: "Complete training system with coaching.",
+                        en: "Complete training system with coaching."
+                    },
                 features: [
                     '24/7 unlimited access',
                     'Personalized programming',
@@ -285,15 +411,27 @@ export const gymPageData: PageData = {
                     'Nutrition guidelines',
                     'Group training sessions',
                 ],
-                buttonText: 'SELECT PLAN',
+                buttonText: {
+                        es: "SELECT PLAN",
+                        en: "SELECT PLAN"
+                    },
                 buttonLink: '#leads',
                 featured: true,
             },
             {
-                name: 'ELITE',
-                price: '$199',
+                name: {
+                        es: "ELITE",
+                        en: "ELITE"
+                    },
+                price: {
+                        es: "$199",
+                        en: "$199"
+                    },
                 frequency: '/mo',
-                description: 'Premium 1-on-1 coaching experience.',
+                description: {
+                        es: "Premium 1-on-1 coaching experience.",
+                        en: "Premium 1-on-1 coaching experience."
+                    },
                 features: [
                     'Everything in Full Protocol',
                     '1-on-1 personal coaching (3x/week)',
@@ -302,7 +440,10 @@ export const gymPageData: PageData = {
                     'Competition preparation',
                     'Priority scheduling',
                 ],
-                buttonText: 'SELECT PLAN',
+                buttonText: {
+                        es: "SELECT PLAN",
+                        en: "SELECT PLAN"
+                    },
                 buttonLink: '#leads',
                 featured: false,
             },
@@ -324,8 +465,14 @@ export const gymPageData: PageData = {
         enableCardAnimation: true,
     },
     faq: {
-        title: 'FREQUENTLY ASKED',
-        description: 'Everything you need to know before stepping through our doors.',
+        title: {
+                es: "FREQUENTLY ASKED",
+                en: "FREQUENTLY ASKED"
+            },
+        description: {
+                es: "Everything you need to know before stepping through our doors.",
+                en: "Everything you need to know before stepping through our doors."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         items: [
@@ -356,13 +503,22 @@ export const gymPageData: PageData = {
     },
     leads: {
         leadsVariant: 'classic',
-        title: 'START YOUR PROTOCOL',
-        description: 'Fill out the form. We\'ll contact you within 24 hours to schedule your free assessment session.',
+        title: {
+                es: "START YOUR PROTOCOL",
+                en: "START YOUR PROTOCOL"
+            },
+        description: {
+                es: "Fill out the form. We'll contact you within 24 hours to schedule your free assessment session.",
+                en: "Complete the form. We will contact you within 24 hours to schedule your free assessment session."
+            },
         namePlaceholder: 'Full Name',
         emailPlaceholder: 'your@email.com',
         companyPlaceholder: 'Current Training Experience',
         messagePlaceholder: 'Tell us about your goals...',
-        buttonText: 'SUBMIT APPLICATION',
+        buttonText: {
+                es: "SUBMIT APPLICATION",
+                en: "SUBMIT APPLICATION"
+            },
         paddingY: 'lg',
         paddingX: 'md',
         cardBorderRadius: 'none',
@@ -386,10 +542,19 @@ export const gymPageData: PageData = {
         },
     },
     newsletter: {
-        title: 'DAILY DIRECTIVES',
-        description: 'Subscribe for training tips, programming updates, and members-only content. No spam. Only signal.',
+        title: {
+                es: "DAILY DIRECTIVES",
+                en: "DAILY DIRECTIVES"
+            },
+        description: {
+                es: "Subscribe for training tips, programming updates, and members-only content. No spam. Only signal.",
+                en: "Subscribe for training tips, programming updates, and members-only content. No spam. Only signal."
+            },
         placeholderText: 'Enter your email',
-        buttonText: 'SUBSCRIBE',
+        buttonText: {
+                es: "SUBSCRIBE",
+                en: "SUBSCRIBE"
+            },
         paddingY: 'lg',
         paddingX: 'md',
         colors: {
@@ -409,9 +574,18 @@ export const gymPageData: PageData = {
     cta: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'READY TO TRANSFORM?',
-        description: 'Stop thinking. Start lifting. Your first session is on us.',
-        buttonText: 'CLAIM FREE SESSION',
+        title: {
+                es: "READY TO TRANSFORM?",
+                en: "READY TO TRANSFORM?"
+            },
+        description: {
+                es: "Stop thinking. Start lifting. Your first session is on us.",
+                en: "Stop thinking. Start lifting. Your first session is free."
+            },
+        buttonText: {
+                es: "CLAIM FREE SESSION",
+                en: "CLAIM FREE SESSION"
+            },
         titleFontSize: 'lg',
         descriptionFontSize: 'md',
         colors: {
@@ -427,22 +601,46 @@ export const gymPageData: PageData = {
     portfolio: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'TRANSFORMATIONS',
-        description: 'Real results from our members.',
+        title: {
+                es: "TRANSFORMATIONS",
+                en: "TRANSFORMATIONS"
+            },
+        description: {
+                es: "Real results from our members.",
+                en: "Real results from our members."
+            },
         items: [
             {
-                title: 'Marcus K. — Powerlifting',
-                description: 'From 80kg squat to 180kg in 12 months of structured programming.',
+                title: {
+                        es: "Marcus K. — Powerlifting",
+                        en: "Marcus K. — Powerlifting"
+                    },
+                description: {
+                        es: "From 80kg squat to 180kg in 12 months of structured programming.",
+                        en: "From 80kg squat to 180kg in 12 months with structured programming."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Sarah V. — Competition Prep',
-                description: 'First place at regional CrossFit qualifier after 8 months of coaching.',
+                title: {
+                        es: "Sarah V. — Competition Prep",
+                        en: "Sarah V. — Competition Prep"
+                    },
+                description: {
+                        es: "First place at regional CrossFit qualifier after 8 months of coaching.",
+                        en: "First place at regional CrossFit qualifier after 8 months of coaching."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1550345332-09e3ac987658?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                title: 'Dmitri V. — Bodybuilding',
-                description: 'Complete body recomposition: -15kg fat, +8kg lean mass in 18 months.',
+                title: {
+                        es: "Dmitri V. — Bodybuilding",
+                        en: "Dmitri V. — Bodybuilding"
+                    },
+                description: {
+                        es: "Complete body recomposition: -15kg fat, +8kg lean mass in 18 months.",
+                        en: "Complete body recomposition: -15kg fat, +8kg lean mass in 18 months."
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -460,23 +658,47 @@ export const gymPageData: PageData = {
         servicesVariant: 'cards',
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'TRAINING PROTOCOLS',
-        description: 'Scientifically structured programs designed for specific outcomes. Choose your path.',
+        title: {
+                es: "TRAINING PROTOCOLS",
+                en: "TRAINING PROTOCOLS"
+            },
+        description: {
+                es: "Scientifically structured programs designed for specific outcomes. Choose your path.",
+                en: "Scientifically structured programs designed for specific outcomes. Choose your path."
+            },
         items: [
             {
                 icon: 'dumbbell',
-                title: 'HYPERTROPHY PROTOCOL',
-                description: 'Volume-based progressive overload programming. Focused on muscle growth through mechanical tension, metabolic stress, and controlled progressive resistance.',
+                title: {
+                        es: "HYPERTROPHY PROTOCOL",
+                        en: "HYPERTROPHY PROTOCOL"
+                    },
+                description: {
+                        es: "Volume-based progressive overload programming. Focused on muscle growth through mechanical tension, metabolic stress, and controlled progressive resistance.",
+                        en: "Volume-based progressive overload programming. Focused on muscle growth through mechanical tension, metabolic stress, and controlled progressive resistance."
+                    },
             },
             {
                 icon: 'trophy',
-                title: 'POWERLIFTING PROGRAM',
-                description: 'Periodized strength programming centered on the squat, bench press, and deadlift. Peaking cycles for competition or personal records.',
+                title: {
+                        es: "POWERLIFTING PROGRAM",
+                        en: "POWERLIFTING PROGRAM"
+                    },
+                description: {
+                        es: "Periodized strength programming centered on the squat, bench press, and deadlift. Peaking cycles for competition or personal records.",
+                        en: "Periodized strength programming centered on the squat, bench press, and deadlift. Peaking cycles for competition or personal records."
+                    },
             },
             {
                 icon: 'flame',
-                title: 'METABOLIC CONDITIONING',
-                description: 'High-intensity interval training combined with functional movements. Designed to maximize cardiovascular capacity and fat oxidation.',
+                title: {
+                        es: "METABOLIC CONDITIONING",
+                        en: "METABOLIC CONDITIONING"
+                    },
+                description: {
+                        es: "High-intensity interval training combined with functional movements. Designed to maximize cardiovascular capacity and fat oxidation.",
+                        en: "High-intensity interval training combined with functional movements. Designed to maximize cardiovascular capacity and fat oxidation."
+                    },
             },
         ],
         animationType: 'fade-in-up',
@@ -492,27 +714,57 @@ export const gymPageData: PageData = {
     team: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'THE INSTRUCTORS',
-        description: 'Certified professionals with competition experience and a passion for results.',
+        title: {
+                es: "THE INSTRUCTORS",
+                en: "THE INSTRUCTORS"
+            },
+        description: {
+                es: "Certified professionals with competition experience and a passion for results.",
+                en: "Certified professionals with competition experience and a passion for results."
+            },
         items: [
             {
-                name: 'Viktor Hale',
-                role: 'Head Coach — Powerlifting',
+                name: {
+                        es: "Viktor Hale",
+                        en: "Viktor Hale"
+                    },
+                role: {
+                        es: "Head Coach — Powerlifting",
+                        en: "Head Coach — Powerlifting"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                name: 'Elena Cross',
-                role: 'Strength & Conditioning',
+                name: {
+                        es: "Elena Cross",
+                        en: "Elena Cross"
+                    },
+                role: {
+                        es: "Strength & Conditioning",
+                        en: "Strength & Conditioning"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1609899464726-209befb42482?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                name: 'Kai Nomura',
-                role: 'Hypertrophy Specialist',
+                name: {
+                        es: "Kai Nomura",
+                        en: "Kai Nomura"
+                    },
+                role: {
+                        es: "Hypertrophy Specialist",
+                        en: "Hypertrophy Specialist"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&q=80&w=2670',
             },
             {
-                name: 'Aria Stone',
-                role: 'Metabolic Conditioning',
+                name: {
+                        es: "Aria Stone",
+                        en: "Aria Stone"
+                    },
+                role: {
+                        es: "Metabolic Conditioning",
+                        en: "Metabolic Conditioning"
+                    },
                 imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=2670',
             },
         ],
@@ -527,8 +779,14 @@ export const gymPageData: PageData = {
     video: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'INSIDE THE TEMPLE',
-        description: 'See what a typical training session looks like.',
+        title: {
+                es: "INSIDE THE TEMPLE",
+                en: "INSIDE THE TEMPLE"
+            },
+        description: {
+                es: "See what a typical training session looks like.",
+                en: "See what a typical training session looks like."
+            },
         source: 'youtube',
         videoId: 'dQw4w9WgXcQ',
         videoUrl: '',
@@ -544,14 +802,44 @@ export const gymPageData: PageData = {
     howItWorks: {
         paddingY: 'lg',
         paddingX: 'md',
-        title: 'YOUR JOURNEY',
-        description: 'From first contact to full transformation.',
+        title: {
+                es: "YOUR JOURNEY",
+                en: "YOUR JOURNEY"
+            },
+        description: {
+                es: "From first contact to full transformation.",
+                en: "From first contact to full transformation."
+            },
         steps: 4,
         items: [
-            { icon: 'upload', title: 'APPLY', description: 'Submit your application and tell us about your goals.' },
-            { icon: 'process', title: 'ASSESS', description: 'Free 1-on-1 assessment to evaluate your current level.' },
-            { icon: 'download', title: 'PROGRAM', description: 'Receive your personalized training protocol.' },
-            { icon: 'share', title: 'EXECUTE', description: 'Train with purpose. Track progress. Evolve.' },
+            { icon: 'upload', title: {
+                        es: "APPLY",
+                        en: "APPLY"
+                    }, description: {
+                        es: "Submit your application and tell us about your goals.",
+                        en: "Submit your application and tell us about your goals."
+                    } },
+            { icon: 'process', title: {
+                        es: "ASSESS",
+                        en: "ASSESS"
+                    }, description: {
+                        es: "Free 1-on-1 assessment to evaluate your current level.",
+                        en: "Free 1-on-1 assessment to evaluate your current level."
+                    } },
+            { icon: 'download', title: {
+                        es: "PROGRAM",
+                        en: "PROGRAM"
+                    }, description: {
+                        es: "Receive your personalized training protocol.",
+                        en: "Receive your personalized training protocol."
+                    } },
+            { icon: 'share', title: {
+                        es: "EXECUTE",
+                        en: "EXECUTE"
+                    }, description: {
+                        es: "Train with purpose. Track progress. Evolve.",
+                        en: "Train with purpose. Track progress. Evolve."
+                    } },
         ],
         colors: {
             background: COLORS.bgAlt,
@@ -572,9 +860,18 @@ export const gymPageData: PageData = {
         },
     },
     map: {
-        title: 'COORDINATES',
-        description: 'Iron Temple Headquarters. Street parking available. 24/7 access for Full Protocol and Elite members.',
-        address: '742 Industrial Blvd, Downtown, NY 10001',
+        title: {
+                es: "COORDINATES",
+                en: "COORDINATES"
+            },
+        description: {
+                es: "Iron Temple Headquarters. Street parking available. 24/7 access for Full Protocol and Elite members.",
+                en: "Iron Temple Headquarters. Street parking available. 24/7 access for Full Protocol and Elite members."
+            },
+        address: {
+                es: "742 Industrial Blvd, Downtown, NY 10001",
+                en: "742 Industrial Blvd, Downtown, NY 10001"
+            },
         lat: 40.7484,
         lng: -73.9967,
         zoom: 15,
@@ -596,33 +893,75 @@ export const gymPageData: PageData = {
     },
     menu: {
         menuVariant: 'classic',
-        title: 'SUPPLEMENTS',
-        description: 'Available at the front desk.',
+        title: {
+                es: "SUPPLEMENTS",
+                en: "SUPPLEMENTS"
+            },
+        description: {
+                es: "Available at the front desk.",
+                en: "Available at the front desk."
+            },
         paddingY: 'lg',
         paddingX: 'md',
         items: [
             {
-                name: 'Pre-Workout Blend',
-                description: 'High-stimulant formula for maximum training intensity.',
-                price: '$3.50',
+                name: {
+                        es: "Pre-Workout Blend",
+                        en: "Pre-Workout Blend"
+                    },
+                description: {
+                        es: "High-stimulant formula for maximum training intensity.",
+                        en: "High-stimulant formula for maximum training intensity."
+                    },
+                price: {
+                        es: "$3.50",
+                        en: "$3.50"
+                    },
                 imageUrl: '',
-                category: 'Performance',
+                category: {
+                        es: "Performance",
+                        en: "Performance"
+                    },
                 isSpecial: true,
             },
             {
-                name: 'Whey Protein Shake',
-                description: '30g protein. Post-workout recovery.',
-                price: '$5.00',
+                name: {
+                        es: "Whey Protein Shake",
+                        en: "Whey Protein Shake"
+                    },
+                description: {
+                        es: "30g protein. Post-workout recovery.",
+                        en: "30g protein. Post-workout recovery."
+                    },
+                price: {
+                        es: "$5.00",
+                        en: "$5.00"
+                    },
                 imageUrl: '',
-                category: 'Recovery',
+                category: {
+                        es: "Recovery",
+                        en: "Recovery"
+                    },
                 isSpecial: false,
             },
             {
-                name: 'BCAA Hydration',
-                description: 'Intra-workout amino acid formula.',
-                price: '$3.00',
+                name: {
+                        es: "BCAA Hydration",
+                        en: "BCAA Hydration"
+                    },
+                description: {
+                        es: "Intra-workout amino acid formula.",
+                        en: "Intra-workout amino acid formula."
+                    },
+                price: {
+                        es: "$3.00",
+                        en: "$3.00"
+                    },
                 imageUrl: '',
-                category: 'Performance',
+                category: {
+                        es: "Performance",
+                        en: "Performance"
+                    },
                 isSpecial: false,
             },
         ],
@@ -643,32 +982,77 @@ export const gymPageData: PageData = {
         enableCardAnimation: true,
     },
     footer: {
-        title: 'IRON TEMPLE',
-        description: 'We don\'t build bodies. We engineer machines.',
+        title: {
+                es: "IRON TEMPLE",
+                en: "IRON TEMPLE"
+            },
+        description: {
+                es: "We don't build bodies. We engineer machines.",
+                en: "We don't build bodies. We engineer machines."
+            },
         linkColumns: [
             {
-                title: 'SITEMAP',
+                title: {
+                        es: "SITEMAP",
+                        en: "SITEMAP"
+                    },
                 links: [
-                    { text: 'Manifesto', href: '#features' },
-                    { text: 'Programs', href: '#services' },
-                    { text: 'Team', href: '#team' },
-                    { text: 'Pricing', href: '#pricing' },
+                    { text: {
+                                es: "Manifesto",
+                                en: "Manifesto"
+                            }, href: '#features' },
+                    { text: {
+                                es: "Programs",
+                                en: "Programs"
+                            }, href: '#services' },
+                    { text: {
+                                es: "Team",
+                                en: "Team"
+                            }, href: '#team' },
+                    { text: {
+                                es: "Pricing",
+                                en: "Pricing"
+                            }, href: '#pricing' },
                 ],
             },
             {
-                title: 'LEGAL',
+                title: {
+                        es: "LEGAL",
+                        en: "LEGAL"
+                    },
                 links: [
-                    { text: 'Terms of Service', href: '/terms-of-service' },
-                    { text: 'Privacy Policy', href: '/privacy-policy' },
-                    { text: 'Waiver', href: '/terms-of-service' },
+                    { text: {
+                                es: "Terms of Service",
+                                en: "Terms of Service"
+                            }, href: '/terms-of-service' },
+                    { text: {
+                                es: "Privacy Policy",
+                                en: "Privacy Policy"
+                            }, href: '/privacy-policy' },
+                    { text: {
+                                es: "Waiver",
+                                en: "Waiver"
+                            }, href: '/terms-of-service' },
                 ],
             },
             {
-                title: 'CONNECT',
+                title: {
+                        es: "CONNECT",
+                        en: "CONNECT"
+                    },
                 links: [
-                    { text: 'Instagram', href: 'https://instagram.com' },
-                    { text: 'YouTube', href: 'https://youtube.com' },
-                    { text: 'Discord', href: 'https://discord.com' },
+                    { text: {
+                                es: "Instagram",
+                                en: "Instagram"
+                            }, href: 'https://instagram.com' },
+                    { text: {
+                                es: "YouTube",
+                                en: "YouTube"
+                            }, href: 'https://youtube.com' },
+                    { text: {
+                                es: "Discord",
+                                en: "Discord"
+                            }, href: 'https://discord.com' },
                 ],
             },
         ],
@@ -687,9 +1071,18 @@ export const gymPageData: PageData = {
     },
     banner: {
         bannerVariant: 'classic',
-        headline: 'NEW MEMBERS: FIRST WEEK FREE',
-        subheadline: 'No commitment. No credit card required. Just show up and work.',
-        buttonText: 'CLAIM OFFER',
+        headline: {
+                es: "NEW MEMBERS: FIRST WEEK FREE",
+                en: "NEW MEMBERS: FIRST WEEK FREE"
+            },
+        subheadline: {
+                es: "No commitment. No credit card required. Just show up and work.",
+                en: "No commitment. No credit card required. Just show up and work."
+            },
+        buttonText: {
+                es: "CLAIM OFFER",
+                en: "CLAIM OFFER"
+            },
         buttonUrl: '#leads',
         showButton: true,
         backgroundImageUrl: '',
@@ -743,7 +1136,10 @@ export const gymTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const gymBrandIdentity: BrandIdentity = {
-    name: 'Iron Temple',
+    name: {
+            es: "Iron Temple",
+            en: "Iron Temple"
+        },
     industry: 'fitness-gym',
     targetAudience: 'Serious athletes, powerlifters, bodybuilders, and fitness enthusiasts seeking structured training programs',
     toneOfVoice: 'Professional',
@@ -792,15 +1188,24 @@ export const gymSectionVisibility = gymComponentOrder.reduce((acc, section) => {
 // FULL TEMPLATE PRESET (ready for Firestore insertion)
 // =============================================================================
 export const gymBrutalistPreset = {
-    name: 'Dark Brutalist Gym',
+    name: {
+            es: "Dark Brutalist Gym",
+            en: "Dark Brutalist Gym"
+        },
     data: gymPageData,
     theme: gymTheme,
     brandIdentity: gymBrandIdentity,
     componentOrder: gymComponentOrder,
     sectionVisibility: gymSectionVisibility,
     status: 'Template' as const,
-    description: 'A dark, brutalist-style gym template with bold typography, red accent (#f2330d), and angular design. Includes hero, manifesto, training programs, team, pricing, FAQ, and contact sections.',
-    category: 'fitness',
+    description: {
+            es: "A dark, brutalist-style gym template with bold typography, red accent (#f2330d), and angular design. Includes hero, manifesto, training programs, team, pricing, FAQ, and contact sections.",
+            en: "A dark, brutalist-style gym template with bold typography, red accent (#f2330d), and angular design. Includes hero, manifesto, training programs, team, pricing, FAQ, and contact sections."
+        },
+    category: {
+            es: "fitness",
+            en: "fitness"
+        },
     tags: ['gym', 'fitness', 'brutalist', 'dark', 'powerlifting', 'bodybuilding'],
     industries: ['fitness-gym'],
     thumbnailUrl: '',

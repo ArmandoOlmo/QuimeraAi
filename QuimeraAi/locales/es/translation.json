@@ -30,7 +30,8 @@
       "delete": "Eliminar",
       "deleteConfirm": "¿Estás seguro de que quieres eliminar esta FAQ?",
       "noFaqs": "Aún no se han agregado FAQs",
-      "noFaqsDesc": "Agrega preguntas frecuentes para ayudar a tu chatbot a proporcionar respuestas instantáneas"
+      "noFaqsDesc": "Agrega preguntas frecuentes para ayudar a tu chatbot a proporcionar respuestas instantáneas",
+      "deleteConfirmTitle": "¿Eliminar pregunta?"
     },
     "dashboard": {
       "title": "Quimera Chat",
@@ -466,7 +467,20 @@
     },
     "listView": {
       "emptyMessage": "No se encontraron citas. Crea una nueva cita para comenzar a gestionar tu calendario."
-    }
+    },
+    "viewDay": "Día",
+    "viewWeek": "Semana",
+    "viewMonth": "Mes",
+    "viewList": "Lista",
+    "createNew": "Nueva Cita",
+    "total": "Total",
+    "completionRate": "Tasa",
+    "emptyState": {
+      "title": "Sin citas de plataforma",
+      "adminDesc": "Las citas agendadas desde la plataforma aparecerán aquí."
+    },
+    "searchPlaceholder": "Buscar citas...",
+    "new": "Nueva Cita"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -673,7 +687,73 @@
       "link": "Enlace",
       "product": "Producto",
       "form": "Formulario"
-    }
+    },
+    "header": "Header",
+    "theme": "Theme",
+    "wallpaper": "Wallpaper",
+    "text": "Text",
+    "colors": "Colors",
+    "profileImageLayout": "Profile image layout",
+    "circle": "Circle",
+    "hero": "Hero",
+    "titleStyle": "Title style",
+    "logo": "Logo",
+    "both": "Both",
+    "uploadLogo": "Upload your logo",
+    "selectLogo": "Select logo image",
+    "size": "Size",
+    "titleFontColor": "Title font color",
+    "wallpaperStyle": "Wallpaper style",
+    "gradientColor": "Gradient end",
+    "patternType": "Pattern type",
+    "patternColor": "Pattern color",
+    "patternSize": "Pattern size",
+    "backgroundImage": "Background image",
+    "headerOverlay": "Contrast overlay",
+    "headerOverlayDesc": "Better text readability",
+    "overlayColor": "Overlay color",
+    "profileBox": "Profile box",
+    "profileBoxDesc": "Card behind name & bio",
+    "profileBoxColor": "Box color",
+    "profileBoxCorners": "Corners",
+    "selectBackgroundImage": "Select background image",
+    "backgroundVideo": "Background video",
+    "pasteVideoUrl": "Paste video URL (MP4)",
+    "uploadVideo": "Upload video",
+    "videoFormats": "MP4, WebM (max 50MB)",
+    "pageTextFont": "Page text font",
+    "pageTextColor": "Page text color",
+    "cornerRoundness": "Corner roundness",
+    "buttonShadow": "Button shadow",
+    "buttonTextColor": "Button text",
+    "colorManagement": "Color Management",
+    "importProjectColors": "Import from project",
+    "importWebColors": "Import Web Colors",
+    "syncWithProject": "Sync with your project theme palette",
+    "importCoolors": "Import from Coolors",
+    "pasteCoolorsUrl": "Paste Coolors URL (coolors.co/palette/...)",
+    "openCoolors": "Open Coolors",
+    "coolorsHelp": "Paste a Coolors URL and press Enter to import colors",
+    "currentColors": "Current colors",
+    "resetColors": "Reset to defaults",
+    "titleColor": "Title color",
+    "bodyColor": "Body text color",
+    "subscribers": "Subscribers",
+    "noSubscribersYet": "No subscribers yet. Share your bio page to start collecting emails!",
+    "enableSignupFirst": "Enable email signup above to start collecting emails.",
+    "chatWelcome": "Hi! How can I help you today?",
+    "chatPlaceholder": "Type a message...",
+    "urlCopied": "URL Copied",
+    "published": "Published!",
+    "urlCopiedMessage": "URL copied",
+    "error": "Error",
+    "publishFailed": "Failed to publish. Please try again.",
+    "updated": "Updated!",
+    "updatedMessage": "Your Bio Page has been updated.",
+    "update": "Update",
+    "hideControls": "Hide controls",
+    "showControls": "Show controls",
+    "closePanel": "Close panel"
   },
   "chatCustomization": {
     "title": "Personalización del Chat",
@@ -738,7 +818,18 @@
     },
     "buttonSize": "Tamaño del Botón",
     "pulseEffect": "Efecto de Pulso",
-    "tooltipText": "Texto del Tooltip"
+    "tooltipText": "Texto del Tooltip",
+    "buttonIcon": "Ícono del Botón",
+    "buttonIcons": {
+      "chat": "Chat",
+      "help": "Help",
+      "customEmoji": "Emoji",
+      "customImage": "Imagen"
+    },
+    "customButtonEmoji": "Custom Emoji",
+    "customButtonImage": "Custom Icon Image",
+    "customButtonImageAlt": "Button icon",
+    "removeIcon": "Remove icon"
   },
   "chatbotWidget": {
     "exitIntentOffer": "🎁 ¡Espera! Déjame tu email y te envío información exclusiva + 20% de descuento",
@@ -765,7 +856,17 @@
     "poweredBy": "Impulsado por Quimera AI",
     "listening": "Escuchando...",
     "voicePrompt": "Habla con naturalidad. Estoy escuchando en",
-    "endCall": "Finalizar Llamada"
+    "endCall": "Finalizar Llamada",
+    "noProjectSelected": "Please select a project to use the chatbot",
+    "rateLimitError": "Too many requests. Please wait a moment and try again.",
+    "configError": "Service temporarily unavailable. Please try again later.",
+    "preChatTitle": "¡Hola!",
+    "preChatSubtitle": "Cuéntanos sobre ti",
+    "preChatName": "Tu nombre",
+    "preChatEmail": "Tu email",
+    "preChatPhone": "Teléfono (opcional)",
+    "preChatStart": "Iniciar Chat",
+    "preChatSkip": "Continuar sin registro"
   },
   "cms": {
     "content": "Contenido",
@@ -1079,7 +1180,21 @@
       "save": "Guardar",
       "saving": "Guardando...",
       "saved": "Guardado",
-      "preview": "Vista Previa"
+      "preview": "Vista Previa",
+      "title": "Título",
+      "generalInfo": "Información General",
+      "contactEmail": "Email de Contacto",
+      "subtitleDescription": "Subtítulo / Descripción",
+      "subtitlePlaceholder": "Breve descripción de la página",
+      "placeholder": "Empieza a escribir algo increíble... Escribe \"/\" para comandos",
+      "configDescription": "Configura metadata y apariencia del artículo.",
+      "urlSlug": "URL Slug",
+      "publicationDate": "Fecha de Publicación",
+      "showAuthor": "Mostrar Autor",
+      "showDate": "Mostrar Fecha",
+      "featuredArticle": "Artículo Destacado",
+      "featuredArticleDescription": "Mostrar en homepage",
+      "autoGen": "Auto-Gen"
     },
     "legal": {
       "title": "Páginas Legales",
@@ -1111,7 +1226,8 @@
       "viewPublicPage": "Ver página pública",
       "noSections": "No hay secciones",
       "noSectionsDescription": "Añade secciones para estructurar el contenido de esta página legal.",
-      "contentPlaceholder": "Escribe el contenido de esta sección. Puedes usar markdown para formatear."
+      "contentPlaceholder": "Escribe el contenido de esta sección. Puedes usar markdown para formatear.",
+      "icon": "Icono"
     },
     "creatorAssistant": {
       "title": "Asistente de Contenido IA",
@@ -1149,7 +1265,46 @@
       "deleteArticleMessage": "¿Estás seguro de que deseas eliminar este artículo? Esta acción no se puede deshacer.",
       "bulkDeleteTitle": "¿Eliminar artículos?",
       "bulkDeleteMessage": "Se eliminarán {{count}} artículo(s) permanentemente."
-    }
+    },
+    "aiAssistant": "Asistente de Contenido AI",
+    "aiAssistantDesc": "Crea artículos para el blog de tu agencia",
+    "whatToWrite": "¿Sobre qué quieres escribir?",
+    "topicDesc": "Describe el tema, idea o título provisional para el artículo.",
+    "topicPlaceholder": "Ej: Cómo la IA está revolucionando la creación de sitios web en 2025...",
+    "category": "Categoría del artículo",
+    "audience": "¿A quién va dirigido? (Audiencia)",
+    "audiencePlaceholder": "Ej: Emprendedores, Desarrolladores, Marketers...",
+    "tone": "¿Cuál es el tono deseado?",
+    "generateDraft": "Generar Borrador",
+    "aiWriting": "La IA está escribiendo...",
+    "aiWritingDesc": "Estamos estructurando tu artículo, creando títulos atractivos y redactando contenido de calidad.",
+    "contentGenerated": "¡Contenido generado con éxito!",
+    "reviewBeforeEditor": "Revisa el resumen antes de llevarlo al editor.",
+    "noTitle": "Sin título",
+    "minRead": "min de lectura",
+    "noExcerpt": "Sin extracto",
+    "contentPreview": "Vista previa del contenido",
+    "noContentGenerated": "Sin contenido generado",
+    "openInEditor": "Abrir en Editor",
+    "searchArticles": "Buscar artículos...",
+    "createWithAI": "Crear con IA",
+    "newArticle": "Nuevo Artículo",
+    "status": {
+      "published": "Publicado",
+      "draft": "Borrador"
+    },
+    "autoTranslated": "Auto-traducido",
+    "reviewed": "Revisado",
+    "actions": {
+      "removeFeatured": "Quitar destacado",
+      "setFeatured": "Destacar",
+      "quickPreview": "Vista rápida"
+    },
+    "confirmDeleteTitle": "¿Estás seguro?",
+    "confirmDeleteMessage": "Esta acción no se puede deshacer. El artículo será eliminado permanentemente.",
+    "confirmBulkDeleteTitle": "¿Eliminar artículos?",
+    "appContent": "Contenido App",
+    "excerpt": "Resumen"
   },
   "common": {
     "loading": "Cargando...",
@@ -1225,7 +1380,72 @@
     "unknownError": "Error desconocido",
     "noImage": "Sin imagen",
     "readMore": "Leer más",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "width": "Ancho",
+    "height": "Alto",
+    "copied": "Copied",
+    "sent": "Sent!",
+    "goHome": "Ir al inicio",
+    "goToDashboard": "Ir al Dashboard",
+    "poweredBy": "Desarrollado con",
+    "recently": "Recently",
+    "unsavedChanges": "Unsaved",
+    "saved": "Saved",
+    "done": "Done",
+    "filters": "Filtros",
+    "clearAll": "Limpiar todo",
+    "expandFooter": "Expandir",
+    "collapseFooter": "Colapsar",
+    "deleted": "eliminado",
+    "deleteFailed": "Error al eliminar",
+    "confirmDelete": "¿Estás seguro?",
+    "confirmDeleteMessage": "Esta acción no se puede deshacer. El elemento será eliminado permanentemente.",
+    "justNow": "Justo ahora",
+    "debugInfo": "Debug Info",
+    "retry": "Reintentar",
+    "minutesShort": "min",
+    "saveChanges": "Guardar Cambios",
+    "fileName": "File Name",
+    "copyName": "Copy name",
+    "copyUrl": "Copy URL",
+    "fileInfo": "File Information",
+    "size": "Size",
+    "type": "Type",
+    "created": "Created",
+    "aiPrompt": "AI Prompt",
+    "copyPrompt": "Copy prompt",
+    "downloadImage": "Download Image",
+    "deleteImage": "Delete Image",
+    "viewDetails": "View details",
+    "preview": "Vista Previa",
+    "configuration": "Configuración",
+    "translate": "Translate",
+    "deleting": "Eliminando...",
+    "copyId": "Copiar ID",
+    "openInNewTab": "Abrir en nueva pestaña",
+    "email": "Email",
+    "phone": "Teléfono",
+    "company": "Empresa",
+    "menu": "Menú",
+    "noName": "Sin nombre",
+    "processing": "Procesando...",
+    "dismiss": "Descartar",
+    "savedSuccessfully": "Guardado correctamente",
+    "free": "Gratis",
+    "viewPlans": "Ver planes",
+    "optional": "opcional",
+    "sending": "Enviando...",
+    "viewAll": "Ver todos",
+    "day": "día",
+    "days": "días",
+    "goBack": "Volver",
+    "new": "Nuevo",
+    "confirmAction": "¿Confirmar acción?",
+    "confirmActionMessage": "¿Deseas continuar con esta acción?",
+    "none": "None",
+    "uploading": "Uploading...",
+    "searching": "Buscando...",
+    "example": "Translation Example"
   },
   "controls": {
     "dropShadow": "Sombra",
@@ -1242,7 +1462,7 @@
     "badge": "Insignia",
     "icon": "Ícono",
     "text": "Texto",
-    "badgeText": "Texto de Insignia",
+    "badgeText": "Texto badge",
     "properties": "Propiedades",
     "closePropertiesPanel": "Cerrar panel de propiedades",
     "showTree": "Mostrar árbol de componentes",
@@ -1284,11 +1504,11 @@
     "verticalSplitLayout": "División vertical 50/50: panel de texto + imagen lateral",
     "glassLayout": "Tarjeta de cristal esmerilado flotando sobre foto completa",
     "stackedLayout": "Imagen arriba, contenido de texto abajo sobre fondo sólido",
-    "heroHeight": "Altura de Sección",
+    "heroHeight": "Altura",
     "sectionHeight": "Altura",
     "auto": "Automático",
     "heroHeightHelp": "Pon 0 para altura automática según el contenido. Mueve el slider para fijar una altura en unidades del viewport (vh).",
-    "content": "Contenido",
+    "content": "Content",
     "headline": "Título",
     "headlineSize": "Tamaño de Título",
     "subheadline": "Subtítulo",
@@ -1314,16 +1534,16 @@
     "position": "Posición",
     "alignment": "Alineación",
     "padding": "Relleno",
-    "borderRadius": "Radio de Borde",
+    "borderRadius": "Radio del Borde",
     "shadow": "Sombra",
     "animation": "Animación",
     "animations": "Animaciones",
     "accentColor": "Color de Acento",
     "textColor": "Color de Texto",
-    "primaryColor": "Color Primario",
+    "primaryColor": "Color Principal",
     "secondaryColor": "Color Secundario",
     "overlay": "Superposición",
-    "overlayOpacity": "Opacidad de Superposición",
+    "overlayOpacity": "Opacidad overlay",
     "overlayColor": "Color de Superposición",
     "showOverlay": "Mostrar Superposición",
     "contentTab": "Contenido",
@@ -1458,37 +1678,37 @@
     "editSection": "Editar sección",
     "signupFloat": {
       "title": "Registro Flotante",
-      "headerText": "Título",
+      "headerText": "Header Text",
       "description": "Descripción",
-      "imagePlacement": "Posición de Imagen",
-      "floatPosition": "Posición Flotante",
-      "showName": "Mostrar Campo Nombre",
-      "showEmail": "Mostrar Campo Email",
-      "showPhone": "Mostrar Campo Teléfono",
-      "showMessage": "Mostrar Campo Mensaje",
-      "showOnLoad": "Mostrar al Cargar",
-      "showClose": "Mostrar Botón Cerrar",
-      "triggerDelay": "Retraso (segundos)",
-      "cooldownDays": "Cooldown (días)",
-      "cooldownHint": "0 = mostrar siempre. Si es > 0, se mantendrá minimizado para visitantes recurrentes.",
-      "width": "Ancho",
-      "imageHeight": "Altura de Imagen",
-      "socialLinks": "Redes Sociales",
-      "showSocial": "Mostrar Redes Sociales",
+      "imagePlacement": "Image Position",
+      "floatPosition": "Float Position",
+      "showName": "Show Name Field",
+      "showEmail": "Show Email Field",
+      "showPhone": "Show Phone Field",
+      "showMessage": "Show Message Field",
+      "showOnLoad": "Show On Load",
+      "showClose": "Show Close Button",
+      "triggerDelay": "Delay (seconds)",
+      "cooldownDays": "Cooldown (days)",
+      "cooldownHint": "0 = always show. If > 0, it will stay minimized for returning visitors.",
+      "width": "Width",
+      "imageHeight": "Image Height",
+      "socialLinks": "Social Links",
+      "showSocial": "Show Social Links",
       "top": "Arriba",
       "bottom": "Abajo",
       "left": "Izquierda",
       "right": "Derecha",
-      "center": "Centro",
-      "formFields": "Campos del Formulario",
-      "namePlaceholder": "Placeholder del Nombre",
-      "emailPlaceholder": "Placeholder del Email",
-      "phonePlaceholder": "Placeholder del Teléfono",
-      "messagePlaceholder": "Placeholder del Mensaje",
-      "behavior": "Comportamiento",
-      "dimensions": "Dimensiones",
-      "minimizeOnClose": "Minimizar al Cerrar",
-      "minimizedLabel": "Texto del Botón Minimizado",
+      "center": "Center",
+      "formFields": "Form Fields",
+      "namePlaceholder": "Name Placeholder",
+      "emailPlaceholder": "Email Placeholder",
+      "phonePlaceholder": "Phone Placeholder",
+      "messagePlaceholder": "Message Placeholder",
+      "behavior": "Behavior",
+      "dimensions": "Dimensions",
+      "minimizeOnClose": "Minimize On Close",
+      "minimizedLabel": "Minimized Button Label",
       "saveDestination": "Destino del Lead",
       "saveToLeads": "Leads",
       "saveToAudience": "Audiencia",
@@ -1500,38 +1720,39 @@
       "hintBoth": "Los envíos se guardarán como leads Y se agregarán a la audiencia de email."
     },
     "map": {
-      "location": "Ubicación",
-      "address": "Dirección",
-      "addressPlaceholder": "ej. Calle 123, Ciudad, País",
-      "searchLocation": "Buscar ubicación",
-      "find": "Buscar",
-      "locationSet": "Ubicación establecida",
-      "manualCoordinates": "Coordenadas manuales (avanzado)",
-      "latitude": "Latitud",
-      "longitude": "Longitud",
-      "zoomLevel": "Nivel de Zoom",
-      "contactInfo": "Información de Contacto",
-      "phone": "Teléfono",
-      "phonePlaceholder": "ej. +1 (555) 123-4567",
+      "location": "Location",
+      "address": "Address",
+      "addressPlaceholder": "e.g. 123 Main St, City, Country",
+      "searchLocation": "Search location",
+      "find": "Find",
+      "locationSet": "Location set",
+      "manualCoordinates": "Manual coordinates (advanced)",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "zoomLevel": "Zoom Level",
+      "contactInfo": "Contact Info",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. +1 (555) 123-4567",
       "email": "Email",
-      "emailPlaceholder": "ej. info@negocio.com",
-      "businessHours": "Horario de Atención",
-      "hoursPlaceholder": "ej. Lun-Vie 9:00-18:00",
-      "buttonText": "Texto del Botón",
-      "mapHeight": "Altura del Mapa",
-      "spacing": "Espaciado",
+      "emailPlaceholder": "e.g. info@business.com",
+      "businessHours": "Business Hours",
+      "hoursPlaceholder": "e.g. Mon-Fri 9:00-18:00",
+      "buttonText": "Button Text",
+      "mapHeight": "Map Height",
+      "spacing": "Spacing",
       "vertical": "Vertical",
       "horizontal": "Horizontal",
-      "colors": "Colores",
-      "textColor": "Texto",
-      "accentColor": "Marcador/Acento",
-      "cardBackground": "Fondo de Tarjeta",
+      "colors": "Colors",
+      "textColor": "Text",
+      "accentColor": "Marker/Accent",
+      "cardBackground": "Card/Gradient Background",
       "variants": {
-        "modern": "🏢 Moderno Dividido",
-        "minimal": "✨ Minimalista",
+        "modern": "🏢 Modern Split",
+        "minimal": "✨ Minimal",
         "darkTech": "🌃 Dark Tech",
-        "night": "🌙 Barra Nocturna"
-      }
+        "night": "🌙 Night Bar"
+      },
+      "buttonBackground": "Button Background"
     },
     "subtitle": "Subtítulo",
     "logoImage": "Imagen del Logo",
@@ -1549,7 +1770,7 @@
     "gradientTo": "Degradado Hasta",
     "backgroundColor": "Color de Fondo",
     "divider": "Divisor",
-    "glassmorphismTransparencia": "Glassmorphism / Transparencia",
+    "glassmorphismTransparencia": "Transparencia (Glassmorphism)",
     "heading": "Encabezado",
     "accent": "Acento",
     "cardBackground": "Fondo de Tarjeta",
@@ -1570,13 +1791,13 @@
     "showSectionHeader": "Mostrar Encabezado de Sección",
     "projects": "Proyectos",
     "sectionColors": "Colores de Sección",
-    "cardColors": "Colores de Tarjetas",
+    "cardColors": "Colores de Tarjeta",
     "grosorDelBorde": "Grosor del Borde",
     "cardOverlayGradient": "Degradado de Superposición de Tarjeta",
     "buttonBackground": "Fondo de Botón",
-    "inputBackground": "Fondo de Entrada",
-    "inputText": "Texto de Entrada",
-    "inputBorder": "Borde de Entrada",
+    "inputBackground": "Fondo de Input",
+    "inputText": "Texto de Input",
+    "inputBorder": "Borde de Input",
     "placeholder": "Texto de Marcador",
     "socialIconColor": "Color de Icono Social",
     "overlayBackground": "Fondo de Superposición",
@@ -1597,7 +1818,7 @@
     "autoplayMuted": "Reproducción Automática (Silenciado)",
     "playbackOptions": "Opciones de Reproducción",
     "featuredPlanHighlighted": "Plan Destacado (Resaltado)",
-    "cardCorners": "Esquinas de Tarjeta",
+    "cardCorners": "Esquinas del card",
     "featuredAccent": "Acento Destacado",
     "checkmarkIcon": "Icono de Verificación",
     "styleVariant": "Variante de Estilo",
@@ -1654,9 +1875,9 @@
     "cardRadius": "Radio de Tarjeta",
     "inputRadius": "Radio de Entrada",
     "buttonRadius": "Radio de Botón",
-    "labelText": "Texto de Etiqueta",
-    "inputColors": "Colores de Entrada",
-    "buttonGradient": "Botón y Degradado",
+    "labelText": "Texto",
+    "inputColors": "Colores de Input",
+    "buttonGradient": "Botón",
     "name": "Nombre",
     "role": "Rol",
     "bioOverlay": "Bio (Superposición)",
@@ -1688,7 +1909,7 @@
     "secondaryButtonText": "Texto Botón Secundario",
     "secondaryButtonStyle": "Estilo Botón Secundario",
     "botonesEnDiagonal": "Botones en Diagonal",
-    "fondoBotn": "Fondo Botón",
+    "fondoBotn": "Fondo del Botón",
     "textoBotn": "Texto Botón",
     "url": "URL",
     "inclinacin": "Inclinación",
@@ -1713,7 +1934,35 @@
     "gradientAngle": "Ángulo de Degradado",
     "imageOverlay": "Superposición de Imagen",
     "fallbackBackground": "Fondo de Respaldo",
-    "glassEffect": "Efecto Cristal"
+    "glassEffect": "Efecto Cristal",
+    "welcomeMessage": "Mensaje de Bienvenida",
+    "placeholderText": "Texto de Placeholder",
+    "knowledgeBase": "Base de Conocimiento",
+    "behavior": "Comportamiento",
+    "form": "Formulario",
+    "formTitle": "Título del formulario",
+    "formTitleSize": "Tamaño del título",
+    "formDescription": "Descripción del formulario",
+    "formDescriptionSize": "Tamaño de la descripción",
+    "namePlaceholder": "Placeholder: Nombre",
+    "emailPlaceholder": "Placeholder: Email",
+    "companyPlaceholder": "Placeholder: Empresa",
+    "phonePlaceholder": "Placeholder: Teléfono",
+    "messagePlaceholder": "Placeholder: Mensaje",
+    "successMessage": "Mensaje de éxito",
+    "fieldVisibility": "Campos visibles",
+    "showCompanyField": "Mostrar campo de empresa",
+    "showPhoneField": "Mostrar campo de teléfono",
+    "showMessageField": "Mostrar campo de mensaje",
+    "formPosition": "Posición del formulario",
+    "formCardOpacity": "Opacidad card formulario",
+    "inputCorners": "Esquinas de inputs",
+    "infoBackground": "Fondo lado info",
+    "badgeBackground": "Fondo badge",
+    "formBackground": "Fondo formulario",
+    "formHeading": "Título formulario",
+    "formText": "Texto formulario",
+    "inputPlaceholder": "Placeholder"
   },
   "coolorsImporter": {
     "title": "Importador de Paletas",
@@ -1754,7 +2003,8 @@
         "promotion": "Promoción",
         "maintenance": "Mantenimiento",
         "other": "Otro"
-      }
+      },
+      "showLess": "Mostrar menos"
     },
     "assets": {
       "title": "Biblioteca de Recursos",
@@ -1806,8 +2056,11 @@
         "bulkDeleteConfirm": "¿Eliminar {{count}} archivo(s)?",
         "deleted": "Archivo eliminado exitosamente",
         "bulkDeleted": "{{count}} archivo(s) eliminados",
-        "uploadSuccess": "subido exitosamente"
-      }
+        "uploadSuccess": "subido exitosamente",
+        "deleteConfirmMessage": "Esta acción no se puede deshacer. El archivo será eliminado permanentemente."
+      },
+      "noProjectSelected": "No hay proyecto seleccionado",
+      "selectProjectMessage": "Selecciona un proyecto desde el menú lateral para ver y gestionar los archivos de ese proyecto."
     },
     "imagePicker": {
       "uploadSuccess": "{{name}} subido exitosamente",
@@ -1859,7 +2112,11 @@
       "poweredByQuimera": "Potenciado por Quimera.ai",
       "enterPromptToStart": "Ingresa una descripción y ajusta los controles para comenzar.",
       "generatedImageApplied": "Imagen generada aplicada",
-      "useThisImage": "Usar Esta Imagen"
+      "useThisImage": "Usar Esta Imagen",
+      "productImages": "Productos",
+      "selectFromProducts": "Selecciona una imagen de tus productos",
+      "noProductImages": "No hay imágenes de productos",
+      "addProductImagesHint": "Agrega imágenes a tus productos en la sección de Productos para verlas aquí."
     },
     "settings": {
       "title": "Configuración del Workspace",
@@ -2166,7 +2423,14 @@
           "clientDesc": "Acceso estándar",
           "client_user": "Visualizador",
           "client_userDesc": "Solo lectura"
-        }
+        },
+        "planAssignment": "Asignar Plan de Servicio",
+        "planAssignmentDesc": "Selecciona un plan predefinido o configura facturación manual abajo.",
+        "planSelected": "Plan seleccionado",
+        "planSelectedDesc": "El cliente heredará los límites y precio de este plan.",
+        "billingOverride": "Sobrescribir Precio (Opcional)",
+        "fromPlan": "del plan",
+        "priceFromPlanNote": "Puedes modificar el precio si deseas cobrar diferente al plan."
       },
       "addonsPage": {
         "title": "Add-ons",
@@ -2363,7 +2627,8 @@
         "aiCreditsUsed": "AI Credits Usados",
         "refreshData": "Actualizar datos",
         "export": "Exportar",
-        "noData": "No hay datos disponibles"
+        "noData": "No hay datos disponibles",
+        "buyCredits": "Comprar Créditos para Pool"
       },
       "onboardingPage": {
         "configuringClient": "Configurando Cliente...",
@@ -2690,6 +2955,34 @@
       "deleteSelected": "Eliminar seleccionados",
       "clearSelection": "Limpiar selección",
       "exportSelected": "Exportar proyectos seleccionados"
+    },
+    "leads": {
+      "title": "Últimos Leads",
+      "empty": "No hay leads recientes",
+      "emptyDesc": "Los leads aparecerán aquí cuando los recibas"
+    },
+    "dragToReorder": "Arrastra para reordenar",
+    "blogHub": "Blog",
+    "agencySection": "Agencia",
+    "statusCards": {
+      "posts": "Posts",
+      "contacts": "Contactos",
+      "uploaded": "Subidas",
+      "active": "Activos",
+      "manage": "Gestionar",
+      "scheduled": "Programadas",
+      "expand": "Expandir",
+      "collapse": "Minimizar",
+      "sectionTitle": "Resumen",
+      "viewDetails": "Ver detalles"
+    },
+    "templateSize": "Tamaño de plantillas",
+    "templateSizeLarge": "Grande",
+    "templateSizeCompact": "Compacto",
+    "thumbnailEditor": {
+      "maxReferences": "Maximum 14 reference images",
+      "referenceImages": "Reference Images",
+      "clickOrDragRef": "Click or drag images"
     }
   },
   "days": {
@@ -3545,7 +3838,69 @@
     "linkToCollection": "Enlazar a Colección",
     "blogArticle": "Artículo de Blog",
     "showSelectionPanel": "Mostrar panel de selección",
-    "removeContent": "Quitar contenido"
+    "removeContent": "Quitar contenido",
+    "analyticsTitle": "Analytics",
+    "unassignedImages": "Sin asignar",
+    "globalLibrary": "Biblioteca Global",
+    "uploadError": "Error al subir la imagen",
+    "imageUploaded": "Imagen subida correctamente",
+    "imageSelected": "Imagen seleccionada",
+    "selectImage": "Seleccionar Imagen",
+    "myImages": "Mis Imágenes",
+    "searchImages": "Buscar imágenes...",
+    "unknownProject": "Proyecto desconocido",
+    "currentProject": "Proyecto actual",
+    "noImagesFound": "No se encontraron imágenes",
+    "tryAdjustingSearch": "Intenta ajustar tu búsqueda",
+    "clearSearch": "Limpiar búsqueda",
+    "noProjectImages": "No hay imágenes en tus proyectos",
+    "noGlobalImages": "No hay imágenes en la biblioteca global",
+    "uploadFirst": "Subir tu primera imagen",
+    "selectFromLibrary": "Seleccionar de Biblioteca",
+    "fromLibrary": "Biblioteca",
+    "deleteDiscount": "Eliminar Descuento",
+    "reportsDesc": "Genera y descarga reportes de tu tienda",
+    "manageReviews": "Modera las reseñas de tus productos",
+    "searchReviews": "Buscar reseñas...",
+    "approved": "Aprobadas",
+    "rejected": "Rechazadas",
+    "allProducts": "Todos los productos",
+    "noReviewsFilter": "No se encontraron reseñas con los filtros aplicados",
+    "noReviewsYet": "Aún no has recibido ninguna reseña",
+    "deleteReview": "Eliminar Reseña",
+    "confirmDeleteReview": "¿Estás seguro de eliminar esta reseña?",
+    "email": "Email",
+    "emailSettings": "Configuración de Email",
+    "senderInfo": "Información del Remitente",
+    "fromEmail": "Email de Envío",
+    "fromName": "Nombre del Remitente",
+    "replyTo": "Email de Respuesta",
+    "replyToDesc": "Las respuestas de clientes llegarán a este email",
+    "emailBranding": "Diseño de Emails",
+    "logoUrl": "URL del Logo",
+    "primaryColor": "Color Principal",
+    "footerText": "Texto del Pie",
+    "transactionalEmails": "Emails Transaccionales",
+    "transactionalEmailsDesc": "Configura qué emails se envían automáticamente a tus clientes",
+    "orderConfirmationDesc": "Email al cliente cuando realiza un pedido",
+    "orderShipped": "Pedido Enviado",
+    "orderShippedDesc": "Email con número de seguimiento cuando se envía",
+    "orderDelivered": "Pedido Entregado",
+    "orderDeliveredDesc": "Email de confirmación cuando el pedido llega",
+    "reviewRequest": "Solicitud de Reseña",
+    "reviewRequestDesc": "Pide una reseña días después de la entrega",
+    "adminNotifications": "Notificaciones de Administrador",
+    "newOrderNotification": "Nueva Orden",
+    "newOrderNotificationDesc": "Recibe email cuando llega un pedido",
+    "lowStockNotification": "Stock Bajo",
+    "lowStockNotificationDesc": "Alerta cuando un producto tiene stock bajo",
+    "stockAlertsDesc": "Gestiona productos con bajo stock y notificaciones de clientes",
+    "stockWarnings": "Productos con Stock Bajo",
+    "notificationSubscribers": "Suscriptores de Notificaciones",
+    "noSubscribers": "Sin suscriptores",
+    "noSubscribersDesc": "Cuando los clientes se suscriban a notificaciones de stock, aparecerán aquí",
+    "deleteSubscriber": "Eliminar Suscripción",
+    "confirmDeleteSubscriber": "¿Eliminar esta suscripción?"
   },
   "editor": {
     "controls": {
@@ -3566,10 +3921,11 @@
         "ctaButton": "Botón de Llamada a la Acción",
         "showCta": "Mostrar Botón CTA",
         "buttonText": "Texto del Botón",
-        "buttonRadius": "Radio del Botón"
+        "buttonRadius": "Radio del Botón",
+        "showLanguageSelector": "Selector de Idioma"
       },
       "header": {
-        "logoHeight": "Altura del Logo",
+        "logoHeight": "Altura",
         "layout": "Disposición",
         "style": "Estilo",
         "classic": "Clásico (Izquierda)",
@@ -3779,24 +4135,24 @@
       },
       "features": {
         "sectionStyle": "Estilo de Sección",
-        "sectionHeader": "Encabezado de Sección",
-        "featuresList": "Lista de Características",
+        "sectionHeader": "Section Header",
+        "featuresList": "Features List",
         "styleVariant": "Variante de Estilo",
         "classic": "Clásico",
         "bento": "Bento",
         "premium": "Premium",
         "overlay": "Superposición",
         "descClassic": "📦 Layout de cuadrícula tradicional",
-        "descBento": "✨ Diseño moderno de cuadrícula bento asimétrica",
-        "descPremium": "🎯 Bento premium con tarjeta destacada primero",
-        "descOverlay": "🖼️ Imágenes de ancho completo con texto superpuesto",
+        "descBento": "✨ Layout moderno bento asimétrico",
+        "descPremium": "🎯 Bento premium con primera tarjeta destacada",
+        "descOverlay": "🖼️ Imágenes completas con texto superpuesto",
         "overlaySettings": "Configuración de Superposición",
         "textAlignment": "Alineación de Texto",
         "showSectionHeader": "Mostrar Encabezado de Sección",
         "gridLayout": "Diseño de Cuadrícula",
         "columnsDesktop": "Columnas (Escritorio)",
-        "cardImage": "Imagen de Tarjeta",
-        "imageHeight": "Altura de Imagen",
+        "cardImage": "Card Image",
+        "imageHeight": "Image Height",
         "cardColors": "Colores de Tarjeta",
         "featureList": "Características",
         "feature": "Característica",
@@ -3889,7 +4245,169 @@
           "guarantee": "Garantía",
           "support": "Soporte",
           "shipping": "Envío"
-        }
+        },
+        "visibility": {
+          "label": "Show in",
+          "both": "Both",
+          "landing": "Landing Only",
+          "store": "Store Only",
+          "bothDesc": "Visible on landing page and store",
+          "landingDesc": "Only on the main page",
+          "storeDesc": "Only on store/category/product views"
+        },
+        "productSelector": {
+          "selectedProducts": "Selected Products",
+          "hideProducts": "Hide Products",
+          "selectProducts": "Select Products",
+          "searchPlaceholder": "Search products...",
+          "loading": "Loading products...",
+          "noProductsInStore": "No products in store",
+          "noProductsFound": "No products found"
+        },
+        "singleProductSelector": {
+          "label": "Featured Product",
+          "remove": "Remove product",
+          "hide": "Hide Products",
+          "change": "Change Product",
+          "select": "Select Product",
+          "searchPlaceholder": "Search products...",
+          "loading": "Loading products...",
+          "noProductsInStore": "No products in store",
+          "noProductsFound": "No products found",
+          "none": "None (no product)"
+        },
+        "collectionSelector": {
+          "label": "Collection",
+          "products": "products",
+          "remove": "Remove collection",
+          "hide": "Hide collections",
+          "change": "Change collection",
+          "select": "Select collection",
+          "none": "None",
+          "loading": "Loading collections...",
+          "noCollections": "No collections available"
+        },
+        "categorySelector": {
+          "loading": "Loading categories...",
+          "noCategories": "No categories available. Create categories in your store first.",
+          "label": "Category",
+          "select": "Select a category..."
+        },
+        "carousel": "Carousel",
+        "grid": "Grid",
+        "showcase": "Showcase",
+        "newestProducts": "Newest Products",
+        "bestSellers": "Best Sellers",
+        "onSale": "On Sale",
+        "byCategory": "By Category",
+        "manual": "Manual Selection",
+        "productsToShow": "Products to Show",
+        "showBadge": "Show Badge (New/Sale)",
+        "sectionColors": "Section Colors",
+        "background": "Background",
+        "heading": "Heading",
+        "text": "Text",
+        "accent": "Accent",
+        "cardColors": "Card Colors",
+        "cardBackground": "Card Background",
+        "cardText": "Card Text",
+        "buttonColors": "Button Colors",
+        "buttonBackground": "Button BG",
+        "buttonText": "Button Text",
+        "badgeColors": "Badge Colors",
+        "badgeBackground": "Badge BG",
+        "badgeText": "Badge Text",
+        "priceColors": "Price Colors",
+        "priceColor": "Price",
+        "salePriceColor": "Sale Price",
+        "borderColor": "Border",
+        "paddingY": "Padding Y",
+        "paddingX": "Padding X",
+        "showTitle": "Show Title",
+        "layout": "Layout",
+        "slider": "Slider",
+        "list": "List",
+        "columns": "Columns (Grid)",
+        "showProductCount": "Show Product Count",
+        "overlayColors": "Overlay Colors",
+        "overlayStart": "Overlay Start",
+        "overlayEnd": "Overlay End",
+        "cardRadius": "Card Radius",
+        "splitImageLeft": "Split (Image Left)",
+        "splitImageRight": "Split (Image Right)",
+        "fullWidth": "Full Width",
+        "centered": "Centered",
+        "imageSize": "Image Size",
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large",
+        "showDescription": "Show Description",
+        "showFeatures": "Show Features",
+        "overlayColor": "Overlay",
+        "textColors": "Text Colors",
+        "badgesManageNote": "Badges content management would be here (list of icon/title/desc).",
+        "flexRow": "Flex Row",
+        "subtitle": "Subtitle",
+        "endDate": "End Date (ISO)",
+        "style": "Style",
+        "simpleText": "Simple Text",
+        "timerCards": "Timer Cards",
+        "fullBanner": "Full Banner",
+        "linkTarget": "Link Target",
+        "collection": "Collection",
+        "product": "Product",
+        "customUrl": "URL Personalizada (opcional)",
+        "url": "URL",
+        "countdownColors": "Countdown Colors",
+        "countdownBackground": "Countdown BG",
+        "countdownText": "Countdown Text",
+        "enabled": "Enabled",
+        "message": "Message",
+        "linkType": "Link Type",
+        "backgroundColor": "Background Color",
+        "textColor": "Text Color",
+        "position": "Position",
+        "inContent": "In Content (Normal)",
+        "aboveHeader": "Above Header",
+        "static": "Static",
+        "scrolling": "Scrolling (Marquee)",
+        "rotating": "Rotating",
+        "messages": "Messages",
+        "linkTypeUrl": "URL",
+        "linkTypePhone": "Phone",
+        "linkTypeEmail": "Email",
+        "phoneNumber": "Phone Number",
+        "emailAddress": "Email Address",
+        "linkUrl": "Link URL",
+        "linkText": "Link Text",
+        "addMessage": "Add Message",
+        "displayOptions": "Display Options",
+        "showIcon": "Show Icon",
+        "icon": "Icon",
+        "dismissible": "Dismissible",
+        "pauseOnHover": "Pause on Hover",
+        "scrollSpeed": "Scroll Speed (seconds)",
+        "rotationSpeed": "Rotation Speed (ms)",
+        "colors": "Colors",
+        "linkColor": "Link Color",
+        "iconColor": "Icon Color",
+        "sizeSpacing": "Size & Spacing",
+        "height": "Height (px)",
+        "fontSize": "Font Size",
+        "extraLarge": "Extra Large",
+        "backgroundImage": "Background Image",
+        "buttonConfig": "Configuración del Botón",
+        "linkToCollection": "Enlazar a Colección",
+        "maxItems": "Max Items",
+        "reviewColors": "Review Colors",
+        "starColor": "Star Color",
+        "verifiedBadgeColor": "Verified Badge",
+        "savingsColor": "Savings",
+        "storeName": "Store Name",
+        "currency": "Currency",
+        "currencySymbol": "Currency Symbol",
+        "storeColors": "Store Colors",
+        "priceAndBadgeColors": "Price & Badge"
       },
       "globalStyles": {
         "colors": "Colores",
@@ -3937,11 +4455,11 @@
         "infoBanner": "Al seleccionar una paleta, los colores se aplicarán a **todos los componentes**. Luego puedes personalizarlos individualmente desde los controles de cada sección."
       },
       "common": {
-        "colors": "Colores",
-        "background": "Fondo",
-        "text": "Texto",
+        "colors": "Colors",
+        "background": "Fondo del Botón",
+        "text": "Texto del Botón",
         "accent": "Acento",
-        "title": "Título",
+        "title": "Title",
         "description": "Descripción",
         "spacing": "Espaciado",
         "vertical": "Vertical",
@@ -3999,7 +4517,7 @@
         "productsPerPage": "Productos por Página",
         "borderRadius": "Radio del Borde",
         "styleVariant": "Variante de Estilo",
-        "cardAnimations": "Animaciones de Tarjeta",
+        "cardAnimations": "Animaciones",
         "heading": "Encabezado",
         "cardBackground": "Fondo de Tarjeta",
         "cardText": "Texto de Tarjeta",
@@ -4007,8 +4525,8 @@
         "buttonText": "Texto del Botón",
         "buttonLink": "Enlace del Botón",
         "titleSize": "Tamaño del Título",
-        "descriptionSize": "Tamaño de la Descripción",
-        "subtitle": "Subtítulo",
+        "descriptionSize": "Tamaño de Descripción",
+        "subtitle": "Descripción",
         "mapStyle": "Estilo de Mapa",
         "selectProduct": "Seleccionar Producto",
         "selectCollection": "Seleccionar Colección",
@@ -4074,7 +4592,53 @@
         "buttons": "Botones",
         "buttonBackground": "Fondo del botón",
         "noArticles": "No hay artículos para mostrar"
-      }
+      },
+      "colors": "Colores",
+      "image": "Imagen",
+      "textLayout": {
+        "label": "Text Layout"
+      },
+      "typography": "Textos Principales",
+      "headline": "Titular",
+      "subheadline": "Subtitular",
+      "sectionHeight": "Altura de la Sección (vh)",
+      "cardBorderRadius": "Curvatura de Tarjeta",
+      "effects": "Efectos Neon",
+      "glassEffect": "Efecto Cristal (Glassmorphism)",
+      "restoreOriginalColors": "Restaurar colores por defecto",
+      "backgroundColor": "Fondo General",
+      "cardBackground": "Fondo de Tarjeta",
+      "headingColor": "Color del Titular",
+      "textColor": "Color del Texto",
+      "questionsList": "Preguntas Frecuentes",
+      "remove": "Eliminar",
+      "question": "Pregunta",
+      "answer": "Respuesta",
+      "addQuestion": "Añadir Pregunta",
+      "featuresList": "Lista de Características",
+      "title": "Título",
+      "description": "Descripción",
+      "featureImage": "Imagen de Característica (Opcional)",
+      "addFeature": "Añadir Característica",
+      "fonts": "Fuentes (Global para Neon)",
+      "gallery": "Galería de Imágenes",
+      "addImage": "Añadir Imagen",
+      "pricingTiers": "Planes de Precios",
+      "isPopular": "Destacar (Popular)",
+      "tierName": "Nombre del Plan",
+      "price": "Precio",
+      "billingPeriod": "Período",
+      "addTier": "Añadir Plan",
+      "cardHeadingColor": "Color de Título de Tarjeta",
+      "cardTextColor": "Color de Texto de Tarjeta",
+      "name": "Nombre",
+      "role": "Cargo",
+      "quote": "Cita",
+      "authorImage": "Imagen del Autor",
+      "resetStyles": "Restaurar Estilos",
+      "resetTooltip": "Resetear estilos al valor por defecto",
+      "background": "Fondo Base",
+      "cardText": "Texto de Tarjeta"
     },
     "title": "Editor",
     "preview": "Vista Previa",
@@ -4102,10 +4666,13 @@
     "heroNeonControls": {
       "buttonText": "Texto del Botón",
       "content": "Contenido del Texto",
-      "headline": "Titular",
-      "subheadline": "Subtítulo",
-      "primaryCta": "Botón Principal",
-      "secondaryCta": "Botón Secundario"
+      "headline": "Headline",
+      "subheadline": "Subheadline",
+      "primaryCta": "Primary Button",
+      "secondaryCta": "Secondary Button",
+      "glowIntensity": "Intensidad de Resplandor Neon",
+      "neonGlowColor": "Color de Neón Principal",
+      "neonColor": "Color Neon"
     },
     "quimeraControls": {
       "overlay": "Overlay",
@@ -4150,7 +4717,7 @@
     },
     "testimonialsNeon": "Testimonios Neon",
     "testimonialsNeonControls": {
-      "testimonialsList": "Lista de Testimonios",
+      "testimonialsList": "Testimonios",
       "addTestimonial": "Añadir Testimonio"
     },
     "featuresNeon": "Características Neon",
@@ -4354,7 +4921,48 @@
     "productGridSection": "Cuadrícula de Productos",
     "cartSection": "Carrito",
     "checkoutSection": "Checkout",
-    "restaurantReservationSection": "Reservaciones"
+    "restaurantReservationSection": "Reservaciones",
+    "publishing": "Publicando...",
+    "published": "¡Publicado!",
+    "publishError": "Error",
+    "unsaved": "Sin guardar",
+    "properties": "Propiedades",
+    "placeholder": {
+      "title": "Título",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "button": "Comenzar",
+      "description": "Descripción",
+      "badge": "Sin tarjeta de crédito requerida",
+      "question": "¿Pregunta?",
+      "answer": "Respuesta detallada.",
+      "features": "Característica 1\\\\nCaracterística 2",
+      "planName": "Plan",
+      "planDesc": "Descripción del plan",
+      "feature": "Escribe tu característica aquí...",
+      "quote": "Testimonio increíble.",
+      "author": "Nombre",
+      "role": "Rol",
+      "company": "Empresa"
+    },
+    "heroQuimera": "Hero Quimera",
+    "featuresQuimera": "Features Quimera",
+    "pricingQuimera": "Pricing Quimera",
+    "testimonialsQuimera": "Testimonials Quimera",
+    "faqQuimera": "FAQ Quimera",
+    "ctaQuimera": "CTA Quimera",
+    "platformShowcaseQuimera": "Platform Showcase",
+    "aiCapabilitiesQuimera": "AI Capabilities",
+    "industrySolutionsQuimera": "Industry Solutions",
+    "agencyWhiteLabelQuimera": "Agency White Label",
+    "contentManagerQuimera": "Content Manager",
+    "imageGeneratorQuimera": "Image Generator",
+    "chatbotWorkflowQuimera": "Chatbot & CRM Flow",
+    "chatbotBuilderQuimera": "Chatbot Builder",
+    "leadsManagerQuimera": "Leads CRM",
+    "appointmentsQuimera": "Appointments",
+    "bioPageQuimera": "Smart Bio Page",
+    "emailMarketingQuimera": "AI Newsletters",
+    "separatorSection": "Separador 5"
   },
   "email": {
     "title": "Email Marketing",
@@ -4793,7 +5401,77 @@
         "cancel": "Cancelar",
         "confirm": "Confirmar"
       }
-    }
+    },
+    "members": "miembros",
+    "addToAudience": "Añadir a Audiencia",
+    "selectExisting": "Seleccionar Existente",
+    "createNew": "Crear Nuevo",
+    "searchLeads": "Buscar leads...",
+    "noLeadsMatchSearch": "No se encontraron leads",
+    "noAvailableLeads": "No hay leads disponibles para añadir",
+    "contactsSelected": "contacto(s) seleccionado(s)",
+    "createNewContactDesc": "El nuevo contacto se creará como Lead en el CRM y se añadirá a esta audiencia.",
+    "addSelected": "Añadir Seleccionados",
+    "createAndAdd": "Crear y Añadir",
+    "selected": "seleccionados",
+    "addedSuccessfully": "¡Añadido exitosamente!",
+    "createAudienceFirst": "Crea una audiencia primero en la sección de Email",
+    "searchProjects": "Buscar proyectos...",
+    "yourProjects": "Tus Proyectos",
+    "selectProjectDescription": "Cada proyecto puede tener sus propias campañas de email marketing. Selecciona uno para comenzar.",
+    "noProjectsFound": "No se encontraron proyectos",
+    "noProjectsYet": "No tienes proyectos aún",
+    "createFirstProject": "Crea tu primer proyecto para comenzar con email marketing",
+    "openEmail": "Email Marketing",
+    "addFirstBlock": "Agregar primer bloque",
+    "previewEmail": "Vista previa del email",
+    "noSubject": "Sin asunto",
+    "emptyEmail": "Email vacío",
+    "emptyEmailHint": "Agrega bloques desde el panel izquierdo para comenzar a diseñar tu email",
+    "document": "Documento",
+    "blockStyles": "Bloque",
+    "globalSettings": "Configuración Global",
+    "subjectPlaceholder": "Escribe el asunto...",
+    "previewTextPlaceholder": "Texto que aparece después del asunto...",
+    "previewTextHint": "Se muestra en la bandeja de entrada después del asunto",
+    "selectBlockHint": "Selecciona un bloque",
+    "selectBlockHintDesc": "Haz clic en un bloque en el preview o en la lista para editar su contenido",
+    "selectBlockForStyles": "Selecciona un bloque para editar sus estilos",
+    "last12months": "Últimos 12 meses",
+    "emailsSent": "Emails enviados",
+    "performanceOverTime": "Rendimiento en el Tiempo",
+    "noChartData": "Sin datos para mostrar",
+    "topCampaigns": "Mejores Campañas",
+    "noCampaignsSent": "No hay campañas enviadas",
+    "bounces": "Rebotes",
+    "complaints": "Quejas",
+    "totalMembers": "Miembros Totales",
+    "dynamicMembers": "Miembros Dinámicos",
+    "staticMembers": "Miembros Manuales",
+    "dynamicFilters": "Filtros Dinámicos",
+    "noMembers": "Sin miembros manuales",
+    "noMembersDesc": "Esta audiencia no tiene miembros añadidos manualmente",
+    "removeFromAudience": "Quitar de Audiencia",
+    "directEmails": "Emails Directos",
+    "manual": "manual",
+    "viewDetail": "Ver Detalle",
+    "description": "Descripción",
+    "filterType": "Tipo de filtro",
+    "minSpent": "Mínimo gastado ($)",
+    "inactiveDays": "Días sin compras",
+    "deleteAudienceTitle": "¿Eliminar audiencia?",
+    "deleteAudienceMessage": "Esta acción no se puede deshacer. La audiencia será eliminada permanentemente.",
+    "campaignDeleted": "Campaña eliminada exitosamente",
+    "errorDeleting": "Error al eliminar la campaña",
+    "noRecipients": "No se encontraron destinatarios. Verifica que la audiencia tenga contactos.",
+    "newCampaignSubtitle": "Configure los detalles de su campaña de email",
+    "campaignDetails": "Detalles de la Campaña",
+    "segment": "Segmento",
+    "orCode": "O código directo",
+    "availableVars": "Variables disponibles:",
+    "requiredFields": "* Campos obligatorios",
+    "deleteConfirmTitle": "¿Eliminar campaña?",
+    "deleteConfirmMessage": "Esta acción no se puede deshacer. La campaña será eliminada permanentemente."
   },
   "adminEmail": {
     "hubTitle": "Email Marketing Hub",
@@ -5764,7 +6442,8 @@
       "payroll": "Nómina",
       "other": "Otros"
     },
-    "expenseAboveAvg": "Gasto {{percent}}% superior al promedio"
+    "expenseAboveAvg": "Gasto {{percent}}% superior al promedio",
+    "deleteExpenseTitle": "¿Eliminar gasto?"
   },
   "accounting": {
     "dashboard": "Panel",
@@ -6375,7 +7054,14 @@
     "footerPricing": "Precios",
     "footerRights": "Todos los derechos reservados.",
     "newDesignAvailable": "Nuevo Diseño Disponible",
-    "changeBilling": "Cambiar facturación"
+    "changeBilling": "Cambiar facturación",
+    "footerTagline": "Crea websites increíbles con AI",
+    "footerNewsletterTitle": "Mantente al día",
+    "footerNewsletterDesc": "Recibe las últimas noticias y actualizaciones",
+    "footerEmailPlaceholder": "Ingresa tu email",
+    "footerSubscribe": "Suscribirse",
+    "footerChangelog": "Changelog",
+    "home": "Inicio"
   },
   "pricing": {
     "badge": "Planes flexibles para cada etapa",
@@ -7000,7 +7686,22 @@
     "loginButton": "Iniciar Sesión",
     "landingPreview": "Vista previa de Landing Page",
     "viewSite": "Ver sitio",
-    "agencyPreview": "Vista previa de Landing de Agencia"
+    "agencyPreview": "Vista previa de Landing de Agencia",
+    "structureNote": "Utilice las pestañas para editar la estructura y diseño.",
+    "pageStructure": "ESTRUCTURA DE PÁGINA",
+    "structure": "ESTRUCTURA",
+    "edit": "Editar",
+    "confirmReset": "¿Descartar todos los cambios no guardados?",
+    "discardChanges": "Descartar",
+    "confirmDeleteTitle": "Eliminar Sección",
+    "confirmDeleteMessage": "¿Estás seguro de que quieres eliminar esta sección? Esta acción no se puede deshacer.",
+    "invalidImageType": "Solo se permiten archivos de imagen",
+    "imageTooLarge": "La imagen no puede superar 5MB",
+    "uploadError": "Error al subir la imagen",
+    "uploadImage": "Subir imagen",
+    "maxFileSize": "Máx. 5MB • PNG, JPG, SVG",
+    "noImagesFound": "No se encontraron imágenes",
+    "imagesAvailable": "imágenes disponibles"
   },
   "language": {
     "selectLanguage": "Seleccionar Idioma",
@@ -7202,7 +7903,26 @@
       "educationLevel": "Nivel Educativo"
     },
     "actions": "Actions",
-    "value": "Valor"
+    "value": "Valor",
+    "anonymous": "Anónimo",
+    "aiAnalysis": "Análisis AI",
+    "emptyState": {
+      "title": "Sin leads de plataforma",
+      "adminDesc": "Los leads de la landing page, formulario de contacto y chatbot aparecerán aquí."
+    },
+    "conversation": "Conversación",
+    "deleteConfirmTitle": "Eliminar Lead",
+    "deleteConfirmMessage": "¿Estás seguro de que quieres eliminar este lead? Esta acción no se puede deshacer.",
+    "leads": "leads",
+    "errors": {
+      "nameRequired": "El nombre es requerido",
+      "emailRequired": "El email es requerido",
+      "createError": "Error al crear el lead. Inténtalo de nuevo."
+    },
+    "noProjectSelected": "No hay proyecto seleccionado",
+    "selectProjectMessage": "Selecciona un proyecto desde el menú lateral para ver y gestionar los leads de ese proyecto.",
+    "deleteLead": "Eliminar Lead",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este lead?"
   },
   "messages": {
     "saveSuccess": "Guardado exitosamente",
@@ -7309,7 +8029,14 @@
     "deleteUsedWarning": "Si lo eliminas, desaparecerá de esas ubicaciones.",
     "deleteUsedQuestion": "¿Deseas continuar?",
     "untitledMenu": "Menú sin título",
-    "pasteLinkOrSearch": "Pega un enlace o busca"
+    "pasteLinkOrSearch": "Pega un enlace o busca",
+    "deleteMenuTitle": "¿Eliminar menú?",
+    "totalMenus": "Total de Menús",
+    "activeMenus": "Menús Activos",
+    "orphanMenus": "Sin Asignar",
+    "tryAdjustingFilters": "Intenta ajustar tu búsqueda o crea un nuevo menú.",
+    "createNewMenu": "Crear nuevo menú",
+    "emptyMenuDescShort": "Este menú está vacío"
   },
   "onboarding": {
     "welcome": "¡Bienvenido a Quimera!",
@@ -8481,7 +9208,15 @@
       "updateFailed": "Error al actualizar el perfil. Por favor intenta de nuevo.",
       "deleteFailed": "Error al eliminar la cuenta. Por favor intenta más tarde.",
       "incorrectPassword": "Contraseña incorrecta. Por favor intenta de nuevo."
-    }
+    },
+    "username": "Nombre de usuario (subdominio)",
+    "subdomainPreview": "Tu sitio será visible en:",
+    "jobTitle": "Cargo / Puesto",
+    "department": "Departamento",
+    "bio": "Biografía",
+    "bioPlaceholder": "Cuéntanos un poco sobre ti...",
+    "phone": "Teléfono",
+    "website": "Sitio Web"
   },
   "project": {
     "actions": {
@@ -8504,7 +9239,11 @@
       "template": "¿Eliminar esta plantilla de tu vista?",
       "project": "¿Eliminar \"{{name}}\" permanentemente?"
     },
-    "deleteError": "Error al eliminar el proyecto. Por favor intenta de nuevo."
+    "deleteError": "Error al eliminar el proyecto. Por favor intenta de nuevo.",
+    "createNew": "Crear nuevo proyecto",
+    "noProject": "Sin proyecto",
+    "selectProject": "Seleccionar Proyecto",
+    "search": "Buscar proyectos..."
   },
   "sections": {
     "hero": "Hero",
@@ -8523,7 +9262,8 @@
     "video": "Video",
     "slideshow": "Presentación",
     "newsletter": "Newsletter",
-    "howItWorks": "Cómo Funciona"
+    "howItWorks": "Cómo Funciona",
+    "heroLead": "Hero Lead (Form)"
   },
   "seo": {
     "title": "Configuración SEO",
@@ -8638,7 +9378,32 @@
     "customBodyScripts": "Scripts en <body>",
     "customHeadScriptsHelp": "Se inyectarán en el <head> del documento",
     "customBodyScriptsHelp": "Se inyectarán al final del <body>",
-    "activePixels": "Píxeles Activos"
+    "activePixels": "Píxeles Activos",
+    "optimizeWithAI": "Optimizar con IA",
+    "totalProjects": "Total de Proyectos",
+    "searchProjects": "Buscar proyectos...",
+    "yourProjects": "Tus Proyectos",
+    "selectProjectDescription": "Cada proyecto tiene su propia configuración SEO. Selecciona uno para optimizarlo.",
+    "noProjectsFound": "No se encontraron proyectos",
+    "noProjectsYet": "No tienes proyectos aún",
+    "tryDifferentSearch": "Intenta con otros términos de búsqueda",
+    "createFirstProject": "Crea tu primer proyecto para configurar SEO",
+    "configureSEO": "Configurar SEO",
+    "aiAssistant": "Asistente SEO con IA",
+    "aiAssistantDesc": "Genera configuración SEO optimizada automáticamente",
+    "describeYourBusiness": "Describe tu negocio",
+    "aiWillOptimize": "La IA analizará tu descripción y generará toda la configuración SEO optimizada.",
+    "businessDescription": "Descripción del negocio / sitio web",
+    "businessDescPlaceholder": "Ej: Somos una agencia de marketing digital especializada en startups y pymes. Ofrecemos servicios de SEO, publicidad en redes sociales y diseño web...",
+    "websiteUrl": "URL del sitio web (opcional)",
+    "contentLanguage": "Idioma del contenido",
+    "generateSEO": "Generar SEO",
+    "aiOptimizing": "Optimizando tu SEO...",
+    "aiOptimizingDesc": "Estamos generando títulos, descripciones, keywords y Open Graph optimizados para tu negocio.",
+    "seoGenerated": "¡Configuración SEO generada!",
+    "reviewBeforeApply": "Revisa los resultados antes de aplicarlos a tu proyecto.",
+    "googlePreview": "Vista previa en Google",
+    "applySEO": "Aplicar SEO"
   },
   "serviceAvailability": {
     "title": "Disponibilidad de Servicios",
@@ -8720,8 +9485,31 @@
       "chatbot": "Chatbot IA",
       "customDomains": "Dominios personalizados",
       "included": "Incluido",
-      "notIncluded": "No incluido"
-    }
+      "notIncluded": "No incluido",
+      "noTenantError": "No workspace found. Please refresh the page and try again.",
+      "checkoutError": "Failed to change plan",
+      "activePlan": "Activo",
+      "usageStatus": "Uso de Créditos",
+      "availablePlans": "Planes Disponibles",
+      "recommended": "Recomendado",
+      "current": "Actual",
+      "changePlan": "Cambiar Plan",
+      "billingPeriod": "Período de Facturación",
+      "billingDesc": "Detalles de tu ciclo de facturación actual",
+      "periodStart": "Inicio del período",
+      "periodEnd": "Próxima renovación",
+      "willCancel": "Tu suscripción se cancelará el",
+      "reactivate": "Reactivar",
+      "cancelSubscription": "Cancelar suscripción",
+      "checkoutErrorTitle": "Error al procesar",
+      "cancelTitle": "Cancelar Suscripción",
+      "confirmCancelImmediately": "¿Estás seguro de que deseas cancelar inmediatamente? Perderás acceso a las funciones de tu plan actual.",
+      "confirmCancel": "¿Estás seguro de que deseas cancelar? Tu suscripción permanecerá activa hasta el final del período actual."
+    },
+    "team": "Equipo",
+    "teamDesc": "Gestionar miembros e invitaciones",
+    "branding": "Branding",
+    "brandingDesc": "Personalizar apariencia y dominio"
   },
   "storeAuth": {
     "login": "Iniciar Sesión",
@@ -9099,7 +9887,8 @@
         "tone": "Tono",
         "description": "Descripción",
         "includedSections": "Secciones Incluidas"
-      }
+      },
+      "deleteConfirmTitle": "¿Eliminar template?"
     },
     "templateEditor": {
       "title": "Editor de Plantilla",
@@ -9156,7 +9945,15 @@
         "imageSize": "La imagen debe ser menor a 5MB",
         "uploadFailed": "Error al subir miniatura",
         "applyFailed": "Error al aplicar miniatura"
-      }
+      },
+      "styles": {
+        "minimalist": "Minimalist",
+        "photorealistic": "Photorealistic",
+        "digitalArt": "Digital Art",
+        "3dRender": "3D Render",
+        "cyberpunk": "Cyberpunk"
+      },
+      "thumbnailUpdated": "Thumbnail updated successfully"
     },
     "imageLibraryManagement": {
       "title": "Biblioteca Global de Imágenes",
@@ -9201,7 +9998,14 @@
       },
       "pagination": "Página {{current}} de {{total}} • {{count}} activo(s)",
       "previous": "Anterior",
-      "next": "Siguiente"
+      "next": "Siguiente",
+      "cannotDeleteSystem": "Los assets del sistema no se pueden eliminar",
+      "assetDeletedError": "Failed to delete asset",
+      "imageDetails": "Image Details",
+      "folders": "Carpetas",
+      "totalImages": "imágenes totales",
+      "deleteTitle": "Delete Assets?",
+      "deleteSingleTitle": "Delete Asset?"
     },
     "templateInformation": "Información de la Plantilla",
     "brandIdentity": "Identidad de Marca",
@@ -9327,7 +10131,9 @@
         "transactionHistory": "Historial de Transacciones",
         "addCredits": "Añadir Créditos",
         "creditsRemaining": "Créditos Restantes",
-        "noTransactions": "No hay transacciones recientes"
+        "noTransactions": "No hay transacciones recientes",
+        "saveSuccess": "Cambios guardados exitosamente",
+        "saveError": "Error al guardar los cambios"
       },
       "metrics": {
         "projects": "Proyectos",
@@ -9345,7 +10151,8 @@
       "alerts": {
         "noPermission": "No tienes permiso para eliminar tenants.",
         "deleteConfirm": "¿Estás seguro de eliminar este tenant? Esta acción no se puede deshacer.",
-        "createError": "Error al crear el tenant: "
+        "createError": "Error al crear el tenant: ",
+        "deleteWarning": "Esta acción no se puede deshacer."
       }
     },
     "admins": {
@@ -9367,7 +10174,8 @@
         "admin": "Administrador",
         "adminDesc": ": Gestión de usuarios y tenants, sin acceso a configuraciones críticas",
         "manager": "Gerente",
-        "managerDesc": ": Solo visualización y gestión básica de contenido"
+        "managerDesc": ": Solo visualización y gestión básica de contenido",
+        "ownerLabel": "Propietario de la plataforma"
       },
       "totalAdmins": "Total de Admins",
       "create": "Crear Nuevo Administrador",
@@ -9383,7 +10191,8 @@
         "role": "Rol",
         "cancel": "Cancelar",
         "create": "Crear"
-      }
+      },
+      "deleteWarning": "Esta acción no se puede deshacer."
     },
     "globalAssistant": {
       "title": "Asistente Global",
@@ -9422,7 +10231,12 @@
         "maxTokens": "Tokens Máximos",
         "precise": "Preciso",
         "balanced": "Balanceado",
-        "creative": "Creativo"
+        "creative": "Creativo",
+        "model": "AI Model",
+        "recommended": "Recommended",
+        "legacy": "Legacy",
+        "highCost": "Higher Cost",
+        "modelDescription": "The model used for chat responses. Flash is fastest and most cost-effective."
       },
       "scope": {
         "title": "Alcance y Permisos",
@@ -9870,7 +10684,12 @@
           "placeholder": "Ingresa verification code",
           "title": "Verificaciones Globales del Sitio"
         }
-      }
+      },
+      "logoUpdated": "Logo actualizado",
+      "logoRemoved": "Logo eliminado",
+      "appLogo": "Logo de la App",
+      "appLogoDesc": "Logo principal que se muestra en el sidebar, landing page, login, footer y toda la plataforma. PNG o SVG, máx. 512KB.",
+      "logoUploaded": "Logo subido"
     },
     "news": {
       "title": "Noticias y Novedades",
@@ -10038,7 +10857,9 @@
         "continue": "Continuar de todos modos",
         "missingInfoDesc": "Noté que tu mensaje es muy breve. La IA podría inventar detalles para completar la noticia.",
         "missingInfoTips": "¿Quieres añadir:\n• Fechas clave\n• Beneficios para el usuario\n• Detalles específicos",
-        "error": "Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo."
+        "error": "Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.",
+        "continueChat": "← Continue",
+        "context": "Context:"
       }
     },
     "messages": {
@@ -11147,7 +11968,29 @@
     "rechargeReason": "Razón de la recarga",
     "thisYear": "Este Año",
     "planDistribution": "Distribución por Plan",
-    "arpu": "ARPU"
+    "arpu": "ARPU",
+    "subdomainManagement": "Gestión de Subdominios",
+    "subdomainManagementDesc": "Administrar subdominios de usuarios, agencias y tenants",
+    "platformLeads": "Leads de Plataforma",
+    "platformLeadsDesc": "Gestionar leads recibidos desde la landing page, formulario de contacto y chatbot",
+    "platformAppointments": "Citas de Plataforma",
+    "platformAppointmentsDesc": "Gestionar citas agendadas a nivel de plataforma",
+    "emailMarketing": "Email Marketing Hub",
+    "emailMarketingDesc": "Gestión centralizada de campañas, audiencias, automatizaciones y AI Email Studio",
+    "settings": {
+      "models": "Models"
+    },
+    "exportError": "Error al exportar traducciones",
+    "importSuccess": "Traducciones importadas correctamente. Los cambios son temporales hasta que se guarden en el servidor.",
+    "importError": "Error al importar. Verifica que el archivo tenga el formato correcto.",
+    "loadError": "Error al cargar traducciones",
+    "translationsSaved": "Traducciones actualizadas. Los cambios son temporales hasta que se guarden en el servidor.",
+    "saveError": "Error al guardar traducciones",
+    "editByLanguage": "Editar por idioma:",
+    "editingTranslations": "Editando traducciones",
+    "searchTranslations": "Buscar por clave o valor...",
+    "noTranslationsFound": "No se encontraron traducciones",
+    "changesAreTemporary": "Los cambios son temporales hasta guardar en el servidor"
   },
   "trash": {
     "title": "Papelera",
@@ -11391,7 +12234,7 @@
   },
   "components": {
     "map": {
-      "getDirections": "Cómo Llegar",
+      "getDirections": "Get Directions",
       "loading": "Cargando Mapa...",
       "locationLabel": "Ubicación",
       "navigate": "Navegar",
@@ -11675,7 +12518,15 @@
     },
     "minutesSuffix": "min",
     "maxPartySizeHint": "Máximo de comensales por reserva",
-    "reservationIntervalHint": "Intervalo entre franjas horarias en minutos"
+    "reservationIntervalHint": "Intervalo entre franjas horarias en minutos",
+    "defaultName": "My Restaurant",
+    "overviewSubtitle": "Performance and quick actions",
+    "digitalMenuSubtitle": "Your public QR code menu link and preview",
+    "selectTime": "Select time",
+    "editReservation": "Edit reservation",
+    "reservationDetails": "Reservation Details",
+    "reviewsAiSubtitle": "Draft professional responses to customer reviews",
+    "projectLibrary": "Project"
   },
   "restaurant": {
     "reservation": {
@@ -11707,7 +12558,21 @@
       "notesPlaceholder": "Alergias, ocasiones especiales, solicitudes...",
       "featureFlexibleDates": "Fechas y horarios flexibles",
       "featureGroupBooking": "Reservaciones para grupos de hasta 20 personas",
-      "featureInstantConfirmation": "Confirmación instantánea por email"
+      "featureInstantConfirmation": "Confirmación instantánea por email",
+      "dataSourceLabel": "Fuente de Datos",
+      "manual": "Manual",
+      "fromRestaurant": "Restaurante",
+      "manualHint": "📝 Configura platos manualmente desde el editor.",
+      "restaurantHint": "🍽️ Los platos se cargan automáticamente del módulo de Restaurantes.",
+      "restaurantIdLabel": "Restaurant ID",
+      "restaurantIdHelp": "Vincula este formulario a un restaurante creado en el módulo de Restaurantes.",
+      "fieldVisibility": "Campos del Formulario",
+      "showPhoneField": "Mostrar Teléfono",
+      "showNotesField": "Mostrar Notas Especiales",
+      "showTablePreference": "Mostrar Preferencia de Mesa",
+      "capacitySettings": "Capacidad",
+      "minPartySize": "Mínimo de Comensales",
+      "maxPartySize": "Máximo de Comensales"
     }
   },
   "landingNavigation": {
@@ -11761,11 +12626,969 @@
       "addLink": "Añadir Enlace",
       "labelPlaceholder": "Etiqueta",
       "urlPlaceholder": "URL",
-      "preview": "Previsualizar"
+      "preview": "Previsualizar",
+      "newLink": "New Link"
     },
     "messages": {
       "saveSuccess": "¡Navegación guardada con éxito!",
       "saveError": "Error al guardar la navegación"
+    }
+  },
+  "init": "${config.redditPixelId}",
+  "track": "PageVisit",
+  "invite": {
+    "acceptError": "Error aceptando invitación",
+    "notFound": "Invitación no encontrada",
+    "invalidLink": "Este enlace de invitación no es válido o ya no está disponible.",
+    "expired": "Invitación expirada",
+    "expiredDescription": "Esta invitación ha expirado. Contacta al administrador del workspace para recibir una nueva invitación.",
+    "alreadyAccepted": "Invitación ya aceptada",
+    "alreadyAcceptedDescription": "Esta invitación ya fue aceptada. Puedes acceder al workspace desde tu dashboard.",
+    "accepted": "¡Bienvenido!",
+    "acceptedDescription": "Te has unido exitosamente a",
+    "redirecting": "Redirigiendo al dashboard...",
+    "invitedBy": "Te ha invitado",
+    "invitedAs": "Serás invitado como",
+    "personalMessage": "Mensaje personal:",
+    "emailMismatch": "Esta invitación fue enviada a",
+    "emailMismatchDescription": "Asegúrate de iniciar sesión con el email correcto.",
+    "accepting": "Aceptando...",
+    "acceptInvite": "Aceptar Invitación",
+    "decline": "Rechazar",
+    "loginToAccept": "Iniciar Sesión para Aceptar",
+    "noAccount": "¿No tienes cuenta?",
+    "createAccount": "Crear una cuenta",
+    "sentTo": "Invitación enviada a",
+    "invalidEmail": "Por favor ingresa un email válido",
+    "error": "Error enviando invitación",
+    "title": "Invitar Miembro",
+    "email": "Email",
+    "emailPlaceholder": "nombre@ejemplo.com",
+    "role": "Rol",
+    "message": "Mensaje personal",
+    "messagePlaceholder": "Añade un mensaje personalizado para la invitación...",
+    "success": "¡Invitación enviada exitosamente!",
+    "send": "Enviar Invitación",
+    "cancelled": "Invitación cancelada",
+    "cancelError": "Error cancelando invitación",
+    "resent": "Invitación reenviada",
+    "resendError": "Error reenviando invitación",
+    "pending": "Invitaciones Pendientes",
+    "expiresIn": "Expira en",
+    "expirestoday": "Expira hoy",
+    "resend": "Reenviar",
+    "cancel": "Cancelar"
+  },
+  "sidebar": {
+    "images": "Imágenes",
+    "workspace": "Workspace",
+    "admin": "Admin"
+  },
+  "agency": {
+    "overview": "Vista General",
+    "billing": "Facturación",
+    "reports": "Reportes",
+    "newClient": "Nuevo Cliente",
+    "addons": "Add-ons",
+    "landing": "Landing Page",
+    "cms": "CMS",
+    "navigation": "Enlaces del Menú",
+    "plans": "Planes",
+    "analytics": "Analytics",
+    "projects": "Proyectos",
+    "whiteLabel": {
+      "tab": "White Label"
+    },
+    "title": "Agency Dashboard",
+    "billingDesc": "Gestiona Stripe Connect y facturación de clientes",
+    "newClientDesc": "Onboarding automatizado para sub-clientes",
+    "addonsDesc": "Gestiona complementos de tu subscription",
+    "navigationDesc": "Configura los enlaces de navegación del header, columnas del footer y redes sociales.",
+    "projectsDesc": "Gestiona y transfiere proyectos a tus clientes",
+    "searchProjects": "Buscar proyectos...",
+    "totalProjects": "Total Proyectos",
+    "publishedProjects": "Publicados",
+    "draftProjects": "Borradores",
+    "noProjectsSearch": "No hay proyectos que coincidan con tu búsqueda",
+    "noProjectsYet": "No tienes proyectos aún",
+    "createProjectHint": "Crea un proyecto desde el panel principal para poder transferirlo",
+    "subdomain": "Subdominio",
+    "transfer": "Transferir",
+    "transferSuccess": "Proyecto transferido exitosamente",
+    "transferError": "Error al transferir el proyecto",
+    "transferProject": "Transferir Proyecto",
+    "selectClient": "Selecciona un cliente",
+    "noClients": "No tienes clientes registrados",
+    "createClientFirst": "Crea un cliente primero desde la pestaña \"Nuevo Cliente\"",
+    "transferring": "Transfiriendo...",
+    "transferToClient": "Transferir a Cliente",
+    "subdomainSaved": "Subdominio configurado correctamente",
+    "configureSubdomain": "Configurar Subdominio",
+    "subdomainName": "Nombre del subdominio",
+    "updateSubdomain": "Actualizar",
+    "setSubdomain": "Configurar"
+  },
+  "workspace": {
+    "create": "Crear Workspace",
+    "selectWorkspace": "Seleccionar Workspace",
+    "createNew": "Crear nuevo workspace"
+  },
+  "chatbot": {
+    "liveVoice": "Listening...",
+    "chats": "Messages"
+  },
+  "adminAssets": {
+    "descriptionSaved": "Description saved",
+    "metadataSaved": "Metadata saved",
+    "saveError": "Failed to save",
+    "deleted": "Asset deleted",
+    "deleteError": "Failed to delete",
+    "details": "Details",
+    "category": "Category",
+    "description": "Description",
+    "descriptionPlaceholder": "Add a description...",
+    "tags": "Tags",
+    "usedIn": "Used in Articles",
+    "aiPrompt": "AI Prompt Used",
+    "deleteTitle": "¿Eliminar asset?",
+    "deleteConfirm": "Delete this asset?",
+    "clickToSelect": "Click to select",
+    "doubleClickPreview": "Double-click to preview",
+    "useAsReference": "Use as Reference",
+    "copyUrl": "Copy URL",
+    "maxReferences": "Maximum 14 reference images",
+    "alreadyReference": "Image is already in references",
+    "addedReference": "Added to reference images",
+    "referenceError": "Failed to prepare reference image",
+    "generated": "Image generated and saved!",
+    "generateError": "Failed to generate image",
+    "enhanced": "Prompt enhanced!",
+    "enhanceError": "Failed to enhance prompt",
+    "uploadSuccess": "uploaded to",
+    "uploadError": "Failed to upload file",
+    "bulkDeleteError": "Failed to delete some assets",
+    "urlCopied": "URL copied!",
+    "title": "Admin Asset Library",
+    "assets": "assets",
+    "generator": {
+      "title": "AI Image Generator",
+      "subtitle": "Create stunning images for your app content",
+      "prompt": "Describe your image",
+      "enhance": "Enhance",
+      "promptPlaceholder": "A professional hero image for a SaaS landing page...",
+      "references": "Reference Images",
+      "uploadRef": "Upload reference images",
+      "dragRef": "or drag and drop",
+      "category": "Save to Category",
+      "aspectRatio": "Aspect Ratio",
+      "style": "Style",
+      "resolution": "Resolution",
+      "4kWarning": "4K images are large and may slow down loading. Consider 2K for web use.",
+      "advanced": "Advanced Controls",
+      "lighting": "Lighting",
+      "camera": "Camera Angle",
+      "color": "Color Grading",
+      "dof": "Depth of Field",
+      "generating": "Generating...",
+      "generate": "Generate Image"
+    },
+    "library": "Asset Library",
+    "search": "Search...",
+    "sortBy": "Sort By",
+    "date": "Date",
+    "name": "Name",
+    "size": "Size",
+    "categoryLabel": "Category",
+    "order": "Order",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "uploadTo": "Upload to",
+    "selected": "selected",
+    "selectAll": "Select All",
+    "noResults": "No assets found",
+    "empty": "No assets yet",
+    "tryFilters": "Try adjusting your filters",
+    "startUploading": "Generate your first image above to get started",
+    "clearFilters": "Clear filters",
+    "bulkDeleteTitle": "¿Eliminar assets?"
+  },
+  "Please enter a title": "error",
+  "Please enter a URL slug": "error",
+  "Error saving article": {
+    " Please try again": {
+      "": "error"
+    }
+  },
+  "Imagen insertada": "success",
+  "Imagen de librería insertada": "success",
+  "Imagen eliminada": "success",
+  "Guarda el artículo primero antes de traducir": "warning",
+  "Imagen generada e insertada": "success",
+  "Video subido correctamente": "success",
+  "Por favor arrastra un archivo de video válido": {
+    "": "warning"
+  },
+  "Guarda la noticia primero antes de traducir": "warning",
+  "content": "Mapping content to components...",
+  "save": "Compiled content in memory...",
+  "done": "Website created successfully!",
+  "Página legal guardada correctamente": "success",
+  "Error al guardar la página": "error",
+  "Error al cargar configuración": "error",
+  "Enlaces guardados correctamente": "success",
+  "Error al guardar": "error",
+  "chatbotWizard": {
+    "nameStep": {
+      "heading": "¿Cómo quieres que se llame tu asistente?",
+      "subheading": "Este nombre aparecerá cuando tus clientes chateen",
+      "placeholder": "Ej: Asistente de Mi Negocio",
+      "suggestions": "Sugerencias:"
+    },
+    "toneStep": {
+      "heading": "¿Qué tono debe usar tu asistente?",
+      "subheading": "Elige el estilo de comunicación que mejor represente tu marca"
+    },
+    "faqsStep": {
+      "heading": "Preguntas frecuentes de tus clientes",
+      "subheading": "Agrega las preguntas que tus clientes hacen más seguido",
+      "suggestions": "Sugerencias para tu industria",
+      "questionPlaceholder": "¿Cuál es la pregunta?",
+      "answerPlaceholder": "Escribe la respuesta...",
+      "addFaq": "Agregar pregunta frecuente"
+    },
+    "leadsStep": {
+      "heading": "Captura contactos de clientes potenciales",
+      "subheading": "Decide cómo quieres obtener información de contacto",
+      "enableCapture": "Capturar leads",
+      "enableCaptureDesc": "Solicita email después de algunas interacciones",
+      "preChatForm": "Formulario antes del chat",
+      "preChatFormDesc": "Pide nombre y email antes de iniciar"
+    },
+    "previewStep": {
+      "heading": "¡Así se verá tu chatbot!",
+      "subheading": "Prueba cómo funcionará antes de activarlo",
+      "summary": "Resumen de configuración"
+    },
+    "title": "Configurar tu Chatbot",
+    "save": "Activar Chatbot"
+  },
+  "calendar": {
+    "view": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes"
+    }
+  },
+  "assets": {
+    "searchProjects": "Buscar proyectos...",
+    "selectProject": "Selecciona un Proyecto",
+    "selectProjectDescription": "Las imágenes generadas se guardarán en la biblioteca del proyecto seleccionado.",
+    "noProjectsFound": "No se encontraron proyectos",
+    "noProjectsYet": "No tienes proyectos aún",
+    "tryDifferentSearch": "Intenta con otros términos de búsqueda",
+    "createFirstProject": "Crea tu primer proyecto para generar imágenes",
+    "generateImages": "Generar Imágenes"
+  },
+  "ai": {
+    "generated": "Contenido generado por IA"
+  },
+  "team": {
+    "members": "Miembros del Equipo",
+    "membersDescription": "Gestiona quién tiene acceso a este workspace y sus roles.",
+    "invite": "Invitar",
+    "totalMembers": "Total",
+    "owners": "Propietarios",
+    "admins": "Admins",
+    "pending": "Pendientes",
+    "noMembersTitle": "Tu equipo está vacío",
+    "noMembers": "Invita a colegas para colaborar en proyectos y gestionar clientes.",
+    "inviteFirst": "Invitar al primer miembro",
+    "member": "Miembro",
+    "role": "Rol",
+    "department": "Departamento",
+    "actions": "Acciones",
+    "unnamed": "Sin nombre",
+    "manage": "Gestionar",
+    "pendingInvites": "Invitaciones Pendientes",
+    "noPending": "No hay invitaciones pendientes",
+    "noPendingInvites": "Todas las invitaciones han sido respondidas",
+    "errors": {
+      "updateFailed": "Error al actualizar miembro",
+      "removeFailed": "Error al eliminar miembro"
+    },
+    "jobTitle": "Cargo",
+    "removeMember": "Eliminar Miembro"
+  },
+  "branding": {
+    "title": "Identidad del Workspace",
+    "subtitle": "Define los colores y nombre de tu marca",
+    "companyName": "Nombre de la empresa",
+    "primaryColor": "Color primario",
+    "secondaryColor": "Color secundario",
+    "preview": "Vista previa",
+    "ctaPreview": "Botón CTA",
+    "footerText": "Texto del footer",
+    "visualAssets": "Assets Visuales",
+    "visualAssetsDesc": "Logo y favicon de tu marca",
+    "logo": "Logo de la empresa",
+    "logoHint": "Se recomienda 200x200 o superior en formato PNG o SVG",
+    "favicon": "Favicon",
+    "faviconHint": "Se recomienda 32x32 o 64x64 píxeles en formato PNG o ICO",
+    "domainTitle": "Dominio & Subdominio",
+    "domainDesc": "Configura la URL de tu portal de clientes",
+    "quimeraSubdomain": "Subdominio Quimera",
+    "subdomainActive": "Activo",
+    "noSubdomain": "Aún no tienes un subdominio. Configura uno para que tu portal esté en tunombre.quimera.ai",
+    "changeSubdomain": "Cambiar subdominio",
+    "setSubdomain": "Elegir subdominio",
+    "saveToApply": "guarda los cambios para aplicar",
+    "customDomain": "Dominio Personalizado",
+    "agencyOnly": "Disponible en planes Agency",
+    "upgradeForDomain": "Actualiza tu plan para usar tu propio dominio",
+    "verified": "Verificado",
+    "pendingVerification": "Pendiente de verificación",
+    "verify": "Verificar",
+    "configureDNS": "Configura estos registros DNS:",
+    "verification": "verificación",
+    "verificationSuccess": "Verificación exitosa",
+    "verificationIncomplete": "Verificación incompleta",
+    "removeDomainTitle": "¿Eliminar dominio?",
+    "removeDomainMessage": "¿Estás seguro de eliminar el dominio personalizado?"
+  },
+  "contact": {
+    "errorSending": "Hubo un error al enviar tu mensaje. Intenta de nuevo.",
+    "title": "Contacto",
+    "subtitle": "¿Tienes preguntas? Estamos aquí para ayudarte.",
+    "sent": "¡Mensaje enviado!",
+    "sentDesc": "Te responderemos lo antes posible.",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "message": "Mensaje",
+    "messagePlaceholder": "¿En qué podemos ayudarte?",
+    "sending": "Enviando...",
+    "send": "Enviar mensaje",
+    "liveChat": "Chat en vivo 24/7"
+  },
+  "Inicio": "Home",
+  "Servicios": "Services",
+  "Nosotros": "About",
+  "Contacto": "Contact",
+  "Comenzar": "Get Started",
+  "Más Info": "Learn More",
+  "Contactar": "Contact",
+  "Lo que ofrecemos": "What we offer",
+  "Características": "Features",
+  "Por qué elegirnos": "Why choose us",
+  "Testimonios": "Testimonials",
+  "Opiniones de clientes": "Customer reviews",
+  "Equipo": "Team",
+  "Nuestro equipo": "Our team",
+  "Portafolio": "Portfolio",
+  "Nuestros trabajos": "Our work",
+  "Cómo Funciona": "How It Works",
+  "Proceso simple": "Simple process",
+  "Precios": "Pricing",
+  "Planes disponibles": "Available plans",
+  "Elegir": "Choose",
+  "Preguntas Frecuentes": "FAQ",
+  "Respuestas a tus dudas": "Answers to your questions",
+  "¿Listo para empezar?": "Ready to start?",
+  "Contáctanos hoy": "Contact us today",
+  "Ver Más": "Learn More",
+  "Escríbenos": "Write to us",
+  "Newsletter": "Newsletter",
+  "Suscríbete": "Subscribe",
+  "Ubicación": "Location",
+  "Visítanos": "Visit us",
+  "Menú": "Menu",
+  "Nuestros platos": "Our dishes",
+  "Últimos Artículos": "Latest Articles",
+  "Mantente al día con nuestro contenido": "Stay up to date with our latest content",
+  "Leer Más": "Read More",
+  "Video": "Video",
+  "Conoce más sobre nosotros": "Learn more about us",
+  "Nuestros Aliados": "Our Partners",
+  "Empresas que confían en nosotros": "Companies that trust us",
+  "Suscribirse": "Subscribe",
+  "Tu correo electrónico": "Your email address",
+  "portal": {
+    "stats": {
+      "projects": "Proyectos Activos",
+      "leads": "Total Leads",
+      "posts": "Posts Publicados",
+      "views": "Visitas"
+    },
+    "welcome": "Bienvenido a",
+    "welcomeSubtitle": "Aquí tienes un resumen de tu workspace",
+    "recentProjects": "Proyectos Recientes",
+    "noProjects": "No hay proyectos aún",
+    "createFirst": "Crear tu primer proyecto",
+    "recentLeads": "Leads Recientes",
+    "noLeads": "No hay leads aún",
+    "recentActivity": "Actividad Reciente",
+    "noActivity": "No hay actividad reciente",
+    "error": "Error",
+    "notFound": "Portal no encontrado",
+    "dashboard": "Dashboard",
+    "projects": "Mis Proyectos",
+    "cms": "Contenido",
+    "leads": "Leads",
+    "ecommerce": "E-commerce",
+    "chat": "Chat",
+    "files": "Archivos",
+    "analytics": "Analytics",
+    "workspace": "Workspace"
+  },
+  "quimera": {
+    "agency": {
+      "item1": {
+        "title": "Sin Rastros de Quimera",
+        "desc": "Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas."
+      },
+      "item2": {
+        "title": "Cobra lo que Quieras",
+        "desc": "Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%."
+      },
+      "item3": {
+        "title": "Subcuentas Ilimitadas",
+        "desc": "Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos."
+      },
+      "item4": {
+        "title": "Soporte Prioritario",
+        "desc": "Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante."
+      },
+      "title": "La Plataforma Definitiva para Agencias",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "button": "Ver Precios de Agencia",
+      "badge": {
+        "colors": "Colores Propios",
+        "domain": "Dominio Propio",
+        "plan": "Plan Agencia"
+      },
+      "item": {
+        "title": "Título",
+        "desc": "Descripción"
+      }
+    },
+    "aicapabilities": {
+      "item1": {
+        "title": "Asistente Global Integrado",
+        "desc": "Un chatbot inteligente en tu panel de control listo para generar secciones enteras, escribir copys o sugerir paletas de colores."
+      },
+      "item2": {
+        "title": "Copywriting Automatizado",
+        "desc": "Dile adiós al síndrome de la página en blanco. Nuestra IA redacta títulos persuasivos y descripciones de productos que convierten."
+      },
+      "item3": {
+        "title": "Sugerencias Visuales",
+        "desc": "Selección inteligente de imágenes de stock y generación de estilos CSS para que tu sitio siempre luzca profesional."
+      },
+      "title": "Impulsado por Inteligencia Artificial",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "title": "Título",
+        "desc": "Descripción"
+      },
+      "chatbot": {
+        "name": "Quimera AI",
+        "status": "En línea",
+        "msg1": "Crea una sección de Hero para una cafetería moderna. Usa tonos oscuros y dorados.",
+        "generating": "Generando componente y copy...",
+        "ready": "¡Listo! He añadido la sección a tu página. Así es como se ve:"
+      },
+      "input": {
+        "placeholder": "Escribe tu prompt aquí..."
+      }
+    },
+    "aiwebstudio": {
+      "title": "Construye tu website conversando con AI Web Studio.",
+      "subtitle": "Responde preguntas simples sobre tu negocio y Quimera AI genera una página web inicial con estructura, textos y secciones listas para personalizar.",
+      "introText": "AI Web Studio funciona como un estratega, copywriter y diseñador inicial dentro de Quimera AI. Te guía paso a paso, entiende lo que vendes, quién es tu cliente y qué quieres lograr, y luego crea una primera versión de tu website para que puedas editar, mejorar y publicar más rápido.",
+      "diffTitle": "Tu website empieza con una conversación.",
+      "diffText": "AI Web Studio convierte ideas sueltas en una estructura clara: títulos, secciones, textos, llamadas a la acción y contenido inicial adaptado al tipo de negocio.",
+      "primaryBtn": "Crear con AI Web Studio",
+      "secondaryBtn": "Explorar templates",
+      "flowText": "Chat → Website Draft → Edit → Publish",
+      "bullet1": "Te hace las preguntas correctas.",
+      "bullet2": "Organiza la información de tu negocio.",
+      "bullet3": "Genera una primera versión de tu website.",
+      "chatMsg1": "Tell me about your business. What do you offer and who do you serve?",
+      "chatMsg2": "I run a local service business and need a website to explain my services, capture leads and book appointments.",
+      "chatMsg3": "Great. I’ll create a homepage with your services, benefits, testimonials and a contact section.",
+      "genStatus": "Generating website...",
+      "badgeDraft": "AI Draft Ready",
+      "badgeEditable": "Editable in Quimera"
+    },
+    "appointments": {
+      "title": "Agendamiento Inteligente",
+      "subtitle": "Olvídate de los correos interminables. Permite a tus clientes reservar reuniones, consultas o servicios directamente en tu sitio web según tu disponibilidad.",
+      "feat1": {
+        "title": "Sincronización Bidireccional",
+        "desc": "Se conecta con tu Google Calendar o Outlook para que nunca haya cruces de horarios."
+      },
+      "feat2": {
+        "title": "Recordatorios Automáticos",
+        "desc": "Envía notificaciones por email y SMS para reducir drásticamente las ausencias (no-shows)."
+      },
+      "feat3": {
+        "title": "Tipos de Reunión Customizables",
+        "desc": "Configura duraciones, formularios previos y ubicación (Zoom, Meet, o presencial) por cada servicio."
+      },
+      "badge": "Reservas & Citas"
+    },
+    "biopage": {
+      "title": "Tu Enlace en Bio potenciado por IA",
+      "subtitle": "Reúne toda tu presencia online en una sola página optimizada. Solo dinos tus redes y la Inteligencia Artificial diseñará y ordenará tus enlaces para maximizar clics.",
+      "feat1": {
+        "title": "Generación Automática",
+        "desc": "La IA extrae tu información de Instagram o TikTok y crea tu página en 10 segundos con tu identidad visual."
+      },
+      "feat2": {
+        "title": "Enlaces Inteligentes",
+        "desc": "Destaca automáticamente el enlace más importante (como tu último video o producto) usando algoritmos de atención."
+      },
+      "feat3": {
+        "title": "Analítica Predictiva",
+        "desc": "Descubre de dónde vienen tus seguidores y qué enlace convierte mejor, con sugerencias de la IA para mejorar."
+      },
+      "badge": "Smart Bio Page"
+    },
+    "chatbotbuilder": {
+      "title": "Crea un Chatbot a tu Medida",
+      "subtitle": "Personaliza cada aspecto de tu asistente. Entrénalo con tus propios documentos, define su personalidad y adapta su diseño visual a tu marca corporativa en segundos.",
+      "feat1": {
+        "title": "Base de Conocimiento",
+        "desc": "Sube PDFs, pega URLs o escribe texto plano para que tu chatbot conozca todo sobre tu negocio al instante."
+      },
+      "feat2": {
+        "title": "Identidad Visual",
+        "desc": "Cambia colores, tipografía, logo y posición para que el chat se integre perfectamente con tu página web."
+      },
+      "feat3": {
+        "title": "Personalidad y Comportamiento",
+        "desc": "Configura instrucciones detalladas (prompts) para definir el tono de voz, el rol del bot y sus reglas de atención."
+      },
+      "badge": "Chatbot Studio"
+    },
+    "chatbotworkflow": {
+      "title": "El Recepcionista Perfecto: 24/7",
+      "subtitle": "Tu asistente virtual impulsado por IA no solo responde dudas; perfila clientes, guarda datos en tu CRM y agenda citas automáticamente sin que tengas que intervenir.",
+      "feat1": {
+        "title": "Atención Inmediata",
+        "desc": "Responde al instante con el tono y personalidad de tu marca, resolviendo dudas frecuentes."
+      },
+      "feat2": {
+        "title": "Captura de Leads (CRM)",
+        "desc": "Identifica oportunidades y solicita datos clave (email, teléfono) guardándolos automáticamente en tu base de contactos."
+      },
+      "feat3": {
+        "title": "Agendamiento Inteligente",
+        "desc": "Se sincroniza con tus servicios y disponibilidad para agendar reuniones y enviar confirmaciones."
+      },
+      "badge": "AI CRM Integration",
+      "node1": "Interacción inicial",
+      "bubble1": "\"¿En qué te ayudo?\"",
+      "node2": "Lead Capturado",
+      "newContact": "Nuevo Contacto",
+      "node3": "Cita Agendada",
+      "meetingConfirmed": "Reunión confirmada",
+      "meetingTime": "Mañana, 10:00 AM"
+    },
+    "contentmanager": {
+      "title": "Gestor de Contenidos con IA Integrada",
+      "subtitle": "Centraliza tus artículos, portafolios y servicios en un editor avanzado que escribe, traduce y optimiza por ti.",
+      "feat1": {
+        "title": "Asistente de Escritura IA",
+        "desc": "Expande ideas, mejora la gramática o genera artículos completos desde un simple comando dentro del editor."
+      },
+      "feat2": {
+        "title": "Optimización SEO Automática",
+        "desc": "La IA sugiere meta títulos, descripciones y palabras clave basándose en el contenido de tu publicación."
+      },
+      "feat3": {
+        "title": "Gestión Multimedia",
+        "desc": "Sube, recorta y organiza tus imágenes y videos en una galería centralizada lista para usar."
+      },
+      "feat4": {
+        "title": "Tipos de Contenido Dinámico",
+        "desc": "Crea blogs, portafolios, menús de restaurantes o listados inmobiliarios sin tocar código."
+      },
+      "aiwriter": "AI Writer",
+      "generating": "Generando continuación...",
+      "seo": "SEO Optimization",
+      "metatitle": "Meta Title",
+      "metadesc": "Meta Description",
+      "seoscore": "SEO Score: 95/100",
+      "medialibrary": "Media Library",
+      "collections": "Content Collections",
+      "blogposts": "Blog Posts",
+      "portfolio": "Portfolio Projects",
+      "team": "Team Members"
+    },
+    "cta": {
+      "title": "¿Listo para escalar tu negocio digital?",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "button": "Empezar Gratis",
+      "badge": "Sin tarjeta de crédito requerida"
+    },
+    "emailmarketing": {
+      "title": "Campañas de Email que se Escriben Solas",
+      "subtitle": "Aumenta tus tasas de apertura con la IA. Genera asuntos irresistibles, redacta newsletters completos y segmenta a tus suscriptores en un par de clics.",
+      "feat1": {
+        "title": "Redacción Asistida",
+        "desc": "Dile a la IA qué quieres promocionar y obtén múltiples opciones de correos con el tono de voz de tu marca."
+      },
+      "feat2": {
+        "title": "Asuntos de Alta Conversión",
+        "desc": "Genera títulos optimizados psicológicamente para evitar la carpeta de spam y maximizar los clics."
+      },
+      "feat3": {
+        "title": "Segmentación Dinámica",
+        "desc": "La IA agrupa automáticamente a tus leads según su comportamiento e intereses para enviar mensajes personalizados."
+      },
+      "openRate": "Open Rate",
+      "industryAvg": "+12% vs. industry avg",
+      "newCampaign": "New Campaign",
+      "send": "Send",
+      "to": "To:",
+      "vipCustomers": "VIP Customers (1,240)",
+      "subject": "Subject:",
+      "aiOptimize": "AI Optimize",
+      "redeemOffer": "REDEEM OFFER",
+      "badge": "AI Newsletters"
+    },
+    "faq": {
+      "item1": {
+        "question": "¿Necesito conocimientos de programación?",
+        "answer": "Absolutamente no. QuimeraAi está diseñado para que cualquier persona pueda crear sitios web profesionales, tiendas y plataformas complejas utilizando nuestro editor visual intuitivo y la ayuda de nuestra IA."
+      },
+      "item2": {
+        "question": "¿Puedo conectar mi propio dominio?",
+        "answer": "Sí. Todos nuestros planes de pago incluyen la posibilidad de conectar tu propio dominio personalizado. También proporcionamos certificados SSL gratuitos para todos los dominios."
+      },
+      "item3": {
+        "question": "¿Cómo funciona la marca blanca para agencias?",
+        "answer": "El plan Agencia te permite eliminar toda la marca de QuimeraAi del editor y del sitio final. Tus clientes verán tu logo, tus colores y tu dominio en el panel de control, permitiéndote ofrecer la plataforma como un servicio propio."
+      },
+      "item4": {
+        "question": "¿Están los sitios web optimizados para SEO y móviles?",
+        "answer": "Sí, todas las páginas generadas por QuimeraAi son 100% responsivas y están optimizadas técnicamente para SEO, incluyendo renderizado en el servidor (SSR), etiquetas automáticas y velocidades de carga ultrarrápidas."
+      },
+      "item5": {
+        "question": "¿Puedo exportar mi código?",
+        "answer": "QuimeraAi es una plataforma gestionada. No permitimos la exportación directa del código fuente, pero aseguramos que tus datos siempre te pertenezcan y puedes exportar tu contenido."
+      },
+      "title": "Preguntas Frecuentes",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "question": "¿Pregunta?",
+        "answer": "Respuesta detallada."
+      }
+    },
+    "features": {
+      "item1": {
+        "title": "Generación por IA",
+        "desc": "Sitios web completos, copys persuasivos y diseño impecable generados en segundos por nuestra IA avanzada."
+      },
+      "item2": {
+        "title": "Editor Visual Intuitivo",
+        "desc": "Personaliza cada detalle con nuestro potente editor drag & drop. Sin necesidad de escribir código."
+      },
+      "item3": {
+        "title": "Dominios Personalizados",
+        "desc": "Conecta tu propio dominio fácilmente para mantener una presencia de marca profesional."
+      },
+      "item4": {
+        "title": "Rendimiento Extremo",
+        "desc": "Optimización automática de imágenes y código para tiempos de carga ultrarrápidos y mejor SEO."
+      },
+      "item5": {
+        "title": "Seguridad Empresarial",
+        "desc": "Certificados SSL gratuitos, protección DDoS y copias de seguridad automáticas de tu sitio."
+      },
+      "item6": {
+        "title": "Marca Blanca",
+        "desc": "Agencias y freelancers pueden revender la plataforma bajo su propia marca sin menciones de Quimera."
+      },
+      "title": "Escribe el título aquí...",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "title": "Título",
+        "desc": "Descripción"
+      }
+    },
+    "hero": {
+      "title": "La plataforma definitiva para la era de la IA",
+      "subtitle": "Crea sitios web, tiendas y directorios inmobiliarios impulsados por IA en segundos.",
+      "button": "Comenzar Gratis",
+      "badge": "QuimeraAi Agency OS 2.0"
+    },
+    "imagegenerator": {
+      "title": "Crea Imágenes Increíbles con IA",
+      "subtitle": "Describe lo que imaginas y deja que Quimera genere visuales profesionales, sin derechos de autor y listos para tu website o redes sociales en segundos.",
+      "feat1": {
+        "title": "Generación desde Texto",
+        "desc": "Solo escribe un prompt detallado y la inteligencia artificial creará imágenes fotorrealistas, ilustraciones o logos únicos."
+      },
+      "feat2": {
+        "title": "Sin Derechos de Autor",
+        "desc": "Úsalas libremente en tus artículos, productos y anuncios sin preocuparte por licencias de stock."
+      },
+      "feat3": {
+        "title": "Variaciones y Estilos",
+        "desc": "Cambia el estilo visual fácilmente: 3D, acuarela, minimalista, realista o cyberpunk con un clic."
+      },
+      "studio": "AI Image Studio",
+      "beta": "Beta",
+      "placeholder": "Describe tu imagen para comenzar",
+      "generating": "Generando visuales...",
+      "style": {
+        "photo": "Fotorealista",
+        "3d": "3D Render",
+        "illustration": "Ilustración",
+        "cyberpunk": "Cyberpunk"
+      }
+    },
+    "industries": {
+      "item1": {
+        "name": "Inmobiliarias",
+        "title": "Motor de Búsqueda de Propiedades",
+        "desc": "Directorio completo de propiedades con filtros avanzados, mapas interactivos y galerías de imágenes. Gestiona agentes, listados y leads desde un panel especializado.",
+        "features": "Filtros avanzados (precio, ubicación, tipo)\\\\nMapas integrados y geolocalización\\\\nPáginas de detalle dinámicas por propiedad\\\\nFormularios de contacto asignados por agente"
+      },
+      "item2": {
+        "name": "E-commerce",
+        "title": "Tiendas Online Completas",
+        "desc": "Vende productos físicos o digitales con un carrito de compras nativo, pasarelas de pago integradas y gestión de inventario en tiempo real.",
+        "features": "Catálogo de productos dinámico\\\\nCarrito de compras y Checkout fluido\\\\nGestión de categorías y variantes\\\\nIntegración con Stripe y PayPal"
+      },
+      "item3": {
+        "name": "Restaurantes",
+        "title": "Menús y Reservas Digitales",
+        "desc": "Digitaliza tu restaurante con menús interactivos, sistema de reservas online y gestión de pedidos para llevar o entrega a domicilio.",
+        "features": "Menús digitales con categorías e imágenes\\\\nSistema de reservas de mesas integrado\\\\nPedidos online con horarios configurables\\\\nGalerías de platos de alta conversión"
+      },
+      "item4": {
+        "name": "Servicios Profesionales",
+        "title": "Agendamiento y Portafolios",
+        "desc": "Perfecto para consultores, clínicas, salones y agencias. Muestra tus servicios, testimonios y permite a los clientes agendar citas automáticamente.",
+        "features": "Calendario de reservas online\\\\nPortafolios dinámicos de proyectos\\\\nSecciones de equipo y servicios\\\\nEmbudos de captación de leads"
+      },
+      "title": "Soluciones por Industria",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "name": "Industria",
+        "title": "Título de la Industria",
+        "desc": "Descripción de la industria",
+        "features": "Característica 1\\\\nCaracterística 2"
+      },
+      "explore": "Explorar solución para"
+    },
+    "leadsmanager": {
+      "title": "Convierte Visitas en Clientes",
+      "subtitle": "Centraliza todos tus contactos en un CRM nativo. Captura leads desde tu web, chatbot o enlaces externos y haz seguimiento sin perder ninguna oportunidad.",
+      "feat1": {
+        "title": "Bandeja Centralizada",
+        "desc": "Todos los contactos generados por formularios y chatbots se guardan automáticamente en tu panel principal."
+      },
+      "feat2": {
+        "title": "Enriquecimiento Automático",
+        "desc": "La IA perfila a los prospectos y añade etiquetas según sus respuestas e intereses detectados."
+      },
+      "feat3": {
+        "title": "Seguimiento Eficaz",
+        "desc": "Añade notas, marca estados de negociación y no dejes que ningún contacto se enfríe."
+      },
+      "badge": "CRM & Leads",
+      "pipeline": "Leads Pipeline",
+      "total": "Total",
+      "addLead": "Add Lead",
+      "col": {
+        "contact": "Contact",
+        "source": "Source",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "new": "NEW",
+        "contacted": "CONTACTED",
+        "qualified": "QUALIFIED"
+      },
+      "alert": "AI Assistant just captured a new lead!"
+    },
+    "metrics": {
+      "item1": {
+        "title": "10x",
+        "desc": "Más rápido que el desarrollo tradicional"
+      },
+      "item2": {
+        "title": "99.9%",
+        "desc": "Uptime garantizado en todos los proyectos"
+      },
+      "item3": {
+        "title": "+5k",
+        "desc": "Usuarios activos diariamente"
+      },
+      "item4": {
+        "title": "24/7",
+        "desc": "Soporte técnico ininterrumpido"
+      },
+      "title": "Impacto Demostrado",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "title": "100%",
+        "desc": "Descripción de métrica"
+      }
+    },
+    "showcase": {
+      "item1": {
+        "title": "Web Editor Avanzado",
+        "desc": "Crea sitios impresionantes con nuestro editor drag & drop. Diseños premium pre-construidos y personalización total sin código."
+      },
+      "item2": {
+        "title": "Gestión de Leads (CRM)",
+        "desc": "Captura, gestiona y nutre a tus clientes potenciales desde un dashboard centralizado. Formularios dinámicos integrados."
+      },
+      "item3": {
+        "title": "SEO Automático",
+        "desc": "Sitemaps, meta tags y robots.txt generados y actualizados automáticamente (SSR)."
+      },
+      "item4": {
+        "title": "Mobile First",
+        "desc": "Previsualizador móvil en tiempo real y componentes nativamente responsivos."
+      },
+      "title": "Plataforma Todo en Uno",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "title": "Título de característica",
+        "desc": "Descripción de la característica"
+      }
+    },
+    "pricing": {
+      "plan1": {
+        "name": "Starter",
+        "desc": "Ideal para individuos empezando",
+        "price": "Free",
+        "period": "para siempre",
+        "button": "Empezar Gratis",
+        "feat1": "1 Sitio web básico",
+        "feat2": "Asistente de IA (10 creditos)",
+        "feat3": "Soporte de la comunidad",
+        "feat4": "Dominio personalizado",
+        "feat5": "Marca blanca"
+      },
+      "plan2": {
+        "name": "Pro",
+        "desc": "Para profesionales y pequeños negocios",
+        "period": "por mes",
+        "button": "Empezar Pro",
+        "feat1": "Sitios web ilimitados",
+        "feat2": "Asistente de IA (Ilimitado)",
+        "feat3": "Soporte prioritario",
+        "feat4": "Dominio personalizado",
+        "feat5": "Marca blanca"
+      },
+      "plan3": {
+        "name": "Agencia",
+        "desc": "Para agencias y equipos grandes",
+        "period": "por mes",
+        "button": "Contactar Ventas",
+        "feat1": "Sitios web ilimitados",
+        "feat2": "Asistente de IA (Ilimitado)",
+        "feat3": "Soporte 24/7",
+        "feat4": "Dominio personalizado",
+        "feat5": "Marca blanca completa"
+      },
+      "perMonth": "/mes",
+      "startFree": "Empezar Gratis",
+      "getStarted": "Comenzar",
+      "title": "Escribe el título aquí...",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "discount": "-20%",
+      "plan": {
+        "name": "Plan",
+        "desc": "Descripción del plan",
+        "button": "Comenzar",
+        "feature": "Escribe tu característica aquí..."
+      },
+      "mostPopular": "Más Popular"
+    },
+    "templates": {
+      "title": "Comienza con un template profesional y hazlo tuyo.",
+      "subtitle": "Elige una base visual diseñada para tu industria y conviértela en un website único con la ayuda de Quimera AI.",
+      "introText": "Los templates de Quimera AI no son páginas rígidas. Son puntos de partida inteligentes con estructura, diseño y secciones listas para personalizar. Cambia textos, colores, imágenes, llamadas a la acción y funcionalidades sin comenzar desde una página en blanco.",
+      "diffTitle": "No empiezas desde cero. Empiezas desde una ventaja.",
+      "diffText": "Los templates funcionan como una base inteligente: tienen estructura, diseño y secciones esenciales listas para adaptar a tu industria, tu marca y tus objetivos.",
+      "primaryBtn": "Explorar templates",
+      "secondaryBtn": "Generar con AI",
+      "flowText": "Choose template → Customize with AI → Launch website",
+      "badgeColors": "Change colors",
+      "badgeCopy": "Rewrite copy",
+      "badgeSections": "Add sections",
+      "badgeImages": "Replace images",
+      "badgePublish": "Publish faster",
+      "explainerText": "Puedes comenzar desde un template o generar tu website desde cero con inteligencia artificial.",
+      "badge": "Premium Templates"
+    },
+    "testimonials": {
+      "title": "Historias de Éxito",
+      "subtitle": "Escribe el subtítulo aquí...",
+      "item": {
+        "quote": "Testimonio increíble.",
+        "author": "Nombre",
+        "role": "Rol",
+        "company": "Empresa"
+      }
+    },
+    "whatis": {
+      "title": "Todo lo que tu negocio necesita para crecer en internet, impulsado por AI.",
+      "subtitle": "Quimera AI combina creación de websites, contenido, automatización, ecommerce, leads y asistentes inteligentes en una sola plataforma diseñada para que cualquier negocio pueda lanzar, vender y operar más rápido.",
+      "introText": "Quimera AI es una plataforma inteligente que convierte la información de tu negocio en una presencia digital completa. Desde un website profesional hasta herramientas de ventas, contenido, automatización y atención al cliente — todo trabaja conectado en un mismo ecosistema.",
+      "benefit1": {
+        "title": "Websites generados con AI",
+        "desc": "Crea páginas profesionales a partir de una descripción simple de tu negocio, con estructura, textos y secciones listas para publicar."
+      },
+      "benefit2": {
+        "title": "Editor visual fácil de usar",
+        "desc": "Ajusta textos, colores, imágenes, secciones y estilo sin depender de procesos complicados."
+      },
+      "benefit3": {
+        "title": "Contenido inteligente",
+        "desc": "Genera textos para páginas, productos, campañas, blogs, emails y redes sociales directamente desde la plataforma."
+      },
+      "benefit4": {
+        "title": "Chatbot y asistentes integrados",
+        "desc": "Atiende visitantes, captura leads, responde preguntas frecuentes y guía clientes usando asistentes conectados a la información del negocio."
+      },
+      "benefit5": {
+        "title": "Leads, citas y clientes",
+        "desc": "Centraliza contactos, formularios, solicitudes, reservaciones y oportunidades para dar seguimiento desde un solo lugar."
+      },
+      "benefit6": {
+        "title": "Ecommerce y servicios",
+        "desc": "Vende productos, servicios, membresías o recursos digitales con una experiencia integrada al website."
+      },
+      "benefit7": {
+        "title": "Automatización de procesos",
+        "desc": "Reduce tareas repetitivas con flujos automáticos para mensajes, seguimiento, contenido y operaciones internas."
+      },
+      "benefit8": {
+        "title": "Preparada para agencias",
+        "desc": "Administra múltiples clientes, proyectos y websites desde una base escalable pensada para crecimiento."
+      },
+      "diffTitle": "No es solo crear una página. Es construir el sistema digital de tu negocio.",
+      "diffText": "Mientras otras herramientas se enfocan únicamente en diseño o publicación, Quimera AI conecta las partes esenciales del negocio: presencia online, generación de contenido, captación de clientes, ventas, comunicación y automatización.",
+      "primaryBtn": "Comienza con Quimera AI",
+      "secondaryBtn": "Ver cómo funciona",
+      "footnote": "Diseñado para pequeños negocios, creadores, profesionales, realtors, restaurantes, tiendas online y agencias.",
+      "item": {
+        "title": "Título",
+        "desc": "Descripción"
+      }
     }
   }
 }

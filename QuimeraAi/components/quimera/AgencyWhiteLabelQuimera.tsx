@@ -28,12 +28,7 @@ interface AgencyWhiteLabelQuimeraProps {
 const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     title,
     subtitle,
-    features = [
-        { title: 'Sin Rastros de Quimera', description: 'Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.' },
-        { title: 'Cobra lo que Quieras', description: 'Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.' },
-        { title: 'Subcuentas Ilimitadas', description: 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.' },
-        { title: 'Soporte Prioritario', description: 'Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.' }
-    ],
+    features,
     buttonText,
     buttonLink = '#',
     colors = {},
@@ -41,6 +36,15 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     imagePosition = 'right'
 }) => {
     const { t } = useTranslation();
+
+    const getDefaultFeatures = (t: any) => [
+        { title: t('quimera.agency.item1.title', 'Sin Rastros de Quimera'), description: t('quimera.agency.item1.desc', 'Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.') },
+        { title: t('quimera.agency.item2.title', 'Cobra lo que Quieras'), description: t('quimera.agency.item2.desc', 'Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.') },
+        { title: t('quimera.agency.item3.title', 'Subcuentas Ilimitadas'), description: t('quimera.agency.item3.desc', 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.') },
+        { title: t('quimera.agency.item4.title', 'Soporte Prioritario'), description: t('quimera.agency.item4.desc', 'Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.') }
+    ];
+
+    const displayFeatures = features || getDefaultFeatures(t);
     const bgColor = colors.background || '#050505';
     const textColor = colors.text || '#ffffff';
     const accentColor = colors.accent || '#D4AF37';
@@ -51,9 +55,9 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     const iconColor = colors.iconColor || accentColor;
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('editor.placeholder.title', 'La Plataforma Definitiva para Agencias');
-    const displaySubtitle = subtitle || t('editor.placeholder.subtitle', 'Escribe el subtítulo aquí...');
-    const displayBtn = buttonText || t('editor.placeholder.button', 'Ver Precios de Agencia');
+    const displayTitle = title || t('quimera.agency.title', 'La Plataforma Definitiva para Agencias');
+    const displaySubtitle = subtitle || t('quimera.agency.subtitle', 'Escribe el subtítulo aquí...');
+    const displayBtn = buttonText || t('quimera.agency.button', 'Ver Precios de Agencia');
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: bgColor, color: textColor }}>
@@ -132,11 +136,11 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                         {/* Floating Badges */}
                         <div className="absolute -right-6 top-1/4 bg-[#111] border border-yellow-500/30 p-3 rounded-xl shadow-xl flex items-center gap-3 animate-[float_4s_ease-in-out_infinite]">
                             <Palette className="w-6 h-6 text-yellow-500" />
-                            <div className="text-sm font-bold">Colores Propios</div>
+                            <div className="text-sm font-bold">{t('quimera.agency.badge.colors', 'Colores Propios')}</div>
                         </div>
                         <div className="absolute -left-6 bottom-1/4 bg-[#111] border border-yellow-500/30 p-3 rounded-xl shadow-xl flex items-center gap-3 animate-[float_5s_ease-in-out_infinite_reverse]">
                             <Globe className="w-6 h-6 text-yellow-500" />
-                            <div className="text-sm font-bold">Dominio Propio</div>
+                            <div className="text-sm font-bold">{t('quimera.agency.badge.domain', 'Dominio Propio')}</div>
                         </div>
 
                     </div>
@@ -145,7 +149,7 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                     <div className="w-full lg:w-1/2">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-sm font-medium mb-6">
                             <Users className="w-4 h-4" />
-                            <span>Plan Agencia</span>
+                            <span>{t('quimera.agency.badge.plan', 'Plan Agencia')}</span>
                         </div>
 
                         <h2 className={`text-4xl md:text-5xl font-bold mb-6 tracking-tight font-header heading-caps ${textDropShadow ? 'drop-shadow-xl' : ''}`}>
@@ -157,9 +161,9 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {features.map((feature, i) => {
-                                const displayFeatureTitle = feature.title || t('editor.placeholder.title', 'Título');
-                                const displayFeatureDesc = feature.description || t('editor.placeholder.description', 'Descripción');
+                            {displayFeatures.map((feature, i) => {
+                                const displayFeatureTitle = feature.title || t('quimera.agency.item.title', 'Título');
+                                const displayFeatureDesc = feature.description || t('quimera.agency.item.desc', 'Descripción');
                                 return (
                                 <div key={i} className="flex gap-4">
                                     <div className="mt-1 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center border" style={{ backgroundColor: `${accentColor}1A`, borderColor: `${accentColor}33` }}>

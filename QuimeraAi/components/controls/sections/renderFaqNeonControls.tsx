@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, MessageCircle } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 
 export const renderFaqNeonControls = (deps: ControlsDeps) => {
@@ -34,9 +34,9 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                         context: 'FAQ Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
-                        onChange={(e) => setNestedData('faqNeon.headline', e.target.value)}
+                        onChange={(val) => setNestedData('faqNeon.headline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -49,9 +49,9 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                         context: 'FAQ Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
-                        onChange={(e) => setNestedData('faqNeon.subheadline', e.target.value)}
+                        onChange={(val) => setNestedData('faqNeon.subheadline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -88,9 +88,9 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                                 context: `FAQ Neon Question ${index}` 
                             })}
                         >
-                            <Input
+                            <I18nInput
                                 value={faq.question || ''}
-                                onChange={(e) => setNestedData(`faqNeon.faqs.${index}.question`, e.target.value)}
+                                onChange={(val) => setNestedData(`faqNeon.faqs.${index}.question`, val)}
                             />
                         </AIFormControl>
 
@@ -102,9 +102,9 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                                 context: `FAQ Neon Answer ${index}` 
                             })}
                         >
-                            <TextArea
+                            <I18nTextArea
                                 value={faq.answer || ''}
-                                onChange={(e) => setNestedData(`faqNeon.faqs.${index}.answer`, e.target.value)}
+                                onChange={(val) => setNestedData(`faqNeon.faqs.${index}.answer`, val)}
                                 rows={3}
                             />
                         </AIFormControl>

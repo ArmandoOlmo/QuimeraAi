@@ -49,33 +49,33 @@ const ContentManagerQuimera: React.FC<ContentManagerQuimeraProps> = ({
     const secondaryColor = colors.secondaryText || '#9ca3af';
     const iconColor = colors.iconColor || accentColor;
 
-    const displayTitle = title || t('contentManagerQuimera.title', 'Gestor de Contenidos con IA Integrada');
-    const displaySubtitle = subtitle || t('contentManagerQuimera.subtitle', 'Centraliza tus artículos, portafolios y servicios en un editor avanzado que escribe, traduce y optimiza por ti.');
+    const displayTitle = title || t('quimera.contentmanager.title', 'Gestor de Contenidos con IA Integrada');
+    const displaySubtitle = subtitle || t('quimera.contentmanager.subtitle', 'Centraliza tus artículos, portafolios y servicios en un editor avanzado que escribe, traduce y optimiza por ti.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('contentManagerQuimera.feat1Title', 'Asistente de Escritura IA'),
-            description: t('contentManagerQuimera.feat1Desc', 'Expande ideas, mejora la gramática o genera artículos completos desde un simple comando dentro del editor.'),
+            title: t('quimera.contentmanager.feat1.title', 'Asistente de Escritura IA'),
+            description: t('quimera.contentmanager.feat1.desc', 'Expande ideas, mejora la gramática o genera artículos completos desde un simple comando dentro del editor.'),
             icon: 'Bot'
         },
         {
-            title: t('contentManagerQuimera.feat2Title', 'Optimización SEO Automática'),
-            description: t('contentManagerQuimera.feat2Desc', 'La IA sugiere meta títulos, descripciones y palabras clave basándose en el contenido de tu publicación.'),
+            title: t('quimera.contentmanager.feat2.title', 'Optimización SEO Automática'),
+            description: t('quimera.contentmanager.feat2.desc', 'La IA sugiere meta títulos, descripciones y palabras clave basándose en el contenido de tu publicación.'),
             icon: 'Globe'
         },
         {
-            title: t('contentManagerQuimera.feat3Title', 'Gestión Multimedia'),
-            description: t('contentManagerQuimera.feat3Desc', 'Sube, recorta y organiza tus imágenes y videos en una galería centralizada lista para usar.'),
+            title: t('quimera.contentmanager.feat3.title', 'Gestión Multimedia'),
+            description: t('quimera.contentmanager.feat3.desc', 'Sube, recorta y organiza tus imágenes y videos en una galería centralizada lista para usar.'),
             icon: 'ImageIcon'
         },
         {
-            title: t('contentManagerQuimera.feat4Title', 'Tipos de Contenido Dinámico'),
-            description: t('contentManagerQuimera.feat4Desc', 'Crea blogs, portafolios, menús de restaurantes o listados inmobiliarios sin tocar código.'),
+            title: t('quimera.contentmanager.feat4.title', 'Tipos de Contenido Dinámico'),
+            description: t('quimera.contentmanager.feat4.desc', 'Crea blogs, portafolios, menús de restaurantes o listados inmobiliarios sin tocar código.'),
             icon: 'Layout'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Auto-cycle tabs if not interacted
     useEffect(() => {
@@ -95,14 +95,14 @@ const ContentManagerQuimera: React.FC<ContentManagerQuimeraProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-2 mb-6">
                             <Bot className="w-5 h-5" style={{ color: accentColor }} />
-                            <span className="text-sm font-semibold" style={{ color: textColor }}>AI Writer</span>
+                            <span className="text-sm font-semibold" style={{ color: textColor }}>{t('quimera.contentmanager.aiwriter', 'AI Writer')}</span>
                         </div>
                         <div className="h-4 w-3/4 rounded bg-gray-800"></div>
                         <div className="h-4 w-full rounded bg-gray-800"></div>
                         <div className="h-4 w-5/6 rounded bg-gray-800"></div>
                         <div className="mt-6 p-4 rounded-xl border border-dashed flex flex-col gap-3" style={{ borderColor: `${accentColor}50`, backgroundColor: `${accentColor}10` }}>
                             <div className="flex items-center gap-2 text-xs" style={{ color: accentColor }}>
-                                <Sparkles className="w-3 h-3" /> Generando continuación...
+                                <Sparkles className="w-3 h-3" /> {t('quimera.contentmanager.generating', 'Generando continuación...')}
                             </div>
                             <div className="h-3 w-full rounded bg-gray-700/50"></div>
                             <div className="h-3 w-4/5 rounded bg-gray-700/50"></div>
@@ -114,23 +114,23 @@ const ContentManagerQuimera: React.FC<ContentManagerQuimeraProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-2 mb-6">
                             <Globe className="w-5 h-5" style={{ color: accentColor }} />
-                            <span className="text-sm font-semibold" style={{ color: textColor }}>SEO Optimization</span>
+                            <span className="text-sm font-semibold" style={{ color: textColor }}>{t('quimera.contentmanager.seo', 'SEO Optimization')}</span>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs text-gray-400">Meta Title</label>
+                            <label className="text-xs text-gray-400">{t('quimera.contentmanager.metatitle', 'Meta Title')}</label>
                             <div className="h-8 w-full rounded border flex items-center px-3" style={{ borderColor: cardBorder, backgroundColor: '#1A1A1A' }}>
                                 <div className="h-2 w-1/2 rounded bg-gray-600"></div>
                             </div>
                         </div>
                         <div className="space-y-2 mt-4">
-                            <label className="text-xs text-gray-400">Meta Description</label>
+                            <label className="text-xs text-gray-400">{t('quimera.contentmanager.metadesc', 'Meta Description')}</label>
                             <div className="h-20 w-full rounded border p-3" style={{ borderColor: cardBorder, backgroundColor: '#1A1A1A' }}>
                                 <div className="h-2 w-full rounded bg-gray-600 mb-2"></div>
                                 <div className="h-2 w-5/6 rounded bg-gray-600"></div>
                             </div>
                         </div>
                         <div className="mt-4 flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: '#10B98130', backgroundColor: '#10B98110' }}>
-                            <span className="text-xs text-[#10B981] font-medium">SEO Score: 95/100</span>
+                            <span className="text-xs text-[#10B981] font-medium">{t('quimera.contentmanager.seoscore', 'SEO Score: 95/100')}</span>
                             <CheckCircle2 className="w-4 h-4 text-[#10B981]" />
                         </div>
                     </div>
@@ -140,7 +140,7 @@ const ContentManagerQuimera: React.FC<ContentManagerQuimeraProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-2 mb-6">
                             <ImageIcon className="w-5 h-5" style={{ color: accentColor }} />
-                            <span className="text-sm font-semibold" style={{ color: textColor }}>Media Library</span>
+                            <span className="text-sm font-semibold" style={{ color: textColor }}>{t('quimera.contentmanager.medialibrary', 'Media Library')}</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             {[1, 2, 3, 4, 5, 6].map(i => (
@@ -156,10 +156,10 @@ const ContentManagerQuimera: React.FC<ContentManagerQuimeraProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-2 mb-6">
                             <Layout className="w-5 h-5" style={{ color: accentColor }} />
-                            <span className="text-sm font-semibold" style={{ color: textColor }}>Content Collections</span>
+                            <span className="text-sm font-semibold" style={{ color: textColor }}>{t('quimera.contentmanager.collections', 'Content Collections')}</span>
                         </div>
                         <div className="space-y-2">
-                            {['Blog Posts', 'Portfolio Projects', 'Team Members'].map((item, idx) => (
+                            {[t('quimera.contentmanager.blogposts', 'Blog Posts'), t('quimera.contentmanager.portfolio', 'Portfolio Projects'), t('quimera.contentmanager.team', 'Team Members')].map((item, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-3 rounded-lg border" style={{ borderColor: cardBorder, backgroundColor: '#1A1A1A' }}>
                                     <div className="flex items-center gap-3">
                                         <FileText className="w-4 h-4 text-gray-400" />

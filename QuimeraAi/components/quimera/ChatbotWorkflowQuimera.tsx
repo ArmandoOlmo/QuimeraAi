@@ -47,28 +47,28 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
     const cardBorder = colors.cardBorder || 'rgba(255,255,255,0.05)';
     const secondaryColor = colors.secondaryText || '#9ca3af';
 
-    const displayTitle = title || t('chatbotWorkflowQuimera.title', 'El Recepcionista Perfecto: 24/7');
-    const displaySubtitle = subtitle || t('chatbotWorkflowQuimera.subtitle', 'Tu asistente virtual impulsado por IA no solo responde dudas; perfila clientes, guarda datos en tu CRM y agenda citas automáticamente sin que tengas que intervenir.');
+    const displayTitle = title || t('quimera.chatbotworkflow.title', 'El Recepcionista Perfecto: 24/7');
+    const displaySubtitle = subtitle || t('quimera.chatbotworkflow.subtitle', 'Tu asistente virtual impulsado por IA no solo responde dudas; perfila clientes, guarda datos en tu CRM y agenda citas automáticamente sin que tengas que intervenir.');
 
-    const defaultFeatures = [
+    const getDefaultFeatures = (t: any) => [
         {
-            title: t('chatbotWorkflowQuimera.feat1Title', 'Atención Inmediata'),
-            description: t('chatbotWorkflowQuimera.feat1Desc', 'Responde al instante con el tono y personalidad de tu marca, resolviendo dudas frecuentes.'),
+            title: t('quimera.chatbotworkflow.feat1.title', 'Atención Inmediata'),
+            description: t('quimera.chatbotworkflow.feat1.desc', 'Responde al instante con el tono y personalidad de tu marca, resolviendo dudas frecuentes.'),
             icon: 'MessageSquare'
         },
         {
-            title: t('chatbotWorkflowQuimera.feat2Title', 'Captura de Leads (CRM)'),
-            description: t('chatbotWorkflowQuimera.feat2Desc', 'Identifica oportunidades y solicita datos clave (email, teléfono) guardándolos automáticamente en tu base de contactos.'),
+            title: t('quimera.chatbotworkflow.feat2.title', 'Captura de Leads (CRM)'),
+            description: t('quimera.chatbotworkflow.feat2.desc', 'Identifica oportunidades y solicita datos clave (email, teléfono) guardándolos automáticamente en tu base de contactos.'),
             icon: 'UserPlus'
         },
         {
-            title: t('chatbotWorkflowQuimera.feat3Title', 'Agendamiento Inteligente'),
-            description: t('chatbotWorkflowQuimera.feat3Desc', 'Se sincroniza con tus servicios y disponibilidad para agendar reuniones y enviar confirmaciones.'),
+            title: t('quimera.chatbotworkflow.feat3.title', 'Agendamiento Inteligente'),
+            description: t('quimera.chatbotworkflow.feat3.desc', 'Se sincroniza con tus servicios y disponibilidad para agendar reuniones y enviar confirmaciones.'),
             icon: 'CalendarCheck'
         }
     ];
 
-    const displayFeatures = features && features.length > 0 ? features : defaultFeatures;
+    const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
     // Simulation loop for the workflow animation
     useEffect(() => {
@@ -108,7 +108,7 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                         <div className="mb-10">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-6 border" style={{ backgroundColor: `${accentColor}15`, color: accentColor, borderColor: `${accentColor}30` }}>
                                 <Sparkles className="w-4 h-4" />
-                                {t('chatbotWorkflowQuimera.badge', 'AI CRM Integration')}
+                                {t('quimera.chatbotworkflow.badge', 'AI CRM Integration')}
                             </div>
                             <h2 className={`text-4xl md:text-5xl font-black mb-6 tracking-tight leading-tight font-header ${textDropShadow ? 'drop-shadow-xl' : ''}`}
                                 style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
@@ -172,12 +172,12 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                                         <Bot className={`w-8 h-8 ${activeStep === 0 ? 'animate-bounce' : ''}`} style={{ color: activeStep === 0 ? accentColor : '#888' }} />
                                     </div>
                                     <div className="bg-[#1A1A1A] border rounded-lg px-4 py-2 text-xs font-medium" style={{ borderColor: cardBorder }}>
-                                        {t('chatbotWorkflowQuimera.node1', 'Interacción inicial')}
+                                        {t('quimera.chatbotworkflow.node1', 'Interacción inicial')}
                                     </div>
                                     
                                     {/* Chat Bubble Mock */}
                                     <div className={`absolute top-0 right-[-60px] md:right-[-100px] bg-white text-black px-3 py-2 text-xs rounded-2xl rounded-tl-sm shadow-xl transition-all duration-300 ${activeStep === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-                                        "¿En qué te ayudo?"
+                                        {t('quimera.chatbotworkflow.bubble1', '"¿En qué te ayudo?"')}
                                     </div>
                                 </div>
 
@@ -188,12 +188,12 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                                         <Users className={`w-8 h-8 ${activeStep === 1 ? 'animate-pulse' : ''}`} style={{ color: activeStep === 1 ? accentColor : '#888' }} />
                                     </div>
                                     <div className="bg-[#1A1A1A] border rounded-lg px-4 py-2 text-xs font-medium" style={{ borderColor: cardBorder }}>
-                                        {t('chatbotWorkflowQuimera.node2', 'Lead Capturado')}
+                                        {t('quimera.chatbotworkflow.node2', 'Lead Capturado')}
                                     </div>
 
                                     {/* Lead Data Mock */}
                                     <div className={`absolute top-0 left-[-60px] md:left-[-120px] bg-[#1A1A1A] border px-3 py-2 text-xs rounded-xl shadow-xl transition-all duration-300 flex flex-col gap-1 ${activeStep === 1 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ borderColor: cardBorder }}>
-                                        <span className="text-[10px] text-gray-500">Nuevo Contacto</span>
+                                        <span className="text-[10px] text-gray-500">{t('quimera.chatbotworkflow.newContact', 'Nuevo Contacto')}</span>
                                         <span className="font-semibold" style={{ color: accentColor }}>cliente@email.com</span>
                                     </div>
                                 </div>
@@ -211,13 +211,13 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                                         )}
                                     </div>
                                     <div className="bg-[#1A1A1A] border rounded-lg px-4 py-2 text-xs font-medium" style={{ borderColor: cardBorder }}>
-                                        {t('chatbotWorkflowQuimera.node3', 'Cita Agendada')}
+                                        {t('quimera.chatbotworkflow.node3', 'Cita Agendada')}
                                     </div>
 
                                     {/* Calendar Mock */}
                                     <div className={`absolute top-0 right-[-60px] md:right-[-100px] bg-[#1A1A1A] border px-3 py-2 text-xs rounded-xl shadow-xl transition-all duration-300 flex flex-col gap-1 ${activeStep >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ borderColor: cardBorder }}>
-                                        <span className="text-[10px] text-gray-500">Reunión confirmada</span>
-                                        <span className="font-semibold text-white">Mañana, 10:00 AM</span>
+                                        <span className="text-[10px] text-gray-500">{t('quimera.chatbotworkflow.meetingConfirmed', 'Reunión confirmada')}</span>
+                                        <span className="font-semibold text-white">{t('quimera.chatbotworkflow.meetingTime', 'Mañana, 10:00 AM')}</span>
                                     </div>
                                 </div>
 

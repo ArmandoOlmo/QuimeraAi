@@ -3,7 +3,7 @@ import TabbedControls from '../../ui/TabbedControls';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2, Trash2, Plus, List } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
-import { ToggleControl, SliderControl, Input, TextArea, Select } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl, Input, TextArea, Select , I18nInput, I18nTextArea } from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 
@@ -35,9 +35,9 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
-                        onChange={(e) => setNestedData('featuresNeon.headline', e.target.value)}
+                        onChange={(val) => setNestedData('featuresNeon.headline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -50,9 +50,9 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
-                        onChange={(e) => setNestedData('featuresNeon.subheadline', e.target.value)}
+                        onChange={(val) => setNestedData('featuresNeon.subheadline', val)}
                         rows={2}
                     />
                 </AIFormControl>
@@ -89,9 +89,9 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Title` 
                             })}
                         >
-                            <Input
+                            <I18nInput
                                 value={feature.title || ''}
-                                onChange={(e) => setNestedData(`featuresNeon.features.${index}.title`, e.target.value)}
+                                onChange={(val) => setNestedData(`featuresNeon.features.${index}.title`, val)}
                             />
                         </AIFormControl>
 
@@ -103,9 +103,9 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Description` 
                             })}
                         >
-                            <TextArea
+                            <I18nTextArea
                                 value={feature.description || ''}
-                                onChange={(e) => setNestedData(`featuresNeon.features.${index}.description`, e.target.value)}
+                                onChange={(val) => setNestedData(`featuresNeon.features.${index}.description`, val)}
                                 rows={2}
                             />
                         </AIFormControl>
