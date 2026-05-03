@@ -21,7 +21,7 @@ import { Eye, EyeOff, ArrowRight, Zap, Layout, Image as ImageIcon, Sparkles, Che
 import LanguageSelector from './ui/LanguageSelector';
 
 // --- Brand Assets ---
-const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+const LOGO_URL = "/logos/quimera-icon.svg";
 
 // --- Components ---
 

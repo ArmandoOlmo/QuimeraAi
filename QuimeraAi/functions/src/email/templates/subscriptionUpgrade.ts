@@ -59,7 +59,7 @@ export const getSubscriptionUpgradeTemplate = (params: SubscriptionUpgradeParams
                     <!-- Header with Logo -->
                     <tr>
                         <td style="padding: 32px 40px; text-align: center; border-bottom: 1px solid #f3f4f6;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Quimera AI" width="60" height="60" style="display: block; margin: 0 auto;">
+                            <img src="https://quimera.ai/logos/quimera-full-dark.png" alt="Quimera AI" width="180" style="display: block; margin: 0 auto; max-width: 100%; height: auto;">
                         </td>
                     </tr>
                     

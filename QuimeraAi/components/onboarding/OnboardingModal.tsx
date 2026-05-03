@@ -21,7 +21,7 @@ import Step5ContactInfo from './steps/Step5ContactInfo';
 import Step6StoreSetup from './steps/Step6StoreSetup';
 import Step7Generation from './steps/Step7Generation';
 
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+const QUIMERA_LOGO = "/logos/quimera-icon.svg";
 
 const OnboardingModal: React.FC = () => {
     const { t } = useTranslation();

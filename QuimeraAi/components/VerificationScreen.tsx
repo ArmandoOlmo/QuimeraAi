@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 const Logo: React.FC = () => (
     <div className="flex items-center space-x-3 mb-8 justify-center">
       <img 
-        src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" 
+        src="/logos/quimera-icon.svg" 
         alt="Quimera Logo" 
         className="w-12 h-12 object-contain" 
       />

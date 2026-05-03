@@ -312,7 +312,7 @@ export const DEFAULT_APP_NAVIGATION: AppNavigation = {
   id: 'main',
   header: {
     logo: {
-      imageUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032',
+      imageUrl: '/logos/quimera-icon.svg',
       text: 'Quimera.ai',
       href: '/'
     },

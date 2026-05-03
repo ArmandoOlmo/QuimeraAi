@@ -15,7 +15,7 @@ export interface WelcomeUserParams {
     supportEmail?: string;
 }
 
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+const QUIMERA_LOGO = "https://quimera.ai/logos/quimera-full-dark.png";
 const PRIMARY_COLOR = '#FACC15'; // Yellow-400
 const SECONDARY_COLOR = '#4F46E5'; // Indigo
 
@@ -36,7 +36,7 @@ export const getWelcomeUserTemplate = (params: WelcomeUserParams): string => {
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
             <tr>
                 <td align="center" style="padding-bottom: 24px;">
-                    <img src="${QUIMERA_LOGO}" alt="Quimera AI" style="width: 80px; height: 80px; filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.5));">
+                    <img src="${QUIMERA_LOGO}" alt="Quimera AI" style="width: 180px; height: auto; filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.5)); max-width: 100%;">
                 </td>
             </tr>
             <tr>

@@ -160,7 +160,7 @@ export const onUserEmailVerified = functions.firestore
                 const emailHtml = `
                     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="text-align: center; margin-bottom: 30px;">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Quimera AI" style="width: 60px; height: 60px;">
+                            <img src="https://quimera.ai/logos/quimera-full-dark.png" alt="Quimera AI" style="width: 180px; height: auto; max-width: 100%;">
                         </div>
                         
                         <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">

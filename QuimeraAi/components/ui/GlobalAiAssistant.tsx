@@ -871,7 +871,7 @@ const normalizeText = (str: string) => {
     return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 };
 
-const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+const LOGO_URL = "/logos/quimera-icon.svg";
 
 const GlobalAiAssistant: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -3574,7 +3574,7 @@ Usuario: ${userMsg}`;
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain animate-pulse" />
                         </div>
                         <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
+                            <img src="/logos/quimera-icon.svg" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Ejecutando acciones...</span>
                         </div>
                     </div>
@@ -3587,7 +3587,7 @@ Usuario: ${userMsg}`;
                             <img src={LOGO_URL} alt="Bot" className="w-5 h-5 object-contain" />
                         </div>
                         <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
-                            <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
+                            <img src="/logos/quimera-icon.svg" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
                             <span>Pensando...</span>
                         </div>
                     </div>
@@ -3619,7 +3619,7 @@ Usuario: ${userMsg}`;
                             className={`p-2 rounded-full transition-all ${isConnecting ? 'text-q-text-muted' : 'text-q-text-muted hover:text-primary hover:bg-primary/10'}`}
                             title={t('aiAssistant.startVoiceMode')}
                         >
-                            {isConnecting ? <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" /> : <Mic size={20} />}
+                            {isConnecting ? <img src="/logos/quimera-icon.svg" alt="Connecting..." className="w-5 h-5 object-contain animate-pulse" /> : <Mic size={20} />}
                         </button>
                     )}
                     <button

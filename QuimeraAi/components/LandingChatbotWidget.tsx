@@ -118,7 +118,7 @@ const LandingChatbotWidget: React.FC = () => {
     console.log('[LandingChatbotWidget] Rendering, isActive:', true, 'path:', typeof window !== 'undefined' ? window.location.pathname : 'SSR');
 
     // Quimera logo URL - ALWAYS use this for the public chatbot
-    const QUIMERA_LOGO = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
+    const QUIMERA_LOGO = '/logos/quimera-icon.svg';
 
     // Use config from context merged with defaults
     // IMPORTANT: Some values are FORCED for the public landing chatbot

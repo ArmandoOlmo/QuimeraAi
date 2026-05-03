@@ -8,7 +8,7 @@
 
 import React from 'react';
 
-const QUIMERA_LOGO = "https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032";
+const QUIMERA_LOGO = "/logos/quimera-icon.svg";
 
 interface QuimeraLoaderProps {
     size?: 'sm' | 'md' | 'lg';

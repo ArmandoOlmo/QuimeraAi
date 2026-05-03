@@ -56,7 +56,7 @@ const META_DESCRIPTION_LIMIT = 160;
 const SITE_DESCRIPTION_LIMIT = 320;
 const LONG_DESCRIPTION_LIMIT = 600;
 
-const DEFAULT_LOGO_URL = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032';
+const DEFAULT_LOGO_URL = '/logos/quimera-icon.svg';
 
 const getDefaultConfig = (): AppInfoConfig => ({
     appName: 'Quimera.ai',

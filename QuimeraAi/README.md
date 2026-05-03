@@ -1,7 +1,7 @@
 # Quimera AI - Website Builder
 
 <p align="center">
-  <img src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032" alt="Quimera AI" width="200"/>
+  <img src="/logos/quimera-icon.svg" alt="Quimera AI" width="200"/>
 </p>
 
 <p align="center">

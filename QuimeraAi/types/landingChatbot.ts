@@ -542,8 +542,8 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
         buttonStyle: 'circle',
         buttonIcon: 'custom-image',       // Use Quimera logo
         customEmoji: '🦋',
-        customIconUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032',
-        avatarUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fquimeralogo.png?alt=media&token=82368c1c-0f63-42b7-831f-72780006f032',
+        customIconUrl: '/logos/quimera-icon.svg',
+        avatarUrl: '/logos/quimera-icon.svg',
         pulseEffect: true,
         showOnAllPages: true,
         excludedPaths: ['/dashboard', '/admin'],  // Only exclude authenticated areas
