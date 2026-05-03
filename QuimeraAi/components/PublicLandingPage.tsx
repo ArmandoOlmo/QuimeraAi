@@ -915,7 +915,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         logoImageUrl={
           (headerPreview?.logoImageUrl && !headerPreview.logoImageUrl.includes('firebasestorage')) 
             ? headerPreview.logoImageUrl 
-            : globalAppLogoUrl
+            : (globalAppLogoUrl === QUIMERA_DEFAULT_LOGO ? QUIMERA_FULL_LOGO : globalAppLogoUrl)
         }
         logoWidth={headerPreview?.logoWidth || 150}
         logoHeight={headerPreview?.logoHeight}
@@ -983,7 +983,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               {/* Logo Column */}
               <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center mb-4">
-                  <img src={globalAppLogoUrl || QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
+                  <img src={(globalAppLogoUrl === QUIMERA_DEFAULT_LOGO ? QUIMERA_FULL_LOGO : globalAppLogoUrl) || QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
                 </div>
                 <p className="text-sm mb-4" style={{ color: `${footerTextColor}80` }}>
                   {footerPreview?.tagline || t('landing.footerTagline', 'Build amazing websites with AI')}
