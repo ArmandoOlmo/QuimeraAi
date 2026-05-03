@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth } from '../contexts/core/AuthContext';
 import {
     MetaConnection,
@@ -63,7 +62,7 @@ export interface UseMetaOAuthReturn extends MetaOAuthState {
 
 export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
     const { user } = useAuth();
-    const functions = getFunctions();
+
 
     const [state, setState] = useState<MetaOAuthState>({
         status: 'disconnected',
@@ -91,9 +90,11 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            const getConnection = httpsCallable(functions, 'metaOAuth-getConnection');
-            const result = await getConnection({ projectId });
-            const data = result.data as any;
+            const { supabase } = await import('../supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'getConnection', projectId }
+            });
+            const data = result.data?.data || result.data;
 
             if (data.connected) {
                 setState(prev => ({
@@ -128,7 +129,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
                 error: error.message || 'Failed to load connection',
             }));
         }
-    }, [projectId, user, functions]);
+    }, [projectId, user]);
 
     // Load on mount and when projectId changes
     useEffect(() => {
@@ -161,13 +162,16 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         setState(prev => ({ ...prev, status: 'connecting', error: null }));
 
         try {
-            const initOAuth = httpsCallable(functions, 'metaOAuth-init');
-            const result = await initOAuth({
-                projectId,
-                returnUrl: window.location.pathname,
+            const { supabase } = await import('../supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: {
+                    action: 'initOAuth',
+                    projectId,
+                    returnUrl: window.location.pathname,
+                }
             });
             
-            const data = result.data as { oauthUrl: string };
+            const data = result.data?.data || result.data;
 
             // Redirect to Meta OAuth
             window.location.href = data.oauthUrl;
@@ -179,7 +183,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
                 error: error.message || 'Failed to connect',
             }));
         }
-    }, [projectId, user, functions]);
+    }, [projectId, user]);
 
     // ==========================================================================
     // DISCONNECT
@@ -191,8 +195,10 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            const disconnectMeta = httpsCallable(functions, 'metaOAuth-disconnect');
-            await disconnectMeta({ projectId });
+            const { supabase } = await import('../supabase');
+            await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'disconnectMeta', projectId }
+            });
 
             setState({
                 status: 'disconnected',
@@ -214,7 +220,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
                 error: error.message || 'Failed to disconnect',
             }));
         }
-    }, [projectId, user, functions]);
+    }, [projectId, user]);
 
     // ==========================================================================
     // REFRESH TOKEN
@@ -226,8 +232,10 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         setState(prev => ({ ...prev, status: 'refreshing', error: null }));
 
         try {
-            const refresh = httpsCallable(functions, 'metaOAuth-refreshToken');
-            await refresh({ projectId });
+            const { supabase } = await import('../supabase');
+            await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'refreshToken', projectId }
+            });
 
             setState(prev => ({ ...prev, status: 'connected' }));
             await loadConnection();
@@ -239,7 +247,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
                 error: error.message || 'Failed to refresh token',
             }));
         }
-    }, [projectId, user, functions, loadConnection]);
+    }, [projectId, user, loadConnection]);
 
     // ==========================================================================
     // SELECT ASSETS
@@ -255,10 +263,13 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
         setState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            const select = httpsCallable(functions, 'metaOAuth-selectAssets');
-            await select({
-                projectId,
-                ...selections,
+            const { supabase } = await import('../supabase');
+            await supabase.functions.invoke('onboarding-api', {
+                body: {
+                    action: 'selectAssets',
+                    projectId,
+                    ...selections,
+                }
             });
 
             setState(prev => ({
@@ -276,7 +287,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
                 error: error.message || 'Failed to select assets',
             }));
         }
-    }, [projectId, user, functions]);
+    }, [projectId, user]);
 
     // ==========================================================================
     // COMPUTED VALUES

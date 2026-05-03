@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import {
   collection,
   query,
@@ -112,7 +112,7 @@ export function ApiKeysManager() {
   const [error, setError] = useState<string | null>(null);
   const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
 
-  const functions = getFunctions();
+
 
   // ============================================================================
   // LOAD API KEYS
@@ -167,14 +167,18 @@ export function ApiKeysManager() {
 
   const handleCreateKey = async (data: CreateApiKeyData) => {
     try {
-      const createApiKey = httpsCallable(functions, 'createApiKey');
-
-      const result = await createApiKey({
-        tenantId: currentTenant?.id,
-        ...data,
+      const { supabase } = await import('@/supabase');
+      
+      const result = await supabase.functions.invoke('onboarding-api', {
+        body: {
+            action: 'createApiKey',
+            tenantId: currentTenant?.id,
+            ...data
+        }
       });
-
-      const response = result.data as any;
+      
+      if (result.error) throw result.error;
+      const response = result.data?.data || result.data;
 
       if (response.success) {
         setNewKeyData(response.apiKey);

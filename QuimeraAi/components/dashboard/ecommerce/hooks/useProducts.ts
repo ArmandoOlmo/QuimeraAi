@@ -19,14 +19,10 @@ import {
     writeBatch,
     setDoc,
     getDoc,
+    getDoc,
 } from 'firebase/firestore';
-import {
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject,
-} from 'firebase/storage';
-import { db, storage } from '../../../../firebase';
+import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Product, ProductImage, ProductStatus } from '../../../../types/ecommerce';
 
 interface UseProductsOptions {
@@ -143,10 +139,16 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
         async (file: File, productId: string): Promise<ProductImage> => {
             const imageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const imagePath = `users/${userId}/stores/${effectiveStoreId}/products/${productId}/${imageId}`;
-            const imageRef = ref(storage, imagePath);
 
-            await uploadBytes(imageRef, file);
-            const url = await getDownloadURL(imageRef);
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(imagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(imagePath);
 
             return {
                 id: imageId,
@@ -162,10 +164,11 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
     const deleteImage = useCallback(
         async (productId: string, imageId: string) => {
             const imagePath = `users/${userId}/stores/${effectiveStoreId}/products/${productId}/${imageId}`;
-            const imageRef = ref(storage, imagePath);
 
             try {
-                await deleteObject(imageRef);
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([imagePath]);
             } catch (err) {
                 console.warn('Image may not exist:', err);
             }

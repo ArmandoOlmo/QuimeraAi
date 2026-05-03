@@ -21,8 +21,8 @@ import {
     limit,
     Timestamp,
 } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../../../../firebase';
+import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import {
     StoreUser,
     StoreUserRole,
@@ -51,11 +51,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
     const segmentsPath = `storeUsers/${storeId}/segments`;
     const activitiesPath = `storeUsers/${storeId}/activities`;
 
-    // Cloud Functions
-    const updateRoleFn = httpsCallable(functions, 'storeUsers-updateRole');
-    const updateStatusFn = httpsCallable(functions, 'storeUsers-updateStatus');
-    const resetPasswordFn = httpsCallable(functions, 'storeUsers-resetPassword');
-    const deleteUserFn = httpsCallable(functions, 'storeUsers-delete');
+    // (Removed Cloud Functions declarations, using Supabase client inline)
 
     // Fetch users with real-time updates
     useEffect(() => {
@@ -276,56 +272,64 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
         };
     }, [users, segments]);
 
-    // Update user role
     const updateUserRole = useCallback(
         async (userId: string, role: StoreUserRole): Promise<void> => {
             try {
-                await updateRoleFn({ storeId, userId, role });
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'storeUsers-updateRole', storeId, userId, role }
+                });
+                if (result.error) throw result.error;
             } catch (err: any) {
                 console.error('Error updating user role:', err);
                 throw new Error(err.message || 'Failed to update role');
             }
         },
-        [storeId, updateRoleFn]
+        [storeId]
     );
 
-    // Update user status
     const updateUserStatus = useCallback(
         async (userId: string, status: StoreUserStatus, reason?: string): Promise<void> => {
             try {
-                await updateStatusFn({ storeId, userId, status, reason });
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'storeUsers-updateStatus', storeId, userId, status, reason }
+                });
+                if (result.error) throw result.error;
             } catch (err: any) {
                 console.error('Error updating user status:', err);
                 throw new Error(err.message || 'Failed to update status');
             }
         },
-        [storeId, updateStatusFn]
+        [storeId]
     );
 
-    // Reset user password
     const resetUserPassword = useCallback(
         async (userId: string): Promise<void> => {
             try {
-                await resetPasswordFn({ storeId, userId });
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'storeUsers-resetPassword', storeId, userId }
+                });
+                if (result.error) throw result.error;
             } catch (err: any) {
                 console.error('Error resetting password:', err);
                 throw new Error(err.message || 'Failed to reset password');
             }
         },
-        [storeId, resetPasswordFn]
+        [storeId]
     );
 
-    // Delete user
     const deleteUser = useCallback(
         async (userId: string): Promise<void> => {
             try {
-                await deleteUserFn({ storeId, userId });
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'storeUsers-delete', storeId, userId }
+                });
+                if (result.error) throw result.error;
             } catch (err: any) {
                 console.error('Error deleting user:', err);
                 throw new Error(err.message || 'Failed to delete user');
             }
         },
-        [storeId, deleteUserFn]
+        [storeId]
     );
 
     // Update user profile (direct Firestore update for non-sensitive fields)

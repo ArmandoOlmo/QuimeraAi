@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -64,7 +64,7 @@ const USER_ROLES = [
 export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
-  const functions = getFunctions();
+
 
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -142,11 +142,16 @@ export function ClientIntakeForm({ onSuccess }: { onSuccess?: () => void }) {
 
     try {
       setLoading(true);
-      const provision = httpsCallable(functions, 'agencyOnboarding-autoProvision');
-      const result = await provision(formData) as any;
+      const { supabase } = await import('@/supabase');
+      const result = await supabase.functions.invoke('onboarding-api', {
+          body: { action: 'autoProvision', ...formData }
+      });
+
+      if (result.error) throw result.error;
+      const response = result.data?.data || result.data;
 
       toast.success(
-        t('dashboard.agency.billingPage.success') + ` ${result.data.clientTenantId} ` + t('dashboard.agency.billingPage.created')
+        t('dashboard.agency.billingPage.success') + ` ${response.clientTenantId} ` + t('dashboard.agency.billingPage.created')
       );
 
       // Reset form

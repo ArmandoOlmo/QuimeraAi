@@ -5,8 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Order, OrderItem, Address } from '../../../../types/ecommerce';
 
 // Types
@@ -108,13 +107,11 @@ export const useStripe = (publishableKey?: string) => {
         setError(null);
 
         try {
-            const createPaymentIntentFn = httpsCallable<CreatePaymentIntentParams, CreatePaymentIntentResponse>(
-                functions,
-                'createPaymentIntent'
-            );
-            
-            const result = await createPaymentIntentFn(params);
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createPaymentIntent', ...params }
+            });
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating payment intent:', err);
             setError(err.message || 'Failed to create payment intent');
@@ -132,13 +129,11 @@ export const useStripe = (publishableKey?: string) => {
         setError(null);
 
         try {
-            const createCheckoutSessionFn = httpsCallable<CreateCheckoutSessionParams, CreateCheckoutSessionResponse>(
-                functions,
-                'createCheckoutSession'
-            );
-            
-            const result = await createCheckoutSessionFn(params);
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createCheckoutSession', ...params }
+            });
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating checkout session:', err);
             setError(err.message || 'Failed to create checkout session');
@@ -241,13 +236,11 @@ export const useStripe = (publishableKey?: string) => {
         setError(null);
 
         try {
-            const createRefundFn = httpsCallable<CreateRefundParams, CreateRefundResponse>(
-                functions,
-                'createRefund'
-            );
-            
-            const result = await createRefundFn(params);
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createRefund', ...params }
+            });
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating refund:', err);
             setError(err.message || 'Failed to create refund');
@@ -265,13 +258,11 @@ export const useStripe = (publishableKey?: string) => {
         setError(null);
 
         try {
-            const getPaymentStatusFn = httpsCallable<{ paymentIntentId: string }, PaymentStatusResponse>(
-                functions,
-                'getPaymentStatus'
-            );
-            
-            const result = await getPaymentStatusFn({ paymentIntentId });
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getPaymentStatus', paymentIntentId }
+            });
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error getting payment status:', err);
             setError(err.message || 'Failed to get payment status');

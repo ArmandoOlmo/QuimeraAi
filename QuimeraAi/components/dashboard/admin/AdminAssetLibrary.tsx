@@ -12,8 +12,8 @@ import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
-import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc, storage } from '../../../firebase';
-import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
+import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import DragDropZone from '../../ui/DragDropZone';
@@ -836,35 +836,30 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
             if (user?.uid) {
                 const scanStorageFolder = async (folderPath: string) => {
                     try {
-                        const folderRef = ref(storage, folderPath);
-                        const result = await listAll(folderRef);
-                        for (const itemRef of result.items) {
-                            const url = await getDownloadURL(itemRef);
+                        const { data: files, error } = await supabase.storage.from('platform-assets').list(folderPath);
+                        if (error) {
+                            console.warn("Could not list files", error);
+                            return;
+                        }
+                        for (const item of files) {
+                            const fullPath = `${folderPath}/${item.name}`;
+                            const { data: { publicUrl: url } } = supabase.storage.from('platform-assets').getPublicUrl(fullPath);
                             // Check if it exists in adminAssets
                             const exists = adminAssets.some(a => a.downloadURL === url);
                             if (!exists) {
-                                // Default metadata if fetch fails
-                                let contentType = 'image/jpeg';
-                                let size = 0;
-                                let timeCreated = new Date().toISOString();
-                                
-                                try {
-                                    const metadata = await getMetadata(itemRef);
-                                    contentType = metadata.contentType || contentType;
-                                    size = metadata.size || size;
-                                    timeCreated = metadata.timeCreated || timeCreated;
-                                } catch (e) {
-                                    console.warn("Could not fetch metadata for", itemRef.fullPath);
-                                }
+                                // Metadata
+                                let contentType = item.metadata?.mimetype || 'image/jpeg';
+                                let size = item.metadata?.size || 0;
+                                let timeCreated = item.created_at || new Date().toISOString();
                                 
                                 // Only add if it's an image
                                 if (contentType.startsWith('image/')) {
                                     const newAsset = {
-                                        name: itemRef.name,
+                                        name: item.name,
                                         type: contentType,
                                         size: size,
                                         downloadURL: url,
-                                        storagePath: itemRef.fullPath,
+                                        storagePath: fullPath,
                                         category: 'ai_generated', // Default category for recovered items
                                         createdAt: timeCreated,
                                         uploadedBy: user.uid,

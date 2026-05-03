@@ -18,13 +18,9 @@ import {
     query,
     orderBy,
     serverTimestamp,
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject,
-    listAll,
     onSnapshot,
 } from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 
@@ -150,10 +146,16 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             
             // Project-scoped storage path
             const storagePath = `users/${user.uid}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
-            const storageRef = ref(storage, storagePath);
             
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             const fileRecord: Omit<FileRecord, 'id'> = {
                 name: file.name,
@@ -185,10 +187,9 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         try {
             // Delete from Storage
-            const storageRef = ref(storage, storagePath);
-            await deleteObject(storageRef).catch(() => {
-                console.warn("[FilesContext] File not found in storage, continuing with Firestore deletion");
-            });
+            await supabase.storage
+                .from('platform-assets')
+                .remove([storagePath]);
 
             // Delete from Firestore (project-scoped)
             const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
@@ -235,14 +236,22 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    // Upload image and get URL (helper)
     const uploadImageAndGetURL = async (file: File, path: string): Promise<string> => {
         const timestamp = Date.now();
         const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fullPath = `${path}/${timestamp}_${safeFileName}`;
-        const storageRef = ref(storage, fullPath);
-        await uploadBytes(storageRef, file);
-        return await getDownloadURL(storageRef);
+        
+        const { error } = await supabase.storage
+            .from('platform-assets')
+            .upload(fullPath, file, { upsert: true });
+            
+        if (error) throw error;
+        
+        const { data: { publicUrl } } = supabase.storage
+            .from('platform-assets')
+            .getPublicUrl(fullPath);
+            
+        return publicUrl;
     };
 
     // Global Files Functions
@@ -271,10 +280,16 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `global/files/${timestamp}_${safeFileName}`;
-            const storageRef = ref(storage, storagePath);
             
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             const fileRecord: Omit<FileRecord, 'id'> = {
                 name: file.name,
@@ -301,10 +316,9 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteGlobalFile = async (fileId: string, storagePath: string) => {
         try {
-            const storageRef = ref(storage, storagePath);
-            await deleteObject(storageRef).catch(() => {
-                console.warn("[FilesContext] Global file not found in storage");
-            });
+            await supabase.storage
+                .from('platform-assets')
+                .remove([storagePath]);
 
             await deleteDoc(doc(db, 'global_files', fileId));
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
@@ -347,10 +361,16 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `admin/assets/${category}/${timestamp}_${safeFileName}`;
-            const storageRef = ref(storage, storagePath);
             
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             const assetRecord: Omit<AdminAssetRecord, 'id'> = {
                 name: file.name,
@@ -439,10 +459,9 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             // Delete from Storage if it has a storage path (not external URL)
             if (storagePath) {
-                const storageRef = ref(storage, storagePath);
-                await deleteObject(storageRef).catch(() => {
-                    console.warn("[FilesContext] Admin asset not found in storage");
-                });
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([storagePath]);
             }
 
             await deleteDoc(doc(db, 'adminAssets', assetId));

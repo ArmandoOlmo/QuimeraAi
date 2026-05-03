@@ -520,14 +520,12 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         setMessages(prev => [...prev, { role: 'model', text: t('aiWebsiteStudio.extraction.analyzing'), timestamp: Date.now() }]);
 
         try {
-            // 1. Call the server-side analyzeWebsite Cloud Function
-            //    This uses OpenRouter + Gemini to analyze the URL directly
-            const { getFunctions, httpsCallable } = await import('firebase/functions');
-            const functions = getFunctions();
-            const analyzeWebsiteFn = httpsCallable(functions, 'agencyOnboarding-analyzeWebsite', { timeout: 60000 });
-
-            const response = await analyzeWebsiteFn({ url });
-            const cfData = response.data as { success: boolean; result: any };
+            // 1. Call the Supabase edge function
+            const { supabase } = await import('../../../supabase');
+            const response = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'analyzeWebsite', url }
+            });
+            const cfData = response.data?.data || response.data;
 
             if (!cfData.success || !cfData.result) {
                 throw new Error('Analysis returned no data');

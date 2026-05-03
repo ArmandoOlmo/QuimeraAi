@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../supabase';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, Minus, HardDrive, Zap, Users, Package, ChevronDown, ChevronUp, Info, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
@@ -30,7 +30,6 @@ interface Addon {
 export function AddonsManager() {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
-  const functions = getFunctions();
 
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<AddonPricing | null>(null);
@@ -64,9 +63,11 @@ export function AddonsManager() {
     };
 
     try {
-      const getPricing = httpsCallable(functions, 'getAddonsPricing');
-      const result = await getPricing({ tenantId: currentTenant.id }) as any;
-      const data = result.data;
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: { action: 'getAddonsPricing', tenantId: currentTenant.id }
+      });
+      if (result.error) throw result.error;
+      const data = result.data?.data || result.data;
 
       // Extract pricing from addons array (backend returns 'addons' not 'availableAddons')
       const addonsArray = data.addons || data.availableAddons;
@@ -148,11 +149,14 @@ export function AddonsManager() {
     try {
       setLoading(true);
       setError(null);
-      const update = httpsCallable(functions, 'updateSubscriptionAddons');
-      await update({
-        tenantId: currentTenant.id,
-        addons: pendingAddons,
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: {
+          action: 'updateSubscriptionAddons',
+          tenantId: currentTenant.id,
+          addons: pendingAddons,
+        }
       });
+      if (result.error) throw result.error;
 
       setSuccess(t('dashboard.agency.addonsPage.updatedSuccess'));
       setAddons(pendingAddons);

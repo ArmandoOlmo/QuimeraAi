@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '@/supabase/client';
 import {
   Plus,
   Minus,
@@ -72,7 +72,7 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const functions = getFunctions();
+
 
   // ============================================================================
   // LOAD CURRENT ADDONS
@@ -211,18 +211,17 @@ export function AddonsManager({ onUpdate }: AddonsManagerProps) {
           addons.find((a) => a.id === 'extraAiCredits')?.currentQuantity || 0,
       };
 
-      // Call Cloud Function to update subscription
-      const updateSubscriptionAddons = httpsCallable(
-        functions,
-        'updateSubscriptionAddons'
-      );
-
-      const result = await updateSubscriptionAddons({
-        tenantId: currentTenant?.id,
-        addons: newAddons,
+      // Call Supabase Edge Function to update subscription
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: {
+          action: 'updateSubscriptionAddons',
+          tenantId: currentTenant?.id,
+          addons: newAddons,
+        }
       });
+      if (result.error) throw result.error;
 
-      const data = result.data as any;
+      const data = result.data?.data || result.data;
 
       if (data.success) {
         setSuccessMessage(

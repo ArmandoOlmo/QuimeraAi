@@ -7,9 +7,9 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { functions, db } from '../../../../firebase';
+import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 
 // Types
 interface CreateConnectAccountParams {
@@ -130,18 +130,11 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const createAccountFn = httpsCallable<CreateConnectAccountParams, CreateConnectAccountResponse>(
-                functions,
-                'createConnectAccount'
-            );
-            
-            const result = await createAccountFn({
-                userId,
-                storeId,
-                ...params,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createConnectAccount', userId, storeId, ...params }
             });
-            
-            return result.data;
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating Connect account:', err);
             setError(err.message || 'Failed to create Connect account');
@@ -163,19 +156,11 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const createLinkFn = httpsCallable<OnboardingLinkParams, OnboardingLinkResponse>(
-                functions,
-                'createConnectOnboardingLink'
-            );
-            
-            const result = await createLinkFn({
-                userId,
-                storeId,
-                returnUrl,
-                refreshUrl,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createConnectOnboardingLink', userId, storeId, returnUrl, refreshUrl }
             });
-            
-            return result.data;
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating onboarding link:', err);
             setError(err.message || 'Failed to create onboarding link');
@@ -193,13 +178,11 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const createLinkFn = httpsCallable<{ userId: string; storeId: string }, LoginLinkResponse>(
-                functions,
-                'createConnectLoginLink'
-            );
-            
-            const result = await createLinkFn({ userId, storeId });
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createConnectLoginLink', userId, storeId }
+            });
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating login link:', err);
             setError(err.message || 'Failed to create login link');
@@ -217,14 +200,13 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const getStatusFn = httpsCallable<{ userId: string; storeId: string }, ConnectAccountStatus>(
-                functions,
-                'getConnectAccountStatus'
-            );
-            
-            const result = await getStatusFn({ userId, storeId });
-            setConnectStatus(result.data);
-            return result.data;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getConnectAccountStatus', userId, storeId }
+            });
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+            setConnectStatus(data);
+            return data;
         } catch (err: any) {
             console.error('Error getting account status:', err);
             setError(err.message || 'Failed to get account status');
@@ -242,12 +224,11 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const disconnectFn = httpsCallable<{ userId: string; storeId: string }, { success: boolean }>(
-                functions,
-                'disconnectConnectAccount'
-            );
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'disconnectConnectAccount', userId, storeId }
+            });
+            if (result.error) throw result.error;
             
-            await disconnectFn({ userId, storeId });
             setConnectStatus({ connected: false, accountId: null });
             return true;
         } catch (err: any) {
@@ -270,18 +251,11 @@ export const useStripeConnect = (userId: string, storeId: string) => {
         setError(null);
 
         try {
-            const createPaymentFn = httpsCallable<CreateConnectPaymentParams, CreateConnectPaymentResponse>(
-                functions,
-                'createConnectPaymentIntent'
-            );
-            
-            const result = await createPaymentFn({
-                userId,
-                storeId,
-                ...params,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createConnectPaymentIntent', userId, storeId, ...params }
             });
-            
-            return result.data;
+            if (result.error) throw result.error;
+            return result.data?.data || result.data;
         } catch (err: any) {
             console.error('Error creating Connect payment:', err);
             setError(err.message || 'Failed to create payment');

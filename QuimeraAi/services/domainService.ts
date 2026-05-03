@@ -5,8 +5,7 @@
  * Communicates with Cloud Functions for domain operations.
  */
 
-import { getFunctionsInstance } from '../firebase';
-import { httpsCallable } from 'firebase/functions';
+
 import { DNSRecord, CustomDomainMapping, DNSVerificationResult, CLOUD_RUN_DNS_CONFIG } from '../types/domains';
 
 /**
@@ -23,14 +22,13 @@ export async function addCustomDomainToProject(
     error?: string;
 }> {
     try {
-        const functions = await getFunctionsInstance();
-        const addDomainFn = httpsCallable<
-            { domain: string; projectId: string },
-            { success: boolean; domain: string; dnsRecords: DNSRecord[]; verificationToken: string }
-        >(functions, 'domains-add');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-add', domain, projectId }
+        });
 
-        const result = await addDomainFn({ domain, projectId });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error adding domain:', error);
@@ -48,14 +46,13 @@ export async function addCustomDomainToProject(
  */
 export async function removeCustomDomainFromProject(domain: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const functions = await getFunctionsInstance();
-        const removeDomainFn = httpsCallable<{ domain: string }, { success: boolean }>(
-            functions,
-            'domains-remove'
-        );
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-remove', domain }
+        });
 
-        const result = await removeDomainFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error removing domain:', error);
@@ -71,14 +68,13 @@ export async function removeCustomDomainFromProject(domain: string): Promise<{ s
  */
 export async function verifyDomainDNS(domain: string): Promise<DNSVerificationResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const verifyDNSFn = httpsCallable<{ domain: string }, DNSVerificationResult>(
-            functions,
-            'domains-verifyDNS'
-        );
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-verifyDNS', domain }
+        });
 
-        const result = await verifyDNSFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error verifying DNS:', error);
@@ -100,14 +96,13 @@ export async function checkDomainSSLStatus(domain: string): Promise<{
     status: string;
 }> {
     try {
-        const functions = await getFunctionsInstance();
-        const checkSSLFn = httpsCallable<
-            { domain: string },
-            { sslStatus: 'pending' | 'provisioning' | 'active' | 'error'; status: string }
-        >(functions, 'domains-checkSSL');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-checkSSL', domain }
+        });
 
-        const result = await checkSSLFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error checking SSL:', error);
@@ -250,14 +245,13 @@ export async function setupExternalDomainWithCloudflare(
     projectId?: string
 ): Promise<ExternalDomainSetupResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const setupFn = httpsCallable<
-            { domain: string; projectId?: string },
-            ExternalDomainSetupResult
-        >(functions, 'domains-setupExternalWithCloudflare');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-setupExternalWithCloudflare', domain, projectId }
+        });
 
-        const result = await setupFn({ domain, projectId });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error setting up external domain:', error);
@@ -277,14 +271,13 @@ export async function verifyExternalDomainNameservers(
     domain: string
 ): Promise<NameserverVerificationResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const verifyFn = httpsCallable<
-            { domain: string },
-            NameserverVerificationResult
-        >(functions, 'domains-verifyExternalNameservers');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-verifyExternalNameservers', domain }
+        });
 
-        const result = await verifyFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error verifying nameservers:', error);
@@ -304,14 +297,13 @@ export async function migrateExistingDomainToCloudflare(
     domain: string
 ): Promise<ExternalDomainSetupResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const migrateFn = httpsCallable<
-            { domain: string },
-            ExternalDomainSetupResult
-        >(functions, 'domains-migrateToCloudflare');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-migrateToCloudflare', domain }
+        });
 
-        const result = await migrateFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error migrating domain:', error);
@@ -359,14 +351,13 @@ export async function createCloudRunDomainMapping(
     domain: string
 ): Promise<DomainMappingResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const createFn = httpsCallable<
-            { domain: string },
-            DomainMappingResult
-        >(functions, 'domains-createMapping');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-createMapping', domain }
+        });
 
-        const result = await createFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error creating Cloud Run mapping:', error);
@@ -389,14 +380,13 @@ export async function checkCloudRunDomainMappingStatus(domain: string): Promise<
     error?: string;
 }> {
     try {
-        const functions = await getFunctionsInstance();
-        const checkFn = httpsCallable<
-            { domain: string },
-            { domain: string; exists: boolean; ready: boolean; certificateStatus?: string; error?: string }
-        >(functions, 'domains-checkMappingStatus');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-checkMappingStatus', domain }
+        });
 
-        const result = await checkFn({ domain });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error checking domain mapping status:', error);
@@ -418,14 +408,13 @@ export async function setupFullDomainMapping(
     projectId?: string
 ): Promise<FullDomainSetupResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const setupFn = httpsCallable<
-            { domain: string; projectId?: string },
-            FullDomainSetupResult
-        >(functions, 'domains-setupFull');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-setupFull', domain, projectId }
+        });
 
-        const result = await setupFn({ domain, projectId });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[DomainService] Error in full domain setup:', error);

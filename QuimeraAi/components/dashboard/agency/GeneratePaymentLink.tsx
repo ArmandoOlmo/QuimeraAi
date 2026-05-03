@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../supabase';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { AgencyPlanCardSelector } from './plans';
 import { AgencyPlan } from '../../../types/agencyPlans';
@@ -23,7 +23,7 @@ import {
     DollarSign,
 } from 'lucide-react';
 
-const functions = getFunctions();
+
 
 // ============================================================================
 // TYPES
@@ -79,16 +79,19 @@ export function GeneratePaymentLink({
         setError(null);
 
         try {
-            const createLink = httpsCallable(functions, 'agencyBilling-createClientPaymentLink');
-            const result = await createLink({
-                clientTenantId,
-                planId: selectedPlan.id,
-                customPrice: useCustomPrice && customPrice
-                    ? parseFloat(customPrice)
-                    : undefined,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'agencyBilling-createClientPaymentLink',
+                    clientTenantId,
+                    planId: selectedPlan.id,
+                    customPrice: useCustomPrice && customPrice
+                        ? parseFloat(customPrice)
+                        : undefined,
+                }
             });
+            if (result.error) throw result.error;
 
-            const data = result.data as any;
+            const data = result.data?.data || result.data;
             setGeneratedLink(data.paymentUrl);
             setExpiresAt(data.expiresAt);
         } catch (err: any) {

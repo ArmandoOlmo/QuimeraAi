@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -22,7 +22,7 @@ interface SubClient {
 export function ReportsGenerator() {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
-  const functions = getFunctions();
+
 
   const [loading, setLoading] = useState(false);
   const [subClients, setSubClients] = useState<SubClient[]>([]);
@@ -62,15 +62,21 @@ export function ReportsGenerator() {
   const handleGenerateReport = async () => {
     try {
       setLoading(true);
-      const generateReport = httpsCallable(functions, 'reports-generateConsolidated');
-      const result = await generateReport({
-        clientIds: selectAll ? subClients.map(c => c.id) : selectedClients,
-        dateRange,
-        metrics: selectedMetrics,
-        template: selectedTemplate
+      const { supabase } = await import('@/supabase');
+      const result = await supabase.functions.invoke('onboarding-api', {
+          body: {
+              action: 'generateConsolidatedReport',
+              clientIds: selectAll ? subClients.map(c => c.id) : selectedClients,
+              dateRange,
+              metrics: selectedMetrics,
+              template: selectedTemplate
+          }
       });
 
-      setGeneratedReport(result.data);
+      if (result.error) throw result.error;
+      const response = result.data?.data || result.data;
+
+      setGeneratedReport(response);
       toast.success('Reporte generado exitosamente');
     } catch (error: any) {
       console.error('Error generating report:', error);

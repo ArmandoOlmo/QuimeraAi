@@ -575,13 +575,13 @@ export const useOnboarding = () => {
         setError(null);
 
         try {
-            // Import Firebase functions
-            const { getFunctions, httpsCallable } = await import('firebase/functions');
-            const functions = getFunctions();
-            const analyzeWebsiteFn = httpsCallable(functions, 'agencyOnboarding-analyzeWebsite');
-
-            const response = await analyzeWebsiteFn({ url });
-            const data = response.data as { success: boolean; result: any };
+            // Import Supabase
+            const { supabase } = await import('../../../supabase');
+            const response = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'analyzeWebsite', url }
+            });
+            
+            const data = response.data?.data || response.data;
 
             if (!data.success || !data.result) {
                 throw new Error('Analysis failed');

@@ -2,7 +2,7 @@
  * platformLeadService.ts
  * Servicio centralizado para capturar leads a nivel de plataforma.
  * 
- * Los leads se almacenan en la colección raíz `platformLeads` para que tanto
+ * Los leads se almacenan en la tabla `platform_leads` de Supabase para que tanto
  * visitantes públicos (sin autenticación) como el admin puedan interactuar.
  * 
  * Sources:
@@ -11,7 +11,7 @@
  *   - manual: Creación manual desde el admin dashboard
  */
 
-import { db, collection, addDoc, serverTimestamp } from '../firebase';
+import { supabase } from '../supabase';
 
 // =============================================================================
 // TYPES
@@ -31,33 +31,44 @@ export interface PlatformLeadData {
     metadata?: Record<string, any>;
 }
 
-// Root-level Firestore collection — publicly writable via security rules
-const PLATFORM_LEADS_COLLECTION = 'platformLeads';
-
 // =============================================================================
 // SERVICE
 // =============================================================================
 
 /**
  * Save a new platform-level lead.
- * This writes to the root `platformLeads` collection so that unauthenticated
+ * This writes to the `platform_leads` table so that unauthenticated
  * visitors (contact page, chatbot) can persist leads without login.
  */
 export async function savePlatformLead(data: PlatformLeadData): Promise<string> {
-    const sanitized: Record<string, any> = {};
+    const row: Record<string, any> = {
+        name: data.name,
+        email: data.email,
+        source: data.source,
+        status: data.status,
+        score: data.score,
+        tags: data.tags,
+        project_id: '__platform__',
+    };
 
-    // Remove undefined values to avoid Firestore errors
-    Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined) sanitized[key] = value;
-    });
+    // Only include optional fields if defined
+    if (data.phone !== undefined) row.phone = data.phone;
+    if (data.company !== undefined) row.company = data.company;
+    if (data.message !== undefined) row.message = data.message;
+    if (data.metadata !== undefined) row.metadata = data.metadata;
 
-    const docRef = await addDoc(collection(db, PLATFORM_LEADS_COLLECTION), {
-        ...sanitized,
-        projectId: '__platform__',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-    });
+    const { data: inserted, error } = await supabase
+        .from('platform_leads')
+        .insert(row)
+        .select('id')
+        .single();
 
-    console.log(`[platformLeadService] ✅ Platform lead saved: ${docRef.id} (source: ${data.source})`);
-    return docRef.id;
+    if (error) {
+        console.error(`[platformLeadService] ❌ Error saving lead:`, error);
+        throw error;
+    }
+
+    console.log(`[platformLeadService] ✅ Platform lead saved: ${inserted.id} (source: ${data.source})`);
+    return inserted.id;
 }
+

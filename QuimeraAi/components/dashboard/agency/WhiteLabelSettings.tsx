@@ -8,8 +8,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { TenantBranding } from '../../../types/multiTenant';
-import { storage } from '../../../firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { supabase } from '../../../supabase';
 import ColorControl from '../../ui/ColorControl';
 import { toast } from 'react-hot-toast';
 import AgencyDomainPanel from './AgencyDomainPanel';
@@ -75,11 +74,19 @@ export function WhiteLabelSettings() {
         setHasChanges(true);
     }, []);
 
-    // Upload file to Firebase Storage
+    // Upload file to Supabase Storage
     const uploadFile = useCallback(async (file: File, path: string): Promise<string> => {
-        const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, file);
-        return getDownloadURL(storageRef);
+        const { error } = await supabase.storage
+            .from('platform-assets')
+            .upload(path, file, { upsert: true });
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('platform-assets')
+            .getPublicUrl(path);
+
+        return publicUrl;
     }, []);
 
     // Handle logo upload

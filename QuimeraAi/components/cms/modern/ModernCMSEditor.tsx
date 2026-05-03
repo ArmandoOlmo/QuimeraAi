@@ -42,8 +42,7 @@ import DashboardSidebar from '../../dashboard/DashboardSidebar';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { logApiCall } from '../../../services/apiLoggingService';
-import { storage } from '../../../firebase';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { supabase } from '../../../supabase';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
@@ -526,9 +525,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const fileRef = storageRef(storage, storagePath);
-            await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(fileRef);
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
+                
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -553,9 +560,17 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
-            const fileRef = storageRef(storage, storagePath);
-            await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(fileRef);
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
+                
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
@@ -578,29 +593,21 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Upload] Storage path:', storagePath);
-            const fileRef = storageRef(storage, storagePath);
             
-            const uploadTask = uploadBytesResumable(fileRef, file);
+            setUploadProgress(50); // Fake progress since supabase-js standard upload doesn't support it
+
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+            setUploadProgress(100);
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
             
-            const url = await new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        setUploadProgress(progress);
-                        console.log(`[Video Upload] Progress: ${progress}% (${(snapshot.bytesTransferred / 1024 / 1024).toFixed(1)}/${(snapshot.totalBytes / 1024 / 1024).toFixed(1)} MB)`);
-                    },
-                    (error) => {
-                        console.error('[Video Upload] Upload error:', error.code, error.message);
-                        reject(error);
-                    },
-                    async () => {
-                        console.log('[Video Upload] Upload complete, getting download URL...');
-                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                        console.log('[Video Upload] ✅ Download URL:', downloadUrl.substring(0, 80) + '...');
-                        resolve(downloadUrl);
-                    }
-                );
-            });
+            console.log('[Video Upload] ✅ Download URL:', url.substring(0, 80) + '...');
             
             setPodcastVideoUrl(url);
         } catch (error: any) {
@@ -629,28 +636,21 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Drop] Storage path:', storagePath);
-            const fileRef = storageRef(storage, storagePath);
             
-            const uploadTask = uploadBytesResumable(fileRef, file);
+            setUploadProgress(50); // Fake progress
+
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+            setUploadProgress(100);
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
             
-            const url = await new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        setUploadProgress(progress);
-                        console.log(`[Video Drop] Progress: ${progress}%`);
-                    },
-                    (error) => {
-                        console.error('[Video Drop] Upload error:', error.code, error.message);
-                        reject(error);
-                    },
-                    async () => {
-                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                        console.log('[Video Drop] ✅ Done:', downloadUrl.substring(0, 80) + '...');
-                        resolve(downloadUrl);
-                    }
-                );
-            });
+            console.log('[Video Drop] ✅ Done:', url.substring(0, 80) + '...');
             
             setPodcastVideoUrl(url);
         } catch (error: any) {

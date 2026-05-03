@@ -40,8 +40,8 @@ import {
     Wallet,
 } from 'lucide-react';
 import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, functions } from '../../firebase';
-import { httpsCallable } from 'firebase/functions';
+import { db } from '../../firebase';
+import { supabase } from '../../supabase';
 import { CartItem, Address, Order, StoreSettings } from '../../types/ecommerce';
 
 // =============================================================================
@@ -229,7 +229,6 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
             }
 
             // 2. Call backend to create Order and PaymentIntent securely
-            const createStoreCheckoutIntentFn = httpsCallable(functions, 'createStoreCheckoutIntent');
             const idempotencyKey = getCheckoutIdempotencyKey();
 
             const checkoutData = {
@@ -257,8 +256,11 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                 notes: formData.notes || undefined
             };
 
-            const result = await createStoreCheckoutIntentFn(checkoutData);
-            const { clientSecret, orderId, orderAccessToken } = result.data as any;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createStoreCheckoutIntent', ...checkoutData }
+            });
+            if (result.error) throw result.error;
+            const { clientSecret, orderId, orderAccessToken } = result.data?.data || result.data;
 
             if (!clientSecret) {
                 throw new Error('Error al generar la intencion de pago');
@@ -304,7 +306,6 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
             }
 
             // 2. Call backend to create Order and PaymentIntent securely
-            const createStoreCheckoutIntentFn = httpsCallable(functions, 'createStoreCheckoutIntent');
             const idempotencyKey = getCheckoutIdempotencyKey();
 
             const checkoutData = {
@@ -342,8 +343,11 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
                 notes: formData.notes || undefined
             };
 
-            const result = await createStoreCheckoutIntentFn(checkoutData);
-            const { clientSecret, orderId, orderAccessToken } = result.data as any;
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'createStoreCheckoutIntent', ...checkoutData }
+            });
+            if (result.error) throw result.error;
+            const { clientSecret, orderId, orderAccessToken } = result.data?.data || result.data;
 
             if (!clientSecret) {
                 throw new Error('Error al generar la intencion de pago');

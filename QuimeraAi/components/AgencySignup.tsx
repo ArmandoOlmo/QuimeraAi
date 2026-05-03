@@ -15,7 +15,7 @@ import {
     Building2, Check, Sparkles, ArrowRight, Zap, Crown,
     Users, Globe, Lock, Menu, X, Twitter, Linkedin, Instagram, Youtube, Github, MessageCircle, Quote
 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../supabase';
 import { useAuth } from '../contexts/core/AuthContext';
 import { usePlans } from '../contexts/PlansContext';
 import { useRouter } from '../hooks/useRouter';
@@ -187,23 +187,20 @@ const AgencySignup: React.FC = () => {
         setError(null);
 
         try {
-            const functions = getFunctions();
-            const createCheckoutSession = httpsCallable<
-                { planId: string; billingCycle: BillingCycle; tenantId: string; successUrl: string; cancelUrl: string },
-                { success: boolean; url: string }
-            >(functions, 'createCheckoutSession');
-
-            // Note: tenantId needs to be obtained from user context
-            // For new signups without a tenant, the checkout should create one
-            const result = await createCheckoutSession({
-                planId,
-                billingCycle,
-                tenantId: `tenant_${user.uid}`, // Standard tenant ID pattern
-                successUrl: `${window.location.origin}/dashboard?subscription=success&plan=${planId}`,
-                cancelUrl: `${window.location.origin}/agency-signup?cancelled=true`,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'createCheckoutSession',
+                    planId,
+                    billingCycle,
+                    tenantId: `tenant_${user.uid}`, // Standard tenant ID pattern
+                    successUrl: `${window.location.origin}/dashboard?subscription=success&plan=${planId}`,
+                    cancelUrl: `${window.location.origin}/agency-signup?cancelled=true`,
+                }
             });
 
-            if (result.data.success && result.data.url) {
+            if (result.error) throw result.error;
+
+            if (result.data?.url) {
                 window.location.href = result.data.url;
             } else {
                 throw new Error('No checkout URL received');

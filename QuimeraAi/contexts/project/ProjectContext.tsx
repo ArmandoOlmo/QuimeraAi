@@ -1283,19 +1283,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
     };
 
-    // Restore project from an automatic backup (calls Cloud Function)
+    // Restore project from an automatic backup (calls Supabase Edge Function)
     const restoreFromBackup = async (backupId: string) => {
         try {
-            const { getFunctions, httpsCallable } = await import('firebase/functions');
-            const functions = getFunctions();
-            const restoreFn = httpsCallable(functions, 'restoreProjectFromBackup');
-            const result = await restoreFn({ backupId }) as any;
+            const { supabase } = await import('@/supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'restoreProjectFromBackup', backupId }
+            });
 
-            if (result.data?.success) {
+            if (result.error) throw result.error;
+            const response = result.data?.data || result.data;
+
+            if (response?.success) {
                 // Refresh projects to pick up the restored project
                 await refreshProjects();
             } else {
-                throw new Error(result.data?.message || 'Restore failed');
+                throw new Error(response?.message || 'Restore failed');
             }
         } catch (error) {
             console.error('[ProjectContext] Error restoring from backup:', error);

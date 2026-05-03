@@ -12,7 +12,7 @@ import GlobalStylesControl from '../../ui/GlobalStylesControl';
 import FontFamilyPicker from '../../ui/FontFamilyPicker';
 import FontWeightPicker from '../../ui/FontWeightPicker';
 import { resolveFontFamily } from '../../../utils/fontLoader';
-import { storage, ref, uploadBytes, getDownloadURL } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import { ProjectContext } from '../../../contexts/project';
 import ColorControl from '../../ui/ColorControl';
 
@@ -242,9 +242,18 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 const timestamp = Date.now();
                 const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                 const path = `admin/landing_page/assets/${timestamp}_${safeFileName}`;
-                const storageRef = ref(storage, path);
-                await uploadBytes(storageRef, file);
-                return await getDownloadURL(storageRef);
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('platform-assets')
+                    .upload(path, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl: url } } = supabase.storage
+                    .from('platform-assets')
+                    .getPublicUrl(path);
+
+                return url;
             } catch (error) {
                 console.error("Error uploading to admin storage:", error);
                 throw error;

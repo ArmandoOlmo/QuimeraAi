@@ -15,7 +15,6 @@ import {
     FolderOutput,
     Globe,
 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant';
 import { Project } from '../../../types';
@@ -46,7 +45,6 @@ export function ProjectTransferModal({
     const { t } = useTranslation();
     const { subClients, loadingClients } = useAgency();
     const { currentTenant } = useTenant();
-    const functions = getFunctions();
 
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [isTransferring, setIsTransferring] = useState(false);
@@ -65,15 +63,18 @@ export function ProjectTransferModal({
         setTransferResult(null);
 
         try {
-            const transferProject = httpsCallable(functions, 'agencyOnboarding-transferProject');
-
-            const result = await transferProject({
-                projectId: project.id,
-                sourceTenantId: currentTenant.id,
-                targetClientTenantId: selectedClientId,
+            const { supabase } = await import('../../../supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: {
+                    action: 'transferProject',
+                    projectId: project.id,
+                    sourceTenantId: currentTenant.id,
+                    targetClientTenantId: selectedClientId,
+                }
             });
 
-            const response = result.data as any;
+            if (result.error) throw result.error;
+            const response = result.data?.data || result.data;
 
             if (response.success) {
                 setTransferResult({

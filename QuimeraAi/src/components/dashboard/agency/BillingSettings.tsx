@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../../supabase/client';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -33,7 +33,7 @@ interface SubClient {
 export function BillingSettings() {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
-  const functions = getFunctions();
+
 
   const [loading, setLoading] = useState(true);
   const [stripeStatus, setStripeStatus] = useState<StripeConnectStatus>({
@@ -54,9 +54,11 @@ export function BillingSettings() {
       setLoading(true);
 
       // Get Stripe Connect status
-      const getStatus = httpsCallable(functions, 'getStripeConnectStatus');
-      const statusResult = await getStatus({ tenantId: currentTenant.id });
-      setStripeStatus(statusResult.data as StripeConnectStatus);
+      const statusResult = await supabase.functions.invoke('stripe-api', {
+        body: { action: 'getStripeConnectStatus', tenantId: currentTenant.id }
+      });
+      if (statusResult.error) throw statusResult.error;
+      setStripeStatus((statusResult.data?.data || statusResult.data) as StripeConnectStatus);
 
       // Load sub-clients (would come from TenantContext in real implementation)
       // For now, mock data
@@ -79,10 +81,12 @@ export function BillingSettings() {
   const handleConnectStripe = async () => {
     try {
       setLoading(true);
-      const connectStripe = httpsCallable(functions, 'createStripeConnectAccount');
-      const result = await connectStripe({ tenantId: currentTenant?.id });
-      const { url } = result.data as { url: string };
-      window.location.href = url;
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: { action: 'createStripeConnectAccount', tenantId: currentTenant?.id }
+      });
+      if (result.error) throw result.error;
+      const { url } = (result.data?.data || result.data) as { url: string };
+      if (url) window.location.href = url;
     } catch (error: any) {
       console.error('Error connecting Stripe:', error);
       toast.error('Error al conectar con Stripe');
@@ -92,8 +96,10 @@ export function BillingSettings() {
 
   const handleUpdatePrice = async (clientId: string) => {
     try {
-      const updatePrice = httpsCallable(functions, 'updateClientMonthlyPrice');
-      await updatePrice({ clientId, price: editingPrice });
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: { action: 'updateClientMonthlyPrice', clientId, price: editingPrice }
+      });
+      if (result.error) throw result.error;
       setSubClients(prev => prev.map(c => c.id === clientId ? { ...c, billing: { ...c.billing, monthlyPrice: editingPrice } } : c));
       setEditingClientId(null);
       toast.success('Precio actualizado');
@@ -145,7 +151,7 @@ export function BillingSettings() {
                     <Input
                       type="number"
                       value={editingPrice}
-                      onChange={(e) => setEditPrice(e.target.value)}
+                      onChange={(e) => setEditingPrice(Number(e.target.value))}
                       className="w-24"
                     />
                     <Button size="sm" onClick={() => handleUpdatePrice(client.id)}>Guardar</Button>

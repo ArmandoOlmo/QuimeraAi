@@ -185,20 +185,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Lazy-loaded services cache
-let _functions: ReturnType<typeof import("firebase/functions").getFunctions> | null = null;
 let _analytics: ReturnType<typeof import("firebase/analytics").getAnalytics> | null = null;
-
-/**
- * Get Firebase Functions instance (lazy-loaded)
- * Use this instead of direct import when functions are only occasionally needed
- */
-export const getFunctionsInstance = async () => {
-  if (!_functions) {
-    const { getFunctions } = await import("firebase/functions");
-    _functions = getFunctions(app);
-  }
-  return _functions;
-};
 
 /**
  * Get Firebase Analytics instance (lazy-loaded)
@@ -221,19 +208,7 @@ export const getAnalyticsInstance = async () => {
   return _analytics;
 };
 
-// Backward compatibility: synchronous functions export (will be loaded on first use)
-// For new code, prefer getFunctionsInstance() for better performance
-export const functions = new Proxy({} as ReturnType<typeof import("firebase/functions").getFunctions>, {
-  get: (_, prop) => {
-    // Lazy initialize on first property access
-    if (!_functions) {
-      import("firebase/functions").then(({ getFunctions }) => {
-        _functions = getFunctions(app);
-      });
-    }
-    return _functions ? (_functions as any)[prop] : undefined;
-  }
-});
+
 
 // Initialize Analytics after page load (non-blocking)
 if (typeof window !== 'undefined') {
@@ -293,7 +268,6 @@ export {
   increment
 };
 
-// Re-export Functions methods
-export { httpsCallable } from 'firebase/functions';
+
 
 export type { User };

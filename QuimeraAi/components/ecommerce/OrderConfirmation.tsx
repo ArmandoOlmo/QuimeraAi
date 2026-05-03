@@ -18,8 +18,8 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db, functions } from '../../firebase';
-import { httpsCallable } from 'firebase/functions';
+import { db } from '../../firebase';
+import { supabase } from '../../supabase';
 import { Order, StoreSettings } from '../../types/ecommerce';
 
 // Props for direct order display
@@ -360,9 +360,11 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                 }
 
                 // Get order securely from backend
-                const getStoreOrderStatusFn = httpsCallable(functions, 'getStoreOrderStatus');
-                const result = await getStoreOrderStatusFn({ storeId, orderId, orderAccessToken });
-                const orderData = result.data as any;
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'getStoreOrderStatus', storeId, orderId, orderAccessToken }
+                });
+                if (result.error) throw result.error;
+                const orderData = result.data?.data || result.data;
 
                 if (!orderData || !orderData.id) {
                     setError('Pedido no encontrado');

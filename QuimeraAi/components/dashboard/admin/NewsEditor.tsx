@@ -77,8 +77,7 @@ import SlashCommands from '../../cms/modern/SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../services/apiLoggingService';
-import { storage } from '../../../firebase';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { supabase } from '../../../supabase';
 import {
     translateNewsContent,
     buildTranslatedNews,
@@ -288,23 +287,18 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `admin_news_video/${user?.uid || 'unknown'}/${timestamp}_${safeFileName}`;
-            const fileRef = storageRef(storage, storagePath);
+            
+            setUploadProgress(50); // Fake progress
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
 
-            const uploadTask = uploadBytesResumable(fileRef, file);
+            if (uploadError) throw uploadError;
+            setUploadProgress(100);
 
-            const url = await new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        setUploadProgress(progress);
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve(downloadUrl);
-                    }
-                );
-            });
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             setVideoUrl(url);
             showToast('Video subido correctamente', 'success');
@@ -331,23 +325,18 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `admin_news_video/${user?.uid || 'unknown'}/${timestamp}_${safeFileName}`;
-            const fileRef = storageRef(storage, storagePath);
+            
+            setUploadProgress(50); // Fake progress
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
 
-            const uploadTask = uploadBytesResumable(fileRef, file);
+            if (uploadError) throw uploadError;
+            setUploadProgress(100);
 
-            const url = await new Promise<string>((resolve, reject) => {
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                        setUploadProgress(progress);
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve(downloadUrl);
-                    }
-                );
-            });
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             setVideoUrl(url);
             showToast('Video subido correctamente', 'success');

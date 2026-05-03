@@ -39,8 +39,7 @@ import Separator from './Separator';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
-import { doc, getDoc, collection, getDocs } from '../firebase';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { savePlatformLead } from '../services/platformLeadService';
 import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fontLoader';
 import { resolveI18nSectionData } from '../utils/i18nContent';
@@ -208,7 +207,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Load saved landing page configuration from Firestore (production mode only)
+  // Load saved landing page configuration from Supabase (production mode only)
   useEffect(() => {
     const loadSavedConfiguration = async () => {
       // Skip if in preview mode - preview mode uses postMessage from editor
@@ -216,30 +215,23 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       if (urlParams.get('preview') === 'landing' || window.location.pathname === '/landing-editor-preview') return;
 
       try {
-        // Primary: load from sub-collection (new format, no 1 MB limit)
-        const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
-        const sectionsSnap = await getDocs(sectionsColRef);
+        const { data: rows, error } = await supabase
+          .from('landing_sections')
+          .select('*')
+          .order('order', { ascending: true });
 
-        if (!sectionsSnap.empty) {
-          const loadedSections = sectionsSnap.docs
-            .map(d => d.data() as typeof previewSections[0])
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-          console.log('[PublicLandingPage] Loaded from sub-collection:', loadedSections.length, 'sections');
+        if (error) throw error;
+
+        if (rows && rows.length > 0) {
+          const loadedSections = rows.map(row => ({
+            id: row.id,
+            type: row.type,
+            enabled: row.enabled,
+            order: row.order,
+            data: row.data || {},
+          }));
+          console.log('[PublicLandingPage] Loaded from Supabase:', loadedSections.length, 'sections');
           setPreviewSections(loadedSections);
-          setSectionsLoaded(true);
-          return;
-        }
-
-        // Fallback: legacy single-document format
-        const settingsRef = doc(db, 'globalSettings', 'landingPage');
-        const settingsSnap = await getDoc(settingsRef);
-
-        if (settingsSnap.exists()) {
-          const data = settingsSnap.data();
-          if (data.sections && Array.isArray(data.sections)) {
-            console.log('[PublicLandingPage] Loaded from legacy doc:', data.sections.length, 'sections');
-            setPreviewSections(data.sections);
-          }
         }
       } catch (error) {
         console.error('[PublicLandingPage] Error loading saved configuration:', error);
@@ -739,8 +731,19 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
     switch (sectionType) {
       // ── QUIMERA SUITE COMPONENTS ──
-      case 'heroQuimera':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}><HeroQuimera {...resolveI18nSectionData(section.data, i18n.language)} isPreviewMode={isPreviewMode} /></section>;
+      case 'heroQuimera': {
+        const heroData = resolveI18nSectionData(section.data, i18n.language);
+        return (
+          <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}>
+            <HeroQuimera
+              {...heroData}
+              showDecoration={heroData.showDecoration !== false}
+              showParticles={heroData.showParticles !== false}
+              isPreviewMode={isPreviewMode}
+            />
+          </section>
+        );
+      }
       case 'platformShowcaseQuimera':
         return renderSuiteSection(section, PlatformShowcaseQuimera);
       case 'bentoShowcaseQuimera':

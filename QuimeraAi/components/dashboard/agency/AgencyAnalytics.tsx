@@ -23,8 +23,7 @@ import {
     ProjectBillingBreakdown,
     ClientHealthScore,
 } from './charts';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import { getAgencyPoolBreakdown } from '../../../services/aiCreditsService';
 import PurchaseCreditsModal from '../../ui/PurchaseCreditsModal';
 
@@ -63,9 +62,12 @@ export function AgencyAnalytics() {
             if (!currentTenant?.id) return;
 
             try {
-                const getAgencyBillingSummary = httpsCallable(functions, 'getAgencyBillingSummary');
-                const result = await getAgencyBillingSummary({ tenantId: currentTenant.id });
-                setBillingSummary(result.data as BillingSummary);
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'getAgencyBillingSummary', tenantId: currentTenant.id }
+                });
+                if (result.error) throw result.error;
+                const data = result.data?.data || result.data;
+                setBillingSummary(data as BillingSummary);
             } catch (error) {
                 console.error('Error loading billing summary:', error);
             }
@@ -177,12 +179,18 @@ export function AgencyAnalytics() {
         try {
             // Refresh billing data
             if (currentTenant?.id) {
-                const updateProjectCount = httpsCallable(functions, 'updateAgencyProjectCount');
-                await updateProjectCount({ tenantId: currentTenant.id });
+                const updateProjectResult = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'updateAgencyProjectCount', tenantId: currentTenant.id }
+                });
+                if (updateProjectResult.error) throw updateProjectResult.error;
 
-                const getAgencyBillingSummary = httpsCallable(functions, 'getAgencyBillingSummary');
-                const result = await getAgencyBillingSummary({ tenantId: currentTenant.id });
-                setBillingSummary(result.data as BillingSummary);
+                const getBillingResult = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'getAgencyBillingSummary', tenantId: currentTenant.id }
+                });
+                if (getBillingResult.error) throw getBillingResult.error;
+                
+                const billingData = getBillingResult.data?.data || getBillingResult.data;
+                setBillingSummary(billingData as BillingSummary);
 
                 // Refresh credits breakdown
                 const breakdown = await getAgencyPoolBreakdown(currentTenant.id);

@@ -14,7 +14,7 @@ import {
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../supabase';
 import {
     CheckCircle,
     Shield,
@@ -28,7 +28,7 @@ import {
     XCircle,
 } from 'lucide-react';
 
-const functions = getFunctions();
+
 
 // ============================================================================
 // STRIPE INIT
@@ -121,14 +121,17 @@ function CardForm({ token, info, onSuccess }: CardFormProps) {
                 return;
             }
 
-            // Call Cloud Function to confirm payment
-            const confirmPayment = httpsCallable(functions, 'agencyBilling-confirmClientPayment');
-            const result = await confirmPayment({
-                token,
-                paymentMethodId: paymentMethod.id,
+            // Call Supabase Edge Function to confirm payment
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'agencyBilling-confirmClientPayment',
+                    token,
+                    paymentMethodId: paymentMethod.id,
+                }
             });
 
-            const data = result.data as any;
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
 
             if (data.requiresAction && data.clientSecret) {
                 // Handle 3D Secure / SCA
@@ -284,9 +287,11 @@ export default function AgencyCheckoutPage({ token }: AgencyCheckoutPageProps) {
     const loadPaymentLink = async () => {
         try {
             setLoading(true);
-            const getInfo = httpsCallable(functions, 'agencyBilling-getPaymentLinkInfo');
-            const result = await getInfo({ token });
-            setInfo(result.data as PaymentLinkInfo);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'agencyBilling-getPaymentLinkInfo', token }
+            });
+            if (result.error) throw result.error;
+            setInfo((result.data?.data || result.data) as PaymentLinkInfo);
         } catch (err: any) {
             console.error('Error loading payment link:', err);
             setError('Este link de pago no es válido o ha expirado.');

@@ -5,8 +5,7 @@
  * via Cloud Functions (for security - API keys stay on server).
  */
 
-import { getFunctionsInstance } from '../firebase';
-import { httpsCallable } from 'firebase/functions';
+
 
 // =============================================================================
 // TYPES
@@ -50,14 +49,13 @@ export interface TLDPricing {
  */
 export async function searchDomains(keyword: string): Promise<DomainSearchResults> {
     try {
-        const functions = await getFunctionsInstance();
-        const searchFn = httpsCallable<{ keyword: string }, DomainSearchResults>(
-            functions,
-            'domains-searchSuggestions'
-        );
-
-        const result = await searchFn({ keyword });
-        return result.data;
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-searchSuggestions', keyword }
+        });
+        
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[NameComService] Search error:', error);
@@ -78,14 +76,13 @@ export async function checkAvailability(domains: string[]): Promise<{
     }>;
 }> {
     try {
-        const functions = await getFunctionsInstance();
-        const checkFn = httpsCallable<{ domains: string[] }, { results: any[] }>(
-            functions,
-            'domains-checkAvailability'
-        );
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-checkAvailability', domains }
+        });
 
-        const result = await checkFn({ domains });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[NameComService] Check availability error:', error);
@@ -113,14 +110,13 @@ export async function purchaseDomain(
     }
 ): Promise<DomainPurchaseResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const purchaseFn = httpsCallable<
-            { domainName: string; years: number; contactInfo?: any },
-            DomainPurchaseResult
-        >(functions, 'domains-purchase');
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-purchase', domainName, years, contactInfo }
+        });
 
-        const result = await purchaseFn({ domainName, years, contactInfo });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[NameComService] Purchase error:', error);
@@ -162,24 +158,23 @@ export async function createDomainCheckout(
     years: number = 1
 ): Promise<DomainCheckoutResult> {
     try {
-        const functions = await getFunctionsInstance();
-        const checkoutFn = httpsCallable<
-            { domainName: string; price: number; years: number; successUrl: string; cancelUrl: string },
-            DomainCheckoutResult
-        >(functions, 'domains-createDomainCheckoutSession');
-
+        const { supabase } = await import('../supabase');
         const successUrl = `${window.location.origin}/dashboard?domain_success=true`;
         const cancelUrl = `${window.location.origin}/dashboard?domain_cancel=true`;
 
-        const result = await checkoutFn({ 
-            domainName, 
-            price, 
-            years,
-            successUrl,
-            cancelUrl
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: {
+                action: 'domains-createDomainCheckoutSession',
+                domainName,
+                price,
+                years,
+                successUrl,
+                cancelUrl
+            }
         });
 
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[NameComService] Checkout error:', error);
@@ -192,14 +187,13 @@ export async function createDomainCheckout(
  */
 export async function checkDomainOrderStatus(orderId: string): Promise<DomainOrderStatus> {
     try {
-        const functions = await getFunctionsInstance();
-        const statusFn = httpsCallable<{ orderId: string }, DomainOrderStatus>(
-            functions,
-            'domains-checkDomainOrderStatus'
-        );
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-checkDomainOrderStatus', orderId }
+        });
 
-        const result = await statusFn({ orderId });
-        return result.data;
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
 
     } catch (error: any) {
         console.error('[NameComService] Check status error:', error);
@@ -212,14 +206,14 @@ export async function checkDomainOrderStatus(orderId: string): Promise<DomainOrd
  */
 export async function getDomainPricing(): Promise<TLDPricing[]> {
     try {
-        const functions = await getFunctionsInstance();
-        const pricingFn = httpsCallable<{}, { pricing: TLDPricing[] }>(
-            functions,
-            'domains-getPricing'
-        );
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'domains-getPricing' }
+        });
 
-        const result = await pricingFn({});
-        return result.data.pricing;
+        if (result.error) throw result.error;
+        const data = result.data?.data || result.data;
+        return data.pricing;
 
     } catch (error: any) {
         console.error('[NameComService] Get pricing error:', error);

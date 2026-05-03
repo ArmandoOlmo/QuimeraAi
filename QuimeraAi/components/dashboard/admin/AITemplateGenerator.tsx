@@ -5,7 +5,7 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useToast } from '../../../contexts/ToastContext';
 import { useFiles } from '../../../contexts/files';
-import { db, collection, addDoc, storage, ref, uploadBytes, getDownloadURL } from '../../../firebase';
+import { db, collection, addDoc } from '../../../firebase';
 import { PageData, PageSection } from '../../../types';
 import {
     Sparkles, Loader2, X, ChevronRight, ChevronLeft, Check,

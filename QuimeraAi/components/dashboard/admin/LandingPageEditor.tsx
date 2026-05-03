@@ -41,8 +41,7 @@ import Modal from '../../ui/Modal';
 import { GlobalColors } from '../../../types';
 import { generateHeroWaveGradientColors, contrastText } from '../../ui/GlobalStylesControl';
 import { hexToRgba } from '../../../utils/colorUtils';
-import { doc, setDoc, getDoc, collection, getDocs, writeBatch, deleteDoc } from '../../../firebase';
-import { db } from '../../../firebase';
+import { supabase } from '../../../supabase';
 
 // Types for landing page sections
 interface LandingSection {
@@ -192,11 +191,11 @@ const DragOverlayItem: React.FC<{ section: LandingSection }> = ({ section }) => 
     const getSectionLabel = useSectionLabel();
     const Icon = getLandingSectionIcon(section.type);
     return (
-    <div className="flex items-center gap-2 p-2.5 bg-q-surface border border-primary rounded-lg shadow-xl">
-        <GripVertical size={14} className="text-primary" />
-        <Icon size={16} className="text-primary" />
-        <span className="text-sm font-medium">{getSectionLabel(section.type)}</span>
-    </div>
+        <div className="flex items-center gap-2 p-2.5 bg-q-surface border border-primary rounded-lg shadow-xl">
+            <GripVertical size={14} className="text-primary" />
+            <Icon size={16} className="text-primary" />
+            <span className="text-sm font-medium">{getSectionLabel(section.type)}</span>
+        </div>
     );
 };
 
@@ -329,7 +328,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 }
             } else if (event.data?.type === 'SECTION_FOCUS' && event.data.sectionId) {
                 const targetId = event.data.sectionId;
-                
+
                 if (targetId === 'header') {
                     setSelectedStructureItem('navigation');
                     setSelectedSection(null);
@@ -429,18 +428,26 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         return result;
     };
 
-    // Load landing page configuration from Firestore
-    // Sections are stored individually in globalSettings/landingPage/sections/{sectionId}
-    // to avoid the Firestore 1 MB document size limit.
+    // Load landing page configuration from Supabase
     useEffect(() => {
         const loadConfiguration = async () => {
             setIsLoading(true);
             try {
-                const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
-                const sectionsSnap = await getDocs(sectionsColRef);
+                const { data: rows, error } = await supabase
+                    .from('landing_sections')
+                    .select('*')
+                    .order('order', { ascending: true });
 
-                if (!sectionsSnap.empty) {
-                    const loadedSections: LandingSection[] = sectionsSnap.docs.map(d => d.data() as LandingSection);
+                if (error) throw error;
+
+                if (rows && rows.length > 0) {
+                    const loadedSections: LandingSection[] = rows.map(row => ({
+                        id: row.id,
+                        type: row.type,
+                        enabled: row.enabled,
+                        order: row.order,
+                        data: row.data || {},
+                    }));
 
                     // Ensure required structure sections exist
                     const mergedSections = ensureStructureSections(loadedSections);
@@ -449,11 +456,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     const featuresIdx = mergedSections.findIndex(s => s.type === 'features');
                     if (featuresIdx !== -1) {
                         const fd = mergedSections[featuresIdx].data || {};
-                        // Migration: if old 'items' key exists but 'features' doesn't, copy items -> features
-                        if (!fd.features && fd.items) {
-                            fd.features = fd.items;
-                        }
-                        // If still no features array, populate with defaults
+                        if (!fd.features && fd.items) fd.features = fd.items;
                         if (!fd.features || fd.features.length === 0) {
                             fd.features = [
                                 { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
@@ -464,7 +467,6 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                                 { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
                             ];
                         }
-                        // Ensure flat color keys exist for PublicLandingPage compatibility
                         if (!fd.backgroundColor) fd.backgroundColor = fd.colors?.background || '#0A0A0A';
                         if (!fd.textColor) fd.textColor = fd.colors?.heading || '#ffffff';
                         if (!fd.accentColor) fd.accentColor = fd.colors?.accent || '#facc15';
@@ -472,60 +474,11 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         mergedSections[featuresIdx] = { ...mergedSections[featuresIdx], data: fd };
                     }
 
-                    // Sort by order field
                     mergedSections.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
                     setSections(mergedSections);
                     savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections));
-
-                    // Try to get lastUpdated from root doc
-                    try {
-                        const rootSnap = await getDoc(doc(db, 'globalSettings', 'landingPage'));
-                        if (rootSnap.exists() && rootSnap.data().lastUpdated) {
-                            setLastSaved(new Date(rootSnap.data().lastUpdated));
-                        }
-                    } catch (_) { /* not critical */ }
-
                     setIsLoading(false);
                     return;
-                }
-
-                // Fallback: try legacy single-document format
-                const settingsRef = doc(db, 'globalSettings', 'landingPage');
-                const settingsSnap = await getDoc(settingsRef);
-
-                if (settingsSnap.exists()) {
-                    const data = settingsSnap.data();
-                    if (data.sections && Array.isArray(data.sections)) {
-                        const mergedSections = ensureStructureSections(data.sections);
-
-                        const featuresIdx = mergedSections.findIndex(s => s.type === 'features');
-                        if (featuresIdx !== -1) {
-                            const fd = mergedSections[featuresIdx].data || {};
-                            if (!fd.features && fd.items) fd.features = fd.items;
-                            if (!fd.features || fd.features.length === 0) {
-                                fd.features = [
-                                    { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
-                                    { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
-                                    { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
-                                    { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
-                                    { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
-                                    { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
-                                ];
-                            }
-                            if (!fd.backgroundColor) fd.backgroundColor = fd.colors?.background || '#0A0A0A';
-                            if (!fd.textColor) fd.textColor = fd.colors?.heading || '#ffffff';
-                            if (!fd.accentColor) fd.accentColor = fd.colors?.accent || '#facc15';
-                            if (!fd.columns) fd.columns = fd.gridColumns || 3;
-                            mergedSections[featuresIdx] = { ...mergedSections[featuresIdx], data: fd };
-                        }
-
-                        setSections(mergedSections);
-                        savedSectionsRef.current = JSON.parse(JSON.stringify(mergedSections));
-                        if (data.lastUpdated) setLastSaved(new Date(data.lastUpdated));
-                        setIsLoading(false);
-                        return;
-                    }
                 }
             } catch (error) {
                 console.error('Error loading landing page configuration:', error);
@@ -535,23 +488,25 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
             const defaultSections: LandingSection[] = [
                 ...defaultStructureSections,
                 { id: 'hero', type: 'hero', enabled: true, order: 1, data: {} },
-                { id: 'features', type: 'features', enabled: true, order: 2, data: {
-                    title: '',
-                    subtitle: '',
-                    backgroundColor: '#0A0A0A',
-                    textColor: '#ffffff',
-                    accentColor: '#facc15',
-                    columns: 3,
-                    showIcons: true,
-                    features: [
-                        { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
-                        { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
-                        { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
-                        { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
-                        { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
-                        { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
-                    ],
-                } },
+                {
+                    id: 'features', type: 'features', enabled: true, order: 2, data: {
+                        title: '',
+                        subtitle: '',
+                        backgroundColor: '#0A0A0A',
+                        textColor: '#ffffff',
+                        accentColor: '#facc15',
+                        columns: 3,
+                        showIcons: true,
+                        features: [
+                            { title: 'Generación Instantánea', description: 'Crea sitios web completos en menos de 30 segundos con IA', imageUrl: '' },
+                            { title: 'Imágenes con IA', description: 'Genera imágenes 4K profesionales directamente desde tu editor', imageUrl: '' },
+                            { title: 'Componentes Profesionales', description: 'Más de 20 componentes modernos listos para usar', imageUrl: '' },
+                            { title: 'Sistema de Diseño Global', description: 'Cambia colores, fuentes y estilos en todo tu sitio con un clic', imageUrl: '' },
+                            { title: 'Chatbot IA Integrado', description: 'Asistente conversacional para tus visitantes con voz', imageUrl: '' },
+                            { title: 'SEO Optimizado', description: 'Herramientas automáticas para posicionar tu sitio', imageUrl: '' },
+                        ],
+                    }
+                },
                 { id: 'pricing', type: 'pricing', enabled: true, order: 3, data: {} },
                 { id: 'testimonials', type: 'testimonials', enabled: true, order: 4, data: {} },
                 { id: 'faq', type: 'faq', enabled: true, order: 5, data: {} },
@@ -564,48 +519,51 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
         loadConfiguration();
     }, []);
 
-    // Handle save to Firestore
-    // Each section is stored as its own document in the sub-collection
-    // globalSettings/landingPage/sections/{sectionId} to avoid the 1 MB limit.
+    // Handle save to Supabase
+    // Each section is stored as its own row in the landing_sections table.
     const handleSave = useCallback(async () => {
         setIsSaving(true);
         try {
             const now = new Date().toISOString();
-            const sectionsColRef = collection(db, 'globalSettings', 'landingPage', 'sections');
 
             // 1. Get currently persisted section IDs so we can delete removed ones
-            const existingSnap = await getDocs(sectionsColRef);
-            const existingIds = new Set(existingSnap.docs.map(d => d.id));
+            const { data: existingRows } = await supabase
+                .from('landing_sections')
+                .select('id');
+            const existingIds = new Set((existingRows ?? []).map(r => r.id));
             const currentIds = new Set(sections.map(s => s.id));
 
-            // Firestore batch writes are limited to 500 ops. Sections are small in count so this is fine.
-            const batch = writeBatch(db);
+            // 2. Upsert each section
+            const rows = sections.map(s => ({
+                id: s.id,
+                type: s.type,
+                enabled: s.enabled !== false,
+                order: s.order ?? 0,
+                data: s.data || {},
+                updated_at: now,
+            }));
 
-            // 2. Upsert each section as its own document
-            for (const section of sections) {
-                const sectionRef = doc(sectionsColRef, section.id);
-                batch.set(sectionRef, section, { merge: false });
-            }
+            const { error: upsertError } = await supabase
+                .from('landing_sections')
+                .upsert(rows, { onConflict: 'id' });
+            if (upsertError) throw upsertError;
 
             // 3. Delete sections that no longer exist
-            for (const existingId of existingIds) {
-                if (!currentIds.has(existingId)) {
-                    batch.delete(doc(sectionsColRef, existingId));
-                }
+            const toDelete = [...existingIds].filter(id => !currentIds.has(id));
+            if (toDelete.length > 0) {
+                const { error: deleteError } = await supabase
+                    .from('landing_sections')
+                    .delete()
+                    .in('id', toDelete);
+                if (deleteError) throw deleteError;
             }
-
-            // 4. Update root doc with lightweight metadata only
-            const rootRef = doc(db, 'globalSettings', 'landingPage');
-            batch.set(rootRef, { lastUpdated: now, sectionIds: sections.map(s => s.id) }, { merge: true });
-
-            await batch.commit();
 
             setHasUnsavedChanges(false);
             setLastSaved(new Date());
             savedSectionsRef.current = JSON.parse(JSON.stringify(sections));
             clearHistory();
             setPreviewKey(prev => prev + 1);
-            console.log('[LandingPageEditor] Saved to Firestore successfully (sub-collection strategy)');
+            console.log('[LandingPageEditor] Saved to Supabase successfully');
         } catch (error: any) {
             console.error('[LandingPageEditor] Error saving landing page:', error);
             console.error('[LandingPageEditor] Error code:', error?.code, 'message:', error?.message);
@@ -726,7 +684,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 glassEffect: true,
             };
         }
-        
+
         if (typeLower.includes('hero') || typeLower.includes('cta')) {
             return {
                 ...defaults,
@@ -740,7 +698,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 secondaryCta: 'Agendar Demo',
             };
         }
-        
+
         if (typeLower.includes('feature') || typeLower.includes('showcase') || typeLower.includes('metric') || typeLower.includes('solution') || typeLower.includes('capability') || typeLower.includes('agency')) {
             return {
                 ...defaults,
@@ -1238,7 +1196,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     // Apply gradient colors to HeroWave sections
                     ...(section.type === 'heroWave' ? { gradientColors } : {}),
                 };
-                
+
                 // Update root-level colors needed by PublicLandingPage
                 if (sectionColors.colors) {
                     if (sectionColors.colors.background) mergedData.backgroundColor = sectionColors.colors.background;
@@ -1254,7 +1212,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                         mergedData.overlayColor = sectionColors.colors.overlayColor;
                     }
                 }
-                
+
                 if (section.type === 'newsletter') {
                     console.log('[applyGlobalColors] Newsletter merged data:', mergedData);
                 }
@@ -1328,7 +1286,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const handleStructureSelect = useCallback((itemId: string) => {
         setSelectedStructureItem(itemId);
         setSelectedSection(null); // Clear section selection
-        
+
         // Scroll to corresponding section if applicable
         const structureItem = STRUCTURE_ITEMS.find(i => i.id === itemId);
         if (structureItem && (structureItem.type === 'header' || structureItem.type === 'footer')) {
@@ -1768,3 +1726,4 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 };
 
 export default LandingPageEditor;
+

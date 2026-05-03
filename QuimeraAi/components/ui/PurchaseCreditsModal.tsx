@@ -8,8 +8,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Zap, Check, Loader2, Crown, Sparkles, AlertTriangle } from 'lucide-react';
 import { AI_CREDIT_PACKAGES, AiCreditPackage } from '../../types/subscription';
-import { getFunctionsInstance } from '../../firebase';
-import { httpsCallable } from 'firebase/functions';
+import { supabase } from '../../supabase';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 
@@ -40,21 +39,20 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
         setError(null);
 
         try {
-            const functions = await getFunctionsInstance();
-            const createCheckout = httpsCallable<
-                { packageId: string; tenantId: string; successUrl: string; cancelUrl: string },
-                { sessionId: string; url: string }
-            >(functions, 'stripe-createCreditPackageCheckout');
-
-            const result = await createCheckout({
-                packageId: pkg.id,
-                tenantId,
-                successUrl: window.location.href,
-                cancelUrl: window.location.href,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'createCreditPackageCheckout',
+                    packageId: pkg.id,
+                    tenantId,
+                    successUrl: window.location.href,
+                    cancelUrl: window.location.href,
+                }
             });
 
+            if (result.error) throw result.error;
+
             // Redirect to Stripe Checkout
-            if (result.data.url) {
+            if (result.data?.url) {
                 window.location.href = result.data.url;
             }
         } catch (err: any) {

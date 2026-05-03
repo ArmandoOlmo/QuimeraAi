@@ -37,7 +37,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../../utils/geminiProxyClient';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../../supabase';
 import { useEmailDashboardContext } from '../EmailDashboard';
 import { useEmailCampaigns, useEmailAudiences } from '../../../../hooks/useEmailSettings';
 import { CampaignStatus, AudienceType, EmailDocument, DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../types/email';
@@ -490,16 +490,17 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
         setShowSendConfirmModal(false);
 
         try {
-            const functions = getFunctions();
-            const sendCampaignFn = httpsCallable(functions, 'sendCampaign');
-
-            const result = await sendCampaignFn({
-                userId,
-                storeId: projectId,
-                campaignId: selectedCampaignId,
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendCampaign',
+                    userId,
+                    storeId: projectId,
+                    campaignId: selectedCampaignId,
+                }
             });
 
-            const data = result.data as any;
+            const data = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (data.success && data.sent > 0) {
                 setSendSuccess(t('email.campaignSent', `Campaña enviada a ${data.sent} destinatarios`));
@@ -532,17 +533,18 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
         setSendError(null);
 
         try {
-            const functions = getFunctions();
-            const sendTestFn = httpsCallable(functions, 'sendTestEmail');
-
-            const result = await sendTestFn({
-                userId,
-                storeId: projectId,
-                campaignId: selectedCampaignId,
-                testEmail,
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendTestEmail',
+                    userId,
+                    storeId: projectId,
+                    campaignId: selectedCampaignId,
+                    testEmail,
+                }
             });
 
-            const data = result.data as any;
+            const data = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (data.success) {
                 setSendSuccess(t('email.testEmailSent', `Email de prueba enviado a ${testEmail}`));

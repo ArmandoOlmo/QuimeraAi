@@ -11,7 +11,7 @@ import {
     db, collection, doc, addDoc, updateDoc, deleteDoc,
 } from '../../../../../firebase';
 import { serverTimestamp } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
 import type { CampaignStatus, EmailDocument, EmailAutomation, AutomationStatus, AutomationWorkflowStep, AutomationCategory } from '../../../../../types/email';
@@ -386,9 +386,6 @@ export function useUserEmailActions(
         setTestSendSuccess(null);
 
         try {
-            const functions = getFunctions();
-            const sendTestFn = httpsCallable(functions, 'sendTestEmail');
-
             const payload: Record<string, any> = {
                 userId,
                 storeId: projectId,
@@ -428,8 +425,14 @@ export function useUserEmailActions(
                 }
             }
 
-            const result = await sendTestFn(payload);
-            const resData = result.data as any;
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendTestEmail',
+                    ...payload
+                }
+            });
+            const resData = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (resData.success) {
                 setTestSendSuccess(`Email de prueba enviado a ${testEmail}`);
@@ -465,16 +468,17 @@ export function useUserEmailActions(
         setSendCampaignError(null);
 
         try {
-            const functions = getFunctions();
-            const sendCampaignFn = httpsCallable(functions, 'sendCampaign');
-
-            const result = await sendCampaignFn({
-                userId,
-                storeId: projectId,
-                campaignId: sendingCampaignId,
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendCampaign',
+                    userId,
+                    storeId: projectId,
+                    campaignId: sendingCampaignId,
+                }
             });
 
-            const resData = result.data as any;
+            const resData = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (resData.success && resData.sent > 0) {
                 setSendCampaignSuccess(`Campaña enviada exitosamente a ${resData.sent} destinatarios`);

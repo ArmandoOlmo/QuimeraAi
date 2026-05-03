@@ -11,7 +11,7 @@ import {
     db, collection, doc, addDoc, updateDoc, deleteDoc,
 } from '../../../../../firebase';
 import { serverTimestamp } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
 import type { CampaignStatus, EmailDocument, EmailAutomation, AutomationStatus, AutomationWorkflowStep, AutomationCategory } from '../../../../../types/email';
@@ -392,9 +392,6 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         setTestSendSuccess(null);
 
         try {
-            const functions = getFunctions();
-            const sendTestFn = httpsCallable(functions, 'sendTestEmail');
-
             const campaign = campaigns.find(c => c.id === campaignId);
             const realUserId = campaign?.userId || user?.uid || 'admin';
             const realProjectId = campaign?.projectId || 'admin';
@@ -446,8 +443,14 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 }
             }
 
-            const result = await sendTestFn(payload);
-            const resData = result.data as any;
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendTestEmail',
+                    ...payload
+                }
+            });
+            const resData = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (resData.success) {
                 setTestSendSuccess(`Email de prueba enviado a ${testEmail}`);
@@ -486,16 +489,17 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         setSendCampaignError(null);
 
         try {
-            const functions = getFunctions();
-            const sendCampaignFn = httpsCallable(functions, 'sendCampaign');
-
-            const result = await sendCampaignFn({
-                userId: campaign.userId || user?.uid || 'admin',
-                storeId: campaign.projectId || 'admin',
-                campaignId: sendingCampaignId,
+            const result = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'sendCampaign',
+                    userId: campaign.userId || user?.uid || 'admin',
+                    storeId: campaign.projectId || 'admin',
+                    campaignId: sendingCampaignId,
+                }
             });
 
-            const resData = result.data as any;
+            const resData = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
             if (resData.success && resData.sent > 0) {
                 setSendCampaignSuccess(`Campaña enviada exitosamente a ${resData.sent} destinatarios`);

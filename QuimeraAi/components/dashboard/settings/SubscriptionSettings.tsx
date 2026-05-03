@@ -30,7 +30,7 @@ import { useSafeUpgrade } from '../../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../../hooks/useCreditsUsage';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useTenant } from '../../../contexts/tenant';
-import { httpsCallable, getFunctionsInstance } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import {
     SUBSCRIPTION_PLANS,
     SubscriptionPlanId,
@@ -89,14 +89,11 @@ const SubscriptionSettings: React.FC = () => {
             if (!currentTenant?.id) return;
 
             try {
-                const functions = await getFunctionsInstance();
-                const getDetails = httpsCallable<
-                    { tenantId: string },
-                    { subscription: SubscriptionDetails; invoices: any[] }
-                >(functions, 'getSubscriptionDetails');
-
-                const result = await getDetails({ tenantId: currentTenant.id });
-                setSubscriptionDetails(result.data.subscription);
+                const result = await supabase.functions.invoke('stripe-api', {
+                    body: { action: 'getSubscriptionDetails', tenantId: currentTenant.id }
+                });
+                if (result.error) throw result.error;
+                setSubscriptionDetails(result.data?.data?.subscription || result.data?.subscription);
             } catch (error) {
                 console.error('Error fetching subscription details:', error);
             }
@@ -162,24 +159,23 @@ const SubscriptionSettings: React.FC = () => {
         setCheckoutError(null);
 
         try {
-            const functions = await getFunctionsInstance();
-
             if (currentPlanId !== 'free') {
-                const updateSub = httpsCallable<
-                    { tenantId: string; newPlanId: string; billingCycle?: string },
-                    { success: boolean; subscription?: any; proration?: any; error?: string }
-                >(functions, 'updateSubscription');
-
                 try {
-                    const result = await updateSub({
-                        tenantId,
-                        newPlanId: planId,
-                        billingCycle,
+                    const result = await supabase.functions.invoke('stripe-api', {
+                        body: {
+                            action: 'updateSubscription',
+                            tenantId,
+                            newPlanId: planId,
+                            billingCycle,
+                        }
                     });
 
-                    if (result.data.success) {
-                        if (result.data.proration && result.data.proration.amount !== 0) {
-                            alert(result.data.proration.description);
+                    if (result.error) throw result.error;
+                    const data = result.data?.data || result.data;
+
+                    if (data.success) {
+                        if (data.proration && data.proration.amount !== 0) {
+                            alert(data.proration.description);
                         }
                         refresh();
                         return;
@@ -191,12 +187,8 @@ const SubscriptionSettings: React.FC = () => {
                 }
             }
 
-            const createCheckout = httpsCallable<
-                { tenantId: string; planId: string; billingCycle: string; successUrl: string; cancelUrl: string },
-                { sessionId: string; url: string }
-            >(functions, 'createSubscriptionCheckout');
-
             const checkoutParams = {
+                action: 'createSubscriptionCheckout',
                 tenantId,
                 planId,
                 billingCycle,
@@ -204,10 +196,15 @@ const SubscriptionSettings: React.FC = () => {
                 cancelUrl: `${window.location.origin}/settings/subscription?cancelled=true`,
             };
 
-            const result = await createCheckout(checkoutParams);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: checkoutParams
+            });
 
-            if (result.data.url) {
-                window.location.href = result.data.url;
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+
+            if (data.url) {
+                window.location.href = data.url;
             } else {
                 setCheckoutError(t('settings.subscription.checkoutError', 'Failed to create checkout session'));
             }
@@ -232,26 +229,24 @@ const SubscriptionSettings: React.FC = () => {
 
         setIsCancelling(true);
         try {
-            const functions = await getFunctionsInstance();
-            const cancelSub = httpsCallable<
-                { tenantId: string; immediately?: boolean },
-                { success: boolean; message: string; cancelsAt?: string }
-            >(functions, 'cancelSubscription');
-
-            const result = await cancelSub({
-                tenantId: currentTenant.id,
-                immediately,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'cancelSubscription',
+                    tenantId: currentTenant.id,
+                    immediately,
+                }
             });
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
 
-            alert(result.data.message);
+            alert(data.message);
             refresh();
 
-            const getDetails = httpsCallable<
-                { tenantId: string },
-                { subscription: SubscriptionDetails; invoices: any[] }
-            >(functions, 'getSubscriptionDetails');
-            const details = await getDetails({ tenantId: currentTenant.id });
-            setSubscriptionDetails(details.data.subscription);
+            const detailsResult = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getSubscriptionDetails', tenantId: currentTenant.id }
+            });
+            if (detailsResult.error) throw detailsResult.error;
+            setSubscriptionDetails(detailsResult.data?.data?.subscription || detailsResult.data?.subscription);
 
         } catch (error: any) {
             console.error('Error cancelling subscription:', error);
@@ -266,22 +261,19 @@ const SubscriptionSettings: React.FC = () => {
 
         setIsReactivating(true);
         try {
-            const functions = await getFunctionsInstance();
-            const reactivateSub = httpsCallable<
-                { tenantId: string },
-                { success: boolean; message: string }
-            >(functions, 'reactivateSubscription');
-
-            const result = await reactivateSub({ tenantId: currentTenant.id });
-            alert(result.data.message);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'reactivateSubscription', tenantId: currentTenant.id }
+            });
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+            alert(data.message);
             refresh();
 
-            const getDetails = httpsCallable<
-                { tenantId: string },
-                { subscription: SubscriptionDetails; invoices: any[] }
-            >(functions, 'getSubscriptionDetails');
-            const details = await getDetails({ tenantId: currentTenant.id });
-            setSubscriptionDetails(details.data.subscription);
+            const detailsResult = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getSubscriptionDetails', tenantId: currentTenant.id }
+            });
+            if (detailsResult.error) throw detailsResult.error;
+            setSubscriptionDetails(detailsResult.data?.data?.subscription || detailsResult.data?.subscription);
 
         } catch (error: any) {
             console.error('Error reactivating subscription:', error);

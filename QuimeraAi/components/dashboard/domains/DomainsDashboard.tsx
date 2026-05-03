@@ -168,13 +168,16 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const handleDomainClick = async () => {
         if (domain.status === 'active' && domain.projectId) {
             try {
-                const { httpsCallable } = await import('firebase/functions');
-                const { getFunctionsInstance } = await import('../../../firebase');
-                const functions = await getFunctionsInstance();
+                const { supabase } = await import('../../../supabase');
+                const result = await supabase.functions.invoke('onboarding-api', {
+                    body: {
+                        action: 'syncDomainMapping',
+                        domain: domain.name,
+                        projectId: domain.projectId
+                    }
+                });
 
-                // Sync domain mapping for Cloud Run SSR
-                const syncFn = httpsCallable(functions, 'syncDomainMapping');
-                await syncFn({ domain: domain.name, projectId: domain.projectId });
+                if (result.error) throw result.error;
 
                 alert(t('domainsDashboard.domainSyncSuccess'));
             } catch (e: any) {

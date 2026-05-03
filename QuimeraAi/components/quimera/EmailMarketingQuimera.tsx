@@ -75,7 +75,11 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
 
     // Simulate AI writing the email subject
     useEffect(() => {
-        if (isPreviewMode) return;
+        if (isPreviewMode) {
+            setTypingText(targetSubject);
+            setAnimationStep(2);
+            return;
+        }
         
         let index = 0;
         let isWriting = true;
@@ -106,7 +110,7 @@ const EmailMarketingQuimera: React.FC<EmailMarketingQuimeraProps> = ({
     }, [isPreviewMode]);
 
     return (
-        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-x-clip overflow-y-visible flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full filter blur-[120px] opacity-20" style={{ backgroundColor: accentColor }}></div>

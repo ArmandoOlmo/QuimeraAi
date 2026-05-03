@@ -14,8 +14,8 @@ import {
     User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { auth, db, functions } from '../../../firebase';
+import { auth, db } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import { StoreUser, StoreAuthContextType, StoreAuthState } from '../../../types/storeUsers';
 
 interface StoreAuthProviderProps {
@@ -36,10 +36,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         error: null,
     });
 
-    // Cloud Functions
-    const createStoreUserFn = httpsCallable(functions, 'storeUsers-create');
-    const recordLoginFn = httpsCallable(functions, 'storeUsers-recordLogin');
-    const getStoreUserFn = httpsCallable(functions, 'storeUsers-get');
+    // (Removed Cloud Functions declarations, using Supabase client inline)
 
     // Fetch store user data from Firestore
     const fetchStoreUser = useCallback(async (email: string): Promise<StoreUser | null> => {
@@ -148,7 +145,9 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
             await signInWithEmailAndPassword(auth, email, password);
 
             // Record login (async, don't wait)
-            recordLoginFn({ storeId, email }).catch(console.error);
+            supabase.functions.invoke('stripe-api', {
+                body: { action: 'storeUsers-recordLogin', storeId, email }
+            }).catch(console.error);
 
         } catch (error: any) {
             let errorMessage = 'Error al iniciar sesión';
@@ -171,7 +170,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [storeId, fetchStoreUser, recordLoginFn]);
+    }, [storeId, fetchStoreUser]);
 
     // Register
     const register = useCallback(async (
@@ -183,15 +182,19 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
         try {
             // Use Cloud Function to create store user
-            const result = await createStoreUserFn({
-                storeId,
-                email,
-                password,
-                displayName,
-                source: 'self_register',
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'storeUsers-create',
+                    storeId,
+                    email,
+                    password,
+                    displayName,
+                    source: 'self_register',
+                }
             });
+            if (result.error) throw result.error;
 
-            const data = result.data as { success: boolean; message?: string };
+            const data = (result.data?.data || result.data) as { success: boolean; message?: string };
 
             if (!data.success) {
                 throw new Error(data.message || 'Error al crear la cuenta');
@@ -223,7 +226,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
             throw new Error(errorMessage);
         }
-    }, [storeId, createStoreUserFn]);
+    }, [storeId]);
 
     // Logout
     const logout = useCallback(async (): Promise<void> => {

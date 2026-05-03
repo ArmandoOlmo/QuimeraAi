@@ -38,6 +38,9 @@ const ChangelogPage = lazyWithRetry(() => import('../components/ChangelogPage'))
 // Admin pages
 const SeedArticlesPage = lazyWithRetry(() => import('../components/admin/SeedArticlesPage'));
 
+// Temporary: Firebase → Supabase migration runner (DELETE AFTER MIGRATION)
+
+
 // Agency Landing Preview (for Agency Landing Editor iframe)
 const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLandingPreview'));
 
@@ -584,6 +587,8 @@ const Router: React.FC<RouterProps> = ({
     navigate('/help-center');
     return <LoadingScreen />;
   }
+
+
 
   // Admin: Seed Help Center Articles (temporary)
   if (path === '/admin/seed-articles') {

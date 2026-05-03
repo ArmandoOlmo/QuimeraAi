@@ -11,7 +11,8 @@ import QuimeraLoader from '../../../ui/QuimeraLoader';
 import { toast } from 'react-hot-toast';
 import { AgencyLandingConfig } from '../../../../types/agencyLanding';
 import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
-import { ref, uploadBytes, getDownloadURL, storage, db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, deleteObject } from '../../../../firebase';
+import { db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 
 interface AgencyWebEditorProviderProps {
     children: ReactNode;
@@ -224,9 +225,16 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
-            const storageRef = ref(storage, storagePath);
-            await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(storageRef);
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
 
             const fileRecord: Omit<FileRecord, 'id'> = {
                 name: file.name,
@@ -244,8 +252,12 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         },
         deleteFile: async (fileId: string, storagePath: string) => {
             if (!tenantId) return;
-            const storageRef = ref(storage, storagePath);
-            await deleteObject(storageRef).catch(() => console.warn("File not found in storage"));
+            
+            await supabase.storage
+                .from('platform-assets')
+                .remove([storagePath])
+                .catch(() => console.warn("File not found in storage"));
+                
             const filePath = `agencies/${tenantId}/files/${fileId}`;
             await deleteDoc(doc(db, filePath));
         },
@@ -254,9 +266,18 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const fullPath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
-            const storageRef = ref(storage, fullPath);
-            await uploadBytes(storageRef, file);
-            return await getDownloadURL(storageRef);
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(fullPath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl: url } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(fullPath);
+
+            return url;
         }
     };
 

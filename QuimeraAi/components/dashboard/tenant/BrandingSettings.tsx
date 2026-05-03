@@ -25,7 +25,7 @@ import {
 import { useTenant } from '../../../contexts/tenant';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { TenantBranding } from '../../../types/multiTenant';
-import { functions, httpsCallable } from '../../../firebase';
+
 import ImagePicker from '../../ui/ImagePicker';
 import ColorControl from '../../ui/ColorControl';
 
@@ -96,13 +96,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         setDnsRecords(null);
 
         try {
-            const addPortalDomain = httpsCallable(functions, 'portalDomains-add');
-            const result = await addPortalDomain({
-                tenantId: currentTenant.id,
-                domain: customDomain,
+            const { supabase } = await import('@/supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'addPortalDomain', tenantId: currentTenant.id, domain: customDomain }
             });
-
-            const data = result.data as any;
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
             setDnsRecords(data.dnsRecords);
             setDomainSuccess('Dominio agregado. Configura los registros DNS mostrados abajo.');
         } catch (err: any) {
@@ -120,13 +119,12 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         setVerificationResult(null);
 
         try {
-            const verifyPortalDomain = httpsCallable(functions, 'portalDomains-verify');
-            const result = await verifyPortalDomain({
-                tenantId: currentTenant.id,
-                domain: currentTenant.branding.customDomain,
+            const { supabase } = await import('@/supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'verifyPortalDomain', tenantId: currentTenant.id, domain: currentTenant.branding.customDomain }
             });
-
-            const data = result.data as any;
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
             setVerificationResult(data);
 
             if (data.verified) {
@@ -153,8 +151,11 @@ const BrandingSettings: React.FC<BrandingSettingsProps> = ({ className = '' }) =
         setDomainError(null);
 
         try {
-            const removePortalDomain = httpsCallable(functions, 'portalDomains-remove');
-            await removePortalDomain({ tenantId: currentTenant.id });
+            const { supabase } = await import('@/supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: { action: 'removePortalDomain', tenantId: currentTenant.id }
+            });
+            if (result.error) throw result.error;
 
             setCustomDomain('');
             setDnsRecords(null);

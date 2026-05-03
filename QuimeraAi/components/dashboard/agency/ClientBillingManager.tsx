@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../supabase';
 import {
     DollarSign,
     CreditCard,
@@ -24,7 +24,7 @@ import {
 import { AssignPlanModal } from './plans';
 import { GeneratePaymentLink } from './GeneratePaymentLink';
 
-const functions = getFunctions();
+
 
 interface ClientBillingInfo {
     clientId: string;
@@ -114,11 +114,10 @@ export function ClientBillingManager() {
         setError(null);
 
         try {
-            const updateLimits = httpsCallable(functions, 'updateTenantLimits');
-            await updateLimits({
-                tenantId: editLimitsClient,
-                limits: editLimits,
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'updateTenantLimits', tenantId: editLimitsClient, limits: editLimits }
             });
+            if (result.error) throw result.error;
 
             setEditLimitsClient(null);
             setEditLimits(null);
@@ -144,12 +143,15 @@ export function ClientBillingManager() {
         try {
             // In production, you would collect payment method here using Stripe Elements
             // For now, we'll use a test payment method
-            const setupClientBilling = httpsCallable(functions, 'setupClientBilling');
-            await setupClientBilling({
-                clientTenantId: clientId,
-                monthlyPrice: parseFloat(setupPrice),
-                paymentMethodId: 'pm_card_visa', // Test payment method
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { 
+                    action: 'setupClientBilling',
+                    clientTenantId: clientId,
+                    monthlyPrice: parseFloat(setupPrice),
+                    paymentMethodId: 'pm_card_visa' // Test payment method
+                }
             });
+            if (result.error) throw result.error;
 
             setSetupModalClient(null);
             setSetupPrice('');
@@ -175,11 +177,14 @@ export function ClientBillingManager() {
         setError(null);
 
         try {
-            const updatePrice = httpsCallable(functions, 'updateClientMonthlyPrice');
-            await updatePrice({
-                clientTenantId: clientId,
-                newMonthlyPrice: parseFloat(editPrice),
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'updateClientMonthlyPrice',
+                    clientTenantId: clientId,
+                    newMonthlyPrice: parseFloat(editPrice)
+                }
             });
+            if (result.error) throw result.error;
 
             setEditingClient(null);
             setEditPrice('');
@@ -206,11 +211,14 @@ export function ClientBillingManager() {
         setError(null);
 
         try {
-            const cancelSubscription = httpsCallable(functions, 'cancelClientSubscription');
-            await cancelSubscription({
-                clientTenantId: clientId,
-                cancelImmediately: false, // Cancel at period end
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'cancelClientSubscription',
+                    clientTenantId: clientId,
+                    cancelImmediately: false
+                }
             });
+            if (result.error) throw result.error;
 
             loadClientsBilling();
             alert('Suscripción cancelada. Se detendrá al final del período actual.');

@@ -191,7 +191,6 @@ export default defineConfig(({ mode }) => {
               'firebase/auth',
               'firebase/firestore',
               'firebase/storage',
-              'firebase/functions',
               'firebase/analytics'
             ],
             // React ecosystem

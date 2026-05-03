@@ -78,22 +78,26 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
         }
 
         const stepDurations = [2500, 2500, 2500, 4000]; // Duration for each step
-        
+        let currentStep = 0;
         let timeout: NodeJS.Timeout;
+        let cancelled = false;
+        
         const advanceStep = () => {
-            setActiveStep(prev => {
-                const next = (prev + 1) % 4;
-                timeout = setTimeout(advanceStep, stepDurations[next]);
-                return next;
-            });
+            if (cancelled) return;
+            currentStep = (currentStep + 1) % 4;
+            setActiveStep(currentStep);
+            timeout = setTimeout(advanceStep, stepDurations[currentStep]);
         };
 
         timeout = setTimeout(advanceStep, stepDurations[0]);
-        return () => clearTimeout(timeout);
+        return () => {
+            cancelled = true;
+            clearTimeout(timeout);
+        };
     }, [isPreviewMode]);
 
     return (
-        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-x-clip overflow-y-visible flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full filter blur-[150px]"></div>
@@ -157,16 +161,17 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                             >
                                 {/* Path Lines (Background) */}
                                 <div className="absolute top-[20%] bottom-[20%] left-1/2 -translate-x-1/2 w-0.5 bg-gray-800 z-0">
-                                    <div className="w-full bg-gradient-to-b from-transparent via-amber-500 to-transparent absolute top-0 bottom-0 opacity-0 animate-[pathFlow_3s_linear_infinite]" 
-                                         style={{ 
-                                             opacity: activeStep > 0 && activeStep < 3 ? 1 : 0,
-                                             backgroundImage: `linear-gradient(to bottom, transparent, ${accentColor}, transparent)`
-                                         }}>
+                                    <div className={`w-full absolute inset-0 transition-opacity duration-500 ${activeStep > 0 && activeStep < 3 ? 'opacity-100' : 'opacity-0'}`}>
+                                        <div className="w-full h-full animate-[pathFlow_3s_linear_infinite]"
+                                             style={{ 
+                                                 backgroundImage: `linear-gradient(to bottom, transparent, ${accentColor}, transparent)`
+                                             }}>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Node 1: Chatbot (Top) */}
-                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 0 ? 'scale-110' : 'scale-100 opacity-80'}`}>
+                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 0 ? 'scale-110' : 'scale-100'}`}>
                                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border"
                                         style={{ backgroundColor: activeStep === 0 ? `${accentColor}20` : '#1A1A1A', borderColor: activeStep === 0 ? accentColor : cardBorder }}>
                                         <Bot className={`w-8 h-8 ${activeStep === 0 ? 'animate-bounce' : ''}`} style={{ color: activeStep === 0 ? accentColor : '#888' }} />
@@ -182,7 +187,7 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                                 </div>
 
                                 {/* Node 2: CRM Leads (Middle) */}
-                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 1 ? 'scale-110' : 'scale-100 opacity-80'}`}>
+                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 1 ? 'scale-110' : 'scale-100'}`}>
                                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border"
                                         style={{ backgroundColor: activeStep === 1 ? `${accentColor}20` : '#1A1A1A', borderColor: activeStep === 1 ? accentColor : cardBorder }}>
                                         <Users className={`w-8 h-8 ${activeStep === 1 ? 'animate-pulse' : ''}`} style={{ color: activeStep === 1 ? accentColor : '#888' }} />
@@ -199,7 +204,7 @@ const ChatbotWorkflowQuimera: React.FC<ChatbotWorkflowQuimeraProps> = ({
                                 </div>
 
                                 {/* Node 3: Calendar (Bottom) */}
-                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 2 || activeStep === 3 ? 'scale-110' : 'scale-100 opacity-80'}`}>
+                                <div className={`relative z-10 flex flex-col items-center gap-3 transition-all duration-700 ${activeStep === 2 || activeStep === 3 ? 'scale-110' : 'scale-100'}`}>
                                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border relative"
                                         style={{ backgroundColor: activeStep >= 2 ? `${accentColor}20` : '#1A1A1A', borderColor: activeStep >= 2 ? accentColor : cardBorder }}>
                                         <CalendarCheck className={`w-8 h-8`} style={{ color: activeStep >= 2 ? accentColor : '#888' }} />

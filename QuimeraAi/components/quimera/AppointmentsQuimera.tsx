@@ -72,7 +72,10 @@ const AppointmentsQuimera: React.FC<AppointmentsQuimeraProps> = ({
 
     // Simulate booking flow
     useEffect(() => {
-        if (isPreviewMode) return;
+        if (isPreviewMode) {
+            setBookingStep(2);
+            return;
+        }
         
         const interval = setInterval(() => {
             setBookingStep((prev) => {
@@ -85,7 +88,7 @@ const AppointmentsQuimera: React.FC<AppointmentsQuimeraProps> = ({
     }, [isPreviewMode]);
 
     return (
-        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-x-clip overflow-y-visible flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full filter blur-[100px] opacity-20" style={{ backgroundColor: accentColor }}></div>

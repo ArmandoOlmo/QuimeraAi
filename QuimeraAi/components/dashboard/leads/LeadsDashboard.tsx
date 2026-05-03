@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useCRM } from '../../../contexts/crm';

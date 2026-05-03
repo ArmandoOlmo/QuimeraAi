@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
@@ -33,7 +33,7 @@ const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
     const { subClients, loadingClients } = useAgency();
-    const functions = getFunctions();
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Determine active tab from URL
@@ -314,25 +314,25 @@ const AgencyDashboardMain: React.FC = () => {
                                                     try {
                                                         console.log('Creating client via Cloud Function:', data);
 
-                                                        const provisionClient = httpsCallable(
-                                                            functions,
-                                                            'agencyOnboarding-autoProvision'
-                                                        );
-
-                                                        const result = await provisionClient({
-                                                            businessName: data.businessName,
-                                                            industry: data.industry,
-                                                            contactEmail: data.contactEmail,
-                                                            contactPhone: data.contactPhone,
-                                                            projectTemplate: data.projectTemplate,
-                                                            enabledFeatures: data.enabledFeatures,
-                                                            initialUsers: data.initialUsers,
-                                                            primaryColor: data.primaryColor,
-                                                            secondaryColor: data.secondaryColor,
-                                                            monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+                                                        const { supabase } = await import('@/supabase');
+                                                        const result = await supabase.functions.invoke('onboarding-api', {
+                                                            body: {
+                                                                action: 'autoProvision',
+                                                                businessName: data.businessName,
+                                                                industry: data.industry,
+                                                                contactEmail: data.contactEmail,
+                                                                contactPhone: data.contactPhone,
+                                                                projectTemplate: data.projectTemplate,
+                                                                enabledFeatures: data.enabledFeatures,
+                                                                initialUsers: data.initialUsers,
+                                                                primaryColor: data.primaryColor,
+                                                                secondaryColor: data.secondaryColor,
+                                                                monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+                                                            }
                                                         });
 
-                                                        const response = result.data as any;
+                                                        if (result.error) throw result.error;
+                                                        const response = result.data?.data || result.data;
 
                                                         if (response.success) {
                                                             toast.success(

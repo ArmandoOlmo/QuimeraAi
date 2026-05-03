@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+
 import {
   CheckCircle2,
   XCircle,
@@ -73,7 +73,7 @@ export function OnboardingWorkflow({
   const [clientTenantId, setClientTenantId] = useState<string | null>(null);
   const [invitesSent, setInvitesSent] = useState(0);
 
-  const functions = getFunctions();
+
 
   // ============================================================================
   // HANDLERS
@@ -134,27 +134,27 @@ export function OnboardingWorkflow({
         'Creando workspace del cliente...'
       );
 
-      const autoProvisionClient = httpsCallable(
-        functions,
-        'agencyOnboarding-autoProvision'
-      );
-
-      const result = await autoProvisionClient({
-        businessName: data.businessName,
-        industry: data.industry,
-        contactEmail: data.contactEmail,
-        contactPhone: data.contactPhone,
-        projectTemplate: data.projectTemplate,
-        enabledFeatures: data.enabledFeatures,
-        initialUsers: data.initialUsers,
-        logo: logoUrl,
-        primaryColor: data.primaryColor,
-        secondaryColor: data.secondaryColor,
-        monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
-        paymentMethod: undefined, // Will be set up later
+      const { supabase } = await import('@/supabase');
+      const result = await supabase.functions.invoke('onboarding-api', {
+        body: {
+            action: 'autoProvision',
+            businessName: data.businessName,
+            industry: data.industry,
+            contactEmail: data.contactEmail,
+            contactPhone: data.contactPhone,
+            projectTemplate: data.projectTemplate,
+            enabledFeatures: data.enabledFeatures,
+            initialUsers: data.initialUsers,
+            logo: logoUrl,
+            primaryColor: data.primaryColor,
+            secondaryColor: data.secondaryColor,
+            monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+            paymentMethod: undefined, // Will be set up later
+        }
       });
 
-      const response = result.data as any;
+      if (result.error) throw result.error;
+      const response = result.data?.data || result.data;
 
       if (!response.success) {
         throw new Error('Failed to provision client');

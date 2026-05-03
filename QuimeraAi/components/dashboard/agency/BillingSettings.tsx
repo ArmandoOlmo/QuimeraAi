@@ -27,11 +27,11 @@ import {
     ArrowRight,
     Info,
 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../supabase';
 import { ClientBillingManager } from './ClientBillingManager';
 import { InvoiceHistory } from './InvoiceHistory';
 
-const functions = getFunctions();
+
 
 interface StripeConnectStatus {
     status: 'not_configured' | 'pending' | 'active';
@@ -67,9 +67,12 @@ export function BillingSettings() {
         setError(null);
 
         try {
-            const getStatus = httpsCallable(functions, 'getStripeConnectStatus');
-            const result = await getStatus({ tenantId: currentTenant.id });
-            setConnectStatus(result.data as any);
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getStripeConnectStatus', tenantId: currentTenant.id }
+            });
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+            setConnectStatus(data as any);
         } catch (err: any) {
             console.error('Error loading Connect status:', err);
             setError(err.message);
@@ -85,16 +88,19 @@ export function BillingSettings() {
         setError(null);
 
         try {
-            const createAccount = httpsCallable(functions, 'createStripeConnectAccount');
-            const result = await createAccount({
-                tenantId: currentTenant.id,
-                businessInfo: {
-                    country: 'US',
-                    // Can add more business info from a form
-                },
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'createStripeConnectAccount',
+                    tenantId: currentTenant.id,
+                    businessInfo: {
+                        country: 'US',
+                        // Can add more business info from a form
+                    },
+                }
             });
+            if (result.error) throw result.error;
 
-            const data = result.data as any;
+            const data = result.data?.data || result.data;
             if (data.onboardingUrl) {
                 // Redirect to Stripe onboarding
                 window.location.href = data.onboardingUrl;

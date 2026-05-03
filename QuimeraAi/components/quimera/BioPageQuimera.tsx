@@ -72,7 +72,10 @@ const BioPageQuimera: React.FC<BioPageQuimeraProps> = ({
 
     // Simulate AI building the bio page
     useEffect(() => {
-        if (isPreviewMode) return;
+        if (isPreviewMode) {
+            setAnimationStep(3);
+            return;
+        }
         
         const interval = setInterval(() => {
             setAnimationStep((prev) => {
@@ -85,7 +88,7 @@ const BioPageQuimera: React.FC<BioPageQuimeraProps> = ({
     }, [isPreviewMode]);
 
     return (
-        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
+        <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-x-clip overflow-y-visible flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/4 right-0 w-[400px] h-[400px] rounded-full filter blur-[120px] opacity-20" style={{ backgroundColor: accentColor }}></div>

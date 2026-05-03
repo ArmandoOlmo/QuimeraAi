@@ -15,7 +15,7 @@ import {
     ExternalLink,
     Loader2,
 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../supabase';
 
 interface OrderTrackerProps {
     storeId?: string;
@@ -60,21 +60,21 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
         setResult(null);
 
         try {
-            const functions = getFunctions();
-            const trackOrderFn = httpsCallable<
-                { orderNumber: string; email: string },
-                { found: boolean; order?: TrackingResult; error?: string }
-            >(functions, 'trackOrder');
-
-            const response = await trackOrderFn({
-                orderNumber: orderNumber.trim(),
-                email: email.trim().toLowerCase(),
+            const response = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'trackOrder',
+                    orderNumber: orderNumber.trim(),
+                    email: email.trim().toLowerCase(),
+                }
             });
 
-            if (response.data.found && response.data.order) {
-                setResult(response.data.order);
+            if (response.error) throw response.error;
+            const data = response.data?.data || response.data;
+
+            if (data.found && data.order) {
+                setResult(data.order);
             } else {
-                setError(response.data.error || 'Pedido no encontrado');
+                setError(data.error || 'Pedido no encontrado');
             }
         } catch (err: any) {
             setError('Error al buscar el pedido. Intenta de nuevo.');

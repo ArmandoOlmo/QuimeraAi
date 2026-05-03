@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { supabase } from '../../../../supabase/client';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -30,7 +30,7 @@ interface Addon {
 
 export function AddonsManager() {
   const { currentTenant } = useTenant();
-  const functions = getFunctions();
+
 
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<AddonPricing | null>(null);
@@ -61,9 +61,11 @@ export function AddonsManager() {
     };
 
     try {
-      const getPricing = httpsCallable(functions, 'getAddonsPricing');
-      const result = await getPricing({ tenantId: currentTenant.id }) as any;
-      const data = result.data;
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: { action: 'getAddonsPricing', tenantId: currentTenant.id }
+      });
+      if (result.error) throw result.error;
+      const data = result.data?.data || result.data;
 
       // Extract pricing from addons array (backend returns 'addons' not 'availableAddons')
       const addonsArray = data.addons || data.availableAddons;
@@ -143,11 +145,14 @@ export function AddonsManager() {
 
     try {
       setLoading(true);
-      const update = httpsCallable(functions, 'updateSubscriptionAddons');
-      await update({
-        tenantId: currentTenant.id,
-        addons: pendingAddons,
+      const result = await supabase.functions.invoke('stripe-api', {
+        body: {
+          action: 'updateSubscriptionAddons',
+          tenantId: currentTenant.id,
+          addons: pendingAddons,
+        }
       });
+      if (result.error) throw result.error;
 
       toast.success('Add-ons actualizados exitosamente');
       setAddons(pendingAddons);
