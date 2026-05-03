@@ -96,7 +96,7 @@ import TestimonialsNeon from './TestimonialsNeon';
 import FaqNeon from './FaqNeon';
 
 // --- Brand Assets ---
-import { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../hooks/useAppLogo';
+import useAppLogo, { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../hooks/useAppLogo';
 
 // Types for preview sections
 interface PreviewSection {
@@ -132,6 +132,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [isAnnualBilling, setIsAnnualBilling] = useState(false);
+  const { logoUrl: globalAppLogoUrl } = useAppLogo();
 
   // Preview mode - listens for postMessage from Landing Page Editor
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -909,10 +910,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           text: getTranslatedLabel(item.label),
           href: item.href,
         }))}
-        logoType={headerPreview?.logoType || (navigation.header.logo?.imageUrl ? 'both' : 'text')}
+        logoType={headerPreview?.logoType || 'both'}
         logoText={headerPreview?.logoText || navigation.header.logo?.text || 'Quimera.ai'}
-        logoImageUrl={headerPreview?.logoImageUrl || navigation.header.logo?.imageUrl || QUIMERA_FULL_LOGO}
-        logoWidth={headerPreview?.logoWidth || 120}
+        logoImageUrl={
+          (headerPreview?.logoImageUrl && !headerPreview.logoImageUrl.includes('firebasestorage')) 
+            ? headerPreview.logoImageUrl 
+            : globalAppLogoUrl
+        }
+        logoWidth={headerPreview?.logoWidth || 150}
         logoHeight={headerPreview?.logoHeight}
         showLogin={headerPreview?.showLoginButton ?? true}
         loginText={getTranslatedLabel(headerPreview?.loginText || navigation.header.cta?.loginText || t('landing.login'))}
@@ -978,7 +983,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
               {/* Logo Column */}
               <div className="col-span-2 md:col-span-1">
                 <div className="flex items-center mb-4">
-                  <img src={QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
+                  <img src={globalAppLogoUrl || QUIMERA_FULL_LOGO} alt="Quimera.ai" className="h-8 w-auto" />
                 </div>
                 <p className="text-sm mb-4" style={{ color: `${footerTextColor}80` }}>
                   {footerPreview?.tagline || t('landing.footerTagline', 'Build amazing websites with AI')}
