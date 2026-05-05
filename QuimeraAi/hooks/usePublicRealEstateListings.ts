@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { collection, getDocs, limit, onSnapshot, query } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { Property } from '../types/realEstate';
 
 export interface UsePublicRealEstateListingsOptions {
@@ -19,22 +18,22 @@ export interface UsePublicRealEstateListingsReturn {
 const sortListings = (properties: Property[]) => {
     return [...properties].sort((a, b) => {
         if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
-        const dateA = (a.updatedAt as any)?.toDate?.() || new Date(0);
-        const dateB = (b.updatedAt as any)?.toDate?.() || new Date(0);
+        const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+        const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
         return dateB.getTime() - dateA.getTime();
     });
 };
 
-const mapPropertyDoc = (doc: any): Property => {
-    const data = doc.data();
+const mapPropertyDoc = (data: any): Property => {
     return {
-        id: doc.id,
+        id: data.id,
         ...data,
-        projectId: data.projectId || '',
+        projectId: data.project_id || data.projectId || '',
         amenities: Array.isArray(data.amenities) ? data.amenities : [],
         images: Array.isArray(data.images) ? data.images : [],
         status: data.status || 'active',
-        isFeatured: Boolean(data.isFeatured),
+        isFeatured: Boolean(data.is_featured || data.isFeatured),
+        updatedAt: data.updated_at || data.updatedAt,
     } as Property;
 };
 
@@ -65,42 +64,61 @@ export const usePublicRealEstateListings = (
         setError(null);
 
         try {
-            const listingsRef = collection(db, 'publicPropertyListings', projectId, 'properties');
-            const snapshot = await getDocs(query(listingsRef, limit(limitCount * 2)));
-            setProperties(applyFilters(snapshot.docs.map(mapPropertyDoc)));
+            const { data, error: fetchError } = await supabase
+                .from('properties')
+                .select('*')
+                .eq('project_id', projectId)
+                .limit(limitCount * 2);
+
+            if (fetchError) throw fetchError;
+
+            if (data) {
+                setProperties(applyFilters(data.map(mapPropertyDoc)));
+            }
         } catch (err: any) {
-            console.error('Error fetching real estate listings:', err);
-            setError(err.message || 'Error loading real estate listings');
-            setProperties([]);
+            // PGRST205 = table not found — silently ignore, this project doesn't use real estate
+            if (err?.code === 'PGRST205') {
+                setProperties([]);
+            } else {
+                console.error('Error fetching real estate listings:', err);
+                setError(err.message || 'Error loading real estate listings');
+                setProperties([]);
+            }
         } finally {
             setIsLoading(false);
         }
     }, [applyFilters, limitCount, projectId]);
 
     useEffect(() => {
-        refetch();
+        let isMounted = true;
+        if (isMounted) {
+            refetch();
+        }
+        return () => { isMounted = false; };
     }, [refetch]);
 
     useEffect(() => {
         if (!projectId || !realtime) return;
 
-        const listingsRef = collection(db, 'publicPropertyListings', projectId, 'properties');
-        const unsubscribe = onSnapshot(
-            query(listingsRef, limit(limitCount * 2)),
-            snapshot => {
-                setProperties(applyFilters(snapshot.docs.map(mapPropertyDoc)));
-                setIsLoading(false);
-                setError(null);
-            },
-            err => {
-                console.error('Error in real estate listings subscription:', err);
-                setError(err.message || 'Error loading real estate listings');
-                setIsLoading(false);
-            }
-        );
+        let isMounted = true;
 
-        return () => unsubscribe();
-    }, [applyFilters, limitCount, projectId, realtime]);
+        const channelId = `public_properties_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'properties', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) refetch();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
+    }, [projectId, realtime, refetch]);
 
     return { properties, isLoading, error, refetch };
 };

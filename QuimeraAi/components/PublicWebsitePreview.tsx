@@ -6,6 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
+import { resolveI18nSectionData } from '../utils/i18nContent';
 import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage, AiAssistantConfig } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
@@ -178,6 +180,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const [activePage, setActivePage] = useState<SitePage | null>(null);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string | null>(null);
   const [loadingPost, setLoadingPost] = useState(false);
+
+  // i18n — must be called unconditionally at top level (Rules of Hooks)
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language || 'es';
 
   /**
    * Preview base path — preserves /preview/{userId}/{projectId} prefix
@@ -1479,7 +1485,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Check if project uses multi-page architecture
   const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
 
-  const { properties: chatbotRealEstateProperties } = usePublicRealEstateListings(project?.id || propProjectId || null, {
+  // Only fetch real estate properties if the project actually uses real estate sections
+  const hasRealEstateSections = project?.componentOrder?.some((s: string) => 
+    s === 'realEstateListings' || s === 'propertyDetail' || s === 'propertyDirectory'
+  ) || false;
+  const realEstateProjectId = hasRealEstateSections ? (project?.id || propProjectId || null) : null;
+
+  const { properties: chatbotRealEstateProperties } = usePublicRealEstateListings(realEstateProjectId, {
     limitCount: 50,
     featuredOnly: false,
     realtime: false,
@@ -1566,8 +1578,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (!componentData && !styles) return undefined;
-    if (!componentData && styles) return styles as any;
-    if (!styles) return componentData;
+    if (!componentData && styles) return resolveI18nSectionData(styles as any, currentLanguage) as any;
+    if (!styles) return resolveI18nSectionData(componentData, currentLanguage);
 
     // First merge the colors
     const mergedColors = {
@@ -1584,7 +1596,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       ...componentData?.cornerGradient,
     } : componentData?.cornerGradient;
 
-    return {
+    const mergedResult = {
       paddingY: 'lg',
       paddingX: 'sm',
       ...styles,
@@ -1592,6 +1604,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       colors: derivedColors,
       ...(mergedCornerGradient && { cornerGradient: mergedCornerGradient }),
     };
+
+    // Resolve all i18n {es, en} objects to strings for the current language
+    return resolveI18nSectionData(mergedResult, currentLanguage);
   };
 
   // Merged data for all components

@@ -41,13 +41,20 @@ const TRANSLATABLE_FIELDS = new Set([
     // Fields from items and nested objects
     'name', 'question', 'answer', 'quote', 'author', 'role', 'company',
     'price', 'billingPeriod', 'linkText', 'frequency', 'text', 'href', 'buttonLink',
-    'address', 'city', 'state', 'zipCode', 'country', 'phone', 'email'
+    'address', 'city', 'state', 'zipCode', 'country', 'phone', 'email',
+    // Hero CTA fields
+    'primaryCta', 'secondaryCta', 'primaryCtaText', 'secondaryCtaText',
+    // Footer / Header fields
+    'companyName', 'copyright', 'label',
 ]);
 
 /**
  * Deep-resolve all translatable fields in a section data object.
  * Returns a new object with resolved string values for the given language.
- * Non-translatable fields are passed through unchanged.
+ * 
+ * IMPORTANT: Any object that looks like an i18n map ({es: "...", en: "..."})
+ * will be resolved to a string regardless of field name. This prevents
+ * React crashes from objects being passed as children.
  */
 export function resolveI18nSectionData(
     data: Record<string, any> | undefined | null,
@@ -59,22 +66,25 @@ export function resolveI18nSectionData(
     const resolved: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(data)) {
-        if (TRANSLATABLE_FIELDS.has(key) && value !== undefined && value !== null) {
-            if (typeof value === 'object' && !Array.isArray(value) && isI18nMap(value)) {
-                resolved[key] = resolveI18nField(value, language, fallbackLanguage);
-            } else {
-                resolved[key] = value;
-            }
+        if (value === undefined || value === null) {
+            resolved[key] = value;
+        } else if (typeof value === 'object' && !Array.isArray(value) && isI18nMap(value)) {
+            // Always resolve i18n maps regardless of field name — this is the safety net
+            resolved[key] = resolveI18nField(value, language, fallbackLanguage);
         } else if (Array.isArray(value)) {
-            // Resolve items inside arrays
+            // Resolve items inside arrays (e.g. slides, items, links)
             resolved[key] = value.map(item => {
-                if (typeof item === 'object' && item !== null && !isI18nMap(item)) {
+                if (typeof item === 'object' && item !== null) {
+                    if (isI18nMap(item)) {
+                        // An i18n map inside an array — resolve it
+                        return resolveI18nField(item, language, fallbackLanguage);
+                    }
                     return resolveI18nSectionData(item, language, fallbackLanguage);
                 }
                 return item;
             });
-        } else if (typeof value === 'object' && value !== null && !isI18nMap(value)) {
-            // Deeply resolve nested objects (e.g. footer.contactInfo)
+        } else if (typeof value === 'object' && value !== null) {
+            // Deeply resolve nested objects (e.g. footer.contactInfo, colors)
             resolved[key] = resolveI18nSectionData(value, language, fallbackLanguage);
         } else {
             resolved[key] = value;
