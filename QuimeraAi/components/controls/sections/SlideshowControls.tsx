@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -32,7 +32,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   if (!data?.slideshow) return null;
   return (
     <div className="space-y-4">
-      <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(val) => setNestedData('slideshow.title', val)} />
+      <I18nInput label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(val) => setNestedData('slideshow.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
 
@@ -228,14 +228,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               setNestedData('slideshow.items', newItems);
             }}
           />
-          <Input
+          <I18nInput
             placeholder="Alt Text"
             value={item.altText}
             onChange={(val) => setNestedData(`slideshow.items.${index}.altText`, val)}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
           />
           {(data.slideshow.showCaptions ?? false) && (
-            <Input
+            <I18nInput
               placeholder="Caption (optional)"
               value={item.caption || ''}
               onChange={(val) => setNestedData(`slideshow.items.${index}.caption`, val)}
@@ -264,7 +264,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const contentTab = (
     <div className="space-y-4">
-      <Input label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(val) => setNestedData('slideshow.title', val)} />
+      <I18nInput label={t('editor.controls.common.title')} value={data.slideshow.title} onChange={(val) => setNestedData('slideshow.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data.slideshow.titleFontSize || 'md'} onChange={(v) => setNestedData('slideshow.titleFontSize', v)} />
 
 
@@ -297,14 +297,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               setNestedData('slideshow.items', newItems);
             }}
           />
-          <Input
+          <I18nInput
             placeholder="Alt Text"
             value={item.altText}
             onChange={(val) => setNestedData(`slideshow.items.${index}.altText`, val)}
             className="w-full bg-q-surface border border-q-border rounded px-2 py-1 text-xs text-q-text-primary focus:outline-none focus:border-q-accent mt-2"
           />
           {(data.slideshow.showCaptions ?? false) && (
-            <Input
+            <I18nInput
               placeholder="Caption (optional)"
               value={item.caption || ''}
               onChange={(val) => setNestedData(`slideshow.items.${index}.caption`, val)}

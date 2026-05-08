@@ -91,11 +91,11 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
 
             const response = await generateContentViaProxy('ai-seo-assistant', promptText, modelToUse, {
                 temperature: 0.7
-            }, user?.uid);
+            }, user?.id);
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'ai-seo-assistant',
                     model: modelToUse,
                     feature: 'ai-seo-assistant',
@@ -127,7 +127,7 @@ Output ONLY valid JSON without any markdown formatting or code blocks.
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'ai-seo-assistant',
                     model: modelToUse,
                     feature: 'ai-seo-assistant',

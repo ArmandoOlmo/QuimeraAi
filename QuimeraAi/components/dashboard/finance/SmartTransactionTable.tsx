@@ -129,7 +129,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                     prompt,
                     'gemini-2.5-flash',
                     { temperature: 0.2 },
-                    user.uid,
+                    user.id,
                 );
 
                 const text = extractTextFromResponse(response);
@@ -138,7 +138,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                 const parsed = JSON.parse(cleaned);
 
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: 'gemini-2.5-flash',
                     feature: 'accounting-ai-categorize',
@@ -148,7 +148,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.`;
                 return { category: parsed.category || '', account: parsed.account || '' };
             } catch (err: any) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: 'gemini-2.5-flash',
                     feature: 'accounting-ai-categorize',

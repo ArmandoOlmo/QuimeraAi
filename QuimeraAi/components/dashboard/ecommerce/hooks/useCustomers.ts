@@ -1,25 +1,12 @@
 /**
  * useCustomers Hook
- * Hook para gestión de clientes en Firestore
+ * Hook para gestión de clientes en Supabase
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    where,
-    getDocs,
-    increment,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Customer, Address } from '../../../../types/ecommerce';
+import { mapCustomerFromDB, mapCustomerToDB } from '../../../../utils/ecommerceMappers';
 
 interface UseCustomersOptions {
     searchTerm?: string;
@@ -33,7 +20,53 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const customersPath = `users/${userId}/stores/${effectiveStoreId}/customers`;
+
+    const fetchCustomers = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        setIsLoading(true);
+        let query = supabase
+            .from('store_customers')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
+
+        if (options?.acceptsMarketing !== undefined) {
+            query = query.eq('accepts_marketing', options.acceptsMarketing);
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) {
+            console.error('Error fetching customers:', fetchError);
+            setError(fetchError.message);
+        } else {
+            let mappedData = (data || []).map(mapCustomerFromDB);
+
+            // Filter by search term in memory
+            if (options?.searchTerm) {
+                const term = options.searchTerm.toLowerCase();
+                mappedData = mappedData.filter(
+                    (c) =>
+                        c.email.toLowerCase().includes(term) ||
+                        c.firstName.toLowerCase().includes(term) ||
+                        c.lastName.toLowerCase().includes(term) ||
+                        c.phone?.toLowerCase().includes(term)
+                );
+            }
+
+            // Filter by tags in memory
+            if (options?.tags && options.tags.length > 0) {
+                mappedData = mappedData.filter((c) =>
+                    options.tags!.some((tag) => c.tags?.includes(tag))
+                );
+            }
+
+            setCustomers(mappedData);
+            setError(null);
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId, options?.acceptsMarketing, options?.searchTerm, options?.tags]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -41,92 +74,78 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
             return;
         }
 
-        const customersRef = collection(db, customersPath);
-        let q = query(customersRef, orderBy('createdAt', 'desc'));
+        fetchCustomers();
 
-        if (options?.acceptsMarketing !== undefined) {
-            q = query(customersRef, where('acceptsMarketing', '==', options.acceptsMarketing), orderBy('createdAt', 'desc'));
-        }
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                let data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Customer[];
-
-                // Filter by search term in memory
-                if (options?.searchTerm) {
-                    const term = options.searchTerm.toLowerCase();
-                    data = data.filter(
-                        (c) =>
-                            c.email.toLowerCase().includes(term) ||
-                            c.firstName.toLowerCase().includes(term) ||
-                            c.lastName.toLowerCase().includes(term) ||
-                            c.phone?.toLowerCase().includes(term)
-                    );
+        const channel = supabase.channel('store_customers_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_customers',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchCustomers();
                 }
+            )
+            .subscribe();
 
-                // Filter by tags in memory
-                if (options?.tags && options.tags.length > 0) {
-                    data = data.filter((c) =>
-                        options.tags!.some((tag) => c.tags?.includes(tag))
-                    );
-                }
-
-                setCustomers(data);
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error('Error fetching customers:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, options?.acceptsMarketing, options?.searchTerm, options?.tags, customersPath]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchCustomers]);
 
     // Add customer
     const addCustomer = useCallback(
         async (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'totalOrders' | 'totalSpent'>): Promise<string> => {
-            const customersRef = collection(db, customersPath);
-
-            const docRef = await addDoc(customersRef, {
+            const dbData = mapCustomerToDB({
                 ...customerData,
                 totalOrders: 0,
                 totalSpent: 0,
                 addresses: customerData.addresses || [],
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             });
 
-            return docRef.id;
+            dbData.project_id = effectiveStoreId;
+
+            const { data: insertedCustomer, error } = await supabase
+                .from('store_customers')
+                .insert(dbData)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return insertedCustomer.id;
         },
-        [customersPath]
+        [effectiveStoreId]
     );
 
     // Update customer
     const updateCustomer = useCallback(
         async (customerId: string, updates: Partial<Customer>) => {
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, {
-                ...updates,
-                updatedAt: serverTimestamp(),
-            });
+            const updateData = mapCustomerToDB(updates);
+
+            const { error } = await supabase
+                .from('store_customers')
+                .update(updateData)
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath]
+        []
     );
 
     // Delete customer
     const deleteCustomer = useCallback(
         async (customerId: string) => {
-            const customerRef = doc(db, customersPath, customerId);
-            await deleteDoc(customerRef);
+            const { error } = await supabase
+                .from('store_customers')
+                .delete()
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath]
+        []
     );
 
     // Find or create customer by email
@@ -138,12 +157,15 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
             phone?: string;
             acceptsMarketing?: boolean;
         }): Promise<string> => {
-            const customersRef = collection(db, customersPath);
-            const q = query(customersRef, where('email', '==', customerData.email.toLowerCase()));
-            const snapshot = await getDocs(q);
+            const { data } = await supabase
+                .from('store_customers')
+                .select('id')
+                .eq('project_id', effectiveStoreId)
+                .ilike('email', customerData.email)
+                .limit(1);
 
-            if (!snapshot.empty) {
-                return snapshot.docs[0].id;
+            if (data && data.length > 0) {
+                return data[0].id;
             }
 
             return await addCustomer({
@@ -153,21 +175,30 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
                 addresses: [],
             });
         },
-        [customersPath, addCustomer]
+        [effectiveStoreId, addCustomer]
     );
 
     // Update customer stats after order
+    // Note: Supabase doesn't support increment via standard update in JS, usually requires RPC.
+    // We will read first then update, or use RPC. Since this is admin/dashboard hook, we might
+    // just rely on a backend trigger in production. For now, read + update.
     const updateCustomerStats = useCallback(
         async (customerId: string, orderTotal: number) => {
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, {
-                totalOrders: increment(1),
-                totalSpent: increment(orderTotal),
-                lastOrderAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            const customer = customers.find(c => c.id === customerId);
+            if (!customer) return;
+
+            const { error } = await supabase
+                .from('store_customers')
+                .update({
+                    total_orders: customer.totalOrders + 1,
+                    total_spent: customer.totalSpent + orderTotal,
+                    last_order_at: new Date().toISOString(),
+                })
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath]
+        [customers]
     );
 
     // Add address to customer
@@ -179,19 +210,22 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
             const updatedAddresses = [...customer.addresses, address];
             const updateData: any = {
                 addresses: updatedAddresses,
-                updatedAt: serverTimestamp(),
             };
 
             if (setAsDefault === 'shipping') {
-                updateData.defaultShippingAddress = address;
+                updateData.default_shipping_address = address;
             } else if (setAsDefault === 'billing') {
-                updateData.defaultBillingAddress = address;
+                updateData.default_billing_address = address;
             }
 
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, updateData);
+            const { error } = await supabase
+                .from('store_customers')
+                .update(updateData)
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath, customers]
+        [customers]
     );
 
     // Remove address from customer
@@ -202,13 +236,14 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
 
             const updatedAddresses = customer.addresses.filter((_, i) => i !== addressIndex);
             
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, {
-                addresses: updatedAddresses,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_customers')
+                .update({ addresses: updatedAddresses })
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath, customers]
+        [customers]
     );
 
     // Add tags to customer
@@ -220,13 +255,14 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
             const existingTags = customer.tags || [];
             const newTags = [...new Set([...existingTags, ...tags])];
 
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, {
-                tags: newTags,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_customers')
+                .update({ tags: newTags })
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath, customers]
+        [customers]
     );
 
     // Remove tag from customer
@@ -237,13 +273,14 @@ export const useCustomers = (userId: string, storeId?: string, options?: UseCust
 
             const updatedTags = (customer.tags || []).filter((t) => t !== tag);
 
-            const customerRef = doc(db, customersPath, customerId);
-            await updateDoc(customerRef, {
-                tags: updatedTags,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_customers')
+                .update({ tags: updatedTags })
+                .eq('id', customerId);
+
+            if (error) throw error;
         },
-        [customersPath, customers]
+        [customers]
     );
 
     // Get customer by ID

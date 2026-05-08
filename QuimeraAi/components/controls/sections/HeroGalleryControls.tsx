@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -64,12 +64,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* Headline */}
             <AIFormControl label={t('controls.headline')} onAssistClick={() => setAiAssistField({ path: `heroGallery.slides.${slideIndex}.headline`, value: slide.headline, context: 'Hero Gallery Headline' })}>
-              <TextArea value={slide.headline || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.headline`, val)} rows={2} />
+              <I18nTextArea value={slide.headline || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.headline`, val)} rows={2} />
             </AIFormControl>
 
             {/* Subheadline */}
             <AIFormControl label={t('controls.subheadline')} onAssistClick={() => setAiAssistField({ path: `heroGallery.slides.${slideIndex}.subheadline`, value: slide.subheadline || '', context: 'Hero Gallery Subheadline' })}>
-              <Input label="" value={slide.subheadline || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.subheadline`, val)} />
+              <I18nInput label="" value={slide.subheadline || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.subheadline`, val)} />
             </AIFormControl>
 
             {/* CTAs */}
@@ -79,11 +79,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 Call to Actions
               </label>
               <div className="grid grid-cols-2 gap-2 mb-2">
-                <Input label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, val)} />
+                <I18nInput label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, val)} />
                 <Input label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, val)} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, val)} />
+                <I18nInput label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, val)} />
                 <Input label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, val)} />
               </div>
             </div>

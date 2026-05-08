@@ -210,7 +210,7 @@ const GlobalChatbotPromptsSettings: React.FC<GlobalChatbotPromptsSettingsProps> 
             await saveGlobalChatbotPrompts({
                 ...prompts,
                 updatedAt: new Date().toISOString(),
-                updatedBy: user?.uid || '',
+                updatedBy: user?.id || '',
             });
             setSaveStatus('success');
             setHasChanges(false);

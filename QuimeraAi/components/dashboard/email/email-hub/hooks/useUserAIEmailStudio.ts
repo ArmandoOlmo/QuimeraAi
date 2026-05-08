@@ -236,7 +236,7 @@ Puedo ayudarte a:
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -247,7 +247,7 @@ Puedo ayudarte a:
             }
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId,
                 model: MODEL_TEXT,
                 feature: 'email-studio-chat',
@@ -262,7 +262,7 @@ Puedo ayudarte a:
             }]);
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId,
                 model: MODEL_TEXT,
                 feature: 'email-studio-chat',
@@ -510,7 +510,7 @@ RESPONDE SOLO CON EL JSON:`;
                 'Devuelve SOLO un JSON válido con bloques de email.',
                 MODEL_TEXT,
                 { temperature: 0.4, maxOutputTokens: 8192 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -581,7 +581,7 @@ RESPONDE SOLO CON EL JSON:`;
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['ai-generated'],
-                createdBy: user?.uid || userId,
+                createdBy: user?.id || userId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -643,7 +643,7 @@ Conversación:\n${conversationSummary}`;
                 projectId, [], prompt,
                 'Devuelve SOLO JSON válido.', MODEL_TEXT,
                 { temperature: 0.3, maxOutputTokens: 2048 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -674,7 +674,7 @@ Conversación:\n${conversationSummary}`;
                 tags: audienceData.tags || ['ai-generated'],
                 estimatedCount: audienceData.estimatedCount || 0,
                 isDefault: false,
-                createdBy: user?.uid || userId,
+                createdBy: user?.id || userId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -750,7 +750,7 @@ RESPONDE SOLO CON EL JSON:`;
                 projectId, [], automationPrompt,
                 'Devuelve SOLO JSON válido para automatización de email.', MODEL_TEXT,
                 { temperature: 0.4, maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -836,7 +836,7 @@ RESPONDE SOLO CON EL JSON:`;
                         projectId, [], emailBlockPrompt,
                         'Genera SOLO JSON con bloques de email.', MODEL_TEXT,
                         { temperature: 0.5, maxOutputTokens: 4096 },
-                        user?.uid
+                        user?.id
                     );
 
                     let emailResponseText = extractTextFromResponse(emailResponse) || '';
@@ -899,7 +899,7 @@ RESPONDE SOLO CON EL JSON:`;
                         tags: ['ai-generated', 'automation-email'],
                         automationId: automationDocRef.id,
                         automationStepId: emailStep.id,
-                        createdBy: user?.uid || userId,
+                        createdBy: user?.id || userId,
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp(),
                     };

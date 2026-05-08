@@ -124,10 +124,10 @@ const LandingPageContent: React.FC = () => {
   const rawData = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
   const data = useMemo(() => sanitizeI18nObject(rawData, preferredLanguage), [rawData, preferredLanguage]);
   
-  const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
-  const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
-  const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
-  const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext;
+  const theme = (isEditorMode ? editorContext?.theme : projectContext?.theme) || projectContext?.theme || {};
+  const componentOrder = (isEditorMode ? editorContext?.componentOrder : projectContext?.componentOrder) || projectContext?.componentOrder;
+  const sectionVisibility = (isEditorMode ? editorContext?.sectionVisibility : projectContext?.sectionVisibility) || projectContext?.sectionVisibility;
+  const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext || {};
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles: rawComponentStyles } = useAdmin();
@@ -186,9 +186,9 @@ const LandingPageContent: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     // Resolve font keys — migrates old/removed fonts to new equivalents
-    const resolvedHeader = resolveFontFamily(theme.fontFamilyHeader);
-    const resolvedBody = resolveFontFamily(theme.fontFamilyBody);
-    const resolvedButton = resolveFontFamily(theme.fontFamilyButton);
+    const resolvedHeader = resolveFontFamily(theme?.fontFamilyHeader || 'Inter');
+    const resolvedBody = resolveFontFamily(theme?.fontFamilyBody || 'Inter');
+    const resolvedButton = resolveFontFamily(theme?.fontFamilyButton || 'Inter');
 
     const headerFont = fontStacks[resolvedHeader];
     const bodyFont = fontStacks[resolvedBody];
@@ -200,25 +200,25 @@ const LandingPageContent: React.FC = () => {
     root.style.setProperty('--font-button', buttonFont);
 
     // Font weight & style variables
-    root.style.setProperty('--font-weight-header', String(theme.fontWeightHeader ?? 700));
-    root.style.setProperty('--font-weight-body', String(theme.fontWeightBody ?? 400));
-    root.style.setProperty('--font-weight-button', String(theme.fontWeightButton ?? 600));
-    root.style.setProperty('--font-style-header', theme.fontStyleHeader ?? 'normal');
-    root.style.setProperty('--font-style-body', theme.fontStyleBody ?? 'normal');
-    root.style.setProperty('--font-style-button', theme.fontStyleButton ?? 'normal');
+    root.style.setProperty('--font-weight-header', String(theme?.fontWeightHeader ?? 700));
+    root.style.setProperty('--font-weight-body', String(theme?.fontWeightBody ?? 400));
+    root.style.setProperty('--font-weight-button', String(theme?.fontWeightButton ?? 600));
+    root.style.setProperty('--font-style-header', theme?.fontStyleHeader ?? 'normal');
+    root.style.setProperty('--font-style-body', theme?.fontStyleBody ?? 'normal');
+    root.style.setProperty('--font-style-button', theme?.fontStyleButton ?? 'normal');
 
     // All Caps variables
-    root.style.setProperty('--headings-transform', theme.headingsAllCaps ? 'uppercase' : 'none');
-    root.style.setProperty('--headings-spacing', theme.headingsAllCaps ? '0.05em' : 'normal');
-    root.style.setProperty('--buttons-transform', theme.buttonsAllCaps ? 'uppercase' : 'none');
-    root.style.setProperty('--buttons-spacing', theme.buttonsAllCaps ? '0.05em' : 'normal');
-    root.style.setProperty('--navlinks-transform', theme.navLinksAllCaps ? 'uppercase' : 'none');
-    root.style.setProperty('--navlinks-spacing', theme.navLinksAllCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--headings-transform', theme?.headingsAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--headings-spacing', theme?.headingsAllCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--buttons-transform', theme?.buttonsAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--buttons-spacing', theme?.buttonsAllCaps ? '0.05em' : 'normal');
+    root.style.setProperty('--navlinks-transform', theme?.navLinksAllCaps ? 'uppercase' : 'none');
+    root.style.setProperty('--navlinks-spacing', theme?.navLinksAllCaps ? '0.05em' : 'normal');
 
     // Load Google Fonts: inject <link> synchronously, browser handles swap via font-display: swap
     const fontsToLoad = [...new Set([resolvedHeader, resolvedBody, resolvedButton])];
     loadGoogleFontsSync(fontsToLoad, 'editor-preview-fonts');
-  }, [theme.fontFamilyHeader, theme.fontFamilyBody, theme.fontFamilyButton, theme.fontWeightHeader, theme.fontWeightBody, theme.fontWeightButton, theme.fontStyleHeader, theme.fontStyleBody, theme.fontStyleButton, theme.headingsAllCaps, theme.buttonsAllCaps, theme.navLinksAllCaps]);
+  }, [theme?.fontFamilyHeader, theme?.fontFamilyBody, theme?.fontFamilyButton, theme?.fontWeightHeader, theme?.fontWeightBody, theme?.fontWeightButton, theme?.fontStyleHeader, theme?.fontStyleBody, theme?.fontStyleButton, theme?.headingsAllCaps, theme?.buttonsAllCaps, theme?.navLinksAllCaps]);
 
   // Handle routing for Articles, Store and Sections
   // Supports both real paths (/tienda, /blog/slug) and anchor scrolling (/#features)
@@ -847,7 +847,7 @@ const LandingPageContent: React.FC = () => {
   // ─── TopBar height measurement for Header offset ────────────────────────
   const topBarAboveRef = useRef<HTMLDivElement>(null);
   const [topBarHeight, setTopBarHeight] = useState(0);
-  const isTopBarAboveVisible = !!(mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection]);
+  const isTopBarAboveVisible = !!(effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection]);
 
   useEffect(() => {
     if (!isTopBarAboveVisible) {
@@ -1541,7 +1541,7 @@ const LandingPageContent: React.FC = () => {
         `}</style>
 
       {/* Announcement Bar - Above Header position */}
-      {mergedAnnouncementBarData?.position === 'above-header' && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && (
+      {effectiveComponentOrder?.includes('announcementBar' as PageSection) && mergedAnnouncementBarData?.position === 'above-header' && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && (
         <div
           id="announcementBar-above"
           className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -1555,7 +1555,7 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* TopBar - Above Header position */}
-      {mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection] && (
+      {effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection] && (
         <div
           ref={topBarAboveRef}
           id="topBar-above"
@@ -1788,7 +1788,7 @@ const LandingPageContent: React.FC = () => {
         {storeView.type === 'category' && activeProjectId && (
           <>
             {/* Announcement Bar for category view */}
-            {componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
+            {effectiveComponentOrder?.includes('announcementBar' as PageSection) && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
               <div
                 id="announcementBar"
                 className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}

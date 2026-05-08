@@ -4,11 +4,8 @@
  */
 import { useState, useEffect } from 'react';
 import { CMSPost, Menu } from '../../types';
-import {
-    db, doc, collection, addDoc, updateDoc, deleteDoc,
-    query, orderBy, onSnapshot
-} from '../../firebase';
-import type { User } from '../../firebase';
+import { supabase } from '../../supabase';
+import type { User } from '../../firebase'; // keep using User interface
 
 interface UseEditorCMSParams {
     user: User | null;
@@ -25,48 +22,86 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
         { id: 'main', title: 'Main Menu', handle: 'main-menu', items: [] }
     ]);
 
+    // We no longer strictly need currentTenantId here for simple operations if we just query by user/project,
+    // but in Supabase `posts` requires tenant_id. Since we are inside the Editor, activeProjectId is known.
+    // However, the `posts` table doesn't have project_id, so we must just get all posts for the user and filter.
+    // Actually, in the Editor, users just need access to their posts. Let's just fetch by user_id for simplicity,
+    // assuming Editor user can see their own posts.
+
     // CMS Real-time Subscription
     useEffect(() => {
-        let unsubscribe: (() => void) | undefined;
-
-        if (user) {
-            setIsLoadingCMS(true);
-            try {
-                const postsCol = collection(db, 'users', user.uid, 'posts');
-                const q = query(postsCol, orderBy('updatedAt', 'desc'));
-
-                unsubscribe = onSnapshot(q,
-                    (snapshot) => {
-                        const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CMSPost));
-                        setCmsPosts(posts);
-                        setIsLoadingCMS(false);
-                    },
-                    (error) => {
-                        console.error("CMS Snapshot Error:", error);
-                        setIsLoadingCMS(false);
-                    }
-                );
-            } catch (e) {
-                console.error("Error setting up CMS subscription:", e);
-                setIsLoadingCMS(false);
-            }
-        } else {
+        if (!user || !activeProjectId) {
             setCmsPosts([]);
             setIsLoadingCMS(false);
+            return;
         }
 
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [user]);
+        const fetchPosts = async () => {
+            setIsLoadingCMS(true);
+            try {
+                // Determine user ID (fallback to uid for legacy compat)
+                const userId = user.id || (user as any).uid;
 
-    // CMS Logic - Stub, as real logic moved to subscription
+                const { data, error } = await supabase
+                    .from('posts')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+
+                const postsData = (data || []).map(p => ({
+                    id: p.id,
+                    title: p.title,
+                    slug: p.slug || '',
+                    content: p.content || '',
+                    excerpt: p.excerpt || '',
+                    featuredImage: p.featured_image || '',
+                    categoryId: p.category || '',
+                    status: p.status as any,
+                    tags: p.tags || [],
+                    authorId: p.user_id,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at,
+                    publishedAt: p.published_at,
+                    authorName: p.author_name || '',
+                    isFeatured: p.is_featured || false
+                })) as CMSPost[];
+                setCmsPosts(postsData);
+            } catch (e) {
+                console.error("Error setting up CMS subscription:", e);
+            } finally {
+                setIsLoadingCMS(false);
+            }
+        };
+
+        fetchPosts();
+
+        const userId = user.id || (user as any).uid;
+        const channel = supabase.channel(`public:posts:user_id=eq.${userId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'posts',
+                filter: `user_id=eq.${userId}`
+            }, () => {
+                fetchPosts();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, activeProjectId]);
+
     const loadCMSPosts = async () => {
-        // No-op to satisfy interface. Subscription handles loading.
+        // No-op. Subscription handles it.
     };
 
     const saveCMSPost = async (post: CMSPost) => {
         if (!user) return;
+        const userId = user.id || (user as any).uid;
+
         try {
             const { id, ...data } = post;
 
@@ -101,8 +136,12 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
                         if (activeProjectId) {
                             try {
-                                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                                await updateDoc(projectDocRef, { menus: updatedMenus });
+                                const { error } = await supabase
+                                    .from('projects')
+                                    .update({ menus: updatedMenus })
+                                    .eq('id', activeProjectId);
+
+                                if (error) throw error;
                                 console.log(`[Ref Integrity] Updated menus linking to ${oldLink} -> ${newLink}`);
                             } catch (err) {
                                 console.error("Failed to update menu references for slug change:", err);
@@ -113,13 +152,44 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
             }
             // --- END FIX ---
 
+            // Save to Supabase
+            const postData = {
+                title: data.title,
+                slug: data.slug,
+                content: data.content,
+                excerpt: data.excerpt,
+                featured_image: data.featuredImage,
+                category: data.categoryId,
+                status: data.status,
+                tags: data.tags,
+                author_name: data.authorName,
+                is_featured: data.isFeatured,
+                published_at: data.status === 'published' ? (data.publishedAt || new Date().toISOString()) : null,
+                updated_at: new Date().toISOString()
+            };
+
             if (id && id.length > 0) {
-                const postRef = doc(db, 'users', user.uid, 'posts', id);
-                await updateDoc(postRef, { ...data, updatedAt: new Date().toISOString() });
+                const { error } = await supabase
+                    .from('posts')
+                    .update(postData)
+                    .eq('id', id);
+                if (error) throw error;
             } else {
-                const postsCol = collection(db, 'users', user.uid, 'posts');
-                const now = new Date().toISOString();
-                await addDoc(postsCol, { ...data, authorId: user.uid, createdAt: now, updatedAt: now });
+                // For inserts, tenant_id is required. Since we don't strictly pass it here, we will fetch tenant_id from projects.
+                // Or just query the current user's default tenant for now.
+                // Wait, useEditorCMS is only used in Editor where the project's tenant is the user's tenant.
+                // We'll fetch the tenant_id of the active project.
+                const { data: project } = await supabase.from('projects').select('tenant_id').eq('id', activeProjectId).single();
+                
+                const { error } = await supabase
+                    .from('posts')
+                    .insert([{
+                        ...postData,
+                        user_id: userId,
+                        tenant_id: project?.tenant_id || userId, // Fallback to user ID for personal workspace
+                        created_at: new Date().toISOString()
+                    }]);
+                if (error) throw error;
             }
         } catch (error) {
             console.error("Error saving post:", error);
@@ -130,8 +200,11 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
     const deleteCMSPost = async (postId: string) => {
         if (!user) return;
         try {
-            const postRef = doc(db, 'users', user.uid, 'posts', postId);
-            await deleteDoc(postRef);
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', postId);
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting post:", error);
         }
@@ -165,11 +238,14 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
         if (user) {
             try {
-                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                await updateDoc(projectDocRef, { menus: updatedMenusList });
+                const { error } = await supabase
+                    .from('projects')
+                    .update({ menus: updatedMenusList })
+                    .eq('id', activeProjectId);
+                if (error) throw error;
                 console.log("Menu saved successfully.");
             } catch (e) {
-                console.error("Error saving menu to Firestore:", e);
+                console.error("Error saving menu to Supabase:", e);
             }
         }
     };
@@ -190,8 +266,11 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
         if (user) {
             try {
-                const projectDocRef = doc(db, 'users', user.uid, 'projects', activeProjectId);
-                await updateDoc(projectDocRef, { menus: updatedMenusList });
+                const { error } = await supabase
+                    .from('projects')
+                    .update({ menus: updatedMenusList })
+                    .eq('id', activeProjectId);
+                if (error) throw error;
             } catch (e) {
                 console.error("Error deleting menu from project", e);
             }

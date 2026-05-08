@@ -461,7 +461,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -473,7 +473,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             }
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId,
                 model: MODEL_TEXT,
                 feature: 'cms-content-studio-chat',
@@ -491,7 +491,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             setMessages(prev => [...prev, errorMsg]);
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: activeProject?.id || 'content-creator-assistant',
                 model: MODEL_TEXT,
                 feature: 'cms-content-studio-chat',
@@ -749,7 +749,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'high', maxOutputTokens: 16384 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -777,7 +777,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             setPhase('preview');
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId,
                 model: MODEL_TEXT,
                 feature: 'cms-content-studio-generate',
@@ -795,7 +795,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             setPhase('conversation');
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId,
                 model: MODEL_TEXT,
                 feature: 'cms-content-studio-generate',
@@ -826,7 +826,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
             excerpt: String(generatedPost.excerpt || ''),
             featuredImage: '',
             status: 'draft',
-            authorId: user.uid,
+            authorId: user.id,
             createdAt: now,
             updatedAt: now,
             // Map SEO fields from the AI's nested seo object to flat CMSPost fields

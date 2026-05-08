@@ -51,7 +51,7 @@ const SettingsView: React.FC = () => {
         updateSettings, 
         addShippingZone, 
         updatePaymentSettings,
-    } = useStoreSettings(user?.uid || '', storeId);
+    } = useStoreSettings(user?.id || '', storeId);
 
     const [activeTab, setActiveTab] = useState<SettingsTab>('general');
     const [localSettings, setLocalSettings] = useState<Partial<StoreSettings>>({});
@@ -149,7 +149,7 @@ const SettingsView: React.FC = () => {
                         settings={localSettings}
                         onChange={handleChange}
                         onSavePayment={updatePaymentSettings}
-                        userId={user?.uid || ''}
+                        userId={user?.id || ''}
                         storeId={storeId}
                     />
                 )}
@@ -168,7 +168,7 @@ const SettingsView: React.FC = () => {
                 )}
                 {activeTab === 'email' && (
                     <EmailSettingsSection
-                        userId={user?.uid || ''}
+                        userId={user?.id || ''}
                         storeId={storeId}
                     />
                 )}

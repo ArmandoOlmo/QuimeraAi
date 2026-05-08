@@ -2,12 +2,9 @@
  * useEditorDomains.ts
  * Extracted from EditorContext.tsx — Domain management, DNS verification, SSL, and deployment
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Domain, DeploymentLog, Project } from '../../types';
-import {
-    db, doc, setDoc, updateDoc, deleteDoc,
-    collection, getDocs, query, orderBy
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { deploymentService } from '../../utils/deploymentService';
 import type { User } from '../../firebase';
 
@@ -21,13 +18,26 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
 
     const fetchUserDomains = async (userId: string) => {
         try {
-            const domainsCol = collection(db, 'users', userId, 'domains');
-            const q = query(domainsCol, orderBy('createdAt', 'desc'));
-            const snap = await getDocs(q);
-            const userDomains = snap.docs.map(docSnapshot => ({
-                ...docSnapshot.data(),
-                id: docSnapshot.id
-            } as Domain));
+            const { data, error } = await supabase
+                .from('custom_domains')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const userDomains = (data || []).map(row => ({
+                id: row.domain,
+                name: row.domain,
+                projectId: row.project_id,
+                userId: row.user_id,
+                status: row.status,
+                sslStatus: row.ssl_status,
+                createdAt: row.updated_at,
+                dnsVerified: row.dns_verified,
+                cloudRunTarget: row.cloud_run_target,
+            } as any));
+
             setDomains(userDomains);
         } catch (error) {
             console.error("Error loading user domains:", error);
@@ -38,7 +48,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
         if (!user) return;
 
         const newDomain = { ...domainData, createdAt: new Date().toISOString() };
-        setDomains(prev => [newDomain, ...prev]); // Optimistic update
+        setDomains(prev => [newDomain, ...prev]);
 
         try {
             if (domainData.provider === 'External' && domainData.projectId) {
@@ -56,9 +66,19 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
                 }
             }
 
-            const domainsCol = collection(db, 'users', user.uid, 'domains');
-            await setDoc(doc(domainsCol, domainData.id), newDomain);
-            setDomains(prev => prev.map(d => d.id === domainData.id ? newDomain : d));
+            const normalizedDomain = domainData.name.toLowerCase().replace(/^www\./, '');
+            await supabase.from('custom_domains').upsert({
+                domain: normalizedDomain,
+                project_id: domainData.projectId || null,
+                user_id: user.id,
+                status: newDomain.status || 'pending',
+                ssl_status: newDomain.sslStatus || 'pending',
+                dns_verified: false,
+                cloud_run_target: 'quimera-ssr-575386543550.us-central1.run.app',
+                updated_at: new Date().toISOString()
+            });
+
+            setDomains(prev => prev.map(d => d.id === domainData.id ? { ...newDomain, id: normalizedDomain } : d));
         } catch (e) {
             console.error("Error adding domain", e);
             setDomains(prev => prev.filter(d => d.id !== domainData.id));
@@ -68,9 +88,17 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
     const updateDomain = async (id: string, data: Partial<Domain>) => {
         if (!user) return;
         setDomains(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+        
         try {
-            const docRef = doc(db, 'users', user.uid, 'domains', id);
-            await updateDoc(docRef, data);
+            const domain = domains.find(d => d.id === id);
+            const normalizedDomain = (domain?.name || id).toLowerCase().replace(/^www\./, '');
+            
+            const syncData: any = { updated_at: new Date().toISOString() };
+            if (data.projectId !== undefined) syncData.project_id = data.projectId;
+            if (data.status !== undefined) syncData.status = data.status;
+            if (data.sslStatus !== undefined) syncData.ssl_status = data.sslStatus;
+            
+            await supabase.from('custom_domains').update(syncData).eq('domain', normalizedDomain);
         } catch (e) {
             console.error("Error updating domain", e);
         }
@@ -80,6 +108,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
         if (!user) return;
 
         const domain = domains.find(d => d.id === id);
+        const normalizedDomain = (domain?.name || id).toLowerCase().replace(/^www\./, '');
         setDomains(prev => prev.filter(d => d.id !== id));
 
         try {
@@ -92,8 +121,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
                 }
             }
 
-            const docRef = doc(db, 'users', user.uid, 'domains', id);
-            await deleteDoc(docRef);
+            await supabase.from('custom_domains').delete().eq('domain', normalizedDomain);
         } catch (e) {
             console.error("Error deleting domain", e);
         }
@@ -194,16 +222,11 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
             if (provider === 'cloud_run' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
 
-                await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                    domain: normalizedDomain,
-                    projectId: domain.projectId,
-                    userId: user.uid,
+                await supabase.from('custom_domains').update({
                     status: 'active',
-                    sslStatus: 'active',
-                    dnsVerified: true,
-                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
+                    ssl_status: 'active',
+                    dns_verified: true
+                }).eq('domain', normalizedDomain);
 
                 await updateDomain(domainId, {
                     status: 'active',
@@ -259,9 +282,33 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
         }
     };
 
+    const [deploymentLogs, setDeploymentLogs] = useState<DeploymentLog[]>([]);
+
+    useEffect(() => {
+        if (!user) return;
+        const fetchLogs = async () => {
+            const { data } = await supabase.from('deployment_logs').select('*');
+            if (data) {
+                setDeploymentLogs(data.map(log => ({
+                    id: log.id,
+                    domainId: log.domain_id,
+                    projectId: log.project_id,
+                    action: log.action as any,
+                    provider: log.provider as any,
+                    status: log.status as any,
+                    message: log.message,
+                    error: log.error,
+                    url: log.url,
+                    timestamp: log.created_at,
+                    metadata: log.metadata
+                })));
+            }
+        };
+        fetchLogs();
+    }, [user]);
+
     const getDomainDeploymentLogs = (domainId: string): DeploymentLog[] => {
-        const domain = domains.find(d => d.id === domainId);
-        return domain?.deploymentLogs || [];
+        return deploymentLogs.filter(d => d.domainId === domainId) || [];
     };
 
     return {

@@ -371,11 +371,11 @@ Text to format:
                 }
             }
 
-            const response = await generateContentViaProxy('agency-article-editor', populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy('agency-article-editor', populatedPrompt, modelName, {}, user?.id);
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'agency-content-admin',
                     model: modelName,
                     feature: `agency-article-${command}`,
@@ -396,7 +396,7 @@ Text to format:
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'agency-content-admin',
                     model: modelName,
                     feature: `agency-article-${command}`,
@@ -430,7 +430,7 @@ Text to format:
                 populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}. Return ONLY valid JSON.`;
             }
 
-            const response = await generateContentViaProxy('agency-article-seo', populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy('agency-article-seo', populatedPrompt, modelName, {}, user?.id);
             let responseText = extractTextFromResponse(response);
 
             // Clean markdown code blocks if present
@@ -442,7 +442,7 @@ Text to format:
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'agency-content-admin',
                     model: modelName,
                     feature: 'agency-article-generate-seo',
@@ -457,7 +457,7 @@ Text to format:
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'agency-content-admin',
                     model: modelName,
                     feature: 'agency-article-generate-seo',

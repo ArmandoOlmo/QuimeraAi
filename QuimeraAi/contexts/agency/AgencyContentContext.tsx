@@ -22,19 +22,7 @@ import {
     DEFAULT_AGENCY_TERMS,
     DEFAULT_AGENCY_COOKIE_POLICY,
 } from '../../types/agencyContent';
-import {
-    db,
-    doc,
-    collection,
-    getDocs,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    orderBy,
-    onSnapshot,
-    getDoc,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useTenant } from '../tenant/TenantContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 
@@ -64,14 +52,11 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
     const [legalPages, setLegalPages] = useState<AgencyLegalPage[]>([]);
     const [isLoadingLegalPages, setIsLoadingLegalPages] = useState(false);
 
-    // ==========================================================================
-    // FIRESTORE PATHS (Tenant-scoped)
-    // ==========================================================================
-
-    const getCollectionPath = useCallback((collectionName: string) => {
-        if (!tenantId) return null;
-        return `tenants/${tenantId}/agencyContent/${collectionName}`;
-    }, [tenantId]);
+    const TABLES = {
+        ARTICLES: 'agency_articles',
+        NAVIGATION: 'agency_navigation',
+        LEGAL_PAGES: 'agency_legal_pages',
+    };
 
     // ==========================================================================
     // ARTICLES
@@ -86,30 +71,42 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
         setIsLoadingArticles(true);
 
-        const articlesPath = `tenants/${tenantId}/agencyContent/data/articles`;
-        const q = query(
-            collection(db, articlesPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchInitialArticles = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.ARTICLES)
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const articlesData = snapshot.docs.map(docSnapshot => {
-                const data = docSnapshot.data();
-                return {
-                    id: docSnapshot.id,
-                    ...data,
-                    title: resolveProjectName(data.title),
-                    excerpt: data.excerpt ? resolveProjectName(data.excerpt) : undefined
-                };
-            }) as AgencyArticle[];
-            setArticles(articlesData);
+            if (!error && data) {
+                const articlesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    publishedAt: item.published_at,
+                    imageUrl: item.image_url,
+                    readTime: item.read_time,
+                    translationGroup: item.translation_group,
+                    title: resolveProjectName(item.title),
+                    excerpt: item.excerpt ? resolveProjectName(item.excerpt) : undefined
+                })) as AgencyArticle[];
+                setArticles(articlesData);
+            }
             setIsLoadingArticles(false);
-        }, (error) => {
-            console.error("Error fetching agency articles:", error);
-            setIsLoadingArticles(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialArticles();
+
+        const channel = supabase
+            .channel(`public:agency_articles:${tenantId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.ARTICLES, filter: `tenant_id=eq.${tenantId}` }, (payload) => {
+                fetchInitialArticles();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [tenantId]);
 
     // Featured articles
@@ -125,22 +122,28 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
         setIsLoadingArticles(true);
         try {
-            const articlesPath = `tenants/${tenantId}/agencyContent/data/articles`;
-            const q = query(
-                collection(db, articlesPath),
-                orderBy('createdAt', 'desc')
-            );
-            const snapshot = await getDocs(q);
-            const articlesData = snapshot.docs.map(docSnapshot => {
-                const data = docSnapshot.data();
-                return {
-                    id: docSnapshot.id,
-                    ...data,
-                    title: resolveProjectName(data.title),
-                    excerpt: data.excerpt ? resolveProjectName(data.excerpt) : undefined
-                };
-            }) as AgencyArticle[];
-            setArticles(articlesData);
+            const { data, error } = await supabase
+                .from(TABLES.ARTICLES)
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            
+            if (data) {
+                const articlesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    publishedAt: item.published_at,
+                    imageUrl: item.image_url,
+                    readTime: item.read_time,
+                    translationGroup: item.translation_group,
+                    title: resolveProjectName(item.title),
+                    excerpt: item.excerpt ? resolveProjectName(item.excerpt) : undefined
+                })) as AgencyArticle[];
+                setArticles(articlesData);
+            }
         } catch (error) {
             console.error("Error loading agency articles:", error);
         } finally {
@@ -158,50 +161,48 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) throw new Error('No tenant selected');
 
         try {
-            const { id, ...data } = article;
+            const { id, createdAt, updatedAt, publishedAt, imageUrl, readTime, translationGroup, ...data } = article;
             const now = new Date().toISOString();
-            const articlesPath = `tenants/${tenantId}/agencyContent/data/articles`;
 
             // Calculate read time
             const wordCount = article.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+            const newReadTime = Math.max(1, Math.ceil(wordCount / 200));
 
-            // Sanitize data to remove undefined values
-            const cleanData = (obj: any): any => {
-                const cleaned: any = {};
-                Object.keys(obj).forEach(key => {
-                    const value = obj[key];
-                    if (value !== undefined) {
-                        cleaned[key] = value;
-                    }
-                });
-                return cleaned;
-            };
-
-            const commonData = {
+            const payload = {
                 ...data,
-                readTime,
-                updatedAt: now,
-                // Ensure optional fields are null if undefined/missing to avoid Firestore errors
-                authorImage: data.authorImage || null,
-                publishedAt: article.status === 'published' ? (article.publishedAt || now) : (article.publishedAt || null)
+                tenant_id: tenantId,
+                image_url: imageUrl,
+                translation_group: translationGroup,
+                read_time: newReadTime,
+                published_at: article.status === 'published' && !publishedAt ? now : publishedAt,
             };
 
-            const sanitizedData = cleanData(commonData);
+            // Remove undefined values
+            const cleanPayload = Object.fromEntries(Object.entries(payload).filter(([_, v]) => v !== undefined));
 
             if (id && id.length > 0) {
-                // Update existing (using setDoc with merge to also handle pre-generated IDs)
-                const articleRef = doc(db, articlesPath, id);
-                await setDoc(articleRef, sanitizedData, { merge: true });
+                // Update existing
+                const { error } = await supabase
+                    .from(TABLES.ARTICLES)
+                    .update(cleanPayload)
+                    .eq('id', id)
+                    .eq('tenant_id', tenantId);
+                    
+                if (error) throw error;
             } else {
+                // Create new
                 const newId = `article_${Date.now()}`;
-                const articleRef = doc(db, articlesPath, newId);
-                await setDoc(articleRef, {
-                    ...sanitizedData,
+                const insertPayload = {
+                    ...cleanPayload,
                     id: newId,
                     views: 0,
-                    createdAt: now,
-                });
+                };
+                
+                const { error } = await supabase
+                    .from(TABLES.ARTICLES)
+                    .insert([insertPayload]);
+                    
+                if (error) throw error;
             }
         } catch (error) {
             console.error("Error saving agency article:", error);
@@ -214,9 +215,13 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) return;
 
         try {
-            const articlesPath = `tenants/${tenantId}/agencyContent/data/articles`;
-            const articleRef = doc(db, articlesPath, id);
-            await deleteDoc(articleRef);
+            const { error } = await supabase
+                .from(TABLES.ARTICLES)
+                .delete()
+                .eq('id', id)
+                .eq('tenant_id', tenantId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting agency article:", error);
             throw error;
@@ -229,30 +234,38 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     // Load navigation with real-time updates
     useEffect(() => {
-        if (!tenantId) {
-            setNavigation(DEFAULT_AGENCY_NAVIGATION);
-            return;
-        }
-
+        if (!tenantId) return;
+        
         setIsLoadingNavigation(true);
 
-        const navPath = `tenants/${tenantId}/agencyContent`;
-        const navRef = doc(db, navPath, 'navigation');
+        const fetchInitialNavigation = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .select('*')
+                .eq('id', 'main')
+                .eq('tenant_id', tenantId)
+                .maybeSingle();
 
-        const unsubscribe = onSnapshot(navRef, (docSnapshot) => {
-            if (docSnapshot.exists()) {
-                setNavigation(docSnapshot.data() as AgencyNavigation);
+            if (!error && data) {
+                setNavigation(data as AgencyNavigation);
             } else {
                 setNavigation(DEFAULT_AGENCY_NAVIGATION);
             }
             setIsLoadingNavigation(false);
-        }, (error) => {
-            console.error("Error fetching agency navigation:", error);
-            setNavigation(DEFAULT_AGENCY_NAVIGATION);
-            setIsLoadingNavigation(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialNavigation();
+
+        const channel = supabase
+            .channel(`public:agency_navigation:${tenantId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.NAVIGATION, filter: `tenant_id=eq.${tenantId}` }, (payload) => {
+                fetchInitialNavigation();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [tenantId]);
 
     // Manual load navigation
@@ -261,12 +274,15 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
         setIsLoadingNavigation(true);
         try {
-            const navPath = `tenants/${tenantId}/agencyContent`;
-            const navRef = doc(db, navPath, 'navigation');
-            const docSnapshot = await getDoc(navRef);
+            const { data, error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .select('*')
+                .eq('id', 'main')
+                .eq('tenant_id', tenantId)
+                .maybeSingle();
 
-            if (docSnapshot.exists()) {
-                setNavigation(docSnapshot.data() as AgencyNavigation);
+            if (!error && data) {
+                setNavigation(data as AgencyNavigation);
             } else {
                 setNavigation(DEFAULT_AGENCY_NAVIGATION);
             }
@@ -283,12 +299,16 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) throw new Error('No tenant selected');
 
         try {
-            const navPath = `tenants/${tenantId}/agencyContent`;
-            const navRef = doc(db, navPath, 'navigation');
-            await setDoc(navRef, {
-                ...nav,
-                updatedAt: new Date().toISOString()
-            });
+            const { error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .upsert({
+                    id: 'main',
+                    tenant_id: tenantId,
+                    links: nav.links,
+                    updated_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error saving agency navigation:", error);
             throw error;
@@ -301,38 +321,43 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     // Load legal pages with real-time updates
     useEffect(() => {
-        if (!tenantId) {
-            setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
-            return;
-        }
+        if (!tenantId) return;
 
         setIsLoadingLegalPages(true);
 
-        const legalPath = `tenants/${tenantId}/agencyContent/data/legalPages`;
-        const q = query(
-            collection(db, legalPath),
-            orderBy('type', 'asc')
-        );
+        const fetchInitialPages = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .order('type', { ascending: true });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const pagesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AgencyLegalPage[];
-
-            if (pagesData.length === 0) {
-                setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
-            } else {
+            if (!error && data && data.length > 0) {
+                const pagesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    lastUpdated: item.last_updated
+                })) as AgencyLegalPage[];
                 setLegalPages(pagesData);
+            } else {
+                setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
             }
             setIsLoadingLegalPages(false);
-        }, (error) => {
-            console.error("Error fetching agency legal pages:", error);
-            setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
-            setIsLoadingLegalPages(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialPages();
+
+        const channel = supabase
+            .channel(`public:agency_legal_pages:${tenantId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.LEGAL_PAGES, filter: `tenant_id=eq.${tenantId}` }, (payload) => {
+                fetchInitialPages();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [tenantId]);
 
     // Manual load legal pages
@@ -341,21 +366,24 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
 
         setIsLoadingLegalPages(true);
         try {
-            const legalPath = `tenants/${tenantId}/agencyContent/data/legalPages`;
-            const q = query(
-                collection(db, legalPath),
-                orderBy('type', 'asc')
-            );
-            const snapshot = await getDocs(q);
-            const pagesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AgencyLegalPage[];
+            const { data, error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .order('type', { ascending: true });
 
-            if (pagesData.length === 0) {
-                setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
-            } else {
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const pagesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    lastUpdated: item.last_updated
+                })) as AgencyLegalPage[];
                 setLegalPages(pagesData);
+            } else {
+                setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
             }
         } catch (error) {
             console.error("Error loading agency legal pages:", error);
@@ -384,16 +412,28 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) throw new Error('No tenant selected');
 
         try {
+            const { id, createdAt, updatedAt, lastUpdated, ...data } = page;
             const now = new Date().toISOString();
-            const legalPath = `tenants/${tenantId}/agencyContent/data/legalPages`;
-            const pageRef = doc(db, legalPath, page.type);
-            await setDoc(pageRef, {
-                ...page,
-                id: page.type,
-                lastUpdated: now,
-                updatedAt: now,
-                createdAt: page.createdAt || now
-            });
+
+            // Using type_language as document ID to match global content approach
+            const docId = `${page.type}_${page.language || 'es'}`;
+            
+            const payload = {
+                ...data,
+                id: docId,
+                tenant_id: tenantId,
+                last_updated: now,
+                updated_at: now,
+                created_at: createdAt || now
+            };
+
+            const cleanPayload = Object.fromEntries(Object.entries(payload).filter(([_, v]) => v !== undefined));
+            
+            const { error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .upsert(cleanPayload);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error saving agency legal page:", error);
             throw error;
@@ -405,9 +445,13 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) return;
 
         try {
-            const legalPath = `tenants/${tenantId}/agencyContent/data/legalPages`;
-            const pageRef = doc(db, legalPath, id);
-            await deleteDoc(pageRef);
+            const { error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .delete()
+                .eq('id', id)
+                .eq('tenant_id', tenantId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting agency legal page:", error);
             throw error;

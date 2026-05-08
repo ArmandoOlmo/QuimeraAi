@@ -84,12 +84,12 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
             }
 
             const projectId = activeProject?.id || 'content-assistant';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, promptTemplate.model, {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, populatedPrompt, promptTemplate.model, {}, user?.id);
 
             // Log successful API call for usage statistics
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: promptTemplate.model,
                     feature: 'content-assistant',
@@ -102,7 +102,7 @@ const AIContentAssistant: React.FC<AIContentAssistantProps> = ({
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: promptTemplate?.model || 'unknown',
                     feature: 'content-assistant',

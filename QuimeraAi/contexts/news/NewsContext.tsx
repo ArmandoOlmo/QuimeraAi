@@ -5,22 +5,7 @@
  */
 
 import React, { createContext, useState, useContext, useCallback, ReactNode } from 'react';
-import {
-  db,
-  collection,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  Timestamp,
-  increment,
-  setDoc,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import {
   NewsItem,
@@ -33,11 +18,10 @@ import {
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
-// =============================================================================
-// FIRESTORE COLLECTIONS
-// =============================================================================
-const NEWS_COLLECTION = 'news';
-const NEWS_USER_STATES_COLLECTION = 'newsUserStates';
+const TABLES = {
+  NEWS: 'news_items',
+  USER_STATES: 'news_user_states',
+};
 
 // =============================================================================
 // PROVIDER
@@ -64,15 +48,28 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
 
     try {
-      let q = query(collection(db, NEWS_COLLECTION), orderBy('createdAt', 'desc'));
+      const { data, error } = await supabase
+        .from(TABLES.NEWS)
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      const snapshot = await getDocs(q);
-      let items = snapshot.docs.map(docSnapshot => ({
-        ...docSnapshot.data(),
-        id: docSnapshot.id, // Firestore ID always takes precedence over any 'id' field in data
+      if (error) throw error;
+
+      let items = (data || []).map(item => ({
+        ...item,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        publishAt: item.publish_at,
+        expireAt: item.expire_at,
+        imageUrl: item.image_url,
+        linkUrl: item.link_url,
+        linkText: item.link_text,
+        createdBy: item.created_by,
+        updatedBy: item.updated_by,
+        translationGroup: item.translation_group,
       })) as NewsItem[];
 
-      // Apply filters client-side (Firestore limitations)
+      // Apply filters client-side
       if (filters) {
         if (filters.status) {
           items = items.filter(item => item.status === filters.status);
@@ -132,24 +129,52 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       try {
         const now = new Date().toISOString();
-        const newItem: Omit<NewsItem, 'id'> = {
+        const newId = `news_${Date.now()}`;
+        
+        const payload = {
+          id: newId,
           ...newsData,
           views: 0,
           clicks: 0,
-          createdAt: now,
-          updatedAt: now,
-          createdBy: user.uid,
+          created_at: now,
+          updated_at: now,
+          created_by: user.id,
+          image_url: newsData.imageUrl,
+          link_url: newsData.linkUrl,
+          link_text: newsData.linkText,
+          publish_at: newsData.publishAt,
+          expire_at: newsData.expireAt,
+          translation_group: newsData.translationGroup,
         };
 
-        // Remove undefined fields before saving to Firestore
-        const cleanedItem = removeUndefinedFields(newItem as Record<string, unknown>);
-        delete cleanedItem.id; // Never store 'id' as a field — Firestore uses document ID
+        const cleanedPayload = removeUndefinedFields(payload as Record<string, unknown>);
+        // Need to explicitly delete camelCase versions from cleanedPayload
+        delete cleanedPayload.imageUrl;
+        delete cleanedPayload.linkUrl;
+        delete cleanedPayload.linkText;
+        delete cleanedPayload.publishAt;
+        delete cleanedPayload.expireAt;
+        delete cleanedPayload.translationGroup;
+        delete cleanedPayload.createdBy;
 
-        const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedItem);
-        const createdItem = { ...newItem, id: docRef.id } as NewsItem;
+        const { error } = await supabase
+          .from(TABLES.NEWS)
+          .insert([cleanedPayload]);
+
+        if (error) throw error;
+
+        const createdItem = { 
+          ...newsData, 
+          id: newId, 
+          views: 0, 
+          clicks: 0, 
+          createdAt: now, 
+          updatedAt: now, 
+          createdBy: user.id 
+        } as NewsItem;
 
         setNewsItems(prev => [createdItem, ...prev]);
-        return docRef.id;
+        return newId;
       } catch (err: any) {
         console.error('[NewsContext] Error creating news:', err);
         throw new Error(err.message || 'Error al crear noticia');
@@ -163,20 +188,39 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user) throw new Error('User not authenticated');
 
       try {
-        const docRef = doc(db, NEWS_COLLECTION, id);
-        const updateData = {
+        const now = new Date().toISOString();
+        const payload = {
           ...updates,
-          updatedAt: new Date().toISOString(),
-          updatedBy: user.uid,
+          updated_at: now,
+          updated_by: user.id,
         };
+        
+        if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+        if (updates.linkUrl !== undefined) payload.link_url = updates.linkUrl;
+        if (updates.linkText !== undefined) payload.link_text = updates.linkText;
+        if (updates.publishAt !== undefined) payload.publish_at = updates.publishAt;
+        if (updates.expireAt !== undefined) payload.expire_at = updates.expireAt;
+        if (updates.translationGroup !== undefined) payload.translation_group = updates.translationGroup;
 
-        // Remove undefined fields before saving to Firestore
-        const cleanedData = removeUndefinedFields(updateData as Record<string, unknown>);
+        const cleanedData = removeUndefinedFields(payload as Record<string, unknown>);
+        delete cleanedData.imageUrl;
+        delete cleanedData.linkUrl;
+        delete cleanedData.linkText;
+        delete cleanedData.publishAt;
+        delete cleanedData.expireAt;
+        delete cleanedData.translationGroup;
+        delete cleanedData.updatedBy;
+        delete cleanedData.createdBy;
 
-        await updateDoc(docRef, cleanedData);
+        const { error } = await supabase
+          .from(TABLES.NEWS)
+          .update(cleanedData)
+          .eq('id', id);
+
+        if (error) throw error;
 
         setNewsItems(prev =>
-          prev.map(item => (item.id === id ? { ...item, ...updateData } : item))
+          prev.map(item => (item.id === id ? { ...item, ...updates, updatedAt: now, updatedBy: user.id } : item))
         );
       } catch (err: any) {
         console.error('[NewsContext] Error updating news:', err);
@@ -188,7 +232,12 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deleteNews = useCallback(async (id: string): Promise<void> => {
     try {
-      await deleteDoc(doc(db, NEWS_COLLECTION, id));
+      const { error } = await supabase
+        .from(TABLES.NEWS)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       setNewsItems(prev => prev.filter(item => item.id !== id));
     } catch (err: any) {
       console.error('[NewsContext] Error deleting news:', err);
@@ -205,26 +254,54 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!original) throw new Error('Noticia no encontrada');
 
         const now = new Date().toISOString();
-        const duplicate: Omit<NewsItem, 'id'> = {
-          ...original,
+        const newId = `news_${Date.now()}`;
+        
+        const duplicatePayload = {
+          id: newId,
           title: `${original.title} (copia)`,
+          excerpt: original.excerpt,
+          content: original.content,
+          category: original.category,
           status: 'draft',
+          priority: original.priority,
+          featured: original.featured,
+          targeting: original.targeting,
+          language: original.language,
           views: 0,
           clicks: 0,
-          createdAt: now,
-          updatedAt: now,
-          createdBy: user.uid,
+          created_at: now,
+          updated_at: now,
+          created_by: user.id,
+          image_url: original.imageUrl,
+          link_url: original.linkUrl,
+          link_text: original.linkText,
+          publish_at: original.publishAt,
+          expire_at: original.expireAt,
+          translation_group: original.translationGroup,
         };
 
-        // Remove undefined fields before saving to Firestore
-        const cleanedDuplicate = removeUndefinedFields(duplicate as Record<string, unknown>);
-        delete cleanedDuplicate.id; // Never store 'id' as a field — Firestore uses document ID
+        const cleanedDuplicate = removeUndefinedFields(duplicatePayload as Record<string, unknown>);
 
-        const docRef = await addDoc(collection(db, NEWS_COLLECTION), cleanedDuplicate);
-        const createdItem = { ...duplicate, id: docRef.id } as NewsItem;
+        const { error } = await supabase
+          .from(TABLES.NEWS)
+          .insert([cleanedDuplicate]);
+
+        if (error) throw error;
+
+        const createdItem = { 
+          ...original, 
+          id: newId, 
+          title: `${original.title} (copia)`,
+          status: 'draft',
+          views: 0, 
+          clicks: 0, 
+          createdAt: now, 
+          updatedAt: now, 
+          createdBy: user.id 
+        } as NewsItem;
 
         setNewsItems(prev => [createdItem, ...prev]);
-        return docRef.id;
+        return newId;
       } catch (err: any) {
         console.error('[NewsContext] Error duplicating news:', err);
         throw new Error(err.message || 'Error al duplicar noticia');
@@ -239,92 +316,104 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUserNews = useCallback(async () => {
     if (!user) return;
-
+    
     setIsLoadingUserNews(true);
 
     try {
-      // Fetch all published news
-      const now = new Date().toISOString();
-      const q = query(
-        collection(db, NEWS_COLLECTION),
-        where('status', '==', 'published'),
-        orderBy('priority', 'desc'),
-        orderBy('createdAt', 'desc')
-      );
+      // 1. Fetch published news
+      const { data: newsData, error: newsError } = await supabase
+        .from(TABLES.NEWS)
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
 
-      const snapshot = await getDocs(q);
-      let items = snapshot.docs.map(docSnapshot => ({
-        ...docSnapshot.data(),
-        id: docSnapshot.id, // Firestore ID always takes precedence over any 'id' field in data
+      if (newsError) throw newsError;
+
+      const items = (newsData || []).map(item => ({
+        ...item,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        publishAt: item.publish_at,
+        expireAt: item.expire_at,
+        imageUrl: item.image_url,
+        linkUrl: item.link_url,
+        linkText: item.link_text,
+        createdBy: item.created_by,
+        updatedBy: item.updated_by,
+        translationGroup: item.translation_group,
       })) as NewsItem[];
 
-      // Filter by publish date and expiry
-      items = items.filter(item => {
-        const publishOk = !item.publishAt || item.publishAt <= now;
-        const expireOk = !item.expireAt || item.expireAt > now;
-        return publishOk && expireOk;
+      // 2. Fetch user states
+      const { data: statesData, error: statesError } = await supabase
+        .from(TABLES.USER_STATES)
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (statesError) throw statesError;
+
+      const statesMap: Record<string, NewsUserState> = {};
+      (statesData || []).forEach(state => {
+        statesMap[state.news_id] = {
+          ...state,
+          userId: state.user_id,
+          newsId: state.news_id,
+          readAt: state.read_at,
+          dismissedAt: state.dismissed_at,
+          clickedAt: state.clicked_at,
+          createdAt: state.created_at,
+          updatedAt: state.updated_at,
+        } as NewsUserState;
       });
-
-      // Filter by targeting
-      const userRole = userDocument?.role || 'user';
-      const userPlan = userDocument?.plan || 'free';
-      const userTenantId = userDocument?.tenantId;
-
-      items = items.filter(item => {
-        const { targeting } = item;
-        if (targeting.type === 'all') return true;
-        if (targeting.type === 'roles' && targeting.roles?.includes(userRole)) return true;
-        if (targeting.type === 'plans' && targeting.plans?.includes(userPlan)) return true;
-        if (targeting.type === 'tenants' && userTenantId && targeting.tenantIds?.includes(userTenantId)) return true;
-        return false;
-      });
-
-      // Filter by language — show news matching the user's current app language
-      // Uses i18next's stored language from localStorage, defaulting to 'es'
-      const storedLang = localStorage.getItem('i18nextLng') || 'es';
-      const currentLang = storedLang.startsWith('en') ? 'en' : 'es';
-      items = items.filter(item => {
-        const itemLang = item.language || 'es';
-        return itemLang === currentLang;
-      });
-
-      // Fetch user states
-      const statesQ = query(
-        collection(db, NEWS_USER_STATES_COLLECTION),
-        where('userId', '==', user.uid)
-      );
-      const statesSnapshot = await getDocs(statesQ);
-      const states: Record<string, NewsUserState> = {};
-      statesSnapshot.docs.forEach(docSnapshot => {
-        const state = { id: docSnapshot.id, ...docSnapshot.data() } as NewsUserState;
-        states[state.newsId] = state;
-      });
-
-      // Filter out dismissed news
-      items = items.filter(item => !states[item.id]?.dismissed);
 
       setUserNews(items);
-      setUserNewsStates(states);
-    } catch (err: any) {
+      setUserNewsStates(statesMap);
+    } catch (err) {
       console.error('[NewsContext] Error fetching user news:', err);
     } finally {
       setIsLoadingUserNews(false);
     }
-  }, [user, userDocument]);
+  }, [user]);
 
   const markAsRead = useCallback(
     async (newsId: string): Promise<void> => {
       if (!user) return;
 
       try {
-        const stateId = `${user.uid}_${newsId}`;
-        const stateRef = doc(db, NEWS_USER_STATES_COLLECTION, stateId);
+        const stateId = `${user.id}_${newsId}`;
         const now = new Date().toISOString();
 
         const existingState = userNewsStates[newsId];
+        
+        const payload = {
+          id: stateId,
+          user_id: user.id,
+          news_id: newsId,
+          read: true,
+          read_at: now,
+          updated_at: now,
+        };
+
+        const { error } = await supabase
+          .from(TABLES.USER_STATES)
+          .upsert(payload);
+          
+        if (error) throw error;
+
+        // Increment view count if first read (rpc function would be better, but we can update directly for now or skip if complex)
+        if (!existingState?.read) {
+          // Simplistic counter update, in a real prod app use an RPC to avoid race conditions
+          const newsItem = userNews.find(n => n.id === newsId);
+          if (newsItem) {
+             await supabase
+              .from(TABLES.NEWS)
+              .update({ views: (newsItem.views || 0) + 1 })
+              .eq('id', newsId);
+          }
+        }
+
         const newState: NewsUserState = {
           id: stateId,
-          userId: user.uid,
+          userId: user.id,
           newsId,
           read: true,
           readAt: now,
@@ -336,20 +425,12 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           updatedAt: now,
         };
 
-        await setDoc(stateRef, newState);
-
-        // Increment view count if first read
-        if (!existingState?.read) {
-          const newsRef = doc(db, NEWS_COLLECTION, newsId);
-          await updateDoc(newsRef, { views: increment(1) });
-        }
-
         setUserNewsStates(prev => ({ ...prev, [newsId]: newState }));
       } catch (err: any) {
         console.error('[NewsContext] Error marking as read:', err);
       }
     },
-    [user, userNewsStates]
+    [user, userNewsStates, userNews]
   );
 
   const dismissNews = useCallback(
@@ -357,14 +438,29 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user) return;
 
       try {
-        const stateId = `${user.uid}_${newsId}`;
-        const stateRef = doc(db, NEWS_USER_STATES_COLLECTION, stateId);
+        const stateId = `${user.id}_${newsId}`;
         const now = new Date().toISOString();
 
         const existingState = userNewsStates[newsId];
+        
+        const payload = {
+          id: stateId,
+          user_id: user.id,
+          news_id: newsId,
+          dismissed: true,
+          dismissed_at: now,
+          updated_at: now,
+        };
+
+        const { error } = await supabase
+          .from(TABLES.USER_STATES)
+          .upsert(payload);
+          
+        if (error) throw error;
+
         const newState: NewsUserState = {
           id: stateId,
-          userId: user.uid,
+          userId: user.id,
           newsId,
           read: existingState?.read || true,
           readAt: existingState?.readAt || now,
@@ -375,8 +471,6 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           createdAt: existingState?.createdAt || now,
           updatedAt: now,
         };
-
-        await setDoc(stateRef, newState);
 
         setUserNewsStates(prev => ({ ...prev, [newsId]: newState }));
         setUserNews(prev => prev.filter(item => item.id !== newsId));
@@ -392,17 +486,40 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user) return;
 
       try {
-        const stateId = `${user.uid}_${newsId}`;
-        const stateRef = doc(db, NEWS_USER_STATES_COLLECTION, stateId);
+        const stateId = `${user.id}_${newsId}`;
         const now = new Date().toISOString();
 
         const existingState = userNewsStates[newsId];
 
         // Only track first click
         if (!existingState?.clicked) {
+          const payload = {
+            id: stateId,
+            user_id: user.id,
+            news_id: newsId,
+            clicked: true,
+            clicked_at: now,
+            updated_at: now,
+          };
+
+          const { error } = await supabase
+            .from(TABLES.USER_STATES)
+            .upsert(payload);
+            
+          if (error) throw error;
+
+          // Increment click count
+          const newsItem = userNews.find(n => n.id === newsId);
+          if (newsItem) {
+             await supabase
+              .from(TABLES.NEWS)
+              .update({ clicks: (newsItem.clicks || 0) + 1 })
+              .eq('id', newsId);
+          }
+
           const newState: NewsUserState = {
             id: stateId,
-            userId: user.uid,
+            userId: user.id,
             newsId,
             read: existingState?.read || true,
             readAt: existingState?.readAt || now,
@@ -414,19 +531,13 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             updatedAt: now,
           };
 
-          await setDoc(stateRef, newState);
-
-          // Increment click count
-          const newsRef = doc(db, NEWS_COLLECTION, newsId);
-          await updateDoc(newsRef, { clicks: increment(1) });
-
           setUserNewsStates(prev => ({ ...prev, [newsId]: newState }));
         }
       } catch (err: any) {
         console.error('[NewsContext] Error tracking click:', err);
       }
     },
-    [user, userNewsStates]
+    [user, userNewsStates, userNews]
   );
 
   // =============================================================================

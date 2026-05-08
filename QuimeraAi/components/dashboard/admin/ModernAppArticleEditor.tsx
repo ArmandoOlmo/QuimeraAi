@@ -507,11 +507,11 @@ Text to format:
                 }
             }
 
-            const response = await generateContentViaProxy('app-article-editor', populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy('app-article-editor', populatedPrompt, modelName, {}, user?.id);
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelName,
                     feature: `app-article-${command}`,
@@ -532,7 +532,7 @@ Text to format:
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelName,
                     feature: `app-article-${command}`,
@@ -566,7 +566,7 @@ Text to format:
                 populatedPrompt = `Generate JSON { "seoTitle": "...", "seoDescription": "..." } for: ${title}. Content: ${contentPreview}. Return ONLY valid JSON.`;
             }
 
-            const response = await generateContentViaProxy('app-article-seo', populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy('app-article-seo', populatedPrompt, modelName, {}, user?.id);
             let responseText = extractTextFromResponse(response);
 
             // Clean markdown code blocks if present
@@ -578,7 +578,7 @@ Text to format:
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelName,
                     feature: 'app-article-generate-seo',
@@ -593,7 +593,7 @@ Text to format:
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelName,
                     feature: 'app-article-generate-seo',
@@ -670,7 +670,7 @@ Text to format:
             const translatedFields = await translateArticleContent(
                 savedOriginalArticle,
                 targetLang,
-                user?.uid
+                user?.id
             );
 
             const translatedArticle = buildTranslatedArticle(

@@ -313,7 +313,7 @@ const AppointmentsDashboard: React.FC = () => {
             id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             content,
             createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-            createdBy: user?.uid || '',
+            createdBy: user?.id || '',
             aiGenerated: false,
             isPrivate: false,
         };

@@ -146,8 +146,8 @@ const SubscriptionSettings: React.FC = () => {
     const handleSelectPlan = async (planId: SubscriptionPlanId, billingCycle: 'monthly' | 'annually' = 'monthly') => {
         let tenantId = currentTenant?.id;
 
-        if (!tenantId && user?.uid) {
-            tenantId = `tenant_${user.uid}`;
+        if (!tenantId && user?.id) {
+            tenantId = `tenant_${user.id}`;
         }
 
         if (!tenantId) {

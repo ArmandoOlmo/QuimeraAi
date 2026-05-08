@@ -24,7 +24,7 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
     const [loading, setLoading] = useState<string | null>(null); // packageId being purchased
     const [error, setError] = useState<string | null>(null);
 
-    const tenantId = tenantContext?.currentTenant?.id || `tenant_${user?.uid}`;
+    const tenantId = tenantContext?.currentTenant?.id || `tenant_${user?.id}`;
     const isAgency = !!tenantContext?.currentTenant?.subscriptionPlan?.includes('agency');
 
     if (!isOpen) return null;

@@ -79,7 +79,7 @@ const OrderConfirmation = lazyWithRetry(() =>
 
 export interface RouterProps {
   // Auth State
-  user: { uid: string; email: string | null; emailVerified: boolean } | null;
+  user: { id: string; email: string | null; emailVerified: boolean } | null;
   userRole?: string;
   loadingAuth: boolean;
 
@@ -160,11 +160,7 @@ const Router: React.FC<RouterProps> = ({
     // default to dashboard; the effect will re-run when userRole arrives.
     if (isAuthenticated && isEmailVerified && (path === '/login' || path === '/register')) {
       console.log('[Router] Authenticated user on', path, '— userRole:', userRole, '— redirecting');
-      if (userRole === 'superadmin' || userRole === 'owner') {
-        replace(ROUTES.SUPERADMIN);
-      } else {
-        replace(ROUTES.DASHBOARD);
-      }
+      replace(ROUTES.DASHBOARD);
       return;
     }
 
@@ -197,11 +193,7 @@ const Router: React.FC<RouterProps> = ({
 
     // Default path handling - skip if preview mode
     if (path === '/' && isAuthenticated && isEmailVerified && !isLandingPreviewMode) {
-      if (userRole === 'superadmin' || userRole === 'owner') {
-        replace(ROUTES.SUPERADMIN);
-      } else {
-        replace(ROUTES.DASHBOARD);
-      }
+      replace(ROUTES.DASHBOARD);
     }
   }, [
     loadingAuth,

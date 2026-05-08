@@ -920,7 +920,7 @@ const AiAssistantDashboard: React.FC = () => {
                     <div className="animate-fade-in-up h-full">
                         <SocialChatInbox
                             projectId={activeProject?.id || ''}
-                            userId={user?.uid}
+                            userId={user?.id}
                         />
                     </div>
                 );

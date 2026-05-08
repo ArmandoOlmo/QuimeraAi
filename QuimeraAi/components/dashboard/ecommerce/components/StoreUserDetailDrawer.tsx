@@ -37,8 +37,7 @@ import {
     UserActivity,
     DEFAULT_ROLE_CONFIGS,
 } from '../../../../types/storeUsers';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 
 interface StoreUserDetailDrawerProps {
     user: StoreUser | null;
@@ -87,21 +86,26 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
 
         setIsLoadingActivities(true);
         try {
-            const activitiesRef = collection(db, `storeUsers/${storeId}/activities`);
-            const q = query(
-                activitiesRef,
-                where('userId', '==', user.id),
-                orderBy('createdAt', 'desc'),
-                limit(50)
-            );
+            const { data, error } = await supabase
+                .from('store_user_activities')
+                .select('*')
+                .eq('project_id', storeId)
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(50);
 
-            const snapshot = await getDocs(q);
-            const data = snapshot.docs.map((doc) => ({
+            if (error) throw error;
+
+            const activitiesData = (data || []).map((doc: any) => ({
                 id: doc.id,
-                ...doc.data(),
+                userId: doc.user_id,
+                type: doc.type,
+                description: doc.description,
+                metadata: doc.metadata,
+                createdAt: { seconds: new Date(doc.created_at).getTime() / 1000 },
             })) as UserActivity[];
 
-            setActivities(data);
+            setActivities(activitiesData);
         } catch (err) {
             console.error('Error loading activities:', err);
         } finally {

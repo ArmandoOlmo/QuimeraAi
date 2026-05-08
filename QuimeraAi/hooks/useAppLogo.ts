@@ -1,30 +1,46 @@
 import { useEffect, useState } from 'react';
-import { db, doc, onSnapshot } from '../firebase';
+import { supabase } from '../supabase';
 
 const DEFAULT_LOGO_URL = '/logos/quimera-icon.svg';
 
 /** Full logo with "Quimera.ai" text integrated — used in header and sidebar */
 const FULL_LOGO_URL = '/logos/quimera-full-dark.png';
 
-// Module-level cache to avoid multiple Firestore listeners
+// Module-level cache to avoid multiple Supabase listeners
 let cachedLogoUrl: string | null = null;
 let listeners: Array<(url: string) => void> = [];
 let unsubscribe: (() => void) | null = null;
+let channel: any = null;
 
 function startListening() {
     if (unsubscribe) return; // Already listening
 
-    const settingsRef = doc(db, 'globalSettings', 'appInfo');
-    unsubscribe = onSnapshot(settingsRef, (snap) => {
-        const data = snap.data();
-        const url = data?.logoUrl || DEFAULT_LOGO_URL;
-        cachedLogoUrl = url;
-        listeners.forEach(fn => fn(url));
-    }, (error) => {
-        console.error('[useAppLogo] Firestore listener error:', error);
-        cachedLogoUrl = DEFAULT_LOGO_URL;
-        listeners.forEach(fn => fn(DEFAULT_LOGO_URL));
-    });
+    const fetchInitial = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('settings')
+                .select('config')
+                .eq('id', 'appInfo')
+                .maybeSingle();
+
+            if (!error && data?.config?.logoUrl) {
+                cachedLogoUrl = data.config.logoUrl;
+                listeners.forEach(fn => fn(data.config.logoUrl));
+            } else {
+                cachedLogoUrl = DEFAULT_LOGO_URL;
+                listeners.forEach(fn => fn(DEFAULT_LOGO_URL));
+            }
+        } catch (e) {
+            console.error('[useAppLogo] Initial fetch error:', e);
+            cachedLogoUrl = DEFAULT_LOGO_URL;
+            listeners.forEach(fn => fn(DEFAULT_LOGO_URL));
+        }
+    };
+
+    fetchInitial();
+
+    // Mark as "listening" so we don't re-fetch
+    unsubscribe = () => { /* no-op — one-shot fetch, no channel to tear down */ };
 }
 
 /**

@@ -4,17 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    getDocs,
-    onSnapshot,
-    QueryConstraint,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { StorefrontProductItem } from '../types/components';
 
 export interface UsePublicProductsOptions {
@@ -35,7 +25,6 @@ export interface UsePublicProductsReturn {
 
 /**
  * Hook para obtener productos públicos de una tienda
- * Lee desde publicStores/{storeId}/products
  */
 export const usePublicProducts = (
     storeId: string | null,
@@ -58,22 +47,36 @@ export const usePublicProducts = (
     useEffect(() => {
         if (!storeId) return;
 
+        let isMounted = true;
+
         const fetchCategories = async () => {
             try {
-                const categoriesRef = collection(db, 'publicStores', storeId, 'categories');
-                const snapshot = await getDocs(categoriesRef);
-                const cats = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    name: doc.data().name,
-                    slug: doc.data().slug,
-                }));
-                setCategories(cats);
+                const { data, error } = await supabase
+                    .from('store_categories')
+                    .select('id, data')
+                    .eq('store_id', storeId);
+
+                if (!isMounted) return;
+
+                if (error) throw error;
+
+                if (data) {
+                    setCategories(data.map((cat: any) => ({
+                        id: cat.id,
+                        name: cat.data?.name || '',
+                        slug: cat.data?.slug || '',
+                    })));
+                }
             } catch (err) {
-                console.error('Error fetching categories:', err);
+                if (isMounted) console.error('Error fetching categories:', err);
             }
         };
 
         fetchCategories();
+
+        return () => {
+            isMounted = false;
+        };
     }, [storeId]);
 
     const fetchProducts = useCallback(async () => {
@@ -87,29 +90,36 @@ export const usePublicProducts = (
         setError(null);
 
         try {
-            const productsRef = collection(db, 'publicStores', storeId, 'products');
-            
-            // Simple query - fetch all and filter/sort client-side to avoid index requirements
-            const q = query(productsRef, limit(limitCount * 2)); // Fetch more to account for filtering
-            const snapshot = await getDocs(q);
+            // Query from store_products (hybrid schema: flat id/store_id + JSONB data)
+            const { data, error } = await supabase
+                .from('store_products')
+                .select('id, store_id, data')
+                .eq('store_id', storeId)
+                .limit(limitCount * 2); // Fetch more to account for filtering
 
-            let fetchedProducts: StorefrontProductItem[] = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    name: data.name,
-                    description: data.shortDescription || data.description,
-                    price: data.price,
-                    compareAtPrice: data.compareAtPrice,
-                    image: data.images?.[0]?.url,
-                    category: data.categoryId,
-                    inStock: data.inStock ?? true,
-                    rating: data.averageRating,
-                    reviewCount: data.reviewCount,
-                    slug: data.slug,
-                    updatedAt: data.updatedAt,
-                };
-            });
+            if (error) throw error;
+
+            let fetchedProducts: StorefrontProductItem[] = [];
+
+            if (data) {
+                fetchedProducts = data.map((doc: any) => {
+                    const d = doc.data || {};
+                    return {
+                        id: doc.id,
+                        name: d.name || '',
+                        description: d.shortDescription || d.description || '',
+                        price: d.price || 0,
+                        compareAtPrice: d.compareAtPrice,
+                        image: d.images?.[0]?.url || d.images?.[0] || null,
+                        category: d.categoryId,
+                        inStock: d.quantity == null ? true : d.quantity > 0,
+                        rating: d.averageRating,
+                        reviewCount: d.reviewCount,
+                        slug: d.slug,
+                        updatedAt: d.updatedAt,
+                    };
+                });
+            }
 
             // Client-side filtering for inStock
             fetchedProducts = fetchedProducts.filter(p => p.inStock !== false);
@@ -143,8 +153,8 @@ export const usePublicProducts = (
                 case 'newest':
                 default:
                     fetchedProducts.sort((a, b) => {
-                        const dateA = a.updatedAt?.toDate?.() || new Date(0);
-                        const dateB = b.updatedAt?.toDate?.() || new Date(0);
+                        const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+                        const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
                         return dateB.getTime() - dateA.getTime();
                     });
                     break;
@@ -168,55 +178,31 @@ export const usePublicProducts = (
         fetchProducts();
     }, [fetchProducts]);
 
-    // Realtime subscription (optional) - uses simple query to avoid index requirements
+    // Realtime subscription (optional)
     useEffect(() => {
         if (!storeId || !realtime) return;
 
-        const productsRef = collection(db, 'publicStores', storeId, 'products');
-        const q = query(productsRef, limit(limitCount * 2));
+        let isMounted = true;
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                let fetchedProducts: StorefrontProductItem[] = snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        name: data.name,
-                        description: data.shortDescription || data.description,
-                        price: data.price,
-                        compareAtPrice: data.compareAtPrice,
-                        image: data.images?.[0]?.url,
-                        category: data.categoryId,
-                        inStock: data.inStock ?? true,
-                        rating: data.averageRating,
-                        reviewCount: data.reviewCount,
-                        slug: data.slug,
-                        updatedAt: data.updatedAt,
-                    };
-                });
-                
-                // Client-side filtering and sorting
-                fetchedProducts = fetchedProducts
-                    .filter(p => p.inStock !== false)
-                    .sort((a, b) => {
-                        const dateA = a.updatedAt?.toDate?.() || new Date(0);
-                        const dateB = b.updatedAt?.toDate?.() || new Date(0);
-                        return dateB.getTime() - dateA.getTime();
-                    })
-                    .slice(0, limitCount);
-                
-                setProducts(fetchedProducts);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error in realtime subscription:', err);
-                setError(err.message);
-            }
-        );
+        const channelId = `public_products_${storeId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'store_products', filter: `store_id=eq.${storeId}` },
+                () => {
+                    if (isMounted) {
+                        fetchProducts();
+                    }
+                }
+            )
+            .subscribe();
 
-        return () => unsubscribe();
-    }, [storeId, realtime, limitCount]);
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
+    }, [storeId, realtime, fetchProducts]);
 
     return {
         products,

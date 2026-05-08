@@ -107,7 +107,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
         // Debounced async availability check
         setUsernameChecking(true);
         usernameDebounceRef.current = setTimeout(async () => {
-            const result = await validateUsername(normalized, user?.uid);
+            const result = await validateUsername(normalized, user?.id);
             setUsernameChecking(false);
             if (result.valid) {
                 setUsernameValid(true);
@@ -117,7 +117,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                 setUsernameError(result.error || '');
             }
         }, 600);
-    }, [user?.uid]);
+    }, [user?.id]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -135,7 +135,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             let newPhotoURL = userDocument?.photoURL || '';
             // 1. Upload new photo if it exists
             if (photoFile) {
-                const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+                const storageRef = ref(storage, `profile-pictures/${user.id}`);
                 const snapshot = await uploadBytes(storageRef, photoFile);
                 newPhotoURL = await getDownloadURL(snapshot.ref);
             }
@@ -152,7 +152,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             // 3. Handle username/subdomain claim if changed
             const usernameChanged = username !== originalUsername.current;
             if (usernameChanged && username) {
-                const claimResult = await claimSubdomain(username, user.uid);
+                const claimResult = await claimSubdomain(username, user.id);
                 if (!claimResult.success) {
                     setError(claimResult.error || 'Error al reclamar subdominio');
                     setIsLoading(false);
@@ -173,7 +173,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             if (usernameChanged) {
                 updatedDocData.username = username;
             }
-            const userDocRef = doc(db, 'users', user.uid);
+            const userDocRef = doc(db, 'users', user.id);
             await updateDoc(userDocRef, updatedDocData);
 
             // 5. Update context state
@@ -201,7 +201,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
             await reauthenticateWithCredential(user, credential);
 
             // Re-authentication successful, proceed with deletion
-            const userDocRef = doc(db, 'users', user.uid);
+            const userDocRef = doc(db, 'users', user.id);
             await deleteDoc(userDocRef);
             await deleteUser(user);
 

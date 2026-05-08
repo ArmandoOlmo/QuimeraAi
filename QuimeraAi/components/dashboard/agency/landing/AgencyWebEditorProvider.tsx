@@ -189,7 +189,7 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             name: 'Agency Landing',
             data: data,
             theme: theme,
-            userId: user?.uid || '',
+            userId: user?.id || '',
             status: 'draft',
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString()

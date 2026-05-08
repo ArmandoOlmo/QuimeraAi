@@ -9,7 +9,6 @@ import { usePortal } from './PortalContext';
 import PortalSidebar from './PortalSidebar';
 import { Menu, Bell, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/core/AuthContext';
-import { auth, signOut } from '../../firebase';
 import { useRouter } from '../../hooks/useRouter';
 import HeaderBackButton from '../ui/HeaderBackButton';
 import QuimeraLoader from '../ui/QuimeraLoader';
@@ -21,15 +20,19 @@ interface PortalLayoutProps {
 const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
     const { t } = useTranslation();
     const { portalConfig, theme, isLoadingPortal, error } = usePortal();
-    const { user, userDocument } = useAuth();
+    const { user, userDocument, logout } = useAuth();
     const { navigate, goBack } = useRouter();
     
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
     const handleSignOut = async () => {
-        await signOut(auth);
-        navigate('/login');
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error("Sign out error", error);
+        }
     };
 
     // Loading state
@@ -115,9 +118,9 @@ const PortalLayout: React.FC<PortalLayoutProps> = ({ children }) => {
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-secondary transition-colors"
                             >
-                                {user?.photoURL ? (
+                                {userDocument?.photoURL ? (
                                     <img
-                                        src={user.photoURL}
+                                        src={userDocument.photoURL}
                                         alt="User"
                                         className="w-8 h-8 rounded-full object-cover"
                                     />

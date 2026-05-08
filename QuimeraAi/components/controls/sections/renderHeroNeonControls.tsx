@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, Select, ToggleControl, SliderControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl, TopDotsControl } from '../ControlsShared';
 import { Type, Link, Settings, Layout, Layers, RotateCcw, Trash2, Plus, Image as ImageIcon, Maximize2 } from 'lucide-react';
@@ -50,7 +50,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <Input 
+            <I18nInput 
               label={t('editor.heroNeonControls.buttonText', 'Texto del Botón')} 
               value={slide[textKey] || ''} 
               onChange={(val) => setNestedData(`heroNeon.slides.${index}.${textKey}`, val)} 
@@ -274,7 +274,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               label={t('editor.heroNeonControls.headline', 'Headline')} 
               onAssistClick={() => setAiAssistField({ path: `heroNeon.slides.${index}.headline`, value: slide.headline, context: 'Hero Neon Headline' })}
             >
-              <TextArea 
+              <I18nTextArea 
                 value={slide.headline || ''} 
                 onChange={(val) => setNestedData(`heroNeon.slides.${index}.headline`, val)} 
                 rows={2} 
@@ -285,7 +285,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
               label={t('editor.heroNeonControls.subheadline', 'Subheadline')} 
               onAssistClick={() => setAiAssistField({ path: `heroNeon.slides.${index}.subheadline`, value: slide.subheadline || '', context: 'Hero Neon Subheadline' })}
             >
-              <TextArea 
+              <I18nTextArea 
                 value={slide.subheadline || ''} 
                 onChange={(val) => setNestedData(`heroNeon.slides.${index}.subheadline`, val)} 
                 rows={3} 

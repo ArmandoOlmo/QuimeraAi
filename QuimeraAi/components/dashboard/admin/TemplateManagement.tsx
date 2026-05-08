@@ -36,7 +36,20 @@ import ThumbnailEditor from '../../ui/ThumbnailEditor';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
-import { db, doc, setDoc } from '../../../firebase';
+import { supabase } from '../../../supabase';
+
+/**
+ * Safely resolves a value that might be a bilingual {en, es} object
+ * into a plain string suitable for React rendering.
+ */
+const resolveText = (value: any, lang: string = 'es'): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && (value.en || value.es)) {
+        return (lang === 'es' ? value.es : value.en) || value.en || value.es || '';
+    }
+    return String(value);
+};
 
 // Lazy-load the AI Template Generator to avoid bloating this module
 const AdminTemplateStudio = React.lazy(() => import('./AdminTemplateStudio'));
@@ -143,34 +156,55 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         return industryId;
     };
 
-    // Update template in Firestore
+    // Update template in Supabase
     const updateTemplate = async (templateId: string, updates: Partial<Project>) => {
         console.log('🔄 updateTemplate called with:', { templateId, updates });
 
         const template = templates.find(t => t.id === templateId);
         if (!template) throw new Error('Template not found');
 
-        const updatedData = {
-            ...template,
-            ...updates,
-            lastUpdated: new Date().toISOString()
+        // Build the updated template in local state
+        const updatedTemplate = { ...template, ...updates, lastUpdated: new Date().toISOString() };
+
+        // Build Supabase column updates.
+        // The `data` JSONB column stores the full project object.
+        // When reading, loadGlobalTemplates does `...row.data` to spread all fields.
+        // So we reconstruct the full data object from the updated template.
+        const supabaseUpdates: Record<string, any> = {
+            last_updated: updatedTemplate.lastUpdated,
+            name: updatedTemplate.name,
+            thumbnail_url: updatedTemplate.thumbnailUrl || null,
         };
 
-        const { id, ...dataToSave } = updatedData;
+        // Direct column mappings for fields that have their own columns
+        if (updates.theme !== undefined) supabaseUpdates.theme = updates.theme;
+        if (updates.brandIdentity !== undefined) supabaseUpdates.brand_identity = updates.brandIdentity;
 
-        console.log('📤 Saving to Firestore:', {
+        // Rebuild the `data` JSONB — this is the full project snapshot
+        // that loadGlobalTemplates spreads via `...row.data`
+        const { id: _id, ...dataPayload } = updatedTemplate;
+        supabaseUpdates.data = dataPayload;
+
+        console.log('📤 Saving to Supabase:', {
             templateId,
-            thumbnailUrl: dataToSave.thumbnailUrl?.substring(0, 50),
-            industries: dataToSave.industries
+            thumbnailUrl: supabaseUpdates.thumbnail_url?.substring(0, 50),
+            industries: updatedTemplate.industries,
         });
 
-        const templateDocRef = doc(db, 'templates', templateId);
-        await setDoc(templateDocRef, dataToSave);
+        const { error } = await supabase
+            .from('projects')
+            .update(supabaseUpdates)
+            .eq('id', templateId);
 
-        console.log('✅ Firestore save complete');
+        if (error) {
+            console.error('❌ Supabase save failed:', error);
+            throw new Error(`Failed to save template: ${error.message}`);
+        }
+
+        console.log('✅ Supabase save complete');
 
         // Update local state immediately so changes are visible
-        updateTemplateInState(templateId, updatedData);
+        updateTemplateInState(templateId, updatedTemplate);
 
         setEditingTemplate(null);
     };
@@ -522,7 +556,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     )}
                                 </div>
                                 <div className="text-base sm:text-xl font-bold text-q-text mb-0.5 group-hover:text-green-400 transition-colors truncate" title={mostUsedTemplate?.name}>
-                                    {mostUsedTemplate?.name || 'N/A'}
+                                    {resolveText(mostUsedTemplate?.name) || 'N/A'}
                                 </div>
                                 <p className="text-xs sm:text-sm text-q-text-secondary font-medium">{t('superadmin.templateManagement.mostPopular', 'Most Popular')}</p>
                             </div>
@@ -620,7 +654,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                                     {/* Content at Bottom */}
                                     <div className="absolute bottom-0 left-0 right-0 z-30 p-4 sm:p-6">
-                                        <h3 className="font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3 line-clamp-2">{template.name}</h3>
+                                        <h3 className="font-bold text-xl sm:text-2xl text-white mb-2 sm:mb-3 line-clamp-2">{resolveText(template.name)}</h3>
 
                                         {/* Industries Tags */}
                                         {template.industries && template.industries.length > 0 && (
@@ -757,7 +791,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
 
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-q-text truncate text-sm sm:text-base mb-1">{template.name}</h3>
+                                                <h3 className="font-semibold text-q-text truncate text-sm sm:text-base mb-1">{resolveText(template.name)}</h3>
                                                 {/* Industry tags in list view */}
                                                 {template.industries && template.industries.length > 0 && (
                                                     <div className="flex items-center gap-1">
@@ -888,7 +922,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                                        <h2 className="text-xl sm:text-2xl font-bold truncate">{previewTemplate.name}</h2>
+                                        <h2 className="text-xl sm:text-2xl font-bold truncate">{resolveText(previewTemplate.name)}</h2>
                                         {previewTemplate.isFeatured && (
                                             <Star className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 fill-yellow-500 flex-shrink-0" />
                                         )}
@@ -976,15 +1010,15 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                                     <div className="space-y-2.5 sm:space-y-2 text-sm">
                                         <div>
                                             <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.business', 'Business')}:</span>
-                                            <p className="font-medium">{previewTemplate.brandIdentity?.name || 'N/A'}</p>
+                                            <p className="font-medium">{resolveText(previewTemplate.brandIdentity?.name) || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.targetAudience', 'Target Audience')}:</span>
-                                            <p className="font-medium">{previewTemplate.brandIdentity?.targetAudience || 'N/A'}</p>
+                                            <p className="font-medium">{resolveText(previewTemplate.brandIdentity?.targetAudience) || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <span className="text-q-text-secondary text-xs">{t('superadmin.templateManagement.metadata.tone', 'Tone')}:</span>
-                                            <p className="font-medium">{previewTemplate.brandIdentity?.toneOfVoice || 'N/A'}</p>
+                                            <p className="font-medium">{resolveText(previewTemplate.brandIdentity?.toneOfVoice) || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -994,7 +1028,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                             {previewTemplate.description && (
                                 <div className="mb-4 sm:mb-6">
                                     <h3 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">{t('superadmin.templateManagement.metadata.description', 'Description')}</h3>
-                                    <p className="text-sm text-q-text-secondary leading-relaxed">{previewTemplate.description}</p>
+                                    <p className="text-sm text-q-text-secondary leading-relaxed">{resolveText(previewTemplate.description)}</p>
                                 </div>
                             )}
 

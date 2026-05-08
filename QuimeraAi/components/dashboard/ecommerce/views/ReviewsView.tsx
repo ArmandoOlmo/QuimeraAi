@@ -36,7 +36,7 @@ const ReviewsView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { products } = useProducts(user?.uid || '', storeId);
+    const { products } = useProducts(user?.id || '', storeId);
     const {
         reviews,
         pendingReviews,
@@ -50,7 +50,7 @@ const ReviewsView: React.FC = () => {
         rejectReview,
         deleteReview,
         respondToReview,
-    } = useReviews(user?.uid || '', storeId);
+    } = useReviews(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');

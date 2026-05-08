@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { AppProviders, LightProviders } from './contexts/AppProviders';
 import { useLightAuthState } from './hooks/useLightAuthState';
 import { useAuth } from './contexts/core/AuthContext';
@@ -104,6 +104,7 @@ const AppContent: React.FC<AppContentProps> = ({
   const { view, setView, setAdminView, isSidebarOpen, setIsSidebarOpen, previewRef } = useUI();
   const { activeProjectId, loadProject, data, isLoadingProjects } = useProject();
   const seoConfig = useSEO();
+  const loadingRouteProjectRef = useRef<string | null>(null);
 
   // Sync route state with contexts
   useEffect(() => {
@@ -116,13 +117,18 @@ const AppContent: React.FC<AppContentProps> = ({
     }
     // Load project when:
     // 1. Route has a projectId AND
-    // 2. Either the projectId changed OR data is not loaded yet (reload scenario) AND
-    // 3. Projects have finished loading from Firebase
-    const shouldLoadProject = routeProjectId && !isLoadingProjects && (
-      routeProjectId !== activeProjectId || !data
-    );
+    // 2. Projects have finished loading AND
+    // 3. We haven't already started loading this specific projectId AND
+    // 4. (projectId changed OR we don't have data yet)
+    const needsLoad = routeProjectId !== activeProjectId || !data;
+    const shouldLoadProject = routeProjectId && !isLoadingProjects && needsLoad && loadingRouteProjectRef.current !== routeProjectId;
+    
     if (shouldLoadProject) {
+      loadingRouteProjectRef.current = routeProjectId;
       loadProject(routeProjectId, false, false);
+    } else if (routeProjectId === activeProjectId && data) {
+      // Clear the ref once successfully loaded so it can be reloaded if needed
+      loadingRouteProjectRef.current = null;
     }
   }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects, data]);
 
@@ -164,7 +170,7 @@ const AuthGate: React.FC = () => {
   useEffect(() => {
     if (user && userDocument) {
       setUserContext({
-        id: user.uid,
+        id: user.id,
         email: user.email || undefined,
         role: userDocument.role,
       });
@@ -185,7 +191,11 @@ const AuthGate: React.FC = () => {
       <GlobalAdPixels />
 
       <Router
-        user={user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null}
+        user={user ? { 
+          uid: user.id, 
+          email: user.email || null, 
+          emailVerified: !!(user.email_confirmed_at || user.user_metadata?.email_verified) 
+        } : null}
         userRole={isUserOwner ? 'owner' : userDocument?.role}
         loadingAuth={loadingAuth}
         onVerificationEmailSent={setVerificationEmail}

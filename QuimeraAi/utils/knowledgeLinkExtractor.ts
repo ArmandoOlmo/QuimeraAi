@@ -2,13 +2,14 @@
  * Knowledge Link Extractor
  * 
  * Client-side utility for extracting content from URLs via the 
- * extractContent Cloud Function.
+ * Supabase Edge Function (OpenRouter).
  */
 
 import { KnowledgeLink } from '../types';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
 const EXTRACT_URL = import.meta.env.VITE_EXTRACT_CONTENT_URL ||
-    'https://us-central1-quimeraai.cloudfunctions.net/knowledge-extractContent';
+    `${SUPABASE_URL}/functions/v1/knowledge-extractContent`;
 
 /**
  * Detect if a URL is a YouTube link

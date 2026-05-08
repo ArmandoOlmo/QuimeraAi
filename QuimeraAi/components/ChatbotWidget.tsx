@@ -7,7 +7,20 @@ import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
-import { db, collection, addDoc, getDocs, getDoc, doc, query, where, orderBy, auth } from '../firebase';
+import { supabase } from '../supabase';
+// Legacy Firebase imports — still used for appointments (Phase 2 migration)
+// Lazy-loaded to avoid top-level await and hard dependency
+let _firebaseModules: any = null;
+let _firebaseLoadPromise: Promise<any> | null = null;
+function getFirebaseModules(): Promise<any> {
+    if (_firebaseModules) return Promise.resolve(_firebaseModules);
+    if (!_firebaseLoadPromise) {
+        _firebaseLoadPromise = import('../firebase')
+            .then(fb => { _firebaseModules = fb; return fb; })
+            .catch(() => null);
+    }
+    return _firebaseLoadPromise;
+}
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
@@ -39,7 +52,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
     const authContext = useSafeAuth();
-    const user = authContext?.user || auth?.currentUser || null;
+    const user = authContext?.user || null;
     const tenantContext = useSafeTenant();
     const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
     const { t } = useTranslation();
@@ -164,7 +177,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // We no longer return null here so that programmatic triggers (like open-quimera-chat) 
     // can always work. The floating button visibility is controlled below.
 
-    // Load CMS articles for chatbot knowledge
+    // Load CMS articles for chatbot knowledge (from Supabase posts table)
     useEffect(() => {
         const loadCmsArticles = async () => {
             const articleIds = aiAssistantConfig.cmsArticleIds;
@@ -173,20 +186,22 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 return;
             }
             try {
-                const articles: { id: string; title: string; content: string }[] = [];
-                // Fetch from publicStores (works for both owner and public visitors)
-                for (const articleId of articleIds.slice(0, 20)) { // Cap at 20 articles
-                    const postRef = doc(db, 'publicStores', activeProject.id, 'posts', articleId);
-                    const postSnap = await getDoc(postRef);
-                    if (postSnap.exists()) {
-                        const postData = postSnap.data();
-                        articles.push({
-                            id: articleId,
-                            title: postData.title || 'Untitled',
-                            content: postData.content || postData.excerpt || ''
-                        });
-                    }
+                const { data: postsData, error } = await supabase
+                    .from('posts')
+                    .select('id, title, content, excerpt')
+                    .in('id', articleIds.slice(0, 20));
+
+                if (error) {
+                    console.warn('[ChatbotWidget] Failed to load CMS articles from Supabase:', error);
+                    return;
                 }
+
+                const articles = (postsData || []).map((p: any) => ({
+                    id: p.id,
+                    title: p.title || 'Untitled',
+                    content: p.content || p.excerpt || ''
+                }));
+
                 setCmsArticles(articles);
                 if (articles.length > 0) {
                     console.log(`[ChatbotWidget] ✅ Loaded ${articles.length} CMS articles for chatbot knowledge`);
@@ -204,15 +219,20 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             if (!user || !activeProject?.id || !isOpen) return;
 
             try {
-                const appointmentsRef = collection(db, 'users', user.uid, 'projects', activeProject.id, 'appointments');
-                const q = query(appointmentsRef, orderBy('startDate', 'asc'));
-                const snapshot = await getDocs(q);
+                const fb = await getFirebaseModules();
+                if (!fb) {
+                    console.warn('[ChatbotWidget] Firebase unavailable, skipping appointment load');
+                    return;
+                }
+                const appointmentsRef = fb.collection(fb.db, 'users', user.id, 'projects', activeProject.id, 'appointments');
+                const q = fb.query(appointmentsRef, fb.orderBy('startDate', 'asc'));
+                const snapshot = await fb.getDocs(q);
 
                 const appointmentSlots: AppointmentSlot[] = [];
                 const now = new Date();
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                snapshot.forEach((docSnap: any) => {
+                    const data = docSnap.data();
                     const startDate = data.startDate?.seconds
                         ? new Date(data.startDate.seconds * 1000)
                         : new Date();
@@ -223,7 +243,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     // Only include future appointments
                     if (startDate >= now && data.status !== 'cancelled') {
                         appointmentSlots.push({
-                            id: doc.id,
+                            id: docSnap.id,
                             title: data.title || 'Cita',
                             startDate,
                             endDate,
@@ -382,8 +402,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         }
 
         // If user is authenticated and matches ownerId (e.g. inside Editor)
-        if (user && user.uid === ownerId) {
+        if (user && user.id === ownerId) {
             try {
+                const fb = await getFirebaseModules();
+                if (!fb) {
+                    console.warn('[ChatbotWidget] Firebase unavailable, falling back to API for appointment creation');
+                    // Fall through to API fallback below
+                } else {
                 // Convert dates to Firestore timestamps
                 const dateToTimestamp = (date: Date) => ({
                     seconds: Math.floor(date.getTime() / 1000),
@@ -416,7 +441,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     startDate: dateToTimestamp(appointmentData.startDate),
                     endDate: dateToTimestamp(appointmentData.endDate),
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    organizerId: user.uid,
+                    organizerId: user.id,
                     organizerName: user.displayName || '',
                     organizerEmail: user.email || '',
                     participants,
@@ -432,13 +457,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     linkedLeadIds: appointmentData.linkedLeadId ? [appointmentData.linkedLeadId] : [],
                     tags: ['chatbot', 'auto-scheduled'],
                     createdAt: now,
-                    createdBy: user.uid,
+                    createdBy: user.id,
                     projectId: projectId,
                 };
 
                 // Save to Firestore: users/{userId}/projects/{projectId}/appointments
-                const appointmentsRef = collection(db, 'users', ownerId, 'projects', projectId, 'appointments');
-                const docRef = await addDoc(appointmentsRef, appointmentDoc);
+                const appointmentsRef = fb.collection(fb.db, 'users', ownerId, 'projects', projectId, 'appointments');
+                const docRef = await fb.addDoc(appointmentsRef, appointmentDoc);
 
                 console.log('[ChatbotWidget] ✅ Appointment created via Firestore:', docRef.id);
 
@@ -460,12 +485,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                             const leadId = await addLead(leadData);
                             console.log('[ChatbotWidget] ✅ Lead created from appointment via context:', leadId);
                         } else {
-                            // Write directly to Firestore since we are the owner (e.g. in standalone preview)
-                            const leadsRef = collection(db, 'users', ownerId, 'projects', projectId, 'leads');
-                            const leadDocRef = await addDoc(leadsRef, {
+                            // Write directly to Firestore since we are the owner
+                            const leadsRef = fb.collection(fb.db, 'users', ownerId, 'projects', projectId, 'leads');
+                            const leadDocRef = await fb.addDoc(leadsRef, {
                                 ...leadData,
                                 createdAt: now,
-                                createdBy: user.uid,
+                                createdBy: user.id,
                                 projectId: projectId
                             });
                             console.log('[ChatbotWidget] ✅ Lead created from appointment via Firestore:', leadDocRef.id);
@@ -477,6 +502,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 }
 
                 return docRef.id;
+                } // end fb block
             } catch (error) {
                 console.error('[ChatbotWidget] ❌ Error creating appointment via Firestore:', error);
                 return undefined;

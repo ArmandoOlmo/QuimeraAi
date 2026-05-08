@@ -12,6 +12,7 @@ import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project';
 import { useFiles } from '../../contexts/files';
 import { useCMS } from '../../contexts/cms';
+import { safeClone } from '../../utils/sanitize';
 import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
@@ -242,7 +243,7 @@ const Controls: React.FC = () => {
     lastUpdatedSectionRef.current = sectionKey;
     setData(prevData => {
       if (!prevData) return null;
-      const newData = JSON.parse(JSON.stringify(prevData));
+      const newData = safeClone(prevData);
       const keys = path.split('.');
       let current: any = newData;
       for (let i = 0; i < keys.length - 1; i++) {
@@ -261,11 +262,18 @@ const Controls: React.FC = () => {
   useEffect(() => {
     if (!activePage || !updatePage || !data || !lastUpdatedSectionRef.current) return;
     const sectionKey = lastUpdatedSectionRef.current;
-    if (activePage.sections.includes(sectionKey as any)) {
+    if (activePage?.sections?.includes(sectionKey as any)) {
       const sectionData = data[sectionKey as keyof typeof data];
       if (sectionData) {
         const tid = setTimeout(() => {
-          updatePage(activePage.id, { sectionData: { ...activePage.sectionData, [sectionKey]: JSON.parse(JSON.stringify(sectionData)) } });
+          // Extract the absolute latest data for all active sections to prevent stale state
+          // overwrites when updatePage syncs back to global data.
+          const updatedPageSectionData: any = { ...activePage.sectionData };
+          activePage.sections?.forEach((sec: string) => {
+            if (data[sec]) updatedPageSectionData[sec] = safeClone(data[sec]);
+          });
+          console.log(`[Controls] Syncing section '${sectionKey}' to ProjectContext updatePage. Keys updated:`, Object.keys(updatedPageSectionData));
+          updatePage(activePage.id, { sectionData: updatedPageSectionData });
           lastUpdatedSectionRef.current = null;
         }, 500);
         return () => clearTimeout(tid);
@@ -412,7 +420,7 @@ const Controls: React.FC = () => {
     let newDataSnapshot: any = null;
     setData(prevData => {
       if (!prevData) return null;
-      const newData = JSON.parse(JSON.stringify(prevData));
+      const newData = safeClone(prevData);
       const sectionDefaults = (initialData.data as any)[section] || {};
       const existingData = newData[section] || {};
       newData[section] = { ...sectionDefaults, ...existingData, ...globalDefault,

@@ -1,22 +1,10 @@
 /**
  * useChangelog Hook
- * Hook para gestionar el changelog desde Firestore
+ * Hook para gestionar el changelog desde Supabase
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  deleteDoc, 
-  getDocs,
-  where,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { 
   ChangelogEntry, 
   ChangelogTag, 
@@ -25,8 +13,8 @@ import {
   DEFAULT_CHANGELOG_CONFIG
 } from '../types/changelog';
 
-const CHANGELOG_COLLECTION = 'changelog';
-const CONFIG_DOC = 'config';
+const CHANGELOG_TABLE = 'changelogs';
+const CONFIG_SETTINGS_ID = 'changelog_config';
 
 // Hook público para leer changelog
 export function useChangelog(filters?: ChangelogFilters) {
@@ -38,71 +26,116 @@ export function useChangelog(filters?: ChangelogFilters) {
   // Subscribe to changelog entries
   useEffect(() => {
     setIsLoading(true);
+    let isMounted = true;
     
-    const q = query(
-      collection(db, CHANGELOG_COLLECTION),
-      where('isPublished', '==', true),
-      orderBy('date', 'desc')
-    );
+    const fetchChangelogs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from(CHANGELOG_TABLE)
+          .select('*')
+          .eq('isPublished', true)
+          .order('date', { ascending: false });
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const changelogEntries: ChangelogEntry[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          changelogEntries.push({
+        if (!isMounted) return;
+
+        if (error) throw error;
+
+        if (data) {
+          const changelogEntries: ChangelogEntry[] = data.map((doc: any) => ({
             id: doc.id,
-            date: data.date,
-            tag: data.tag,
-            title: data.title,
-            title_en: data.title_en,
-            description: data.description,
-            description_en: data.description_en,
-            features: (data.features || []).map((f: any) => ({
+            date: doc.date,
+            tag: doc.tag,
+            title: doc.title,
+            title_en: doc.title_en,
+            description: doc.description,
+            description_en: doc.description_en,
+            features: (doc.features || []).map((f: any) => ({
               ...f,
               title_en: f.title_en,
               description_en: f.description_en,
             })),
-            imageUrl: data.imageUrl,
-            imageAlt: data.imageAlt,
-            version: data.version,
-            isPublished: data.isPublished,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-            slug: data.slug,
-          });
-        });
-        setEntries(changelogEntries);
-        setIsLoading(false);
-        setError(null);
-      },
-      (err) => {
+            imageUrl: doc.imageUrl || doc.image_url,
+            imageAlt: doc.imageAlt || doc.image_alt,
+            version: doc.version,
+            isPublished: doc.isPublished || doc.is_published,
+            createdAt: doc.createdAt || doc.created_at,
+            updatedAt: doc.updatedAt || doc.updated_at,
+            slug: doc.slug,
+          }));
+          setEntries(changelogEntries);
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
         console.error('Error fetching changelog:', err);
         setError('Error loading changelog');
-        setIsLoading(false);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    fetchChangelogs();
+
+    const channelId = `changelog_public_${Math.random().toString(36).substring(2, 9)}`;
+    const subscription = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: CHANGELOG_TABLE, filter: 'isPublished=eq.true' },
+        () => {
+          if (isMounted) fetchChangelogs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   // Load config
   useEffect(() => {
-    const loadConfig = async () => {
+    let isMounted = true;
+    const fetchConfig = async () => {
       try {
-        const configRef = doc(db, CHANGELOG_COLLECTION, CONFIG_DOC);
-        const unsubscribe = onSnapshot(configRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setConfig({ ...DEFAULT_CHANGELOG_CONFIG, ...docSnap.data() as ChangelogConfig });
-          }
-        });
-        return unsubscribe;
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('id', CONFIG_SETTINGS_ID)
+          .single();
+
+        if (!isMounted) return;
+        
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        if (data && data.config) {
+          setConfig({ ...DEFAULT_CHANGELOG_CONFIG, ...(data.config as ChangelogConfig) });
+        }
       } catch (err) {
-        console.error('Error loading changelog config:', err);
+        if (isMounted) console.error('Error loading changelog config:', err);
       }
     };
-    loadConfig();
+
+    fetchConfig();
+
+    const channelId = `changelog_config_${Math.random().toString(36).substring(2, 9)}`;
+    const subscription = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'settings', filter: `id=eq.${CONFIG_SETTINGS_ID}` },
+        (payload) => {
+          if (isMounted && payload.new && (payload.new as any).config) {
+            setConfig({ ...DEFAULT_CHANGELOG_CONFIG, ...((payload.new as any).config as ChangelogConfig) });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   // Filter entries based on filters
@@ -168,7 +201,9 @@ export function useChangelog(filters?: ChangelogFilters) {
       beta: 0,
     };
     entries.forEach((e) => {
-      counts[e.tag]++;
+      if (counts[e.tag] !== undefined) {
+        counts[e.tag]++;
+      }
     });
     return counts;
   }, [entries]);
@@ -195,55 +230,70 @@ export function useChangelogAdmin() {
   // Subscribe to ALL changelog entries (including unpublished)
   useEffect(() => {
     setIsLoading(true);
+    let isMounted = true;
     
-    const q = query(
-      collection(db, CHANGELOG_COLLECTION),
-      orderBy('date', 'desc')
-    );
+    const fetchChangelogs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from(CHANGELOG_TABLE)
+          .select('*')
+          .order('date', { ascending: false });
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const changelogEntries: ChangelogEntry[] = [];
-        snapshot.forEach((docSnap) => {
-          // Skip config document
-          if (docSnap.id === CONFIG_DOC) return;
-          
-          const data = docSnap.data();
-          changelogEntries.push({
-            id: docSnap.id,
-            date: data.date,
-            tag: data.tag,
-            title: data.title,
-            title_en: data.title_en,
-            description: data.description,
-            description_en: data.description_en,
-            features: (data.features || []).map((f: any) => ({
+        if (!isMounted) return;
+
+        if (error) throw error;
+
+        if (data) {
+          const changelogEntries: ChangelogEntry[] = data.map((doc: any) => ({
+            id: doc.id,
+            date: doc.date,
+            tag: doc.tag,
+            title: doc.title,
+            title_en: doc.title_en,
+            description: doc.description,
+            description_en: doc.description_en,
+            features: (doc.features || []).map((f: any) => ({
               ...f,
               title_en: f.title_en,
               description_en: f.description_en,
             })),
-            imageUrl: data.imageUrl,
-            imageAlt: data.imageAlt,
-            version: data.version,
-            isPublished: data.isPublished ?? true,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt,
-            slug: data.slug,
-          });
-        });
-        setEntries(changelogEntries);
-        setIsLoading(false);
-        setError(null);
-      },
-      (err) => {
+            imageUrl: doc.imageUrl || doc.image_url,
+            imageAlt: doc.imageAlt || doc.image_alt,
+            version: doc.version,
+            isPublished: doc.isPublished ?? doc.is_published ?? true,
+            createdAt: doc.createdAt || doc.created_at,
+            updatedAt: doc.updatedAt || doc.updated_at,
+            slug: doc.slug,
+          }));
+          setEntries(changelogEntries);
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
         console.error('Error fetching changelog:', err);
         setError('Error loading changelog');
-        setIsLoading(false);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
+    fetchChangelogs();
+
+    const channelId = `changelog_admin_${Math.random().toString(36).substring(2, 9)}`;
+    const subscription = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: CHANGELOG_TABLE },
+        () => {
+          if (isMounted) fetchChangelogs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   // Generate slug from title
@@ -264,17 +314,30 @@ export function useChangelogAdmin() {
     try {
       const now = new Date().toISOString();
       const slug = generateSlug(entry.title) + '-' + Date.now();
-      const docRef = doc(collection(db, CHANGELOG_COLLECTION));
       
-      await setDoc(docRef, {
-        ...entry,
-        slug,
-        createdAt: now,
-        updatedAt: now,
+      // Remove any undefined values
+      const sanitizedEntry: any = {};
+      Object.keys(entry).forEach(key => {
+        if ((entry as any)[key] !== undefined) {
+          sanitizedEntry[key] = (entry as any)[key];
+        }
       });
       
+      const { data, error } = await supabase
+        .from(CHANGELOG_TABLE)
+        .insert({
+          ...sanitizedEntry,
+          slug,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
       setIsSaving(false);
-      return { id: docRef.id, slug };
+      return { id: data.id, slug };
     } catch (err) {
       console.error('Error creating changelog entry:', err);
       setError('Error creating entry');
@@ -289,19 +352,29 @@ export function useChangelogAdmin() {
     setError(null);
     
     try {
-      const docRef = doc(db, CHANGELOG_COLLECTION, id);
-      
       // If title changed, update slug
       let slug = updates.slug;
       if (updates.title && !updates.slug) {
         slug = generateSlug(updates.title) + '-' + Date.now();
       }
       
-      await setDoc(docRef, {
-        ...updates,
-        ...(slug && { slug }),
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
+      const sanitizedUpdates: any = {};
+      Object.keys(updates).forEach(key => {
+        if ((updates as any)[key] !== undefined) {
+          sanitizedUpdates[key] = (updates as any)[key];
+        }
+      });
+      
+      const { error } = await supabase
+        .from(CHANGELOG_TABLE)
+        .update({
+          ...sanitizedUpdates,
+          ...(slug && { slug }),
+          updatedAt: new Date().toISOString(),
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
       
       setIsSaving(false);
     } catch (err) {
@@ -318,7 +391,12 @@ export function useChangelogAdmin() {
     setError(null);
     
     try {
-      await deleteDoc(doc(db, CHANGELOG_COLLECTION, id));
+      const { error } = await supabase
+        .from(CHANGELOG_TABLE)
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
       setIsSaving(false);
     } catch (err) {
       console.error('Error deleting changelog entry:', err);
@@ -334,11 +412,30 @@ export function useChangelogAdmin() {
   };
 
   // Update config
-  const updateConfig = async (config: Partial<ChangelogConfig>) => {
+  const updateConfig = async (configData: Partial<ChangelogConfig>) => {
     setIsSaving(true);
     try {
-      const configRef = doc(db, CHANGELOG_COLLECTION, CONFIG_DOC);
-      await setDoc(configRef, config, { merge: true });
+      const { data: existingData } = await supabase
+        .from('settings')
+        .select('config')
+        .eq('id', CONFIG_SETTINGS_ID)
+        .single();
+        
+      const mergedConfig = {
+        ...DEFAULT_CHANGELOG_CONFIG,
+        ...(existingData?.config as ChangelogConfig || {}),
+        ...configData
+      };
+      
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: CONFIG_SETTINGS_ID,
+          config: mergedConfig,
+          updated_at: new Date().toISOString()
+        });
+        
+      if (error) throw error;
       setIsSaving(false);
     } catch (err) {
       console.error('Error updating changelog config:', err);
@@ -520,29 +617,46 @@ export async function seedChangelog(): Promise<void> {
     },
   ];
 
-  // Check if changelog already has entries
-  const existingDocs = await getDocs(collection(db, CHANGELOG_COLLECTION));
-  const hasEntries = existingDocs.docs.some(doc => doc.id !== CONFIG_DOC);
-  
-  if (hasEntries) {
-    console.log('Changelog already has entries, skipping seed');
-    return;
-  }
+  try {
+    // Check if changelog already has entries
+    const { count, error: countError } = await supabase
+      .from(CHANGELOG_TABLE)
+      .select('*', { count: 'exact', head: true });
+      
+    if (countError) throw countError;
+    
+    if (count && count > 0) {
+      console.log('Changelog already has entries, skipping seed');
+      return;
+    }
 
-  // Seed entries
-  const now = new Date().toISOString();
-  for (const entry of initialEntries) {
-    const docRef = doc(collection(db, CHANGELOG_COLLECTION));
-    await setDoc(docRef, {
-      ...entry,
-      createdAt: now,
-      updatedAt: now,
+    // Seed entries
+    const now = new Date().toISOString();
+    for (const entry of initialEntries) {
+      const sanitizedEntry: any = {};
+      Object.keys(entry).forEach(key => {
+        if ((entry as any)[key] !== undefined) {
+          sanitizedEntry[key] = (entry as any)[key];
+        }
+      });
+      
+      await supabase.from(CHANGELOG_TABLE).insert({
+        ...sanitizedEntry,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Save default config
+    await supabase.from('settings').upsert({
+      id: CONFIG_SETTINGS_ID,
+      config: DEFAULT_CHANGELOG_CONFIG,
+      updated_at: now
     });
+
+    console.log('Changelog seeded successfully');
+  } catch (err) {
+    console.error('Error seeding changelog:', err);
   }
-
-  // Save default config
-  await setDoc(doc(db, CHANGELOG_COLLECTION, CONFIG_DOC), DEFAULT_CHANGELOG_CONFIG);
-
-  console.log('Changelog seeded successfully');
 }
 

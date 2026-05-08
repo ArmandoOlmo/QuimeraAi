@@ -5,7 +5,7 @@ import { Type, Settings, Layout, RotateCcw, Link, Maximize2 } from 'lucide-react
 import ColorControl from '../../ui/ColorControl';
 import {
   ToggleControl, SliderControl, Input, TextArea, Select
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
 
@@ -29,7 +29,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
             </label>
             
             <div className="mb-4">
-                <Input 
+                <I18nInput 
                   label={t('editor.ctaNeon.buttonText', 'Texto del Botón')} 
                   value={sectionData[textKey] || ''} 
                   onChange={(val) => setNestedData(`ctaNeon.${textKey}`, val)} 
@@ -153,7 +153,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                         context: 'CTA Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('ctaNeon.headline', val)}
                         rows={2}
@@ -168,7 +168,7 @@ export const renderCtaNeonControls = (deps: ControlsDeps) => {
                         context: 'CTA Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('ctaNeon.subheadline', val)}
                         rows={2}

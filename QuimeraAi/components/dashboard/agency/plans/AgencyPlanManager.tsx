@@ -125,7 +125,7 @@ export function AgencyPlanManager() {
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setProcessingPlanId(plan.id);
-                const result = await archiveAgencyPlan(plan.id, user?.uid);
+                const result = await archiveAgencyPlan(plan.id, user?.id);
                 setProcessingPlanId(null);
 
                 if (result.success) {
@@ -139,7 +139,7 @@ export function AgencyPlanManager() {
 
     const handleRestorePlan = async (plan: AgencyPlan) => {
         setProcessingPlanId(plan.id);
-        const result = await restoreAgencyPlan(plan.id, user?.uid);
+        const result = await restoreAgencyPlan(plan.id, user?.id);
         setProcessingPlanId(null);
 
         if (result.success) {

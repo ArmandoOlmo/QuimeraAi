@@ -646,8 +646,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.hero?.headline) {
           sections.push({
             id: 'hero',
-            title: pageData.hero.headline,
-            description: pageData.hero.subheadline,
+            title: resolveText(pageData.hero.headline),
+            description: resolveText(pageData.hero.subheadline),
             href: '/'
           });
         }
@@ -656,8 +656,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.features?.title) {
           sections.push({
             id: 'features',
-            title: pageData.features.title,
-            description: pageData.features.subtitle,
+            title: resolveText(pageData.features.title),
+            description: resolveText(pageData.features.subtitle),
             href: '#features'
           });
         }
@@ -666,8 +666,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.services?.title) {
           sections.push({
             id: 'services',
-            title: pageData.services.title,
-            description: pageData.services.subtitle,
+            title: resolveText(pageData.services.title),
+            description: resolveText(pageData.services.subtitle),
             href: '#services'
           });
         }
@@ -676,8 +676,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.testimonials?.title) {
           sections.push({
             id: 'testimonials',
-            title: pageData.testimonials.title,
-            description: pageData.testimonials.subtitle,
+            title: resolveText(pageData.testimonials.title),
+            description: resolveText(pageData.testimonials.subtitle),
             href: '#testimonials'
           });
         }
@@ -686,8 +686,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.pricing?.title) {
           sections.push({
             id: 'pricing',
-            title: pageData.pricing.title,
-            description: pageData.pricing.subtitle,
+            title: resolveText(pageData.pricing.title),
+            description: resolveText(pageData.pricing.subtitle),
             href: '#pricing'
           });
         }
@@ -696,8 +696,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.faq?.title) {
           sections.push({
             id: 'faq',
-            title: pageData.faq.title,
-            description: pageData.faq.subtitle,
+            title: resolveText(pageData.faq.title),
+            description: resolveText(pageData.faq.subtitle),
             href: '#faq'
           });
         }
@@ -706,8 +706,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.portfolio?.title) {
           sections.push({
             id: 'portfolio',
-            title: pageData.portfolio.title,
-            description: pageData.portfolio.subtitle,
+            title: resolveText(pageData.portfolio.title),
+            description: resolveText(pageData.portfolio.subtitle),
             href: '#portfolio'
           });
         }
@@ -716,8 +716,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.team?.title) {
           sections.push({
             id: 'team',
-            title: pageData.team.title,
-            description: pageData.team.subtitle,
+            title: resolveText(pageData.team.title),
+            description: resolveText(pageData.team.subtitle),
             href: '#team'
           });
         }
@@ -726,8 +726,8 @@ const Header: React.FC<HeaderData & {
         if (pageData.cta?.headline) {
           sections.push({
             id: 'cta',
-            title: pageData.cta.headline,
-            description: pageData.cta.subheadline,
+            title: resolveText(pageData.cta.headline),
+            description: resolveText(pageData.cta.subheadline),
             href: '#cta'
           });
         }
@@ -735,8 +735,8 @@ const Header: React.FC<HeaderData & {
         // Add store link
         sections.push({
           id: 'store',
-          title: 'Tienda',
-          description: 'Ver todos los productos',
+          title: resolveText('Tienda'),
+          description: resolveText('Ver todos los productos'),
           href: '/tienda'
         });
       }
@@ -1218,7 +1218,7 @@ const Header: React.FC<HeaderData & {
                         handleContentClick(href);
                         setIsMenuOpen(false);
                       }}
-                      placeholder={searchPlaceholder}
+                      placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={colors?.text}
                       sections={searchableSections}
@@ -1265,7 +1265,7 @@ const Header: React.FC<HeaderData & {
                       className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
                       style={{ color: colors?.text }}
                     >
-                      {loginText}
+                      {resolvedLoginText}
                     </a>
                   )}
                   {showLanguageSelector && (

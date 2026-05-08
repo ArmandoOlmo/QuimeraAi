@@ -286,7 +286,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `admin_news_video/${user?.uid || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `admin_news_video/${user?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             
             setUploadProgress(50); // Fake progress
             const { error: uploadError } = await supabase.storage
@@ -324,7 +324,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `admin_news_video/${user?.uid || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `admin_news_video/${user?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             
             setUploadProgress(50); // Fake progress
             const { error: uploadError } = await supabase.storage
@@ -445,11 +445,11 @@ Text to format:
                 return;
             }
 
-            const response = await generateContentViaProxy('admin-news-editor', populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy('admin-news-editor', populatedPrompt, modelName, {}, user?.id);
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'admin-news',
                     model: modelName,
                     feature: `news-article-${command}`,
@@ -471,7 +471,7 @@ Text to format:
         } catch (error) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'admin-news',
                     model: modelName,
                     feature: `news-article-${command}`,
@@ -525,7 +525,7 @@ Text to format:
                     roles: targetType === 'roles' ? targetRoles : undefined,
                     plans: targetType === 'plans' ? targetPlans : undefined,
                 },
-                createdBy: news?.createdBy || user?.uid || '',
+                createdBy: news?.createdBy || user?.id || '',
                 language,
                 // Preserve translation metadata
                 ...(news?.translationGroup ? { translationGroup: news.translationGroup } : {}),
@@ -604,7 +604,7 @@ Text to format:
                     roles: targetType === 'roles' ? targetRoles : undefined,
                     plans: targetType === 'plans' ? targetPlans : undefined,
                 },
-                createdBy: news?.createdBy || user?.uid || '',
+                createdBy: news?.createdBy || user?.id || '',
                 language,
                 translationGroup: news?.translationGroup || generateNewsTranslationGroupId(),
                 translationStatus: news?.translationStatus || 'original',
@@ -634,7 +634,7 @@ Text to format:
             const translatedFields = await translateNewsContent(
                 savedOriginal,
                 targetLang,
-                user?.uid
+                user?.id
             );
 
             const translatedNews = buildTranslatedNews(

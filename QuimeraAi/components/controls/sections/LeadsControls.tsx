@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -65,11 +65,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <Input label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(val) => setNestedData('leads.title', val)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.leads.title} onChange={(val) => setNestedData('leads.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.leads.titleFontSize || 'md'} onChange={(v) => setNestedData('leads.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={data?.leads.description} onChange={(val) => setNestedData('leads.description', val)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.leads.description} onChange={(val) => setNestedData('leads.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.leads.descriptionFontSize || 'md'} onChange={(v) => setNestedData('leads.descriptionFontSize', v)} />
-        <Input label={t('editor.controls.common.buttonText')} value={data?.leads.buttonText} onChange={(val) => setNestedData('leads.buttonText', val)} />
+        <I18nInput label={t('editor.controls.common.buttonText')} value={data?.leads.buttonText} onChange={(val) => setNestedData('leads.buttonText', val)} />
       </div>
     </div>
   );

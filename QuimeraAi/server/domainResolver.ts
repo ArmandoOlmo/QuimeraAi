@@ -1,37 +1,23 @@
 /**
  * Domain Resolver
  * 
- * Resolves custom domains to their associated projects using Firestore.
- * Uses a global collection for fast lookups.
+ * Resolves custom domains to their associated projects using Supabase.
+ * Uses the custom_domains and projects tables for lookups.
  */
 
-import { initializeApp, cert, getApps, App } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Initialize Firebase Admin (for server-side)
-let app: App;
-let db: Firestore;
+// Supabase Admin client (server-side, bypasses RLS)
+let supabaseAdmin: SupabaseClient;
 
-function initializeFirebase() {
-    if (getApps().length === 0) {
-        // In Cloud Run, credentials are automatic via service account
-        // For local dev, use GOOGLE_APPLICATION_CREDENTIALS env var
-        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-            app = initializeApp({
-                credential: cert(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-            });
-        } else {
-            // Cloud Run: uses default credentials
-            app = initializeApp();
-        }
-    } else {
-        app = getApps()[0];
+function getSupabaseAdmin(): SupabaseClient {
+    if (!supabaseAdmin) {
+        const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        supabaseAdmin = createClient(url, key);
     }
-    db = getFirestore(app);
+    return supabaseAdmin;
 }
-
-// Initialize on module load
-initializeFirebase();
 
 export interface DomainResolutionResult {
     projectId: string;
@@ -68,39 +54,49 @@ export async function resolveDomainToProject(domain: string): Promise<DomainReso
     }
 
     try {
-        console.log(`[DomainResolver] Looking up ${normalizedDomain} in Firestore...`);
+        const sb = getSupabaseAdmin();
+        console.log(`[DomainResolver] Looking up ${normalizedDomain} in Supabase...`);
         
-        // Query the global customDomains collection
-        const domainDoc = await db.collection('customDomains').doc(normalizedDomain).get();
+        // Query the custom_domains table
+        const { data: domainRow, error: domainError } = await sb
+            .from('custom_domains')
+            .select('*')
+            .eq('domain_name', normalizedDomain)
+            .single();
 
-        if (!domainDoc.exists) {
+        if (domainError || !domainRow) {
             console.log(`[DomainResolver] Domain ${normalizedDomain} not found`);
             // Cache negative result
             domainCache.set(normalizedDomain, { data: null, timestamp: Date.now() });
             return null;
         }
 
-        const data = domainDoc.data()!;
-        
+        const domainData = domainRow.data || {};
         const result: DomainResolutionResult = {
-            projectId: data.projectId,
-            userId: data.userId,
-            domain: data.domain,
-            status: data.status || 'pending',
-            sslStatus: data.sslStatus || 'pending',
-            agencyLandingTenantId: data.agencyLandingTenantId || undefined,
+            projectId: domainData.projectId || domainData.project_id || domainRow.project_id,
+            userId: domainRow.user_id || domainData.userId || domainData.user_id,
+            domain: domainRow.domain_name || domainData.domain,
+            status: domainData.status || domainRow.status || 'pending',
+            sslStatus: domainData.sslStatus || domainData.ssl_status || domainRow.ssl_status || 'pending',
+            agencyLandingTenantId: domainRow.agency_landing_tenant_id || undefined,
         };
 
         // If domain is active, also fetch basic store data for SEO
         if (result.status === 'active') {
             try {
-                const storeDoc = await db.collection('publicStores').doc(result.projectId).get();
-                if (storeDoc.exists) {
-                    const storeData = storeDoc.data()!;
+                const { data: projectRow } = await sb
+                    .from('projects')
+                    .select('published_data')
+                    .eq('id', result.projectId)
+                    .not('published_data', 'is', null)
+                    .single();
+
+                if (projectRow?.published_data) {
+                    const pd = projectRow.published_data as any;
                     result.storeData = {
-                        name: storeData.name || 'Store',
-                        theme: storeData.theme,
-                        header: storeData.header
+                        name: pd.name || 'Store',
+                        theme: pd.theme,
+                        header: pd.header,
                     };
                 }
             } catch (e) {
@@ -163,14 +159,3 @@ export function getCacheStats(): { size: number; entries: string[] } {
         entries: Array.from(domainCache.keys())
     };
 }
-
-
-
-
-
-
-
-
-
-
-

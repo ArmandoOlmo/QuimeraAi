@@ -185,7 +185,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             `;
 
             const projectId = activeProject?.id || 'appointment-ai-prep';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             let responseText = extractTextFromResponse(response);
 
             // Strip markdown code blocks if present (Gemini often wraps JSON in ```json...```)
@@ -214,7 +214,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'appointment-ai-preparation',
                     success: true,
@@ -224,7 +224,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
         } catch (error: any) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'appointment-ai-preparation',
                     success: false,
@@ -292,7 +292,7 @@ export const AIPreparationPanel: React.FC<AIPreparationPanelProps> = ({
             }
 
             const projectId = activeProject?.id || 'appointment-ai-section';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             let responseText = extractTextFromResponse(response);
 
             // Strip markdown code blocks if present (Gemini often wraps JSON in ```json...```)

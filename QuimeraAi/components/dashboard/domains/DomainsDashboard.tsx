@@ -20,12 +20,12 @@ import { Domain } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import { CLOUD_RUN_DNS_CONFIG } from '../../../types/domains';
 
-// --- QUIMERA DNS CONFIG (Centralized Load Balancer) ---
-// Use the centralized Load Balancer IP (same as yooeat.com)
+// --- QUIMERA DNS CONFIG (Vercel Integration) ---
+// Vercel Anycast IP for A records
 const QUIMERA_DNS = {
-    IP: '130.211.43.242',
-    // www CNAME should point to the root domain itself (e.g. www → tudominio.com)
-    // This ensures it resolves to the same LB IP as the A record
+    IP: '76.76.21.21',
+    // www CNAME should point to cname.vercel-dns.com
+    CNAME: 'cname.vercel-dns.com'
 };
 
 // --- STEP INDICATOR COMPONENT ---
@@ -469,11 +469,11 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
-                                                    <code className="font-mono font-bold text-primary">130.211.43.242</code>
+                                                    <code className="font-mono font-bold text-primary">76.76.21.21</code>
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText('130.211.43.242');
+                                                        navigator.clipboard.writeText('76.76.21.21');
                                                         alert(t('domainsDashboard.ipCopiedAlert'));
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
@@ -506,11 +506,11 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
-                                                    <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
+                                                    <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText(domain.name);
+                                                        navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
                                                         alert(t('domainsDashboard.cnameCopiedAlert'));
                                                     }}
                                                     className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
@@ -655,10 +655,10 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                             <span className="text-sm text-q-text-muted">Host: <code className="font-mono font-bold">www</code></span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <code className="font-mono font-bold text-primary text-xs">{domain.name}</code>
+                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
                                             <button
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(domain.name);
+                                                    navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
                                                     alert(t('domainsDashboard.cnameCopiedAlert'));
                                                 }}
                                                 className="p-2 hover:bg-secondary rounded-md text-q-text-muted hover:text-primary transition-colors"

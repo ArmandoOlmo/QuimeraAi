@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, Select, ToggleControl, I18nStringArrayEditor
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -30,7 +30,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.headline', value: data.pricingLumina.headline, context: 'Pricing Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.pricingLumina.headline || ''} 
               onChange={(val) => setNestedData('pricingLumina.headline', val)} 
@@ -41,7 +41,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.pricingLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'pricingLumina.subheadline', value: data.pricingLumina.subheadline || '', context: 'Pricing Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.pricingLumina.subheadline || ''} 
               onChange={(val) => setNestedData('pricingLumina.subheadline', val)} 
               rows={2}
@@ -72,7 +72,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Tier #{idx + 1}</span>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierName', 'Name')} 
                 value={tier.name || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.name`, val)} 
@@ -85,12 +85,12 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierPrice', 'Price')} 
                 value={tier.price || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.price`, val)} 
               />
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.tierPeriod', 'Period')} 
                 value={tier.period || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.period`, val)} 
@@ -98,7 +98,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
               />
             </div>
 
-            <Input 
+            <I18nInput 
               label={t('editor.pricingLumina.tierDescription', 'Description')} 
               value={tier.description || ''} 
               onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.description`, val)} 
@@ -113,7 +113,7 @@ export const renderPricingLuminaControls = (deps: ControlsDeps) => {
             />
 
             <div className="mt-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.pricingLumina.buttonText', 'Button Text')} 
                 value={tier.buttonText || ''} 
                 onChange={(val) => setNestedData(`pricingLumina.tiers.${idx}.buttonText`, val)} 

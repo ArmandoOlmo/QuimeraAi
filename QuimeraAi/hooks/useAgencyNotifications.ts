@@ -4,20 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot,
-    doc,
-    updateDoc,
-    addDoc,
-    serverTimestamp,
-    Timestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 
 // =============================================================================
 // TYPES
@@ -42,8 +29,8 @@ export interface AgencyNotification {
     message: string;
     data?: Record<string, any>;
     read: boolean;
-    createdAt: Timestamp;
-    expiresAt?: Timestamp;
+    createdAt: any;
+    expiresAt?: any;
     link?: string;
     clientId?: string;
     clientName?: string;
@@ -68,67 +55,93 @@ export function useAgencyNotifications(tenantId: string | undefined) {
 
         setIsLoading(true);
         setError(null);
+        let isMounted = true;
 
-        const q = query(
-            collection(db, 'agencyNotifications'),
-            where('tenantId', '==', tenantId),
-            orderBy('createdAt', 'desc'),
-            limit(50)
-        );
+        const fetchNotifications = async () => {
+            try {
+                const { data, error: fetchError } = await supabase
+                    .from('agency_notifications')
+                    .select('*')
+                    .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
+                if (!isMounted) return;
+
+                if (fetchError) throw fetchError;
+
                 const notifs: AgencyNotification[] = [];
                 let unread = 0;
+                const now = new Date();
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const notif: AgencyNotification = {
-                        id: doc.id,
-                        tenantId: data.tenantId,
-                        type: data.type,
-                        title: data.title,
-                        message: data.message,
-                        data: data.data,
-                        read: data.read,
-                        createdAt: data.createdAt,
-                        expiresAt: data.expiresAt,
-                        link: data.link,
-                        clientId: data.clientId,
-                        clientName: data.clientName,
-                    };
+                if (data) {
+                    data.forEach((doc: any) => {
+                        const notif: AgencyNotification = {
+                            id: doc.id,
+                            tenantId: doc.tenant_id,
+                            type: doc.type,
+                            title: doc.title,
+                            message: doc.message,
+                            data: doc.data,
+                            read: doc.read,
+                            createdAt: doc.created_at,
+                            expiresAt: doc.expires_at,
+                            link: doc.link,
+                            clientId: doc.client_id,
+                            clientName: doc.client_name,
+                        };
 
-                    // Filter out expired notifications
-                    if (notif.expiresAt && notif.expiresAt.toDate() < new Date()) {
-                        return;
-                    }
+                        // Filter out expired notifications
+                        if (notif.expiresAt && new Date(notif.expiresAt) < now) {
+                            return;
+                        }
 
-                    notifs.push(notif);
-                    if (!notif.read) unread++;
-                });
+                        notifs.push(notif);
+                        if (!notif.read) unread++;
+                    });
+                }
 
                 setNotifications(notifs);
                 setUnreadCount(unread);
                 setIsLoading(false);
-            },
-            (err) => {
+            } catch (err) {
+                if (!isMounted) return;
                 console.error('Error subscribing to notifications:', err);
                 setError('Error cargando notificaciones');
                 setIsLoading(false);
             }
-        );
+        };
 
-        return () => unsubscribe();
+        fetchNotifications();
+
+        const channelId = `agency_notifications_${tenantId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'agency_notifications', filter: `tenant_id=eq.${tenantId}` },
+                () => {
+                    if (isMounted) fetchNotifications();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [tenantId]);
 
     // Mark notification as read
     const markAsRead = useCallback(async (notificationId: string) => {
         try {
-            await updateDoc(doc(db, 'agencyNotifications', notificationId), {
-                read: true,
-                readAt: serverTimestamp(),
-            });
+            await supabase
+                .from('agency_notifications')
+                .update({
+                    read: true,
+                    read_at: new Date().toISOString(),
+                })
+                .eq('id', notificationId);
         } catch (err) {
             console.error('Error marking notification as read:', err);
         }
@@ -140,14 +153,19 @@ export function useAgencyNotifications(tenantId: string | undefined) {
 
         try {
             const unreadNotifs = notifications.filter((n) => !n.read);
-            await Promise.all(
-                unreadNotifs.map((n) =>
-                    updateDoc(doc(db, 'agencyNotifications', n.id), {
-                        read: true,
-                        readAt: serverTimestamp(),
-                    })
-                )
-            );
+            if (unreadNotifs.length === 0) return;
+
+            const ids = unreadNotifs.map(n => n.id);
+            
+            // Note: Supabase supports update with 'in' filter for multiple rows
+            await supabase
+                .from('agency_notifications')
+                .update({
+                    read: true,
+                    read_at: new Date().toISOString(),
+                })
+                .in('id', ids);
+                
         } catch (err) {
             console.error('Error marking all as read:', err);
         }
@@ -174,12 +192,29 @@ export async function createAgencyNotification(
     notification: Omit<AgencyNotification, 'id' | 'createdAt' | 'read'>
 ): Promise<string | null> {
     try {
-        const docRef = await addDoc(collection(db, 'agencyNotifications'), {
-            ...notification,
+        // Map camelCase to snake_case for Supabase
+        const dbPayload = {
+            tenant_id: notification.tenantId,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            data: notification.data,
             read: false,
-            createdAt: serverTimestamp(),
-        });
-        return docRef.id;
+            created_at: new Date().toISOString(),
+            expires_at: notification.expiresAt ? new Date(notification.expiresAt).toISOString() : null,
+            link: notification.link,
+            client_id: notification.clientId,
+            client_name: notification.clientName,
+        };
+
+        const { data, error } = await supabase
+            .from('agency_notifications')
+            .insert(dbPayload)
+            .select('id')
+            .single();
+
+        if (error) throw error;
+        return data.id;
     } catch (err) {
         console.error('Error creating notification:', err);
         return null;

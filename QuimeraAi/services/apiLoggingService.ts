@@ -1,19 +1,33 @@
-import { db, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from '../firebase';
+import { supabase } from '../supabase';
 import { ApiLog } from '../types';
 
 /**
- * Logs an API call to Firestore
+ * Logs an API call to Supabase
  * @param logData - The API call data to log
  */
 export const logApiCall = async (logData: Omit<ApiLog, 'id' | 'timestamp'>): Promise<void> => {
     try {
-        await addDoc(collection(db, 'apiLogs'), {
-            ...logData,
-            timestamp: serverTimestamp()
-        });
+        const { error } = await supabase
+            .from('api_logs')
+            .insert([{
+                user_id: logData.userId,
+                project_id: logData.projectId,
+                model: logData.model,
+                feature: logData.feature,
+                success: logData.success,
+                error: logData.error,
+                prompt_tokens: logData.promptTokens,
+                completion_tokens: logData.completionTokens,
+                total_tokens: logData.totalTokens,
+                latency_ms: logData.latencyMs,
+                endpoint: logData.endpoint,
+                metadata: logData.metadata,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (error) throw error;
     } catch (error) {
-        // Log to console but don't throw to avoid breaking the main flow
-        console.error('Error logging API call:', error);
+        console.error('[apiLoggingService] Error logging API call:', error);
     }
 };
 
@@ -32,49 +46,54 @@ export const getApiLogs = async (filters?: {
     limitResults?: number;
 }): Promise<ApiLog[]> => {
     try {
-        let q = query(collection(db, 'apiLogs'));
+        let query = supabase.from('api_logs').select('*');
 
-        // Apply filters
         if (filters?.userId) {
-            q = query(q, where('userId', '==', filters.userId));
+            query = query.eq('user_id', filters.userId);
         }
         if (filters?.projectId) {
-            q = query(q, where('projectId', '==', filters.projectId));
+            query = query.eq('project_id', filters.projectId);
         }
         if (filters?.model) {
-            q = query(q, where('model', '==', filters.model));
+            query = query.eq('model', filters.model);
         }
         if (filters?.feature) {
-            q = query(q, where('feature', '==', filters.feature));
+            query = query.eq('feature', filters.feature);
         }
         if (filters?.startDate) {
-            q = query(q, where('timestamp', '>=', filters.startDate));
+            query = query.gte('created_at', filters.startDate.toISOString());
         }
         if (filters?.endDate) {
-            q = query(q, where('timestamp', '<=', filters.endDate));
+            query = query.lte('created_at', filters.endDate.toISOString());
         }
 
-        // Order by timestamp descending
-        q = query(q, orderBy('timestamp', 'desc'));
+        query = query.order('created_at', { ascending: false });
 
-        // Limit results
         if (filters?.limitResults) {
-            q = query(q, limit(filters.limitResults));
+            query = query.limit(filters.limitResults);
         }
 
-        const snapshot = await getDocs(q);
-        const logs: ApiLog[] = [];
+        const { data, error } = await query;
+        if (error) throw error;
 
-        snapshot.forEach((doc) => {
-            logs.push({
-                id: doc.id,
-                ...doc.data()
-            } as ApiLog);
-        });
-
-        return logs;
+        return (data || []).map(doc => ({
+            id: doc.id,
+            userId: doc.user_id,
+            projectId: doc.project_id,
+            model: doc.model,
+            feature: doc.feature,
+            success: doc.success,
+            error: doc.error,
+            promptTokens: doc.prompt_tokens,
+            completionTokens: doc.completion_tokens,
+            totalTokens: doc.total_tokens,
+            latencyMs: doc.latency_ms,
+            endpoint: doc.endpoint,
+            metadata: doc.metadata,
+            timestamp: doc.created_at, // Use created_at as timestamp for backwards compatibility
+        })) as unknown as ApiLog[];
     } catch (error) {
-        console.error('Error fetching API logs:', error);
+        console.error('[apiLoggingService] Error fetching API logs:', error);
         return [];
     }
 };
@@ -102,7 +121,7 @@ export const getApiCallsByModel = async (startDate?: Date, endDate?: Date): Prom
 
         return modelCounts;
     } catch (error) {
-        console.error('Error getting API calls by model:', error);
+        console.error('[apiLoggingService] Error getting API calls by model:', error);
         return {};
     }
 };
@@ -119,10 +138,20 @@ export const getTotalApiCalls = async (startDate?: Date, endDate?: Date): Promis
         if (startDate) filters.startDate = startDate;
         if (endDate) filters.endDate = endDate;
 
+        // Count query is more efficient if supported, but fallback to existing pattern
+        let query = supabase.from('api_logs').select('id', { count: 'exact', head: true }).eq('success', true);
+        if (startDate) query = query.gte('created_at', startDate.toISOString());
+        if (endDate) query = query.lte('created_at', endDate.toISOString());
+        
+        const { count, error } = await query;
+        if (error) throw error;
+        
+        if (count !== null) return count;
+
         const logs = await getApiLogs(filters);
         return logs.filter(log => log.success).length;
     } catch (error) {
-        console.error('Error getting total API calls:', error);
+        console.error('[apiLoggingService] Error getting total API calls:', error);
         return 0;
     }
 };
@@ -146,7 +175,7 @@ export const getApiErrorRate = async (startDate?: Date, endDate?: Date): Promise
         const errorCount = logs.filter(log => !log.success).length;
         return (errorCount / logs.length) * 100;
     } catch (error) {
-        console.error('Error calculating API error rate:', error);
+        console.error('[apiLoggingService] Error calculating API error rate:', error);
         return 0;
     }
 };
@@ -174,7 +203,7 @@ export const getApiCallsByFeature = async (startDate?: Date, endDate?: Date): Pr
 
         return featureCounts;
     } catch (error) {
-        console.error('Error getting API calls by feature:', error);
+        console.error('[apiLoggingService] Error getting API calls by feature:', error);
         return {};
     }
 };

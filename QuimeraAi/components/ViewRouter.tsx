@@ -180,7 +180,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     // Editor View - Show loading if data is not yet ready
     if (view === 'editor') {
         // If we're in editor mode but data isn't ready yet, show loading
-        if (!activeProjectId || !data) {
+        console.log("ViewRouter render check:", { view, activeProjectId, dataPresent: !!data }); if (!activeProjectId || !data) {
             return <ViewLoading logoUrl={agencyLogoUrl} />;
         }
 

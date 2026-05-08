@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaqData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
 import { Plus, Minus, ChevronDown, HelpCircle } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
@@ -264,9 +265,9 @@ interface FaqProps extends FaqData {
 
 const Faq: React.FC<FaqProps> = ({
   glassEffect,
-  title,
-  description,
-  items = [],
+  title: rawTitle,
+  description: rawDescription,
+  items: rawItems = [],
   paddingY,
   paddingX,
   colors,
@@ -280,6 +281,26 @@ const Faq: React.FC<FaqProps> = ({
   // Get design tokens for primary color
   const { colors: tokenColors } = useDesignTokens();
   const primaryColor = tokenColors.primary;
+
+  const { i18n } = useTranslation();
+  
+  const resolveText = (text: any) => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    if (typeof text === 'object' && text !== null) {
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      return text[preferred] || text.es || text.en || Object.values(text)[0] || '';
+    }
+    return String(text);
+  };
+
+  const title = resolveText(rawTitle);
+  const description = resolveText(rawDescription);
+  const items = (rawItems || []).map(item => ({
+    ...item,
+    question: resolveText(item.question),
+    answer: resolveText(item.answer)
+  }));
 
   const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);

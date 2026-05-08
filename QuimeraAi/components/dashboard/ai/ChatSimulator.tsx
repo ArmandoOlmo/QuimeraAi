@@ -28,7 +28,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             if (!user || !projectId) return;
 
             try {
-                const targetUserId = project?.userId || user.uid;
+                const targetUserId = project?.userId || user.id;
                 const appointmentsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'appointments');
                 const q = query(appointmentsRef, orderBy('startDate', 'asc'));
                 const snapshot = await getDocs(q);
@@ -83,7 +83,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
         };
 
         try {
-            const targetUserId = project?.userId || user?.uid;
+            const targetUserId = project?.userId || user?.id;
             if (targetUserId && projectId) {
                 const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
                 const docRef = await addDoc(leadsRef, fullLeadData);
@@ -111,7 +111,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     // Handle creating appointment from chat
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
         console.log('[ChatSimulator] 📅 handleCreateAppointment called with:', appointmentData);
-        console.log('[ChatSimulator] 📅 user:', user?.uid, 'projectId:', projectId);
+        console.log('[ChatSimulator] 📅 user:', user?.id, 'projectId:', projectId);
 
         if (!user || !projectId) {
             console.error('[ChatSimulator] ❌ Cannot create appointment: no user or project', { user: !!user, projectId });
@@ -152,7 +152,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 startDate: dateToTimestamp(appointmentData.startDate),
                 endDate: dateToTimestamp(appointmentData.endDate),
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                organizerId: user.uid,
+                organizerId: user.id,
                 organizerName: user.displayName || '',
                 organizerEmail: user.email || '',
                 participants,
@@ -168,7 +168,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 linkedLeadIds: [],
                 tags: ['quimera-chat', 'auto-scheduled'],
                 createdAt: now,
-                createdBy: user.uid,
+                createdBy: user.id,
                 projectId: projectId,
             };
 
@@ -179,7 +179,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
             console.log('[ChatSimulator] 📅 Appointment document to save:', JSON.stringify(appointmentDoc, null, 2));
 
-            const targetUserId = project?.userId || user.uid;
+            const targetUserId = project?.userId || user.id;
             const appointmentPath = `users/${targetUserId}/projects/${projectId}/appointments`;
             console.log('[ChatSimulator] 📍 Saving appointment to path:', appointmentPath);
 
@@ -212,7 +212,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                         transcriptLength: appointmentData.conversationTranscript?.length || 0
                     });
 
-                    const targetUserId = project?.userId || user.uid;
+                    const targetUserId = project?.userId || user.id;
                     const leadsRef = collection(db, 'users', targetUserId, 'projects', projectId, 'leads');
                     await addDoc(leadsRef, leadData);
                     console.log('[ChatSimulator] ✅ Lead created directly for appointment with transcript');

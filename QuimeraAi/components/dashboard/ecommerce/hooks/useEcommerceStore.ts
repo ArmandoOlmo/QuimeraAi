@@ -1,18 +1,11 @@
 /**
  * useEcommerceStore Hook
- * Hook para inicializar y gestionar la tienda de ecommerce
- * Crea automáticamente el store 'default' si no existe
+ * Hook para inicializar y gestionar la tienda de ecommerce en Supabase
+ * En la arquitectura de Supabase, un "store" equivale a un "project".
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    doc,
-    getDoc,
-    setDoc,
-    onSnapshot,
-    serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 
 export interface EcommerceStoreData {
     id: string;
@@ -39,104 +32,81 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const storePath = `users/${userId}/stores/${effectiveStoreId}`;
 
-    // Función para inicializar la tienda
-    const initializeStore = useCallback(async () => {
+    // Función para inicializar o cargar la tienda
+    const fetchAndInitializeStore = useCallback(async () => {
         if (!userId || !effectiveStoreId) {
             setError('No user ID or store ID provided');
+            setIsLoading(false);
             return;
         }
 
         try {
-            const storeRef = doc(db, storePath);
-            const storeDoc = await getDoc(storeRef);
+            // Un "store" está vinculado a un "project". Validamos si el proyecto existe
+            const { data: projectData, error: projectError } = await supabase
+                .from('projects')
+                .select('id, name, created_at, updated_at, user_id')
+                .eq('id', effectiveStoreId)
+                .single();
 
-            if (!storeDoc.exists()) {
-                // Crear la tienda si no existe
-                const newStore: Omit<EcommerceStoreData, 'id'> = {
-                    name: 'Mi Tienda',
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                    isActive: true,
-                    ownerId: userId,
-                };
-
-                await setDoc(storeRef, newStore);
-                console.log('✅ Ecommerce store initialized:', storeId);
+            if (projectError) {
+                // If no rows, we can't do anything because a project MUST exist in Supabase
+                if (projectError.code === 'PGRST116') {
+                    throw new Error('Project not found. Cannot initialize store.');
+                }
+                throw projectError;
             }
 
+            // Mapeamos los datos del proyecto a EcommerceStoreData
+            const storeData: EcommerceStoreData = {
+                id: projectData.id,
+                name: projectData.name,
+                createdAt: projectData.created_at,
+                updatedAt: projectData.updated_at,
+                isActive: true, // Asumimos que si el proyecto existe, la tienda está activa
+                ownerId: projectData.user_id,
+            };
+
+            setStore(storeData);
             setIsInitialized(true);
             setError(null);
+            console.log('✅ Ecommerce store loaded via Project:', effectiveStoreId);
+            
+            // Validamos que haya un store_settings inicializado, si no, lo inicializamos silenciosamente
+            const { count, error: settingsError } = await supabase
+                .from('store_settings')
+                .select('*', { count: 'exact', head: true })
+                .eq('project_id', effectiveStoreId);
+
+            if (!settingsError && count === 0) {
+                await supabase
+                    .from('store_settings')
+                    .insert({
+                        project_id: effectiveStoreId,
+                        store_name: projectData.name,
+                        store_email: '', // Requires manual configuration
+                    });
+            }
+
         } catch (err: any) {
             console.error('Error initializing store:', err);
             setError(err.message);
             setIsInitialized(false);
+        } finally {
+            setIsLoading(false);
         }
-    }, [userId, storePath, effectiveStoreId]);
+    }, [userId, effectiveStoreId]);
 
-    // Escuchar cambios en la tienda y auto-inicializar si no existe
+    // Escuchar cambios
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
             setIsLoading(false);
             return;
         }
 
-        let isMounted = true;
-        const storeRef = doc(db, storePath);
+        fetchAndInitializeStore();
 
-        const checkAndInitialize = async () => {
-            try {
-                const storeDoc = await getDoc(storeRef);
-                
-                if (!storeDoc.exists() && isMounted) {
-                    // Auto-inicializar la tienda
-                    await initializeStore();
-                }
-            } catch (err: any) {
-                console.error('Error checking store:', err);
-                if (isMounted) {
-                    setError(err.message);
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        // Verificar e inicializar primero
-        checkAndInitialize();
-
-        // Luego suscribirse a cambios
-        const unsubscribe = onSnapshot(
-            storeRef,
-            (snapshot) => {
-                if (isMounted) {
-                    if (snapshot.exists()) {
-                        setStore({
-                            id: snapshot.id,
-                            ...snapshot.data(),
-                        } as EcommerceStoreData);
-                        setIsInitialized(true);
-                    } else {
-                        setStore(null);
-                    }
-                    setIsLoading(false);
-                    setError(null);
-                }
-            },
-            (err) => {
-                console.error('Error listening to store:', err);
-                if (isMounted) {
-                    setError(err.message);
-                    setIsLoading(false);
-                }
-            }
-        );
-
-        return () => {
-            isMounted = false;
-            unsubscribe();
-        };
-    }, [userId, storePath, initializeStore]);
+    }, [userId, effectiveStoreId, fetchAndInitializeStore]);
 
     return {
         store,
@@ -144,11 +114,12 @@ export const useEcommerceStore = (userId: string, storeId: string = ''): UseEcom
         isLoading,
         isInitialized,
         error,
-        initializeStore,
+        initializeStore: fetchAndInitializeStore,
     };
 };
 
 export default useEcommerceStore;
+
 
 
 

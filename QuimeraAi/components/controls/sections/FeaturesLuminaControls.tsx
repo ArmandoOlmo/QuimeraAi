@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, ToggleControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -30,7 +30,7 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.featuresLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'featuresLumina.headline', value: data.featuresLumina.headline, context: 'Features Lumina Headline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.featuresLumina.headline || ''} 
               onChange={(val) => setNestedData('featuresLumina.headline', val)} 
               rows={2} 
@@ -41,7 +41,7 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.featuresLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'featuresLumina.subheadline', value: data.featuresLumina.subheadline || '', context: 'Features Lumina Subheadline' })}
           >
-            <Input 
+            <I18nInput 
               label="" 
               value={data.featuresLumina.subheadline || ''} 
               onChange={(val) => setNestedData('featuresLumina.subheadline', val)} 
@@ -81,13 +81,13 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
                 />
             </div>
 
-            <Input 
+            <I18nInput 
               label={t('editor.featuresLumina.itemTitle', 'Title')} 
               value={feature.title || ''} 
               onChange={(val) => setNestedData(`featuresLumina.features.${idx}.title`, val)} 
             />
             
-            <TextArea 
+            <I18nTextArea 
               value={feature.description || ''} 
               onChange={(val) => setNestedData(`featuresLumina.features.${idx}.description`, val)} 
               rows={2}

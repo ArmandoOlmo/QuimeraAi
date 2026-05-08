@@ -2,23 +2,23 @@
  * useCustomDomain Hook
  * 
  * Detects if the app is running on a custom domain and resolves
- * the associated projectId from Firestore.
+ * the associated projectId from Supabase.
  */
 
 import { useState, useEffect } from 'react';
-import { doc, getDoc, collection, query, where, limit, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { detectSubdomain } from '../utils/subdomainUtils';
 
 // Domains that are NOT custom domains (our own app domains)
 // Custom domains like quimeraapp.com ARE treated as custom domains
-// and will be resolved via Firestore customDomains collection
+// and will be resolved via Supabase custom_domains collection
 const KNOWN_DOMAINS = [
     'localhost',
     '127.0.0.1',
     'quimera.ai',
     'quimeraai.web.app',
     'quimera-502e2.web.app',
+    'vercel.app',
 ];
 
 interface CustomDomainState {
@@ -112,6 +112,8 @@ export function useCustomDomain(): CustomDomainState {
             return;
         }
 
+        let isMounted = true;
+
         // PRIORITY 2: Check for user subdomain (username.quimera.ai)
         const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
         const subInfo = detectSubdomain(hostname);
@@ -122,23 +124,30 @@ export function useCustomDomain(): CustomDomainState {
             const resolveSubdomain = async () => {
                 try {
                     // Resolve username to user + project
-                    const usersCol = collection(db, 'users');
-                    const usernameQuery = query(usersCol, where('username', '==', subInfo.subdomain), limit(1));
-                    const usernameSnap = await getDocs(usernameQuery);
+                    const { data: userDoc, error: userError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('username', subInfo.subdomain)
+                        .limit(1)
+                        .single();
                     
-                    if (!usernameSnap.empty) {
-                        const userDoc = usernameSnap.docs[0];
-                        const userData = userDoc.data();
+                    if (!isMounted) return;
+                    
+                    if (!userError && userDoc) {
                         const userId = userDoc.id;
-                        let projectId = userData.defaultProjectId || userData.primaryProjectId;
+                        let projectId = userDoc.default_project_id || userDoc.defaultProjectId || userDoc.primary_project_id || userDoc.primaryProjectId;
                         
                         if (!projectId) {
                             // Fallback: first project
-                            const projectsCol = collection(db, 'users', userId, 'projects');
-                            const projectsQuery = query(projectsCol, limit(1));
-                            const projectsSnap = await getDocs(projectsQuery);
-                            if (!projectsSnap.empty) {
-                                projectId = projectsSnap.docs[0].id;
+                            const { data: projectDoc, error: projectError } = await supabase
+                                .from('projects')
+                                .select('id')
+                                .eq('user_id', userId)
+                                .limit(1)
+                                .single();
+
+                            if (!projectError && projectDoc) {
+                                projectId = projectDoc.id;
                             }
                         }
                         
@@ -156,6 +165,7 @@ export function useCustomDomain(): CustomDomainState {
                         }
                     }
                     
+                    if (!isMounted) return;
                     // Username not found or no projects
                     setState({
                         isCustomDomain: true,
@@ -167,6 +177,7 @@ export function useCustomDomain(): CustomDomainState {
                         projectData: null,
                     });
                 } catch (error) {
+                    if (!isMounted) return;
                     console.error(`[CustomDomain] Error resolving subdomain ${subInfo.subdomain}:`, error);
                     setState({
                         isCustomDomain: true,
@@ -181,7 +192,7 @@ export function useCustomDomain(): CustomDomainState {
             };
             
             resolveSubdomain();
-            return;
+            return () => { isMounted = false; };
         }
         
         // PRIORITY 3: App subdomain (app.quimera.ai) — treat as root (not custom domain)
@@ -211,16 +222,22 @@ export function useCustomDomain(): CustomDomainState {
             return;
         }
 
-        // It's a custom domain - resolve it via Firestore
+        // It's a custom domain - resolve it via Supabase
         const normalizedDomain = hostname.toLowerCase().replace(/^www\./, '');
-        console.log(`[CustomDomain] Detected custom domain: ${normalizedDomain}, resolving via Firestore...`);
+        console.log(`[CustomDomain] Detected custom domain: ${normalizedDomain}, resolving via Supabase...`);
 
         const resolveDomain = async () => {
             try {
-                const domainDoc = await getDoc(doc(db, 'customDomains', normalizedDomain));
+                const { data: domainDoc, error: domainError } = await supabase
+                    .from('custom_domains')
+                    .select('*')
+                    .eq('domain_name', normalizedDomain)
+                    .maybeSingle();
 
-                if (!domainDoc.exists()) {
-                    console.warn(`[CustomDomain] Domain ${normalizedDomain} not found in Firestore`);
+                if (!isMounted) return;
+
+                if (domainError || !domainDoc) {
+                    console.warn(`[CustomDomain] Domain ${normalizedDomain} not found in Supabase`);
                     setState({
                         isCustomDomain: true,
                         isLoading: false,
@@ -233,31 +250,40 @@ export function useCustomDomain(): CustomDomainState {
                     return;
                 }
 
-                const domainData = domainDoc.data();
+                const domainData = domainDoc.data || {};
+                const domainStatus = domainData.status || domainDoc.status || 'pending';
 
-                if (domainData.status !== 'active') {
-                    console.warn(`[CustomDomain] Domain ${normalizedDomain} is not active (status: ${domainData.status})`);
+                if (domainStatus !== 'active') {
+                    console.warn(`[CustomDomain] Domain ${normalizedDomain} is not active (status: ${domainStatus})`);
                     setState({
                         isCustomDomain: true,
                         isLoading: false,
                         projectId: null,
                         userId: null,
                         domain: normalizedDomain,
-                        error: `Domain is ${domainData.status}`,
+                        error: `Domain is ${domainStatus}`,
                         projectData: null,
                     });
                     return;
                 }
 
-                console.log(`[CustomDomain] Resolved ${normalizedDomain} -> Project ${domainData.projectId}, User ${domainData.userId}`);
+                const projectId = domainData.projectId || domainData.project_id || domainDoc.project_id || domainDoc.projectId;
+                const userId = domainDoc.user_id || domainData.userId || domainData.user_id;
 
-                // Fetch the full project data from user's collection
+                console.log(`[CustomDomain] Resolved ${normalizedDomain} -> Project ${projectId}, User ${userId}`);
+
+                // Fetch the full project data
                 let projectData = null;
-                if (domainData.userId && domainData.projectId) {
+                if (userId && projectId) {
                     try {
-                        const projectDoc = await getDoc(doc(db, 'users', domainData.userId, 'projects', domainData.projectId));
-                        if (projectDoc.exists()) {
-                            projectData = { id: projectDoc.id, ...projectDoc.data() };
+                        const { data: projectDoc, error: projectError } = await supabase
+                            .from('projects')
+                            .select('*')
+                            .eq('id', projectId)
+                            .maybeSingle();
+
+                        if (!projectError && projectDoc) {
+                            projectData = projectDoc;
                             console.log(`[CustomDomain] Loaded project data: ${projectData.name}`);
                         }
                     } catch (e) {
@@ -265,17 +291,20 @@ export function useCustomDomain(): CustomDomainState {
                     }
                 }
 
-                setState({
-                    isCustomDomain: true,
-                    isLoading: false,
-                    projectId: domainData.projectId,
-                    userId: domainData.userId,
-                    domain: normalizedDomain,
-                    error: null,
-                    projectData,
-                });
+                if (isMounted) {
+                    setState({
+                        isCustomDomain: true,
+                        isLoading: false,
+                        projectId,
+                        userId,
+                        domain: normalizedDomain,
+                        error: null,
+                        projectData,
+                    });
+                }
 
             } catch (error) {
+                if (!isMounted) return;
                 console.error(`[CustomDomain] Error resolving ${normalizedDomain}:`, error);
                 setState({
                     isCustomDomain: true,
@@ -290,7 +319,9 @@ export function useCustomDomain(): CustomDomainState {
         };
 
         resolveDomain();
-    }, []);
+        
+        return () => { isMounted = false; };
+    }, [serverConfig]);
 
     return state;
 }

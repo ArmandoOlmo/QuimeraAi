@@ -105,12 +105,12 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
 
             const response = await generateContentViaProxy('app-content-creator', promptText, modelToUse, {
                 temperature: 0.85
-            }, user?.uid);
+            }, user?.id);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelToUse,
                     feature: 'app-content-creator-assistant',
@@ -153,7 +153,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'app-content-admin',
                     model: modelToUse,
                     feature: 'app-content-creator-assistant',

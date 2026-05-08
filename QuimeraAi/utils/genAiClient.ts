@@ -1,12 +1,10 @@
 /**
  * Google Generative AI Client
  * 
- * SECURITY: All AI generation goes through the secure Cloud Functions proxy.
- * The API key is NEVER exposed to the client bundle.
+ * SECURITY: All AI generation goes through the Supabase Edge Function (OpenRouter).
+ * API keys are NEVER exposed to the client bundle.
  * 
- * The only exception is the Live API (voice sessions) which requires a
- * client-side GoogleGenAI SDK instance. For that, the key is fetched
- * securely from the backend at runtime (requires auth + admin role).
+ * The Live API (voice sessions) key is fetched from the Edge Function at runtime.
  */
 
 import { GoogleGenAI } from '@google/genai';
@@ -33,30 +31,18 @@ export const syncApiKeyFromAiStudio = async (): Promise<string | null> => {
 
 /**
  * Fetch API key securely from backend (for Live API / voice sessions only).
- * Requires Firebase Auth + admin/owner permissions.
- * SECURITY: The key is NEVER read from environment variables or the client bundle.
+ * Routes through Supabase Edge Function.
  */
 export const fetchGoogleApiKey = async (): Promise<string> => {
     if (cachedApiKey) return cachedApiKey;
 
-    // Fetch from secure backend endpoint (requires Firebase Auth)
-    const { auth } = await import('../firebase');
-    const currentUser = auth.currentUser;
+    const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+    const AI_PROXY_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
-    if (!currentUser) {
-        throw new Error('User not authenticated. Please log in to use the Voice Assistant.');
-    }
-
-    const idToken = await currentUser.getIdToken();
-    const PROXY_BASE_URL = (import.meta as any).env?.VITE_GEMINI_PROXY_URL ||
-        'https://us-central1-quimeraai.cloudfunctions.net/gemini';
-
-    const response = await fetch(`${PROXY_BASE_URL}-liveApiKey`, {
+    const response = await fetch(AI_PROXY_URL, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getLiveApiKey' }),
     });
 
     if (!response.ok) {
@@ -71,15 +57,12 @@ export const fetchGoogleApiKey = async (): Promise<string> => {
     }
 
     throw new Error(
-        'API key not available. Please ensure you are logged in and have admin permissions to use the Voice Assistant.'
+        'API key not available. Voice Assistant requires a configured API key on the server.'
     );
 };
 
 /**
  * Get GoogleGenAI instance for Live API (voice sessions)
- * 
- * In development: uses VITE_GEMINI_API_KEY from environment
- * In production: securely fetches the API key from the backend
  */
 export const getGoogleGenAI = async () => {
     const apiKey = await fetchGoogleApiKey();
@@ -87,8 +70,8 @@ export const getGoogleGenAI = async () => {
 };
 
 /**
- * Generate content using Gemini
- * SECURE: Always uses the proxy to keep API key protected
+ * Generate content using AI
+ * SECURE: Always uses the Supabase Edge Function (OpenRouter) proxy
  */
 export const generateContent = async (
     prompt: string,
@@ -98,10 +81,10 @@ export const generateContent = async (
     userId?: string
 ): Promise<string> => {
     // Always use proxy for security
-    console.debug('🔐 Using SECURE PROXY for Gemini API');
+    console.debug('🔐 Using OpenRouter proxy for AI generation');
 
     if (!projectId) {
-        throw new Error('projectId is required for Gemini API calls');
+        throw new Error('projectId is required for AI API calls');
     }
 
     const response = await generateContentViaProxy(projectId, prompt, model, config, userId);
@@ -114,3 +97,4 @@ export const generateContent = async (
 export const isProxyMode = (): boolean => {
     return shouldUseProxy();
 };
+

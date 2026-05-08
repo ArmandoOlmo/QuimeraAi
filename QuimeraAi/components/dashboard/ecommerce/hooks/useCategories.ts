@@ -1,25 +1,12 @@
 /**
  * useCategories Hook
- * Hook para gestión de categorías en Firestore
+ * Hook para gestión de categorías en Supabase
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    where,
-    getDocs,
-    setDoc,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Category } from '../../../../types/ecommerce';
+import { mapCategoryFromDB, mapCategoryToDB } from '../../../../utils/ecommerceMappers';
 
 export const useCategories = (userId: string, storeId?: string) => {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -27,33 +14,25 @@ export const useCategories = (userId: string, storeId?: string) => {
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const categoriesPath = `users/${userId}/stores/${effectiveStoreId}/categories`;
 
-    // Helper to sync with public store
-    const syncToPublicStore = useCallback(async (categoryId: string, categoryData: any, isDelete = false) => {
+    const fetchCategories = useCallback(async () => {
         if (!effectiveStoreId) return;
 
-        try {
-            const publicCategoryRef = doc(db, 'publicStores', effectiveStoreId, 'categories', categoryId);
+        setIsLoading(true);
+        const { data, error: fetchError } = await supabase
+            .from('store_categories')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('position', { ascending: true });
 
-            if (isDelete) {
-                await deleteDoc(publicCategoryRef);
-                console.log(`[useCategories] 🗑️ Deleted category ${categoryId} from publicStores`);
-                return;
-            }
-
-            // Ensure we don't save undefined values
-            const publicData = { ...categoryData };
-
-            await setDoc(publicCategoryRef, {
-                ...publicData,
-                publishedAt: new Date().toISOString(),
-            }, { merge: true });
-            console.log(`[useCategories] ✅ Synced category ${categoryId} to publicStores`);
-
-        } catch (err) {
-            console.error('[useCategories] Error syncing to public store:', err);
+        if (fetchError) {
+            console.error('Error fetching categories:', fetchError);
+            setError(fetchError.message);
+        } else {
+            setCategories((data || []).map(mapCategoryFromDB));
+            setError(null);
         }
+        setIsLoading(false);
     }, [effectiveStoreId]);
 
     useEffect(() => {
@@ -62,29 +41,27 @@ export const useCategories = (userId: string, storeId?: string) => {
             return;
         }
 
-        const categoriesRef = collection(db, categoriesPath);
-        const q = query(categoriesRef, orderBy('position', 'asc'));
+        fetchCategories();
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Category[];
-                setCategories(data);
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error('Error fetching categories:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
+        const channel = supabase.channel('store_categories_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_categories',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchCategories();
+                }
+            )
+            .subscribe();
 
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, categoriesPath]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchCategories]);
 
     // Generate slug from name
     const generateSlug = (name: string): string => {
@@ -99,108 +76,81 @@ export const useCategories = (userId: string, storeId?: string) => {
     // Add category
     const addCategory = useCallback(
         async (categoryData: Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'slug' | 'position'>): Promise<string> => {
-            const categoriesRef = collection(db, categoriesPath);
-
-            // Get next position
             const position = categories.length;
             const slug = generateSlug(categoryData.name);
-            const timestamp = serverTimestamp();
 
-            const newCategoryData = {
+            const dbData = mapCategoryToDB({
                 ...categoryData,
                 slug,
                 position,
-                createdAt: timestamp,
-                updatedAt: timestamp,
-            };
+            });
 
-            const docRef = await addDoc(categoriesRef, newCategoryData);
+            dbData.project_id = effectiveStoreId;
 
-            // Sync to public store
-            const publicSyncData = {
-                ...newCategoryData,
-                id: docRef.id,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            await syncToPublicStore(docRef.id, publicSyncData);
+            const { data: insertedDoc, error } = await supabase
+                .from('store_categories')
+                .insert(dbData)
+                .select()
+                .single();
 
-            return docRef.id;
+            if (error) throw error;
+            return insertedDoc.id;
         },
-        [categoriesPath, categories.length, syncToPublicStore]
+        [categories.length, effectiveStoreId]
     );
 
     // Update category
     const updateCategory = useCallback(
         async (categoryId: string, updates: Partial<Category>) => {
-            const categoryRef = doc(db, categoriesPath, categoryId);
-
-            const updateData: any = {
-                ...updates,
-                updatedAt: serverTimestamp(),
-            };
+            const updateData = mapCategoryToDB(updates);
 
             if (updates.name) {
                 updateData.slug = generateSlug(updates.name);
             }
 
-            await updateDoc(categoryRef, updateData);
+            const { error } = await supabase
+                .from('store_categories')
+                .update(updateData)
+                .eq('id', categoryId);
 
-            // Sync to public store
-            // We need to merge with existing data to ensure completeness if needed,
-            // or just merge what we have if the public store already has the rest.
-            // Using merge: true in syncToPublicStore handles partial updates safely.
-            // But to be safe, let's grab the current category from state to ensure we have a full picture if needed,
-            // though for updates just sending changed fields + updatedAt is usually enough with merge: true.
-            const currentCategory = categories.find(c => c.id === categoryId);
-
-            if (currentCategory) {
-                const finalDataForSync = {
-                    ...currentCategory,
-                    ...updateData,
-                    updatedAt: new Date().toISOString()
-                };
-                await syncToPublicStore(categoryId, finalDataForSync);
-            }
+            if (error) throw error;
         },
-        [categoriesPath, categories, syncToPublicStore]
+        []
     );
 
     // Delete category
     const deleteCategory = useCallback(
         async (categoryId: string) => {
-            const categoryRef = doc(db, categoriesPath, categoryId);
-            await deleteDoc(categoryRef);
+            const { error } = await supabase
+                .from('store_categories')
+                .delete()
+                .eq('id', categoryId);
 
-            // Sync delete to public store
-            await syncToPublicStore(categoryId, null, true);
+            if (error) throw error;
         },
-        [categoriesPath, syncToPublicStore]
+        []
     );
 
     // Reorder categories
     const reorderCategories = useCallback(
         async (orderedIds: string[]) => {
+            // Because Supabase doesn't have a direct 'bulk update multiple rows with different values' 
+            // easily via the JS client, we can do multiple updates or use a database function.
+            // Using Promise.all for updates since it's an admin op and categories count is usually small.
             const promises = orderedIds.map((id, index) => {
-                const categoryRef = doc(db, categoriesPath, id);
-                return updateDoc(categoryRef, {
-                    position: index,
-                    updatedAt: serverTimestamp(),
-                });
+                return supabase
+                    .from('store_categories')
+                    .update({ position: index })
+                    .eq('id', id);
             });
 
-            await Promise.all(promises);
-
-            // Sync reorder to public store (updates positions)
-            for (let index = 0; index < orderedIds.length; index++) {
-                const id = orderedIds[index];
-                await syncToPublicStore(id, {
-                    position: index,
-                    updatedAt: new Date().toISOString()
-                });
+            const results = await Promise.all(promises);
+            const errors = results.filter(r => r.error);
+            if (errors.length > 0) {
+                throw errors[0].error;
             }
         },
-        [categoriesPath, syncToPublicStore]
+        []
     );
 
     // Get category by ID

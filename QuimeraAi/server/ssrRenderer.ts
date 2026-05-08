@@ -3,27 +3,27 @@
  * 
  * Renders the storefront React app on the server for custom domains.
  * Provides SEO benefits and fast initial load.
+ * 
+ * Data source: Supabase projects.published_data JSONB column
  */
 
 import fs from 'fs';
 import path from 'path';
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Only import vite types - actual usage is dynamic
 type ViteDevServer = import('vite').ViteDevServer;
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Firebase Admin initialization
-let db: Firestore;
+// Supabase Admin client (service role key for server-side access bypassing RLS)
+let supabaseAdmin: SupabaseClient;
 
-function getFirestoreDb(): Firestore {
-    if (!db) {
-        if (getApps().length === 0) {
-            initializeApp();
-        }
-        db = getFirestore();
+function getSupabaseAdmin(): SupabaseClient {
+    if (!supabaseAdmin) {
+        const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+        supabaseAdmin = createClient(url, key);
     }
-    return db;
+    return supabaseAdmin;
 }
 
 export interface SSRRenderOptions {
@@ -359,60 +359,65 @@ function generateBrandedSkeleton(project: ProjectData): string {
 }
 
 /**
- * Fetch project data from Firestore
+ * Fetch project data from Supabase (projects.published_data)
  */
 export async function fetchProjectData(projectId: string): Promise<ProjectData | null> {
     try {
-        const firestore = getFirestoreDb();
+        const sb = getSupabaseAdmin();
         
         console.log(`[SSR] fetchProjectData called for projectId: ${projectId}`);
         
-        // First try publicStores (published stores)
-        const publicStoreDoc = await firestore.collection('publicStores').doc(projectId).get();
+        // Read published_data from the projects table
+        const { data: row, error } = await sb
+            .from('projects')
+            .select('published_data')
+            .eq('id', projectId)
+            .not('published_data', 'is', null)
+            .single();
         
-        if (publicStoreDoc.exists) {
-            const data = publicStoreDoc.data()!;
-            // Log data from publicStores for debugging
-            console.log(`[SSR] publicStores data:`, {
-                hasData: !!data.data,
-                hasTheme: !!data.theme,
-                hasComponentStyles: !!data.componentStyles,
-                componentStylesCount: data.componentStyles ? Object.keys(data.componentStyles).length : 0,
-                hasPages: !!data.pages,
-                pagesCount: data.pages?.length || 0,
-                hasComponentOrder: !!data.componentOrder,
-                componentOrderCount: data.componentOrder?.length || 0,
-                heroVariant: data.data?.hero?.heroVariant,
-                headerLogoText: data.data?.header?.logoText,
-            });
-            return {
-                id: projectId,
-                name: data.name || 'Store',
-                theme: data.theme,
-                data: data.data,
-                seoConfig: data.seoConfig,
-                brandIdentity: data.brandIdentity,
-                aiAssistantConfig: data.aiAssistantConfig,
-                // Complete project data for proper rendering
-                componentStyles: data.componentStyles || null,
-                componentOrder: data.componentOrder || [],
-                sectionVisibility: data.sectionVisibility || {},
-                pages: data.pages || [],
-                menus: data.menus || [],
-                designTokens: data.designTokens || null,
-                responsiveStyles: data.responsiveStyles || null,
-                header: data.header || null,
-                footer: data.footer || null,
-                faviconUrl: data.faviconUrl || null,
-                thumbnailUrl: data.thumbnailUrl || null,
-                componentStatus: data.componentStatus || null,
-            };
+        if (error || !row?.published_data) {
+            console.warn(`[SSR] Project ${projectId} not found or not published`);
+            return null;
         }
 
-        // If not in publicStores, try to find via the userId
-        // This requires the domain mapping to have userId
-        console.warn(`[SSR] Project ${projectId} not found in publicStores`);
-        return null;
+        const data = row.published_data as any;
+
+        // Log data for debugging
+        console.log(`[SSR] published_data loaded:`, {
+            hasData: !!data.data,
+            hasTheme: !!data.theme,
+            hasComponentStyles: !!data.componentStyles,
+            componentStylesCount: data.componentStyles ? Object.keys(data.componentStyles).length : 0,
+            hasPages: !!data.pages,
+            pagesCount: data.pages?.length || 0,
+            hasComponentOrder: !!data.componentOrder,
+            componentOrderCount: data.componentOrder?.length || 0,
+            heroVariant: data.data?.hero?.heroVariant,
+            headerLogoText: data.data?.header?.logoText,
+        });
+
+        return {
+            id: projectId,
+            name: data.name || 'Store',
+            theme: data.theme,
+            data: data.data,
+            seoConfig: data.seoConfig,
+            brandIdentity: data.brandIdentity,
+            aiAssistantConfig: data.aiAssistantConfig,
+            // Complete project data for proper rendering
+            componentStyles: data.componentStyles || null,
+            componentOrder: data.componentOrder || [],
+            sectionVisibility: data.sectionVisibility || {},
+            pages: data.pages || [],
+            menus: data.menus || [],
+            designTokens: data.designTokens || null,
+            responsiveStyles: data.responsiveStyles || null,
+            header: data.header || null,
+            footer: data.footer || null,
+            faviconUrl: data.faviconUrl || null,
+            thumbnailUrl: data.thumbnailUrl || null,
+            componentStatus: data.componentStatus || null,
+        };
 
     } catch (error) {
         console.error(`[SSR] Error fetching project ${projectId}:`, error);

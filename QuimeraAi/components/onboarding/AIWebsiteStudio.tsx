@@ -24,6 +24,7 @@ import ColorControl from '../ui/ColorControl';
 import { PageSection } from '../../types/ui';
 import ImagePicker from '../ui/ImagePicker';
 import FontFamilyPicker from '../ui/FontFamilyPicker';
+import { SortableComponentChips } from '../ui/SortableComponentChips';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -94,12 +95,9 @@ const AIWebsiteStudio: React.FC = () => {
                 {/* ── Header ── */}
                 <div className="flex items-center justify-between px-3 lg:px-5 py-2.5 lg:py-3 border-b border-q-border bg-primary/5">
                     <div className="flex items-center gap-2 lg:gap-3 min-w-0">
-                        {/* Branding icon — condensed on mobile (no box), boxed on desktop */}
+                        {/* Branding icon */}
                         <div className="relative flex-shrink-0">
-                            <div className="hidden lg:flex bg-q-accent p-2.5 rounded-xl shadow-lg shadow-primary/20">
-                                <Sparkles className="text-primary-foreground w-5 h-5" />
-                            </div>
-                            <Sparkles className="lg:hidden w-5 h-5 text-q-accent" />
+                            <img src="/logos/quimera-icon.svg" alt="Quimera" className="w-7 h-7 lg:w-8 lg:h-8" />
                             {studio.isVoiceActive && (
                                 <span className="absolute -top-1 -right-1 w-2.5 lg:w-3 h-2.5 lg:h-3 bg-green-400 rounded-full border-2 border-q-bg animate-pulse" />
                             )}
@@ -107,11 +105,8 @@ const AIWebsiteStudio: React.FC = () => {
                         <div className="min-w-0">
                             <h2 className="text-sm lg:text-lg font-bold text-q-text flex items-center gap-1.5 lg:gap-2">
                                 <span className="truncate">{t('aiWebsiteStudio.title')}</span>
-                                <span className="hidden sm:inline text-[10px] font-mono bg-primary/15 text-q-accent px-2 py-0.5 rounded-full flex-shrink-0">
-                                    Quimera AI
-                                </span>
                             </h2>
-                            <p className="text-[10px] lg:text-xs text-q-text-secondary hidden sm:block">{t('aiWebsiteStudio.poweredBy')}</p>
+                            <p className="text-[10px] lg:text-xs text-q-accent hidden sm:block">{t('aiWebsiteStudio.poweredBy')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
@@ -260,7 +255,7 @@ const AIWebsiteStudio: React.FC = () => {
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
                     <div className="hidden lg:flex w-[300px] flex-col border-l border-q-border bg-q-surface/30 overflow-y-auto custom-scrollbar">
-                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
+                        <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} />
                     </div>
 
                     {/* RIGHT: Business Brief Panel (mobile bottom sheet) */}
@@ -285,7 +280,7 @@ const AIWebsiteStudio: React.FC = () => {
                                 </div>
                                 {/* Content — scrollable */}
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} />
+                                    <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} />
                                 </div>
                             </div>
                         </div>
@@ -397,7 +392,8 @@ const BriefPanel: React.FC<{
     onUpdateColor: (colorKey: string, newColor: string) => void;
     onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: string) => void;
     onToggleComponent: (component: PageSection) => void;
-}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent }) => {
+    onSetComponents: (components: PageSection[]) => void;
+}> = ({ brief, canGenerate, isGenerating, onGenerate, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents }) => {
     const { t } = useTranslation();
     const readiness = brief.readinessScore;
     const readinessColor = readiness >= 80 ? '#22c55e' : readiness >= 50 ? '#f59e0b' : readiness >= 20 ? '#ef4444' : '#6b7280';
@@ -554,17 +550,11 @@ const BriefPanel: React.FC<{
             {/* Components — Uniform compact chips */}
             <BriefSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
                 <div className="flex flex-wrap gap-[3px]">
-                    {brief.suggestedComponents.map(comp => (
-                        <button
-                            key={comp}
-                            onClick={() => onToggleComponent(comp as PageSection)}
-                            className="group/chip inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded bg-q-accent/10 text-q-accent text-[9px] font-medium border border-q-accent/15 hover:bg-red-500/15 hover:border-red-500/25 hover:text-red-400 transition-all cursor-pointer leading-none"
-                            title={`Remove ${comp}`}
-                        >
-                            <span>{comp}</span>
-                            <X size={8} className="opacity-0 group-hover/chip:opacity-100 -mr-0.5 transition-opacity flex-shrink-0" />
-                        </button>
-                    ))}
+                    <SortableComponentChips 
+                        items={brief.suggestedComponents} 
+                        onChange={onSetComponents} 
+                        onRemove={onToggleComponent} 
+                    />
                     {/* Inline add button */}
                     <div className="relative">
                         <button

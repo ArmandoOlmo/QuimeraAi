@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { supabase } from '../supabase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import {
     GlobalServiceAvailability,
@@ -64,31 +65,31 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
     const userRole = userDocument?.role || 'user';
 
     // =========================================================================
-    // LOAD AVAILABILITY (with real-time listener)
+    // LOAD AVAILABILITY (one-shot fetch — no realtime needed for admin config)
     // =========================================================================
     useEffect(() => {
-        const docRef = doc(db, 'globalSettings', 'serviceAvailability');
+        const fetchAvailability = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('settings')
+                    .select('config')
+                    .eq('id', 'serviceAvailability')
+                    .maybeSingle();
 
-        const unsubscribe = onSnapshot(
-            docRef,
-            (snap) => {
-                if (snap.exists()) {
-                    setAvailability(snap.data() as GlobalServiceAvailability);
+                if (!error && data?.config) {
+                    setAvailability(data.config as GlobalServiceAvailability);
                 } else {
-                    // Initialize with default values if document doesn't exist
                     setAvailability(null);
                 }
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
+            } catch (err) {
                 console.error('Error loading service availability:', err);
                 setError('Error loading service availability');
+            } finally {
                 setIsLoading(false);
             }
-        );
+        };
 
-        return () => unsubscribe();
+        fetchAvailability();
     }, []);
 
     // =========================================================================
@@ -97,14 +98,24 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
     const refreshAuditLog = useCallback(async () => {
         setIsLoadingAuditLog(true);
         try {
-            const auditRef = collection(db, AUDIT_LOG_COLLECTION);
-            const q = query(auditRef, orderBy('timestamp', 'desc'), limit(50));
-            const snap = await getDocs(q);
+            const { data, error } = await supabase
+                .from('service_audit_logs')
+                .select('*')
+                .order('timestamp', { ascending: false })
+                .limit(50);
 
-            const entries: ServiceAuditEntry[] = snap.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            } as ServiceAuditEntry));
+            if (error) throw error;
+
+            const entries: ServiceAuditEntry[] = (data || []).map(row => ({
+                id: row.id,
+                serviceId: row.service_id,
+                previousStatus: row.previous_status,
+                newStatus: row.new_status,
+                reason: row.reason,
+                userId: row.user_id,
+                userEmail: row.user_email,
+                timestamp: row.timestamp,
+            } as any));
 
             setAuditLog(entries);
         } catch (err) {
@@ -134,87 +145,85 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
             return false;
         }
 
-        const docRef = doc(db, 'globalSettings', 'serviceAvailability');
-
         try {
             console.log('[ServiceAvailability] Starting update:', {
                 serviceId,
                 newStatus,
-                userId: user.uid,
+                userId: user.id || user.uid,
                 userEmail: user.email,
                 userRole: userDocument?.role
             });
 
             // Get current state for audit log
-            const currentSnap = await getDoc(docRef);
+            const { data: currentSnap } = await supabase
+                .from('settings')
+                .select('config')
+                .eq('id', 'serviceAvailability')
+                .maybeSingle();
+
             let currentAvailability: GlobalServiceAvailability;
 
-            if (currentSnap.exists()) {
-                currentAvailability = currentSnap.data() as GlobalServiceAvailability;
-                console.log('[ServiceAvailability] Current doc exists, reading current state');
+            if (currentSnap?.config) {
+                currentAvailability = currentSnap.config as GlobalServiceAvailability;
             } else {
-                // Initialize if doesn't exist
-                currentAvailability = getInitialServiceAvailability(user.uid);
-                console.log('[ServiceAvailability] No existing doc, using initial state');
+                currentAvailability = getInitialServiceAvailability(user.id || user.uid);
             }
 
             const previousStatus = currentAvailability.services[serviceId]?.status || 'public';
-            const now = { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 };
-
-            // Update service config - ensure no undefined values (Firestore rejects undefined)
+            
+            // Update service config
             const updatedServices = {
                 ...currentAvailability.services,
                 [serviceId]: {
                     status: newStatus,
-                    statusReason: reason || null, // Firestore doesn't allow undefined
-                    updatedAt: now,
-                    updatedBy: user.uid,
+                    statusReason: reason || null,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: user.id || user.uid,
                 } as ServiceConfig,
             };
 
-            // Save updated availability
-            console.log('[ServiceAvailability] Attempting to save main document...');
-            await setDoc(docRef, {
+            const updatedConfig = {
                 services: updatedServices,
-                lastUpdated: now,
-                updatedBy: user.uid,
-            });
+                lastUpdated: new Date().toISOString(),
+                updatedBy: user.id || user.uid,
+            };
+
+            // Save updated availability
+            const { error: updateError } = await supabase
+                .from('settings')
+                .upsert({
+                    id: 'serviceAvailability',
+                    config: updatedConfig,
+                    updated_at: new Date().toISOString(),
+                    updated_by: user.id || user.uid
+                });
+
+            if (updateError) throw updateError;
             console.log('[ServiceAvailability] Main document saved successfully');
 
-            // Create audit log entry - wrap in separate try-catch to not block main functionality
+            // Create audit log entry
             try {
                 console.log('[ServiceAvailability] Attempting to write audit log...');
-                const auditRef = collection(db, AUDIT_LOG_COLLECTION);
-                const auditEntry: Omit<ServiceAuditEntry, 'id'> = {
-                    serviceId,
-                    previousStatus,
-                    newStatus,
-                    reason: reason || null, // Firestore doesn't allow undefined
-                    userId: user.uid,
-                    userEmail: user.email || 'unknown',
-                    timestamp: now,
-                };
+                
+                await supabase.from('service_audit_logs').insert({
+                    service_id: serviceId,
+                    previous_status: previousStatus,
+                    new_status: newStatus,
+                    reason: reason || null,
+                    user_id: user.id || user.uid,
+                    user_email: user.email || 'unknown'
+                });
 
-                await addDoc(auditRef, auditEntry);
                 console.log('[ServiceAvailability] Audit log saved successfully');
-
-                // Refresh audit log
                 await refreshAuditLog();
             } catch (auditErr) {
-                // Audit log failure should not block the main update
                 console.warn('[ServiceAvailability] Audit log write failed (non-critical):', auditErr);
             }
 
-            // Clear any previous error since main operation succeeded
             setError(null);
             return true;
         } catch (err: any) {
-            console.error('[ServiceAvailability] Error updating service status:', {
-                message: err?.message,
-                code: err?.code,
-                name: err?.name,
-                fullError: err
-            });
+            console.error('[ServiceAvailability] Error updating service status:', err);
             setError('Error updating service status');
             return false;
         }

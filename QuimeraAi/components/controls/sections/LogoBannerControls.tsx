@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -47,8 +47,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         />
       </div>
 
-      <Input label={t('controls.title')} value={data.logoBanner.title || ''} onChange={(val) => setNestedData('logoBanner.title', val)} placeholder="Trusted by industry leaders" />
-      <Input label={t('controls.subtitle')} value={data.logoBanner.subtitle || ''} onChange={(val) => setNestedData('logoBanner.subtitle', val)} placeholder="" />
+      <I18nInput label={t('controls.title')} value={data.logoBanner.title || ''} onChange={(val) => setNestedData('logoBanner.title', val)} placeholder="Trusted by industry leaders" />
+      <I18nInput label={t('controls.subtitle')} value={data.logoBanner.subtitle || ''} onChange={(val) => setNestedData('logoBanner.subtitle', val)} placeholder="" />
 
       <div className="text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider pt-1">Logos</div>
       {logos.map((logo: any, idx: number) => (
@@ -73,8 +73,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             value={logo.imageUrl}
             onChange={(url) => setNestedData(`logoBanner.logos.${idx}.imageUrl`, url)}
           />
-          <Input label={t('controls.altText')} value={logo.alt || ''} onChange={(val) => setNestedData(`logoBanner.logos.${idx}.alt`, val)} placeholder="Brand Name" />
-          <Input label={t('controls.linkText')} value={logo.linkText || ''} onChange={(val) => setNestedData(`logoBanner.logos.${idx}.linkText`, val)} placeholder="Visit Brand" />
+          <I18nInput label={t('controls.altText')} value={logo.alt || ''} onChange={(val) => setNestedData(`logoBanner.logos.${idx}.alt`, val)} placeholder="Brand Name" />
+          <I18nInput label={t('controls.linkText')} value={logo.linkText || ''} onChange={(val) => setNestedData(`logoBanner.logos.${idx}.linkText`, val)} placeholder="Visit Brand" />
 
           {/* Link Type Selector */}
           <div>

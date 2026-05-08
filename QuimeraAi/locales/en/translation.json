@@ -5948,7 +5948,7 @@
     "brief": "Brief",
     "close": "Close",
     "welcome": {
-      "greeting": "Hi there! 👋 I'm **Quimera AI**, your web design assistant.",
+      "greeting": "Hi there! 👋 I'm **Quibo**, your web design assistant.",
       "description": "I'll help you create a **complete professional website** through natural conversation. No design skills needed, I'll handle everything.",
       "whatINeed": "🎯 I just need to learn about your business:",
       "businessName": "🏢 **Name and type** of business",
@@ -11976,7 +11976,21 @@
     "editingTranslations": "Editing translations",
     "searchTranslations": "Search by key or value...",
     "noTranslationsFound": "No translations found",
-    "changesAreTemporary": "Changes are temporary until saved to the server"
+    "changesAreTemporary": "Changes are temporary until saved to the server",
+    "mediaManager": "Media Library",
+    "media": {
+      "platformAssets": "Platform Assets",
+      "globalAssets": "Global Assets",
+      "tenantAssets": "User Uploads"
+    },
+    "tenantMedia": {
+      "title": "User & Restaurant Files",
+      "searchPlaceholder": "Search by file name or tenant ID...",
+      "noFiles": "No files found",
+      "fileDetails": "File Details",
+      "tenant": "Tenant",
+      "project": "Project"
+    }
   },
   "trash": {
     "title": "Trash",
@@ -12236,7 +12250,7 @@
     "brief": "Brief",
     "close": "Close",
     "welcome": {
-      "greeting": "Hi there! 👋 I'm **Quimera AI**, your web design assistant.",
+      "greeting": "Hi there! 👋 I'm **Quibo**, your web design assistant.",
       "description": "I'll help you create a **complete professional website** through natural conversation. No design skills needed, I'll handle everything.",
       "whatINeed": "🎯 I just need to learn about your business:",
       "businessName": "🏢 **Name and type** of business",

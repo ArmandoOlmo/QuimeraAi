@@ -69,7 +69,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
         setError(null);
 
         const blockedRef = collection(
-            db, 'users', user.uid, 'projects', activeProjectId, 'blockedDates'
+            db, 'users', user.id, 'projects', activeProjectId, 'blockedDates'
         );
         const q = query(blockedRef, orderBy('startDate', 'asc'));
 
@@ -115,7 +115,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
             endDate: data.endDate,
             allDay: data.allDay,
             createdAt: now,
-            createdBy: user.uid,
+            createdBy: user.id,
             projectId: activeProjectId,
         };
 
@@ -124,7 +124,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
         if (data.recurring) newBlockedDate.recurring = data.recurring;
 
         const blockedRef = collection(
-            db, 'users', user.uid, 'projects', activeProjectId, 'blockedDates'
+            db, 'users', user.id, 'projects', activeProjectId, 'blockedDates'
         );
         const docRef = await addDoc(blockedRef, newBlockedDate);
 
@@ -139,7 +139,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
         if (!activeProjectId) throw new Error('No hay proyecto seleccionado');
 
         const docRef = doc(
-            db, 'users', user.uid, 'projects', activeProjectId, 'blockedDates', id
+            db, 'users', user.id, 'projects', activeProjectId, 'blockedDates', id
         );
         await updateDoc(docRef, { ...data });
     }, [user, activeProjectId]);
@@ -149,7 +149,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
         if (!activeProjectId) throw new Error('No hay proyecto seleccionado');
 
         const docRef = doc(
-            db, 'users', user.uid, 'projects', activeProjectId, 'blockedDates', id
+            db, 'users', user.id, 'projects', activeProjectId, 'blockedDates', id
         );
         await deleteDoc(docRef);
     }, [user, activeProjectId]);

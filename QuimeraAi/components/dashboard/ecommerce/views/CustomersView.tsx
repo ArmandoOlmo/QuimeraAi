@@ -34,7 +34,7 @@ const CustomersView: React.FC = () => {
     const { storeId } = useEcommerceContext();
     const { activeProject } = useProject();
     const theme = useEcommerceTheme();
-    const { customers, isLoading, getTopCustomers } = useCustomers(user?.uid || '', storeId);
+    const { customers, isLoading, getTopCustomers } = useCustomers(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -314,7 +314,7 @@ const CustomersView: React.FC = () => {
                 <AddToAudienceModal
                     isOpen={showAddToAudienceModal}
                     onClose={() => setShowAddToAudienceModal(false)}
-                    userId={user.uid}
+                    userId={user.id}
                     projectId={activeProject.id}
                     customerIds={[selectedCustomer.id]}
                     contactCount={1}

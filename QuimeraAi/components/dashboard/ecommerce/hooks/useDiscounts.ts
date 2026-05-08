@@ -1,26 +1,12 @@
 /**
  * useDiscounts Hook
- * Hook para gestión de descuentos en Firestore
+ * Hook para gestión de descuentos en Supabase
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    where,
-    getDocs,
-    increment,
-    Timestamp,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Discount, DiscountType } from '../../../../types/ecommerce';
+import { mapDiscountFromDB, mapDiscountToDB } from '../../../../utils/ecommerceMappers';
 
 interface UseDiscountsOptions {
     activeOnly?: boolean;
@@ -32,7 +18,32 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const discountsPath = `users/${userId}/stores/${effectiveStoreId}/discounts`;
+
+    const fetchDiscounts = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        setIsLoading(true);
+        let query = supabase
+            .from('store_discounts')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
+
+        if (options?.activeOnly) {
+            query = query.eq('is_active', true);
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) {
+            console.error('Error fetching discounts:', fetchError);
+            setError(fetchError.message);
+        } else {
+            setDiscounts((data || []).map(mapDiscountFromDB));
+            setError(null);
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId, options?.activeOnly]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -40,33 +51,27 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             return;
         }
 
-        const discountsRef = collection(db, discountsPath);
-        let q = query(discountsRef, orderBy('createdAt', 'desc'));
+        fetchDiscounts();
 
-        if (options?.activeOnly) {
-            q = query(discountsRef, where('isActive', '==', true), orderBy('createdAt', 'desc'));
-        }
+        const channel = supabase.channel('store_discounts_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_discounts',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchDiscounts();
+                }
+            )
+            .subscribe();
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Discount[];
-                setDiscounts(data);
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error('Error fetching discounts:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, options?.activeOnly, discountsPath]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchDiscounts]);
 
     // Generate unique code
     const generateCode = (): string => {
@@ -89,70 +94,88 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             startsAt: Date;
             endsAt?: Date;
         }): Promise<string> => {
-            const discountsRef = collection(db, discountsPath);
-            
             const code = discountData.code?.toUpperCase() || generateCode();
 
             // Check if code already exists
-            const existingQuery = query(discountsRef, where('code', '==', code));
-            const existingSnapshot = await getDocs(existingQuery);
-            if (!existingSnapshot.empty) {
+            const { data: existingData } = await supabase
+                .from('store_discounts')
+                .select('id')
+                .eq('project_id', effectiveStoreId)
+                .eq('code', code)
+                .limit(1);
+
+            if (existingData && existingData.length > 0) {
                 throw new Error('El código de descuento ya existe');
             }
 
-            const docRef = await addDoc(discountsRef, {
+            const dbData = mapDiscountToDB({
                 code,
                 type: discountData.type,
                 value: discountData.value,
                 minimumPurchase: discountData.minimumPurchase || 0,
                 maxUses: discountData.maxUses,
                 usedCount: 0,
-                startsAt: Timestamp.fromDate(discountData.startsAt),
-                endsAt: discountData.endsAt ? Timestamp.fromDate(discountData.endsAt) : null,
                 isActive: true,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             });
 
-            return docRef.id;
+            dbData.project_id = effectiveStoreId;
+            dbData.starts_at = discountData.startsAt.toISOString();
+            if (discountData.endsAt) {
+                dbData.ends_at = discountData.endsAt.toISOString();
+            }
+
+            const { data: insertedDoc, error } = await supabase
+                .from('store_discounts')
+                .insert(dbData)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return insertedDoc.id;
         },
-        [discountsPath]
+        [effectiveStoreId]
     );
 
     // Update discount
     const updateDiscount = useCallback(
         async (discountId: string, updates: Partial<Omit<Discount, 'id' | 'createdAt' | 'usedCount'>>) => {
-            const discountRef = doc(db, discountsPath, discountId);
-            
-            const updateData: any = {
-                ...updates,
-                updatedAt: serverTimestamp(),
-            };
+            const updateData: any = mapDiscountToDB(updates);
 
             if (updates.code) {
                 updateData.code = updates.code.toUpperCase();
             }
 
             if (updates.startsAt && updates.startsAt instanceof Date) {
-                updateData.startsAt = Timestamp.fromDate(updates.startsAt as unknown as Date);
+                updateData.starts_at = (updates.startsAt as unknown as Date).toISOString();
             }
 
             if (updates.endsAt && updates.endsAt instanceof Date) {
-                updateData.endsAt = Timestamp.fromDate(updates.endsAt as unknown as Date);
+                updateData.ends_at = (updates.endsAt as unknown as Date).toISOString();
+            } else if (updates.endsAt === null) {
+                updateData.ends_at = null;
             }
 
-            await updateDoc(discountRef, updateData);
+            const { error } = await supabase
+                .from('store_discounts')
+                .update(updateData)
+                .eq('id', discountId);
+
+            if (error) throw error;
         },
-        [discountsPath]
+        []
     );
 
     // Delete discount
     const deleteDiscount = useCallback(
         async (discountId: string) => {
-            const discountRef = doc(db, discountsPath, discountId);
-            await deleteDoc(discountRef);
+            const { error } = await supabase
+                .from('store_discounts')
+                .delete()
+                .eq('id', discountId);
+
+            if (error) throw error;
         },
-        [discountsPath]
+        []
     );
 
     // Toggle discount active status
@@ -161,13 +184,14 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             const discount = discounts.find((d) => d.id === discountId);
             if (!discount) return;
 
-            const discountRef = doc(db, discountsPath, discountId);
-            await updateDoc(discountRef, {
-                isActive: !discount.isActive,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_discounts')
+                .update({ is_active: !discount.isActive })
+                .eq('id', discountId);
+
+            if (error) throw error;
         },
-        [discountsPath, discounts]
+        [discounts]
     );
 
     // Validate discount code
@@ -228,13 +252,17 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
     // Increment usage count
     const incrementUsage = useCallback(
         async (discountId: string) => {
-            const discountRef = doc(db, discountsPath, discountId);
-            await updateDoc(discountRef, {
-                usedCount: increment(1),
-                updatedAt: serverTimestamp(),
-            });
+            const discount = discounts.find(d => d.id === discountId);
+            if (!discount) return;
+
+            const { error } = await supabase
+                .from('store_discounts')
+                .update({ used_count: discount.usedCount + 1 })
+                .eq('id', discountId);
+
+            if (error) throw error;
         },
-        [discountsPath]
+        [discounts]
     );
 
     // Get discount by ID

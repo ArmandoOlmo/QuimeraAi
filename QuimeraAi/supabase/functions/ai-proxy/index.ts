@@ -7,8 +7,14 @@ import { corsHeaders } from '../_shared/cors.ts'
  */
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY'); // Required for Live API / Voice Assistant
 
 function mapModelToOpenRouter(model: string): string {
+    // If model is already in OpenRouter format (e.g. "qwen/qwen-max"), pass through
+    if (model.includes('/')) {
+        return model;
+    }
+
     const MODEL_MAP: Record<string, string> = {
         // Gemini 2.5
         'gemini-2.5-flash': 'google/gemini-2.5-flash',
@@ -23,11 +29,21 @@ function mapModelToOpenRouter(model: string): string {
         'gemini-3-pro-preview': 'google/gemini-2.5-pro',
         'gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
         'gemini-3.1-flash-lite-preview': 'google/gemini-2.5-flash',
+        // Image Models
+        'gemini-3.1-flash-image-preview': 'google/gemini-3.1-flash-image-preview', // Nano Banana 2
+        'imagen-4.0-nano-banana-002': 'google/gemini-3.1-flash-image-preview',
+        'gemini-3-pro-image-preview': 'google/gemini-3-pro-image-preview',
+        'gemini-2.5-flash-image': 'google/gemini-2.5-flash',
         // Legacy
         'gemini-1.5-flash': 'google/gemini-flash-1.5',
         'gemini-1.5-pro': 'google/gemini-pro-1.5',
     };
     return MODEL_MAP[model] || 'google/gemini-2.5-flash';
+}
+
+function isImageModel(model: string): boolean {
+    const lowerModel = model.toLowerCase();
+    return lowerModel.includes('image') || lowerModel.includes('imagen') || lowerModel.includes('banana');
 }
 
 serve(async (req) => {
@@ -39,9 +55,31 @@ serve(async (req) => {
     try {
         const payload = await req.json();
         
-        // Handle Action payload (used by supabase.functions.invoke)
-        // If the request comes from Supabase client, the payload is wrapped in the body, but usually we just read it directly
-        // However, Supabase JS client `functions.invoke` passes the object directly.
+        // Handle Action payload (used by supabase.functions.invoke or direct fetch)
+        // 1. Live API Key
+        if (payload.action === 'getLiveApiKey') {
+            if (!GEMINI_API_KEY) {
+                console.warn('GEMINI_API_KEY is not configured for Voice Assistant');
+                return new Response(
+                    JSON.stringify({ error: 'Voice Assistant requires GEMINI_API_KEY in Supabase secrets.' }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+            return new Response(
+                JSON.stringify({ apiKey: GEMINI_API_KEY }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // 2. Usage Stats (Stubbed to prevent UI crashes)
+        if (payload.action === 'usage') {
+            // Future: Implement real token usage reading from Supabase DB
+            return new Response(
+                JSON.stringify({ success: true, usage: { creditsRemaining: 'Unlimited (Proxy)' } }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
         const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, tools } = payload;
 
         if (!OPENROUTER_API_KEY) {
@@ -51,6 +89,7 @@ serve(async (req) => {
         const orModel = mapModelToOpenRouter(model);
         const temperature = config.temperature ?? 0.7;
         const maxTokens = config.maxOutputTokens ?? 8192;
+        const isImageGen = isImageModel(model);
 
         const messages: Array<{ role: string; content: string | any[] }> = [];
 
@@ -67,7 +106,7 @@ serve(async (req) => {
             }
         }
 
-        // Handle prompt with or without images
+        // Handle prompt with or without images (vision)
         if (images && images.length > 0) {
             const contentParts: any[] = [{ type: 'text', text: prompt || ' ' }];
             for (const img of images) {
@@ -91,6 +130,14 @@ serve(async (req) => {
             max_tokens: maxTokens,
         };
 
+        // If requesting image generation, we must inject modalities
+        if (isImageGen) {
+            orBody.modalities = ["text", "image"];
+        }
+
+        // Debug log for troubleshooting
+        console.log(`[ai-proxy] Requesting: model=${orModel}, messages=${messages.length}, max_tokens=${maxTokens}, temp=${temperature}${isImageGen ? ', modalities=text+image' : ''}`);
+
         const orResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -112,6 +159,85 @@ serve(async (req) => {
         }
 
         const data = await orResponse.json();
+        
+        // Handle Image Generation Response Format
+        if (isImageGen) {
+            const msg = data.choices?.[0]?.message;
+            let extractedImage = '';
+            
+            if (msg) {
+                // OpenRouter returns images as objects: { type: "image_url", image_url: { url: "data:..." } }
+                if (msg.images && msg.images.length > 0) {
+                    const firstImage = msg.images[0];
+                    if (typeof firstImage === 'string') {
+                        extractedImage = firstImage;
+                    } else if (firstImage?.image_url?.url) {
+                        extractedImage = firstImage.image_url.url;
+                    } else if (firstImage?.url) {
+                        extractedImage = firstImage.url;
+                    } else if (typeof firstImage === 'object') {
+                        // Last resort: stringify and log for debugging
+                        console.warn('[ai-proxy] Unexpected image object format:', JSON.stringify(firstImage).slice(0, 200));
+                        extractedImage = '';
+                    }
+                } else if (msg.image_url && msg.image_url.url) {
+                    extractedImage = msg.image_url.url;
+                } else if (Array.isArray(msg.content)) {
+                    // Content can be an array of multipart objects
+                    for (const part of msg.content) {
+                        if (part?.type === 'image_url' && part?.image_url?.url) {
+                            extractedImage = part.image_url.url;
+                            break;
+                        }
+                    }
+                } else if (typeof msg.content === 'string') {
+                    // It might be a markdown link: ![alt](data:image/jpeg;base64,...)
+                    const match = msg.content.match(/!\[.*?\]\((.*?)\)/);
+                    if (match) {
+                        extractedImage = match[1];
+                    } else if (msg.content.startsWith('data:image')) {
+                        extractedImage = msg.content;
+                    } else if (msg.content.startsWith('http')) {
+                        extractedImage = msg.content;
+                    } else {
+                        // Fallback assuming content is raw base64
+                        extractedImage = msg.content;
+                    }
+                }
+            }
+
+            if (!extractedImage) {
+                console.error('[ai-proxy] No image extracted from response. Full message:', JSON.stringify(msg).slice(0, 500));
+                return new Response(
+                    JSON.stringify({ error: 'No image data returned from model', details: JSON.stringify(data.choices?.[0]).slice(0, 300) }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+            
+            // Extract mimetype if it's a data URL
+            let mimeType = 'image/jpeg';
+            if (typeof extractedImage === 'string' && extractedImage.startsWith('data:')) {
+                const parts = extractedImage.split(',');
+                const mimeMatch = parts[0].match(/data:(.*?);/);
+                if (mimeMatch) mimeType = mimeMatch[1];
+                extractedImage = parts[1]; // Remove data URL prefix for consistency
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    image: extractedImage,
+                    mimeType,
+                    metadata: {
+                        model: orModel,
+                        provider: 'openrouter'
+                    }
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // Handle Standard Text Response Format
         const text = data.choices?.[0]?.message?.content || '';
         
         const promptTokens = data.usage?.prompt_tokens || 0;

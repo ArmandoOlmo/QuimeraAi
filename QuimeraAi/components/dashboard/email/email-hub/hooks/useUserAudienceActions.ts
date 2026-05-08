@@ -68,7 +68,7 @@ export function useUserAudienceActions(
                 tags: [],
                 acceptsMarketing: true,
                 source: 'manual',
-                createdBy: user?.uid || userId,
+                createdBy: user?.id || userId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });

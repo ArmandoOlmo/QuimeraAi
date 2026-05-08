@@ -16,6 +16,7 @@ import { useProject } from '../../../contexts/project';
 import { useEditor } from '../../../contexts/EditorContext';
 import { useAdmin } from '../../../contexts/admin';
 import { useUI } from '../../../contexts/core/UIContext';
+import { useSafeTenant } from '../../../contexts/tenant';
 import { useTranslation } from 'react-i18next';
 import {
     generateChatContentViaProxy,
@@ -23,6 +24,7 @@ import {
     type ChatMessage,
 } from '../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../services/apiLoggingService';
+import { Conversation, Role } from '@elevenlabs/client';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../utils/genAiClient';
 import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
@@ -30,44 +32,14 @@ import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotC
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { PageSection, SitePage } from '../../../types';
-import { db, collection, addDoc, serverTimestamp, doc, updateDoc } from '../../../firebase';
 
 // ── Models ──────────────────────────────────────────────────────────────────
-const MODEL_CHAT = 'gemini-3.1-pro-preview';  // Flagship orchestrator (replaces deprecated gemini-3-pro-preview)
+const MODEL_CHAT = 'qwen/qwen3-max';  // Flagship orchestrator — 262K context, 32K output
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
 const MODEL_IMAGE = 'gemini-3-pro-image-preview';
 
-// ── Voice helpers (same as email studio) ────────────────────────────────────
-const base64ToBytes = (base64: string): Uint8Array => {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-    return bytes;
-};
-const bytesToBase64 = (bytes: Uint8Array): string => {
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary);
-};
-const floatTo16BitPCM = (input: Float32Array): ArrayBuffer => {
-    const output = new ArrayBuffer(input.length * 2);
-    const view = new DataView(output);
-    for (let i = 0; i < input.length; i++) {
-        const s = Math.max(-1, Math.min(1, input[i]));
-        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    }
-    return output;
-};
-const decodeAudioData = async (bytes: Uint8Array, ctx: AudioContext, sampleRate: number, channels: number): Promise<AudioBuffer> => {
-    const numSamples = bytes.length / 2;
-    const buffer = ctx.createBuffer(channels, numSamples, sampleRate);
-    const channelData = buffer.getChannelData(0);
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    for (let i = 0; i < numSamples; i++) channelData[i] = view.getInt16(i * 2, true) / 32768;
-    return buffer;
-};
-
 const isDev = import.meta.env.DEV;
+const ELEVENLABS_AGENT_ID = '52ac360bd7d15d8bd5e86b214d14338adc732616468d4dc145ce3d12df400eb5';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -180,6 +152,18 @@ const safeJsonParse = (text: string, fallback: any = {}): any => {
     }
 };
 
+const createUuid = (): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOK
 // ═══════════════════════════════════════════════════════════════════════════
@@ -190,7 +174,9 @@ export function useAIWebsiteStudio() {
     const { generateImage } = useEditor();
     const { getPrompt } = useAdmin();
     const { setIsOnboardingOpen } = useUI();
+    const tenantContext = useSafeTenant();
     const { t, i18n } = useTranslation();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
 
     // ── Chat state ──────────────────────────────────────────────────────────
     const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -218,14 +204,7 @@ export function useAIWebsiteStudio() {
     const [isVoiceConnecting, setIsVoiceConnecting] = useState(false);
     const [liveUserTranscript, setLiveUserTranscript] = useState('');
     const [liveModelTranscript, setLiveModelTranscript] = useState('');
-    const sessionRef = useRef<any>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const inputAudioContextRef = useRef<AudioContext | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-    const processorRef = useRef<ScriptProcessorNode | null>(null);
-    const isConnectedRef = useRef(false);
-    const nextStartTimeRef = useRef(0);
-    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const conversationRef = useRef<any>(null);
     const currentModelResponseRef = useRef<string>('');
     const currentUserTranscriptRef = useRef<string>('');
 
@@ -282,174 +261,47 @@ CRITICAL RULES:
 11. If the user provides a URL or existing website, acknowledge it and extract whatever info you can from the conversation.
 
 ═══════════════════════════════════════════════════════════
-COMPONENT SELECTION GUIDE BY INDUSTRY
+AVAILABLE COMPONENTS
 ═══════════════════════════════════════════════════════════
-- Restaurant/Café/Bar: [HERO: heroGallery OR heroNova OR heroSplit], topBar, menu, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
-- Healthcare/Dental/Clinic: [HERO: heroLead OR heroSplit OR heroWave], topBar, services, features, testimonials, pricing, faq, leads, newsletter, cta, banner, map, signupFloat
-- Fitness/Gym/Wellness: [HERO: heroWave OR heroNova OR heroLead], topBar, services, features, testimonials, pricing, howItWorks, faq, leads, newsletter, cta, banner, map, signupFloat
-- Agency/Consulting/Marketing: [HERO: heroLead OR heroSplit OR heroNova], logoBanner, services, features, testimonials, howItWorks, faq, leads, newsletter, cta, banner, signupFloat
-- Photography/Videography: [HERO: heroGallery OR heroNova OR heroSplit], testimonials, services, faq, leads, cta, banner, signupFloat
-- Legal/Accounting/Finance: [HERO: heroLead OR heroSplit OR heroWave], topBar, services, features, testimonials, faq, leads, newsletter, cta, banner, map
-- Ecommerce/Retail/Online Store: [HERO: heroNova OR heroGallery OR heroWave], topBar, features, testimonials, faq, newsletter, cta, banner, signupFloat
-- Real Estate/Property: [HERO: heroLead OR heroGallery OR heroNova], topBar, realEstateListings, features, services, testimonials, faq, leads, map, cta, banner, signupFloat
-- Beauty/Spa/Salon: [HERO: heroGallery OR heroSplit OR heroNova], topBar, services, features, pricing, testimonials, faq, leads, newsletter, map, banner, signupFloat
-- Education/Academy/Coaching: [HERO: hero OR heroWave OR heroSplit], topBar, services, features, howItWorks, testimonials, pricing, faq, leads, newsletter, cta, banner, signupFloat
-- Music/Audio/Entertainment: [HERO: heroNova OR heroWave OR heroGallery], topBar, features, services, testimonials, faq, leads, newsletter, cta, banner, signupFloat
-- Architecture/Interior Design: [HERO: heroGallery OR heroNova OR heroSplit], services, features, testimonials, faq, leads, cta, banner, signupFloat
-- Construction/Home Services: [HERO: hero OR heroSplit OR heroNova], topBar, services, features, howItWorks, testimonials, faq, leads, map, cta, banner, signupFloat
-- Tech/SaaS/Startup: [HERO: heroWave OR heroNova OR heroSplit], logoBanner, features, services, howItWorks, pricing, testimonials, faq, leads, newsletter, cta, banner, signupFloat
-- Non-Profit/NGO/Foundation: [HERO: hero OR heroWave OR heroSplit], topBar, features, howItWorks, testimonials, faq, leads, newsletter, cta, banner, signupFloat
+You have these components at your disposal. Choose whichever combination best fits — there are NO rigid industry rules. Be creative:
 
-HERO SELECTION RULE: For [HERO: A OR B OR C], you MUST randomly pick ONE from the options listed. Do NOT always default to the first option. Vary your choice across different conversations.
-HEADER SELECTION RULE: NEVER default to the same header style. Vary between sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc. Match the style to the industry vibe.
-BANNER: ALWAYS include a banner component in suggestedComponents. It is REQUIRED for every website.
+HERO VARIANTS (pick ONE): hero, heroSplit, heroGallery, heroWave, heroNova, heroLead
+SUITE COMPONENTS (use ALL from ONE suite if the user requests it, or if the vibe fits):
+  - Lumina Suite: heroLumina, featuresLumina, ctaLumina, portfolioLumina, pricingLumina, testimonialsLumina, faqLumina
+  - Neon Suite: heroNeon, featuresNeon, ctaNeon, portfolioNeon, pricingNeon, testimonialsNeon, faqNeon
+STANDARD: topBar, logoBanner, banner, features, testimonials, pricing, faq, cta, services, team, video, howItWorks, menu, realEstateListings, leads, newsletter, map, signupFloat, portfolio, slideshow
+DECORATIVE: separator1, separator2, separator3, separator4, separator5
+
+RULES:
+- heroLead = split hero with integrated lead form — great for service businesses.
+- realEstateListings = only for property/real estate. Pair with leads.
+- banner MUST always be included.
+- ALWAYS include at least one hero variant.
+- Vary header styles freely: sticky-solid, floating-glass, floating-pill, transparent-blur, edge-minimal, edge-bordered, transparent-gradient-dark, etc.
 
 ═══════════════════════════════════════════════════════════
-EXPERT COLOR THEORY — PALETTE DESIGN RULES
+COLOR THEORY FUNDAMENTALS
 ═══════════════════════════════════════════════════════════
 
-**The 60-30-10 Rule (ALWAYS follow this):**
-- 60% = Background/dominant color (your "background" color — sets the mood)
-- 30% = Secondary surfaces (cards, sections, header — your "primary" brand color)
-- 10% = Accent pop (CTAs, highlights, hover states — your "accent" color)
+**The 60-30-10 Rule:**
+- 60% = Background  |  30% = Primary/surfaces  |  10% = Accent pop
 
-**Color Temperature & Psychology:**
-- WARM tones (reds, oranges, yellows, golds) → Energy, appetite, urgency, passion
-- COOL tones (blues, teals, greens, purples) → Trust, calm, professionalism, health
-- NEUTRAL tones (grays, off-whites, tans, charcoals) → Sophistication, timelessness, luxury
+**Contrast (WCAG AA):**
+- Dark bg → white/light text  |  Light bg → dark text  |  Min 4.5:1 ratio
 
-**Contrast Requirements (WCAG AA):**
-- Text on background must have at least 4.5:1 ratio
-- Dark backgrounds (#0a0a0a to #1a1a2e) → Use white (#ffffff) or very light text
-- Light backgrounds (#fafafa to #ffffff) → Use very dark text (#111827 or #1a1a1a)
+**Hard Rules:**
+- Text over colored backgrounds MUST be white (#ffffff) — critical for nav & hero.
+- Footer bg MUST NEVER be white. Use a solid color or match the header.
 
-**Typography & Component Rules (CRITICAL):**
-- Typography color over any colored background MUST ALWAYS be white (#ffffff), unless it is a specific character detail that requires another color for design reasons. THIS IS EXTREMELY IMPORTANT for the navigation and the Hero section, which must strictly enforce white text over colored backgrounds.
-- The footer background MUST NEVER be white (#ffffff). It must be a solid color or match the header color.
-
-**Modern Palette Trends 2025-2026:**
-- Clay & earth palettes: warm neutrals with terracotta accents
-- Deep cool: midnight navy/charcoal with electric blue or mint accents
-- Moody gradients: dark purple-to-blue backgrounds with golden/amber accents
-- Neo-luxury: black/dark gray with champagne gold or rose gold accents
-- Digital fresh: clean whites with vibrant coral, teal, or chartreuse accents
-- Organic warm: sage green + warm beige + burnt orange
+Be original with palettes. Use color psychology, modern trends, and brand personality.
 
 ═══════════════════════════════════════════════════════════
-EXPERT COLOR PALETTES BY INDUSTRY
+AVAILABLE FONTS
 ═══════════════════════════════════════════════════════════
-Choose the best palette for the client's industry. These are reference starting points — adjust based on the brand personality:
+43 Google Fonts — use exact keys:
+inter, inter-tight, dm-sans, outfit, figtree, urbanist, manrope, sora, montserrat, poppins, raleway, public-sans, open-sans, work-sans, space-grotesk, bricolage-grotesque, ibm-plex-sans, libre-franklin, fira-sans, barlow-condensed, archivo-narrow, red-hat-display, syne, unbounded, instrument-sans, ubuntu, playfair-display, instrument-serif, eb-garamond, libre-baskerville, merriweather, newsreader, fraunces, dm-serif-text, biorhyme, bree-serif, eczar, inknut-antiqua, marcellus, neuton, dm-mono, space-mono, noto-sans-mono
 
-**Restaurant/Café:**
-  Warm & Appetizing: primary #c8a97e, secondary #8b6f47, accent #d4a053, background #0f0d0a, text #ffffff
-  Modern Bistro: primary #b8860b, secondary #2d2926, accent #e8c547, background #1a1612, text #f5f0e8
-
-**Healthcare/Medical/Dental:**
-  Trust & Clean: primary #0ea5e9, secondary #0369a1, accent #38bdf8, background #f0f9ff, text #1e3a5f
-  Medical Dark: primary #38bdf8, secondary #1e40af, accent #06b6d4, background #0f172a, text #f1f5f9
-
-**Fitness/Gym/Wellness:**
-  Bold Energy: primary #ef4444, secondary #1a1a1a, accent #f97316, background #0a0a0a, text #ffffff
-  Modern Wellness: primary #10b981, secondary #064e3b, accent #34d399, background #0a0f0d, text #ecfdf5
-
-**Legal/Finance/Consulting:**
-  Authoritative: primary #1e3a5f, secondary #1e40af, accent #d4a853, background #0f1729, text #f1f5f9
-  Classic Trust: primary #1e40af, secondary #1e3a5f, accent #f59e0b, background #fafbfe, text #1a1a2e
-
-**Tech/SaaS/Startup:**
-  Digital Edge: primary #8b5cf6, secondary #6366f1, accent #06b6d4, background #0f0b1a, text #f5f3ff
-  Clean Tech: primary #3b82f6, secondary #1d4ed8, accent #10b981, background #f8fafc, text #1e293b
-
-**Real Estate/Property:**
-  Luxury Estate: primary #b8860b, secondary #2c2c2c, accent #d4a853, background #111111, text #f5f0e8
-  Modern Living: primary #0d9488, secondary #134e4a, accent #f97316, background #fafaf9, text #1c1917
-
-**Beauty/Spa/Salon:**
-  Elegant Rose: primary #be185d, secondary #831843, accent #f472b6, background #0f0a0d, text #fdf2f8
-  Natural Glow: primary #d4a853, secondary #92400e, accent #fbbf24, background #fffbeb, text #451a03
-
-**Ecommerce/Retail:**
-  Bold Commerce: primary #f97316, secondary #c2410c, accent #fbbf24, background #0a0a0a, text #ffffff
-  Premium Store: primary #1a1a2e, secondary #2d2b55, accent #e8c547, background #fafafa, text #1a1a2e
-
-**Education/Academy:**
-  Knowledge: primary #2563eb, secondary #1d4ed8, accent #f59e0b, background #eff6ff, text #1e3a5f
-  Digital Campus: primary #7c3aed, secondary #5b21b6, accent #06b6d4, background #0f0a1a, text #f5f3ff
-
-**Music/Audio/Entertainment:**
-  Electric Night: primary #e8c547, secondary #b8860b, accent #f59e0b, background #0a0a0a, text #ffffff
-  Studio Pro: primary #8b5cf6, secondary #6d28d9, accent #f97316, background #0f0b15, text #ede9fe
-
-**Architecture/Interior Design:**
-  Minimal Lux: primary #1a1a1a, secondary #737373, accent #d4a853, background #fafafa, text #171717
-  Dark Portfolio: primary #a3a3a3, secondary #525252, accent #f97316, background #0a0a0a, text #fafafa
-
-**Construction/Home Services:**
-  Industrial: primary #f97316, secondary #9a3412, accent #fbbf24, background #1c1917, text #fafaf9
-  Reliable Pro: primary #2563eb, secondary #1d4ed8, accent #f59e0b, background #fafafa, text #1e293b
-
-**Non-Profit/NGO:**
-  Compassion: primary #059669, secondary #047857, accent #f59e0b, background #ecfdf5, text #064e3b
-  Impact Dark: primary #10b981, secondary #065f46, accent #fbbf24, background #0a0f0d, text #d1fae5
-
-**Photography/Creative:**
-  Noir Gallery: primary #ffffff, secondary #a3a3a3, accent #e8c547, background #0a0a0a, text #fafafa
-  Light & Airy: primary #1a1a1a, secondary #525252, accent #f472b6, background #fafafa, text #171717
-
-═══════════════════════════════════════════════════════════
-EXPERT TYPOGRAPHY — FONT PAIRING GUIDE
-═══════════════════════════════════════════════════════════
-Available fonts (43 Google Fonts in app): inter, inter-tight, dm-sans, outfit, figtree, urbanist, manrope, sora, montserrat, poppins, raleway, public-sans, open-sans, work-sans, space-grotesk, bricolage-grotesque, ibm-plex-sans, libre-franklin, fira-sans, barlow-condensed, archivo-narrow, red-hat-display, syne, unbounded, instrument-sans, ubuntu, playfair-display, instrument-serif, eb-garamond, libre-baskerville, merriweather, newsreader, fraunces, dm-serif-text, biorhyme, bree-serif, eczar, inknut-antiqua, marcellus, neuton, dm-mono, space-mono, noto-sans-mono
-
-**RECOMMENDED PAIRINGS BY INDUSTRY:**
-
-Tech/SaaS/Startup:
-  Header: space-grotesk | sora | inter-tight  Body: inter | dm-sans | work-sans  Button: inter-tight | space-grotesk
-
-Luxury/Premium/Real Estate:
-  Header: playfair-display | instrument-serif | fraunces  Body: dm-sans | inter | outfit  Button: dm-sans | montserrat
-
-Legal/Finance/Corporate:
-  Header: eb-garamond | libre-baskerville | merriweather  Body: ibm-plex-sans | work-sans | libre-franklin  Button: work-sans | ibm-plex-sans
-
-Healthcare/Medical:
-  Header: outfit | manrope | inter  Body: ibm-plex-sans | open-sans | inter  Button: outfit | manrope
-
-Restaurant/Café/Food:
-  Header: instrument-serif | fraunces | playfair-display  Body: figtree | dm-sans | inter  Button: figtree | dm-sans
-
-Fitness/Sports/Energy:
-  Header: barlow-condensed | montserrat | unbounded  Body: inter | dm-sans | fira-sans  Button: barlow-condensed | montserrat
-
-Beauty/Spa/Fashion:
-  Header: instrument-serif | playfair-display | marcellus  Body: dm-sans | outfit | urbanist  Button: dm-sans | outfit
-
-Education/Academy:
-  Header: merriweather | libre-baskerville | outfit  Body: inter | open-sans | work-sans  Button: inter | outfit
-
-Agency/Creative/Design:
-  Header: syne | bricolage-grotesque | red-hat-display  Body: inter | dm-sans | urbanist  Button: syne | space-grotesk
-
-Architecture/Construction:
-  Header: archivo-narrow | barlow-condensed | space-grotesk  Body: inter | work-sans | public-sans  Button: archivo-narrow | space-grotesk
-
-Music/Entertainment:
-  Header: syne | unbounded | bricolage-grotesque  Body: inter | dm-sans | outfit  Button: syne | unbounded
-
-Non-Profit/Community:
-  Header: outfit | manrope | figtree  Body: inter | open-sans | dm-sans  Button: outfit | manrope
-
-Ecommerce/Retail:
-  Header: montserrat | red-hat-display | outfit  Body: inter | dm-sans | figtree  Button: montserrat | outfit
-
-**FONT PERSONALITY RULES:**
-- Serif fonts (playfair-display, instrument-serif, eb-garamond) → Elegance, tradition, authority, luxury
-- Geometric sans (montserrat, poppins, outfit) → Modern, clean, approachable, tech-friendly
-- Humanist sans (inter, dm-sans, figtree) → Warm, readable, universal — safe for any industry
-- Grotesque sans (space-grotesk, bricolage-grotesque, sora) → Futuristic, technical, edgy, startup vibes
-- Condensed (barlow-condensed, archivo-narrow) → Bold impact, sports, industrial, space-efficient
-- Display (syne, unbounded, red-hat-display) → Creative, attention-grabbing, for headlines only
-- Monospace (dm-mono, space-mono) → Developer, tech, data-driven brands
+Choose ANY header/body/button combo freely. Explain your choices to the user.
 
 ═══════════════════════════════════════════════════════════
 REFERENCE IMAGES — STYLE TRANSFER & VISUAL GUIDANCE
@@ -708,7 +560,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 systemPrompt,
                 MODEL_CHAT,
                 { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 8192 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -720,7 +572,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             }
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 model: MODEL_CHAT,
                 feature: 'ai-website-studio-chat',
                 success: true,
@@ -746,15 +598,16 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
     // VOICE MODE
     // ═════════════════════════════════════════════════════════════════════════
 
-    const stopVoiceSession = useCallback(() => {
-        isConnectedRef.current = false;
-        if (processorRef.current) { processorRef.current.disconnect(); processorRef.current = null; }
-        if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-        if (audioContextRef.current) { audioContextRef.current.close().catch(() => {}); audioContextRef.current = null; }
-        if (inputAudioContextRef.current) { inputAudioContextRef.current.close().catch(() => {}); inputAudioContextRef.current = null; }
-        activeSourcesRef.current.forEach(s => { try { s.stop(); } catch (_e) {} });
-        activeSourcesRef.current = [];
-        if (sessionRef.current) { try { sessionRef.current.close?.(); } catch (_e) {} sessionRef.current = null; }
+    const stopVoiceSession = useCallback(async () => {
+        if (conversationRef.current) {
+            try {
+                await conversationRef.current.endSession();
+            } catch (e) {
+                console.error('[AIWebsiteStudio Voice] Error ending session:', e);
+            }
+            conversationRef.current = null;
+        }
+
         // Flush leftover transcripts
         if (currentUserTranscriptRef.current.trim()) {
             const leftover = currentUserTranscriptRef.current.trim();
@@ -767,115 +620,74 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             setMessages(prev => [...prev, { role: 'model', text: cleaned, isVoice: true, timestamp: Date.now() }]);
             historyRef.current.push({ role: 'model', text: leftover });
         }
-        setLiveUserTranscript(''); setLiveModelTranscript('');
-        currentUserTranscriptRef.current = ''; currentModelResponseRef.current = '';
-        setIsVoiceActive(false); setIsVoiceConnecting(false);
+        setLiveUserTranscript('');
+        setLiveModelTranscript('');
+        currentUserTranscriptRef.current = '';
+        currentModelResponseRef.current = '';
+        setIsVoiceActive(false);
+        setIsVoiceConnecting(false);
     }, [extractAndUpdateBrief]);
 
     const startVoiceSession = useCallback(async () => {
         setIsVoiceConnecting(true);
         try {
-            const ai = await getGoogleGenAI();
-            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-            const outputCtx = new AudioCtx({ sampleRate: 24000 });
-            const inputCtx = new AudioCtx({ sampleRate: 16000 });
-            audioContextRef.current = outputCtx;
-            inputAudioContextRef.current = inputCtx;
-            nextStartTimeRef.current = outputCtx.currentTime;
+            // Request mic permissions first
+            await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            const baseSystemPrompt = buildSystemPrompt();
-            const conversationHistory = historyRef.current
-                .filter(m => !m.text.startsWith('[SYSTEM]'))
-                .map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.text}`)
-                .join('\n\n');
-
-            const systemPromptWithHistory = conversationHistory
-                ? `${baseSystemPrompt}\n\n--- PREVIOUS CONVERSATION ---\n${conversationHistory}\n--- END ---\n\nContinue the conversation naturally. The user is now speaking by voice. IMPORTANT: Include <!--BRIEF:{...}--> tags in your responses with updated business information.`
-                : baseSystemPrompt;
-
-            let resolvedSession: any = null;
-
-            const session = await ai.live.connect({
-                model: MODEL_VOICE,
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } },
-                    systemInstruction: systemPromptWithHistory,
-                    contextWindowCompression: { slidingWindow: {} },
-                    sessionResumption: {},
-                    inputAudioTranscription: {},
-                    outputAudioTranscription: {},
+            const conversation = await Conversation.startSession({
+                agentId: ELEVENLABS_AGENT_ID,
+                onConnect: () => {
+                    setIsVoiceConnecting(false);
+                    setIsVoiceActive(true);
                 },
-                callbacks: {
-                    onopen: () => { setIsVoiceConnecting(false); setIsVoiceActive(true); isConnectedRef.current = true; },
-                    onmessage: async (message: LiveServerMessage) => {
-                        const msg = message as any;
-                        if (message.serverContent?.interrupted) {
-                            activeSourcesRef.current.forEach(s => { try { s.stop(); } catch (_e) {} });
-                            activeSourcesRef.current = [];
-                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
-                            return;
-                        }
-                        const inputTranscript = msg.serverContent?.inputTranscription?.text || msg.serverContent?.inputTranscript;
-                        const outputTranscript = msg.serverContent?.outputTranscription?.text || msg.serverContent?.outputTranscript;
-                        if (inputTranscript) { currentUserTranscriptRef.current += inputTranscript; setLiveUserTranscript(currentUserTranscriptRef.current); }
-                        if (outputTranscript) { currentModelResponseRef.current += outputTranscript; setLiveModelTranscript(currentModelResponseRef.current); }
-                        const turnComplete = msg.serverContent?.turnComplete || msg.serverContent?.generationComplete;
-                        if (turnComplete) {
-                            if (currentUserTranscriptRef.current.trim()) {
-                                const ut = currentUserTranscriptRef.current.trim();
-                                setMessages(prev => [...prev, { role: 'user', text: ut, isVoice: true, timestamp: Date.now() }]);
-                                historyRef.current.push({ role: 'user', text: ut });
-                                currentUserTranscriptRef.current = ''; setLiveUserTranscript('');
-                            }
-                            if (currentModelResponseRef.current.trim()) {
-                                const mt = currentModelResponseRef.current.trim();
-                                const cleaned = extractAndUpdateBrief(mt);
-                                setMessages(prev => [...prev, { role: 'model', text: cleaned, isVoice: true, timestamp: Date.now() }]);
-                                historyRef.current.push({ role: 'model', text: mt });
-                                currentModelResponseRef.current = ''; setLiveModelTranscript('');
-                            }
-                        }
-                        const modelParts = message.serverContent?.modelTurn?.parts;
-                        const audioData = modelParts?.[0]?.inlineData?.data;
-                        if (audioData && audioContextRef.current) {
-                            const ctx = audioContextRef.current;
-                            const bytes = base64ToBytes(audioData);
-                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            const source = ctx.createBufferSource();
-                            source.buffer = buffer; source.connect(ctx.destination);
-                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                            source.start(startTime); nextStartTimeRef.current = startTime + buffer.duration;
-                            activeSourcesRef.current.push(source);
-                            source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
-                        }
-                    },
-                    onclose: () => stopVoiceSession(),
-                    onerror: (e: any) => { console.error('[AIWebsiteStudio Voice] Error:', e); },
+                onDisconnect: () => {
+                    stopVoiceSession();
                 },
+                onError: (error) => {
+                    console.error('[AIWebsiteStudio Voice] Error:', error);
+                    stopVoiceSession();
+                },
+                onModeChange: (mode) => {
+                    // Could handle speaking state here if needed
+                },
+                onMessage: (message) => {
+                    if (message.source === 'user') {
+                        // User transcript
+                        currentUserTranscriptRef.current += message.message + ' ';
+                        setLiveUserTranscript(currentUserTranscriptRef.current);
+                        
+                        // Treat each message as a complete turn for UI simplicity
+                        const ut = currentUserTranscriptRef.current.trim();
+                        if (ut) {
+                            setMessages(prev => [...prev, { role: 'user', text: ut, isVoice: true, timestamp: Date.now() }]);
+                            historyRef.current.push({ role: 'user', text: ut });
+                        }
+                        currentUserTranscriptRef.current = '';
+                        setLiveUserTranscript('');
+                    } else if (message.source === 'ai') {
+                        // Model transcript
+                        currentModelResponseRef.current += message.message + ' ';
+                        setLiveModelTranscript(currentModelResponseRef.current);
+                        
+                        const mt = currentModelResponseRef.current.trim();
+                        if (mt) {
+                            const cleaned = extractAndUpdateBrief(mt);
+                            setMessages(prev => [...prev, { role: 'model', text: cleaned, isVoice: true, timestamp: Date.now() }]);
+                            historyRef.current.push({ role: 'model', text: mt });
+                        }
+                        currentModelResponseRef.current = '';
+                        setLiveModelTranscript('');
+                    }
+                }
             });
 
-            resolvedSession = session;
-            sessionRef.current = session;
+            conversationRef.current = conversation;
 
-            // Mic setup
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                streamRef.current = stream;
-                const source = inputCtx.createMediaStreamSource(stream);
-                const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-                processorRef.current = processor;
-                processor.onaudioprocess = (e) => {
-                    if (!isConnectedRef.current || !resolvedSession) return;
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    const pcm16 = floatTo16BitPCM(inputData);
-                    const base64Data = bytesToBase64(new Uint8Array(pcm16));
-                    try { resolvedSession.sendRealtimeInput({ audio: { mimeType: 'audio/pcm;rate=16000', data: base64Data } }); } catch (_err) { /* ignore */ }
-                };
-                source.connect(processor); processor.connect(inputCtx.destination);
-            } catch (micErr) { console.error('[AIWebsiteStudio] Mic error:', micErr); stopVoiceSession(); }
-        } catch (error) { console.error('[AIWebsiteStudio] Voice session error:', error); setIsVoiceConnecting(false); }
-    }, [buildSystemPrompt, stopVoiceSession, extractAndUpdateBrief]);
+        } catch (error) {
+            console.error('[AIWebsiteStudio] Voice session error:', error);
+            setIsVoiceConnecting(false);
+        }
+    }, [stopVoiceSession, extractAndUpdateBrief]);
 
     // Cleanup voice on unmount
     useEffect(() => { return () => { stopVoiceSession(); }; }, [stopVoiceSession]);
@@ -907,7 +719,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             // ══════════════════════════════════════════════════════════════════
             setGenerationPhase({ phase: 'content', progress: 2, currentStep: 'Creating project...', imagesTotal: 0, imagesCompleted: 0, imagesFailed: 0, events: [{ timestamp: Date.now(), type: 'start', message: `Starting website generation for "${brief.businessName}"` }], generatedImages: [] });
 
-            const projectId = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            const projectId = createUuid();
             addEvent('content', 'Creating project...');
 
             // Build theme from brief
@@ -979,11 +791,11 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                 contentPrompt,
                 'Generate complete website JSON data. Return ONLY valid JSON.',
                 MODEL_CHAT,
-                { temperature: 0.7, thinkingLevel: 'high', maxOutputTokens: 32768 },
-                user.uid
+                { temperature: 0.7, maxOutputTokens: 32768 },
+                user.id
             );
 
-            logApiCall({ userId: user.uid, model: MODEL_CHAT, feature: 'ai-website-studio-content', success: true });
+            logApiCall({ userId: user.id, model: MODEL_CHAT, feature: 'ai-website-studio-content', success: true });
 
             const contentText = extractTextFromResponse(contentResponse) || '{}';
             const websiteData = safeJsonParse(contentText, null);
@@ -1144,10 +956,12 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
                             style: 'Photorealistic',
                             resolution: '1K',
                             model: MODEL_IMAGE,
+                            destination: 'user',
                             personGeneration: 'allow_adult',
                             lighting: 'natural golden hour',
                             depthOfField: 'shallow cinematic bokeh',
                             projectId: finalProjectId,
+                            tenantId: currentTenantId,
                             referenceImages: referenceImagesRef.current.length > 0 ? referenceImagesRef.current : undefined,
                         });
                         if (imageUrl) break;
@@ -1310,7 +1124,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
             isGeneratingRef.current = false;
             setIsGenerating(false);
         }
-    }, [businessBrief, user, t, generateImage, addNewProject, i18n.language, loadProject, setIsOnboardingOpen]);
+    }, [businessBrief, user, currentTenantId, t, generateImage, addNewProject, i18n.language, loadProject, setIsOnboardingOpen]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // PUBLIC API
@@ -1343,6 +1157,13 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         });
     }, []);
 
+    const setBriefComponents = useCallback((components: PageSection[]) => {
+        setBusinessBrief(prev => ({
+            ...prev,
+            suggestedComponents: components,
+        }));
+    }, []);
+
     // ── Reference image callbacks ────────────────────────────────────────────
     const addReferenceImage = useCallback((base64: string) => {
         setReferenceImages(prev => {
@@ -1364,7 +1185,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         liveUserTranscript, liveModelTranscript,
         startVoiceSession, stopVoiceSession,
         // Brief
-        businessBrief, updateBriefColor, updateBriefFont, toggleBriefComponent,
+        businessBrief, updateBriefColor, updateBriefFont, toggleBriefComponent, setBriefComponents,
         // Reference Images
         referenceImages, addReferenceImage, removeReferenceImage,
         // Generation
@@ -1790,47 +1611,11 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     }
 
 
-    // Map industry to aesthetically recommended header styles
-    const industryLower = (brief.industry || '').toLowerCase();
-    let recommendedHeaderStyles: string[];
-    
-    if (/restaurant|caf[eé]|bar|food|bakery|pizza/i.test(industryLower)) {
-        recommendedHeaderStyles = ['transparent-gradient-dark', 'edge-solid', 'sticky-solid'];
-    } else if (/tech|saas|startup|software|app/i.test(industryLower)) {
-        recommendedHeaderStyles = ['floating-glass', 'floating-pill', 'transparent-blur'];
-    } else if (/law|legal|financ|account|consult/i.test(industryLower)) {
-        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'edge-bordered'];
-    } else if (/beauty|spa|salon|fashion|luxury/i.test(industryLower)) {
-        recommendedHeaderStyles = ['transparent-blur', 'floating-shadow', 'transparent-bordered'];
-    } else if (/fitness|gym|sport|wellness/i.test(industryLower)) {
-        recommendedHeaderStyles = ['sticky-solid', 'edge-bordered', 'floating-pill'];
-    } else if (/health|medic|dental|clinic|doctor/i.test(industryLower)) {
-        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'floating-glass'];
-    } else if (/real.?estate|property|architect/i.test(industryLower)) {
-        recommendedHeaderStyles = ['transparent-gradient-dark', 'floating-shadow', 'transparent-blur'];
-    } else if (/photo|video|creative|design|art/i.test(industryLower)) {
-        recommendedHeaderStyles = ['transparent-bordered', 'floating-glass', 'transparent-blur'];
-    } else if (/ecommerce|retail|store|shop/i.test(industryLower)) {
-        recommendedHeaderStyles = ['sticky-solid', 'edge-solid', 'floating-pill'];
-    } else if (/music|entertain|event/i.test(industryLower)) {
-        recommendedHeaderStyles = ['transparent-gradient-dark', 'floating-glass', 'transparent-blur'];
-    } else if (/education|academy|coach|school/i.test(industryLower)) {
-        recommendedHeaderStyles = ['edge-minimal', 'sticky-solid', 'floating-glass'];
-    } else if (/construction|home.?service|plumb|electric/i.test(industryLower)) {
-        recommendedHeaderStyles = ['sticky-solid', 'edge-solid', 'edge-bordered'];
-    } else if (/non.?profit|ngo|foundation|church/i.test(industryLower)) {
-        recommendedHeaderStyles = ['edge-minimal', 'sticky-transparent', 'floating-shadow'];
-    } else if (/agenc|market|consult/i.test(industryLower)) {
-        recommendedHeaderStyles = ['floating-glass', 'floating-pill', 'transparent-bordered'];
-    } else {
-        recommendedHeaderStyles = ['floating-glass', 'edge-minimal', 'sticky-solid'];
-    }
-
     const allHeaderStyles = 'sticky-solid|sticky-transparent|floating|edge-solid|edge-minimal|edge-bordered|floating-pill|floating-glass|floating-shadow|transparent-blur|transparent-bordered|transparent-gradient|transparent-gradient-dark|tabbed|segmented-pill';
 
     componentExamples += `
     "header": {
-      "style": "[SELECT ONE for ${brief.industry || 'this industry'}. RECOMMENDED: ${recommendedHeaderStyles.join(' or ')}. All options: ${allHeaderStyles}]",
+      "style": "[SELECT ONE freely. Options: ${allHeaderStyles}]",
       "layout": "[SELECT: minimal|center|stack|classic]",
       "isSticky": true,
       "height": 95,

@@ -17,9 +17,10 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface ImageLibraryManagementProps {
     onBack: () => void;
+    noLayout?: boolean;
 }
 
-const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack }) => {
+const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack, noLayout }) => {
     const { t } = useTranslation();
     const { globalFiles, isGlobalFilesLoading, fetchGlobalFiles, uploadGlobalFile, deleteGlobalFile } = useFiles();
     const { success, error: showError } = useToast();
@@ -348,7 +349,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
             )}
 
             <div className="flex h-screen bg-q-bg text-q-text">
-                <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                {!noLayout && <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />}
 
                 {/* Folder Sidebar */}
                 {isFolderPanelOpen && (
@@ -395,13 +396,15 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                     {/* Header */}
                     <header className="h-14 bg-q-bg border-b border-q-border flex-shrink-0 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10">
                         <div className="flex items-center">
-                            <button
-                                onClick={() => setIsMobileMenuOpen(true)}
-                                className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-full lg:hidden mr-2 transition-colors"
-                                title={t('common.openMenu', 'Open menu')}
-                            >
-                                <Menu className="w-4 h-4" />
-                            </button>
+                            {!noLayout && (
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(true)}
+                                    className="h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-full lg:hidden mr-2 transition-colors"
+                                    title={t('common.openMenu', 'Open menu')}
+                                >
+                                    <Menu className="w-4 h-4" />
+                                </button>
+                            )}
                             <div className="flex items-center gap-2">
                                 <Image className="text-q-accent w-5 h-5" />
                                 <h1 className="text-lg font-semibold text-q-text">{t('superadmin.imageLibraryManagement.title', 'Global Image Library')}</h1>
@@ -413,7 +416,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack 
                             )}
                         </div>
                         <div className="flex items-center gap-1">
-                            <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
+                            {!noLayout && <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />}
                             <button
                                 onClick={() => setIsGeneratorOpen(true)}
                                 className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-purple-500 hover:text-purple-400"

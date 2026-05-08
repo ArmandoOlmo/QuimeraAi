@@ -20,24 +20,7 @@ import {
     DEFAULT_PERMISSIONS,
     hasPermission,
 } from '../../types/multiTenant';
-import {
-    db,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    collection,
-    getDocs,
-    addDoc,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    serverTimestamp,
-    writeBatch,
-    Timestamp,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 
@@ -105,24 +88,37 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // ==========================================================================
 
     const loadUserTenants = useCallback(async (userId: string) => {
-        try {
-            // Query tenantMembers where userId matches
-            const membershipsQuery = query(
-                collection(db, 'tenantMembers'),
-                where('userId', '==', userId)
-            );
+        setIsLoadingTenant(true);
+        setError(null);
 
-            const snapshot = await getDocs(membershipsQuery);
+        try {
+            const { data: snapshot, error: fetchErr } = await supabase
+                .from('tenant_members')
+                .select('*, tenant:tenants(*)')
+                .eq('user_id', userId);
+
+            if (fetchErr) throw fetchErr;
+
             const memberships: TenantMembership[] = [];
 
-            // Load tenant details for each membership
-            for (const docSnap of snapshot.docs) {
-                const membershipData = docSnap.data() as Omit<TenantMembership, 'id' | 'tenant'>;
-
-                // Fetch the tenant
-                const tenantDoc = await getDoc(doc(db, 'tenants', membershipData.tenantId));
-                if (tenantDoc.exists()) {
-                    const rawTenant = { id: tenantDoc.id, ...tenantDoc.data() } as any;
+            for (const row of snapshot || []) {
+                const tData = row.tenant;
+                if (tData) {
+                    const rawTenant = {
+                        id: tData.id,
+                        name: tData.name,
+                        slug: tData.slug,
+                        type: tData.type,
+                        ownerUserId: tData.owner_user_id,
+                        subscriptionPlan: tData.subscription_plan,
+                        status: tData.status,
+                        limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
+                        usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
+                        branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
+                        settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
+                        createdAt: tData.created_at,
+                        updatedAt: tData.updated_at
+                    };
                     const tenant = {
                         ...rawTenant,
                         name: resolveProjectName(rawTenant.name),
@@ -132,10 +128,15 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                         } : undefined
                     } as Tenant;
                     memberships.push({
-                        ...membershipData,
-                        id: docSnap.id,
+                        id: row.id,
+                        tenantId: row.tenant_id,
+                        userId: row.user_id,
+                        role: row.role,
+                        permissions: typeof row.permissions === 'string' ? JSON.parse(row.permissions) : row.permissions,
+                        invitedBy: row.invited_by,
+                        joinedAt: row.joined_at,
                         tenant,
-                    });
+                    } as any);
                 }
             }
 
@@ -153,14 +154,34 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // ==========================================================================
 
     const loadTenant = useCallback(async (tenantId: string) => {
+        setIsLoadingTenant(true);
         try {
-            const tenantDoc = await getDoc(doc(db, 'tenants', tenantId));
+            const { data: tenantDoc, error: tenantErr } = await supabase
+                .from('tenants')
+                .select('*')
+                .eq('id', tenantId)
+                .single();
 
-            if (!tenantDoc.exists()) {
-                throw new Error('Tenant not found');
+            if (tenantErr || !tenantDoc) {
+                throw new Error('Workspace no encontrado');
             }
 
-            const rawTenant = { id: tenantDoc.id, ...tenantDoc.data() } as any;
+            const rawTenant = {
+                id: tenantDoc.id,
+                name: tenantDoc.name,
+                slug: tenantDoc.slug,
+                type: tenantDoc.type,
+                ownerUserId: tenantDoc.owner_user_id,
+                subscriptionPlan: tenantDoc.subscription_plan,
+                status: tenantDoc.status,
+                limits: typeof tenantDoc.limits === 'string' ? JSON.parse(tenantDoc.limits) : tenantDoc.limits,
+                usage: typeof tenantDoc.usage === 'string' ? JSON.parse(tenantDoc.usage) : tenantDoc.usage,
+                branding: typeof tenantDoc.branding === 'string' ? JSON.parse(tenantDoc.branding) : tenantDoc.branding,
+                settings: typeof tenantDoc.settings === 'string' ? JSON.parse(tenantDoc.settings) : tenantDoc.settings,
+                createdAt: tenantDoc.created_at,
+                updatedAt: tenantDoc.updated_at
+            } as any;
+
             const tenant = {
                 ...rawTenant,
                 name: resolveProjectName(rawTenant.name),
@@ -169,99 +190,79 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     companyName: rawTenant.branding.companyName ? resolveProjectName(rawTenant.branding.companyName) : resolveProjectName(rawTenant.name)
                 } : undefined
             } as Tenant;
+
             setCurrentTenant(tenant);
 
-            // Find membership for current user
             if (user) {
-                const membershipId = getMembershipId(tenantId, user.uid);
-                const membershipDoc = await getDoc(doc(db, 'tenantMembers', membershipId));
+                const { data: membershipDoc } = await supabase
+                    .from('tenant_members')
+                    .select('*')
+                    .eq('tenant_id', tenantId)
+                    .eq('user_id', user.id)
+                    .maybeSingle();
 
-                if (membershipDoc.exists()) {
+                if (membershipDoc) {
                     setCurrentMembership({
                         id: membershipDoc.id,
-                        ...membershipDoc.data(),
+                        tenantId: membershipDoc.tenant_id,
+                        userId: membershipDoc.user_id,
+                        role: membershipDoc.role,
+                        permissions: typeof membershipDoc.permissions === 'string' ? JSON.parse(membershipDoc.permissions) : membershipDoc.permissions,
+                        invitedBy: membershipDoc.invited_by,
+                        joinedAt: membershipDoc.joined_at,
                         tenant,
-                    } as TenantMembership);
+                    } as any);
+                } else {
+                    setCurrentMembership(null);
                 }
+            } else {
+                setCurrentMembership(null);
             }
 
-            // Save to local storage
-            localStorage.setItem(ACTIVE_TENANT_KEY, tenantId);
-
-            return tenant;
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error loading tenant:', err);
-            setError('Error cargando workspace');
-            return null;
+            setError(err.message || 'Error cargando el workspace');
+            setCurrentTenant(null);
+            setCurrentMembership(null);
+        } finally {
+            setIsLoadingTenant(false);
         }
-    }, [user]);
+    }, [user, userDocument]);
 
-    // ==========================================================================
-    // CREATE PERSONAL TENANT (Auto-creation for new users)
-    // ==========================================================================
-
-    const createPersonalTenant = useCallback(async (authUser: { uid: string; email: string | null; displayName?: string | null }): Promise<string> => {
+    const createPersonalTenant = useCallback(async (authUser: { id: string; email: string | null; displayName?: string | null }): Promise<string> => {
         const userName = authUser.displayName || authUser.email?.split('@')[0] || 'Usuario';
         const tenantName = `${userName}'s Workspace`;
-        const slug = generateSlug(tenantName) + '-' + authUser.uid.slice(0, 6);
+        const slug = generateSlug(tenantName) + '-' + authUser.id.slice(0, 6);
 
-        const tenantId = `tenant_${authUser.uid}`;
-        const membershipId = getMembershipId(tenantId, authUser.uid);
-        const now = serverTimestamp();
-
-        const batch = writeBatch(db);
-
-        // Create tenant document
-        const tenantRef = doc(db, 'tenants', tenantId);
-        batch.set(tenantRef, {
-            id: tenantId,
-            name: tenantName,
-            slug,
-            ownerId: authUser.uid,
-            ownerUserId: authUser.uid, // Required by Firestore rules
-            type: 'personal',
-            subscriptionPlan: 'free',
-            settings: {
+        // Call the SECURITY DEFINER function which bypasses RLS entirely.
+        // It handles idempotency: if tenant/membership already exist, it returns the existing tenant ID.
+        const { data: tenantId, error } = await supabase.rpc('create_personal_tenant', {
+            p_user_id: authUser.id,
+            p_tenant_name: tenantName,
+            p_slug: slug,
+            p_settings: {
                 allowPublicSignup: false,
                 requireEmailVerification: true,
                 defaultRole: 'viewer',
             },
-            limits: getDefaultLimitsForPlan('free'),
-            usage: {
+            p_limits: getDefaultLimitsForPlan('free'),
+            p_usage: {
                 projectCount: 0,
                 userCount: 1,
                 storageUsedGB: 0,
                 aiCreditsUsed: 0,
                 subClientCount: 0,
             },
-            createdAt: now,
-            updatedAt: now,
         });
 
-        // Create owner membership
-        const membershipRef = doc(db, 'tenantMembers', membershipId);
-        batch.set(membershipRef, {
-            id: membershipId,
-            tenantId,
-            userId: authUser.uid,
-            email: authUser.email,
-            displayName: userName,
-            role: 'agency_owner', // Required by Firestore rules for initial creation
-            permissions: DEFAULT_PERMISSIONS.agency_owner,
-            status: 'active',
-            joinedAt: now,
-            invitedBy: authUser.uid,
-        });
+        if (error) throw error;
 
-        await batch.commit();
-        console.log('Personal workspace created:', tenantId);
-
+        console.log('Personal workspace created/recovered via RPC:', tenantId);
         return tenantId;
     }, []);
 
-    // ==========================================================================
-    // INITIAL LOAD
-    // ==========================================================================
+    // Guard to prevent infinite retry of tenant creation
+    const hasAttemptedCreateRef = React.useRef(false);
 
     useEffect(() => {
         if (!user) {
@@ -269,6 +270,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setUserTenants([]);
             setCurrentMembership(null);
             setIsLoadingTenant(false);
+            hasAttemptedCreateRef.current = false; // Reset on logout
             return;
         }
 
@@ -278,14 +280,22 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
             try {
                 // Load user's tenants
-                const memberships = await loadUserTenants(user.uid);
+                const memberships = await loadUserTenants(user.id);
 
                 if (memberships.length === 0) {
+                    // Only attempt auto-create ONCE per session
+                    if (hasAttemptedCreateRef.current) {
+                        console.warn('[TenantContext] Already attempted tenant creation this session, skipping retry.');
+                        setIsLoadingTenant(false);
+                        return;
+                    }
+                    hasAttemptedCreateRef.current = true;
+
                     // Auto-create a personal workspace for the user
                     try {
                         const personalTenantId = await createPersonalTenant(user);
                         // Reload memberships after creating tenant
-                        const newMemberships = await loadUserTenants(user.uid);
+                        const newMemberships = await loadUserTenants(user.id);
                         if (newMemberships.length > 0) {
                             await loadTenant(personalTenantId);
                         }
@@ -344,39 +354,73 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }, [userTenants, loadTenant]);
 
     // ==========================================================================
+    // REFRESH FUNCTIONS
+    // ==========================================================================
+
+    const refreshTenants = useCallback(async () => {
+        if (user) {
+            await loadUserTenants(user.id);
+        }
+    }, [user, loadUserTenants]);
+
+    const refreshCurrentTenant = useCallback(async () => {
+        if (currentTenant) {
+            await loadTenant(currentTenant.id);
+        }
+    }, [currentTenant, loadTenant]);
+
+    // ==========================================================================
     // CREATE TENANT
     // ==========================================================================
 
     const createTenant = useCallback(async (data: CreateTenantData, skipSwitch = false): Promise<string> => {
-        if (!user) throw new Error('User not authenticated');
+        if (!user) throw new Error('Usuario no autenticado');
 
-        const slug = generateSlug(data.name);
-        const plan = data.plan || 'free';
-
-        // Check for slug uniqueness
-        const existingSlug = await getDocs(
-            query(collection(db, 'tenants'), where('slug', '==', slug))
-        );
-
-        let finalSlug = slug;
-        if (!existingSlug.empty) {
-            finalSlug = `${slug}-${Date.now().toString(36)}`;
+        // Verify sub-client limit
+        if (data.type === 'agency_client') {
+            if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
+                throw new Error('No tienes permiso para crear sub-clientes');
+            }
+            if ((currentTenant.usage.subClientCount || 0) >= (currentTenant.limits.maxSubClients || 0)) {
+                throw new Error('Has alcanzado el límite de sub-clientes para tu plan');
+            }
         }
 
-        const tenantData: Omit<Tenant, 'id'> = {
+        let slug = generateSlug(data.name);
+        let finalSlug = slug;
+        let counter = 1;
+
+        while (true) {
+            const { data: existingSlug } = await supabase
+                .from('tenants')
+                .select('id')
+                .eq('slug', finalSlug);
+
+            if (existingSlug && existingSlug.length > 0) {
+                finalSlug = `${slug}-${counter}`;
+                counter++;
+            } else {
+                break;
+            }
+        }
+
+        const plan = data.type === 'agency_client' ? 'agency_client' : 'free';
+
+        const tenantRecord = {
             name: data.name,
             slug: finalSlug,
             type: data.type,
-            ownerUserId: user.uid,
-            ownerTenantId: data.parentTenantId,
-            subscriptionPlan: plan,
+            owner_user_id: user.id,
+            owner_tenant_id: data.parentTenantId,
+            subscription_plan: plan,
             status: 'active',
-            limits: getDefaultLimitsForPlan(plan),
+            limits: getDefaultLimitsForPlan(plan as any),
             usage: {
                 projectCount: 0,
                 userCount: 1,
                 storageUsedGB: 0,
                 aiCreditsUsed: 0,
+                subClientCount: 0,
             },
             branding: {
                 ...getDefaultTenantBranding(),
@@ -384,100 +428,84 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 companyName: data.name,
             },
             settings: getDefaultTenantSettings(),
-            createdAt: serverTimestamp() as any,
-            updatedAt: serverTimestamp() as any,
         };
 
-        // Create tenant document
-        const tenantRef = await addDoc(collection(db, 'tenants'), tenantData);
-        const tenantId = tenantRef.id;
+        const { data: tenantRes, error: tenantErr } = await supabase
+            .from('tenants')
+            .insert(tenantRecord)
+            .select()
+            .single();
 
-        // Create membership for owner
-        const membershipId = getMembershipId(tenantId, user.uid);
-        const membershipData: Omit<TenantMembership, 'id' | 'tenant'> = {
-            tenantId,
-            userId: user.uid,
+        if (tenantErr) throw tenantErr;
+        const tenantId = tenantRes.id;
+
+        const membershipData = {
+            id: `${tenantId}_${user.id}`,
+            tenant_id: tenantId,
+            user_id: user.id,
             role: 'agency_owner',
             permissions: DEFAULT_PERMISSIONS.agency_owner,
-            invitedBy: user.uid,
-            joinedAt: serverTimestamp() as any,
-            userName: userDocument?.name || user.displayName || '',
-            userEmail: user.email || '',
-            userPhotoURL: userDocument?.photoURL || user.photoURL || '',
+            invited_by: user.id,
         };
 
-        await setDoc(doc(db, 'tenantMembers', membershipId), membershipData);
+        await supabase.from('tenant_members').insert(membershipData);
 
-        // Refresh user tenants
-        await loadUserTenants(user.uid);
+        await refreshTenants();
 
-        // Switch to new tenant if not skipped
         if (!skipSwitch) {
-            await loadTenant(tenantId);
+            await switchTenant(tenantId);
         }
 
         return tenantId;
-    }, [user, userDocument, loadUserTenants, loadTenant]);
+    }, [user, currentTenant, currentMembership, switchTenant, refreshTenants]);
 
     // ==========================================================================
     // UPDATE TENANT
     // ==========================================================================
 
     const updateTenant = useCallback(async (tenantId: string, data: Partial<Tenant>) => {
-        if (!currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
-            throw new Error('No tienes permiso para editar este workspace');
+        if (!currentMembership || (!isUserOwner && !hasPermission(currentMembership, 'canManageSettings'))) {
+            throw new Error('No tienes permiso para actualizar este workspace');
         }
 
-        await updateDoc(doc(db, 'tenants', tenantId), {
-            ...data,
-            updatedAt: serverTimestamp(),
-        });
+        await supabase.from('tenants').update({
+            name: data.name,
+            slug: data.slug,
+            type: data.type,
+            subscription_plan: data.subscriptionPlan,
+            status: data.status,
+            limits: data.limits,
+            usage: data.usage,
+            branding: data.branding,
+            settings: data.settings,
+            updated_at: new Date().toISOString()
+        }).eq('id', tenantId);
 
-        // Refresh current tenant if it's the one being updated
         if (currentTenant?.id === tenantId) {
             await loadTenant(tenantId);
         }
-    }, [currentMembership, currentTenant, loadTenant]);
+    }, [currentMembership, isUserOwner, currentTenant, loadTenant]);
 
     // ==========================================================================
     // DELETE TENANT
     // ==========================================================================
 
     const deleteTenant = useCallback(async (tenantId: string) => {
-        if (!currentMembership || currentMembership.role !== 'agency_owner') {
+        if (!currentMembership || (!isUserOwner && currentMembership.role !== 'agency_owner')) {
             throw new Error('Solo el propietario puede eliminar el workspace');
         }
 
-        // Delete all memberships
-        const membershipsQuery = query(
-            collection(db, 'tenantMembers'),
-            where('tenantId', '==', tenantId)
-        );
-        const memberships = await getDocs(membershipsQuery);
+        // RLS cascade will handle members if setup properly, but let's delete explicitly just in case
+        await supabase.from('tenant_members').delete().eq('tenant_id', tenantId);
+        await supabase.from('tenants').delete().eq('id', tenantId);
 
-        for (const membership of memberships.docs) {
-            await deleteDoc(membership.ref);
-        }
-
-        // Delete tenant
-        await deleteDoc(doc(db, 'tenants', tenantId));
-
-        // Clear local storage if this was the active tenant
-        if (localStorage.getItem(ACTIVE_TENANT_KEY) === tenantId) {
+        if (currentTenant?.id === tenantId) {
+            setCurrentTenant(null);
+            setCurrentMembership(null);
             localStorage.removeItem(ACTIVE_TENANT_KEY);
+            await refreshTenants();
         }
-
-        // Refresh user tenants and switch to another if available
-        if (user) {
-            const memberships = await loadUserTenants(user.uid);
-            if (memberships.length > 0) {
-                await loadTenant(memberships[0].tenantId);
-            } else {
-                setCurrentTenant(null);
-                setCurrentMembership(null);
-            }
-        }
-    }, [user, currentMembership, loadUserTenants, loadTenant]);
+    }, [currentMembership, isUserOwner, currentTenant, refreshTenants]);
 
     // ==========================================================================
     // INVITE MEMBER
@@ -494,25 +522,38 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const token = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
 
         // Create invite
-        const inviteData: Omit<TenantInvite, 'id'> = {
-            tenantId: currentTenant.id,
+        const inviteData = {
+            tenant_id: currentTenant.id,
             email: data.email.toLowerCase(),
             role: data.role,
-            customPermissions: data.customPermissions,
-            invitedBy: user.uid,
-            invitedByName: userDocument?.name || user.displayName || '',
+            custom_permissions: data.customPermissions,
+            invited_by: user.id,
             token,
             message: data.message,
-            expiresAt: { seconds: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, nanoseconds: 0 }, // 7 days
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
             status: 'pending',
-            createdAt: serverTimestamp() as any,
-            tenantName: currentTenant.name,
-            tenantLogo: currentTenant.branding?.logoUrl,
+            tenant_name: currentTenant.name,
         };
 
-        const inviteRef = await addDoc(collection(db, 'tenantInvites'), inviteData);
+        const { data: inviteRes, error } = await supabase.from('tenant_invites').insert(inviteData).select().single();
+        if (error) throw error;
 
-        return inviteRef.id;
+        // Call Edge Function to send email
+        try {
+            await supabase.functions.invoke('send-invite-email', {
+                body: {
+                    email: data.email.toLowerCase(),
+                    token,
+                    tenantName: currentTenant.name,
+                    role: data.role,
+                    inviterName: userDocument?.name || user.displayName || 'Alguien'
+                }
+            });
+        } catch (emailError) {
+            console.error('Failed to send invite email via Edge Function:', emailError);
+        }
+
+        return inviteRes.id;
     }, [currentTenant, currentMembership, user, userDocument]);
 
     // ==========================================================================
@@ -525,54 +566,30 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         // Can't remove yourself
-        if (user?.uid === userId) {
+        if (user?.id === userId) {
             throw new Error('No puedes removerte a ti mismo');
         }
 
         // Check permissions
         if (!hasPermission(currentMembership, 'canRemoveMembers')) {
-            throw new Error('No tienes permiso para remover miembros');
+            await switchTenant('');
         }
-
-        // Can't remove the owner
-        if (currentTenant.ownerUserId === userId) {
-            throw new Error('No puedes remover al propietario');
-        }
-
-        const membershipId = getMembershipId(currentTenant.id, userId);
-        await deleteDoc(doc(db, 'tenantMembers', membershipId));
-
-        // Update tenant usage
-        await updateDoc(doc(db, 'tenants', currentTenant.id), {
-            'usage.userCount': (currentTenant.usage.userCount || 1) - 1,
-            updatedAt: serverTimestamp(),
-        });
-    }, [currentTenant, currentMembership, user]);
+    }, [currentTenant, currentMembership, user, switchTenant]);
 
     // ==========================================================================
     // UPDATE MEMBER ROLE
     // ==========================================================================
 
     const updateMemberRole = useCallback(async (userId: string, role: AgencyRole) => {
-        if (!currentTenant || !currentMembership) {
-            throw new Error('No hay workspace activo');
+        if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
+            throw new Error('No tienes permiso para cambiar roles');
         }
 
-        // Only owner can change roles
-        if (currentMembership.role !== 'agency_owner') {
-            throw new Error('Solo el propietario puede cambiar roles');
-        }
-
-        // Can't change owner's role
-        if (currentTenant.ownerUserId === userId) {
-            throw new Error('No puedes cambiar el rol del propietario');
-        }
-
-        const membershipId = getMembershipId(currentTenant.id, userId);
-        await updateDoc(doc(db, 'tenantMembers', membershipId), {
+        await supabase.from('tenant_members').update({
             role,
-            permissions: DEFAULT_PERMISSIONS[role],
-        });
+            permissions: DEFAULT_PERMISSIONS[role] as any,
+        }).eq('tenant_id', currentTenant.id).eq('user_id', userId);
+
     }, [currentTenant, currentMembership]);
 
     // ==========================================================================
@@ -580,104 +597,88 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // ==========================================================================
 
     const updateMemberPermissions = useCallback(async (userId: string, permissions: Partial<TenantPermissions>) => {
-        if (!currentTenant || !currentMembership) {
-            throw new Error('No hay workspace activo');
-        }
-
-        // Only owner and admin can change permissions
-        if (currentMembership.role !== 'agency_owner' && currentMembership.role !== 'agency_admin') {
+        if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
             throw new Error('No tienes permiso para cambiar permisos');
         }
 
-        const membershipId = getMembershipId(currentTenant.id, userId);
-        const membershipDoc = await getDoc(doc(db, 'tenantMembers', membershipId));
-
-        if (!membershipDoc.exists()) {
+        const { data: memDoc } = await supabase.from('tenant_members').select('permissions').eq('tenant_id', currentTenant.id).eq('user_id', userId).single();
+        
+        if (!memDoc) {
             throw new Error('Miembro no encontrado');
         }
 
-        const currentPermissions = membershipDoc.data().permissions;
+        const currentPermissions = typeof memDoc.permissions === 'string' ? JSON.parse(memDoc.permissions) : memDoc.permissions;
 
-        await updateDoc(doc(db, 'tenantMembers', membershipId), {
-            permissions: { ...currentPermissions, ...permissions },
-        });
+        await supabase.from('tenant_members').update({
+            permissions: { ...currentPermissions, ...permissions } as any,
+        }).eq('tenant_id', currentTenant.id).eq('user_id', userId);
+
     }, [currentTenant, currentMembership]);
 
     // ==========================================================================
     // CREATE SUB-CLIENT (FOR AGENCIES)
     // ==========================================================================
 
-    const createSubClient = useCallback(async (
-        data: CreateTenantData,
-        initialUsers?: { email: string, name: string, role: AgencyRole }[]
-    ): Promise<string> => {
-        if (!currentTenant || !currentMembership) {
-            throw new Error('No hay workspace activo');
+    const createSubClient = useCallback(async (data: CreateTenantData, initialUsers: { email: string, name: string, role: AgencyRole }[] = []): Promise<string> => {
+        if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
+            throw new Error('No tienes permiso para gestionar sub-clientes');
         }
 
-        // Check if current tenant is an agency plan
-        if (!currentTenant.subscriptionPlan.includes('agency') && currentTenant.subscriptionPlan !== 'enterprise') {
-            throw new Error('Necesitas un plan Agency para crear sub-clientes');
-        }
-
-        // Check limits
-        const subClientCount = currentTenant.usage.subClientCount || 0;
-        const maxSubClients = currentTenant.limits.maxSubClients || 0;
+        const subClientCount = currentTenant.usage?.subClientCount || 0;
+        const maxSubClients = currentTenant.limits?.maxSubClients || 0;
 
         if (subClientCount >= maxSubClients) {
-            throw new Error(`Has alcanzado el límite de ${maxSubClients} sub-clientes`);
+            throw new Error('Has alcanzado el límite de sub-clientes permitidos por tu plan');
         }
 
-        // Create the sub-client tenant, skip switching
+        // Create sub-client tenant, skip switching
         const subClientId = await createTenant({
             ...data,
             type: 'agency_client',
-            parentTenantId: currentTenant.id,
-            plan: 'free', // Sub-clients use parent's resources
+            parentTenantId: currentTenant.id
         }, true);
 
-        // Handle initial users by creating invitations
-        if (initialUsers && initialUsers.length > 0) {
+        // Invite initial users
+        if (initialUsers.length > 0) {
             for (const newUser of initialUsers) {
                 const token = `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
-                const inviteData: any = {
-                    tenantId: subClientId,
+                
+                const inviteData = {
+                    tenant_id: subClientId,
                     email: newUser.email.toLowerCase(),
                     role: newUser.role,
-                    invitedBy: user?.uid || '',
-                    invitedByName: userDocument?.name || user?.displayName || '',
+                    invited_by: user?.id || '',
                     token,
                     message: `Bienvenido a ${data.name}`,
-                    expiresAt: Timestamp.fromMillis(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
                     status: 'pending',
-                    createdAt: serverTimestamp(),
-                    tenantName: data.name,
+                    tenant_name: data.name,
                 };
-                await addDoc(collection(db, 'tenantInvites'), inviteData);
+                
+                await supabase.from('tenant_invites').insert(inviteData);
+                
+                // Invoke Edge function to send email for the subclient invite
+                try {
+                    await supabase.functions.invoke('send-invite-email', {
+                        body: {
+                            email: newUser.email.toLowerCase(),
+                            token,
+                            tenantName: data.name,
+                            role: newUser.role,
+                            inviterName: userDocument?.name || user?.displayName || 'Alguien'
+                        }
+                    });
+                } catch (e) {
+                    console.error('Failed to send edge function invite for subclient:', e);
+                }
             }
         }
 
-        // Log agency activity (non-blocking - may fail if Firestore rules restrict)
-        try {
-            await addDoc(collection(db, 'agencyActivity'), {
-                agencyTenantId: currentTenant.id,
-                type: 'client_created',
-                clientTenantId: subClientId,
-                clientName: data.name,
-                description: `Se creó el nuevo cliente: ${data.name}`,
-                timestamp: serverTimestamp(),
-                createdBy: user?.uid,
-                createdByName: userDocument?.name || user?.displayName || '',
-            });
-        } catch (activityErr) {
-            console.warn('Could not log agency activity (non-critical):', activityErr);
-        }
-
         // Update parent tenant's sub-client count
-        await updateDoc(doc(db, 'tenants', currentTenant.id), {
-            'usage.subClientCount': subClientCount + 1,
-            updatedAt: serverTimestamp(),
-        });
+        await supabase.from('tenants').update({
+            usage: { ...currentTenant.usage, subClientCount: subClientCount + 1 },
+            updated_at: new Date().toISOString()
+        }).eq('id', currentTenant.id);
 
         return subClientId;
     }, [currentTenant, currentMembership, createTenant, user, userDocument]);
@@ -689,14 +690,24 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const getSubClients = useCallback(async (): Promise<Tenant[]> => {
         if (!currentTenant) return [];
 
-        const subClientsQuery = query(
-            collection(db, 'tenants'),
-            where('ownerTenantId', '==', currentTenant.id)
-        );
-
-        const snapshot = await getDocs(subClientsQuery);
-        return snapshot.docs.map(doc => {
-            const raw = { id: doc.id, ...doc.data() } as any;
+        const { data: snapshot } = await supabase.from('tenants').select('*').eq('owner_tenant_id', currentTenant.id);
+        
+        return (snapshot || []).map((tData: any) => {
+            const raw = {
+                id: tData.id,
+                name: tData.name,
+                slug: tData.slug,
+                type: tData.type,
+                ownerUserId: tData.owner_user_id,
+                subscriptionPlan: tData.subscription_plan,
+                status: tData.status,
+                limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
+                usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
+                branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
+                settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
+                createdAt: tData.created_at,
+                updatedAt: tData.updated_at
+            } as any;
             return {
                 ...raw,
                 name: resolveProjectName(raw.name),
@@ -708,21 +719,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
     }, [currentTenant]);
 
-    // ==========================================================================
-    // REFRESH FUNCTIONS
-    // ==========================================================================
 
-    const refreshTenants = useCallback(async () => {
-        if (user) {
-            await loadUserTenants(user.uid);
-        }
-    }, [user, loadUserTenants]);
-
-    const refreshCurrentTenant = useCallback(async () => {
-        if (currentTenant) {
-            await loadTenant(currentTenant.id);
-        }
-    }, [currentTenant, loadTenant]);
 
     // ==========================================================================
     // PERMISSION HELPERS

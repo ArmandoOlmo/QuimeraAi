@@ -248,13 +248,13 @@ ${colorAnalysis}
 Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
             const projectId = activeProject?.id || project.id || 'thumbnail-prompt';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id || project.id,
                     model: 'gemini-2.5-flash',
                     feature: 'thumbnail-prompt-suggestion',
@@ -267,7 +267,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id || project.id,
                     model: 'gemini-2.5-flash',
                     feature: 'thumbnail-prompt-suggestion',

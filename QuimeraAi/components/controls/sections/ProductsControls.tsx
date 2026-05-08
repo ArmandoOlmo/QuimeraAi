@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -50,9 +50,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Type size={14} />
           Content
         </label>
-        <Input label={t('editor.controls.common.title')} value={data?.products?.title || 'Nuestros Productos'} onChange={(val) => setNestedData('products.title', val)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.products?.title || 'Nuestros Productos'} onChange={(val) => setNestedData('products.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.products?.titleFontSize || 'lg'} onChange={(v) => setNestedData('products.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.subtitle')} value={data?.products?.subtitle || ''} onChange={(val) => setNestedData('products.subtitle', val)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.subtitle')} value={data?.products?.subtitle || ''} onChange={(val) => setNestedData('products.subtitle', val)} rows={2} />
       </div>
 
       {/* Info */}

@@ -4,21 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    db,
-    collection,
-    doc,
-    getDocs,
-    getDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    serverTimestamp,
-} from '../firebase';
+import { supabase } from '../supabase';
 import { useTenant } from '../contexts/tenant';
 import {
     TenantMembership,
@@ -40,6 +26,9 @@ export interface TenantMemberWithDetails extends TenantMembership {
     isOwner: boolean;
     canBeEdited: boolean;
     canBeRemoved: boolean;
+    userName?: string;
+    userEmail?: string;
+    userPhotoUrl?: string;
 }
 
 export interface UseTenantMembersReturn {
@@ -83,7 +72,7 @@ export function useTenantMembers(): UseTenantMembersReturn {
     // LOAD MEMBERS
     // =========================================================================
     
-    useEffect(() => {
+    const loadMembers = useCallback(async () => {
         if (!currentTenant) {
             setMembers([]);
             setIsLoading(false);
@@ -93,67 +82,101 @@ export function useTenantMembers(): UseTenantMembersReturn {
         setIsLoading(true);
         setError(null);
 
-        const membersQuery = query(
-            collection(db, 'tenantMembers'),
-            where('tenantId', '==', currentTenant.id)
-        );
+        try {
+            const { data, error } = await supabase
+                .from('tenant_members')
+                .select(`
+                    *,
+                    users (name, email, photo_url)
+                `)
+                .eq('tenant_id', currentTenant.id);
 
-        const unsubscribe = onSnapshot(
-            membersQuery,
-            (snapshot) => {
-                const memberList = snapshot.docs.map(docSnap => {
-                    const data = docSnap.data() as TenantMembership;
-                    const isCurrentUser = data.userId === currentMembership?.userId;
-                    const isOwner = data.userId === currentTenant.ownerUserId;
-                    
-                    // Determine if current user can manage this member
-                    const currentUserIsOwner = currentMembership?.role === 'agency_owner';
-                    const currentUserIsAdmin = currentMembership?.role === 'agency_admin';
-                    
-                    // Can edit: owner can edit anyone except self, admin can edit members/clients
-                    const canBeEdited = !isCurrentUser && !isOwner && (
-                        currentUserIsOwner || 
-                        (currentUserIsAdmin && hasMinimumRole(currentMembership?.role || 'client', data.role))
-                    );
-                    
-                    // Can remove: owner can remove anyone except self
-                    const canBeRemoved = !isCurrentUser && !isOwner && currentUserIsOwner;
-                    
-                    return {
-                        id: docSnap.id,
-                        ...data,
-                        isCurrentUser,
-                        isOwner,
-                        canBeEdited,
-                        canBeRemoved,
-                    } as TenantMemberWithDetails;
-                });
-                
-                // Sort: owner first, then by role, then by name
-                memberList.sort((a, b) => {
-                    if (a.isOwner && !b.isOwner) return -1;
-                    if (!a.isOwner && b.isOwner) return 1;
-                    
-                    const roleOrder: AgencyRole[] = ['agency_owner', 'agency_admin', 'agency_member', 'client'];
-                    const aIndex = roleOrder.indexOf(a.role);
-                    const bIndex = roleOrder.indexOf(b.role);
-                    if (aIndex !== bIndex) return aIndex - bIndex;
-                    
-                    return (a.userName || '').localeCompare(b.userName || '');
-                });
-                
-                setMembers(memberList);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error loading tenant members:', err);
-                setError('Error cargando miembros');
-                setIsLoading(false);
-            }
-        );
+            if (error) throw error;
 
-        return () => unsubscribe();
+            const memberList = data.map((d: any) => {
+                const isCurrentUser = d.user_id === currentMembership?.userId;
+                const isOwner = d.user_id === currentTenant.ownerUserId;
+                
+                // Determine if current user can manage this member
+                const currentUserIsOwner = currentMembership?.role === 'agency_owner';
+                const currentUserIsAdmin = currentMembership?.role === 'agency_admin';
+                
+                // Can edit: owner can edit anyone except self, admin can edit members/clients
+                const canBeEdited = !isCurrentUser && !isOwner && (
+                    currentUserIsOwner || 
+                    (currentUserIsAdmin && hasMinimumRole(currentMembership?.role || 'client', d.role as AgencyRole))
+                );
+                
+                // Can remove: owner can remove anyone except self
+                const canBeRemoved = !isCurrentUser && !isOwner && currentUserIsOwner;
+                
+                return {
+                    id: d.id,
+                    tenantId: d.tenant_id,
+                    userId: d.user_id,
+                    role: d.role as AgencyRole,
+                    permissions: d.permissions as TenantPermissions,
+                    title: d.title,
+                    department: d.department,
+                    joinedAt: d.joined_at,
+                    lastAccessAt: d.last_access_at,
+                    invitedBy: d.invited_by,
+                    userName: d.users?.name,
+                    userEmail: d.users?.email,
+                    userPhotoUrl: d.users?.photo_url,
+                    isCurrentUser,
+                    isOwner,
+                    canBeEdited,
+                    canBeRemoved,
+                } as TenantMemberWithDetails;
+            });
+            
+            // Sort: owner first, then by role, then by name
+            memberList.sort((a, b) => {
+                if (a.isOwner && !b.isOwner) return -1;
+                if (!a.isOwner && b.isOwner) return 1;
+                
+                const roleOrder: AgencyRole[] = ['agency_owner', 'agency_admin', 'agency_member', 'client'];
+                const aIndex = roleOrder.indexOf(a.role);
+                const bIndex = roleOrder.indexOf(b.role);
+                if (aIndex !== bIndex) return aIndex - bIndex;
+                
+                return (a.userName || '').localeCompare(b.userName || '');
+            });
+            
+            setMembers(memberList);
+        } catch (err: any) {
+            console.error('Error loading tenant members:', err);
+            setError('Error cargando miembros');
+        } finally {
+            setIsLoading(false);
+        }
     }, [currentTenant, currentMembership]);
+
+    useEffect(() => {
+        loadMembers();
+
+        if (!currentTenant) return;
+
+        const channel = supabase.channel(`public:tenant_members:tenant_id=eq.${currentTenant.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tenant_members',
+                    filter: `tenant_id=eq.${currentTenant.id}`,
+                },
+                () => {
+                    loadMembers();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [loadMembers, currentTenant]);
 
     // =========================================================================
     // UPDATE MEMBER ROLE
@@ -213,8 +236,8 @@ export function useTenantMembers(): UseTenantMembersReturn {
     // =========================================================================
     
     const refreshMembers = useCallback(async () => {
-        // The onSnapshot handles real-time updates
-    }, []);
+        await loadMembers();
+    }, [loadMembers]);
 
     return {
         members,

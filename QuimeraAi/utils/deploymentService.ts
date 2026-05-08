@@ -771,6 +771,59 @@ class DeploymentService {
     }
 
     /**
+     * Bind a custom domain to the Vercel project via API
+     */
+    public async addDomainToVercel(domainName: string): Promise<{ success: boolean; error?: string }> {
+        try {
+            console.log(`Binding domain ${domainName} to Vercel...`);
+            const VERCEL_TOKEN = import.meta.env.VITE_VERCEL_TOKEN;
+            // Retrieve project id from Vercel team variables or use default
+            const VERCEL_PROJECT_ID = import.meta.env.VITE_VERCEL_PROJECT_ID || 'quimera-ai';
+            const VERCEL_TEAM_ID = import.meta.env.VITE_VERCEL_TEAM_ID;
+
+            if (!VERCEL_TOKEN) {
+                throw new Error("Missing VITE_VERCEL_TOKEN. Vercel integration requires the API token.");
+            }
+
+            const url = new URL(`https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains`);
+            if (VERCEL_TEAM_ID) {
+                url.searchParams.append('teamId', VERCEL_TEAM_ID);
+            }
+
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${VERCEL_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: domainName
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.warn(`[Vercel] Warning adding domain ${domainName}:`, errorData);
+                // 400 with "Domain is already assigned" is fine.
+                if (response.status === 400 && errorData.error?.code === 'forbidden' || errorData.error?.code === 'domain_already_in_use') {
+                    throw new Error(errorData.error?.message || response.statusText);
+                }
+                if (response.status !== 400 || (errorData.error?.code !== 'domain_already_in_use' && errorData.error?.code !== 'domain_already_assigned')) {
+                    throw new Error(`Vercel API error: ${errorData.error?.message || response.statusText}`);
+                }
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Failed to bind domain to Vercel:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error while binding domain to Vercel'
+            };
+        }
+    }
+
+    /**
      * Deploy to Cloudflare Pages (placeholder)
      */
     private async deployToCloudflare(

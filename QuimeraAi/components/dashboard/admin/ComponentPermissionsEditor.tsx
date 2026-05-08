@@ -85,7 +85,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
     const filteredUsers = allUsers.filter(user => 
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    ).filter(user => !canView.includes(user.uid)); // Don't show users who already have permissions
+    ).filter(user => !canView.includes(user.id)); // Don't show users who already have permissions
 
     const getUserById = (userId: string) => allUsers.find(u => u.uid === userId);
 
@@ -154,7 +154,7 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                     </p>
                                 ) : (
                                     filteredUsers.map(user => (
-                                        <div key={user.uid} className="flex items-center justify-between p-2 rounded hover:bg-q-surface">
+                                        <div key={user.id} className="flex items-center justify-between p-2 rounded hover:bg-q-surface">
                                             <div className="flex items-center gap-2">
                                                 <User size={16} className="text-q-text-secondary" />
                                                 <div>
@@ -164,13 +164,13 @@ const ComponentPermissionsEditor: React.FC<ComponentPermissionsEditorProps> = ({
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
-                                                    onClick={() => addUserPermission(user.uid, 'view')}
+                                                    onClick={() => addUserPermission(user.id, 'view')}
                                                     className="px-2 py-1 text-xs bg-q-surface-overlay text-q-text rounded hover:bg-q-accent hover:text-q-bg transition-colors"
                                                 >
                                                     View
                                                 </button>
                                                 <button
-                                                    onClick={() => addUserPermission(user.uid, 'edit')}
+                                                    onClick={() => addUserPermission(user.id, 'edit')}
                                                     className="px-2 py-1 text-xs bg-q-accent text-q-bg rounded hover:opacity-90 transition-opacity"
                                                 >
                                                     Edit

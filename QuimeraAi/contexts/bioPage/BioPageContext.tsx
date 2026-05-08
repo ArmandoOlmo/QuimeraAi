@@ -316,7 +316,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         setIsLoading(true);
         try {
-            const pathSegments = getBioPagesCollectionPath(user.uid, currentTenantId);
+            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
             const bioPageRef = doc(db, ...pathSegments, projectId);
             const bioPageSnap = await getDoc(bioPageRef);
 
@@ -357,7 +357,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     const createBioPage = useCallback(async (projectId: string, username: string): Promise<string> => {
         if (!user) throw new Error('User not authenticated');
 
-        const pathSegments = getBioPagesCollectionPath(user.uid, currentTenantId);
+        const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
         const bioPageRef = doc(db, ...pathSegments, projectId);
 
         const newBioPage: BioPageData = {
@@ -398,7 +398,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         postSaveProtectionRef.current = true;
 
         try {
-            const pathSegments = getBioPagesCollectionPath(user.uid, currentTenantId);
+            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
             const bioPageRef = doc(db, ...pathSegments, bioPage.id);
 
             const updatedData = removeUndefinedValues({
@@ -531,7 +531,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             await saveBioPage();
 
             // Update isPublished flag in user's bio page
-            const pathSegments = getBioPagesCollectionPath(user.uid, currentTenantId);
+            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
             const bioPageRef = doc(db, ...pathSegments, bioPage.id);
 
             await updateDoc(bioPageRef, {
@@ -544,14 +544,14 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (bioPage.projectId) {
                 try {
                     // Try the correct projects collection path based on tenant
-                    const projectPathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
+                    const projectPathSegments = getProjectsCollectionPath(user.id, currentTenantId);
                     const projectRef = doc(db, ...projectPathSegments, bioPage.projectId);
                     let projectSnap = await getDoc(projectRef);
 
                     // If not found, try the alternate path (in case project is stored in user path when using tenant)
                     if (!projectSnap.exists() && currentTenantId) {
                         console.log('[BioPageContext] Project not found in tenant path, trying user path...');
-                        const userProjectRef = doc(db, 'users', user.uid, 'projects', bioPage.projectId);
+                        const userProjectRef = doc(db, 'users', user.id, 'projects', bioPage.projectId);
                         projectSnap = await getDoc(userProjectRef);
                     }
 
@@ -579,7 +579,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 links: bioPage.links.map(l => removeUndefinedValues(l)),
                 emailSignupEnabled: emailSignupEnabled,
                 isPublished: true,
-                ownerId: user.uid,
+                ownerId: user.id,
                 tenantId: currentTenantId || null,
                 projectId: bioPage.projectId || bioPage.id,
                 updatedAt: new Date().toISOString(),

@@ -404,3 +404,52 @@ export default sanitizeHtml;
 
 
 
+
+export const sanitizeForStorage = <T>(obj: T): T => {
+    if (!obj || typeof obj !== 'object') return obj;
+    
+    // Quick check to avoid unnecessary cloning if we know it's a simple type
+    if (Array.isArray(obj) && obj.length === 0) return obj;
+    
+    try {
+        const cache = new Set();
+        const safeStringify = JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                // Strip DOM nodes, React Fiber nodes, and Synthetic Events
+                if (
+                    (typeof HTMLElement !== 'undefined' && value instanceof HTMLElement) ||
+                    value.nodeType ||
+                    value.nativeEvent ||
+                    key.startsWith('__reactFiber') ||
+                    key.startsWith('__reactProps')
+                ) {
+                    return undefined;
+                }
+                if (cache.has(value)) {
+                    return undefined; // Circular reference found, discard key
+                }
+                cache.add(value);
+            }
+            return value;
+        });
+        return JSON.parse(safeStringify);
+    } catch (e) {
+        console.warn('Sanitization fallback failed', e);
+        return {} as T; // Safe fallback
+    }
+};
+
+export const safeClone = <T>(value: T): T => {
+    try {
+        if (typeof structuredClone === 'function') {
+            try {
+                return structuredClone(value);
+            } catch (cloneErr) {
+                return sanitizeForStorage(value);
+            }
+        }
+        return sanitizeForStorage(value);
+    } catch (e) {
+        return {} as T;
+    }
+};

@@ -270,18 +270,18 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
                 response = await generateMultimodalContentViaProxy(projectId, promptText, mediaFiles, modelToUse, {
                     temperature: 0.9,
                     maxOutputTokens: 8192
-                }, user?.uid, apiTools);
+                }, user?.id, apiTools);
             } else {
                 response = await generateContentViaProxy(projectId, promptText, modelToUse, {
                     temperature: 0.9,
                     maxOutputTokens: 8192
-                }, user?.uid, apiTools);
+                }, user?.id, apiTools);
             }
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelToUse,
                     feature: 'content-creator-assistant',
@@ -346,7 +346,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelToUse,
                     feature: 'content-creator-assistant',
@@ -381,7 +381,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
             excerpt: generatedPost.excerpt || '',
             featuredImage: '',
             status: 'draft',
-            authorId: user.uid,
+            authorId: user.id,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             seoTitle: generatedPost.seoTitle || '',

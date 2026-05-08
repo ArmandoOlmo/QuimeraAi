@@ -28,20 +28,7 @@ import {
     DEFAULT_TERMS_OF_SERVICE_EN,
     DEFAULT_COOKIE_POLICY_EN,
 } from '../../types/appContent';
-import {
-    db,
-    doc,
-    collection,
-    getDocs,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    orderBy,
-    where,
-    onSnapshot,
-    getDoc,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 
 // =============================================================================
 // UTILITY: Strip undefined values (Firestore rejects them)
@@ -60,15 +47,11 @@ function stripUndefined<T extends Record<string, any>>(obj: T): T {
     return result as T;
 }
 
-// =============================================================================
-// FIREBASE PATHS (Global, not per-user)
-// =============================================================================
-
-const COLLECTIONS = {
-    ARTICLES: 'appContent/data/articles',
-    NAVIGATION: 'appContent/data/navigation',
-    LANDING_CONFIG: 'appContent/data/config',
-    LEGAL_PAGES: 'appContent/data/legalPages',
+const TABLES = {
+    ARTICLES: 'app_articles',
+    NAVIGATION: 'app_navigation',
+    LANDING_CONFIG: 'app_landing_config',
+    LEGAL_PAGES: 'app_legal_pages',
 };
 
 // =============================================================================
@@ -106,24 +89,42 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     useEffect(() => {
         setIsLoadingArticles(true);
 
-        const q = query(
-            collection(db, COLLECTIONS.ARTICLES),
-            orderBy('createdAt', 'desc')
-        );
+        // Fetch initial data
+        const fetchInitialArticles = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.ARTICLES)
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const articlesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AppArticle[];
-            setArticles(articlesData);
+            if (!error && data) {
+                // Convert snake_case to camelCase mapping
+                const articlesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    publishedAt: item.published_at,
+                    imageUrl: item.image_url,
+                    readTime: item.read_time,
+                    translationGroup: item.translation_group,
+                })) as AppArticle[];
+                setArticles(articlesData);
+            }
             setIsLoadingArticles(false);
-        }, (error) => {
-            console.error("Error fetching app articles:", error);
-            setIsLoadingArticles(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialArticles();
+
+        // Subscribe to real-time changes
+        const channel = supabase
+            .channel('public:app_articles')
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.ARTICLES }, (payload) => {
+                fetchInitialArticles(); // Simple refresh strategy for now
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     // Featured articles (published + featured flag)
@@ -137,16 +138,25 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     const loadArticles = useCallback(async () => {
         setIsLoadingArticles(true);
         try {
-            const q = query(
-                collection(db, COLLECTIONS.ARTICLES),
-                orderBy('createdAt', 'desc')
-            );
-            const snapshot = await getDocs(q);
-            const articlesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as AppArticle[];
-            setArticles(articlesData);
+            const { data, error } = await supabase
+                .from(TABLES.ARTICLES)
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            
+            if (data) {
+                const articlesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    publishedAt: item.published_at,
+                    imageUrl: item.image_url,
+                    readTime: item.read_time,
+                    translationGroup: item.translation_group,
+                })) as AppArticle[];
+                setArticles(articlesData);
+            }
         } catch (error) {
             console.error("Error loading app articles:", error);
         } finally {
@@ -162,41 +172,62 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Save article
     const saveArticle = useCallback(async (article: AppArticle): Promise<AppArticle> => {
         try {
-            const { id, ...data } = article;
+            const { id, createdAt, updatedAt, publishedAt, imageUrl, readTime, translationGroup, ...data } = article;
             const now = new Date().toISOString();
 
             // Calculate read time (approx 200 words per minute)
             const wordCount = article.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-            const readTime = Math.max(1, Math.ceil(wordCount / 200));
+            const newReadTime = Math.max(1, Math.ceil(wordCount / 200));
+
+            const payload = stripUndefined({
+                ...data,
+                image_url: imageUrl,
+                translation_group: translationGroup,
+                read_time: newReadTime,
+                published_at: article.status === 'published' && !publishedAt ? now : publishedAt,
+            });
 
             let savedArticle: AppArticle;
 
             if (id && id.length > 0) {
-                // Update existing (using setDoc with merge to also handle pre-generated IDs)
-                const articleRef = doc(db, COLLECTIONS.ARTICLES, id);
+                // Update existing
+                const { error } = await supabase
+                    .from(TABLES.ARTICLES)
+                    .update(payload)
+                    .eq('id', id);
+
+                if (error) throw error;
+                
                 savedArticle = {
-                    ...data,
-                    id,
-                    readTime,
+                    ...article,
+                    readTime: newReadTime,
                     updatedAt: now,
-                    // Treat falsy string values as undefined so they don't crash
-                    publishedAt: article.status === 'published' && !article.publishedAt ? now : (article.publishedAt || undefined)
+                    publishedAt: payload.published_at
                 } as AppArticle;
-                await setDoc(articleRef, stripUndefined(savedArticle), { merge: true });
             } else {
                 // Create new
                 const newId = `article_${Date.now()}`;
-                const articleRef = doc(db, COLLECTIONS.ARTICLES, newId);
-                savedArticle = {
-                    ...data,
+                const insertPayload = {
+                    ...payload,
                     id: newId,
-                    readTime,
+                    views: 0,
+                };
+                
+                const { error } = await supabase
+                    .from(TABLES.ARTICLES)
+                    .insert([insertPayload]);
+
+                if (error) throw error;
+
+                savedArticle = {
+                    ...article,
+                    id: newId,
+                    readTime: newReadTime,
                     views: 0,
                     createdAt: now,
                     updatedAt: now,
-                    publishedAt: article.status === 'published' ? now : undefined
+                    publishedAt: payload.published_at
                 } as AppArticle;
-                await setDoc(articleRef, stripUndefined(savedArticle));
             }
             
             return savedArticle;
@@ -215,8 +246,12 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Delete article
     const deleteArticle = useCallback(async (id: string) => {
         try {
-            const articleRef = doc(db, COLLECTIONS.ARTICLES, id);
-            await deleteDoc(articleRef);
+            const { error } = await supabase
+                .from(TABLES.ARTICLES)
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting app article:", error);
             throw error;
@@ -231,34 +266,47 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     useEffect(() => {
         setIsLoadingNavigation(true);
 
-        const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
+        const fetchInitialNavigation = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .select('*')
+                .eq('id', 'main')
+                .maybeSingle();
 
-        const unsubscribe = onSnapshot(navRef, (docSnapshot) => {
-            if (docSnapshot.exists()) {
-                setNavigation(docSnapshot.data() as AppNavigation);
+            if (!error && data) {
+                setNavigation(data as AppNavigation);
             } else {
-                // Initialize with defaults if not exists
                 setNavigation(DEFAULT_APP_NAVIGATION);
             }
             setIsLoadingNavigation(false);
-        }, (error) => {
-            console.error("Error fetching app navigation:", error);
-            setNavigation(DEFAULT_APP_NAVIGATION);
-            setIsLoadingNavigation(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialNavigation();
+
+        const channel = supabase
+            .channel('public:app_navigation')
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.NAVIGATION, filter: 'id=eq.main' }, (payload) => {
+                fetchInitialNavigation();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     // Manual load navigation
     const loadNavigation = useCallback(async () => {
         setIsLoadingNavigation(true);
         try {
-            const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
-            const docSnapshot = await getDoc(navRef);
+            const { data, error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .select('*')
+                .eq('id', 'main')
+                .maybeSingle();
 
-            if (docSnapshot.exists()) {
-                setNavigation(docSnapshot.data() as AppNavigation);
+            if (!error && data) {
+                setNavigation(data as AppNavigation);
             } else {
                 setNavigation(DEFAULT_APP_NAVIGATION);
             }
@@ -273,11 +321,15 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Save navigation
     const saveNavigation = useCallback(async (nav: AppNavigation) => {
         try {
-            const navRef = doc(db, COLLECTIONS.NAVIGATION, 'main');
-            await setDoc(navRef, stripUndefined({
-                ...nav,
-                updatedAt: new Date().toISOString()
-            }));
+            const { error } = await supabase
+                .from(TABLES.NAVIGATION)
+                .upsert({
+                    id: 'main',
+                    links: nav.links,
+                    updated_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error saving app navigation:", error);
             throw error;
@@ -292,33 +344,61 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     useEffect(() => {
         setIsLoadingLandingConfig(true);
 
-        const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
+        const fetchInitialConfig = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.LANDING_CONFIG)
+                .select('*')
+                .eq('id', 'landing')
+                .maybeSingle();
 
-        const unsubscribe = onSnapshot(configRef, (docSnapshot) => {
-            if (docSnapshot.exists()) {
-                setLandingConfig(docSnapshot.data() as AppLandingConfig);
+            if (!error && data) {
+                setLandingConfig({
+                    ...data,
+                    heroTitle: data.hero_title,
+                    heroSubtitle: data.hero_subtitle,
+                    heroImage: data.hero_image,
+                    ctaText: data.cta_text,
+                    ctaLink: data.cta_link
+                } as AppLandingConfig);
             } else {
                 setLandingConfig(DEFAULT_APP_LANDING_CONFIG);
             }
             setIsLoadingLandingConfig(false);
-        }, (error) => {
-            console.error("Error fetching landing config:", error);
-            setLandingConfig(DEFAULT_APP_LANDING_CONFIG);
-            setIsLoadingLandingConfig(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialConfig();
+
+        const channel = supabase
+            .channel('public:app_landing_config')
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.LANDING_CONFIG, filter: 'id=eq.landing' }, (payload) => {
+                fetchInitialConfig();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     // Manual load landing config
     const loadLandingConfig = useCallback(async () => {
         setIsLoadingLandingConfig(true);
         try {
-            const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
-            const docSnapshot = await getDoc(configRef);
+            const { data, error } = await supabase
+                .from(TABLES.LANDING_CONFIG)
+                .select('*')
+                .eq('id', 'landing')
+                .maybeSingle();
 
-            if (docSnapshot.exists()) {
-                setLandingConfig(docSnapshot.data() as AppLandingConfig);
+            if (!error && data) {
+                setLandingConfig({
+                    ...data,
+                    heroTitle: data.hero_title,
+                    heroSubtitle: data.hero_subtitle,
+                    heroImage: data.hero_image,
+                    ctaText: data.cta_text,
+                    ctaLink: data.cta_link
+                } as AppLandingConfig);
             } else {
                 setLandingConfig(DEFAULT_APP_LANDING_CONFIG);
             }
@@ -333,11 +413,22 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Save landing config
     const saveLandingConfig = useCallback(async (config: AppLandingConfig) => {
         try {
-            const configRef = doc(db, COLLECTIONS.LANDING_CONFIG, 'landing');
-            await setDoc(configRef, stripUndefined({
-                ...config,
-                updatedAt: new Date().toISOString()
-            }));
+            const payload = {
+                id: 'landing',
+                hero_title: config.heroTitle,
+                hero_subtitle: config.heroSubtitle,
+                hero_image: config.heroImage,
+                features: config.features,
+                cta_text: config.ctaText,
+                cta_link: config.ctaLink,
+                updated_at: new Date().toISOString()
+            };
+            
+            const { error } = await supabase
+                .from(TABLES.LANDING_CONFIG)
+                .upsert(stripUndefined(payload));
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error saving landing config:", error);
             throw error;
@@ -352,52 +443,61 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     useEffect(() => {
         setIsLoadingLegalPages(true);
 
-        const q = query(
-            collection(db, COLLECTIONS.LEGAL_PAGES),
-            orderBy('type', 'asc')
-        );
+        const fetchInitialPages = async () => {
+            const { data, error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .select('*')
+                .order('type', { ascending: true });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const pagesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as LegalPage[];
-
-            // If no pages exist, use defaults
-            if (pagesData.length === 0) {
-                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
-            } else {
+            if (!error && data && data.length > 0) {
+                const pagesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    lastUpdated: item.last_updated
+                })) as LegalPage[];
                 setLegalPages(pagesData);
+            } else {
+                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
             }
             setIsLoadingLegalPages(false);
-        }, (error) => {
-            console.error("Error fetching legal pages:", error);
-            // Use defaults on error
-            setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
-            setIsLoadingLegalPages(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchInitialPages();
+
+        const channel = supabase
+            .channel('public:app_legal_pages')
+            .on('postgres_changes', { event: '*', schema: 'public', table: TABLES.LEGAL_PAGES }, (payload) => {
+                fetchInitialPages();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     // Manual load legal pages
     const loadLegalPages = useCallback(async () => {
         setIsLoadingLegalPages(true);
         try {
-            const q = query(
-                collection(db, COLLECTIONS.LEGAL_PAGES),
-                orderBy('type', 'asc')
-            );
-            const snapshot = await getDocs(q);
-            const pagesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as LegalPage[];
+            const { data, error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .select('*')
+                .order('type', { ascending: true });
 
-            if (pagesData.length === 0) {
-                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
-            } else {
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                const pagesData = data.map(item => ({
+                    ...item,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    lastUpdated: item.last_updated
+                })) as LegalPage[];
                 setLegalPages(pagesData);
+            } else {
+                setLegalPages([DEFAULT_PRIVACY_POLICY, DEFAULT_DATA_DELETION, DEFAULT_TERMS_OF_SERVICE, DEFAULT_COOKIE_POLICY]);
             }
         } catch (error) {
             console.error("Error loading legal pages:", error);
@@ -433,20 +533,25 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Save legal page
     const saveLegalPage = useCallback(async (page: LegalPage) => {
         try {
-            const { id, ...data } = page;
+            const { id, createdAt, updatedAt, lastUpdated, ...data } = page;
             const now = new Date().toISOString();
 
-            // Use type as document ID for easy retrieval
             // Use type-lang as document ID for easy retrieval and multi-language support
             const docId = `${page.type}_${page.language || 'es'}`;
-            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, docId);
-            await setDoc(pageRef, stripUndefined({
+            
+            const payload = stripUndefined({
                 ...data,
                 id: docId,
-                lastUpdated: now,
-                updatedAt: now,
-                createdAt: page.createdAt || now
-            }));
+                last_updated: now,
+                updated_at: now,
+                created_at: createdAt || now
+            });
+            
+            const { error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .upsert(payload);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error saving legal page:", error);
             throw error;
@@ -456,8 +561,12 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Delete legal page
     const deleteLegalPage = useCallback(async (id: string) => {
         try {
-            const pageRef = doc(db, COLLECTIONS.LEGAL_PAGES, id);
-            await deleteDoc(pageRef);
+            const { error } = await supabase
+                .from(TABLES.LEGAL_PAGES)
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
         } catch (error) {
             console.error("Error deleting legal page:", error);
             throw error;

@@ -613,7 +613,7 @@ const ImportLeadsModal: React.FC<ImportLeadsModalProps> = ({ isOpen, onClose }) 
     const { addLeadsBulk } = useCRM();
 
     // Audience hook
-    const userId = user?.uid || '';
+    const userId = user?.id || '';
     const projectId = activeProject?.id || '';
     const { audiences, isLoading: audiencesLoading, createAudience, updateAudience } = useEmailAudiences(userId, projectId);
 

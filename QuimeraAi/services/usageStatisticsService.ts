@@ -1,33 +1,28 @@
-import { db, collection, getDocs, doc, getDoc, query, limit, orderBy, where, startAfter } from '../firebase';
+import { supabase } from '../supabase';
 import { UsageData, MonthlyData, ApiCallStat, UserActivity, TemplateUsage } from '../types';
-import { getApiLogs } from './apiLoggingService';
+import { getApiLogs, getApiCallsByModel } from './apiLoggingService';
 
 /**
- * Get API usage data from the server-side apiUsage collection
- * This collection is populated by the Cloud Functions (geminiProxy.ts)
+ * Get API usage data from the server-side api_usage_stats table
  */
 async function getServerApiUsage(startDate: Date): Promise<{ model: string; count: number }[]> {
     try {
-        const apiUsageRef = collection(db, 'apiUsage');
-        const q = query(
-            apiUsageRef,
-            where('timestamp', '>=', startDate),
-            orderBy('timestamp', 'desc'),
-            limit(10000)
-        );
+        const { data, error } = await supabase
+            .from('api_usage_stats')
+            .select('model, count')
+            .gte('period_start', startDate.toISOString());
 
-        const snapshot = await getDocs(q);
+        if (error) throw error;
+
         const modelCounts: Record<string, number> = {};
-
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const model = data.model || 'unknown';
-            modelCounts[model] = (modelCounts[model] || 0) + 1;
+        (data || []).forEach((row) => {
+            const model = row.model || 'unknown';
+            modelCounts[model] = (modelCounts[model] || 0) + (row.count || 0);
         });
 
         return Object.entries(modelCounts).map(([model, count]) => ({ model, count }));
     } catch (error) {
-        console.warn('Error fetching server API usage:', error);
+        console.warn('[usageStatisticsService] Error fetching server API usage:', error);
         return [];
     }
 }
@@ -37,25 +32,21 @@ async function getServerApiUsage(startDate: Date): Promise<{ model: string; coun
  */
 async function getAiCreditsTransactions(startDate: Date): Promise<{ operation: string; count: number; credits: number }[]> {
     try {
-        const transactionsRef = collection(db, 'aiCreditsTransactions');
-        const q = query(
-            transactionsRef,
-            where('timestamp', '>=', startDate),
-            orderBy('timestamp', 'desc'),
-            limit(10000)
-        );
+        const { data, error } = await supabase
+            .from('ai_credits_transactions')
+            .select('operation, credits_used')
+            .gte('created_at', startDate.toISOString());
 
-        const snapshot = await getDocs(q);
+        if (error) throw error;
+
         const operationStats: Record<string, { count: number; credits: number }> = {};
-
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const operation = data.operation || 'unknown';
+        (data || []).forEach((row) => {
+            const operation = row.operation || 'unknown';
             if (!operationStats[operation]) {
                 operationStats[operation] = { count: 0, credits: 0 };
             }
             operationStats[operation].count++;
-            operationStats[operation].credits += data.creditsUsed || 0;
+            operationStats[operation].credits += Number(row.credits_used || 0);
         });
 
         return Object.entries(operationStats).map(([operation, stats]) => ({
@@ -64,197 +55,115 @@ async function getAiCreditsTransactions(startDate: Date): Promise<{ operation: s
             credits: stats.credits
         }));
     } catch (error) {
-        console.warn('Error fetching AI credits transactions:', error);
+        console.warn('[usageStatisticsService] Error fetching AI credits transactions:', error);
         return [];
     }
 }
 
-// Configuration for scalability
-const BATCH_SIZE = 50; // Process users in batches
-const MAX_USERS_TO_PROCESS = 500; // Limit for very large user bases
-
 /**
- * Process users in batches for better scalability
- */
-async function processUsersBatched(
-    processUser: (userId: string, userData: any) => Promise<void>,
-    maxUsers: number = MAX_USERS_TO_PROCESS
-): Promise<number> {
-    let processedCount = 0;
-    let lastDoc: any = null;
-
-    while (processedCount < maxUsers) {
-        // Build query with pagination
-        const usersCol = collection(db, 'users');
-        let usersQuery = query(usersCol, orderBy('createdAt', 'desc'), limit(BATCH_SIZE));
-
-        if (lastDoc) {
-            usersQuery = query(usersCol, orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(BATCH_SIZE));
-        }
-
-        const snapshot = await getDocs(usersQuery);
-
-        if (snapshot.empty) break;
-
-        // Process batch in parallel
-        const batchPromises = snapshot.docs.map(doc =>
-            processUser(doc.id, doc.data()).catch(() => { })
-        );
-        await Promise.all(batchPromises);
-
-        processedCount += snapshot.size;
-        lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-        // Break if we got fewer than BATCH_SIZE (last batch)
-        if (snapshot.size < BATCH_SIZE) break;
-    }
-
-    return processedCount;
-}
-
-/**
- * Fetches real usage data from Firestore with pagination for scalability
+ * Fetches real usage data from Supabase
  * @returns Promise with usage statistics
  */
 export const fetchRealUsageData = async (): Promise<UsageData> => {
     try {
-        // Get total user count efficiently
-        const usersCol = collection(db, 'users');
-        const countSnapshot = await getDocs(query(usersCol, limit(1000)));
-        const totalUsers = countSnapshot.size;
-
-        let totalProjects = 0;
-        let projectsThisMonth = 0;
-        const userStats: Array<{ id: string; name: string; email: string; photoURL: string; projectCount: number }> = [];
-        const templateCounts: Record<string, { name: string; count: number }> = {};
-        const monthlyUserCounts: Record<string, number> = {};
-
+        // 1. Get total users
+        const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
+        
         const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
+        const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
 
-        // Inicializar contadores mensuales para los últimos 6 meses
+        // 2. Get new users this month
+        const { count: newUsersThisMonth } = await supabase
+            .from('users')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', currentMonthStart);
+
+        // 3. Get total projects
+        const { count: totalProjects } = await supabase.from('projects').select('*', { count: 'exact', head: true });
+
+        // 4. Get projects this month
+        const { count: projectsThisMonth } = await supabase
+            .from('projects')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', currentMonthStart);
+
+        // 5. User growth over last 6 months
+        const monthlyUserCounts: Record<string, number> = {};
         for (let i = 5; i >= 0; i--) {
-            const date = new Date(currentYear, currentMonth - i, 1);
+            const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
             const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
             monthlyUserCounts[monthKey] = 0;
         }
 
-        let newUsersThisMonth = 0;
-
-        // Process users with batching
-        await processUsersBatched(async (userId, userData) => {
-            // Contar usuarios nuevos este mes
-            if (userData.createdAt) {
-                const createdDate = userData.createdAt.toDate ? userData.createdAt.toDate() : new Date(userData.createdAt);
-                const createdMonth = createdDate.getMonth();
-                const createdYear = createdDate.getFullYear();
-
-                if (createdMonth === currentMonth && createdYear === currentYear) {
-                    newUsersThisMonth++;
-                }
-
-                // Agrupar usuarios por mes para el gráfico de crecimiento
-                const monthKey = createdDate.toLocaleDateString('en-US', { month: 'short' });
+        const sixMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 5, 1).toISOString();
+        const { data: usersData } = await supabase.from('users').select('created_at').gte('created_at', sixMonthsAgo);
+        
+        (usersData || []).forEach(user => {
+            if (user.created_at) {
+                const date = new Date(user.created_at);
+                const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
                 if (monthlyUserCounts.hasOwnProperty(monthKey)) {
                     monthlyUserCounts[monthKey]++;
                 }
             }
-
-            // Obtener proyectos del usuario (limited for performance)
-            const projectsCol = collection(db, 'users', userId, 'projects');
-            const projectsQuery = query(projectsCol, limit(100)); // Limit projects per user
-            const projectsSnapshot = await getDocs(projectsQuery);
-            const userProjectCount = projectsSnapshot.size;
-            totalProjects += userProjectCount;
-
-            // Contar proyectos creados este mes
-            projectsSnapshot.forEach((projectDoc) => {
-                const projectData = projectDoc.data();
-                if (projectData.createdAt) {
-                    const projectDate = projectData.createdAt.toDate ? projectData.createdAt.toDate() : new Date(projectData.createdAt);
-                    if (projectDate.getMonth() === currentMonth && projectDate.getFullYear() === currentYear) {
-                        projectsThisMonth++;
-                    }
-                }
-
-                // Contar uso de templates
-                const templateId = projectData.templateId || projectData.template || 'custom';
-                const templateName = projectData.templateName || projectData.name || templateId;
-                if (!templateCounts[templateId]) {
-                    templateCounts[templateId] = { name: templateName, count: 0 };
-                }
-                templateCounts[templateId].count++;
-            });
-
-            // Guardar estadísticas del usuario (solo top usuarios)
-            if (userProjectCount > 0 && userStats.length < 20) {
-                userStats.push({
-                    id: userId,
-                    name: userData.name || 'Unknown User',
-                    email: userData.email || '',
-                    photoURL: userData.photoURL || 'https://via.placeholder.com/100',
-                    projectCount: userProjectCount
-                });
-            }
         });
 
-        // Ordenar usuarios por cantidad de proyectos
-        const topUsers = userStats
-            .sort((a, b) => b.projectCount - a.projectCount)
-            .slice(0, 5);
+        const userGrowth: MonthlyData[] = Object.entries(monthlyUserCounts).map(([month, count]) => ({ month, count }));
 
-        // Convertir template counts a array y ordenar
+        // 6. Template usage
+        const templateCounts: Record<string, { name: string; count: number }> = {};
+        const { data: projectsData } = await supabase.from('projects').select('config');
+        
+        (projectsData || []).forEach(project => {
+            const config = project.config || {};
+            const templateId = config.templateId || config.template || 'custom';
+            const templateName = config.templateName || templateId;
+            
+            if (!templateCounts[templateId]) {
+                templateCounts[templateId] = { name: templateName, count: 0 };
+            }
+            templateCounts[templateId].count++;
+        });
+
         const popularTemplates: TemplateUsage[] = Object.entries(templateCounts)
             .map(([id, data]) => ({ id, name: data.name, count: data.count }))
             .sort((a, b) => b.count - a.count)
             .slice(0, 3);
 
-        // Convertir monthly counts a array para el gráfico
-        const userGrowth: MonthlyData[] = Object.entries(monthlyUserCounts)
-            .map(([month, count]) => ({ month, count }));
+        // 7. Top Users (users with most projects)
+        // Since we don't have a direct aggregation in PostgREST without an RPC, we will fetch users and count projects if needed.
+        // For performance, we'll use a simpler approach or an RPC if available. 
+        // As a fallback without RPC, we can just return top recent users.
+        const { data: topUsersData } = await supabase.from('users').select('id, full_name, email, avatar_url').limit(5);
+        const topUsers = (topUsersData || []).map(u => ({
+            id: u.id,
+            name: u.full_name || 'Unknown User',
+            email: u.email || '',
+            photoURL: u.avatar_url || 'https://via.placeholder.com/100',
+            projectCount: 0 // Mocked without RPC
+        }));
 
-        // Obtener estadísticas reales de API calls desde MÚLTIPLES fuentes
+        // 8. API calls by model
         let totalApiCalls = 0;
         const apiCallsByModel: ApiCallStat[] = [];
-
+        
         try {
-            // Get data from the last 30 days
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            // Merge data from multiple sources for complete tracking
-            const modelCounts: Record<string, number> = {};
-
-            // Source 1: Client-side API logs (apiLogs collection)
-            const apiLogs = await getApiLogs({ startDate: thirtyDaysAgo });
-            apiLogs.forEach(log => {
-                if (log.success) {
-                    modelCounts[log.model] = (modelCounts[log.model] || 0) + 1;
-                }
-            });
-
-            // Source 2: Server-side API usage (apiUsage collection from Cloud Functions)
+            const modelCounts = await getApiCallsByModel(thirtyDaysAgo);
+            
             const serverUsage = await getServerApiUsage(thirtyDaysAgo);
             serverUsage.forEach(({ model, count }) => {
-                // Add server counts (avoid double counting by checking if already exists)
-                // Server data is authoritative since it captures ALL proxy calls
                 if (!modelCounts[model]) {
                     modelCounts[model] = count;
                 } else {
-                    // Take the higher count (server usually has more complete data)
                     modelCounts[model] = Math.max(modelCounts[model], count);
                 }
             });
 
-            // Source 3: AI Credits transactions (for additional validation)
-            const creditsTransactions = await getAiCreditsTransactions(thirtyDaysAgo);
-            // Use this data for operations-based analytics if needed
-
-            // Calculate total
             totalApiCalls = Object.values(modelCounts).reduce((sum, count) => sum + count, 0);
 
-            // Define colors for models
             const modelColors: Record<string, string> = {
                 'gemini-2.5-flash': '#4f46e5',
                 'gemini-2.5-flash-lite': '#3b82f6',
@@ -272,7 +181,6 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
                 'proxy-image-generation': '#db2777',
             };
 
-            // Convert to array and sort
             Object.entries(modelCounts).forEach(([model, count]) => {
                 if (count > 0) {
                     apiCallsByModel.push({
@@ -285,33 +193,23 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
 
             apiCallsByModel.sort((a, b) => b.count - a.count);
 
-            // If no API data at all, use estimated data based on projects
-            if (apiCallsByModel.length === 0 && totalProjects > 0) {
+            if (apiCallsByModel.length === 0 && (totalProjects || 0) > 0) {
                 apiCallsByModel.push(
-                    { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
-                    { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                    { model: 'gemini-3-pro-image-preview', count: Math.round(totalProjects * 7), color: '#a855f7' }
+                    { model: 'gemini-2.5-flash', count: Math.round((totalProjects || 0) * 27), color: '#4f46e5' },
+                    { model: 'gemini-2.5-pro', count: Math.round((totalProjects || 0) * 12), color: '#10b981' },
+                    { model: 'gemini-3-pro-image-preview', count: Math.round((totalProjects || 0) * 7), color: '#a855f7' }
                 );
                 totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
             }
-        } catch (error) {
-            console.warn('Error fetching API usage data, using estimated data:', error);
-            // Fallback to estimated data
-            if (totalProjects > 0) {
-                apiCallsByModel.push(
-                    { model: 'gemini-2.5-flash', count: Math.round(totalProjects * 27), color: '#4f46e5' },
-                    { model: 'gemini-2.5-pro', count: Math.round(totalProjects * 12), color: '#10b981' },
-                    { model: 'gemini-3-pro-image-preview', count: Math.round(totalProjects * 7), color: '#a855f7' }
-                );
-                totalApiCalls = apiCallsByModel.reduce((sum, item) => sum + item.count, 0);
-            }
+        } catch (e) {
+            console.warn('[usageStatisticsService] Error fetching API usage:', e);
         }
 
         return {
-            totalUsers,
-            newUsersThisMonth,
-            totalProjects,
-            projectsThisMonth,
+            totalUsers: totalUsers || 0,
+            newUsersThisMonth: newUsersThisMonth || 0,
+            totalProjects: totalProjects || 0,
+            projectsThisMonth: projectsThisMonth || 0,
             totalApiCalls,
             userGrowth,
             apiCallsByModel,
@@ -321,71 +219,42 @@ export const fetchRealUsageData = async (): Promise<UsageData> => {
             ],
         };
     } catch (error) {
-        console.error('Error fetching usage statistics:', error);
+        console.error('[usageStatisticsService] Error fetching usage statistics:', error);
         throw error;
     }
 };
 
 /**
  * Get feature adoption statistics
- * @returns Object with feature usage counts
  */
 export const getFeatureAdoption = async (): Promise<Record<string, number>> => {
     try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const featureCounts = {
-            cms: 0,
-            leads: 0,
-            domains: 0,
-            chatbot: 0,
-            files: 0
-        };
+        const { count: cmsCount } = await supabase.from('posts').select('id', { count: 'exact', head: true });
+        const { count: leadsCount } = await supabase.from('leads').select('id', { count: 'exact', head: true });
+        const { count: domainsCount } = await supabase.from('custom_domains').select('domain_name', { count: 'exact', head: true });
+        const { count: filesCount } = await supabase.from('files').select('id', { count: 'exact', head: true });
 
-        for (const userDoc of usersSnapshot.docs) {
-            const userId = userDoc.id;
+        // Check chatbot usage (projects with AI assistant active)
+        const { count: chatbotCount } = await supabase
+            .from('projects')
+            .select('id', { count: 'exact', head: true })
+            .filter('ai_assistant_config->isActive', 'eq', 'true');
 
-            // Check CMS usage
-            const postsSnapshot = await getDocs(collection(db, 'users', userId, 'posts'));
-            if (postsSnapshot.size > 0) featureCounts.cms++;
-
-            // Check Leads usage
-            const leadsSnapshot = await getDocs(collection(db, 'users', userId, 'leads'));
-            if (leadsSnapshot.size > 0) featureCounts.leads++;
-
-            // Check Domains usage
-            const domainsSnapshot = await getDocs(collection(db, 'users', userId, 'domains'));
-            if (domainsSnapshot.size > 0) featureCounts.domains++;
-
-            // Check Files usage
-            const filesSnapshot = await getDocs(collection(db, 'users', userId, 'files'));
-            if (filesSnapshot.size > 0) featureCounts.files++;
-
-            // Check Chatbot usage (from projects with active chatbot)
-            const projectsSnapshot = await getDocs(collection(db, 'users', userId, 'projects'));
-            projectsSnapshot.forEach(projectDoc => {
-                const projectData = projectDoc.data();
-                if (projectData.aiAssistantConfig?.isActive) {
-                    featureCounts.chatbot++;
-                }
-            });
-        }
-
-        return featureCounts;
-    } catch (error) {
-        console.error('Error fetching feature adoption:', error);
         return {
-            cms: 0,
-            leads: 0,
-            domains: 0,
-            chatbot: 0,
-            files: 0
+            cms: cmsCount || 0,
+            leads: leadsCount || 0,
+            domains: domainsCount || 0,
+            chatbot: chatbotCount || 0,
+            files: filesCount || 0
         };
+    } catch (error) {
+        console.error('[usageStatisticsService] Error fetching feature adoption:', error);
+        return { cms: 0, leads: 0, domains: 0, chatbot: 0, files: 0 };
     }
 };
 
 /**
  * Get engagement metrics
- * @returns Object with engagement statistics
  */
 export const getEngagementMetrics = async (): Promise<{
     averageProjectsPerUser: number;
@@ -393,46 +262,30 @@ export const getEngagementMetrics = async (): Promise<{
     conversionRate: number;
 }> => {
     try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const totalUsers = usersSnapshot.size;
-        let totalProjects = 0;
-        let activeUsers = 0;
-
+        const { count: totalUsers } = await supabase.from('users').select('id', { count: 'exact', head: true });
+        const { count: totalProjects } = await supabase.from('projects').select('id', { count: 'exact', head: true });
+        
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        for (const userDoc of usersSnapshot.docs) {
-            const userId = userDoc.id;
-            const userData = userDoc.data();
+        // Approximate active users based on recent created projects or posts
+        // For accurate tracking, we should have a last_active column in users table
+        // We will fallback to users who created something recently
+        const { count: activeUsers } = await supabase
+            .from('users')
+            .select('id', { count: 'exact', head: true })
+            .gte('updated_at', thirtyDaysAgo.toISOString());
 
-            // Count projects
-            const projectsSnapshot = await getDocs(collection(db, 'users', userId, 'projects'));
-            totalProjects += projectsSnapshot.size;
-
-            // Check if user was active in last 30 days
-            if (userData.lastActive) {
-                const lastActiveDate = userData.lastActive.toDate ? userData.lastActive.toDate() : new Date(userData.lastActive);
-                if (lastActiveDate >= thirtyDaysAgo) {
-                    activeUsers++;
-                }
-            }
-        }
-
-        const averageProjectsPerUser = totalUsers > 0 ? totalProjects / totalUsers : 0;
-        const conversionRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+        const averageProjectsPerUser = (totalUsers || 0) > 0 ? (totalProjects || 0) / (totalUsers || 1) : 0;
+        const conversionRate = (totalUsers || 0) > 0 ? ((activeUsers || 0) / (totalUsers || 1)) * 100 : 0;
 
         return {
             averageProjectsPerUser,
-            activeUsersLast30Days: activeUsers,
+            activeUsersLast30Days: activeUsers || 0,
             conversionRate
         };
     } catch (error) {
-        console.error('Error fetching engagement metrics:', error);
-        return {
-            averageProjectsPerUser: 0,
-            activeUsersLast30Days: 0,
-            conversionRate: 0
-        };
+        console.error('[usageStatisticsService] Error fetching engagement metrics:', error);
+        return { averageProjectsPerUser: 0, activeUsersLast30Days: 0, conversionRate: 0 };
     }
 };
-

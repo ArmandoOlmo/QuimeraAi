@@ -103,10 +103,9 @@ const TopBar: React.FC<TopBarProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const marqueeRef = useRef<HTMLDivElement>(null);
 
-  const validMessages = messages.length > 0 ? messages : [
-    { text: 'Free shipping on orders over $50!', icon: 'truck', link: '', linkText: 'Shop Now' },
-  ];
+  const validMessages = messages.filter(message => String(message?.text || '').trim().length > 0);
 
   const hasMultiple = validMessages.length > 1;
 
@@ -118,49 +117,6 @@ const TopBar: React.FC<TopBarProps> = ({
     }, rotateSpeed);
     return () => clearInterval(interval);
   }, [scrollEnabled, hasMultiple, isPaused, rotateSpeed, validMessages.length]);
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('tel:') && !href.startsWith('mailto:')) {
-      e.preventDefault();
-      onNavigate(href);
-    }
-  };
-
-  if (!isVisible) return null;
-
-  // Background style
-  const bgStyle: React.CSSProperties = useGradient
-    ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
-    : { backgroundColor };
-
-  const renderIcon = (iconName?: string) => {
-    if (!iconName) return null;
-    const Icon = iconMap[iconName];
-    if (!Icon) return null;
-    return <Icon size={14} style={{ color: iconColor, flexShrink: 0 }} />;
-  };
-
-  const renderMessageContent = (msg: TopBarMessage) => (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      {renderIcon(msg.icon)}
-      <span>{msg.text}</span>
-      {msg.link && msg.linkText && (
-        <a
-          href={msg.link}
-          onClick={(e) => handleClick(e, msg.link!)}
-          className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
-          style={{ color: linkColor }}
-        >
-          {msg.linkText}
-        </a>
-      )}
-    </span>
-  );
-
-  const separatorChar = separatorMap[separator] || '';
-
-  // ─── Marquee ref for animation ───
-  const marqueeRef = useRef<HTMLDivElement>(null);
 
   // Force-start animation via JS when scroll mode activates
   useEffect(() => {
@@ -199,6 +155,46 @@ const TopBar: React.FC<TopBarProps> = ({
       el.style.animationPlayState = isPaused ? 'paused' : 'running';
     }
   }, [scrollEnabled, scrollSpeed, isPaused]);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (onNavigate && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('tel:') && !href.startsWith('mailto:')) {
+      e.preventDefault();
+      onNavigate(href);
+    }
+  };
+
+  if (!isVisible || validMessages.length === 0) return null;
+
+  // Background style
+  const bgStyle: React.CSSProperties = useGradient
+    ? { background: `linear-gradient(${gradientAngle}deg, ${gradientFrom}, ${gradientTo})` }
+    : { backgroundColor };
+
+  const renderIcon = (iconName?: string) => {
+    if (!iconName) return null;
+    const Icon = iconMap[iconName];
+    if (!Icon) return null;
+    return <Icon size={14} style={{ color: iconColor, flexShrink: 0 }} />;
+  };
+
+  const renderMessageContent = (msg: TopBarMessage) => (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+      {renderIcon(msg.icon)}
+      <span>{msg.text}</span>
+      {msg.link && msg.linkText && (
+        <a
+          href={msg.link}
+          onClick={(e) => handleClick(e, msg.link!)}
+          className="font-semibold underline underline-offset-2 hover:no-underline transition-all"
+          style={{ color: linkColor }}
+        >
+          {msg.linkText}
+        </a>
+      )}
+    </span>
+  );
+
+  const separatorChar = separatorMap[separator] || '';
 
   // ─── Scrolling (Marquee) mode ───
   if (scrollEnabled) {

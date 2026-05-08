@@ -61,7 +61,7 @@ const ProjectDiagnostic: React.FC = () => {
     addLog('Starting diagnosis...');
 
     try {
-      const projectsCol = collection(db, 'users', user.uid, 'projects');
+      const projectsCol = collection(db, 'users', user.id, 'projects');
       const snap = await getDocs(projectsCol);
       addLog(`Found ${snap.size} projects`);
 
@@ -155,7 +155,7 @@ const ProjectDiagnostic: React.FC = () => {
       addLog(`🔄 Restoring "${proj.draft.name}" from publicStores...`);
 
       const pubData = proj.rawPublished;
-      const projectRef = doc(db, 'users', user.uid, 'projects', projectId);
+      const projectRef = doc(db, 'users', user.id, 'projects', projectId);
 
       // Restore key fields from published version
       const restoreData: any = {};

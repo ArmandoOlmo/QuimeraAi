@@ -4,8 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot, getDocs, Timestamp } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import type { Tenant, TenantUsage, TenantStatus } from '../types/multiTenant';
 import { resolveProjectName } from '../utils/resolveProjectName';
 
@@ -198,11 +197,16 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
             // Check for trial end date
             if (client.trialEndsAt) {
-                renewalDate = new Date(client.trialEndsAt.seconds * 1000);
+                // Handle both Firestore timestamps and ISO strings
+                renewalDate = typeof client.trialEndsAt === 'string' 
+                    ? new Date(client.trialEndsAt)
+                    : new Date((client.trialEndsAt as any).seconds * 1000);
             }
             // Check for billing period end
             else if (client.billing?.currentPeriodEnd) {
-                renewalDate = new Date(client.billing.currentPeriodEnd.seconds * 1000);
+                renewalDate = typeof client.billing.currentPeriodEnd === 'string'
+                    ? new Date(client.billing.currentPeriodEnd)
+                    : new Date((client.billing.currentPeriodEnd as any).seconds * 1000);
             }
 
             if (renewalDate && renewalDate >= now && renewalDate <= thirtyDaysFromNow) {
@@ -230,27 +234,32 @@ export function useAgencyMetrics(agencyTenantId: string) {
             return;
         }
 
+        let isMounted = true;
         setLoading(true);
         setError(null);
 
-        const q = query(
-            collection(db, 'tenants'),
-            where('ownerTenantId', '==', agencyTenantId),
-            where('status', 'in', ['active', 'trial', 'suspended'])
-        );
+        const fetchSubClients = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('tenants')
+                    .select('*')
+                    .eq('owner_tenant_id', agencyTenantId)
+                    .in('status', ['active', 'trial', 'suspended']);
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
+                if (!isMounted) return;
+
+                if (error) throw error;
+
                 const clients: Tenant[] = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    clients.push({
-                        id: doc.id,
-                        ...data,
-                        name: resolveProjectName(data.name)
-                    } as Tenant);
-                });
+                if (data) {
+                    data.forEach((doc: any) => {
+                        clients.push({
+                            ...doc,
+                            id: doc.id,
+                            name: resolveProjectName(doc.name)
+                        } as Tenant);
+                    });
+                }
 
                 setSubClients(clients);
 
@@ -267,115 +276,148 @@ export function useAgencyMetrics(agencyTenantId: string) {
                 setResourceAlerts(alerts);
                 setUpcomingRenewals(renewals);
 
-                setLoading(false);
-            },
-            (err) => {
+            } catch (err: any) {
+                if (!isMounted) return;
                 console.error('Error fetching sub-clients:', err);
                 setError(err as Error);
-                setLoading(false);
+            } finally {
+                if (isMounted) setLoading(false);
             }
-        );
+        };
 
-        return () => unsubscribe();
+        fetchSubClients();
+
+        const channelId = `tenants_${agencyTenantId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'tenants', filter: `owner_tenant_id=eq.${agencyTenantId}` },
+                () => {
+                    if (isMounted) fetchSubClients();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(subscription);
+        };
     }, [agencyTenantId, calculateMetrics, detectAlerts, calculateRenewals]);
 
     // Aggregate Leads and Revenue (Async)
     useEffect(() => {
         if (subClients.length === 0) return;
 
+        let isMounted = true;
+
         const aggregateAsyncMetrics = async () => {
             try {
                 const clientIds = subClients.map(c => c.id);
-                // Firestore 'in' query limit is 30. If more, we need to chunk or query individually.
-                // For simplicity and to be robust, we'll chunk if needed.
+                // Supabase 'in' filter limit might apply, but generally it supports many items.
+                // We'll chunk to be safe, e.g., max 50 items per query
                 const chunks = [];
-                for (let i = 0; i < clientIds.length; i += 30) {
-                    chunks.push(clientIds.slice(i, i + 30));
+                for (let i = 0; i < clientIds.length; i += 50) {
+                    chunks.push(clientIds.slice(i, i + 50));
                 }
 
                 let totalLeads = 0;
                 let totalRevenue = 0;
 
                 const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const startTimestamp = Timestamp.fromDate(startOfMonth);
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
                 for (const chunk of chunks) {
-                    // Fetch Leads
-                    const leadsQ = query(
-                        collection(db, 'leads'),
-                        where('tenantId', 'in', chunk),
-                        where('createdAt', '>=', startTimestamp)
-                    );
-                    const leadsSnap = await getDocs(leadsQ);
-                    totalLeads += leadsSnap.size;
+                    // Fetch Leads count
+                    const { count: leadsCount, error: leadsError } = await supabase
+                        .from('leads')
+                        .select('*', { count: 'exact', head: true })
+                        .in('tenant_id', chunk)
+                        .gte('created_at', startOfMonth);
+
+                    if (!leadsError && leadsCount !== null) {
+                        totalLeads += leadsCount;
+                    }
 
                     // Fetch Revenue (Orders)
-                    const ordersQ = query(
-                        collection(db, 'orders'),
-                        where('tenantId', 'in', chunk),
-                        where('status', 'in', ['paid', 'completed']),
-                        where('createdAt', '>=', startTimestamp)
-                    );
-                    const ordersSnap = await getDocs(ordersQ);
-                    ordersSnap.forEach(doc => {
-                        totalRevenue += (doc.data().total || 0);
-                    });
+                    const { data: ordersData, error: ordersError } = await supabase
+                        .from('orders')
+                        .select('total')
+                        .in('tenant_id', chunk)
+                        .in('status', ['paid', 'completed'])
+                        .gte('created_at', startOfMonth);
+
+                    if (!ordersError && ordersData) {
+                        ordersData.forEach(doc => {
+                            totalRevenue += (doc.total || 0);
+                        });
+                    }
                 }
 
-                setAggregatedMetrics(prev => ({
-                    ...prev,
-                    totalLeads,
-                    totalRevenue,
-                }));
+                if (isMounted) {
+                    setAggregatedMetrics(prev => ({
+                        ...prev,
+                        totalLeads,
+                        totalRevenue,
+                    }));
+                }
             } catch (err) {
+                if (!isMounted) return;
                 console.error('Error aggregating async agency metrics:', err);
             }
         };
 
         aggregateAsyncMetrics();
-        // Refresh every 5 minutes or when subClients change significantly
+        // Refresh every 5 minutes
         const interval = setInterval(aggregateAsyncMetrics, 5 * 60 * 1000);
-        return () => clearInterval(interval);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, [subClients]);
 
     // Fetch recent activity
     useEffect(() => {
         if (!agencyTenantId) return;
 
+        let isMounted = true;
+
         const fetchActivity = async () => {
             try {
-                const q = query(
-                    collection(db, 'agencyActivity'),
-                    where('agencyTenantId', '==', agencyTenantId)
-                );
+                const { data, error } = await supabase
+                    .from('agency_activity')
+                    .select('*')
+                    .eq('agency_tenant_id', agencyTenantId)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
 
-                const snapshot = await getDocs(q);
+                if (!isMounted) return;
+
+                if (error) throw error;
+
                 const activities: ActivityEvent[] = [];
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    activities.push({
-                        id: doc.id,
-                        type: data.type,
-                        clientId: data.clientTenantId,
-                        clientName: resolveProjectName(data.clientName),
-                        description: data.description || getActivityDescription(data),
-                        timestamp: data.timestamp?.toDate() || new Date(),
-                        userId: data.createdBy,
-                        userName: data.createdByName,
-                        metadata: data.metadata,
+                if (data) {
+                    data.forEach((doc: any) => {
+                        activities.push({
+                            id: doc.id,
+                            type: doc.type,
+                            clientId: doc.client_tenant_id || doc.clientTenantId,
+                            clientName: resolveProjectName(doc.client_name || doc.clientName),
+                            description: doc.description || getActivityDescription(doc),
+                            timestamp: new Date(doc.created_at || doc.timestamp),
+                            userId: doc.created_by || doc.createdBy,
+                            userName: doc.created_by_name || doc.createdByName,
+                            metadata: doc.metadata,
+                        });
                     });
-                });
+                }
 
-                // Sort by most recent first
-                activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-                // Keep only last 50
-                setRecentActivity(activities.slice(0, 50));
+                setRecentActivity(activities);
             } catch (err: any) {
+                if (!isMounted) return;
                 // Suppress permission errors silently (expected for non-agency users)
-                if (err?.code !== 'permission-denied') {
+                if (err?.code !== '42501') { // 42501 is Postgres Insufficient Privilege
                     console.warn('Error fetching activity:', err);
                 }
             }
@@ -385,7 +427,10 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
         // Refresh activity every 30 seconds
         const interval = setInterval(fetchActivity, 30000);
-        return () => clearInterval(interval);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, [agencyTenantId]);
 
     // Get client metrics summary
@@ -403,13 +448,20 @@ export function useAgencyMetrics(agencyTenantId: string) {
         const limits = client.limits;
 
         const usagePercentages = {
-            projects: limits.maxProjects > 0 ? (usage.projectCount / limits.maxProjects) * 100 : 0,
-            storage: limits.maxStorageGB > 0 ? (usage.storageUsedGB / limits.maxStorageGB) * 100 : 0,
-            aiCredits: limits.maxAiCredits > 0 ? (usage.aiCreditsUsed / limits.maxAiCredits) * 100 : 0,
-            users: limits.maxUsers > 0 ? (usage.userCount / limits.maxUsers) * 100 : 0,
+            projects: limits?.maxProjects > 0 ? (usage.projectCount / limits.maxProjects) * 100 : 0,
+            storage: limits?.maxStorageGB > 0 ? (usage.storageUsedGB / limits.maxStorageGB) * 100 : 0,
+            aiCredits: limits?.maxAiCredits > 0 ? (usage.aiCreditsUsed / limits.maxAiCredits) * 100 : 0,
+            users: limits?.maxUsers > 0 ? (usage.userCount / limits.maxUsers) * 100 : 0,
         };
 
         const clientAlerts = resourceAlerts.filter(alert => alert.clientId === clientId);
+
+        let lastActiveAt: Date | undefined;
+        if (client.lastActiveAt) {
+            lastActiveAt = typeof client.lastActiveAt === 'string' 
+                ? new Date(client.lastActiveAt) 
+                : new Date((client.lastActiveAt as any).seconds * 1000);
+        }
 
         return {
             clientId: client.id,
@@ -420,15 +472,15 @@ export function useAgencyMetrics(agencyTenantId: string) {
             limits,
             usagePercentages,
             alerts: clientAlerts,
-            lastActiveAt: client.lastActiveAt ? new Date(client.lastActiveAt.seconds * 1000) : undefined,
+            lastActiveAt,
             mrr: client.billing?.mrr,
         };
     }, [subClients, resourceAlerts]);
 
     // Manual refresh
     const refreshMetrics = useCallback(async () => {
-        // Trigger a re-fetch by updating the query
-        // The real-time listener will handle the update
+        // Since we decoupled the main query to a useEffect with local state update
+        // We could just trigger a state change, but usually realtime handles this.
         return Promise.resolve();
     }, []);
 
@@ -457,17 +509,17 @@ export function useAgencyMetrics(agencyTenantId: string) {
 function getActivityDescription(data: any): string {
     switch (data.type) {
         case 'client_created':
-            return `Nuevo cliente creado: ${data.clientName}`;
+            return `Nuevo cliente creado: ${data.client_name || data.clientName}`;
         case 'client_updated':
-            return `Cliente actualizado: ${data.clientName}`;
+            return `Cliente actualizado: ${data.client_name || data.clientName}`;
         case 'report_generated':
-            return `Reporte generado para ${data.clientName || 'múltiples clientes'}`;
+            return `Reporte generado para ${data.client_name || data.clientName || 'múltiples clientes'}`;
         case 'payment_received':
-            return `Pago recibido de ${data.clientName}`;
+            return `Pago recibido de ${data.client_name || data.clientName}`;
         case 'project_created':
-            return `Nuevo proyecto creado en ${data.clientName}`;
+            return `Nuevo proyecto creado en ${data.client_name || data.clientName}`;
         case 'project_published':
-            return `Proyecto publicado en ${data.clientName}`;
+            return `Proyecto publicado en ${data.client_name || data.clientName}`;
         default:
             return 'Actividad registrada';
     }

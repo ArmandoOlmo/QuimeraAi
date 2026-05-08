@@ -102,7 +102,7 @@ const EcommerceDashboard: React.FC = () => {
     const [showAllProjects, setShowAllProjects] = useState(false);
 
     // UserId seguro
-    const userId = user?.uid;
+    const userId = user?.id;
 
     // Determinar qué proyecto usar para ecommerce
     const effectiveProjectId = selectedProjectId || activeProjectId;

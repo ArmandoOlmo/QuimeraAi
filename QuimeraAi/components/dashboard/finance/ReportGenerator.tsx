@@ -93,12 +93,12 @@ ${report.data.expenses.map(e => `  ${e.category}: $${e.amount.toFixed(2)}`).join
 Write a 3-paragraph executive summary: 1) Financial health overview, 2) Key observations about income/expenses, 3) Recommendations.
 Keep it professional. Language: ${t('accounting.insightsPromptLang', 'English')}.`;
 
-            const resp = await generateContentViaProxy(activeProject?.id || 'accounting', prompt, 'gemini-2.5-flash', { temperature: 0.4 }, user.uid);
+            const resp = await generateContentViaProxy(activeProject?.id || 'accounting', prompt, 'gemini-2.5-flash', { temperature: 0.4 }, user.id);
             setAiNarrative(extractTextFromResponse(resp));
-            logApiCall({ userId: user.uid, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-report-narrative', success: true });
+            logApiCall({ userId: user.id, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-report-narrative', success: true });
         } catch (err: any) {
             console.error('[ReportGenerator] AI narrative error:', err);
-            logApiCall({ userId: user.uid, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-report-narrative', success: false, errorMessage: err.message });
+            logApiCall({ userId: user.id, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-report-narrative', success: false, errorMessage: err.message });
         } finally { setIsNarrating(false); }
     }, [user, activeProject, report, reportType, t]);
 

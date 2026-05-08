@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FooterData, SocialPlatform, FontSize } from '../types';
 import { Twitter, Github, Facebook, Instagram, Linkedin, MapPin, Phone, Mail, Youtube, Music, Pin, MessageCircle, Send, Ghost, Gamepad2, AtSign } from 'lucide-react';
 import BusinessHours from './BusinessHours';
-import { db, doc, getDoc } from '../firebase';
+import { supabase } from '../supabase';
 import { getNeonGlowStyles } from '../utils/colorUtils';
 
 // Quimera logo URL for the badge
@@ -55,10 +56,31 @@ const Footer: React.FC<FooterData & {
   companyName, tagline, copyright, // Accept alternative prop names from editor
   footerVariant = 'classic', cardGlow
 }) => {
-    // Use alternative prop names if original ones are not provided
-    const actualTitle = title || companyName;
-    const actualDescription = description || tagline;
-    const actualCopyrightText = copyrightText || copyright;
+  const { i18n } = useTranslation();
+  
+  const resolveText = (text: any) => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    if (typeof text === 'object' && text !== null) {
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      return text[preferred] || text.es || text.en || Object.values(text)[0] || '';
+    }
+    return String(text);
+  };
+
+  // Use alternative prop names if original ones are not provided, and resolve i18n objects
+  const actualTitle = resolveText(title || companyName);
+  const actualDescription = resolveText(description || tagline);
+  const actualCopyrightText = resolveText(copyrightText || copyright);
+  
+  const resolvedLinkColumns = (linkColumns || []).map(column => ({
+    ...column,
+    title: resolveText(column.title),
+    links: (column.links || []).map(link => ({
+      ...link,
+      text: resolveText(link.text)
+    }))
+  }));
 
     // Get global app logo
     const { logoUrl: quimeraLogoUrl } = useAppLogo();
@@ -76,11 +98,15 @@ const Footer: React.FC<FooterData & {
       // Fetch tenant doc to check for White Label branding
       const checkTenantBranding = async () => {
         try {
-          const tenantRef = doc(db, 'tenants', `tenant_${userId}`);
-          const tenantSnap = await getDoc(tenantRef);
-          if (tenantSnap.exists()) {
-            const data = tenantSnap.data();
-            if (data?.branding?.companyName || data?.branding?.logoUrl) {
+          const { data, error } = await supabase
+            .from('tenants')
+            .select('branding')
+            .eq('owner_user_id', userId)
+            .limit(1);
+            
+          if (!error && data && data.length > 0) {
+            const branding = data[0].branding as any;
+            if (branding?.companyName || branding?.logoUrl) {
               setAutoHideBranding(true);
             }
           }
@@ -204,7 +230,7 @@ const Footer: React.FC<FooterData & {
               )}
             </div>
 
-            {linkColumns.map((column, index) => (
+            {resolvedLinkColumns.map((column, index) => (
               <div key={index} className="lg:col-span-2">
                 <h4 className="font-semibold text-site-heading mb-4 font-header" style={{ color: actualColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{column.title}</h4>
                 <ul className="space-y-2 font-body">

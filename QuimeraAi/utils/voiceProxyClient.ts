@@ -1,12 +1,12 @@
 /**
  * Voice Proxy Client
  * 
- * Client-side utility for interacting with Google Cloud TTS through our secure proxy.
- * This allows the public landing chatbot to use high-quality Google voices
- * without exposing API keys.
+ * Client-side utility for TTS and voice chat through the Supabase Edge Function.
+ * Routes through OpenRouter for AI, no Firebase dependency.
  */
 
-const VOICE_PROXY_BASE_URL = 'https://us-central1-quimeraai.cloudfunctions.net';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const VOICE_PROXY_BASE_URL = `${SUPABASE_URL}/functions/v1`;
 
 export interface TTSOptions {
     voiceName?: string;

@@ -3,15 +3,11 @@
  * 
  * Client-side utilities for managing subdomains:
  * - Username validation (format, reserved words, uniqueness)
- * - Claiming/releasing subdomains in Firestore
+ * - Claiming/releasing subdomains in Supabase
  * - Subdomain status queries
  */
 
-import { 
-    doc, getDoc, setDoc, deleteDoc, updateDoc, 
-    collection, query, where, getDocs, limit, serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 
 // =============================================================================
 // CONSTANTS
@@ -46,6 +42,7 @@ export interface SubdomainRecord {
     createdAt: any;
     updatedAt?: any;
     displayName?: string;
+    slug?: string;
 }
 
 export interface ValidationResult {
@@ -58,7 +55,7 @@ export interface ValidationResult {
 // =============================================================================
 
 /**
- * Validate username format (synchronous, no Firestore calls)
+ * Validate username format (synchronous, no database calls)
  */
 export function validateUsernameFormat(username: string): ValidationResult {
     if (!username || username.trim().length === 0) {
@@ -91,7 +88,7 @@ export function validateUsernameFormat(username: string): ValidationResult {
 }
 
 /**
- * Check if a username is available (async - checks Firestore)
+ * Check if a username is available (async - checks Supabase)
  */
 export async function isUsernameAvailable(username: string, currentUserId?: string): Promise<boolean> {
     const normalized = username.toLowerCase().trim();
@@ -101,14 +98,20 @@ export async function isUsernameAvailable(username: string, currentUserId?: stri
     if (!formatCheck.valid) return false;
 
     try {
-        // Check /subdomains collection
-        const subdomainRef = doc(db, 'subdomains', normalized);
-        const subdomainSnap = await getDoc(subdomainRef);
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('owner_user_id')
+            .eq('slug', normalized)
+            .maybeSingle();
+            
+        if (error) {
+            console.error('[SubdomainService] Error checking availability:', error);
+            return false;
+        }
         
-        if (subdomainSnap.exists()) {
-            const data = subdomainSnap.data();
+        if (data) {
             // Available if it belongs to the current user (they're re-checking their own)
-            return data.userId === currentUserId;
+            return data.owner_user_id === currentUserId;
         }
 
         return true;
@@ -141,12 +144,12 @@ export async function validateUsername(
 }
 
 // =============================================================================
-// FIRESTORE OPERATIONS
+// SUPABASE OPERATIONS
 // =============================================================================
 
 /**
  * Claim a subdomain for a user
- * Creates entry in /subdomains and updates user document
+ * Updates the user's primary tenant with the new slug
  */
 export async function claimSubdomain(
     username: string,
@@ -163,26 +166,32 @@ export async function claimSubdomain(
     }
 
     try {
-        // Release any existing subdomain for this user first
-        await releaseSubdomainForUser(userId);
+        // Find the user's primary tenant
+        const { data: tenants, error: fetchError } = await supabase
+            .from('tenants')
+            .select('id')
+            .eq('owner_user_id', userId)
+            .limit(1);
 
-        // Create subdomain record
-        const subdomainRef = doc(db, 'subdomains', normalized);
-        await setDoc(subdomainRef, {
-            userId,
-            projectId,
-            type,
-            status: 'active',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        } satisfies Omit<SubdomainRecord, 'displayName'>);
+        if (fetchError) throw fetchError;
 
-        // Update user document
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, {
-            username: normalized,
-            ...(projectId ? { defaultProjectId: projectId } : {}),
-        });
+        if (tenants && tenants.length > 0) {
+            // Update existing tenant's slug
+            const { error: updateError } = await supabase
+                .from('tenants')
+                .update({ 
+                    slug: normalized,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', tenants[0].id);
+                
+            if (updateError) throw updateError;
+        } else {
+            // User doesn't have a tenant yet, shouldn't happen with normal flow,
+            // but just in case, we could create one or return an error.
+            console.error('[SubdomainService] User does not have a tenant to attach slug to.');
+            return { success: false, error: 'Usuario no tiene un workspace válido.' };
+        }
 
         console.log(`[SubdomainService] Claimed '${normalized}' for user ${userId}`);
         return { success: true };
@@ -194,6 +203,8 @@ export async function claimSubdomain(
 
 /**
  * Update which project is shown on a user's subdomain
+ * (In the Supabase model, this might not be needed directly on the tenant if projects are separate,
+ * but keeping signature for backwards compatibility if needed, or we might need to update a 'default_project' field on tenant)
  */
 export async function updateSubdomainProject(
     username: string,
@@ -203,14 +214,24 @@ export async function updateSubdomainProject(
     const normalized = username.toLowerCase().trim();
 
     try {
-        const subdomainRef = doc(db, 'subdomains', normalized);
-        await updateDoc(subdomainRef, {
-            projectId,
-            updatedAt: serverTimestamp(),
-        });
+        // Update user's preferences to set default project
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('preferences')
+            .eq('id', userId)
+            .single();
 
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, { defaultProjectId: projectId });
+        if (userError && userError.code !== 'PGRST116') throw userError;
+
+        const currentPrefs = user?.preferences || {};
+        const updatedPrefs = { ...currentPrefs, defaultProjectId: projectId };
+
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ preferences: updatedPrefs })
+            .eq('id', userId);
+
+        if (updateError) throw updateError;
 
         return { success: true };
     } catch (error: any) {
@@ -224,12 +245,20 @@ export async function updateSubdomainProject(
  */
 export async function releaseSubdomainForUser(userId: string): Promise<void> {
     try {
-        const subdomainsRef = collection(db, 'subdomains');
-        const q = query(subdomainsRef, where('userId', '==', userId), limit(5));
-        const snap = await getDocs(q);
+        // In the new model, releasing a subdomain just means generating a random slug or appending a timestamp
+        const { data: tenants, error: fetchError } = await supabase
+            .from('tenants')
+            .select('id, slug')
+            .eq('owner_user_id', userId);
 
-        for (const docSnap of snap.docs) {
-            await deleteDoc(docSnap.ref);
+        if (fetchError) throw fetchError;
+
+        for (const tenant of tenants || []) {
+            const tempSlug = `released-${tenant.id.substring(0, 8)}-${Date.now()}`;
+            await supabase
+                .from('tenants')
+                .update({ slug: tempSlug })
+                .eq('id', tenant.id);
         }
     } catch (error) {
         console.error('[SubdomainService] Error releasing subdomains:', error);
@@ -241,9 +270,24 @@ export async function releaseSubdomainForUser(userId: string): Promise<void> {
  */
 export async function getSubdomainRecord(username: string): Promise<SubdomainRecord | null> {
     try {
-        const ref = doc(db, 'subdomains', username.toLowerCase().trim());
-        const snap = await getDoc(ref);
-        return snap.exists() ? (snap.data() as SubdomainRecord) : null;
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('slug', username.toLowerCase().trim())
+            .maybeSingle();
+
+        if (error || !data) return null;
+
+        return {
+            userId: data.owner_user_id,
+            projectId: null, // Note: We don't store default projectId on tenant anymore, it's on user preferences or inferred
+            type: data.type === 'agency_client' ? 'agency' : 'user',
+            status: data.status as any,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            displayName: data.name,
+            slug: data.slug
+        };
     } catch (error) {
         console.error('[SubdomainService] Error getting record:', error);
         return null;
@@ -255,19 +299,15 @@ export async function getSubdomainRecord(username: string): Promise<SubdomainRec
  */
 export async function getUserSubdomain(userId: string): Promise<string | null> {
     try {
-        const subdomainsRef = collection(db, 'subdomains');
-        const q = query(
-            subdomainsRef, 
-            where('userId', '==', userId), 
-            where('type', '==', 'user'),
-            limit(1)
-        );
-        const snap = await getDocs(q);
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('slug')
+            .eq('owner_user_id', userId)
+            .limit(1);
+            
+        if (error || !data || data.length === 0) return null;
         
-        if (!snap.empty) {
-            return snap.docs[0].id; // The document ID is the subdomain name
-        }
-        return null;
+        return data[0].slug;
     } catch (error) {
         console.error('[SubdomainService] Error getting user subdomain:', error);
         return null;

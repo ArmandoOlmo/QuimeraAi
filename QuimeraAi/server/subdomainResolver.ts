@@ -2,12 +2,28 @@
  * Subdomain Resolver (Server-Side)
  * 
  * Resolves user subdomains (username.quimera.ai) to their associated projects.
- * Uses Firebase Admin SDK for server-side Firestore access.
+ * Uses Supabase Admin client for server-side database access.
  * Includes caching for performance.
  */
 
-import { getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+// Initialize Supabase Admin client
+let supabaseAdmin: SupabaseClient;
+
+function initializeSupabase() {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        console.error('[SubdomainResolver] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+        throw new Error('Supabase configuration missing for subdomain resolver');
+    }
+
+    supabaseAdmin = createClient(url, key);
+}
+
+initializeSupabase();
 
 // =============================================================================
 // TYPES
@@ -70,7 +86,7 @@ export function extractUserSubdomain(hostname: string): string | null {
 }
 
 /**
- * Resolve a username to a project using Firestore
+ * Resolve a username to a project using Supabase
  * Returns null if user not found or has no projects
  */
 export async function resolveUserSubdomain(username: string): Promise<SubdomainResolution | null> {
@@ -82,43 +98,51 @@ export async function resolveUserSubdomain(username: string): Promise<SubdomainR
   }
 
   try {
-    const db = getFirestore(getApps()[0]);
-
     console.log(`[SubdomainResolver] Looking up username '${username}'...`);
 
-    // Query users collection for matching username
-    const usersRef = db.collection('users');
-    const snapshot = await usersRef.where('username', '==', username).limit(1).get();
+    // Query users table for matching username
+    // Username might be stored in the 'name' column or a 'username' column
+    const { data: users, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email, preferences')
+      .or(`name.eq.${username},preferences->>username.eq.${username}`)
+      .limit(1);
 
-    if (snapshot.empty) {
+    if (userError || !users || users.length === 0) {
       console.log(`[SubdomainResolver] Username '${username}' not found`);
       cache.set(username, { data: null, timestamp: Date.now() });
       return null;
     }
 
-    const userDoc = snapshot.docs[0];
-    const userData = userDoc.data();
-    const userId = userDoc.id;
+    const userData = users[0];
+    const userId = userData.id;
 
-    // Try to get default/primary project
-    let projectId = userData.defaultProjectId || userData.primaryProjectId;
+    // Try to get the user's primary/default project
+    let projectId: string | null = userData.preferences?.defaultProjectId || null;
 
     if (!projectId) {
-      // Fallback: get first project from publicStores that belongs to this user
-      const publicStoresRef = db.collection('publicStores');
-      const storeSnapshot = await publicStoresRef
-        .where('userId', '==', userId)
-        .limit(1)
-        .get();
+      // Fallback: get the first published project belonging to this user
+      const { data: projects } = await supabaseAdmin
+        .from('projects')
+        .select('id')
+        .eq('user_id', userId)
+        .not('published_data', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(1);
 
-      if (!storeSnapshot.empty) {
-        projectId = storeSnapshot.docs[0].id;
+      if (projects && projects.length > 0) {
+        projectId = projects[0].id;
       } else {
-        // Last resort: get first project from user's subcollection
-        const projectsRef = db.collection('users').doc(userId).collection('projects');
-        const projectsSnapshot = await projectsRef.limit(1).get();
-        if (!projectsSnapshot.empty) {
-          projectId = projectsSnapshot.docs[0].id;
+        // Last resort: get any project
+        const { data: anyProjects } = await supabaseAdmin
+          .from('projects')
+          .select('id')
+          .eq('user_id', userId)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+
+        if (anyProjects && anyProjects.length > 0) {
+          projectId = anyProjects[0].id;
         }
       }
     }
@@ -133,7 +157,7 @@ export async function resolveUserSubdomain(username: string): Promise<SubdomainR
       projectId,
       userId,
       username,
-      projectName: userData.displayName || username,
+      projectName: userData.name || username,
     };
 
     console.log(`[SubdomainResolver] Resolved '${username}' -> Project ${projectId}`);

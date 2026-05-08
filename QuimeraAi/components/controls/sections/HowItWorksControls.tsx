@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -39,9 +39,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <Input label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(val) => setNestedData('howItWorks.title', val)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.howItWorks?.title} onChange={(val) => setNestedData('howItWorks.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.howItWorks?.titleFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(val) => setNestedData('howItWorks.description', val)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.howItWorks?.description} onChange={(val) => setNestedData('howItWorks.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.howItWorks?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('howItWorks.descriptionFontSize', v)} />
       </div>
 
@@ -77,7 +77,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               <Trash2 size={14} />
             </button>
           </div>
-          <Input
+          <I18nInput
             placeholder="Title"
             value={item.title}
             onChange={(val) => setNestedData(`howItWorks.items.${index}.title`, val)}

@@ -9,12 +9,8 @@ import {
 } from '../../types';
 import { isOwner, determineRole } from '../../constants/roles';
 import { defaultPrompts } from '../../data/defaultPrompts';
-import {
-    db, doc, setDoc, updateDoc, deleteDoc, getDoc,
-    collection, getDocs, addDoc, query, orderBy, serverTimestamp
-} from '../../firebase';
-import { updateProfile } from '../../firebase';
-import type { User } from '../../firebase';
+import { supabase } from '../../supabase';
+import type { User } from '../../firebase'; // Note: User might come from AuthContext
 
 interface UseEditorAdminParams {
     user: User | null;
@@ -38,10 +34,19 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
     // ─── User Management ───
 
     const fetchAllUsers = async () => {
-        const usersCol = collection(db, 'users');
-        const userSnapshot = await getDocs(usersCol);
-        const userList = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserDocument));
-        setAllUsers(userList);
+        const { data, error } = await supabase.from('users').select('*');
+        if (!error && data) {
+            setAllUsers(data.map(u => ({
+                id: u.id,
+                uid: u.id,
+                email: u.email,
+                name: u.name,
+                role: u.role,
+                createdAt: u.created_at,
+                photoURL: u.photo_url,
+                isOnboardingComplete: u.is_onboarding_complete
+            } as UserDocument)));
+        }
     };
 
     const updateUserRole = async (userId: string, newRole: UserRole) => {
@@ -61,8 +66,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
         }
 
         try {
-            const userDocRef = doc(db, 'users', userId);
-            await updateDoc(userDocRef, { role: newRole });
+            await supabase.from('users').update({ role: newRole }).eq('id', userId);
             setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } catch (error) {
             console.error('Error updating role:', error);
@@ -76,8 +80,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
             throw new Error('No se puede eliminar al Owner');
         }
 
-        const userDocRef = doc(db, 'users', userId);
-        await deleteDoc(userDocRef);
+        await supabase.from('users').delete().eq('id', userId);
         setAllUsers(prev => prev.filter(u => u.id !== userId));
     };
 
@@ -95,18 +98,15 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
                 throw new Error('Ya existe un usuario con este email');
             }
 
-            const newAdminDoc = {
+            await supabase.from('pending_admins').insert([{
                 email,
                 name,
-                photoURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3f3f46&color=e4e4e7`,
                 role: determineRole(email, role),
-                createdBy: userDocument?.email,
-                createdAt: serverTimestamp()
-            };
-
-            const usersCol = collection(db, 'users');
-            await addDoc(usersCol, newAdminDoc);
-            await fetchAllUsers();
+                created_at: new Date().toISOString(),
+                created_by: userDocument?.email
+            }]);
+            
+            // Re-fetch handled independently or we can fetch again if we have a view for pending admins
         } catch (error) {
             console.error('Error creating admin:', error);
             throw error;
@@ -117,11 +117,13 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
         if (!user || !userDocument) return;
 
         try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, { name, photoURL });
-            await updateProfile(user, { displayName: name, photoURL: photoURL });
+            await supabase.from('users').update({ 
+                name, 
+                photo_url: photoURL 
+            }).eq('id', user.id);
+            
             setUserDocument(prev => prev ? { ...prev, name, photoURL } : null);
-            setAllUsers(prev => prev.map(u => u.id === user.uid ? { ...u, name, photoURL } : u));
+            setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u, name, photoURL } : u));
         } catch (error) {
             console.error("Error updating profile:", error);
             throw error;
@@ -134,19 +136,18 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
         }
 
         try {
-            const userDocRef = doc(db, 'users', userId);
-            const { id, uid, email, role, ...updatableData } = data as any;
-            await updateDoc(userDocRef, updatableData);
-            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatableData } : u));
+            const updateData: any = {};
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.email !== undefined) updateData.email = data.email;
+            if (data.photoURL !== undefined) updateData.photo_url = data.photoURL;
+            if (data.isOnboardingComplete !== undefined) updateData.is_onboarding_complete = data.isOnboardingComplete;
+            if (data.role !== undefined) updateData.role = data.role;
 
-            if (user && userId === user.uid) {
-                setUserDocument(prev => prev ? { ...prev, ...updatableData } : null);
-                if (updatableData.name || updatableData.photoURL) {
-                    await updateProfile(user, {
-                        displayName: updatableData.name || user.displayName,
-                        photoURL: updatableData.photoURL || user.photoURL
-                    });
-                }
+            await supabase.from('users').update(updateData).eq('id', userId);
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
+
+            if (user && userId === user.id) {
+                setUserDocument(prev => prev ? { ...prev, ...data } : null);
             }
         } catch (error) {
             console.error("Error updating user details:", error);
@@ -158,11 +159,26 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const fetchTenants = async () => {
         try {
-            const tenantsCol = collection(db, 'tenants');
-            const q = query(tenantsCol, orderBy('createdAt', 'desc'));
-            const tenantSnapshot = await getDocs(q);
-            const tenantList = tenantSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tenant));
-            setTenants(tenantList);
+            const { data } = await supabase.from('tenants').select('*').order('created_at', { ascending: false });
+            if (data) {
+                setTenants(data.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    name: t.name,
+                    email: t.email,
+                    companyName: t.company_name,
+                    status: t.status,
+                    createdAt: t.created_at,
+                    subscriptionPlan: t.subscription_plan,
+                    limits: t.limits,
+                    usage: t.usage,
+                    ownerUserId: t.owner_user_id,
+                    memberUserIds: t.member_user_ids || [],
+                    projectIds: t.project_ids || [],
+                    settings: t.settings,
+                    billingInfo: t.billing_info,
+                } as unknown as Tenant)));
+            }
         } catch (error) {
             console.error("Error fetching tenants:", error);
         }
@@ -182,19 +198,25 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
     }): Promise<string> => {
         try {
             const tenantDoc = {
-                type: data.type, name: data.name, email: data.email,
-                companyName: data.companyName || '',
-                status: 'trial' as TenantStatus,
-                subscriptionPlan: data.plan,
+                type: data.type, 
+                name: data.name, 
+                email: data.email,
+                company_name: data.companyName || '',
+                status: 'trial',
+                subscription_plan: data.plan,
                 limits: getDefaultLimits(data.plan),
                 usage: { projectCount: 0, userCount: 1, storageUsedGB: 0, aiCreditsUsed: 0 },
-                ownerUserId: '', memberUserIds: [], projectIds: [],
-                createdAt: serverTimestamp(),
+                owner_user_id: user?.uid || null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
                 settings: { allowMemberInvites: data.type === 'agency', requireTwoFactor: false, brandingEnabled: false }
             };
-            const docRef = await addDoc(collection(db, 'tenants'), tenantDoc);
+            
+            const { data: newTenant, error } = await supabase.from('tenants').insert([tenantDoc]).select('*').single();
+            if (error) throw error;
+            
             await fetchTenants();
-            return docRef.id;
+            return newTenant.id;
         } catch (error) {
             console.error("Error creating tenant:", error);
             throw error;
@@ -203,8 +225,20 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
         try {
-            const tenantRef = doc(db, 'tenants', tenantId);
-            await updateDoc(tenantRef, data);
+            const updateData: any = { updated_at: new Date().toISOString() };
+            if (data.type !== undefined) updateData.type = data.type;
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.email !== undefined) updateData.email = data.email;
+            if (data.companyName !== undefined) updateData.company_name = data.companyName;
+            if (data.status !== undefined) updateData.status = data.status;
+            if (data.subscriptionPlan !== undefined) updateData.subscription_plan = data.subscriptionPlan;
+            if (data.limits !== undefined) updateData.limits = data.limits;
+            if (data.usage !== undefined) updateData.usage = data.usage;
+            if (data.ownerUserId !== undefined) updateData.owner_user_id = data.ownerUserId;
+            if (data.settings !== undefined) updateData.settings = data.settings;
+            if (data.billingInfo !== undefined) updateData.billing_info = data.billingInfo;
+
+            await supabase.from('tenants').update(updateData).eq('id', tenantId);
             setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, ...data } : t));
         } catch (error) {
             console.error("Error updating tenant:", error);
@@ -213,8 +247,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const deleteTenant = async (tenantId: string) => {
         try {
-            const tenantRef = doc(db, 'tenants', tenantId);
-            await deleteDoc(tenantRef);
+            await supabase.from('tenants').delete().eq('id', tenantId);
             setTenants(prev => prev.filter(t => t.id !== tenantId));
         } catch (error) {
             console.error("Error deleting tenant:", error);
@@ -223,8 +256,11 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const updateTenantStatus = async (tenantId: string, status: TenantStatus) => {
         try {
-            const tenantRef = doc(db, 'tenants', tenantId);
-            await updateDoc(tenantRef, { status, lastStatusChangeAt: serverTimestamp() });
+            await supabase.from('tenants').update({ 
+                status, 
+                last_status_change_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }).eq('id', tenantId);
             setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, status } : t));
         } catch (error) {
             console.error("Error updating tenant status:", error);
@@ -236,8 +272,10 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
             const tenant = tenants.find(t => t.id === tenantId);
             if (!tenant) return;
             const updatedLimits = { ...tenant.limits, ...limits };
-            const tenantRef = doc(db, 'tenants', tenantId);
-            await updateDoc(tenantRef, { limits: updatedLimits });
+            await supabase.from('tenants').update({ 
+                limits: updatedLimits,
+                updated_at: new Date().toISOString()
+            }).eq('id', tenantId);
             setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, limits: updatedLimits } : t));
         } catch (error) {
             console.error("Error updating tenant limits:", error);
@@ -263,25 +301,55 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const fetchAllPrompts = async () => {
         try {
-            const promptsCol = collection(db, 'prompts');
-            const q = query(promptsCol, orderBy('name', 'asc'));
-            const promptSnapshot = await getDocs(q);
+            const { data } = await supabase.from('prompts').select('*').order('name', { ascending: true });
 
-            if (promptSnapshot.empty) {
+            if (!data || data.length === 0) {
                 if (isAdmin()) {
                     console.log('No prompts found, seeding database with defaults...');
-                    const seedPromises = defaultPrompts.map(promptData => {
-                        const dataToSave = { ...promptData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-                        return addDoc(collection(db, 'prompts'), dataToSave);
-                    });
-                    await Promise.all(seedPromises);
-                    const newSnapshot = await getDocs(q);
-                    const promptList = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LLMPrompt));
-                    setPrompts(promptList);
+                    const now = new Date().toISOString();
+                    const seedData = defaultPrompts.map(promptData => ({
+                        name: promptData.name,
+                        description: promptData.description,
+                        template: promptData.template,
+                        variables: promptData.variables,
+                        tags: promptData.tags || [],
+                        is_system: promptData.isSystem || false,
+                        version: promptData.version || 1,
+                        created_at: now,
+                        updated_at: now
+                    }));
+                    
+                    await supabase.from('prompts').insert(seedData);
+                    
+                    const { data: newPrompts } = await supabase.from('prompts').select('*').order('name', { ascending: true });
+                    if (newPrompts) {
+                        setPrompts(newPrompts.map(p => ({
+                            id: p.id,
+                            name: p.name,
+                            description: p.description,
+                            template: p.template,
+                            variables: p.variables,
+                            tags: p.tags,
+                            isSystem: p.is_system,
+                            version: p.version,
+                            createdAt: p.created_at,
+                            updatedAt: p.updated_at
+                        } as LLMPrompt)));
+                    }
                 }
             } else {
-                const promptList = promptSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LLMPrompt));
-                setPrompts(promptList);
+                setPrompts(data.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    template: p.template,
+                    variables: p.variables,
+                    tags: p.tags,
+                    isSystem: p.is_system,
+                    version: p.version,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at
+                } as LLMPrompt)));
             }
         } catch (error) {
             console.error("Error fetching prompts:", error);
@@ -290,30 +358,37 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const savePrompt = async (promptData: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
         const { id, ...data } = promptData;
-        const collectionRef = collection(db, 'prompts');
+        const now = new Date().toISOString();
+        
+        const saveObj = {
+            name: data.name,
+            description: data.description,
+            template: data.template,
+            variables: data.variables,
+            tags: data.tags || [],
+            is_system: data.isSystem || false,
+            version: data.version || 1,
+            updated_at: now
+        };
+
         if (id) {
-            const promptDocRef = doc(collectionRef, id);
-            await updateDoc(promptDocRef, { ...data, updatedAt: serverTimestamp() });
+            await supabase.from('prompts').update(saveObj).eq('id', id);
         } else {
-            await addDoc(collectionRef, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+            await supabase.from('prompts').insert([{ ...saveObj, created_at: now }]);
         }
         await fetchAllPrompts();
     };
 
     const deletePrompt = async (promptId: string) => {
-        const promptDocRef = doc(db, 'prompts', promptId);
-        await deleteDoc(promptDocRef);
+        await supabase.from('prompts').delete().eq('id', promptId);
         await fetchAllPrompts();
     };
 
     const syncPrompts = async () => {
         try {
             console.log('🔄 Syncing default prompts...');
-            const promptsCol = collection(db, 'prompts');
-            const q = query(promptsCol);
-            const snapshot = await getDocs(q);
-            const dbPrompts = snapshot.docs.map(doc => doc.data() as LLMPrompt);
-            const dbPromptNames = new Set(dbPrompts.map(p => p.name));
+            const { data: dbPrompts } = await supabase.from('prompts').select('name');
+            const dbPromptNames = new Set((dbPrompts || []).map(p => p.name));
 
             const promptsToAdd = defaultPrompts.filter(dp => !dbPromptNames.has(dp.name));
 
@@ -323,20 +398,26 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
             }
 
             console.log(`Creating ${promptsToAdd.length} missing prompts...`);
-            const promises = promptsToAdd.map(promptData => {
-                const dataToSave = { ...promptData, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-                return addDoc(promptsCol, dataToSave);
-            });
+            const now = new Date().toISOString();
+            const insertData = promptsToAdd.map(promptData => ({
+                name: promptData.name,
+                description: promptData.description,
+                template: promptData.template,
+                variables: promptData.variables,
+                tags: promptData.tags || [],
+                is_system: promptData.isSystem || false,
+                version: promptData.version || 1,
+                created_at: now,
+                updated_at: now
+            }));
 
-            await Promise.all(promises);
+            await supabase.from('prompts').insert(insertData);
             console.log('✅ Prompts synced successfully.');
             await fetchAllPrompts();
         } catch (error) {
             console.error("❌ Error syncing prompts:", error);
         }
     };
-
-
 
     return {
         adminView, setAdminView,

@@ -91,7 +91,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ maxItems = 6 }) => {
                 // Fetch up to 5 recent leads per project (in parallel)
                 const promises = userProjects.map(async (project) => {
                     try {
-                        const leadsPath = `users/${user.uid}/projects/${project.id}/leads`;
+                        const leadsPath = `users/${user.id}/projects/${project.id}/leads`;
                         const q = query(
                             collection(db, leadsPath),
                             orderBy('createdAt', 'desc'),

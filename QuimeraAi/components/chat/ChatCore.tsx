@@ -2,12 +2,11 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import { AiAssistantConfig, Project, ChatAppearanceConfig, Lead, PageData, PageSection } from '../../types';
-import { LiveServerMessage, Modality } from '@google/genai';
 import { MessageSquare, Send, Mic, Loader2, Minimize2, PhoneOff, Sparkles, X, Calendar } from 'lucide-react';
 import { useSafeAuth } from '../../contexts/core/AuthContext';
 import { useSafeAI } from '../../contexts/ai';
 import { useSafeProject } from '../../contexts/project';
-import { getGoogleGenAI, isProxyMode } from '../../utils/genAiClient';
+import { isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy, generateMultimodalContentViaProxy } from '../../utils/geminiProxyClient';
 import { captureCurrentView } from '../../utils/visionUtils';
 import { logApiCall } from '../../services/apiLoggingService';
@@ -16,6 +15,7 @@ import { useWebChatConversation } from './hooks/useWebChatConversation';
 import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
 import type { GlobalChatbotPrompts } from '../../types';
 import { useCanAccessService } from '../../hooks/useServiceAvailability';
+import { Conversation, Role } from '@elevenlabs/client';
 
 // =============================================================================
 // INTERFACES
@@ -80,59 +80,6 @@ interface PreChatFormData {
     name: string;
     email: string;
     phone?: string;
-}
-
-// =============================================================================
-// AUDIO UTILITY FUNCTIONS
-// =============================================================================
-
-function base64ToBytes(base64: string) {
-    const binaryString = atob(base64);
-    const length = binaryString.length;
-    const bytes = new Uint8Array(length);
-    for (let i = 0; i < length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-}
-
-function bytesToBase64(bytes: Uint8Array) {
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-}
-
-async function decodeAudioData(
-    data: Uint8Array,
-    ctx: AudioContext,
-    sampleRate: number,
-    numChannels: number
-): Promise<AudioBuffer> {
-    const dataInt16 = new Int16Array(data.buffer);
-    const frameCount = dataInt16.length / numChannels;
-    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-    for (let channel = 0; channel < numChannels; channel++) {
-        const channelData = buffer.getChannelData(channel);
-        for (let i = 0; i < frameCount; i++) {
-            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-        }
-    }
-    return buffer;
-}
-
-function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
-    const buffer = new ArrayBuffer(float32Array.length * 2);
-    const view = new DataView(buffer);
-    let offset = 0;
-    for (let i = 0; i < float32Array.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, float32Array[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-    }
-    return buffer;
 }
 
 // =============================================================================
@@ -380,7 +327,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Ecommerce chat hook for order lookups and product info
     const canAccessEcommerce = useCanAccessService('ecommerce');
     const isEcommerceEnabled = canAccessEcommerce && (!!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled);
-    const projectOwnerId = project?.userId || (activeProject as any)?.userId || user?.uid;
+    const projectOwnerId = project?.userId || (activeProject as any)?.userId || user?.id;
     const {
         checkOrderStatus,
         getProductInfo,
@@ -397,7 +344,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         saveMessage: saveConversationMessage,
         updateParticipantInfo,
         linkToLead,
-    } = useWebChatConversation(projectIdForConversation, user?.uid);
+    } = useWebChatConversation(projectIdForConversation, user?.id);
 
     // Get lead capture config with defaults
     const rawLeadConfig = config.leadCaptureConfig || {
@@ -454,12 +401,6 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const inputAudioContextRef = useRef<AudioContext | null>(null);
-    const processorRef = useRef<ScriptProcessorNode | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
-    const nextStartTimeRef = useRef<number>(0);
-    const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
     const sessionRef = useRef<any>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const isConnectedRef = useRef(false);
@@ -843,7 +784,7 @@ ${suggestAvailableSlots()}
 
             // Analyze customer intent using LLM (if there's conversation history)
             const intentAnalysis = messages.length > 0
-                ? await analyzeCustomerIntent(messages, project?.id || 'chatbot', user?.uid)
+                ? await analyzeCustomerIntent(messages, project?.id || 'chatbot', user?.id)
                 : null;
 
             // Create conversation for Inbox with participant info
@@ -1281,7 +1222,7 @@ ${suggestAvailableSlots()}
             if (extracted.email) {
                 console.log('[ChatCore] 📧 Contact detected in message:', extracted);
                 const convText = newMessages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
-                const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.id || 'chatbot', user?.uid);
+                const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.id || 'chatbot', user?.id);
                 await updateParticipantInfo({ email: extracted.email, phone: extracted.phone || undefined });
                 if (onLeadCapture) {
                     const leadId = await onLeadCapture({
@@ -1373,7 +1314,7 @@ ${suggestAvailableSlots()}
                         temperature: 0.7,
                         maxOutputTokens: 2048
                     },
-                    user?.uid
+                    user?.id
                 );
 
                 botResponse = proxyResponse?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
@@ -1391,7 +1332,7 @@ ${suggestAvailableSlots()}
                         topP: 0.95,
                         maxOutputTokens: 2048
                     },
-                    user?.uid
+                    user?.id
                 );
 
                 botResponse = proxyResponse.response.candidates[0]?.content?.parts[0]?.text ||
@@ -1401,7 +1342,7 @@ ${suggestAvailableSlots()}
             // Log API call
             if (user && activeProject) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject.id,
                     model: 'gemini-2.5-flash',
                     feature: isEmbedded ? 'embedded-widget' : 'chatbot',
@@ -1430,7 +1371,7 @@ ${suggestAvailableSlots()}
             // Log failed API call
             if (user && activeProject) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject.id,
                     model: 'gemini-2.5-flash',
                     feature: isEmbedded ? 'embedded-widget' : 'chatbot',
@@ -1466,11 +1407,6 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     const startLiveSession = async () => {
-        if (hasApiKey === false) {
-            promptForKeySelection();
-            return;
-        }
-
         if (!config.enableLiveVoice) {
             alert(t('chatbotWidget.liveVoiceDisabled'));
             return;
@@ -1479,176 +1415,86 @@ ${suggestAvailableSlots()}
         setIsConnecting(true);
 
         try {
-            const ai = await getGoogleGenAI();
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-            const outputCtx = new AudioContextClass({ sampleRate: 24000 });
-            const inputCtx = new AudioContextClass({ sampleRate: 16000 });
-            audioContextRef.current = outputCtx;
-            inputAudioContextRef.current = inputCtx;
-            nextStartTimeRef.current = outputCtx.currentTime;
-
-            const sessionPromise = ai.live.connect({
-                model: 'gemini-3.1-flash-live-preview',
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    speechConfig: {
-                        voiceConfig: { prebuiltVoiceConfig: { voiceName: config.voiceName || 'Zephyr' } }
-                    },
-                    systemInstruction: buildSystemInstruction(),
-                    // Gemini 3.1 Flash Live: Unlimited session duration
-                    contextWindowCompression: { slidingWindow: {} },
-                    // Gemini 3.1 Flash Live: Auto-reconnect on WebSocket drop  
-                    sessionResumption: {},
-                    // NOTE: enableAffectiveDialog omitted — SDK bug serializes it
-                    // into generationConfig where the Live API server rejects it.
-                    // Enable transcription for both user input and model output
-                    inputAudioTranscription: {},
-                    outputAudioTranscription: {},
-                },
-                callbacks: {
-                    onopen: async () => {
-                        setIsConnecting(false);
-                        setIsLiveActive(true);
-                        isConnectedRef.current = true;
-
-                        // Send initial screen capture for visual context (dashboard mode only)
-                        if (!isEmbedded) {
-                            try {
-                                const screenCapture = await captureCurrentView();
-                                if (screenCapture && isConnectedRef.current) {
-                                    console.log('[ChatCore] 📸 Sending initial screen context for voice session');
-                                    const session = await sessionPromise;
-                                    session.sendRealtimeInput({
-                                        video: { mimeType: 'image/jpeg', data: screenCapture }
-                                    });
-                                }
-                            } catch (e) {
-                                console.warn('[ChatCore] Could not capture initial screen:', e);
-                            }
-                        }
+            const session = await Conversation.startSession({
+                agentId: '52ac360bd7d15d8bd5e86b214d14338adc732616468d4dc145ce3d12df400eb5',
+                onConnect: () => {
+                    setIsConnecting(false);
+                    setIsLiveActive(true);
+                    isConnectedRef.current = true;
+                    
+                    // Start visualizer interval
+                    if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
+                    visualizerIntervalRef.current = window.setInterval(() => {
+                        if (!isConnectedRef.current || !sessionRef.current) return;
+                        
                         try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            streamRef.current = stream;
-                            const source = inputCtx.createMediaStreamSource(stream);
-                            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
-                            processorRef.current = processor;
-                            processor.onaudioprocess = (e) => {
-                                if (!isConnectedRef.current) return;
-                                const inputData = e.inputBuffer.getChannelData(0);
-                                const pcm16 = floatTo16BitPCM(inputData);
-                                const base64Data = bytesToBase64(new Uint8Array(pcm16));
-                                sessionPromise.then(session => {
-                                    if (!isConnectedRef.current) return;
-                                    try {
-                                        session.sendRealtimeInput({
-                                            audio: { mimeType: 'audio/pcm;rate=16000', data: base64Data }
-                                        });
-                                    } catch (err) { }
-                                });
-                            };
-                            source.connect(processor);
-                            processor.connect(inputCtx.destination);
-                        } catch (micErr) {
-                            stopLiveSession();
-                            alert("No se pudo acceder al micrófono. Permite el acceso y recarga la página.");
+                            const volume = sessionRef.current.getOutputVolume() || 0;
+                            // scale volume (0.0 to 1.0) to visualizer levels
+                            const newLevels = Array.from({ length: 20 }, (_, i) => {
+                                const wave = Math.sin(Date.now() * 0.005 + i * 0.3) * (volume * 20) + 10;
+                                const noise = Math.random() * (volume * 10);
+                                return Math.max(4, wave + noise);
+                            });
+                            setVisualizerLevels(newLevels);
+                        } catch (e) {
+                            // ignore volume errors if session closed
                         }
-                    },
-                    onmessage: async (message: LiveServerMessage) => {
-                        const msg = message as any;
-
-                        if (message.serverContent?.interrupted) {
-                            activeSourcesRef.current.forEach(source => { try { source.stop(); } catch (e) { } });
-                            activeSourcesRef.current = [];
-                            if (audioContextRef.current) nextStartTimeRef.current = audioContextRef.current.currentTime;
-                            return;
-                        }
-
-                        // Accumulate user input transcription chunks (arrive word-by-word)
-                        if (msg.serverContent?.inputTranscript) {
-                            currentUserTranscriptRef.current += msg.serverContent.inputTranscript;
-                        }
-
-                        // Accumulate model output transcription chunks (arrive word-by-word)
-                        if (msg.serverContent?.outputTranscript) {
-                            currentModelResponseRef.current += msg.serverContent.outputTranscript;
-                        }
-
-                        // NOTE: modelTurn.parts[].text contains internal thinking/reasoning for native audio models.
-                        // We do NOT use it for transcript — outputTranscript above captures the actual spoken words.
-                        const modelParts = message.serverContent?.modelTurn?.parts;
-
-                        // On turn complete, push accumulated transcripts as full messages
-                        if (msg.serverContent?.turnComplete) {
-                            // Push accumulated user transcript
-                            if (currentUserTranscriptRef.current.trim()) {
-                                voiceTranscriptRef.current.push({ role: 'user', text: currentUserTranscriptRef.current.trim() });
-                                currentUserTranscriptRef.current = '';
-                            }
-                            // Push accumulated model transcript
-                            if (currentModelResponseRef.current.trim()) {
-                                voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
-                                currentModelResponseRef.current = '';
-                            }
-                        }
-
-                        // Handle Audio Output
-                        const audioData = modelParts?.[0]?.inlineData?.data;
-                        if (audioData && audioContextRef.current) {
-                            const ctx = audioContextRef.current;
-                            const bytes = base64ToBytes(audioData);
-                            const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
-                            const source = ctx.createBufferSource();
-                            source.buffer = buffer;
-                            source.connect(ctx.destination);
-                            const startTime = Math.max(nextStartTimeRef.current, ctx.currentTime);
-                            source.start(startTime);
-                            nextStartTimeRef.current = startTime + buffer.duration;
-                            activeSourcesRef.current.push(source);
-                            source.onended = () => { activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== source); };
-                        }
-                    },
-                    onclose: () => stopLiveSession(),
-                    onerror: () => { if (!isConnectedRef.current) return; }
+                    }, 80);
+                },
+                onDisconnect: () => {
+                    stopLiveSession();
+                },
+                onError: (error) => {
+                    console.error("ElevenLabs Session Error:", error);
+                    stopLiveSession();
+                },
+                onModeChange: (mode) => {
+                    if (mode === 'speaking') {
+                        // AI is speaking
+                    }
+                },
+                onMessage: (message) => {
+                    if (message.source === 'ai') {
+                        currentModelResponseRef.current += message.message + " ";
+                    } else if (message.source === 'user') {
+                        currentUserTranscriptRef.current += message.message + " ";
+                    }
                 }
             });
-            sessionRef.current = sessionPromise;
+
+            sessionRef.current = session;
+
         } catch (error) {
-            handleApiError(error);
             setIsConnecting(false);
+            console.error("ElevenLabs connection error:", error);
             alert("Error al iniciar sesión de voz.");
         }
     };
 
-    const stopLiveSession = () => {
+    const stopLiveSession = async () => {
         isConnectedRef.current = false;
-
-        // Stop Mic
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-            streamRef.current = null;
-        }
-        if (processorRef.current && inputAudioContextRef.current) {
-            processorRef.current.disconnect();
-            processorRef.current = null;
-        }
-        if (inputAudioContextRef.current) {
-            inputAudioContextRef.current.close();
-            inputAudioContextRef.current = null;
+        
+        if (visualizerIntervalRef.current) {
+            clearInterval(visualizerIntervalRef.current);
+            visualizerIntervalRef.current = null;
         }
 
-        // Stop Speakers
-        activeSourcesRef.current.forEach(source => {
-            try { source.stop(); } catch (e) { }
-        });
-        activeSourcesRef.current = [];
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-            audioContextRef.current = null;
-        }
-
-        // Close Session
+        // Close ElevenLabs Session
         if (sessionRef.current) {
+            try {
+                await sessionRef.current.endSession();
+            } catch (e) {
+                console.warn("Error ending session", e);
+            }
             sessionRef.current = null;
+        }
+
+        // Add accumulated transcripts to history
+        if (currentUserTranscriptRef.current.trim() !== '') {
+            voiceTranscriptRef.current.push({ role: 'user', text: currentUserTranscriptRef.current.trim() });
+        }
+        if (currentModelResponseRef.current.trim() !== '') {
+            voiceTranscriptRef.current.push({ role: 'model', text: currentModelResponseRef.current.trim() });
         }
 
         // Add voice transcription to chat messages

@@ -30,7 +30,7 @@ const OrdersView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { orders, isLoading, updateOrderStatus, addTrackingInfo } = useOrders(user?.uid || '', storeId);
+    const { orders, isLoading, updateOrderStatus, addTrackingInfo } = useOrders(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');

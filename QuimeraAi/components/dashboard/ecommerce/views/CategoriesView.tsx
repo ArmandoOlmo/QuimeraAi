@@ -25,8 +25,8 @@ const CategoriesView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { categories, isLoading, addCategory, updateCategory, deleteCategory } = useCategories(user?.uid || '', storeId);
-    const { products } = useProducts(user?.uid || '', storeId);
+    const { categories, isLoading, addCategory, updateCategory, deleteCategory } = useCategories(user?.id || '', storeId);
+    const { products } = useProducts(user?.id || '', storeId);
 
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);

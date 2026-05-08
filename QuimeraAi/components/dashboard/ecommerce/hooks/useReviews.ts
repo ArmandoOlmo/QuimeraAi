@@ -1,26 +1,12 @@
 /**
  * useReviews Hook
- * Hook para gestión y moderación de reseñas en el dashboard
+ * Hook para gestión y moderación de reseñas en el dashboard en Supabase
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    collection,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    doc,
-    updateDoc,
-    deleteDoc,
-    addDoc,
-    getDocs,
-    writeBatch,
-    serverTimestamp,
-    Timestamp,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
-import { Review, ReviewStatus, ReviewStats } from '../../../../types/ecommerce';
+import { supabase } from '../../../../supabase';
+import { Review, ReviewStatus } from '../../../../types/ecommerce';
+import { mapReviewFromDB, mapReviewToDB } from '../../../../utils/ecommerceMappers';
 
 export interface UseReviewsOptions {
     statusFilter?: ReviewStatus | 'all';
@@ -54,243 +40,147 @@ export const useReviews = (
     const { statusFilter = 'all', productFilter } = options;
 
     const [reviews, setReviews] = useState<Review[]>([]);
-    const [pendingReviews, setPendingReviews] = useState<Review[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Paths - use empty string if no storeId to prevent invalid queries
     const effectiveStoreId = storeId || '';
-    const reviewsPath = `users/${userId}/stores/${effectiveStoreId}/reviews`;
-    const pendingReviewsPath = `pendingReviews/${effectiveStoreId}/reviews`;
-    const publicReviewsPath = `publicStores/${effectiveStoreId}/reviews`;
 
-    // Load store reviews
+    const fetchReviews = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        setIsLoading(true);
+        let query = supabase
+            .from('store_reviews')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
+
+        if (statusFilter !== 'all') {
+            query = query.eq('status', statusFilter);
+        }
+
+        if (productFilter) {
+            query = query.eq('product_id', productFilter);
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) {
+            console.error('Error fetching reviews:', fetchError);
+            setError(fetchError.message);
+        } else {
+            setReviews((data || []).map(mapReviewFromDB));
+            setError(null);
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId, statusFilter, productFilter]);
+
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
+        fetchReviews();
 
-        // Build query
-        const reviewsRef = collection(db, reviewsPath);
-        let q = query(reviewsRef, orderBy('createdAt', 'desc'));
+        const channel = supabase.channel('store_reviews_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_reviews',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchReviews();
+                }
+            )
+            .subscribe();
 
-        if (statusFilter !== 'all') {
-            q = query(reviewsRef, where('status', '==', statusFilter), orderBy('createdAt', 'desc'));
-        }
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchReviews]);
 
-        if (productFilter) {
-            q = query(
-                reviewsRef,
-                where('productId', '==', productFilter),
-                orderBy('createdAt', 'desc')
-            );
-        }
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const reviewsData = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
-                    id: doc.id,
-                } as Review));
-                setReviews(reviewsData);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error loading reviews:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, storeId, statusFilter, productFilter, reviewsPath]);
-
-    // Load pending reviews (from customers)
-    useEffect(() => {
-        if (!userId || !effectiveStoreId) return;
-
-        const pendingRef = collection(db, pendingReviewsPath);
-        const q = query(pendingRef, orderBy('createdAt', 'desc'));
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const pendingData = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
-                    id: doc.id,
-                } as Review));
-                setPendingReviews(pendingData);
-            },
-            (err) => {
-                console.error('Error loading pending reviews:', err);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, storeId, pendingReviewsPath]);
+    // Separate pending reviews for convenience (since old implementation had them separate)
+    const pendingReviews = useMemo(() => {
+        return reviews.filter(r => r.status === 'pending');
+    }, [reviews]);
 
     // Stats
     const stats = useMemo(() => {
-        const allReviews = [...reviews, ...pendingReviews];
         return {
-            totalReviews: allReviews.length,
-            pendingCount: allReviews.filter((r) => r.status === 'pending').length + pendingReviews.length,
-            approvedCount: allReviews.filter((r) => r.status === 'approved').length,
-            rejectedCount: allReviews.filter((r) => r.status === 'rejected').length,
+            totalReviews: reviews.length,
+            pendingCount: reviews.filter((r) => r.status === 'pending').length,
+            approvedCount: reviews.filter((r) => r.status === 'approved').length,
+            rejectedCount: reviews.filter((r) => r.status === 'rejected').length,
         };
-    }, [reviews, pendingReviews]);
+    }, [reviews]);
 
     // Approve review
     const approveReview = useCallback(async (reviewId: string) => {
         try {
-            // Check if it's a pending review (from customer submission)
-            const pendingReview = pendingReviews.find((r) => r.id === reviewId);
-            
-            if (pendingReview) {
-                // Move from pending to approved
-                const batch = writeBatch(db);
-                
-                // Add to store reviews
-                const storeReviewRef = doc(collection(db, reviewsPath));
-                const reviewData = {
-                    ...pendingReview,
-                    status: 'approved' as ReviewStatus,
-                    updatedAt: serverTimestamp(),
-                };
-                delete (reviewData as any).id;
-                batch.set(storeReviewRef, reviewData);
-                
-                // Add to public reviews
-                const publicReviewRef = doc(db, publicReviewsPath, storeReviewRef.id);
-                batch.set(publicReviewRef, reviewData);
-                
-                // Delete from pending
-                batch.delete(doc(db, pendingReviewsPath, reviewId));
-                
-                await batch.commit();
-            } else {
-                // Update existing review status
-                const batch = writeBatch(db);
-                
-                batch.update(doc(db, reviewsPath, reviewId), {
-                    status: 'approved',
-                    updatedAt: serverTimestamp(),
-                });
-                
-                // Update or create in public
-                const review = reviews.find((r) => r.id === reviewId);
-                if (review) {
-                    const publicReviewData = {
-                        ...review,
-                        status: 'approved',
-                        updatedAt: serverTimestamp(),
-                    };
-                    batch.set(doc(db, publicReviewsPath, reviewId), publicReviewData, { merge: true });
-                }
-                
-                await batch.commit();
-            }
+            const { error } = await supabase
+                .from('store_reviews')
+                .update({ status: 'approved' })
+                .eq('id', reviewId);
+
+            if (error) throw error;
         } catch (err: any) {
             console.error('Error approving review:', err);
             throw new Error(err.message || 'Error al aprobar la reseña');
         }
-    }, [reviewsPath, publicReviewsPath, pendingReviewsPath, reviews, pendingReviews]);
+    }, []);
 
     // Reject review
     const rejectReview = useCallback(async (reviewId: string) => {
         try {
-            // Check if it's a pending review
-            const pendingReview = pendingReviews.find((r) => r.id === reviewId);
-            
-            if (pendingReview) {
-                // Move from pending to rejected in store reviews
-                const batch = writeBatch(db);
-                
-                const storeReviewRef = doc(collection(db, reviewsPath));
-                const reviewData = {
-                    ...pendingReview,
-                    status: 'rejected' as ReviewStatus,
-                    updatedAt: serverTimestamp(),
-                };
-                delete (reviewData as any).id;
-                batch.set(storeReviewRef, reviewData);
-                
-                // Delete from pending
-                batch.delete(doc(db, pendingReviewsPath, reviewId));
-                
-                await batch.commit();
-            } else {
-                // Update existing review
-                const batch = writeBatch(db);
-                
-                batch.update(doc(db, reviewsPath, reviewId), {
-                    status: 'rejected',
-                    updatedAt: serverTimestamp(),
-                });
-                
-                // Remove from public if exists
-                batch.delete(doc(db, publicReviewsPath, reviewId));
-                
-                await batch.commit();
-            }
+            const { error } = await supabase
+                .from('store_reviews')
+                .update({ status: 'rejected' })
+                .eq('id', reviewId);
+
+            if (error) throw error;
         } catch (err: any) {
             console.error('Error rejecting review:', err);
             throw new Error(err.message || 'Error al rechazar la reseña');
         }
-    }, [reviewsPath, publicReviewsPath, pendingReviewsPath, pendingReviews]);
+    }, []);
 
     // Delete review
     const deleteReview = useCallback(async (reviewId: string) => {
         try {
-            const batch = writeBatch(db);
-            
-            // Check if pending
-            const isPending = pendingReviews.find((r) => r.id === reviewId);
-            
-            if (isPending) {
-                batch.delete(doc(db, pendingReviewsPath, reviewId));
-            } else {
-                batch.delete(doc(db, reviewsPath, reviewId));
-                batch.delete(doc(db, publicReviewsPath, reviewId));
-            }
-            
-            await batch.commit();
+            const { error } = await supabase
+                .from('store_reviews')
+                .delete()
+                .eq('id', reviewId);
+
+            if (error) throw error;
         } catch (err: any) {
             console.error('Error deleting review:', err);
             throw new Error(err.message || 'Error al eliminar la reseña');
         }
-    }, [reviewsPath, publicReviewsPath, pendingReviewsPath, pendingReviews]);
+    }, []);
 
     // Respond to review
     const respondToReview = useCallback(async (reviewId: string, response: string) => {
         try {
-            const batch = writeBatch(db);
-            
-            const updateData = {
-                adminResponse: response,
-                adminResponseAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            
-            batch.update(doc(db, reviewsPath, reviewId), updateData);
-            
-            // Update public if approved
-            const review = reviews.find((r) => r.id === reviewId);
-            if (review?.status === 'approved') {
-                batch.update(doc(db, publicReviewsPath, reviewId), updateData);
-            }
-            
-            await batch.commit();
+            // Update the record; custom `admin_response_at` isn't native to the old schema but we can
+            // rely on standard triggers or map if we had added it. We'll just update the response for now.
+            // (Wait, I added adminResponseAt to the mapper just in case, but let's see if we should save it.
+            //  In supabase DB schema, we don't have `admin_response_at`. So just `admin_response`.)
+            const { error } = await supabase
+                .from('store_reviews')
+                .update({ admin_response: response })
+                .eq('id', reviewId);
+
+            if (error) throw error;
         } catch (err: any) {
             console.error('Error responding to review:', err);
             throw new Error(err.message || 'Error al responder la reseña');
         }
-    }, [reviewsPath, publicReviewsPath, reviews]);
+    }, []);
 
     // Bulk approve
     const bulkApprove = useCallback(async (reviewIds: string[]) => {
@@ -307,7 +197,7 @@ export const useReviews = (
     }, [rejectReview]);
 
     return {
-        reviews: [...pendingReviews, ...reviews], // Combine for display
+        reviews, // Now includes all queried reviews (pending/approved/etc)
         pendingReviews,
         isLoading,
         error,
@@ -322,3 +212,4 @@ export const useReviews = (
 };
 
 export default useReviews;
+

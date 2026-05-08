@@ -354,12 +354,12 @@ Text to fix: "${selectedText}"`;
             usedModel = promptConfig?.model || 'gemini-2.5-flash';
 
             const projectId = activeProject?.id || 'cms-editor';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, usedModel, {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, populatedPrompt, usedModel, {}, user?.id);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: `cms-${instruction}`,
@@ -374,7 +374,7 @@ Text to fix: "${selectedText}"`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: `cms-${instruction}`,
@@ -430,12 +430,12 @@ IMPORTANT FORMATTING RULES:
 
             const projectId = activeProject?.id || 'cms-editor';
             const response = await generateMultimodalContentViaProxy(
-                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.uid
+                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.id
             );
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: 'cms-vision-write',
@@ -456,7 +456,7 @@ IMPORTANT FORMATTING RULES:
         } catch (error: any) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: 'cms-vision-write',
@@ -491,13 +491,13 @@ IMPORTANT FORMATTING RULES:
             }
 
             const projectId = activeProject?.id || 'cms-seo';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, seoModelName, {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, populatedPrompt, seoModelName, {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: seoModelName,
                     feature: 'cms-generate-seo',
@@ -512,7 +512,7 @@ IMPORTANT FORMATTING RULES:
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: seoModelName,
                     feature: 'cms-generate-seo',

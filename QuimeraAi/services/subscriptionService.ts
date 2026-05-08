@@ -3,17 +3,7 @@
  * Servicio para gestión de planes de suscripción en Quimera AI
  */
 
-import {
-    db,
-    collection,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp,
-    Timestamp,
-    auth,
-} from '../firebase';
+import { supabase } from '../supabase';
 import { isOwner } from '../constants/roles';
 import {
     SubscriptionPlanId,
@@ -39,7 +29,6 @@ import { initializeCreditsUsage, handlePlanChange } from './aiCreditsService';
 // CONSTANTS
 // =============================================================================
 
-const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
 const TRIAL_DAYS = 7;  // Cambiado de 14 a 7 días de trial
 
 // =============================================================================
@@ -51,16 +40,34 @@ const TRIAL_DAYS = 7;  // Cambiado de 14 a 7 días de trial
  */
 export async function getTenantSubscription(tenantId: string): Promise<TenantSubscription | null> {
     try {
-        const subRef = doc(db, SUBSCRIPTIONS_COLLECTION, tenantId);
-        const subDoc = await getDoc(subRef);
+        const { data, error } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('tenant_id', tenantId)
+            .single();
 
-        if (!subDoc.exists()) {
+        if (error || !data) {
             return null;
         }
 
-        return subDoc.data() as TenantSubscription;
+        return {
+            tenantId: data.tenant_id,
+            planId: data.plan_id as SubscriptionPlanId,
+            billingCycle: data.billing_cycle as BillingCycle,
+            status: data.status as SubscriptionStatus,
+            startDate: data.start_date ? { seconds: Math.floor(new Date(data.start_date).getTime() / 1000), nanoseconds: 0 } : null as any,
+            currentPeriodStart: data.current_period_start ? { seconds: Math.floor(new Date(data.current_period_start).getTime() / 1000), nanoseconds: 0 } : null as any,
+            currentPeriodEnd: data.current_period_end ? { seconds: Math.floor(new Date(data.current_period_end).getTime() / 1000), nanoseconds: 0 } : null as any,
+            trialEndDate: data.trial_end_date ? { seconds: Math.floor(new Date(data.trial_end_date).getTime() / 1000), nanoseconds: 0 } : undefined,
+            cancelAtPeriodEnd: data.cancel_at_period_end,
+            cancelledAt: data.cancelled_at ? { seconds: Math.floor(new Date(data.cancelled_at).getTime() / 1000), nanoseconds: 0 } : undefined,
+            stripeCustomerId: data.stripe_customer_id,
+            addOns: data.add_ons || [],
+            creditPackagesPurchased: data.credit_packages_purchased || [],
+            aiCreditsUsage: data.ai_credits_usage || null,
+        } as unknown as TenantSubscription;
     } catch (error) {
-        console.error('Error getting tenant subscription:', error);
+        console.error('[subscriptionService] Error getting tenant subscription:', error);
         return null;
     }
 }
@@ -79,47 +86,46 @@ export async function createSubscription(
     const planId = options?.planId || 'free';
     const startWithTrial = options?.startWithTrial ?? false;
 
-    const now = Timestamp.now();
-    const periodEndDate = new Date(now.toDate());
+    const now = new Date();
+    const periodEndDate = new Date(now);
     periodEndDate.setMonth(periodEndDate.getMonth() + 1);
 
     // Calcular fecha de fin de trial si aplica
-    let trialEndDate: { seconds: number; nanoseconds: number } | undefined;
+    let trialEndDate: Date | undefined;
     if (startWithTrial && planId !== 'free') {
-        const trialEnd = new Date(now.toDate());
-        trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
-        trialEndDate = Timestamp.fromDate(trialEnd) as any;
+        trialEndDate = new Date(now);
+        trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DAYS);
     }
 
-    const subscription: TenantSubscription = {
-        tenantId,
-        planId,
-        billingCycle: 'monthly',
+    // Inicializar uso de credits antes de insertar
+    const creditsUsage = await initializeCreditsUsage(tenantId, planId);
+
+    const subscriptionData = {
+        tenant_id: tenantId,
+        plan_id: planId,
+        billing_cycle: 'monthly',
         status: startWithTrial ? 'trial' : 'active',
-        startDate: { seconds: now.seconds, nanoseconds: now.nanoseconds },
-        currentPeriodStart: { seconds: now.seconds, nanoseconds: now.nanoseconds },
-        currentPeriodEnd: { seconds: Timestamp.fromDate(periodEndDate).seconds, nanoseconds: 0 },
-        trialEndDate,
-        cancelAtPeriodEnd: false,
-        stripeCustomerId: options?.stripeCustomerId,
-        addOns: [],
-        creditPackagesPurchased: [],
-        aiCreditsUsage: null as any, // Se inicializa después
+        start_date: now.toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: periodEndDate.toISOString(),
+        trial_end_date: trialEndDate?.toISOString() || null,
+        cancel_at_period_end: false,
+        stripe_customer_id: options?.stripeCustomerId || null,
+        add_ons: [],
+        credit_packages_purchased: [],
+        ai_credits_usage: creditsUsage,
     };
 
-    // Guardar suscripción
-    await setDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), subscription);
+    const { error } = await supabase
+        .from('subscriptions')
+        .upsert(subscriptionData);
 
-    // Inicializar uso de credits
-    const creditsUsage = await initializeCreditsUsage(tenantId, planId);
-    subscription.aiCreditsUsage = creditsUsage;
+    if (error) {
+        console.error('[subscriptionService] Error creating subscription:', error);
+        throw error;
+    }
 
-    // Actualizar con el uso de credits
-    await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
-        aiCreditsUsage: creditsUsage,
-    });
-
-    return subscription;
+    return getTenantSubscription(tenantId) as Promise<TenantSubscription>;
 }
 
 /**
@@ -140,19 +146,22 @@ export async function updateSubscriptionPlan(
         const oldPlanId = currentSub.planId;
 
         // Actualizar suscripción
-        const updates: Partial<TenantSubscription> = {
-            planId: newPlanId,
+        const updates: any = {
+            plan_id: newPlanId,
             status: 'active',
+            updated_at: new Date().toISOString(),
         };
 
         if (billingCycle) {
-            updates.billingCycle = billingCycle;
+            updates.billing_cycle = billingCycle;
         }
 
-        await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
-            ...updates,
-            lastUpdated: serverTimestamp(),
-        } as any);
+        const { error } = await supabase
+            .from('subscriptions')
+            .update(updates)
+            .eq('tenant_id', tenantId);
+
+        if (error) throw error;
 
         // Manejar cambio de credits
         await handlePlanChange(tenantId, oldPlanId, newPlanId);
@@ -160,7 +169,7 @@ export async function updateSubscriptionPlan(
         return { success: true };
 
     } catch (error) {
-        console.error('Error updating subscription plan:', error);
+        console.error('[subscriptionService] Error updating subscription plan:', error);
         return { success: false, error: 'Error al actualizar el plan' };
     }
 }
@@ -174,21 +183,26 @@ export async function cancelSubscription(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const updates: any = {
-            cancelAtPeriodEnd: !immediately,
-            lastUpdated: serverTimestamp(),
+            cancel_at_period_end: !immediately,
+            updated_at: new Date().toISOString(),
         };
 
         if (immediately) {
             updates.status = 'cancelled';
-            updates.cancelledAt = serverTimestamp();
+            updates.cancelled_at = new Date().toISOString();
         }
 
-        await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), updates);
+        const { error } = await supabase
+            .from('subscriptions')
+            .update(updates)
+            .eq('tenant_id', tenantId);
+
+        if (error) throw error;
 
         return { success: true };
 
     } catch (error) {
-        console.error('Error cancelling subscription:', error);
+        console.error('[subscriptionService] Error cancelling subscription:', error);
         return { success: false, error: 'Error al cancelar la suscripción' };
     }
 }
@@ -200,17 +214,22 @@ export async function reactivateSubscription(
     tenantId: string
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
-            cancelAtPeriodEnd: false,
-            status: 'active',
-            cancelledAt: null,
-            lastUpdated: serverTimestamp(),
-        } as any);
+        const { error } = await supabase
+            .from('subscriptions')
+            .update({
+                cancel_at_period_end: false,
+                status: 'active',
+                cancelled_at: null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('tenant_id', tenantId);
+
+        if (error) throw error;
 
         return { success: true };
 
     } catch (error) {
-        console.error('Error reactivating subscription:', error);
+        console.error('[subscriptionService] Error reactivating subscription:', error);
         return { success: false, error: 'Error al reactivar la suscripción' };
     }
 }
@@ -227,7 +246,8 @@ export async function hasFeature(
     feature: keyof PlanFeatures
 ): Promise<boolean> {
     // SECURITY: Bypass for OWNER (Armando)
-    if (isOwner(auth.currentUser?.email || '')) return true;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isOwner(session?.user?.email || '')) return true;
 
     try {
         const subscription = await getTenantSubscription(tenantId);
@@ -241,7 +261,7 @@ export async function hasFeature(
         return Boolean(features[feature]);
 
     } catch (error) {
-        console.error('Error checking feature:', error);
+        console.error('[subscriptionService] Error checking feature:', error);
         return false;
     }
 }
@@ -263,7 +283,7 @@ export async function getLimit(
         return getPlanLimits(subscription.planId)[limit] ?? 0;
 
     } catch (error) {
-        console.error('Error getting limit:', error);
+        console.error('[subscriptionService] Error getting limit:', error);
         return 0;
     }
 }
@@ -277,7 +297,8 @@ export async function hasReachedLimit(
     currentUsage: number
 ): Promise<boolean> {
     // SECURITY: Bypass for OWNER (Armando)
-    if (isOwner(auth.currentUser?.email || '')) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (isOwner(session?.user?.email || '')) return false;
 
     const maxLimit = await getLimit(tenantId, limit);
 
@@ -296,7 +317,7 @@ export async function getCurrentPlan(tenantId: string): Promise<SubscriptionPlan
         const planId = subscription?.planId || 'free';
         return getPlanById(planId);
     } catch (error) {
-        console.error('Error getting current plan:', error);
+        console.error('[subscriptionService] Error getting current plan:', error);
         return getPlanById('free');
     }
 }
@@ -320,18 +341,23 @@ export async function startTrial(
             return { success: false, error: 'Ya has utilizado tu período de prueba' };
         }
 
-        const now = Timestamp.now();
-        const trialEnd = new Date(now.toDate());
+        const now = new Date();
+        const trialEnd = new Date(now);
         trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
 
         if (existingSub) {
             // Actualizar suscripción existente
-            await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
-                planId,
-                status: 'trial',
-                trialEndDate: Timestamp.fromDate(trialEnd),
-                lastUpdated: serverTimestamp(),
-            } as any);
+            const { error } = await supabase
+                .from('subscriptions')
+                .update({
+                    plan_id: planId,
+                    status: 'trial',
+                    trial_end_date: trialEnd.toISOString(),
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('tenant_id', tenantId);
+                
+            if (error) throw error;
         } else {
             // Crear nueva suscripción con trial
             await createSubscription(tenantId, { planId, startWithTrial: true });
@@ -343,7 +369,7 @@ export async function startTrial(
         return { success: true, trialEndsAt: trialEnd };
 
     } catch (error) {
-        console.error('Error starting trial:', error);
+        console.error('[subscriptionService] Error starting trial:', error);
         return { success: false, error: 'Error al iniciar el período de prueba' };
     }
 }
@@ -363,16 +389,21 @@ export async function checkTrialExpiration(tenantId: string): Promise<boolean> {
             return false;
         }
 
-        const now = Timestamp.now();
-        const trialEnd = subscription.trialEndDate;
+        const now = new Date().getTime();
+        const trialEnd = subscription.trialEndDate.seconds * 1000;
 
-        if (now.seconds > trialEnd.seconds) {
+        if (now > trialEnd) {
             // Trial expirado, degradar a free
-            await updateDoc(doc(db, SUBSCRIPTIONS_COLLECTION, tenantId), {
-                planId: 'free',
-                status: 'expired',
-                lastUpdated: serverTimestamp(),
-            } as any);
+            const { error } = await supabase
+                .from('subscriptions')
+                .update({
+                    plan_id: 'free',
+                    status: 'expired',
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('tenant_id', tenantId);
+
+            if (error) throw error;
 
             // Actualizar credits al plan free
             await handlePlanChange(tenantId, subscription.planId, 'free');
@@ -383,7 +414,7 @@ export async function checkTrialExpiration(tenantId: string): Promise<boolean> {
         return false;
 
     } catch (error) {
-        console.error('Error checking trial expiration:', error);
+        console.error('[subscriptionService] Error checking trial expiration:', error);
         return false;
     }
 }

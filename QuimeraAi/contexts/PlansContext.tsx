@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { db, collection, onSnapshot, query, orderBy } from '../firebase';
+import { supabase } from '../supabase';
 import {
     SUBSCRIPTION_PLANS,
     PlanFeatures,
@@ -59,7 +59,7 @@ export interface PlansContextValue {
 // CONSTANTS
 // =============================================================================
 
-const PLANS_COLLECTION = 'subscriptionPlans';
+const PLANS_COLLECTION = 'subscription_plans';
 
 // Plan order for comparison
 const PLAN_ORDER: SubscriptionPlanId[] = ['free', 'individual', 'agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
@@ -122,92 +122,66 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         setIsLoading(true);
         setError(null);
-
-        try {
-            const plansQuery = query(
-                collection(db, PLANS_COLLECTION),
-                orderBy('price.monthly', 'asc')
-            );
-
-            const unsubscribe = onSnapshot(
-                plansQuery,
-                (snapshot) => {
-                    if (snapshot.empty) {
-                        // No plans in Firestore, use hardcoded
-                        console.log('[PlansContext] No plans in Firestore, using hardcoded plans');
-                        setPlans(convertHardcodedPlans());
-                    } else {
-                        const seenPlans = new Set<string>();
-                        const loadedPlans: Record<string, StoredPlanData> = {};
-
-                        snapshot.docs.forEach((doc) => {
-                            const data = doc.data();
-                            seenPlans.add(doc.id);
-
-                            // Skip archived plans
-                            if (data.isArchived) return;
-
-                            loadedPlans[doc.id] = {
-                                id: doc.id as SubscriptionPlanId,
-                                name: resolveProjectName(data.name) || doc.id,
-                                description: resolveProjectName(data.description) || '',
-                                price: data.price || { monthly: 0, annually: 0 },
-                                features: data.features || SUBSCRIPTION_PLANS.free.features,
-                                limits: data.limits || SUBSCRIPTION_PLANS.free.limits,
-                                color: data.color || '#6b7280',
-                                icon: data.icon || 'Sparkles',
-                                isFeatured: data.isFeatured || false,
-                                isPopular: data.isPopular || false,
-                                isArchived: data.isArchived || false,
-                                showInLanding: data.showInLanding,
-                                landingOrder: data.landingOrder,
-                            };
-                        });
-
-                        // Ensure we have at least the base plans
-                        for (const planId of PLAN_ORDER) {
-                            // Only fall back to hardcoded if the plan is NOT in Firestore at all
-                            // If it is in Firestore but was skipped (archived), do NOT use hardcoded
-                            if (!loadedPlans[planId] && !seenPlans.has(planId)) {
-                                const hardcoded = SUBSCRIPTION_PLANS[planId];
-                                if (hardcoded) {
-                                    loadedPlans[planId] = {
-                                        id: planId,
-                                        name: hardcoded.name,
-                                        description: hardcoded.description,
-                                        price: hardcoded.price,
-                                        features: hardcoded.features,
-                                        limits: hardcoded.limits,
-                                        color: hardcoded.color,
-                                        icon: hardcoded.icon,
-                                        isFeatured: hardcoded.isFeatured,
-                                        isPopular: hardcoded.isPopular,
-                                    };
-                                }
-                            }
-                        }
-
-                        console.log('[PlansContext] Loaded plans from Firestore:', Object.keys(loadedPlans));
-                        setPlans(loadedPlans);
-                    }
-                    setIsLoading(false);
-                },
-                (err) => {
-                    console.error('[PlansContext] Error loading plans:', err);
-                    setError(err.message);
-                    // Fallback to hardcoded plans
+        
+        const fetchPlans = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from(PLANS_COLLECTION)
+                    .select('*')
+                    .eq('is_archived', false);
+                    
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    const plansMap: Record<string, StoredPlanData> = {};
+                    data.forEach(item => {
+                        plansMap[item.id] = {
+                            id: item.id as SubscriptionPlanId,
+                            name: resolveProjectName(item.name || ''),
+                            description: resolveProjectName(item.description || ''),
+                            price: {
+                                monthly: item.price_monthly,
+                                annually: item.price_annually
+                            },
+                            features: item.features,
+                            limits: item.limits,
+                            color: item.color,
+                            icon: item.icon,
+                            isFeatured: item.is_featured,
+                            isPopular: item.is_popular,
+                            isArchived: item.is_archived,
+                            showInLanding: item.show_in_landing,
+                            landingOrder: item.landing_order
+                        };
+                    });
+                    
+                    // Fallback for missing plans to ensure completeness
+                    const hardcoded = convertHardcodedPlans();
+                    setPlans({ ...hardcoded, ...plansMap });
+                } else {
                     setPlans(convertHardcodedPlans());
-                    setIsLoading(false);
                 }
-            );
+            } catch (err: any) {
+                console.error("[PlansContext] Error fetching plans from Supabase:", err);
+                setPlans(convertHardcodedPlans());
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-            return () => unsubscribe();
-        } catch (err) {
-            console.error('[PlansContext] Error setting up listener:', err);
-            setError(err instanceof Error ? err.message : 'Unknown error');
-            setPlans(convertHardcodedPlans());
-            setIsLoading(false);
-        }
+        fetchPlans();
+        
+        const channel = supabase
+            .channel('public:subscription_plans')
+            .on('postgres_changes', { event: '*', schema: 'public', table: PLANS_COLLECTION }, (payload) => {
+                fetchPlans();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [refreshTrigger]);
 
     // Convert to array sorted by plan order

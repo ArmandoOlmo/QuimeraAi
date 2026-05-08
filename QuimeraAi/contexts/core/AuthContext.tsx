@@ -4,7 +4,9 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, onAuthStateChanged, auth, db, doc, getDoc, setDoc } from '../../firebase';
+
+import { supabase } from '../../supabase';
+import { User } from '@supabase/supabase-js';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
 import { getPermissions, isOwner, determineRole } from '../../constants/roles';
 
@@ -35,6 +37,9 @@ interface AuthContextType {
 
     // Admin Access
     canAccessSuperAdmin: boolean;
+
+    // Logout
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,11 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
     const [userPermissions, setUserPermissions] = useState<RolePermissions>(getPermissions('user'));
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [isOwnerFromClaims, setIsOwnerFromClaims] = useState(false);
 
     // Auth State Observer
     useEffect(() => {
-        // Safari safety: if onAuthStateChanged never fires (IndexedDB lock hang),
-        // force loadingAuth to false after 8 seconds
+        // Safe timeout in case auth takes too long
         const timeout = setTimeout(() => {
             setLoadingAuth((current) => {
                 if (current) {
@@ -60,82 +65,79 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
         }, 8000);
 
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const handleAuthChange = async (supabaseUser: User | null) => {
             clearTimeout(timeout);
-            console.log('[AuthProvider] onAuthStateChanged fired:', firebaseUser ? `uid=${firebaseUser.uid}, email=${firebaseUser.email}` : 'null (signed out)');
-            setUser(firebaseUser);
+            console.log('[AuthProvider] Auth state changed:', supabaseUser ? `id=${supabaseUser.id}, email=${supabaseUser.email}` : 'null (signed out)');
+            setUser(supabaseUser);
 
-            if (firebaseUser) {
+            if (supabaseUser) {
                 try {
-                    const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    const userSnap = await getDoc(userDocRef);
+                    // Fetch from Supabase Postgres
+                    const { data: userSnap, error: fetchError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', supabaseUser.id)
+                        .maybeSingle();
 
                     let finalUserDoc: Omit<UserDocument, 'id'>;
 
-                    if (userSnap.exists()) {
-                        finalUserDoc = userSnap.data() as Omit<UserDocument, 'id'>;
+                    if (userSnap) {
+                        finalUserDoc = {
+                            ...userSnap,
+                            photoURL: userSnap.photo_url || supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || '',
+                        } as any;
                     } else {
-                        // Create user document if doesn't exist (using merge: true to prevent accidental wipes of existing fields)
+                        // Create user document if doesn't exist
                         const newUserDocData = {
-                            name: firebaseUser.displayName || 'Unnamed User',
-                            email: firebaseUser.email!,
-                            photoURL: firebaseUser.photoURL || '',
+                            id: supabaseUser.id,
+                            name: supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'Unnamed User',
+                            email: supabaseUser.email!,
+                            photo_url: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || '',
+                            role: 'user'
                         };
-                        await setDoc(userDocRef, newUserDocData, { merge: true });
-                        finalUserDoc = newUserDocData;
+                        await supabase.from('users').upsert(newUserDocData);
+                        finalUserDoc = { ...newUserDocData, photoURL: newUserDocData.photo_url } as any;
                     }
 
-                    // Auto-promote owner (fallback until Custom Claims are deployed)
-                    if (isOwner(firebaseUser.email!) && finalUserDoc.role !== 'owner') {
+                    // Auto-promote owner
+                    if (isOwner(supabaseUser.email!) && finalUserDoc.role !== 'owner') {
                         try {
                             finalUserDoc.role = 'owner';
-                            await setDoc(userDocRef, { role: 'owner' }, { merge: true });
+                            await supabase.from('users').update({ role: 'owner' }).eq('id', supabaseUser.id);
                         } catch (e) {
                             console.warn('Failed to auto-promote owner:', e);
                         }
                     }
 
-                    setUserDocument({ ...finalUserDoc, id: firebaseUser.uid });
-                    const effectiveRole = determineRole(firebaseUser.email!, finalUserDoc.role || 'user');
+                    setUserDocument({ ...finalUserDoc, id: supabaseUser.id });
+                    const effectiveRole = determineRole(supabaseUser.email!, finalUserDoc.role || 'user');
                     console.log('[AuthProvider] User doc loaded. role:', finalUserDoc.role, 'effectiveRole:', effectiveRole, 'tenantId:', finalUserDoc.tenantId);
                     setUserPermissions(getPermissions(effectiveRole));
 
-                    // Read isOwner from Custom Claims (set by server-side Cloud Function)
-                    try {
-                        const tokenResult = await firebaseUser.getIdTokenResult();
-                        if (tokenResult.claims.isOwner === true) {
-                            setIsOwnerFromClaims(true);
-                        }
-                    } catch (claimsErr) {
-                        console.warn('[AuthProvider] Could not read custom claims:', claimsErr);
+                    // In Supabase, custom claims are usually stored in app_metadata
+                    if (supabaseUser.app_metadata?.isOwner === true) {
+                        setIsOwnerFromClaims(true);
                     }
                 } catch (error) {
                     console.error('Error fetching user document:', error);
-                    // Fallback: try to get role from Custom Claims before giving up
+                    
                     let fallbackRole: string | undefined;
-                    try {
-                        const tokenResult = await firebaseUser.getIdTokenResult();
-                        if (tokenResult.claims.isOwner === true) {
-                            setIsOwnerFromClaims(true);
-                            fallbackRole = 'owner';
-                        } else if (typeof tokenResult.claims.role === 'string') {
-                            fallbackRole = tokenResult.claims.role;
-                        }
-                        console.log('[AuthProvider] Recovered role from Custom Claims:', fallbackRole || 'none');
-                    } catch (claimsErr) {
-                        console.error('[AuthProvider] Custom Claims also failed:', claimsErr);
+                    if (supabaseUser.app_metadata?.isOwner === true) {
+                        setIsOwnerFromClaims(true);
+                        fallbackRole = 'owner';
+                    } else if (typeof supabaseUser.app_metadata?.role === 'string') {
+                        fallbackRole = supabaseUser.app_metadata.role;
                     }
 
                     const fallbackDoc: UserDocument = {
-                        id: firebaseUser.uid,
-                        name: firebaseUser.displayName || 'User',
-                        email: firebaseUser.email || '',
-                        photoURL: firebaseUser.photoURL || '',
+                        id: supabaseUser.id,
+                        name: supabaseUser.user_metadata?.full_name || 'User',
+                        email: supabaseUser.email || '',
+                        photoURL: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || '',
                         role: fallbackRole as any,
                     };
                     setUserDocument(fallbackDoc);
-                    const effectiveRole = determineRole(firebaseUser.email!, fallbackRole || 'user');
-                    console.log('[AuthProvider] Using fallback doc with effectiveRole:', effectiveRole);
+                    const effectiveRole = determineRole(supabaseUser.email!, fallbackRole || 'user');
                     setUserPermissions(getPermissions(effectiveRole));
                 }
             } else {
@@ -143,24 +145,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUserPermissions(getPermissions('user'));
             }
 
-            console.log('[AuthProvider] Auth state resolved. loadingAuth -> false');
             setLoadingAuth(false);
+        };
+
+        // Initialize from existing session if available
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            handleAuthChange(session?.user ?? null);
         });
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                // Ignore initial setup events if they fire right after getSession
+                handleAuthChange(session?.user ?? null);
+            }
+        );
 
         return () => {
             clearTimeout(timeout);
-            unsubscribe();
+            subscription.unsubscribe();
         };
     }, []);
 
-    const [isOwnerFromClaims, setIsOwnerFromClaims] = useState(false);
-
-    // isUserOwner: Custom Claims (primary) OR email check (fallback) OR Firestore role
+    // isUserOwner: App Metadata (primary) OR email check (fallback) OR Firestore role
     const isUserOwner = isOwnerFromClaims || isOwner(user?.email || '') || userDocument?.role === 'owner';
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
-    // Include isUserOwner as fallback to handle race condition where userDocument.role
-    // hasn't loaded yet but we can verify owner by claims
     const canAccessSuperAdmin = isUserOwner || ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
 
     // Functions
@@ -171,6 +181,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const openProfileModal = () => setIsProfileModalOpen(true);
     const closeProfileModal = () => setIsProfileModalOpen(false);
+
+    const logout = async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
+    };
 
     const value: AuthContextType = {
         user,
@@ -188,6 +206,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentTenant,
         currentTenantRole,
         canAccessSuperAdmin,
+        logout,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -140,9 +140,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Content Controls */}
       <div className="space-y-3">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.content')}</label>
-        <Input label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(val) => setNestedData('menu.title', val)} />
+        <I18nInput label={t('editor.controls.common.title')} value={data?.menu?.title || ''} onChange={(val) => setNestedData('menu.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.menu?.titleFontSize || 'md'} onChange={(v) => setNestedData('menu.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(val) => setNestedData('menu.description', val)} rows={2} />
+        <I18nTextArea label={t('editor.controls.common.description')} value={data?.menu?.description || ''} onChange={(val) => setNestedData('menu.description', val)} rows={2} />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.menu?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('menu.descriptionFontSize', v)} />
       </div>
 

@@ -6,7 +6,6 @@ import { useUI } from '../../contexts/core/UIContext';
 import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { auth, signOut } from '../../firebase';
 import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
@@ -63,7 +62,7 @@ interface NavItemData {
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
-  const { user, userDocument, openProfileModal, canAccessSuperAdmin, isUserOwner, loadingAuth } = useAuth();
+  const { user, userDocument, openProfileModal, canAccessSuperAdmin, isUserOwner, loadingAuth, logout } = useAuth();
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder, setIsOnboardingOpen } = useUI();
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
 
@@ -326,10 +325,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }
   };
 
-  const handleSignOut = () => {
-    signOut(auth).then(() => {
+  const handleSignOut = async () => {
+    try {
+      await logout();
       navigate(ROUTES.LOGIN);
-    }).catch((error) => console.error("Sign out error", error));
+    } catch (error) {
+      console.error("Sign out error", error);
+    }
   };
 
   // Helper: Check if an item is accessible based on global service availability
@@ -902,8 +904,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                   className="relative group cursor-pointer touch-manipulation"
                   onClick={openProfileModal}
                 >
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border-2 border-q-border group-hover:border-primary transition-colors" />
+                  {userDocument?.photoURL ? (
+                    <img src={userDocument.photoURL} alt="User" className="w-11 h-11 md:w-10 md:h-10 rounded-full object-cover border-2 border-q-border group-hover:border-primary transition-colors" />
                   ) : (
                     <div className="w-11 h-11 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border-2 border-q-border group-hover:border-primary transition-colors">
                       <UserIcon size={22} className="md:w-5 md:h-5 text-q-text-muted" />

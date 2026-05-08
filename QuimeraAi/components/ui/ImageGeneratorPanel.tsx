@@ -295,6 +295,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const saveToLibrary = async (imageDataUrl: string, promptText: string): Promise<string | undefined> => {
         setIsSaving(true);
         try {
+            // If the image is already uploaded by the new Supabase proxy (returns an HTTPS URL),
+            // it has already been saved to the database by AIContext.saveGeneratedImageToLibrary.
+            if (imageDataUrl.startsWith('http')) {
+                console.log('✅ [ImageGeneratorPanel] Image was already saved by AIContext proxy');
+                setSavedToLibrary(true);
+                setSavedImageUrl(imageDataUrl);
+                return imageDataUrl;
+            }
+
+            // Fallback for data URLs (legacy or proxy fallback)
             const timestamp = Date.now();
             const filename = `quimera-${timestamp}.png`;
             const file = base64ToFile(imageDataUrl, filename);
@@ -307,18 +317,19 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                     isAiGenerated: true,
                     aiPrompt: promptText,
                 });
-                console.log('✅ [ImageGeneratorPanel] Saved to admin library');
+                console.log('✅ [ImageGeneratorPanel] Saved fallback to admin library');
                 setSavedToLibrary(true);
+                savedUrl = imageDataUrl; // Use data URL or fetch admin URL later
             } else if (hasActiveProject) {
                 // Save to user's project files
                 savedUrl = await uploadFile(file);
-                console.log('✅ [ImageGeneratorPanel] Saved to project files:', savedUrl);
+                console.log('✅ [ImageGeneratorPanel] Saved fallback to project files:', savedUrl);
                 if (savedUrl) {
                     setSavedToLibrary(true);
                     setSavedImageUrl(savedUrl);
                 }
             } else {
-                console.warn('⚠️ [ImageGeneratorPanel] No active project, image not saved to library');
+                console.warn('⚠️ [ImageGeneratorPanel] No active project, fallback image not saved to library');
             }
 
             return savedUrl;
@@ -430,7 +441,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-                projectId,
+                projectId: effectiveProjectId || undefined, // Use effectiveProjectId to ensure user projects get it
+                adminCategory,
+                adminTags: [style, aspectRatio].filter(s => s !== 'None'),
+                adminDescription: prompt,
                 generationContext,
             };
 

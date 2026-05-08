@@ -82,7 +82,7 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
     };
 
     const handleSeedStore = async () => {
-        if (!user?.uid || !storeId) {
+        if (!user?.id || !storeId) {
             setError('No se pudo identificar la tienda');
             return;
         }
@@ -93,17 +93,17 @@ const DemoDataSeeder: React.FC<DemoDataSeederProps> = ({ onComplete, onClose }) 
         try {
             // Step 1: Categories
             updateStepStatus('categories', 'loading');
-            const categoryMap = await seedCategories(user.uid, storeId);
+            const categoryMap = await seedCategories(user.id, storeId);
             updateStepStatus('categories', 'success');
 
             // Step 2: Products
             updateStepStatus('products', 'loading');
-            await seedProducts(user.uid, storeId, DEMO_PRODUCTS, categoryMap);
+            await seedProducts(user.id, storeId, DEMO_PRODUCTS, categoryMap);
             updateStepStatus('products', 'success');
 
             // Step 3: Settings
             updateStepStatus('settings', 'loading');
-            await seedStoreSettings(user.uid, storeId);
+            await seedStoreSettings(user.id, storeId);
             updateStepStatus('settings', 'success');
 
             // Complete

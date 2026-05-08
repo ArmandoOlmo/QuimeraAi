@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -41,12 +41,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <AIFormControl label={t('editor.controls.common.headline')} onAssistClick={() => setAiAssistField({ path: 'banner.headline', value: data?.banner?.headline || '', context: 'Banner Headline' })}>
-          <Input value={data?.banner?.headline || ''} onChange={(val) => setNestedData('banner.headline', val)} />
+          <I18nInput value={data?.banner?.headline || ''} onChange={(val) => setNestedData('banner.headline', val)} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.headlineSize')} value={data?.banner?.headlineFontSize || 'lg'} onChange={(v) => setNestedData('banner.headlineFontSize', v)} />
 
         <AIFormControl label={t('editor.controls.common.subheadline')} onAssistClick={() => setAiAssistField({ path: 'banner.subheadline', value: data?.banner?.subheadline || '', context: 'Banner Subheadline' })}>
-          <TextArea value={data?.banner?.subheadline || ''} onChange={(val) => setNestedData('banner.subheadline', val)} rows={2} />
+          <I18nTextArea value={data?.banner?.subheadline || ''} onChange={(val) => setNestedData('banner.subheadline', val)} rows={2} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.subheadlineSize')} value={data?.banner?.subheadlineFontSize || 'md'} onChange={(v) => setNestedData('banner.subheadlineFontSize', v)} />
 
@@ -55,7 +55,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         {data?.banner?.showButton !== false && (
           <div className="space-y-3 animate-fade-in-up">
             <AIFormControl label={t('editor.controls.common.buttonText')} onAssistClick={() => setAiAssistField({ path: 'banner.buttonText', value: data?.banner?.buttonText || 'Get Started', context: 'Banner Button' })}>
-              <Input value={data?.banner?.buttonText || 'Get Started'} onChange={(val) => setNestedData('banner.buttonText', val)} />
+              <I18nInput value={data?.banner?.buttonText || 'Get Started'} onChange={(val) => setNestedData('banner.buttonText', val)} />
             </AIFormControl>
 
             {/* Link Type Selector */}

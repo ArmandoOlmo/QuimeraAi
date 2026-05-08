@@ -102,12 +102,12 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
 
             const response = await generateContentViaProxy('content-agency-creator', promptText, modelToUse, {
                 temperature: 0.85
-            }, user?.uid);
+            }, user?.id);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'content-agency-admin',
                     model: modelToUse,
                     feature: 'agency-content-creator-assistant',
@@ -150,7 +150,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: 'content-agency-admin',
                     model: modelToUse,
                     feature: 'agency-content-creator-assistant',

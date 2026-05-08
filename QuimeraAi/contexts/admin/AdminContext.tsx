@@ -29,21 +29,7 @@ import { ThemeMode } from '../../types';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
 import { defaultPrompts } from '../../data/defaultPrompts';
 import { initialData } from '../../data/initialData';
-import {
-    db,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    collection,
-    getDocs,
-    addDoc,
-    query,
-    orderBy,
-    onSnapshot,
-    serverTimestamp,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 
 // Build default component status
@@ -132,7 +118,7 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, userDocument } = useAuth();
+    const { user } = useAuth();
 
     // User Management State
     const [allUsers, setAllUsers] = useState<UserDocument[]>([]);
@@ -186,6 +172,22 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [usage, setUsage] = useState<{ used: number; limit: number; plan: string } | null>(null);
     const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
+    // Helper to fetch setting document
+    const getSetting = async (id: string) => {
+        const { data } = await supabase.from('settings').select('config').eq('id', id).maybeSingle();
+        return data?.config;
+    };
+
+    // Helper to save setting document
+    const saveSetting = async (id: string, config: any) => {
+        await supabase.from('settings').upsert({
+            id,
+            config,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id || null
+        });
+    };
+
     // Fetch global settings on mount
     useEffect(() => {
         if (!user) return;
@@ -193,9 +195,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const fetchGlobalSettings = async () => {
             try {
                 // Component status
-                const compDoc = await getDoc(doc(db, 'settings', 'components'));
-                if (compDoc.exists()) {
-                    const status = compDoc.data().status;
+                const compConfig = await getSetting('components');
+                if (compConfig?.status) {
+                    const status = compConfig.status;
                     const mergedStatus = { ...defaultComponentStatus };
                     Object.keys(status).forEach(key => {
                         mergedStatus[key as PageSection] = status[key];
@@ -204,33 +206,33 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
 
                 // Global assistant config
-                const assistantDoc = await getDoc(doc(db, 'settings', 'global_assistant'));
-                if (assistantDoc.exists()) {
-                    setGlobalAssistantConfig(prev => ({ ...prev, ...assistantDoc.data() }));
+                const assistantConfig = await getSetting('global_assistant');
+                if (assistantConfig) {
+                    setGlobalAssistantConfig(prev => ({ ...prev, ...assistantConfig }));
                 }
 
                 // Landing chatbot config
-                const landingChatbotDoc = await getDoc(doc(db, 'settings', 'landingChatbot'));
-                if (landingChatbotDoc.exists()) {
-                    setLandingChatbotConfig(prev => ({ ...prev, ...landingChatbotDoc.data() }));
+                const landingChatbotConfig = await getSetting('landingChatbot');
+                if (landingChatbotConfig) {
+                    setLandingChatbotConfig(prev => ({ ...prev, ...landingChatbotConfig }));
                 }
 
                 // Global Ad Tracking Pixels (for app-wide analytics)
-                const adPixelsDoc = await getDoc(doc(db, 'settings', 'globalAdPixels'));
-                if (adPixelsDoc.exists()) {
-                    setGlobalAdPixels(adPixelsDoc.data() as AdPixelConfig);
+                const adPixelsConfig = await getSetting('globalAdPixels');
+                if (adPixelsConfig) {
+                    setGlobalAdPixels(adPixelsConfig as AdPixelConfig);
                 }
 
                 // Design tokens
-                const tokensDoc = await getDoc(doc(db, 'settings', 'designTokens'));
-                if (tokensDoc.exists()) {
-                    setDesignTokens(tokensDoc.data() as DesignTokens);
+                const tokensConfig = await getSetting('designTokens');
+                if (tokensConfig) {
+                    setDesignTokens(tokensConfig as DesignTokens);
                 }
 
                 // App tokens
-                const appTokensDoc = await getDoc(doc(db, 'settings', 'appTokens'));
-                if (appTokensDoc.exists()) {
-                    const loadedTokens = appTokensDoc.data() as Partial<AppTokens>;
+                const appTokensConfig = await getSetting('appTokens');
+                if (appTokensConfig) {
+                    const loadedTokens = appTokensConfig as Partial<AppTokens>;
                     const fullTokens = getAppTokensWithDefaults(loadedTokens);
                     setAppTokens(fullTokens);
                     // Apply tokens to CSS
@@ -249,57 +251,81 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         if (!user) return;
 
-        const q = query(collection(db, 'customComponents'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const components = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            } as CustomComponent));
-            setCustomComponents(components);
-        }, (error) => {
-            if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
-                console.error("Error in custom components listener:", error);
+        const fetchCustomComponents = async () => {
+            const { data } = await supabase.from('custom_components').select('*').order('created_at', { ascending: false });
+            if (data) {
+                setCustomComponents(data.map(d => ({
+                    id: d.id,
+                    name: d.name,
+                    baseComponent: d.base_component,
+                    styles: d.styles,
+                    createdAt: d.created_at,
+                    updatedAt: d.updated_at,
+                    createdBy: d.created_by,
+                    isPublic: d.is_public,
+                    usageCount: d.usage_count,
+                    versions: d.versions || []
+                } as CustomComponent)));
             }
-        });
+        };
+
+        fetchCustomComponents();
+
+        const channel = supabase.channel('public:custom_components')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_components' }, () => {
+                fetchCustomComponents();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
     }, [user]);
 
     // Setup landing chatbot config listener for real-time updates
-    // This runs for ALL users (authenticated or not) since it's for the public landing page
     useEffect(() => {
-        const unsubscribe = onSnapshot(
-            doc(db, 'settings', 'landingChatbot'),
-            (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    setLandingChatbotConfig(prev => ({ ...prev, ...docSnapshot.data() }));
-                }
-            },
-            (error) => {
-                // Silently ignore permission errors for unauthenticated users
-                if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
-                    console.error("Error in landing chatbot config listener:", error);
-                }
+        const fetchLandingConfig = async () => {
+            const config = await getSetting('landingChatbot');
+            if (config) {
+                setLandingChatbotConfig(prev => ({ ...prev, ...config }));
             }
-        );
+        };
+        fetchLandingConfig();
+
+        const channel = supabase.channel('public:settings:landingChatbot')
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'settings',
+                filter: 'id=eq.landingChatbot'
+            }, (payload) => {
+                if (payload.new && (payload.new as any).config) {
+                    setLandingChatbotConfig(prev => ({ ...prev, ...(payload.new as any).config }));
+                }
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, []); // No dependency on user - runs for everyone
+    }, []);
 
     // User Management Functions
     const fetchAllUsers = async () => {
         try {
-            const usersCol = collection(db, 'users');
-            const snapshot = await getDocs(usersCol);
-            const users = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as UserDocument[];
-            setAllUsers(users);
+            const { data } = await supabase.from('users').select('*');
+            if (data) {
+                setAllUsers(data.map(u => ({
+                    id: u.id,
+                    uid: u.id,
+                    email: u.email,
+                    name: u.name,
+                    role: u.role,
+                    createdAt: u.created_at,
+                    photoURL: u.photo_url,
+                    isOnboardingComplete: u.is_onboarding_complete
+                } as UserDocument)));
+            }
         } catch (error) {
             console.error("Error fetching users:", error);
         }
@@ -307,10 +333,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const updateUserRole = async (userId: string, role: UserRole) => {
         try {
-            await updateDoc(doc(db, 'users', userId), { role });
-            setAllUsers(prev => prev.map(u =>
-                u.id === userId ? { ...u, role } : u
-            ));
+            await supabase.from('users').update({ role }).eq('id', userId);
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
         } catch (error) {
             console.error("Error updating user role:", error);
             throw error;
@@ -319,7 +343,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteUserRecord = async (userId: string) => {
         try {
-            await deleteDoc(doc(db, 'users', userId));
+            // Note: deleting a user requires admin rights or specific RLS policies, or calling a Supabase edge function if deleting auth user.
+            await supabase.from('users').delete().eq('id', userId);
             setAllUsers(prev => prev.filter(u => u.id !== userId));
         } catch (error) {
             console.error("Error deleting user:", error);
@@ -329,13 +354,12 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const createAdmin = async (email: string, name: string, role: UserRole) => {
         try {
-            const adminData = {
+            await supabase.from('pending_admins').insert([{
                 email,
                 name,
                 role,
-                createdAt: new Date().toISOString(),
-            };
-            await addDoc(collection(db, 'pendingAdmins'), adminData);
+                created_at: new Date().toISOString()
+            }]);
         } catch (error) {
             console.error("Error creating admin:", error);
             throw error;
@@ -346,7 +370,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user) return;
 
         try {
-            await updateDoc(doc(db, 'users', user.uid), { name, photoURL });
+            await supabase.from('users').update({ 
+                name, 
+                photo_url: photoURL 
+            }).eq('id', user.id);
         } catch (error) {
             console.error("Error updating profile:", error);
             throw error;
@@ -355,10 +382,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const updateUserDetails = async (userId: string, data: Partial<UserDocument>) => {
         try {
-            await updateDoc(doc(db, 'users', userId), data);
-            setAllUsers(prev => prev.map(u =>
-                u.id === userId ? { ...u, ...data } : u
-            ));
+            const updateData: any = {};
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.email !== undefined) updateData.email = data.email;
+            if (data.photoURL !== undefined) updateData.photo_url = data.photoURL;
+            if (data.isOnboardingComplete !== undefined) updateData.is_onboarding_complete = data.isOnboardingComplete;
+            if (data.role !== undefined) updateData.role = data.role;
+
+            await supabase.from('users').update(updateData).eq('id', userId);
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
         } catch (error) {
             console.error("Error updating user details:", error);
             throw error;
@@ -368,13 +400,26 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Tenant Management Functions
     const fetchTenants = async () => {
         try {
-            const tenantsCol = collection(db, 'tenants');
-            const snapshot = await getDocs(tenantsCol);
-            const tenantsList = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as Tenant[];
-            setTenants(tenantsList);
+            const { data } = await supabase.from('tenants').select('*');
+            if (data) {
+                setTenants(data.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    name: t.name,
+                    email: t.email,
+                    companyName: t.company_name,
+                    status: t.status,
+                    createdAt: t.created_at,
+                    subscriptionPlan: t.subscription_plan,
+                    limits: t.limits,
+                    usage: t.usage,
+                    ownerUserId: t.owner_user_id,
+                    memberUserIds: t.member_user_ids || [],
+                    projectIds: t.project_ids || [],
+                    settings: t.settings,
+                    billingInfo: t.billing_info,
+                } as unknown as Tenant)));
+            }
         } catch (error) {
             console.error("Error fetching tenants:", error);
         }
@@ -388,31 +433,28 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         companyName?: string
     }): Promise<string> => {
         try {
-            // Definir límites según el plan y tipo
             const planLimits = {
                 free: { maxProjects: 1, maxUsers: 1, maxStorageGB: 1, maxAiCredits: 100 },
                 starter: { maxProjects: 5, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 500 },
                 pro: { maxProjects: 20, maxUsers: 5, maxStorageGB: 20, maxAiCredits: 2000 },
                 agency: { maxProjects: 50, maxUsers: 20, maxStorageGB: 50, maxAiCredits: 5000 },
-                enterprise: { maxProjects: -1, maxUsers: -1, maxStorageGB: 100, maxAiCredits: 10000 }, // -1 = unlimited
+                enterprise: { maxProjects: -1, maxUsers: -1, maxStorageGB: 100, maxAiCredits: 10000 },
             };
 
             const limits = planLimits[data.plan as keyof typeof planLimits] || planLimits.free;
 
-            // Ajustar límites para agencias
             if (data.type === 'agency' && data.plan !== 'agency' && data.plan !== 'enterprise') {
                 limits.maxUsers = Math.max(limits.maxUsers, 5);
                 limits.maxProjects = Math.max(limits.maxProjects, 10);
             }
 
-            const tenantData = {
+            const { data: newTenant, error } = await supabase.from('tenants').insert([{
                 type: data.type,
                 name: data.name,
                 email: data.email,
-                companyName: data.companyName || '',
-                status: 'active' as TenantStatus,
-                createdAt: new Date().toISOString(),
-                subscriptionPlan: data.plan,
+                company_name: data.companyName || '',
+                status: 'active',
+                subscription_plan: data.plan,
                 limits: limits,
                 usage: {
                     projectCount: 0,
@@ -420,25 +462,26 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     storageUsedGB: 0,
                     aiCreditsUsed: 0,
                 },
-                ownerUserId: user?.uid || '',
-                memberUserIds: user?.uid ? [user.uid] : [],
-                projectIds: [],
+                owner_user_id: user?.id || null,
                 settings: {
                     allowMemberInvites: data.type === 'agency',
                     requireTwoFactor: false,
                     brandingEnabled: data.plan !== 'free',
                 },
-                billingInfo: {
+                billing_info: {
                     mrr: 0,
                     nextBillingDate: undefined,
                     paymentMethod: undefined,
                 },
-            };
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }]).select('*').single();
 
-            const docRef = await addDoc(collection(db, 'tenants'), tenantData);
-            const newTenant = { ...tenantData, id: docRef.id } as Tenant;
-            setTenants(prev => [...prev, newTenant]);
-            return docRef.id;
+            if (error) throw error;
+            
+            // Re-fetch tenants
+            await fetchTenants();
+            return newTenant.id;
         } catch (error) {
             console.error("Error creating tenant:", error);
             throw error;
@@ -447,10 +490,21 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
         try {
-            await updateDoc(doc(db, 'tenants', tenantId), data);
-            setTenants(prev => prev.map(t =>
-                t.id === tenantId ? { ...t, ...data } : t
-            ));
+            const updateData: any = { updated_at: new Date().toISOString() };
+            if (data.type !== undefined) updateData.type = data.type;
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.email !== undefined) updateData.email = data.email;
+            if (data.companyName !== undefined) updateData.company_name = data.companyName;
+            if (data.status !== undefined) updateData.status = data.status;
+            if (data.subscriptionPlan !== undefined) updateData.subscription_plan = data.subscriptionPlan;
+            if (data.limits !== undefined) updateData.limits = data.limits;
+            if (data.usage !== undefined) updateData.usage = data.usage;
+            if (data.ownerUserId !== undefined) updateData.owner_user_id = data.ownerUserId;
+            if (data.settings !== undefined) updateData.settings = data.settings;
+            if (data.billingInfo !== undefined) updateData.billing_info = data.billingInfo;
+
+            await supabase.from('tenants').update(updateData).eq('id', tenantId);
+            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, ...data } : t));
         } catch (error) {
             console.error("Error updating tenant:", error);
             throw error;
@@ -459,7 +513,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteTenant = async (tenantId: string) => {
         try {
-            await deleteDoc(doc(db, 'tenants', tenantId));
+            await supabase.from('tenants').delete().eq('id', tenantId);
             setTenants(prev => prev.filter(t => t.id !== tenantId));
         } catch (error) {
             console.error("Error deleting tenant:", error);
@@ -483,13 +537,20 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Prompts Management Functions
     const fetchAllPrompts = async () => {
         try {
-            const promptsCol = collection(db, 'prompts');
-            const snapshot = await getDocs(promptsCol);
-            const promptsList = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            })) as LLMPrompt[];
-            setPrompts(promptsList);
+            const { data } = await supabase.from('prompts').select('*');
+            if (data) {
+                setPrompts(data.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    template: p.template,
+                    variables: p.variables,
+                    tags: p.tags || [],
+                    isSystem: p.is_system,
+                    createdAt: p.created_at,
+                    updatedAt: p.updated_at
+                } as LLMPrompt)));
+            }
         } catch (error) {
             console.error("Error fetching prompts:", error);
         }
@@ -503,16 +564,26 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             const now = new Date().toISOString();
             if (prompt.id) {
-                await updateDoc(doc(db, 'prompts', prompt.id), {
-                    ...prompt,
-                    updatedAt: now,
-                });
+                await supabase.from('prompts').update({
+                    name: prompt.name,
+                    description: prompt.description,
+                    template: prompt.template,
+                    variables: prompt.variables,
+                    tags: prompt.tags,
+                    is_system: prompt.isSystem,
+                    updated_at: now
+                }).eq('id', prompt.id);
             } else {
-                await addDoc(collection(db, 'prompts'), {
-                    ...prompt,
-                    createdAt: now,
-                    updatedAt: now,
-                });
+                await supabase.from('prompts').insert([{
+                    name: prompt.name,
+                    description: prompt.description,
+                    template: prompt.template,
+                    variables: prompt.variables,
+                    tags: prompt.tags || [],
+                    is_system: prompt.isSystem || false,
+                    created_at: now,
+                    updated_at: now
+                }]);
             }
             await fetchAllPrompts();
         } catch (error) {
@@ -523,7 +594,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deletePrompt = async (promptId: string) => {
         try {
-            await deleteDoc(doc(db, 'prompts', promptId));
+            await supabase.from('prompts').delete().eq('id', promptId);
             setPrompts(prev => prev.filter(p => p.id !== promptId));
         } catch (error) {
             console.error("Error deleting prompt:", error);
@@ -538,7 +609,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Global Assistant Config Functions
     const saveGlobalAssistantConfig = async (config: GlobalAssistantConfig) => {
         try {
-            await setDoc(doc(db, 'settings', 'global_assistant'), config);
+            await saveSetting('global_assistant', config);
             setGlobalAssistantConfig(config);
         } catch (error) {
             console.error("Error saving global assistant config:", error);
@@ -549,7 +620,6 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Landing Chatbot Config Functions
     const saveLandingChatbotConfig = async (config: LandingChatbotConfig) => {
         try {
-            // Deep clean function to remove undefined values recursively
             const removeUndefined = (obj: any): any => {
                 if (obj === null || obj === undefined) return null;
                 if (Array.isArray(obj)) {
@@ -568,16 +638,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             };
 
             const cleanConfig = removeUndefined(config);
-
-            const configToSave = {
-                ...cleanConfig,
-                lastUpdated: serverTimestamp(),
-                updatedBy: user?.uid || '',
-            };
-
-            console.log('AdminContext: Saving config to Firestore:', configToSave);
-            await setDoc(doc(db, 'settings', 'landingChatbot'), configToSave);
-            console.log('AdminContext: Config saved successfully');
+            await saveSetting('landingChatbot', cleanConfig);
             setLandingChatbotConfig(config);
         } catch (error) {
             console.error("Error saving landing chatbot config:", error);
@@ -588,20 +649,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Global Ad Tracking Pixels Functions
     const saveGlobalAdPixels = async (config: AdPixelConfig) => {
         try {
-            // Clean undefined values
             const cleanConfig = Object.fromEntries(
                 Object.entries(config).filter(([_, v]) => v !== undefined)
             );
-
-            const configToSave = {
-                ...cleanConfig,
-                lastUpdated: serverTimestamp(),
-                updatedBy: user?.uid || '',
-            };
-
-            console.log('AdminContext: Saving global ad pixels to Firestore:', configToSave);
-            await setDoc(doc(db, 'settings', 'globalAdPixels'), configToSave);
-            console.log('AdminContext: Global ad pixels saved successfully');
+            await saveSetting('globalAdPixels', cleanConfig);
             setGlobalAdPixels(config);
         } catch (error) {
             console.error("Error saving global ad pixels:", error);
@@ -612,10 +663,9 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Global Chatbot Prompts Functions
     const fetchGlobalChatbotPrompts = async () => {
         try {
-            const docRef = doc(db, 'globalSettings', 'chatbotPrompts');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setGlobalChatbotPrompts(docSnap.data() as GlobalChatbotPrompts);
+            const config = await getSetting('chatbotPrompts');
+            if (config) {
+                setGlobalChatbotPrompts(config as GlobalChatbotPrompts);
             }
         } catch (error) {
             console.error('Error fetching global chatbot prompts:', error);
@@ -624,14 +674,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const saveGlobalChatbotPrompts = async (prompts: GlobalChatbotPrompts) => {
         try {
-            const configToSave = {
-                ...prompts,
-                updatedAt: new Date().toISOString(),
-                updatedBy: user?.uid || '',
-            };
-            await setDoc(doc(db, 'globalSettings', 'chatbotPrompts'), configToSave);
-            setGlobalChatbotPrompts(configToSave);
-            console.log('Global chatbot prompts saved successfully');
+            await saveSetting('chatbotPrompts', prompts);
+            setGlobalChatbotPrompts(prompts);
         } catch (error) {
             console.error('Error saving global chatbot prompts:', error);
             throw error;
@@ -657,9 +701,12 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const saveComponent = async (componentId: string, changeDescription?: string) => {
         try {
-            const componentRef = doc(db, 'componentDefaults', componentId);
             const styles = componentStyles[componentId as keyof ComponentStyles];
-            await setDoc(componentRef, { styles, updatedAt: new Date().toISOString() });
+            await supabase.from('component_defaults').upsert({
+                id: componentId,
+                styles,
+                updated_at: new Date().toISOString()
+            });
         } catch (error) {
             console.error("Error saving component:", error);
             throw error;
@@ -668,24 +715,36 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const createNewCustomComponent = async (name: string, baseComponent: EditableComponentID): Promise<CustomComponent> => {
         const now = new Date().toISOString();
-        const newComponent: Omit<CustomComponent, 'id'> = {
+        const { data, error } = await supabase.from('custom_components').insert([{
             name,
-            baseComponent,
+            base_component: baseComponent,
             styles: {},
-            createdAt: now,
-            updatedAt: now,
-            createdBy: user?.uid || '',
-            isPublic: false,
-            usageCount: 0,
-            versions: [],
-        };
+            created_at: now,
+            updated_at: now,
+            created_by: user?.id || null,
+            is_public: false,
+            usage_count: 0,
+            versions: []
+        }]).select('*').single();
 
-        const docRef = await addDoc(collection(db, 'customComponents'), newComponent);
-        return { ...newComponent, id: docRef.id } as CustomComponent;
+        if (error || !data) throw error || new Error("Failed to create custom component");
+
+        return {
+            id: data.id,
+            name: data.name,
+            baseComponent: data.base_component as any,
+            styles: data.styles,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            createdBy: data.created_by,
+            isPublic: data.is_public,
+            usageCount: data.usage_count,
+            versions: data.versions || []
+        } as CustomComponent;
     };
 
     const deleteCustomComponent = async (componentId: string) => {
-        await deleteDoc(doc(db, 'customComponents', componentId));
+        await supabase.from('custom_components').delete().eq('id', componentId);
     };
 
     const duplicateComponent = async (componentId: string): Promise<CustomComponent> => {
@@ -696,15 +755,15 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const renameCustomComponent = async (componentId: string, newName: string) => {
-        await updateDoc(doc(db, 'customComponents', componentId), { name: newName });
+        await supabase.from('custom_components').update({ name: newName }).eq('id', componentId);
     };
 
     const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string) => {
-        await updateDoc(doc(db, 'customComponents', componentId), {
+        await supabase.from('custom_components').update({
             variants,
-            activeVariant,
-            updatedAt: new Date().toISOString(),
-        });
+            active_variant: activeVariant,
+            updated_at: new Date().toISOString()
+        }).eq('id', componentId);
     };
 
     const exportComponent = (componentId: string): string => {
@@ -715,12 +774,37 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const importComponent = async (jsonString: string): Promise<CustomComponent> => {
         const parsed = JSON.parse(jsonString);
         delete parsed.id;
-        const docRef = await addDoc(collection(db, 'customComponents'), {
-            ...parsed,
-            createdAt: new Date().toISOString(),
-            createdBy: user?.uid || '',
-        });
-        return { ...parsed, id: docRef.id } as CustomComponent;
+        
+        const { data, error } = await supabase.from('custom_components').insert([{
+            name: parsed.name,
+            base_component: parsed.baseComponent,
+            styles: parsed.styles,
+            variants: parsed.variants,
+            active_variant: parsed.activeVariant,
+            is_public: parsed.isPublic,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            created_by: user?.id || null,
+            usage_count: 0,
+            versions: parsed.versions || []
+        }]).select('*').single();
+
+        if (error || !data) throw error || new Error("Import failed");
+
+        return {
+            id: data.id,
+            name: data.name,
+            baseComponent: data.base_component as any,
+            styles: data.styles,
+            variants: data.variants,
+            activeVariant: data.active_variant,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            createdBy: data.created_by,
+            isPublic: data.is_public,
+            usageCount: data.usage_count,
+            versions: data.versions || []
+        } as CustomComponent;
     };
 
     const revertToVersion = async (componentId: string, versionNumber: number) => {
@@ -729,21 +813,20 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         const version = component.versions.find(v => v.version === versionNumber);
         if (version) {
-            await updateDoc(doc(db, 'customComponents', componentId), {
+            await supabase.from('custom_components').update({
                 styles: version.styles,
-                updatedAt: new Date().toISOString(),
-            });
+                updated_at: new Date().toISOString()
+            }).eq('id', componentId);
         }
     };
 
     const trackComponentUsage = async (projectId: string, componentIds: string[]) => {
-        // Track usage statistics
         for (const componentId of componentIds) {
             const component = customComponents.find(c => c.id === componentId);
             if (component) {
-                await updateDoc(doc(db, 'customComponents', componentId), {
-                    usageCount: (component.usageCount || 0) + 1,
-                });
+                await supabase.from('custom_components').update({
+                    usage_count: (component.usageCount || 0) + 1
+                }).eq('id', componentId);
             }
         }
     };
@@ -751,7 +834,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Design Tokens Functions
     const updateDesignTokens = async (tokens: DesignTokens) => {
         try {
-            await setDoc(doc(db, 'settings', 'designTokens'), tokens);
+            await saveSetting('designTokens', tokens);
             setDesignTokens(tokens);
         } catch (error) {
             console.error("Error updating design tokens:", error);
@@ -762,9 +845,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // App Tokens Functions
     const updateAppTokens = async (tokens: AppTokens) => {
         try {
-            await setDoc(doc(db, 'settings', 'appTokens'), tokens);
+            await saveSetting('appTokens', tokens);
             setAppTokens(tokens);
-            // Apply tokens to CSS immediately
             const themeMode = (localStorage.getItem('themeMode') as ThemeMode) || 'dark';
             applyAppTokensToCSS(tokens, themeMode);
         } catch (error) {
@@ -777,7 +859,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updateComponentStatus = async (componentId: PageSection, isEnabled: boolean) => {
         try {
             const newStatus = { ...componentStatus, [componentId]: isEnabled };
-            await setDoc(doc(db, 'settings', 'components'), { status: newStatus });
+            await saveSetting('components', { status: newStatus });
             setComponentStatus(newStatus);
         } catch (error) {
             console.error("Error updating component status:", error);
@@ -849,14 +931,7 @@ export const useAdmin = (): AdminContextType => {
     return context;
 };
 
-/**
- * Safe version of useAdmin that returns null instead of throwing
- * Use this in components that might render outside AdminProvider
- */
 export const useSafeAdmin = (): AdminContextType | null => {
     const context = useContext(AdminContext);
     return context || null;
 };
-
-
-

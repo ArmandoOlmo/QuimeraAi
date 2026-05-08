@@ -240,7 +240,7 @@ Puedo ayudarte a:
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -251,7 +251,7 @@ Puedo ayudarte a:
             }
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-email-studio',
                 model: MODEL_TEXT,
                 feature: 'email-studio-chat',
@@ -267,7 +267,7 @@ Puedo ayudarte a:
             setAiMessages(prev => [...prev, errorMsg]);
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-email-studio',
                 model: MODEL_TEXT,
                 feature: 'email-studio-chat',
@@ -588,7 +588,7 @@ RESPONDE SOLO CON EL JSON:`;
                 'Eres un generador de JSON para bloques de email. Devuelve SOLO un objeto JSON válido con la estructura de bloques especificada. Sin markdown, sin explicaciones, sin backticks. Solo el JSON puro.',
                 MODEL_TEXT,
                 { temperature: 0.4, maxOutputTokens: 8192 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -671,7 +671,7 @@ RESPONDE SOLO CON EL JSON:`;
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['ai-generated'],
-                createdBy: user?.uid || 'ai-studio',
+                createdBy: user?.id || 'ai-studio',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -685,7 +685,7 @@ RESPONDE SOLO CON EL JSON:`;
                 ...newCampaign,
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
-                userId: user?.uid || 'admin',
+                userId: user?.id || 'admin',
                 projectId: 'admin',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -741,7 +741,7 @@ Conversación:\n${conversationSummary}`;
                 'ai-email-studio', [], prompt,
                 'Devuelve SOLO JSON válido.', MODEL_TEXT,
                 { temperature: 0.3, maxOutputTokens: 2048 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -772,7 +772,7 @@ Conversación:\n${conversationSummary}`;
                 tags: audienceData.tags || ['ai-generated'],
                 estimatedCount: audienceData.estimatedCount || 0,
                 isDefault: false,
-                createdBy: user?.uid || 'ai-studio',
+                createdBy: user?.id || 'ai-studio',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -784,7 +784,7 @@ Conversación:\n${conversationSummary}`;
                 ...newAudience,
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
-                userId: user?.uid || 'admin',
+                userId: user?.id || 'admin',
                 projectId: 'admin',
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -909,7 +909,7 @@ RESPONDE SOLO CON EL JSON:`;
                 'Eres un generador de JSON para automatizaciones de email. Devuelve SOLO un JSON válido con la estructura de flujo multi-paso especificada. Sin markdown, sin explicaciones, sin backticks. Solo el JSON puro.',
                 MODEL_TEXT,
                 { temperature: 0.4, maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             let responseText = extractTextFromResponse(response) || '';
@@ -1028,7 +1028,7 @@ RESPONDE SOLO CON EL JSON:`;
                         'Genera SOLO un JSON válido con un array de bloques de email. Sin markdown, sin backticks.',
                         MODEL_TEXT,
                         { temperature: 0.5, maxOutputTokens: 4096 },
-                        user?.uid
+                        user?.id
                     );
 
                     let emailResponseText = extractTextFromResponse(emailResponse) || '';
@@ -1098,7 +1098,7 @@ RESPONDE SOLO CON EL JSON:`;
                         tags: ['ai-generated', 'automation-email'],
                         automationId,
                         automationStepId: emailStep.id,
-                        createdBy: user?.uid || 'ai-studio',
+                        createdBy: user?.id || 'ai-studio',
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp(),
                     };
@@ -1112,7 +1112,7 @@ RESPONDE SOLO CON EL JSON:`;
                         ...campaignData,
                         tenantId: 'admin',
                         tenantName: 'Super Admin',
-                        userId: user?.uid || 'admin',
+                        userId: user?.id || 'admin',
                         projectId: 'admin',
                         createdAt: new Date(),
                         updatedAt: new Date(),

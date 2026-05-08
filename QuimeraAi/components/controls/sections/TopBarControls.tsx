@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -99,8 +99,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
 
-          <Input label={t('controls.text')} value={msg.text || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.text`, val)} />
-          <Input label={t('controls.linkText')} value={msg.linkText || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.linkText`, val)} placeholder="Shop Now" />
+          <I18nInput label={t('controls.text')} value={msg.text || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.text`, val)} />
+          <I18nInput label={t('controls.linkText')} value={msg.linkText || ''} onChange={(val) => setNestedData(`topBar.messages.${idx}.linkText`, val)} placeholder="Shop Now" />
 
           {/* Link Type Selector */}
           <div>

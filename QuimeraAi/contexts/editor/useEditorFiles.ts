@@ -4,14 +4,10 @@
  */
 import { useState, useEffect } from 'react';
 import { FileRecord, LLMPrompt } from '../../types';
-import {
-    db, doc, storage, collection, addDoc, updateDoc, deleteDoc, getDocs,
-    query, orderBy, serverTimestamp,
-    ref, uploadBytes, getDownloadURL, deleteObject
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
-import type { User } from '../../firebase';
+import type { User } from '../../firebase'; // keep using User interface
 
 interface UseEditorFilesParams {
     user: User | null;
@@ -43,14 +39,33 @@ export const useEditorFiles = ({
     const fetchAllFiles = async (userId: string, projectId?: string) => {
         setIsFilesLoading(true);
         try {
-            const filesPath = projectId
-                ? `users/${userId}/projects/${projectId}/files`
-                : `users/${userId}/files`;
-            const filesCol = collection(db, filesPath);
-            const q = query(filesCol, orderBy('createdAt', 'desc'));
-            const filesSnapshot = await getDocs(q);
-            const userFiles = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
-            setFiles(userFiles);
+            if (projectId) {
+                const { data, error } = await supabase
+                    .from('files')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                const userFiles = (data || []).map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    url: f.url,
+                    size: f.size,
+                    type: f.type,
+                    downloadURL: f.url,
+                    storagePath: f.metadata?.storagePath || '',
+                    projectId: f.project_id,
+                    createdAt: f.created_at,
+                    notes: f.metadata?.notes,
+                    aiSummary: f.metadata?.aiSummary
+                })) as FileRecord[];
+                setFiles(userFiles);
+            } else {
+                // If no projectId, fetch all tenant files... 
+                // But in the editor we always have projectId.
+                setFiles([]);
+            }
         } catch (error) {
             console.error("[useEditorFiles] Error loading user files:", error);
             setFiles([]);
@@ -62,36 +77,72 @@ export const useEditorFiles = ({
     // Reload files when activeProjectId changes
     useEffect(() => {
         if (user && activeProjectId) {
-            fetchAllFiles(user.uid, activeProjectId);
+            fetchAllFiles(user.id || (user as any).uid, activeProjectId);
         }
     }, [user, activeProjectId]);
 
     const uploadFile = async (file: File): Promise<string | undefined> => {
         if (!user) throw new Error("Authentication required to upload files.");
         if (!activeProjectId) throw new Error("No active project to upload file to.");
+        
         setIsFilesLoading(true);
         try {
-            const storageRef = ref(storage, `users/${user.uid}/projects/${activeProjectId}/files/${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            const userId = user.id || (user as any).uid;
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const timestamp = Date.now();
+            const storagePath = `users/${userId}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (uploadError) throw uploadError;
 
-            const newFileRecord: Omit<FileRecord, 'id'> = {
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
+
+            const { data: project } = await supabase.from('projects').select('tenant_id').eq('id', activeProjectId).single();
+
+            const fileRecord = {
+                tenant_id: project?.tenant_id || userId,
+                project_id: activeProjectId,
                 name: file.name,
-                storagePath: snapshot.ref.fullPath,
-                downloadURL,
+                url: downloadURL,
                 size: file.size,
                 type: file.type,
-                createdAt: serverTimestamp() as any,
-                notes: '',
-                aiSummary: '',
-                projectId: activeProjectId,
-                projectName: activeProjectName
+                metadata: {
+                    storagePath,
+                    notes: '',
+                    aiSummary: '',
+                    projectName: activeProjectName
+                },
+                created_at: new Date().toISOString()
             };
 
-            const filesCol = collection(db, `users/${user.uid}/projects/${activeProjectId}/files`);
-            const docRef = await addDoc(filesCol, newFileRecord);
+            const { data, error } = await supabase
+                .from('files')
+                .insert([fileRecord])
+                .select('id')
+                .single();
 
-            setFiles(prev => [{ id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord, ...prev]);
+            if (error) throw error;
+
+            const newFileRecord = {
+                id: data.id,
+                name: fileRecord.name,
+                url: fileRecord.url,
+                size: fileRecord.size,
+                type: fileRecord.type,
+                downloadURL,
+                storagePath,
+                projectId: activeProjectId,
+                createdAt: fileRecord.created_at,
+                notes: '',
+                aiSummary: ''
+            } as FileRecord;
+
+            setFiles(prev => [newFileRecord, ...prev]);
             return downloadURL;
         } catch (error) {
             console.error("[useEditorFiles] Error uploading file:", error);
@@ -104,10 +155,18 @@ export const useEditorFiles = ({
     const deleteFile = async (fileId: string, storagePath: string) => {
         if (!user || !activeProjectId) return;
         try {
-            const fileRef = ref(storage, storagePath);
-            await deleteObject(fileRef);
-            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
-            await deleteDoc(fileDocRef);
+            if (storagePath) {
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([storagePath]);
+            }
+            
+            const { error } = await supabase
+                .from('files')
+                .delete()
+                .eq('id', fileId);
+
+            if (error) throw error;
             setFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
             console.error("[useEditorFiles] Error deleting file:", error);
@@ -118,8 +177,16 @@ export const useEditorFiles = ({
         if (!user || !activeProjectId) return;
         setFiles(prev => prev.map(f => f.id === fileId ? { ...f, notes } : f));
         try {
-            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
-            await updateDoc(fileDocRef, { notes });
+            const file = files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const metadata = { ...file, notes };
+            const { error } = await supabase
+                .from('files')
+                .update({ metadata })
+                .eq('id', fileId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[useEditorFiles] Error updating file notes:", error);
         }
@@ -130,11 +197,26 @@ export const useEditorFiles = ({
     const fetchGlobalFiles = async () => {
         setIsGlobalFilesLoading(true);
         try {
-            const filesCol = collection(db, 'global_files');
-            const q = query(filesCol, orderBy('createdAt', 'desc'));
-            const filesSnapshot = await getDocs(q);
-            const files = filesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FileRecord));
-            setGlobalFiles(files);
+            const { data, error } = await supabase
+                .from('global_files')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            
+            const filesList = (data || []).map(f => ({
+                id: f.id,
+                name: f.name,
+                url: f.url,
+                size: f.size,
+                type: f.type,
+                downloadURL: f.url,
+                storagePath: f.metadata?.storagePath || '',
+                createdAt: f.created_at,
+                notes: 'Global Asset',
+                aiSummary: ''
+            } as FileRecord));
+            setGlobalFiles(filesList);
         } catch (error) {
             console.error("Error loading global files:", error);
             setGlobalFiles([]);
@@ -146,24 +228,53 @@ export const useEditorFiles = ({
     const uploadGlobalFile = async (file: File) => {
         setIsGlobalFilesLoading(true);
         try {
-            const storageRef = ref(storage, `global/files/${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            const timestamp = Date.now();
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const storagePath = `global/files/${timestamp}_${safeFileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (uploadError) throw uploadError;
 
-            const newFileRecord: Omit<FileRecord, 'id'> = {
+            const { data: { publicUrl: downloadURL } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
+
+            const userId = user?.id || (user as any)?.uid;
+            
+            const fileRecord = {
                 name: file.name,
-                storagePath: snapshot.ref.fullPath,
-                downloadURL,
+                url: downloadURL,
                 size: file.size,
                 type: file.type,
-                createdAt: serverTimestamp() as any,
-                notes: 'Global Asset',
-                aiSummary: ''
+                metadata: {
+                    storagePath,
+                    uploadedBy: userId,
+                },
+                created_at: new Date().toISOString()
             };
 
-            const filesCol = collection(db, 'global_files');
-            const docRef = await addDoc(filesCol, newFileRecord);
-            setGlobalFiles(prev => [{ id: docRef.id, ...newFileRecord, createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } } as FileRecord, ...prev]);
+            const { data, error } = await supabase
+                .from('global_files')
+                .insert([fileRecord])
+                .select('id')
+                .single();
+                
+            if (error) throw error;
+
+            const newFile = {
+                ...fileRecord,
+                id: data.id,
+                downloadURL,
+                storagePath,
+                createdAt: fileRecord.created_at,
+                notes: 'Global Asset',
+                aiSummary: ''
+            } as FileRecord;
+
+            setGlobalFiles(prev => [newFile, ...prev]);
         } catch (error) {
             console.error("Error uploading global file:", error);
         } finally {
@@ -173,10 +284,18 @@ export const useEditorFiles = ({
 
     const deleteGlobalFile = async (fileId: string, storagePath: string) => {
         try {
-            const fileRef = ref(storage, storagePath);
-            await deleteObject(fileRef);
-            const fileDocRef = doc(db, 'global_files', fileId);
-            await deleteDoc(fileDocRef);
+            if (storagePath) {
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([storagePath]);
+            }
+            
+            const { error } = await supabase
+                .from('global_files')
+                .delete()
+                .eq('id', fileId);
+
+            if (error) throw error;
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
             console.error("Error deleting global file:", error);
@@ -199,6 +318,8 @@ export const useEditorFiles = ({
 
         setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: 'Generating...' } : f));
 
+        const userId = user.id || (user as any).uid;
+
         try {
             const fileResponse = await fetch(downloadURL);
             if (!fileResponse.ok) throw new Error('Failed to fetch file for summary.');
@@ -206,25 +327,35 @@ export const useEditorFiles = ({
 
             const populatedPrompt = summaryPrompt.template.replace('{{fileContent}}', fileContent);
             const projectIdForApi = activeProjectId || 'file-summary';
-            const response = await generateContentViaProxy(projectIdForApi, populatedPrompt, summaryPrompt.model, {}, user.uid);
+            const response = await generateContentViaProxy(projectIdForApi, populatedPrompt, summaryPrompt.model, {}, userId);
 
             if (user) {
-                logApiCall({ userId: user.uid, model: summaryPrompt.model, feature: 'file-summary', success: true });
+                logApiCall({ userId: userId, model: summaryPrompt.model, feature: 'file-summary', success: true });
             }
 
             const summary = extractTextFromResponse(response).trim();
-            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
-            await updateDoc(fileDocRef, { aiSummary: summary });
+            
+            const file = files.find(f => f.id === fileId);
+            if (file) {
+                const metadata = { ...file, aiSummary: summary };
+                await supabase.from('files').update({ metadata }).eq('id', fileId);
+            }
+            
             setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: summary } : f));
         } catch (error: any) {
             if (user) {
-                logApiCall({ userId: user.uid, model: summaryPrompt.model, feature: 'file-summary', success: false, errorMessage: error.message || 'Unknown error' });
+                logApiCall({ userId: userId, model: summaryPrompt.model, feature: 'file-summary', success: false, errorMessage: error.message || 'Unknown error' });
             }
             handleApiError(error);
             console.error("[useEditorFiles] Error generating file summary:", error);
             const errorMessage = 'Error generating summary.';
-            const fileDocRef = doc(db, `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`);
-            await updateDoc(fileDocRef, { aiSummary: errorMessage });
+            
+            const file = files.find(f => f.id === fileId);
+            if (file) {
+                const metadata = { ...file, aiSummary: errorMessage };
+                await supabase.from('files').update({ metadata }).eq('id', fileId);
+            }
+            
             setFiles(prev => prev.map(f => f.id === fileId ? { ...f, aiSummary: errorMessage } : f));
         }
     };
@@ -232,10 +363,21 @@ export const useEditorFiles = ({
     const uploadImageAndGetURL = async (file: File, path: string): Promise<string> => {
         if (!user) throw new Error("User not authenticated for image upload.");
         try {
-            const storageRef = ref(storage, `user_uploads/${user.uid}/${path}/${Date.now()}-${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            return downloadURL;
+            const userId = user.id || (user as any).uid;
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const storagePath = `user_uploads/${userId}/${path}/${Date.now()}-${safeFileName}`;
+            
+            const { error } = await supabase.storage
+                .from('platform-assets')
+                .upload(storagePath, file, { upsert: true });
+                
+            if (error) throw error;
+            
+            const { data: { publicUrl } } = supabase.storage
+                .from('platform-assets')
+                .getPublicUrl(storagePath);
+                
+            return publicUrl;
         } catch (error) {
             console.error("Error uploading image:", error);
             throw error;

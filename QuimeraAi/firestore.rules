@@ -380,7 +380,14 @@ service cloud.firestore {
       // Helper: Check if user owns the source project
       // This allows publishing even if publicStore has stale userId
       function ownsSourceProject() {
-        return exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId));
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId)) ||
+               (resource != null && resource.data.tenantId != null && isTenantMember(resource.data.tenantId) && exists(/databases/$(database)/documents/tenants/$(resource.data.tenantId)/projects/$(storeId))) ||
+               (request.resource != null && request.resource.data.tenantId != null && isTenantMember(request.resource.data.tenantId) && exists(/databases/$(database)/documents/tenants/$(request.resource.data.tenantId)/projects/$(storeId)));
+      }
+      
+      function hasTenantAccess() {
+        return (resource != null && resource.data.tenantId != null && isTenantMember(resource.data.tenantId)) ||
+               (request.resource != null && request.resource.data.tenantId != null && isTenantMember(request.resource.data.tenantId));
       }
       
       // Only the store owner or superadmin can write
@@ -388,6 +395,7 @@ service cloud.firestore {
       allow create: if request.auth != null && (
         isSuperAdminOrOwner() || 
         request.resource.data.userId == request.auth.uid ||
+        hasTenantAccess() ||
         ownsSourceProject()
       );
       
@@ -396,6 +404,7 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && (
         isSuperAdminOrOwner() || 
         resource.data.userId == request.auth.uid ||
+        hasTenantAccess() ||
         ownsSourceProject()
       );
       
@@ -409,7 +418,8 @@ service cloud.firestore {
         allow write: if request.auth != null && (
           isSuperAdminOrOwner() || 
           get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
+          (get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId != null && isTenantMember(get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId)) ||
+          ownsSourceProject()
         );
       }
 
@@ -418,7 +428,8 @@ service cloud.firestore {
         allow write: if request.auth != null && (
           isSuperAdminOrOwner() || 
           get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
+          (get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId != null && isTenantMember(get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId)) ||
+          ownsSourceProject()
         );
       }
 
@@ -427,7 +438,8 @@ service cloud.firestore {
         allow write: if request.auth != null && (
           isSuperAdminOrOwner() || 
           get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
+          (get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId != null && isTenantMember(get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId)) ||
+          ownsSourceProject()
         ); 
       }
 
@@ -436,7 +448,8 @@ service cloud.firestore {
         allow write: if request.auth != null && (
           isSuperAdminOrOwner() || 
           get(/databases/$(database)/documents/publicStores/$(storeId)).data.userId == request.auth.uid ||
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(storeId))
+          (get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId != null && isTenantMember(get(/databases/$(database)/documents/publicStores/$(storeId)).data.tenantId)) ||
+          ownsSourceProject()
         ); 
       }
     }

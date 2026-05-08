@@ -788,7 +788,7 @@ Name: "${profile.name}"
 Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no explanation.`;
 
             const projectId = activeProjectId || 'bio-page-builder';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             const enhancedBio = extractTextFromResponse(response);
 
             if (enhancedBio && enhancedBio.trim()) {

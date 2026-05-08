@@ -273,7 +273,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     status: 'draft' as CampaignStatus,
                     stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                     tags: ['visual-editor'],
-                    createdBy: user?.uid || 'admin',
+                    createdBy: user?.id || 'admin',
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                 };
@@ -281,7 +281,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 setCampaigns(prev => [{
                     id: docRef.id, ...newCampaign,
                     tenantId: 'admin', tenantName: 'Super Admin',
-                    userId: user?.uid || 'admin', projectId: 'admin',
+                    userId: user?.id || 'admin', projectId: 'admin',
                     createdAt: new Date(), updatedAt: new Date(),
                 } as CrossTenantCampaign, ...prev]);
             }
@@ -393,7 +393,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
 
         try {
             const campaign = campaigns.find(c => c.id === campaignId);
-            const realUserId = campaign?.userId || user?.uid || 'admin';
+            const realUserId = campaign?.userId || user?.id || 'admin';
             const realProjectId = campaign?.projectId || 'admin';
 
             const payload: Record<string, any> = {
@@ -492,7 +492,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             const result = await supabase.functions.invoke('email-api', {
                 body: {
                     action: 'sendCampaign',
-                    userId: campaign.userId || user?.uid || 'admin',
+                    userId: campaign.userId || user?.id || 'admin',
                     storeId: campaign.projectId || 'admin',
                     campaignId: sendingCampaignId,
                 }
@@ -559,7 +559,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['duplicate'],
-                createdBy: user?.uid || 'admin',
+                createdBy: user?.id || 'admin',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -567,7 +567,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             setCampaigns(prev => [{
                 id: docRef.id, ...dupData,
                 tenantId: 'admin', tenantName: 'Super Admin',
-                userId: user?.uid || 'admin', projectId: 'admin',
+                userId: user?.id || 'admin', projectId: 'admin',
                 createdAt: new Date(), updatedAt: new Date(),
             } as CrossTenantCampaign, ...prev]);
         } catch (err) {
@@ -773,7 +773,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             tags: ['automation-email'],
             automationId,
             automationStepId: stepId,
-            createdBy: user?.uid || 'admin',
+            createdBy: user?.id || 'admin',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
@@ -817,7 +817,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             ...campaignData,
             tenantId: 'admin',
             tenantName: 'Super Admin',
-            userId: user?.uid || 'admin',
+            userId: user?.id || 'admin',
             projectId: 'admin',
             createdAt: new Date(),
             updatedAt: new Date(),

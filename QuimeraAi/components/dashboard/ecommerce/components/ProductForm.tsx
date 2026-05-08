@@ -37,8 +37,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
     const theme = useEcommerceTheme();
-    const { addProduct, updateProduct, uploadImage, deleteImage, isLoading } = useProducts(user?.uid || '', storeId);
-    const { categories } = useCategories(user?.uid || '', storeId);
+    const { addProduct, updateProduct, uploadImage, deleteImage, isLoading } = useProducts(user?.id || '', storeId);
+    const { categories } = useCategories(user?.id || '', storeId);
     
     // AI Generation Hook
     const {
@@ -51,7 +51,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSuccess }
         isGeneratingTags,
         isGeneratingAll,
         error: aiError,
-    } = useProductAI(user?.uid, storeId);
+    } = useProductAI(user?.id, storeId);
 
     const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({

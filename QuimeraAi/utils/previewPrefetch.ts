@@ -1,11 +1,13 @@
 /**
  * Preview Data Prefetch
- * Starts Firestore fetch IMMEDIATELY when a /preview/ URL is detected,
+ * Starts Supabase fetch IMMEDIATELY when a /preview/ URL is detected,
  * BEFORE React even hydrates. This runs in parallel with the lazy component load,
  * saving ~2-5s of sequential waiting.
+ * 
+ * Data source: Supabase projects.published_data + posts table
  */
 
-import { db, doc, getDoc, collection, getDocs, query, orderBy } from '../firebase';
+import { supabase } from '../supabase';
 
 export interface PrefetchedPreviewData {
     project: any | null;
@@ -40,25 +42,40 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
     }
 
     try {
-        // Fire ALL requests in parallel: project doc, posts, and tenant branding
-        const publicStoreRef = doc(db, 'publicStores', projectId);
-        const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
-        const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
+        // Fire requests in parallel: project + posts + tenant branding
+        const projectResult = await supabase
+            .from('projects')
+            .select('id, tenant_id, user_id, name, published_data, data')
+            .eq('id', projectId)
+            .single();
 
+        const tenantId = projectResult.data?.tenant_id;
         const promises: Promise<any>[] = [
-            getDoc(publicStoreRef),
-            getDocs(publicPostsQuery),
+            // 1. Get published posts. The remote posts table is tenant-scoped, not project-scoped.
+            tenantId
+                ? supabase
+                    .from('posts')
+                    .select('*')
+                    .eq('tenant_id', tenantId)
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false })
+                : Promise.resolve({ data: [], error: null }),
         ];
 
         // Also fetch tenant branding if we have userId
         if (userId) {
-            promises.push(getDoc(doc(db, 'tenants', `tenant_${userId}`)));
+            promises.push(
+                supabase
+                    .from('tenants')
+                    .select('branding')
+                    .eq('owner_user_id', userId)
+                    .single()
+            );
         }
 
         const results = await Promise.all(promises);
-        const publicStoreSnap = results[0];
-        const publicPostsSnap = results[1];
-        const tenantSnap = results[2]; // may be undefined
+        const postsResult = results[0];
+        const tenantResult = results[1]; // may be undefined
 
         let project: any = null;
         let posts: any[] = [];
@@ -66,63 +83,41 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         let categories: any[] = [];
         let tenantBranding: { logoUrl?: string; companyName?: string } | null = null;
 
-        if (publicStoreSnap.exists()) {
-            const rawData = publicStoreSnap.data();
-            project = { id: publicStoreSnap.id, ...rawData };
-            menus = rawData.menus && Array.isArray(rawData.menus) ? rawData.menus : [];
-            categories = rawData.categories && Array.isArray(rawData.categories) ? rawData.categories : [];
+        // Process project data
+        if (projectResult.data) {
+            const row = projectResult.data;
+            // /preview routes are editor previews, so prefer draft data.
+            // Public domains use PublicWebsitePreview's non-prefetch path and prefer published_data.
+            const sourceData = row.data || row.published_data || {};
+            project = {
+                id: row.id,
+                userId: row.user_id,
+                name: row.name || sourceData.name,
+                ...sourceData,
+            };
+            menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
+            categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
         }
 
-        if (publicPostsSnap && !publicPostsSnap.empty) {
-            posts = publicPostsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+        // Process posts
+        if (postsResult.data && postsResult.data.length > 0) {
+            posts = postsResult.data.map((p: any) => ({ id: p.id, ...p }));
         }
 
-        if (tenantSnap?.exists?.()) {
-            const d = tenantSnap.data();
-            if (d?.branding?.logoUrl || d?.branding?.companyName) {
+        // Process tenant branding
+        if (tenantResult?.data?.branding) {
+            const b = tenantResult.data.branding;
+            if (b.logoUrl || b.companyName) {
                 tenantBranding = {
-                    logoUrl: d.branding.logoUrl,
-                    companyName: d.branding.companyName,
+                    logoUrl: b.logoUrl,
+                    companyName: b.companyName,
                 };
             }
         }
 
-        // If no project from publicStores, try user projects
-        if (!project && userId) {
-            try {
-                const userProjectSnap = await getDoc(doc(db, 'users', userId, 'projects', projectId));
-                if (userProjectSnap.exists()) {
-                    project = { id: userProjectSnap.id, ...userProjectSnap.data() };
-                    menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
-                    categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
-                }
-            } catch (_) { /* ignore */ }
-        }
-
-        // If project was found but categories are still empty, try user project doc for categories
-        if (project && categories.length === 0 && userId) {
-            try {
-                const userProjectSnap = await getDoc(doc(db, 'users', userId, 'projects', projectId));
-                if (userProjectSnap.exists()) {
-                    const upData = userProjectSnap.data();
-                    if (upData?.categories && Array.isArray(upData.categories) && upData.categories.length > 0) {
-                        categories = upData.categories;
-                        console.log('[PreviewPrefetch] ✅ Loaded categories from user project (fallback):', categories.length);
-                    }
-                }
-            } catch (_) { /* ignore */ }
-        }
-
-        // Last resort: templates
-        if (!project) {
-            try {
-                const templateSnap = await getDoc(doc(db, 'templates', projectId));
-                if (templateSnap.exists()) {
-                    project = { id: templateSnap.id, ...templateSnap.data() };
-                    menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
-                    categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
-                }
-            } catch (_) { /* ignore */ }
+        // If ecommerce data is embedded in published_data, extract categories
+        if (project?.ecommerce?.categories && categories.length === 0) {
+            categories = project.ecommerce.categories.map((c: any) => ({ id: c.id, ...c.data }));
         }
 
         return { project, posts, menus, categories, tenantBranding, userId, projectId, error: project ? null : 'Project not found' };

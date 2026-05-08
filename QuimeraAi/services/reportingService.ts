@@ -3,8 +3,7 @@
  * Service for aggregating data from multiple clients and generating reports
  */
 
-import { db } from '../firebase';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import type { Tenant, TenantUsage } from '../types/multiTenant';
 import type {
     ReportMetric,
@@ -23,21 +22,34 @@ export class ReportingService {
         dateRange: ReportDateRange,
         metrics: ReportMetric[]
     ): Promise<AggregatedReportData> {
-        const startTime = dateRange.start.getTime();
-        const endTime = dateRange.end.getTime();
-
         // Fetch all client data
-        const clientsQuery = query(
-            collection(db, 'tenants'),
-            where('ownerTenantId', '==', agencyTenantId),
-            where('__name__', 'in', clientIds.length > 0 ? clientIds : ['dummy'])
-        );
+        let query = supabase
+            .from('tenants')
+            .select('*')
+            .eq('owner_tenant_id', agencyTenantId);
 
-        const clientsSnapshot = await getDocs(clientsQuery);
-        const clients: Tenant[] = [];
-        clientsSnapshot.forEach((doc) => {
-            clients.push({ id: doc.id, ...doc.data() } as Tenant);
-        });
+        if (clientIds.length > 0) {
+            query = query.in('id', clientIds);
+        }
+
+        const { data: clientsData, error } = await query;
+        if (error) {
+            console.error('[ReportingService] Error fetching clients:', error);
+            return this.getEmptyReport(dateRange, clientIds, metrics);
+        }
+
+        const clients: Tenant[] = (clientsData || []).map(doc => ({
+            id: doc.id,
+            name: doc.name,
+            ownerTenantId: doc.owner_tenant_id,
+            domain: doc.domain,
+            plan: doc.plan,
+            status: doc.status,
+            createdAt: doc.created_at ? new Date(doc.created_at) : new Date(),
+            updatedAt: doc.updated_at ? new Date(doc.updated_at) : new Date(),
+            settings: doc.settings,
+            usage: doc.usage
+        }));
 
         // Calculate metrics for each client
         const clientMetrics: ClientMetrics[] = [];
@@ -67,6 +79,23 @@ export class ReportingService {
         };
     }
 
+    private getEmptyReport(dateRange: ReportDateRange, clientIds: string[], metrics: ReportMetric[]): AggregatedReportData {
+        return {
+            summary: this.calculateSummary([]),
+            byClient: [],
+            trends: {
+                topPerformingClients: [],
+                underperformingClients: [],
+                periodOverPeriodComparison: { leadsGrowth: 0, revenueGrowth: 0, trafficGrowth: 0 }
+            },
+            recommendations: ['No data available'],
+            generatedAt: new Date(),
+            dateRange,
+            includedClients: clientIds,
+            metrics
+        };
+    }
+
     /**
      * Get metrics for a single client
      */
@@ -75,24 +104,17 @@ export class ReportingService {
         dateRange: ReportDateRange,
         includeTrends: boolean = true
     ): Promise<ClientMetrics> {
-        const startTimestamp = Timestamp.fromDate(dateRange.start);
-        const endTimestamp = Timestamp.fromDate(dateRange.end);
-
         // Get leads data
-        const leadsData = await this.getLeadsMetrics(client.id, startTimestamp, endTimestamp);
+        const leadsData = await this.getLeadsMetrics(client.id, dateRange.start, dateRange.end);
 
         // Get traffic data
-        const trafficData = await this.getTrafficMetrics(
-            client.id,
-            startTimestamp,
-            endTimestamp
-        );
+        const trafficData = await this.getTrafficMetrics(client.id, dateRange.start, dateRange.end);
 
         // Get sales data
-        const salesData = await this.getSalesMetrics(client.id, startTimestamp, endTimestamp);
+        const salesData = await this.getSalesMetrics(client.id, dateRange.start, dateRange.end);
 
         // Get email data
-        const emailData = await this.getEmailMetrics(client.id, startTimestamp, endTimestamp);
+        const emailData = await this.getEmailMetrics(client.id, dateRange.start, dateRange.end);
 
         // Get resource usage
         const usage = client.usage || this.getDefaultUsage();
@@ -110,22 +132,10 @@ export class ReportingService {
             const previousMetrics = await this.getClientMetrics(client, previousDateRange, false);
 
             trends = {
-                leadsChange: this.calculatePercentageChange(
-                    leadsData.totalLeads,
-                    previousMetrics.totalLeads
-                ),
-                visitsChange: this.calculatePercentageChange(
-                    trafficData.totalVisits,
-                    previousMetrics.totalVisits
-                ),
-                revenueChange: this.calculatePercentageChange(
-                    salesData.totalRevenue,
-                    previousMetrics.totalRevenue
-                ),
-                emailPerformanceChange: this.calculatePercentageChange(
-                    emailData.openRate,
-                    previousMetrics.openRate
-                ),
+                leadsChange: this.calculatePercentageChange(leadsData.totalLeads, previousMetrics.totalLeads),
+                visitsChange: this.calculatePercentageChange(trafficData.totalVisits, previousMetrics.totalVisits),
+                revenueChange: this.calculatePercentageChange(salesData.totalRevenue, previousMetrics.totalRevenue),
+                emailPerformanceChange: this.calculatePercentageChange(emailData.openRate, previousMetrics.openRate),
             };
         }
 
@@ -149,18 +159,20 @@ export class ReportingService {
      */
     private async getLeadsMetrics(
         tenantId: string,
-        startDate: Timestamp,
-        endDate: Timestamp
+        startDate: Date,
+        endDate: Date
     ) {
-        const leadsQuery = query(
-            collection(db, 'leads'),
-            where('tenantId', '==', tenantId),
-            where('createdAt', '>=', startDate),
-            where('createdAt', '<=', endDate)
-        );
+        const { data: leads, error } = await supabase
+            .from('leads')
+            .select('status, source')
+            .eq('tenant_id', tenantId)
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString());
 
-        const leadsSnapshot = await getDocs(leadsQuery);
-        const leads = leadsSnapshot.docs.map((doc) => doc.data());
+        if (error) {
+            console.error('[ReportingService] Error fetching leads metrics:', error);
+            return { totalLeads: 0, newLeads: 0, convertedLeads: 0, conversionRate: 0, leadsBySource: {} };
+        }
 
         const totalLeads = leads.length;
         const newLeads = leads.filter((l) => l.status === 'new').length;
@@ -188,30 +200,31 @@ export class ReportingService {
      */
     private async getTrafficMetrics(
         tenantId: string,
-        startDate: Timestamp,
-        endDate: Timestamp
+        startDate: Date,
+        endDate: Date
     ) {
-        // Query analytics collection
-        const analyticsQuery = query(
-            collection(db, 'analytics'),
-            where('tenantId', '==', tenantId),
-            where('timestamp', '>=', startDate),
-            where('timestamp', '<=', endDate)
-        );
+        // Assume an 'analytics' table will exist in Supabase
+        const { data: sessions, error } = await supabase
+            .from('analytics')
+            .select('visitor_id, page_views, duration')
+            .eq('tenant_id', tenantId)
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString());
 
-        const analyticsSnapshot = await getDocs(analyticsQuery);
-        const sessions = analyticsSnapshot.docs.map((doc) => doc.data());
+        if (error || !sessions) {
+            return { totalVisits: 0, uniqueVisitors: 0, pageViews: 0, avgSessionDuration: 0, bounceRate: 0 };
+        }
 
         const totalVisits = sessions.length;
-        const uniqueVisitors = new Set(sessions.map((s) => s.visitorId)).size;
-        const pageViews = sessions.reduce((sum, s) => sum + (s.pageViews || 1), 0);
+        const uniqueVisitors = new Set(sessions.map((s) => s.visitor_id)).size;
+        const pageViews = sessions.reduce((sum, s) => sum + (Number(s.page_views) || 1), 0);
 
         // Calculate average session duration
-        const totalDuration = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const totalDuration = sessions.reduce((sum, s) => sum + (Number(s.duration) || 0), 0);
         const avgSessionDuration = totalVisits > 0 ? totalDuration / totalVisits : 0;
 
         // Calculate bounce rate
-        const bounces = sessions.filter((s) => s.pageViews === 1 && s.duration < 30).length;
+        const bounces = sessions.filter((s) => Number(s.page_views) === 1 && Number(s.duration) < 30).length;
         const bounceRate = totalVisits > 0 ? (bounces / totalVisits) * 100 : 0;
 
         return {
@@ -228,26 +241,26 @@ export class ReportingService {
      */
     private async getSalesMetrics(
         tenantId: string,
-        startDate: Timestamp,
-        endDate: Timestamp
+        startDate: Date,
+        endDate: Date
     ) {
-        const ordersQuery = query(
-            collection(db, 'orders'),
-            where('tenantId', '==', tenantId),
-            where('status', '==', 'paid'),
-            where('createdAt', '>=', startDate),
-            where('createdAt', '<=', endDate)
-        );
+        // Assume an 'orders' table will exist in Supabase
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select('total')
+            .eq('tenant_id', tenantId)
+            .eq('status', 'paid')
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString());
 
-        const ordersSnapshot = await getDocs(ordersQuery);
-        const orders = ordersSnapshot.docs.map((doc) => doc.data());
+        if (error || !orders) {
+            return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, conversionToSale: 0 };
+        }
 
         const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+        const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-        // Calculate conversion to sale (from leads)
-        // This would require cross-referencing leads to orders
         const conversionToSale = 0; // Placeholder
 
         return {
@@ -263,22 +276,24 @@ export class ReportingService {
      */
     private async getEmailMetrics(
         tenantId: string,
-        startDate: Timestamp,
-        endDate: Timestamp
+        startDate: Date,
+        endDate: Date
     ) {
-        const campaignsQuery = query(
-            collection(db, 'emailCampaigns'),
-            where('tenantId', '==', tenantId),
-            where('sentAt', '>=', startDate),
-            where('sentAt', '<=', endDate)
-        );
+        // Assume an 'email_campaigns' table will exist in Supabase
+        const { data: campaigns, error } = await supabase
+            .from('email_campaigns')
+            .select('recipient_count, opens_count, clicks_count')
+            .eq('tenant_id', tenantId)
+            .gte('sent_at', startDate.toISOString())
+            .lte('sent_at', endDate.toISOString());
 
-        const campaignsSnapshot = await getDocs(campaignsQuery);
-        const campaigns = campaignsSnapshot.docs.map((doc) => doc.data());
+        if (error || !campaigns) {
+            return { emailsSent: 0, emailsOpened: 0, emailsClicked: 0, openRate: 0, clickRate: 0 };
+        }
 
-        const emailsSent = campaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0);
-        const emailsOpened = campaigns.reduce((sum, c) => sum + (c.opensCount || 0), 0);
-        const emailsClicked = campaigns.reduce((sum, c) => sum + (c.clicksCount || 0), 0);
+        const emailsSent = campaigns.reduce((sum, c) => sum + (Number(c.recipient_count) || 0), 0);
+        const emailsOpened = campaigns.reduce((sum, c) => sum + (Number(c.opens_count) || 0), 0);
+        const emailsClicked = campaigns.reduce((sum, c) => sum + (Number(c.clicks_count) || 0), 0);
 
         const openRate = emailsSent > 0 ? (emailsOpened / emailsSent) * 100 : 0;
         const clickRate = emailsSent > 0 ? (emailsClicked / emailsSent) * 100 : 0;
@@ -347,10 +362,6 @@ export class ReportingService {
             }));
 
         // Period over period comparison (aggregate)
-        const previousDateRange = this.getPreviousPeriodRange(dateRange);
-        const currentTotals = this.calculateSummary(clientMetrics);
-
-        // For simplicity, we'll use the trends from individual clients
         const avgLeadsGrowth =
             clientMetrics.length > 0
                 ? clientMetrics.reduce((sum, c) => sum + c.trends.leadsChange, 0) /

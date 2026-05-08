@@ -7,6 +7,7 @@ import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { usePlans } from '../../contexts/PlansContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { usePersistedBoolean } from '../../hooks/usePersistedState';
+import { useAppLogo } from '../../hooks/useAppLogo';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { Sparkles, Crown, ChevronUp, ChevronDown } from 'lucide-react';
@@ -29,6 +30,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const upgradeContext = useSafeUpgrade();
     const { plansArray, getPlan } = usePlans();
     const { usage } = useCreditsUsage();
+    const { logoUrl: appLogoUrl } = useAppLogo();
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
 
@@ -74,7 +76,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                 {/* Greeting Header with CTA */}
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4">
                     <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
-                        {/* Logo - conditional: tenant logo > generic agency icon > Quimera logo */}
+                        {/* Logo - conditional: tenant logo > App logo */}
                         {tenantContext?.currentTenant?.branding?.logoUrl ? (
                             <img
                                 src={tenantContext.currentTenant.branding.logoUrl}
@@ -85,21 +87,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 loading="eager"
                                 decoding="async"
                             />
-                        ) : tenantContext?.currentTenant?.branding?.companyName ? (
-                            <div
-                                className="w-9 h-9 sm:w-12 sm:h-12 md:w-16 md:h-16 flex items-center justify-center rounded-xl sm:rounded-2xl mr-2 sm:mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
-                                style={{
-                                    backgroundColor:
-                                        (tenantContext.currentTenant.branding as any)?.primaryColor ||
-                                        'hsl(var(--primary))',
-                                }}
-                            >
-                                <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
-                            </div>
                         ) : (
                             <img
-                                src="/logos/quimera-icon.svg"
-                                alt="Quimera Logo"
+                                src={appLogoUrl}
+                                alt="App Logo"
                                 className="w-9 h-9 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain mr-2 sm:mr-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.4)]"
                                 width={64}
                                 height={64}

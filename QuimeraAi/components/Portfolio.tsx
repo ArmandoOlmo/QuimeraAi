@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PortfolioData, PortfolioItem, PaddingSize, BorderRadiusSize, FontSize, AnimationType, TextAlignment, ObjectFit, CornerGradientConfig } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
@@ -297,9 +298,9 @@ const STATIC_PARTICLES = [
 ];
 
 const Portfolio: React.FC<PortfolioProps> = ({
-  title,
-  description,
-  items = [],
+  title: rawTitle,
+  description: rawDescription,
+  items: rawItems = [],
   paddingY,
   paddingX,
   colors,
@@ -320,6 +321,27 @@ const Portfolio: React.FC<PortfolioProps> = ({
   glassEffect,
   onNavigate
 }) => {
+  const { i18n } = useTranslation();
+  
+  const resolveText = (text: any) => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    if (typeof text === 'object' && text !== null) {
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      return text[preferred] || text.es || text.en || Object.values(text)[0] || '';
+    }
+    return String(text);
+  };
+
+  const title = resolveText(rawTitle);
+  const description = resolveText(rawDescription);
+  const items = (rawItems || []).map(item => ({
+    ...item,
+    title: resolveText(item.title),
+    description: resolveText(item.description),
+    linkText: resolveText(item.linkText)
+  }));
+
   // Derive particle color from heading color or fallback
   const particleColor = colors?.heading || colors?.accent || 'rgba(255,255,255,0.5)';
   // --- RENDERIZADO IMAGE OVERLAY ---

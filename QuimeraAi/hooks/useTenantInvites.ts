@@ -335,7 +335,7 @@ export function useMyInvites(): UseMyInvitesReturn {
             }
             
             // Check if already a member
-            const membershipId = getMembershipId(invite.tenantId, user.uid);
+            const membershipId = getMembershipId(invite.tenantId, user.id);
             const existingMembership = await getDoc(doc(db, 'tenantMembers', membershipId));
             
             if (existingMembership.exists()) {
@@ -356,7 +356,7 @@ export function useMyInvites(): UseMyInvitesReturn {
             
             const membershipData: Omit<TenantMembership, 'id' | 'tenant'> = {
                 tenantId: invite.tenantId,
-                userId: user.uid,
+                userId: user.id,
                 role: invite.role,
                 permissions,
                 invitedBy: invite.invitedBy,
@@ -372,7 +372,7 @@ export function useMyInvites(): UseMyInvitesReturn {
             await updateDoc(doc(db, 'tenantInvites', inviteId), {
                 status: 'accepted' as InviteStatus,
                 acceptedAt: serverTimestamp(),
-                acceptedByUserId: user.uid,
+                acceptedByUserId: user.id,
             });
             
             // Update tenant user count
@@ -515,7 +515,7 @@ export function useInviteByToken(token: string | null): UseInviteByTokenReturn {
             }
             
             // Check if already a member
-            const membershipId = getMembershipId(invite.tenantId, user.uid);
+            const membershipId = getMembershipId(invite.tenantId, user.id);
             const existingMembership = await getDoc(doc(db, 'tenantMembers', membershipId));
             
             if (existingMembership.exists()) {
@@ -536,7 +536,7 @@ export function useInviteByToken(token: string | null): UseInviteByTokenReturn {
             
             const membershipData: Omit<TenantMembership, 'id' | 'tenant'> = {
                 tenantId: invite.tenantId,
-                userId: user.uid,
+                userId: user.id,
                 role: invite.role,
                 permissions,
                 invitedBy: invite.invitedBy,
@@ -552,7 +552,7 @@ export function useInviteByToken(token: string | null): UseInviteByTokenReturn {
             await updateDoc(doc(db, 'tenantInvites', invite.id), {
                 status: 'accepted' as InviteStatus,
                 acceptedAt: serverTimestamp(),
-                acceptedByUserId: user.uid,
+                acceptedByUserId: user.id,
             });
             
             // Update tenant user count

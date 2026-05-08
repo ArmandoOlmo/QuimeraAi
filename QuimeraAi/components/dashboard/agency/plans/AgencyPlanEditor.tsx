@@ -224,7 +224,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
         setErrors([]);
 
         try {
-            const result = await saveAgencyPlan(formData, user?.uid);
+            const result = await saveAgencyPlan(formData, user?.id);
             if (result.success) {
                 onSave();
             } else {

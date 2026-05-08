@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, ToggleControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -29,7 +29,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.faqLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'faqLumina.headline', value: data.faqLumina.headline, context: 'FAQ Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.faqLumina.headline || ''} 
               onChange={(val) => setNestedData('faqLumina.headline', val)} 
@@ -40,7 +40,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.faqLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'faqLumina.subheadline', value: data.faqLumina.subheadline || '', context: 'FAQ Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.faqLumina.subheadline || ''} 
               onChange={(val) => setNestedData('faqLumina.subheadline', val)} 
               rows={2}
@@ -70,13 +70,13 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
             
             <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Question #{idx + 1}</span>
 
-            <Input 
+            <I18nInput 
               label={t('editor.faqLumina.question', 'Question')} 
               value={faq.question || ''} 
               onChange={(val) => setNestedData(`faqLumina.faqs.${idx}.question`, val)} 
             />
             
-            <TextArea 
+            <I18nTextArea 
               label={t('editor.faqLumina.answer', 'Answer')} 
               value={faq.answer || ''} 
               onChange={(val) => setNestedData(`faqLumina.faqs.${idx}.answer`, val)} 

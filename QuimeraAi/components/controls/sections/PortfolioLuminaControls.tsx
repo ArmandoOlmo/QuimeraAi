@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, Select, ToggleControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
@@ -31,7 +31,7 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.portfolioLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'portfolioLumina.headline', value: data.portfolioLumina.headline, context: 'Portfolio Lumina Headline' })}
           >
-            <Input 
+            <I18nInput 
               label=""
               value={data.portfolioLumina.headline || ''} 
               onChange={(val) => setNestedData('portfolioLumina.headline', val)} 
@@ -42,7 +42,7 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.portfolioLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'portfolioLumina.subheadline', value: data.portfolioLumina.subheadline || '', context: 'Portfolio Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.portfolioLumina.subheadline || ''} 
               onChange={(val) => setNestedData('portfolioLumina.subheadline', val)} 
               rows={2}
@@ -80,12 +80,12 @@ export const renderPortfolioLuminaControls = (deps: ControlsDeps) => {
             />
 
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <Input 
+              <I18nInput 
                 label={t('editor.portfolioLumina.projectTitle', 'Title')} 
                 value={project.title || ''} 
                 onChange={(val) => setNestedData(`portfolioLumina.projects.${idx}.title`, val)} 
               />
-              <Input 
+              <I18nInput 
                 label={t('editor.portfolioLumina.projectCategory', 'Category')} 
                 value={project.category || ''} 
                 onChange={(val) => setNestedData(`portfolioLumina.projects.${idx}.category`, val)} 

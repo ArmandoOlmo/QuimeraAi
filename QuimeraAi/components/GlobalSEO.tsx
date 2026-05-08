@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SEOConfig } from '../types';
-import { db, doc, getDoc } from '../firebase';
-
+import { supabase } from '../supabase';
 interface GlobalSEOProps {
   config: SEOConfig;
   customMeta?: Array<{ name?: string; property?: string; content: string }>;
@@ -19,14 +18,22 @@ interface AppInfoConfig {
 const GlobalSEO: React.FC<GlobalSEOProps> = ({ config, customMeta = [] }) => {
   const [appInfo, setAppInfo] = useState<AppInfoConfig | null>(null);
 
-  // Load global app information from Firestore
+  // Load global app information from Supabase
   useEffect(() => {
     const loadAppInfo = async () => {
       try {
-        const settingsRef = doc(db, 'globalSettings', 'appInfo');
-        const settingsSnap = await getDoc(settingsRef);
-        if (settingsSnap.exists()) {
-          setAppInfo(settingsSnap.data() as AppInfoConfig);
+        const { data, error } = await supabase
+            .from('settings')
+            .select('config')
+            .eq('id', 'appInfo')
+            .maybeSingle();
+
+        if (error) {
+            throw error;
+        }
+
+        if (data && data.config) {
+          setAppInfo(data.config as AppInfoConfig);
         }
       } catch (error) {
         console.error('Error loading global app info for SEO:', error);

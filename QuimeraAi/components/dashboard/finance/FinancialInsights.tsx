@@ -75,14 +75,14 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
                 prompt,
                 'gemini-2.5-flash',
                 { temperature: 0.4 },
-                user.uid,
+                user.id,
             );
 
             const text = extractTextFromResponse(response);
             setInsights(text);
 
             logApiCall({
-                userId: user.uid,
+                userId: user.id,
                 projectId: activeProject?.id,
                 model: 'gemini-2.5-flash',
                 feature: 'accounting-financial-insights',
@@ -92,7 +92,7 @@ Keep the response concise, professional, and under 500 words. Use bullet points 
             console.error('[FinancialInsights] generation error:', err);
             setError(err.message || t('accounting.insightsError', 'Could not generate insights'));
             logApiCall({
-                userId: user.uid,
+                userId: user.id,
                 projectId: activeProject?.id,
                 model: 'gemini-2.5-flash',
                 feature: 'accounting-financial-insights',

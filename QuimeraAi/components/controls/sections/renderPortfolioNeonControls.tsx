@@ -5,7 +5,7 @@ import { Type, Settings, Maximize2, RotateCcw, Trash2, Plus, Image as ImageIcon 
 import ColorControl from '../../ui/ColorControl';
 import {
   ToggleControl, SliderControl, Input, TextArea, Select
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 
@@ -37,7 +37,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                         context: 'Portfolio Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('portfolioNeon.headline', val)}
                         rows={2}
@@ -52,7 +52,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                         context: 'Portfolio Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('portfolioNeon.subheadline', val)}
                         rows={2}
@@ -97,7 +97,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                                 context: `Portfolio Neon Image ${index} Title` 
                             })}
                         >
-                            <Input
+                            <I18nInput
                                 value={item.title || ''}
                                 onChange={(val) => setNestedData(`portfolioNeon.images.${index}.title`, val)}
                             />
@@ -111,7 +111,7 @@ export const renderPortfolioNeonControls = (deps: ControlsDeps) => {
                                 context: `Portfolio Neon Image ${index} Description` 
                             })}
                         >
-                            <TextArea
+                            <I18nTextArea
                                 value={item.description || ''}
                                 onChange={(val) => setNestedData(`portfolioNeon.images.${index}.description`, val)}
                                 rows={2}

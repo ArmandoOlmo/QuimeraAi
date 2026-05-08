@@ -33,8 +33,8 @@ const ProductsView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { products, isLoading, deleteProduct, updateProduct } = useProducts(user?.uid || '', storeId);
-    const { categories } = useCategories(user?.uid || '', storeId);
+    const { products, isLoading, deleteProduct, updateProduct } = useProducts(user?.id || '', storeId);
+    const { categories } = useCategories(user?.id || '', storeId);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');

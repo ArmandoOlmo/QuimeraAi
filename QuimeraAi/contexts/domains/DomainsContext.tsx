@@ -7,20 +7,7 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { Domain, DeploymentLog } from '../../types';
-import {
-    db,
-    doc,
-    collection,
-    getDocs,
-    getDoc,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    setDoc,
-    query,
-    orderBy,
-    onSnapshot,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
@@ -45,6 +32,37 @@ interface DomainsContextType {
 
 const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
 
+const mapCustomDomainRow = (row: any): Domain => {
+    const data = row.data || {};
+    const domainName = row.domain_name || data.domain || data.name;
+
+    return {
+        id: domainName,
+        name: domainName,
+        projectId: data.projectId || data.project_id || row.project_id,
+        projectUserId: data.projectUserId || data.project_user_id,
+        userId: row.user_id || data.userId || data.user_id,
+        status: data.status || row.status || 'pending',
+        sslStatus: data.sslStatus || data.ssl_status || row.ssl_status || 'pending',
+        createdAt: data.createdAt || row.created_at || row.updated_at,
+        dnsVerified: data.dnsVerified ?? data.dns_verified ?? row.dns_verified ?? false,
+        cloudRunTarget: data.cloudRunTarget || data.cloud_run_target || row.cloud_run_target,
+        ...data,
+    } as any;
+};
+
+const toCustomDomainData = (domain: Partial<Domain>, normalizedDomain: string) => ({
+    domain: normalizedDomain,
+    name: normalizedDomain,
+    projectId: domain.projectId || null,
+    projectUserId: domain.projectUserId,
+    status: domain.status || 'pending',
+    sslStatus: domain.sslStatus || 'pending',
+    dnsVerified: domain.dnsVerified ?? false,
+    cloudRunTarget: domain.cloudRunTarget || 'quimera-ssr-575386543550.us-central1.run.app',
+    updatedAt: new Date().toISOString(),
+});
+
 export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const projectContext = useSafeProject();
@@ -65,20 +83,20 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Fetch domains
     const fetchUserDomains = useCallback(async (userId: string) => {
         try {
-            console.log(`📂 [DomainsContext] Fetching domains for user: ${userId}`);
-            const domainsCol = collection(db, 'users', userId, 'domains');
-            const q = query(domainsCol, orderBy('createdAt', 'desc'));
-            const snap = await getDocs(q);
-            const userDomains = snap.docs.map(docSnapshot => {
-                const data = docSnapshot.data();
-                // IMPORTANT: Use docSnapshot.id (Firestore document ID), NOT data.id
-                return {
-                    ...data,
-                    id: docSnapshot.id,  // This MUST come after ...data to override any "id" field in the document
-                } as Domain;
-            });
-            console.log(`✅ [DomainsContext] Loaded ${userDomains.length} domains from Firestore`);
-            userDomains.forEach(d => console.log(`   - ${d.name} (docId: ${d.id}, projectId: ${d.projectId})`));
+            const { data, error } = await supabase
+                .from('custom_domains')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("❌ [DomainsContext] Supabase Error:", error);
+                return;
+            }
+
+            const userDomains = (data || []).map(mapCustomDomainRow);
+
+            console.log(`✅ [DomainsContext] Loaded ${userDomains.length} domains from Supabase`);
             setDomains(userDomains);
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error loading domains:", error);
@@ -89,7 +107,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Load domains when user changes
     useEffect(() => {
         if (user) {
-            fetchUserDomains(user.uid);
+            fetchUserDomains(user.id);
         } else {
             setDomains([]);
         }
@@ -97,207 +115,179 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Load deployment logs (scoped to active project)
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setDeploymentLogs([]);
             return;
         }
 
-        // Project-scoped deployment logs path
-        const logsPath = `users/${user.uid}/projects/${activeProjectId}/deploymentLogs`;
-        const q = query(
-            collection(db, logsPath),
-            orderBy('timestamp', 'desc')
-        );
+        const fetchLogs = async () => {
+            const { data, error } = await supabase
+                .from('deployment_logs')
+                .select('*')
+                .eq('project_id', activeProjectId)
+                .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const logs = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as DeploymentLog[];
-            setDeploymentLogs(logs);
-        }, (error: any) => {
-            // Silently ignore permission-denied errors (collection may not exist yet)
-            if (error.code !== 'permission-denied' && error.code !== 'failed-precondition') {
-                console.error("[DomainsContext] Error fetching deployment logs:", error);
+            if (!error && data) {
+                setDeploymentLogs(data.map(log => ({
+                    id: log.id,
+                    domainId: log.domain_id,
+                    projectId: log.project_id,
+                    action: log.action as any,
+                    provider: log.provider as any,
+                    status: log.status as any,
+                    message: log.message,
+                    error: log.error,
+                    url: log.url,
+                    timestamp: log.created_at,
+                    metadata: log.metadata
+                })));
             }
-        });
+        };
+
+        fetchLogs();
+
+        const channel = supabase.channel(`public:deployment_logs:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'deployment_logs',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchLogs();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
     // Helper to add deployment log (project-scoped)
     const addDeploymentLog = useCallback(async (logData: Omit<DeploymentLog, 'id' | 'projectId'>) => {
-        if (!user || !activeProjectId) return;
+        if (!user || !activeProjectId || !currentTenantId) return;
 
-        const logsPath = `users/${user.uid}/projects/${activeProjectId}/deploymentLogs`;
-        await addDoc(collection(db, logsPath), {
-            ...logData,
-            projectId: activeProjectId,
-        });
-    }, [user, activeProjectId]);
+        await supabase.from('deployment_logs').insert([{
+            tenant_id: currentTenantId,
+            project_id: activeProjectId,
+            domain_id: logData.domainId,
+            action: logData.action,
+            provider: logData.provider,
+            status: logData.status,
+            message: logData.message || null,
+            error: logData.error || null,
+            url: logData.url || null,
+            created_at: logData.timestamp || new Date().toISOString(),
+            metadata: {}
+        }]);
+    }, [user, activeProjectId, currentTenantId]);
 
-    // Add domain (syncs to both user collection and global customDomains)
-    // Now also creates Cloud Run domain mapping for automatic SSL
+    // Add domain
     const addDomain = async (domain: Domain) => {
         if (!user) return;
 
         try {
-            // Don't save the temporary "id" field - Firestore will generate the real ID (now we use name)
             const { id: _tempId, ...domainDataWithoutId } = domain;
-
-            // Ensure projectId is set (use active project if not specified)
             const projectIdToUse = domain.projectId || activeProjectId;
-
-            // Store projectUserId and projectTenantId for cross-user deployment support
-            // If not provided, default to current user/tenant
-            const projectUserIdToUse = domain.projectUserId || user.uid;
-            const projectTenantIdToUse = domain.projectTenantId || currentTenantId || null;
-
-            // Normalize domain for use as ID
+            const projectUserIdToUse = domain.projectUserId || user.id;
             const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
-            const domainId = normalizedDomain; // Use the domain itself as ID to prevent duplicates
+            const domainId = normalizedDomain; 
 
-            const agencyLandingTenantId = domain.agencyLandingTenantId || null;
+            // Sync to global customDomains table
+            await supabase.from('custom_domains').upsert({
+                domain_name: normalizedDomain,
+                user_id: user.id, // Who created the domain entry
+                data: toCustomDomainData({
+                    ...domain,
+                    projectId: projectIdToUse || undefined,
+                    projectUserId: projectUserIdToUse,
+                    status: 'ssl_pending',
+                    sslStatus: 'provisioning',
+                    dnsVerified: false,
+                    cloudRunTarget: 'cname.vercel-dns.com', // Legacy property name, points to Vercel now
+                }, normalizedDomain),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'domain_name' });
 
-            await setDoc(doc(db, 'users', user.uid, 'domains', domainId), {
-                ...domainDataWithoutId,
-                projectId: projectIdToUse,
-                projectUserId: projectUserIdToUse,
-                projectTenantId: projectTenantIdToUse,
-                agencyLandingTenantId,
-                createdAt: new Date().toISOString(),
-                status: 'ssl_pending', // Start with SSL pending since we're creating mapping
-            }, { merge: true });
-
-            // Use the domain as the ID
             const newDomain = {
                 ...domainDataWithoutId,
                 id: domainId,
                 projectId: projectIdToUse,
                 projectUserId: projectUserIdToUse,
-                projectTenantId: projectTenantIdToUse,
                 status: 'ssl_pending',
             } as Domain;
 
-            // Check if it already exists in state to avoid duplicate UI entries before refetch
             setDomains(prev => {
                 const filtered = prev.filter(d => d.id !== domainId);
                 return [newDomain, ...filtered];
             });
 
-            // Sync to global customDomains collection for domain resolution
-            await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                domain: normalizedDomain,
-                projectId: projectIdToUse || null,
-                projectUserId: projectUserIdToUse,
-                projectTenantId: projectTenantIdToUse,
-                agencyLandingTenantId: agencyLandingTenantId || null,
-                userId: user.uid, // Who created the domain entry
-                status: 'ssl_pending',
-                sslStatus: 'provisioning',
-                dnsVerified: false,
-                cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            }, { merge: true });
-
             console.log(`✅ [DomainsContext] Domain added with ID: ${domainId}, projectId: ${projectIdToUse}`);
 
-            // ============================================
-            // AUTOMATIC: Create Cloud Run domain mapping for SSL
-            // This happens in the background - no user action required
-            // ============================================
+            // AUTOMATIC: Bind custom domain to Vercel Project
             try {
-                console.log(`🔐 [DomainsContext] Creating Cloud Run domain mapping for: ${normalizedDomain}`);
-                const { setupFullDomainMapping } = await import('../../services/domainService');
-                const mappingResult = await setupFullDomainMapping(normalizedDomain, projectIdToUse || undefined);
+                console.log(`🔐 [DomainsContext] Binding domain to Vercel: ${normalizedDomain}`);
+                const DeploymentService = (await import('../../utils/deploymentService')).DeploymentService;
+                const deploymentService = DeploymentService.getInstance();
+                const mappingResult = await deploymentService.addDomainToVercel(normalizedDomain);
 
                 if (mappingResult.success) {
-                    console.log(`✅ [DomainsContext] Cloud Run mapping created:`, mappingResult);
+                    console.log(`✅ [DomainsContext] Domain successfully added to Vercel.`);
 
-                    // Update status based on result
-                    const newStatus = mappingResult.cloudRunStatus === 'ready' ? 'active' : 'ssl_pending';
-                    await updateDoc(doc(db, 'users', user.uid, 'domains', domainId), {
-                        status: newStatus,
-                        sslStatus: mappingResult.cloudRunStatus === 'ready' ? 'active' : 'provisioning',
-                        cloudRunMappingCreated: true,
-                        cloudflareConfigured: mappingResult.cloudflareConfigured,
-                        cloudflareNameservers: mappingResult.nameservers || null,
-                    });
+                    const newStatus = 'pending';
+                    const newSslStatus = 'provisioning';
+                    
+                    await supabase.from('custom_domains').update({
+                        data: toCustomDomainData({
+                            ...newDomain,
+                            status: newStatus,
+                            sslStatus: newSslStatus,
+                        }, normalizedDomain),
+                        updated_at: new Date().toISOString()
+                    }).eq('domain_name', normalizedDomain);
 
-                    // Update local state
                     setDomains(prev => prev.map(d =>
                         d.id === domainId
-                            ? { ...d, status: newStatus, sslStatus: mappingResult.cloudRunStatus === 'ready' ? 'active' : 'provisioning' }
+                            ? { ...d, status: newStatus, sslStatus: newSslStatus }
                             : d
                     ));
                 } else {
-                    console.warn(`⚠️ [DomainsContext] Cloud Run mapping failed:`, mappingResult.error);
-                    // Domain still added, but SSL needs manual setup
+                    console.warn(`⚠️ [DomainsContext] Vercel mapping failed:`, mappingResult.error);
                 }
             } catch (mappingError: any) {
-                console.error(`❌ [DomainsContext] Cloud Run mapping error:`, mappingError);
-                // Domain still added, user can retry verification later
+                console.error(`❌ [DomainsContext] Vercel mapping error:`, mappingError);
             }
-
         } catch (error) {
             console.error("[DomainsContext] Error adding domain:", error);
             throw error;
         }
     };
 
-    // Update domain (syncs to both user collection and global customDomains)
+    // Update domain
     const updateDomain = async (id: string, data: Partial<Domain>) => {
         if (!user) return;
 
         try {
-            await updateDoc(doc(db, 'users', user.uid, 'domains', id), {
-                ...data,
-                updatedAt: new Date().toISOString(),
-            });
-
-            // Get the domain to sync
             const domain = domains.find(d => d.id === id);
+            
+            const normalizedDomain = (domain?.name || id).toLowerCase().replace(/^www\./, '');
+            
+            const updatedDomain = { ...(domain || {}), ...data } as Partial<Domain>;
+            
+            await supabase.from('custom_domains').update({
+                data: toCustomDomainData(updatedDomain, normalizedDomain),
+                updated_at: new Date().toISOString()
+            }).eq('domain_name', normalizedDomain);
 
-            setDomains(prev => prev.map(d =>
-                d.id === id ? { ...d, ...data } : d
-            ));
-
-            // Sync to global customDomains collection
-            if (domain?.name) {
-                const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
-                const syncData: any = {
-                    projectId: data.projectId !== undefined ? data.projectId : domain.projectId,
-                    status: data.status || domain.status,
-                    sslStatus: data.sslStatus || domain.sslStatus || 'pending',
-                    updatedAt: new Date().toISOString(),
-                };
-
-                // Also sync projectUserId and projectTenantId if provided
-                if (data.projectUserId !== undefined) {
-                    syncData.projectUserId = data.projectUserId;
-                }
-                if (data.projectTenantId !== undefined) {
-                    syncData.projectTenantId = data.projectTenantId;
-                }
-                // Sync agency landing tenant ID
-                if (data.agencyLandingTenantId !== undefined) {
-                    syncData.agencyLandingTenantId = data.agencyLandingTenantId;
-                }
-
-                await setDoc(doc(db, 'customDomains', normalizedDomain), syncData, { merge: true });
-                console.log(`✅ [DomainsContext] Domain updated in customDomains: ${normalizedDomain} -> projectId: ${data.projectId || domain.projectId}`);
-            }
+            setDomains(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+            
+            console.log(`✅ [DomainsContext] Domain updated: ${normalizedDomain}`);
         } catch (error) {
             console.error("[DomainsContext] Error updating domain:", error);
             throw error;
         }
     };
 
-    // Delete domain (via Cloud Function - handles both Firestore collections + SSL cleanup)
+    // Delete domain
     const deleteDomain = async (id: string) => {
         if (!user) {
             console.error("❌ [DomainsContext] No user logged in");
@@ -305,60 +295,42 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         console.log(`🗑️ [DomainsContext] Deleting domain: ${id}`);
-
         const domain = domains.find(d => d.id === id);
         const domainName = domain?.name || id;
         const normalizedDomain = domainName.toLowerCase().trim().replace(/^www\./, '');
 
         try {
-            // Use Cloud Function for reliable deletion (admin SDK, bypasses security rules)
-            // Also cleans up SSL certificates in Certificate Manager
             const { removeCustomDomainFromProject } = await import('../../services/domainService');
             console.log(`🔐 [DomainsContext] Calling domains-remove for: ${normalizedDomain}`);
             const result = await removeCustomDomainFromProject(normalizedDomain);
 
             if (!result.success) {
                 console.warn(`⚠️ [DomainsContext] Cloud Function returned error: ${result.error}`);
-                // If Cloud Function fails (e.g., domain not found in customDomains), 
-                // fall back to direct Firestore delete
-                throw new Error(result.error || 'Cloud Function delete failed');
             }
-
-            console.log(`✅ [DomainsContext] Cloud Function delete succeeded`);
-
         } catch (cloudFnError: any) {
-            console.warn(`⚠️ [DomainsContext] Cloud Function delete failed, trying direct delete:`, cloudFnError.message);
-
-            // Fallback: direct Firestore delete (in case Cloud Function is down or domain not in customDomains)
-            try {
-                await deleteDoc(doc(db, 'users', user.uid, 'domains', id));
-                console.log(`✅ [DomainsContext] Direct delete from user domains succeeded`);
-            } catch (directErr: any) {
-                console.error(`❌ [DomainsContext] Direct delete also failed:`, directErr.message);
-            }
-
-            try {
-                await deleteDoc(doc(db, 'customDomains', normalizedDomain));
-                console.log(`✅ [DomainsContext] Direct delete from customDomains succeeded`);
-            } catch (e) {
-                // Non-blocking
-            }
+            console.warn(`⚠️ [DomainsContext] Cloud Function delete failed, continuing with direct delete:`, cloudFnError.message);
         }
 
-        // Update local state
+        try {
+            await supabase.from('custom_domains').delete().eq('domain_name', normalizedDomain);
+            console.log(`✅ [DomainsContext] Direct delete from custom_domains succeeded`);
+        } catch (e) {
+            console.error(`❌ [DomainsContext] Delete failed:`, e);
+        }
+
         setDomains(prev => prev.filter(d => d.id !== id));
         console.log(`🎉 [DomainsContext] Domain deleted: ${domainName}`);
     };
 
-    // Refetch domains from Firestore
+    // Refetch domains
     const refetch = useCallback(async () => {
         if (user) {
             console.log("🔄 [DomainsContext] Refetching domains...");
-            await fetchUserDomains(user.uid);
+            await fetchUserDomains(user.id);
         }
     }, [user, fetchUserDomains]);
 
-    // Verify domain (DNS check) - does REAL verification before marking as active
+    // Verify domain (DNS check)
     const verifyDomain = async (id: string): Promise<boolean> => {
         if (!user) return false;
 
@@ -367,18 +339,12 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (!domain) return false;
 
             console.log(`🔍 [DomainsContext] Verifying domain: ${domain.name}`);
-
             const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
 
-            // Update status to verifying
             await updateDomain(id, { status: 'verifying' });
 
-            // ============================================
-            // 1. AUTO-RECOVERY: Check/Create Cloud Run Mapping
-            // Ensure backend mapping exists before testing URL
-            // ============================================
+            // AUTO-RECOVERY
             try {
-                console.log(`🔧 [DomainsContext] Checking Cloud Run mapping status...`);
                 const { checkCloudRunDomainMappingStatus, createCloudRunDomainMapping } = await import('../../services/domainService');
                 const mappingStatus = await checkCloudRunDomainMappingStatus(normalizedDomain);
 
@@ -386,56 +352,38 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     console.log(`⚠️ [DomainsContext] Cloud Run mapping missing. Attempting to create...`);
                     const createResult = await createCloudRunDomainMapping(normalizedDomain);
                     if (createResult.success) {
-                        console.log(`✅ [DomainsContext] Cloud Run mapping created successfully`);
                         await updateDomain(id, {
                             cloudRunMappingCreated: true,
                             sslStatus: 'provisioning',
-                            status: 'ssl_pending' // Force SSL pending status so UI shows provisioning
+                            status: 'ssl_pending' 
                         });
-                        // Return early - let SSL verify in background, or wait for next user verify
-                        // But we can continue to try HTTP check just in case
                     }
                 } else if (mappingStatus.ready) {
-                    console.log(`✅ [DomainsContext] Cloud Run mapping is READY`);
                     await updateDomain(id, { sslStatus: 'active' });
                 } else {
-                    console.log(`⏳ [DomainsContext] Cloud Run mapping exists but pending: ${mappingStatus.certificateStatus}`);
                     await updateDomain(id, { sslStatus: 'provisioning' });
                 }
             } catch (e) {
                 console.warn("⚠️ [DomainsContext] Failed to check/recover Cloud Run status:", e);
             }
 
-            // ============================================
-            // 2. REAL VERIFICATION: Try to fetch the domain
-            // This checks if DNS is configured and SSL is working
-            // ============================================
+            // REAL VERIFICATION
             try {
                 const testUrl = `https://${normalizedDomain}`;
                 console.log(`🔍 [DomainsContext] Testing URL: ${testUrl}`);
 
-                const response = await fetch(testUrl, {
-                    method: 'HEAD',
-                    mode: 'no-cors', // Allow cross-origin
-                    cache: 'no-cache'
-                });
-
-                // If we get here without error, the domain is reachable
-                // Note: no-cors mode always returns opaque response, so we can't check status
-                // But if fetch succeeds, DNS + SSL are working
+                await fetch(testUrl, { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
                 console.log(`✅ [DomainsContext] Domain ${normalizedDomain} is reachable`);
 
-                // Domain is working - mark as active
-                await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                    domain: normalizedDomain,
-                    projectId: domain.projectId || null,
-                    userId: user.uid,
-                    status: 'active',
-                    sslStatus: 'active',
-                    dnsVerified: true,
-                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
+                await supabase.from('custom_domains').update({
+                    data: toCustomDomainData({
+                        ...domain,
+                        status: 'active',
+                        sslStatus: 'active',
+                        dnsVerified: true,
+                    }, normalizedDomain),
+                    updated_at: new Date().toISOString()
+                }).eq('domain_name', normalizedDomain);
 
                 await updateDomain(id, {
                     status: 'active',
@@ -444,31 +392,15 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 });
 
                 return true;
-
             } catch (fetchError: any) {
                 console.log(`⏳ [DomainsContext] Domain ${normalizedDomain} not ready yet: ${fetchError.message}`);
 
-                // Domain not ready yet - keep as pending
                 await updateDomain(id, {
                     status: 'pending',
                     sslStatus: 'pending',
                 });
-
-                // Still save to customDomains so SSR knows about it
-                await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                    domain: normalizedDomain,
-                    projectId: domain.projectId || null,
-                    userId: user.uid,
-                    status: 'pending',
-                    sslStatus: 'pending',
-                    dnsVerified: false,
-                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                    updatedAt: new Date().toISOString()
-                }, { merge: true });
-
                 return false;
             }
-
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error verifying domain:", error);
             await updateDomain(id, { status: 'error' });
@@ -476,7 +408,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    // Deploy domain - Uses centralized publish service (like Shopify/Wix)
+    // Deploy domain
     const deployDomain = async (
         domainId: string,
         provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom' = 'cloud_run'
@@ -490,14 +422,11 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.log(`🚀 [DomainsContext] Deploying domain: ${domain.name} using provider: ${provider}`);
 
             if (!domain.projectId) {
-                console.error('❌ [DomainsContext] No project linked to this domain');
                 throw new Error("No hay un proyecto vinculado a este dominio");
             }
 
-            // Update status to deploying
             await updateDomain(domainId, { status: 'deploying' });
 
-            // Log deployment start
             await addDeploymentLog({
                 domainId,
                 action: 'deploy_start',
@@ -507,50 +436,31 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 message: `Iniciando despliegue en ${provider}...`
             });
 
-            // Handle Cloud Run / Custom / Quimera (SSR Mapping)
             if (provider === 'cloud_run' || provider === 'custom' || domain.provider === 'Quimera') {
                 const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
 
-                console.log(`📡 [DomainsContext] Publishing project using centralized service...`);
-
-                // ============================================
-                // STEP 1: CHECK IF PROJECT IS LOADED IN EDITOR
-                // If loaded, use snapshot (single source of truth)
-                // Otherwise, publishService will read from Firestore
-                // ============================================
                 let projectSnapshot: any = null;
-                let projectUserId = domain.projectUserId || user.uid;
+                let projectUserId = domain.projectUserId || user.id;
                 const projectTenantId = domain.projectTenantId || currentTenantId;
 
-                // Check if project is currently loaded in the editor
                 if (projectContext?.activeProjectId === domain.projectId && projectContext.getProjectSnapshot) {
                     projectSnapshot = projectContext.getProjectSnapshot();
-                    if (projectSnapshot) {
-                        console.log(`📸 [DomainsContext] Using editor snapshot for project: ${projectSnapshot.name}`);
-                    }
                 }
 
-                // If not loaded in editor, try to get userId from loaded projects
                 if (!projectSnapshot && !domain.projectUserId && projectContext?.projects) {
                     const loadedProject = projectContext.projects.find(p => p.id === domain.projectId);
                     if (loadedProject?.userId) {
                         projectUserId = loadedProject.userId;
-                        console.log(`📋 [DomainsContext] Found projectUserId from loaded projects: ${projectUserId}`);
-                        await updateDomain(domainId, { projectUserId });
                     }
                 }
 
-                // ============================================
-                // STEP 2: PUBLISH USING CENTRALIZED SERVICE
-                // ============================================
                 const { publishProject: publishToService } = await import('../../services/publishService');
-
                 const publishResult = await publishToService({
                     userId: projectUserId,
                     projectId: domain.projectId,
                     tenantId: projectTenantId || null,
-                    projectSnapshot: projectSnapshot || undefined, // Use snapshot if available
-                    saveDraftFirst: !!projectSnapshot, // Only save draft if using snapshot
+                    projectSnapshot: projectSnapshot || undefined,
+                    saveDraftFirst: !!projectSnapshot,
                     includeEcommerce: true,
                     includeCMS: true,
                 });
@@ -559,31 +469,16 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     throw new Error(publishResult.error || 'Error publishing project');
                 }
 
-                console.log(`✅ [DomainsContext] Project published via service at ${publishResult.publishedAt}`);
-                if (publishResult.stats) {
-                    console.log(`   📦 Products: ${publishResult.stats.productsPublished}`);
-                    console.log(`   📂 Categories: ${publishResult.stats.categoriesPublished}`);
-                    console.log(`   📝 Posts: ${publishResult.stats.postsPublished}`);
-                }
+                await supabase.from('custom_domains').update({
+                    data: toCustomDomainData({
+                        ...domain,
+                        status: 'active',
+                        sslStatus: 'active',
+                        dnsVerified: true,
+                    }, normalizedDomain),
+                    updated_at: new Date().toISOString()
+                }).eq('domain_name', normalizedDomain);
 
-                // ============================================
-                // STEP 3: REGISTER DOMAIN IN customDomains
-                // ============================================
-                const domainData = {
-                    domain: normalizedDomain,
-                    projectId: domain.projectId,
-                    userId: user.uid,
-                    status: 'active',
-                    sslStatus: 'active',
-                    dnsVerified: true,
-                    cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                    updatedAt: new Date().toISOString()
-                };
-
-                await setDoc(doc(db, 'customDomains', normalizedDomain), domainData, { merge: true });
-                console.log(`✅ [DomainsContext] Domain synced to customDomains: ${normalizedDomain}`);
-
-                // Update domain status to active
                 await updateDomain(domainId, {
                     status: 'active',
                     sslStatus: 'active',
@@ -596,7 +491,6 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     }
                 });
 
-                // Log success
                 await addDeploymentLog({
                     domainId,
                     action: 'deploy_success',
@@ -607,25 +501,19 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                     url: `https://${domain.name}`,
                 });
 
-                console.log(`🎉 [DomainsContext] Deploy complete for ${domain.name}`);
                 return true;
             }
 
             // Handle Static Providers (Vercel, Cloudflare, Netlify)
-            // Fetch project data from Firestore
-            const projectDoc = await getDocs(query(collection(db, 'users', user.uid, 'projects')));
-            const projectData = projectDoc.docs.find(d => d.id === domain.projectId)?.data() as any;
+            const { data: projectData } = await supabase.from('projects').select('*').eq('id', domain.projectId).single();
 
             if (!projectData) {
                 throw new Error("Project data not found");
             }
 
             const project = { id: domain.projectId, ...projectData };
-
-            // Use deployment service with full objects
             const result = await deploymentService.deployProject(project, domain, provider as any);
 
-            // Update domain status
             await updateDomain(domainId, {
                 status: result.success ? 'active' : 'error',
                 deployment: {
@@ -638,7 +526,6 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 }
             });
 
-            // Log deployment result (project-scoped)
             await addDeploymentLog({
                 domainId,
                 action: result.success ? 'deploy_success' : 'deploy_failed',
@@ -653,8 +540,6 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             return result.success;
         } catch (error: any) {
             console.error("❌ [DomainsContext] Error deploying domain:", error);
-
-            // Log error (project-scoped)
             await addDeploymentLog({
                 domainId,
                 action: 'deploy_error',
@@ -663,13 +548,11 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 message: 'Error durante el despliegue',
                 error: error instanceof Error ? error.message : String(error) || 'Unknown error',
             });
-
             await updateDomain(domainId, { status: 'error' });
             return false;
         }
     };
 
-    // Get deployment logs for a domain
     const getDomainDeploymentLogs = (domainId: string): DeploymentLog[] => {
         return deploymentLogs.filter(log => log.domainId === domainId);
     };
@@ -698,4 +581,3 @@ export const useDomains = (): DomainsContextType => {
     }
     return context;
 };
-

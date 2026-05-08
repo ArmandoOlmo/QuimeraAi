@@ -4,20 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    onSnapshot,
-    serverTimestamp,
-    collection,
-    query,
-    orderBy,
-    addDoc,
-    deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../supabase';
 import {
     EmailSettings,
     TransactionalEmailSettings,
@@ -75,87 +62,69 @@ export const useEmailSettings = (
 
     // Fetch or subscribe to settings
     useEffect(() => {
-        // Only proceed if we have valid userId and projectId (not empty or 'default')
         if (!userId || !projectId || projectId === 'default') {
-            console.log('⚠️ [useEmailSettings] Invalid userId/projectId, using defaults');
             setSettings(defaultEmailSettings);
             setIsLoading(false);
             return;
         }
 
-        console.log(`🔄 [useEmailSettings] Init for Project: ${projectId}`);
-        const settingsPath = `users/${userId}/projects/${projectId}/settings/email`;
-        const settingsRef = doc(db, settingsPath);
-        let unsubscribe: (() => void) | undefined;
         let isMounted = true;
 
-        // Safety timeout to prevent infinite loading
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted && isLoading) {
-                console.warn('⚠️ [useEmailSettings] Safety timeout triggered - forcing loading to completion');
-                setIsLoading(false);
-                // We keep the current settings (or null/default) but stop the spinner
-                if (!settings) setSettings(defaultEmailSettings);
-            }
-        }, 15000); // 15 seconds timeout
+        const fetchSettings = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('project_email_settings')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .single();
 
-        if (realtime) {
-            // Realtime subscription
-            unsubscribe = onSnapshot(
-                settingsRef,
-                (snapshot) => {
-                    if (!isMounted) return;
-                    console.log(`✅ [useEmailSettings] Snapshot received via realtime`);
-                    clearTimeout(safetyTimeout); // Clear timeout on success
+                if (!isMounted) return;
 
-                    if (snapshot.exists()) {
-                        setSettings(snapshot.data() as EmailSettings);
-                    } else {
-                        console.log('ℹ️ [useEmailSettings] No settings found, using defaults');
-                        setSettings(defaultEmailSettings);
-                    }
-                    setIsLoading(false);
-                    setError(null);
-                },
-                (err) => {
-                    if (!isMounted) return;
-                    console.error('❌ [useEmailSettings] Error fetching settings:', err);
-                    clearTimeout(safetyTimeout);
-                    setError(err.message);
-                    setSettings(defaultEmailSettings);
-                    setIsLoading(false);
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
                 }
-            );
-        } else {
-            // One-time fetch
-            getDoc(settingsRef)
-                .then((snapshot) => {
-                    if (!isMounted) return;
-                    console.log(`✅ [useEmailSettings] Snapshot received via getDoc`);
-                    clearTimeout(safetyTimeout);
 
-                    if (snapshot.exists()) {
-                        setSettings(snapshot.data() as EmailSettings);
-                    } else {
-                        setSettings(defaultEmailSettings);
-                    }
-                    setIsLoading(false);
-                })
-                .catch((err) => {
-                    if (!isMounted) return;
-                    console.error('❌ [useEmailSettings] Error fetching settings:', err);
-                    clearTimeout(safetyTimeout);
-                    setError(err.message);
+                if (data) {
+                    setSettings(data as EmailSettings);
+                } else {
                     setSettings(defaultEmailSettings);
-                    setIsLoading(false);
-                });
+                }
+            } catch (err: any) {
+                if (!isMounted) return;
+                console.error('❌ [useEmailSettings] Error fetching settings:', err);
+                setError(err.message);
+                setSettings(defaultEmailSettings);
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
+
+        fetchSettings();
+
+        let subscription: any;
+        if (realtime) {
+            const channelId = `email_settings_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+            subscription = supabase
+                .channel(channelId)
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'project_email_settings', filter: `project_id=eq.${projectId}` },
+                    (payload) => {
+                        if (!isMounted) return;
+                        if (payload.new) {
+                            setSettings(payload.new as EmailSettings);
+                        } else {
+                            setSettings(defaultEmailSettings);
+                        }
+                    }
+                )
+                .subscribe();
         }
 
         return () => {
             isMounted = false;
-            clearTimeout(safetyTimeout);
-            if (unsubscribe) {
-                unsubscribe();
+            if (subscription) {
+                supabase.removeChannel(subscription);
             }
         };
     }, [userId, projectId, realtime]);
@@ -169,23 +138,20 @@ export const useEmailSettings = (
             setError(null);
 
             try {
-                const settingsPath = `users/${userId}/projects/${projectId}/settings/email`;
-                const settingsRef = doc(db, settingsPath);
-                const settingsDoc = await getDoc(settingsRef);
+                const updatedPayload = {
+                    ...defaultEmailSettings,
+                    ...settings,
+                    ...updates,
+                    project_id: projectId,
+                    user_id: userId,
+                    updated_at: new Date().toISOString(),
+                };
 
-                if (settingsDoc.exists()) {
-                    await updateDoc(settingsRef, {
-                        ...updates,
-                        updatedAt: serverTimestamp(),
-                    });
-                } else {
-                    await setDoc(settingsRef, {
-                        ...defaultEmailSettings,
-                        ...updates,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
-                    });
-                }
+                const { error } = await supabase
+                    .from('project_email_settings')
+                    .upsert(updatedPayload, { onConflict: 'project_id' });
+
+                if (error) throw error;
 
                 if (!realtime) {
                     setSettings((prev) => ({ ...prev, ...updates }));
@@ -198,7 +164,7 @@ export const useEmailSettings = (
                 setIsSaving(false);
             }
         },
-        [userId, projectId, realtime]
+        [userId, projectId, realtime, settings]
     );
 
     // Update sender info
@@ -268,8 +234,6 @@ export const useEmailSettings = (
 
     // Check if API key is configured
     const checkApiKeyStatus = useCallback(async () => {
-        // This would typically call a cloud function to verify the API key
-        // For now, we just return the stored status
         return settings?.apiKeyConfigured || false;
     }, [settings?.apiKeyConfigured]);
 
@@ -305,55 +269,53 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
     // Fetch campaigns
     useEffect(() => {
-        // Only proceed if we have valid userId and projectId (not empty or 'default')
         if (!userId || !projectId || projectId === 'default') {
             setCampaigns([]);
             setIsLoading(false);
             return;
         }
 
-        let unsubscribe: (() => void) | undefined;
         let isMounted = true;
 
-        const setupListener = async () => {
+        const fetchCampaigns = async () => {
             try {
-                const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-                const campaignsRef = collection(db, campaignsPath);
-                const q = query(campaignsRef, orderBy('createdAt', 'desc'));
+                const { data, error } = await supabase
+                    .from('email_campaigns')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false });
 
-                unsubscribe = onSnapshot(
-                    q,
-                    (snapshot) => {
-                        if (!isMounted) return;
-                        const campaignsData = snapshot.docs.map((doc) => ({
-                            id: doc.id,
-                            ...doc.data(),
-                        }));
-                        setCampaigns(campaignsData);
-                        setIsLoading(false);
-                    },
-                    (err) => {
-                        if (!isMounted) return;
-                        console.error('Error fetching campaigns:', err);
-                        setCampaigns([]);
-                        setIsLoading(false);
-                    }
-                );
+                if (!isMounted) return;
+                
+                if (error) throw error;
+                if (data) setCampaigns(data);
+                
             } catch (err) {
                 if (!isMounted) return;
-                console.error('Error setting up campaigns listener:', err);
+                console.error('Error fetching campaigns:', err);
                 setCampaigns([]);
-                setIsLoading(false);
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        setupListener();
+        fetchCampaigns();
+
+        const channelId = `campaigns_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_campaigns', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchCampaigns();
+                }
+            )
+            .subscribe();
 
         return () => {
             isMounted = false;
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            supabase.removeChannel(subscription);
         };
     }, [userId, projectId]);
 
@@ -373,9 +335,6 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-            const campaignsRef = collection(db, campaignsPath);
-            // Sanitize to remove undefined values which Firestore rejects
             const sanitizedData: any = {};
             Object.keys(campaignData).forEach(key => {
                 const val = (campaignData as any)[key];
@@ -386,6 +345,8 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
             const finalCampaign = {
                 ...sanitizedData,
+                project_id: projectId,
+                user_id: userId,
                 status: 'draft',
                 stats: {
                     totalRecipients: 0,
@@ -399,12 +360,16 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
                     complained: 0,
                     unsubscribed: 0,
                 },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(campaignsRef, finalCampaign);
-            return { id: docRef.id, ...finalCampaign };
+            const { data, error } = await supabase
+                .from('email_campaigns')
+                .insert(finalCampaign)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
         } catch (err) {
             console.error('Error creating campaign:', err);
             throw err;
@@ -419,10 +384,6 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-            const campaignRef = doc(db, campaignsPath, campaignId);
-
-            // Sanitize updates to remove undefined values
             const sanitizedUpdates: any = {};
             Object.keys(updates).forEach(key => {
                 if (updates[key] !== undefined) {
@@ -430,10 +391,12 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
                 }
             });
 
-            await updateDoc(campaignRef, {
-                ...sanitizedUpdates,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('email_campaigns')
+                .update(sanitizedUpdates)
+                .eq('id', campaignId);
+
+            if (error) throw error;
         } catch (err) {
             console.error('Error updating campaign:', err);
             throw err;
@@ -447,9 +410,12 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         if (!userId || !projectId || projectId === 'default') return;
 
         try {
-            const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-            const campaignRef = doc(db, campaignsPath, campaignId);
-            await deleteDoc(campaignRef);
+            const { error } = await supabase
+                .from('email_campaigns')
+                .delete()
+                .eq('id', campaignId);
+            
+            if (error) throw error;
         } catch (err) {
             console.error('Error deleting campaign:', err);
             throw err;
@@ -479,7 +445,6 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // Only proceed if we have valid userId and projectId (not empty or 'default')
         if (!userId || !projectId || projectId === 'default') {
             setLogs([]);
             setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
@@ -487,80 +452,61 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
             return;
         }
 
-        console.log(`🔄 [useEmailLogs] Init for Project: ${projectId}`);
-        let unsubscribe: (() => void) | undefined;
         let isMounted = true;
+        setIsLoading(true);
 
-        // Safety timeout
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted) { // Note: useEmailLogs doesn't have local isLoading state check here because we set it inside
-                console.warn('⚠️ [useEmailLogs] Safety timeout triggered - forcing loading to completion');
-                setLogs([]); // Return empty logs on timeout
-                setIsLoading(false);
-            }
-        }, 15000);
-
-        const setupListener = async () => {
-            setIsLoading(true);
+        const fetchLogs = async () => {
             try {
-                const logsPath = `users/${userId}/projects/${projectId}/emailLogs`;
-                const logsRef = collection(db, logsPath);
-                const q = query(logsRef, orderBy('sentAt', 'desc'));
+                const { data, error } = await supabase
+                    .from('email_logs')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('sent_at', { ascending: false });
 
-                unsubscribe = onSnapshot(
-                    q,
-                    (snapshot) => {
-                        if (!isMounted) return;
-                        console.log(`✅ [useEmailLogs] Snapshot received, docs: ${snapshot.docs.length}`);
-                        clearTimeout(safetyTimeout);
+                if (!isMounted) return;
 
-                        const logsData = snapshot.docs.map((doc) => ({
-                            id: doc.id,
-                            ...doc.data(),
-                        })) as Array<{ id: string; status?: string; opened?: boolean; clicked?: boolean;[key: string]: any }>;
-                        setLogs(logsData);
+                if (error) throw error;
 
-                        // Calculate stats from logs
-                        const calculatedStats = logsData.reduce(
-                            (acc, log) => ({
-                                totalSent: acc.totalSent + 1,
-                                delivered: acc.delivered + (log.status === 'delivered' ? 1 : 0),
-                                opened: acc.opened + (log.opened ? 1 : 0),
-                                clicked: acc.clicked + (log.clicked ? 1 : 0),
-                                bounced: acc.bounced + (log.status === 'bounced' ? 1 : 0),
-                            }),
-                            { totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 }
-                        );
-                        setStats(calculatedStats);
-                        setIsLoading(false);
-                    },
-                    (err) => {
-                        if (!isMounted) return;
-                        console.error('❌ [useEmailLogs] Error fetching email logs:', err);
-                        clearTimeout(safetyTimeout);
-                        setLogs([]);
-                        setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
-                        setIsLoading(false);
-                    }
-                );
+                if (data) {
+                    setLogs(data);
+                    const calculatedStats = data.reduce(
+                        (acc: any, log: any) => ({
+                            totalSent: acc.totalSent + 1,
+                            delivered: acc.delivered + (log.status === 'delivered' ? 1 : 0),
+                            opened: acc.opened + (log.opened ? 1 : 0),
+                            clicked: acc.clicked + (log.clicked ? 1 : 0),
+                            bounced: acc.bounced + (log.status === 'bounced' ? 1 : 0),
+                        }),
+                        { totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 }
+                    );
+                    setStats(calculatedStats);
+                }
             } catch (err) {
                 if (!isMounted) return;
-                console.error('❌ [useEmailLogs] Error setting up logs listener:', err);
-                clearTimeout(safetyTimeout);
+                console.error('❌ [useEmailLogs] Error fetching email logs:', err);
                 setLogs([]);
-                setStats({ totalSent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 });
-                setIsLoading(false);
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        setupListener();
+        fetchLogs();
+
+        const channelId = `logs_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_logs', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchLogs();
+                }
+            )
+            .subscribe();
 
         return () => {
             isMounted = false;
-            clearTimeout(safetyTimeout);
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            supabase.removeChannel(subscription);
         };
     }, [userId, projectId, options?.limit]);
 
@@ -580,74 +526,57 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
 
     // Fetch audiences with realtime updates
     useEffect(() => {
-        // Only proceed if we have valid userId and projectId (not empty or 'default')
         if (!userId || !projectId || projectId === 'default') {
             setAudiences([]);
             setIsLoading(false);
             return;
         }
 
-        console.log(`🔄 [useEmailAudiences] Init for Project: ${projectId}`);
-        let unsubscribe: (() => void) | undefined;
         let isMounted = true;
 
-        // Safety timeout
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted) {
-                console.warn('⚠️ [useEmailAudiences] Safety timeout triggered');
-                setAudiences([]);
-                setIsLoading(false);
-            }
-        }, 15000);
-
-        const setupListener = async () => {
+        const fetchAudiences = async () => {
             try {
-                const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
-                const audiencesRef = collection(db, audiencesPath);
-                const q = query(audiencesRef, orderBy('createdAt', 'desc'));
+                const { data, error } = await supabase
+                    .from('email_audiences')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false });
 
-                unsubscribe = onSnapshot(
-                    q,
-                    (snapshot) => {
-                        if (!isMounted) return;
-                        console.log(`✅ [useEmailAudiences] Snapshot received, docs: ${snapshot.docs.length}`);
-                        clearTimeout(safetyTimeout);
+                if (!isMounted) return;
 
-                        const audiencesData = snapshot.docs.map((doc) => ({
-                            id: doc.id,
-                            ...doc.data(),
-                        }));
-                        setAudiences(audiencesData);
-                        setIsLoading(false);
-                        setError(null);
-                    },
-                    (err) => {
-                        if (!isMounted) return;
-                        console.error('❌ [useEmailAudiences] Error fetching audiences:', err);
-                        clearTimeout(safetyTimeout);
-                        setAudiences([]);
-                        setError(err.message);
-                        setIsLoading(false);
-                    }
-                );
+                if (error) throw error;
+
+                if (data) {
+                    setAudiences(data);
+                    setError(null);
+                }
             } catch (err: any) {
                 if (!isMounted) return;
-                console.error('❌ [useEmailAudiences] Error setting up listener:', err);
-                clearTimeout(safetyTimeout);
+                console.error('❌ [useEmailAudiences] Error fetching audiences:', err);
                 setAudiences([]);
                 setError(err.message);
-                setIsLoading(false);
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        setupListener();
+        fetchAudiences();
+
+        const channelId = `audiences_${projectId}_${Math.random().toString(36).substring(2, 9)}`;
+        const subscription = supabase
+            .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'email_audiences', filter: `project_id=eq.${projectId}` },
+                () => {
+                    if (isMounted) fetchAudiences();
+                }
+            )
+            .subscribe();
 
         return () => {
             isMounted = false;
-            clearTimeout(safetyTimeout);
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            supabase.removeChannel(subscription);
         };
     }, [userId, projectId]);
 
@@ -673,21 +602,22 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         setError(null);
 
         try {
-            const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
-            const audiencesRef = collection(db, audiencesPath);
-
             const newAudience = {
                 ...audienceData,
                 estimatedCount: 0,
                 isDefault: false,
+                project_id: projectId,
                 createdBy: userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             };
 
-            const docRef = await addDoc(audiencesRef, newAudience);
-            console.log(`✅ [useEmailAudiences] Created audience: ${docRef.id}`);
-            return { id: docRef.id, ...newAudience };
+            const { data, error } = await supabase
+                .from('email_audiences')
+                .insert(newAudience)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error creating audience:', err);
             setError(err.message);
@@ -726,14 +656,12 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         setError(null);
 
         try {
-            const audiencePath = `users/${userId}/projects/${projectId}/emailAudiences`;
-            const audienceRef = doc(db, audiencePath, audienceId);
+            const { error } = await supabase
+                .from('email_audiences')
+                .update(updates)
+                .eq('id', audienceId);
 
-            await updateDoc(audienceRef, {
-                ...updates,
-                updatedAt: serverTimestamp(),
-            });
-            console.log(`✅ [useEmailAudiences] Updated audience: ${audienceId}`);
+            if (error) throw error;
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error updating audience:', err);
             setError(err.message);
@@ -748,10 +676,12 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         if (!userId || !projectId || projectId === 'default') return;
 
         try {
-            const audiencePath = `users/${userId}/projects/${projectId}/emailAudiences`;
-            const audienceRef = doc(db, audiencePath, audienceId);
-            await deleteDoc(audienceRef);
-            console.log(`✅ [useEmailAudiences] Deleted audience: ${audienceId}`);
+            const { error } = await supabase
+                .from('email_audiences')
+                .delete()
+                .eq('id', audienceId);
+                
+            if (error) throw error;
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error deleting audience:', err);
             setError(err.message);
@@ -764,7 +694,7 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         const original = audiences.find(a => a.id === audienceId);
         if (!original) return null;
 
-        const { id, createdAt, updatedAt, ...audienceData } = original;
+        const { id, created_at, updated_at, createdAt, updatedAt, ...audienceData } = original;
         return createAudience({
             ...audienceData,
             name: `${audienceData.name} (copia)`,

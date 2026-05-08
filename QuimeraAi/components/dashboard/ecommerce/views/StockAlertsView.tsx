@@ -1,6 +1,6 @@
 /**
  * StockAlertsView
- * Vista para gestionar alertas de stock y notificaciones de clientes
+ * Vista para gestionar alertas de stock y notificaciones de clientes usando Supabase
  */
 
 import React, { useState, useEffect } from 'react';
@@ -22,16 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useProducts } from '../hooks/useProducts';
-import {
-    collection,
-    query,
-    getDocs,
-    deleteDoc,
-    doc,
-    orderBy,
-    onSnapshot,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { useEcommerceContext } from '../EcommerceDashboard';
 
 interface StockNotificationSubscriber {
@@ -49,7 +40,7 @@ const StockAlertsView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { products } = useProducts(user?.uid || '', storeId);
+    const { products } = useProducts(user?.id || '', storeId);
 
     const [subscribers, setSubscribers] = useState<StockNotificationSubscriber[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -59,31 +50,55 @@ const StockAlertsView: React.FC = () => {
 
     // Load subscribers
     useEffect(() => {
-        if (!user?.uid) return;
+        if (!storeId) return;
 
         setIsLoading(true);
 
-        const subscribersRef = collection(db, 'publicStores', storeId, 'stockNotifications');
-        const q = query(subscribersRef, orderBy('createdAt', 'desc'));
+        const fetchSubscribers = async () => {
+            const { data, error } = await supabase
+                .from('store_stock_notifications')
+                .select('*')
+                .eq('project_id', storeId)
+                .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
+            if (error) {
+                console.error('Error loading stock notifications:', error);
+            } else {
+                setSubscribers((data || []).map((doc: any) => ({
                     id: doc.id,
-                })) as StockNotificationSubscriber[];
-                setSubscribers(data);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error loading stock notifications:', err);
-                setIsLoading(false);
+                    productId: doc.product_id,
+                    productName: doc.product_name,
+                    productSlug: doc.product_slug,
+                    productImage: doc.product_image,
+                    email: doc.email,
+                    notified: doc.notified,
+                    createdAt: { seconds: new Date(doc.created_at).getTime() / 1000 }
+                })));
             }
-        );
+            setIsLoading(false);
+        };
 
-        return () => unsubscribe();
-    }, [user?.uid, storeId]);
+        fetchSubscribers();
+
+        const channel = supabase.channel('stock_notifications_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_stock_notifications',
+                    filter: `project_id=eq.${storeId}`
+                },
+                () => {
+                    fetchSubscribers();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [storeId]);
 
     // Get low stock products
     const lowStockProducts = products.filter(
@@ -128,7 +143,10 @@ const StockAlertsView: React.FC = () => {
         if (!deleteConfirmId) return;
         setProcessingId(deleteConfirmId);
         try {
-            await deleteDoc(doc(db, 'publicStores', storeId, 'stockNotifications', deleteConfirmId));
+            await supabase
+                .from('store_stock_notifications')
+                .delete()
+                .eq('id', deleteConfirmId);
         } catch (err) {
             console.error('Error deleting subscriber:', err);
         }

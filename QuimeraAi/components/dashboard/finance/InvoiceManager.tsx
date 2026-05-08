@@ -104,14 +104,14 @@ const InvoiceManager: React.FC<InvoiceManagerProps> = ({
         setIsOptimizing(true);
         try {
             const prompt = `You are a billing AI. Suggest optimal payment terms and a professional payment reminder.\nClient: ${clientName}\nTotal: $${total.toFixed(2)} ${currency}\nCurrent Terms: ${paymentTerms}\nRespond as JSON: { "paymentTerms": "...", "reminderNote": "..." }\nNo markdown. Language: ${t('accounting.insightsPromptLang', 'English')}.`;
-            const resp = await generateContentViaProxy(activeProject?.id || 'accounting', prompt, 'gemini-2.5-flash', { temperature: 0.5 }, user.uid);
+            const resp = await generateContentViaProxy(activeProject?.id || 'accounting', prompt, 'gemini-2.5-flash', { temperature: 0.5 }, user.id);
             const text = extractTextFromResponse(resp).replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
             const parsed = JSON.parse(text);
             if (parsed.paymentTerms) setPaymentTerms(parsed.paymentTerms);
             if (parsed.reminderNote) setReminderNote(parsed.reminderNote);
-            logApiCall({ userId: user.uid, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-smart-invoicing', success: true });
+            logApiCall({ userId: user.id, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-smart-invoicing', success: true });
         } catch (err: any) {
-            logApiCall({ userId: user.uid, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-smart-invoicing', success: false, errorMessage: err.message });
+            logApiCall({ userId: user.id, projectId: activeProject?.id, model: 'gemini-2.5-flash', feature: 'accounting-smart-invoicing', success: false, errorMessage: err.message });
         } finally { setIsOptimizing(false); }
     }, [user, activeProject, clientName, total, currency, paymentTerms, t]);
 

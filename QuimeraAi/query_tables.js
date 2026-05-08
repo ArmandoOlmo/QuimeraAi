@@ -1,15 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-dotenv.config();
+import fs from 'fs';
+import path from 'path';
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co',
-  process.env.VITE_SUPABASE_ANON_KEY
-);
+// Parse args
+const queryStr = process.argv[2];
 
-async function check() {
-  const { data, error } = await supabase.rpc('get_tables'); // Or try querying pg_catalog if rpc doesn't exist
-  console.log("Error:", error);
+const envFile = fs.readFileSync('.env.local', 'utf8');
+const env = {};
+envFile.split('\n').forEach(line => {
+    const parts = line.split('=');
+    if (parts.length >= 2) {
+        env[parts[0]] = parts.slice(1).join('=');
+    }
+});
+
+const supabase = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY);
+
+async function run() {
+    // If it's a raw query, we might not be able to execute it via JS client directly
+    // Instead we will call the REST API or RPC
+    console.log("Cannot run raw SQL from client side without RPC.");
+    // We can query the policies if we use RPC, but let's just dump the project row again
 }
-
-check();
+run();

@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -57,12 +57,12 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           onChange={(v) => setNestedData(`${sectionKey}.glassEffect`, v)}
         />
       </div>
-      <Input label={t('editor.controls.common.title')} value={sectionData.title} onChange={(val) => setNestedData(`${sectionKey}.title`, val)} />
+      <I18nInput label={t('editor.controls.common.title')} value={sectionData.title} onChange={(val) => setNestedData(`${sectionKey}.title`, val)} />
       <FontSizeSelector label={`${t('editor.controls.common.title')} ${t('editor.controls.common.size')}`} value={sectionData.titleFontSize || 'md'} onChange={(v) => setNestedData(`${sectionKey}.titleFontSize`, v)} />
 
       {sectionData.description !== undefined && (
         <>
-          <TextArea label={t('editor.controls.common.description')} value={sectionData.description} onChange={(val) => setNestedData(`${sectionKey}.description`, val)} rows={2} />
+          <I18nTextArea label={t('editor.controls.common.description')} value={sectionData.description} onChange={(val) => setNestedData(`${sectionKey}.description`, val)} rows={2} />
           <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={sectionData.descriptionFontSize || 'md'} onChange={(v) => setNestedData(`${sectionKey}.descriptionFontSize`, v)} />
         </>
       )}
@@ -116,7 +116,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
           {fields.map(field => (
             <div key={field.key} className="mb-2 last:mb-0">
               {field.type === 'textarea' ? (
-                <TextArea
+                <I18nTextArea
                   placeholder={field.label}
                   value={item[field.key]}
                   onChange={(val) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, val)}
@@ -143,7 +143,7 @@ const { data, setNestedData, t, setAiAssistField } = deps;
                   onChange={(url) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, url)}
                 />
               ) : (
-                <Input
+                <I18nInput
                   placeholder={field.label}
                   value={item[field.key]}
                   onChange={(val) => setNestedData(`${sectionKey}.items.${index}.${field.key}`, val)}

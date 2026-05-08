@@ -1,29 +1,12 @@
 /**
  * useProducts Hook
- * Hook para gestión de productos en Firestore
+ * Hook para gestión de productos en Supabase
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    where,
-    getDocs,
-    writeBatch,
-    setDoc,
-    getDoc,
-    getDoc,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
 import { supabase } from '../../../../supabase';
 import { Product, ProductImage, ProductStatus } from '../../../../types/ecommerce';
+import { mapProductFromDB, mapProductToDB } from '../../../../utils/ecommerceMappers';
 
 interface UseProductsOptions {
     categoryId?: string;
@@ -36,47 +19,46 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Use provided storeId (projectId)
     const effectiveStoreId = storeId || '';
-    const productsPath = `users/${userId}/stores/${effectiveStoreId}/products`;
 
-    // Helper to sync with public store
-    const syncToPublicStore = useCallback(async (productId: string, productData: any, isDelete = false) => {
+    // Fetch products
+    const fetchProducts = useCallback(async () => {
         if (!effectiveStoreId) return;
+        
+        setIsLoading(true);
+        let query = supabase
+            .from('store_products')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
 
-        try {
-            const publicProductRef = doc(db, 'publicStores', effectiveStoreId, 'products', productId);
-
-            if (isDelete) {
-                await deleteDoc(publicProductRef);
-                console.log(`[useProducts] 🗑️ Deleted product ${productId} from publicStores`);
-                return;
-            }
-
-            // Only publish if active
-            if (productData.status === 'active') {
-                // Ensure we don't save undefined values
-                const publicData = { ...productData };
-
-                // Remove serverTimestamp placeholders effectively for client-side usage if needed, 
-                // but for sync we want consistent data. 
-                // However, we should be careful not to pass function objects if any.
-
-                await setDoc(publicProductRef, {
-                    ...publicData,
-                    publishedAt: new Date().toISOString(),
-                }, { merge: true });
-                console.log(`[useProducts] ✅ Synced active product ${productId} to publicStores`);
-            } else {
-                // If not active, ensure it's removed from public store (e.g. status changed to draft)
-                // Check if it exists first or just delete it
-                await deleteDoc(publicProductRef);
-                console.log(`[useProducts] 🔒 Removed non-active product ${productId} from publicStores`);
-            }
-        } catch (err) {
-            console.error('[useProducts] Error syncing to public store:', err);
+        if (options?.categoryId) {
+            query = query.eq('category_id', options.categoryId);
         }
-    }, [effectiveStoreId]);
+        if (options?.status) {
+            query = query.eq('status', options.status);
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) {
+            console.error('Error fetching products:', fetchError);
+            setError(fetchError.message);
+        } else {
+            let mappedData = (data || []).map(mapProductFromDB);
+
+            // Filter low stock in memory
+            if (options?.lowStock) {
+                mappedData = mappedData.filter(
+                    (p) => p.trackInventory && p.quantity <= (p.lowStockThreshold || 5)
+                );
+            }
+
+            setProducts(mappedData);
+            setError(null);
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId, options?.categoryId, options?.status, options?.lowStock]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -84,45 +66,28 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             return;
         }
 
-        const productsRef = collection(db, productsPath);
-        let q = query(productsRef, orderBy('createdAt', 'desc'));
+        fetchProducts();
 
-        // Apply filters
-        if (options?.categoryId) {
-            q = query(productsRef, where('categoryId', '==', options.categoryId), orderBy('createdAt', 'desc'));
-        }
-        if (options?.status) {
-            q = query(productsRef, where('status', '==', options.status), orderBy('createdAt', 'desc'));
-        }
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                let data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Product[];
-
-                // Filter low stock in memory (Firestore doesn't support complex queries easily)
-                if (options?.lowStock) {
-                    data = data.filter(
-                        (p) => p.trackInventory && p.quantity <= (p.lowStockThreshold || 5)
-                    );
+        // Realtime subscription
+        const channel = supabase.channel('store_products_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_products',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchProducts();
                 }
+            )
+            .subscribe();
 
-                setProducts(data);
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error('Error fetching products:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, options?.categoryId, options?.status, options?.lowStock, productsPath]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchProducts]);
 
     // Generate slug from name
     const generateSlug = (name: string): string => {
@@ -182,25 +147,28 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'slug'> & { libraryImageUrls?: string[] },
             imageFiles?: File[]
         ): Promise<string> => {
-            const productsRef = collection(db, productsPath);
-
             // Extract library image URLs from productData
             const { libraryImageUrls, ...cleanProductData } = productData;
 
             const slug = generateSlug(cleanProductData.name);
-            const timestamp = serverTimestamp() as any;
 
-            const newProductData = {
+            const dbData = mapProductToDB({
                 ...cleanProductData,
                 slug,
                 images: [],
-                createdAt: timestamp,
-                updatedAt: timestamp,
-            };
+            });
 
-            const docRef = await addDoc(productsRef, newProductData);
-            let finalProductData = { ...newProductData, id: docRef.id } as Product;
+            dbData.project_id = effectiveStoreId;
 
+            const { data: insertedProduct, error: insertError } = await supabase
+                .from('store_products')
+                .insert(dbData)
+                .select()
+                .single();
+
+            if (insertError) throw insertError;
+
+            const productId = insertedProduct.id;
             const allImages: ProductImage[] = [];
             let position = 0;
 
@@ -219,7 +187,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             // Upload new image files
             if (imageFiles && imageFiles.length > 0) {
                 for (const file of imageFiles) {
-                    const image = await uploadImage(file, docRef.id);
+                    const image = await uploadImage(file, productId);
                     image.position = position++;
                     allImages.push(image);
                 }
@@ -227,22 +195,15 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
 
             // Update product with all images
             if (allImages.length > 0) {
-                await updateDoc(docRef, { images: allImages });
-                finalProductData.images = allImages;
+                await supabase
+                    .from('store_products')
+                    .update({ images: allImages })
+                    .eq('id', productId);
             }
 
-            // Sync to public store
-            // Convert serverTimestamp to date for public store immediate sync (approximate)
-            const publicSyncData = {
-                ...finalProductData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            await syncToPublicStore(docRef.id, publicSyncData);
-
-            return docRef.id;
+            return productId;
         },
-        [productsPath, uploadImage, syncToPublicStore]
+        [effectiveStoreId, uploadImage]
     );
 
     // Update product
@@ -252,33 +213,27 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             updates: Partial<Product> & { libraryImageUrls?: string[] },
             newImageFiles?: File[]
         ) => {
-            const productRef = doc(db, productsPath, productId);
-
             // Extract library image URLs from updates
             const { libraryImageUrls, ...cleanUpdates } = updates;
 
-            const updateData: any = {
-                ...cleanUpdates,
-                updatedAt: serverTimestamp(),
-            };
+            const updateData = mapProductToDB(cleanUpdates);
 
             // Update slug if name changed
             if (cleanUpdates.name) {
                 updateData.slug = generateSlug(cleanUpdates.name);
             }
 
-            // Fetch current product to merge for sync
+            // Fetch current product to merge images
             const currentProduct = products.find((p) => p.id === productId);
-            if (!currentProduct) return; // Should not happen
+            if (!currentProduct) return;
 
             const existingImages = currentProduct.images || [];
             let position = existingImages.length;
             const newImages: ProductImage[] = [];
 
-            // Add library images (URLs from project/global library)
+            // Add library images
             if (libraryImageUrls && libraryImageUrls.length > 0) {
                 for (const url of libraryImageUrls) {
-                    // Check if this URL is already in existing images
                     const alreadyExists = existingImages.some(img => img.url === url);
                     if (!alreadyExists) {
                         newImages.push({
@@ -305,17 +260,14 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 updateData.images = [...existingImages, ...newImages];
             }
 
-            await updateDoc(productRef, updateData);
+            const { error: updateError } = await supabase
+                .from('store_products')
+                .update(updateData)
+                .eq('id', productId);
 
-            // Sync to public store
-            const finalDataForSync = {
-                ...currentProduct,
-                ...updateData,
-                updatedAt: new Date().toISOString() // Use ISO string for public sync
-            };
-            await syncToPublicStore(productId, finalDataForSync);
+            if (updateError) throw updateError;
         },
-        [productsPath, products, uploadImage, syncToPublicStore]
+        [products, uploadImage]
     );
 
     // Delete product
@@ -330,69 +282,41 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 }
             }
 
-            const productRef = doc(db, productsPath, productId);
-            await deleteDoc(productRef);
+            const { error } = await supabase
+                .from('store_products')
+                .delete()
+                .eq('id', productId);
 
-            // Sync delete to public store
-            await syncToPublicStore(productId, null, true);
+            if (error) throw error;
         },
-        [productsPath, products, deleteImage, syncToPublicStore]
+        [products, deleteImage]
     );
 
     // Update inventory
     const updateInventory = useCallback(
         async (productId: string, quantity: number) => {
-            const productRef = doc(db, productsPath, productId);
-            await updateDoc(productRef, {
-                quantity,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_products')
+                .update({ quantity })
+                .eq('id', productId);
 
-            // Sync inventory to public store
-            const currentProduct = products.find(p => p.id === productId);
-            if (currentProduct) {
-                await syncToPublicStore(productId, {
-                    ...currentProduct,
-                    quantity,
-                    updatedAt: new Date().toISOString()
-                });
-            }
+            if (error) throw error;
         },
-        [productsPath, products, syncToPublicStore]
+        []
     );
 
     // Bulk update status
     const bulkUpdateStatus = useCallback(
         async (productIds: string[], status: ProductStatus) => {
-            const batch = writeBatch(db);
+            // Supabase allows bulk updates with in()
+            const { error } = await supabase
+                .from('store_products')
+                .update({ status })
+                .in('id', productIds);
 
-            productIds.forEach((productId) => {
-                const productRef = doc(db, productsPath, productId);
-                batch.update(productRef, {
-                    status,
-                    updatedAt: serverTimestamp(),
-                });
-            });
-
-            await batch.commit();
-
-            // Sync all affected products to public store
-            // We need to loop because each might have different data, 
-            // but we can optimize by just syncing the status if we trust consistency.
-            // Better safely: read current, update status, sync.
-            // Since we have `products` in memory:
-            for (const productId of productIds) {
-                const currentProduct = products.find(p => p.id === productId);
-                if (currentProduct) {
-                    await syncToPublicStore(productId, {
-                        ...currentProduct,
-                        status,
-                        updatedAt: new Date().toISOString()
-                    });
-                }
-            }
+            if (error) throw error;
         },
-        [productsPath, products, syncToPublicStore]
+        []
     );
 
     // Get product by ID

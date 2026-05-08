@@ -7,8 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { resolveI18nSectionData } from '../utils/i18nContent';
-import { db, doc, getDoc, collection, getDocs, query, orderBy, where, limit } from '../firebase';
+import { resolveI18nField, resolveI18nSectionData } from '../utils/i18nContent';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage, AiAssistantConfig } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
@@ -194,6 +193,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const previewBasePath = useMemo(() => {
     return resolvePreviewBaseFromPath(window.location.pathname);
   }, []);
+  const isEditorPreviewRoute = Boolean(previewBasePath);
 
   /**
    * Strips the preview base path from a full pathname to get the
@@ -389,45 +389,40 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         if (!resolvedProjectId && propUsername) {
           console.log(`[PublicWebsitePreview] Resolving username: ${propUsername}`);
           try {
-            // Look up user by username
-            const usersCol = collection(db, 'users');
-            const usernameQuery = query(usersCol, where('username', '==', propUsername), limit(1));
-            const usernameSnap = await getDocs(usernameQuery);
-            
-            if (!usernameSnap.empty) {
-              const userDoc = usernameSnap.docs[0];
-              resolvedUserId = userDoc.id;
-              const userData = userDoc.data();
-              
-              // Try to get default/primary project from user data
-              resolvedProjectId = userData.defaultProjectId || userData.primaryProjectId;
-              
-              if (!resolvedProjectId) {
-                // Fallback: get first project from user's projects subcollection
-                const projectsCol = collection(db, 'users', resolvedUserId, 'projects');
-                const projectsQuery = query(projectsCol, limit(1));
-                const projectsSnap = await getDocs(projectsQuery);
-                if (!projectsSnap.empty) {
-                  resolvedProjectId = projectsSnap.docs[0].id;
-                }
-              }
-              
-              console.log(`[PublicWebsitePreview] Resolved username '${propUsername}' -> userId: ${resolvedUserId}, projectId: ${resolvedProjectId}`);
-            } else {
+            const { data: tenant, error } = await supabase
+              .from('tenants')
+              .select('id, owner_user_id')
+              .eq('slug', propUsername)
+              .maybeSingle();
+
+            if (error || !tenant) {
               console.warn(`[PublicWebsitePreview] Username '${propUsername}' not found`);
               setError(`User "${propUsername}" not found`);
+              setLoading(false);
+              return;
+            }
+            
+            resolvedUserId = tenant.owner_user_id;
+
+            // Get project associated with this tenant
+            const { data: project } = await supabase
+              .from('projects')
+              .select('id')
+              .eq('tenant_id', tenant.id)
+              .limit(1)
+              .maybeSingle();
+
+            if (project) {
+              resolvedProjectId = project.id;
+              console.log(`[PublicWebsitePreview] Resolved username '${propUsername}' -> userId: ${resolvedUserId}, projectId: ${resolvedProjectId}`);
+            } else {
+              setError(`User "${propUsername}" has no published projects`);
               setLoading(false);
               return;
             }
           } catch (err) {
             console.error('[PublicWebsitePreview] Error resolving username:', err);
             setError('Failed to resolve username');
-            setLoading(false);
-            return;
-          }
-          
-          if (!resolvedProjectId) {
-            setError(`User "${propUsername}" has no published projects`);
             setLoading(false);
             return;
           }
@@ -483,31 +478,20 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           if ((projectData as any).categories && Array.isArray((projectData as any).categories) && (projectData as any).categories.length > 0) {
             console.log('[PublicWebsitePreview] ✅ Loaded categories from SSR data:', (projectData as any).categories.length);
             setCategories((projectData as any).categories);
-          } else {
-            // Categories not in SSR data — fetch from publicStores
-            console.log('[PublicWebsitePreview] ⚠️ No categories in SSR data, fetching from publicStores...');
+            // Categories not in SSR data — fetch from Supabase
+            console.log('[PublicWebsitePreview] ⚠️ No categories in SSR data, fetching from Supabase...');
             try {
-              const publicStoreRef = doc(db, 'publicStores', ssrData.projectId);
-              const publicStoreSnap = await getDoc(publicStoreRef);
-              if (publicStoreSnap.exists()) {
-                const psData = publicStoreSnap.data();
-                if (psData?.categories && Array.isArray(psData.categories) && psData.categories.length > 0) {
-                  console.log('[PublicWebsitePreview] ✅ Loaded categories from publicStores (SSR fallback):', psData.categories.length);
-                  setCategories(psData.categories);
-                } else {
-                  console.log('[PublicWebsitePreview] ⚠️ publicStores has no categories either');
-                  // Last resort: try user project doc
-                  if (userId) {
-                    const userProjectRef = doc(db, 'users', userId, 'projects', ssrData.projectId);
-                    const userProjectSnap = await getDoc(userProjectRef);
-                    if (userProjectSnap.exists()) {
-                      const upData = userProjectSnap.data();
-                      if (upData?.categories && Array.isArray(upData.categories) && upData.categories.length > 0) {
-                        console.log('[PublicWebsitePreview] ✅ Loaded categories from user project (SSR fallback):', upData.categories.length);
-                        setCategories(upData.categories);
-                      }
-                    }
-                  }
+              const { data, error } = await supabase
+                .from('projects')
+                .select('published_data')
+                .eq('id', ssrData.projectId)
+                .maybeSingle();
+
+              if (!error && data?.published_data) {
+                const pd = data.published_data as any;
+                if (pd.categories && Array.isArray(pd.categories) && pd.categories.length > 0) {
+                  console.log('[PublicWebsitePreview] ✅ Loaded categories from Supabase (SSR fallback):', pd.categories.length);
+                  setCategories(pd.categories);
                 }
               }
             } catch (e) {
@@ -523,90 +507,112 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from SSR data:', ssrPosts.length, ssrPosts.map((p: any) => p.slug));
             setCmsPosts(ssrPosts as CMSPost[]);
           } else {
-            console.log('[PublicWebsitePreview] ⚠️ No CMS posts in SSR data, will need to load from Firestore');
-            // Don't return yet - we need to load posts from publicStores
+            console.log('[PublicWebsitePreview] ⚠️ No CMS posts in SSR data, will need to load from Supabase');
+            // Don't return yet - we need to load posts from Supabase
             // Continue to load posts below
           }
 
           setLoading(false);
 
-          // If no posts were loaded from SSR, fetch them from publicStores
+          // If no posts were loaded from SSR, fetch them from Supabase
           if (!ssrPosts || ssrPosts.length === 0) {
             try {
-              const publicPostsCol = collection(db, 'publicStores', ssrData.projectId, 'posts');
-              const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
-              const publicPostsSnap = await getDocs(publicPostsQuery);
+              const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .order('published_at', { ascending: false });
 
-              if (!publicPostsSnap.empty) {
-                const posts = publicPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
-                console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from publicStores (SSR fallback):', posts.length, posts.map(p => p.slug));
+              if (!error && data && data.length > 0) {
+                const posts = data.map(d => ({
+                  id: d.id,
+                  projectId: d.project_id,
+                  title: d.title,
+                  slug: d.slug,
+                  content: d.content,
+                  excerpt: d.excerpt,
+                  featuredImage: d.featured_image,
+                  status: d.status,
+                  author: d.author,
+                  seoTitle: d.seo_title,
+                  seoDescription: d.seo_description,
+                  publishedAt: d.published_at,
+                  createdAt: d.created_at,
+                  updatedAt: d.updated_at
+                } as any));
+                console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from Supabase (SSR fallback):', posts.length, posts.map((p: any) => p.slug));
                 setCmsPosts(posts);
               } else {
-                console.log('[PublicWebsitePreview] ⚠️ No CMS posts found in publicStores either');
+                console.log('[PublicWebsitePreview] ⚠️ No CMS posts found in Supabase either');
               }
             } catch (e) {
-              console.log('[PublicWebsitePreview] Error loading posts from publicStores:', e);
+              console.log('[PublicWebsitePreview] Error loading posts from Supabase:', e);
             }
           }
 
-          // Don't return here! We want to check for updates in publicStores (Instant Publish)
+          // Don't return here! We want to check for updates in Supabase (Instant Publish)
           // The SSR data might be stale if a post was just published
         }
 
         // ========== NON-SSR / REFRESH PATH ==========
         // Fetch project doc and CMS posts in PARALLEL to minimize load time
 
-        // STEP 1: Try publicStores (fast, public path) — project + posts in parallel
-        if (!projectData) {
+        // STEP 1: Try Supabase published_data, then draft data for editor previews.
+        if (!projectData && resolvedProjectId) {
           try {
-            const publicStoreRef = doc(db, 'publicStores', projectId);
-            const publicPostsCol = collection(db, 'publicStores', projectId, 'posts');
-            const publicPostsQuery = query(publicPostsCol, orderBy('publishedAt', 'desc'));
+            const projectResult = await supabase
+              .from('projects')
+              .select('id, tenant_id, user_id, name, published_data, data')
+              .eq('id', resolvedProjectId)
+              .maybeSingle();
+            const postsResult = projectResult.data?.tenant_id
+              ? await supabase
+                  .from('posts')
+                  .select('*')
+                  .eq('tenant_id', projectResult.data.tenant_id)
+                  .eq('status', 'published')
+                  .order('published_at', { ascending: false })
+              : { data: [], error: null };
 
-            // Fire both in parallel
-            const [publicStoreSnap, publicPostsSnap] = await Promise.all([
-              getDoc(publicStoreRef),
-              getDocs(publicPostsQuery),
-            ]);
+            if (!projectResult.error && projectResult.data) {
+              const row = projectResult.data as any;
+              const rawData = isEditorPreviewRoute ? (row.data || row.published_data) : (row.published_data || row.data);
 
-            if (publicStoreSnap.exists()) {
-              const rawData = publicStoreSnap.data();
-              projectData = { id: publicStoreSnap.id, ...rawData } as Project;
-              console.log('[PublicWebsitePreview] ✅ Loaded from publicStores. Has categories?', !!(rawData as any)?.categories, 'Count:', (rawData as any)?.categories?.length || 0);
+              if (rawData) {
+                projectData = {
+                  id: resolvedProjectId,
+                  userId: row.user_id,
+                  name: row.name || rawData.name,
+                  ...rawData,
+                } as Project;
+                console.log('[PublicWebsitePreview] ✅ Loaded from Supabase:', {
+                  source: rawData === row.data ? 'data' : 'published_data',
+                  hasCategories: !!rawData?.categories,
+                  categoriesCount: rawData?.categories?.length || 0,
+                });
+              }
             }
 
-            if (!publicPostsSnap.empty) {
-              const posts = publicPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost));
+            if (!postsResult.error && postsResult.data && postsResult.data.length > 0) {
+              const posts = postsResult.data.map(d => ({
+                  id: d.id,
+                  projectId: d.project_id,
+                  title: d.title,
+                  slug: d.slug,
+                  content: d.content,
+                  excerpt: d.excerpt,
+                  featuredImage: d.featured_image,
+                  status: d.status,
+                  author: d.author,
+                  seoTitle: d.seo_title,
+                  seoDescription: d.seo_description,
+                  publishedAt: d.published_at,
+                  createdAt: d.created_at,
+                  updatedAt: d.updated_at
+                } as any));
               setCmsPosts(posts);
             }
           } catch (publicErr) {
-            console.log('[PublicWebsitePreview] Could not load from publicStores:', publicErr);
-          }
-        }
-
-        // STEP 2: If no project yet, try user's projects (requires userId)
-        if (!projectData && userId) {
-          try {
-            const projectRef = doc(db, 'users', userId, 'projects', projectId);
-            const projectSnap = await getDoc(projectRef);
-            if (projectSnap.exists()) {
-              projectData = { id: projectSnap.id, ...projectSnap.data() } as Project;
-            }
-          } catch (e) {
-            // Silently ignore
-          }
-        }
-
-        // STEP 3: Try templates as last resort
-        if (!projectData) {
-          try {
-            const templateRef = doc(db, 'templates', projectId);
-            const templateSnap = await getDoc(templateRef);
-            if (templateSnap.exists()) {
-              projectData = { id: templateSnap.id, ...templateSnap.data() } as Project;
-            }
-          } catch (e) {
-            // Silently ignore
+            console.log('[PublicWebsitePreview] Could not load from Supabase:', publicErr);
           }
         }
 
@@ -616,28 +622,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           // Fire-and-forget: tenant branding check (non-blocking)
           const ownerUserId = projectData.userId || userId;
           if (ownerUserId) {
-            getDoc(doc(db, 'tenants', `tenant_${ownerUserId}`)).then(snap => {
-              if (snap.exists()) {
-                const d = snap.data();
-                if (d?.branding?.companyName || d?.branding?.logoUrl) {
+            supabase.from('tenants').select('branding').eq('owner_user_id', ownerUserId).limit(1).then(({ data, error }) => {
+              if (!error && data && data.length > 0) {
+                const branding = data[0].branding as any;
+                if (branding?.companyName || branding?.logoUrl) {
                   setHasWhiteLabelBranding(true);
                 }
               }
             }).catch(() => { });
-          }
-
-          // If no CMS posts loaded yet (project was in user collection / templates), try draft
-          if (cmsPosts.length === 0 && userId) {
-            try {
-              const draftPostsCol = collection(db, 'users', userId, 'projects', projectId, 'posts');
-              const draftPostsQuery = query(draftPostsCol, orderBy('publishedAt', 'desc'));
-              const draftPostsSnap = await getDocs(draftPostsQuery);
-              if (!draftPostsSnap.empty) {
-                setCmsPosts(draftPostsSnap.docs.map(d => ({ id: d.id, ...d.data() } as CMSPost)));
-              }
-            } catch (e) {
-              // Silently ignore
-            }
           }
 
           // Load menus from project data
@@ -651,26 +643,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           if ((projectData as any).categories && Array.isArray((projectData as any).categories) && (projectData as any).categories.length > 0) {
             console.log('[PublicWebsitePreview] ✅ Loaded categories from project data:', (projectData as any).categories.length);
             setCategories((projectData as any).categories);
-          } else if (userId) {
-            // Fallback: categories might be in user's project doc but not in publicStores
-            try {
-              const userProjectRef = doc(db, 'users', userId, 'projects', projectId);
-              const userProjectSnap = await getDoc(userProjectRef);
-              if (userProjectSnap.exists()) {
-                const userProjectData = userProjectSnap.data();
-                if (userProjectData?.categories && Array.isArray(userProjectData.categories) && userProjectData.categories.length > 0) {
-                  console.log('[PublicWebsitePreview] ✅ Loaded categories from user project (fallback):', userProjectData.categories.length);
-                  setCategories(userProjectData.categories);
-                } else {
-                  setCategories([]);
-                }
-              } else {
-                setCategories([]);
-              }
-            } catch (e) {
-              console.warn('[PublicWebsitePreview] Could not load categories from user project:', e);
-              setCategories([]);
-            }
           } else {
             setCategories([]);
           }
@@ -1322,15 +1294,25 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     });
 
     // Helper to create or update meta tag
-    const setMetaTag = (selector: string, content: string, attribute: 'name' | 'property' = 'name') => {
-      if (!content) return;
+    const toMetaText = (value: unknown): string => {
+      if (value === undefined || value === null) return '';
+      if (typeof value === 'string') return value;
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return resolveI18nField(value as Record<string, string>, currentLanguage);
+      }
+      return String(value);
+    };
+
+    const setMetaTag = (selector: string, content: unknown, attribute: 'name' | 'property' = 'name') => {
+      const safeContent = toMetaText(content);
+      if (!safeContent) return;
       let element = document.querySelector(selector) as HTMLMetaElement;
       if (!element) {
         element = document.createElement('meta');
         element.setAttribute(attribute, selector.replace(`[${attribute}="`, '').replace('"]', ''));
         document.head.appendChild(element);
       }
-      element.content = content;
+      element.content = safeContent;
     };
 
     // Helper to set link tag
@@ -1346,9 +1328,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     };
 
     // Helper to strip HTML tags from text
-    const stripHtml = (html: string): string => {
-      if (!html) return '';
-      return html.replace(/<[^>]*>/g, '').trim();
+    const stripHtml = (html: unknown): string => {
+      const safeHtml = toMetaText(html);
+      if (!safeHtml) return '';
+      return safeHtml.replace(/<[^>]*>/g, '').trim();
     };
 
     // Set document title - prefer seoConfig.title, then projectName, then hero headline
@@ -1358,7 +1341,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     console.log('[PublicWebsitePreview] Document title set to:', title);
 
     // Basic SEO
-    const description = seoConfig?.description || heroData?.subheadline || '';
+    const description = stripHtml(seoConfig?.description || heroData?.subheadline || '');
     setMetaTag('[name="description"]', description);
 
     if (seoConfig?.keywords?.length) {
@@ -2091,14 +2074,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       `}</style>
 
       {/* Announcement Bar - Above Header position */}
-      {mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
+      {componentOrder?.includes('announcementBar' as PageSection) && mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
         <div id="announcementBar-above" className="w-full">
           <AnnouncementBar data={mergedData.announcementBar} />
         </div>
       )}
 
       {/* TopBar - Above Header position */}
-      {mergedData.topBar?.aboveHeader && componentStatus?.topBar !== false && sectionVisibility?.topBar !== false && mergedData.topBar && (
+      {componentOrder?.includes('topBar' as PageSection) && mergedData.topBar?.aboveHeader && componentStatus?.topBar !== false && sectionVisibility?.topBar !== false && mergedData.topBar && (
         <Suspense fallback={null}>
           <TopBar {...mergedData.topBar} onNavigate={handleLinkNavigation} />
         </Suspense>

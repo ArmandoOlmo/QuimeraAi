@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToggleControl } from '../../ui/EditorControlPrimitives';
+import { ToggleControl , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import ColorControl from '../../ui/ColorControl';
 
 // We import AIFormControl logic conceptually to wrap inputs nicely.

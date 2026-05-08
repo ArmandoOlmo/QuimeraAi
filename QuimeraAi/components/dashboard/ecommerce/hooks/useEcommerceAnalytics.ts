@@ -1,19 +1,12 @@
 /**
  * useEcommerceAnalytics Hook
- * Hook para analytics y métricas de ecommerce
+ * Hook para analytics y métricas de ecommerce usando Supabase
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    where,
-    Timestamp,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Order, OrderStatus, EcommerceStats, Product, Customer } from '../../../../types/ecommerce';
+import { mapOrderFromDB, mapProductFromDB, mapCustomerFromDB } from '../../../../utils/ecommerceMappers';
 
 interface DateRange {
     startDate: Date;
@@ -36,95 +29,106 @@ export const useEcommerceAnalytics = (
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const basePath = `users/${userId}/stores/${effectiveStoreId}`;
 
     // Fetch orders
-    useEffect(() => {
-        if (!userId || !effectiveStoreId) {
+    const fetchOrders = useCallback(async () => {
+        if (!effectiveStoreId) {
             setIsLoading(false);
             return;
         }
 
-        const ordersRef = collection(db, `${basePath}/orders`);
-        let q = query(ordersRef, orderBy('createdAt', 'desc'));
+        let query = supabase
+            .from('store_orders')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                let data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Order[];
+        if (options?.dateRange) {
+            query = query
+                .gte('created_at', options.dateRange.startDate.toISOString())
+                .lte('created_at', options.dateRange.endDate.toISOString());
+        }
 
-                // Filter by date range
-                if (options?.dateRange) {
-                    const startTs = options.dateRange.startDate.getTime() / 1000;
-                    const endTs = options.dateRange.endDate.getTime() / 1000;
-                    data = data.filter(
-                        (o) => o.createdAt.seconds >= startTs && o.createdAt.seconds <= endTs
-                    );
-                }
+        const { data, error: fetchError } = await query;
 
-                setOrders(data);
-            },
-            (err) => {
-                console.error('Error fetching orders for analytics:', err);
-                setError(err.message);
-            }
-        );
+        if (fetchError) {
+            console.error('Error fetching orders for analytics:', fetchError);
+            setError(fetchError.message);
+        } else {
+            setOrders((data || []).map(mapOrderFromDB));
+        }
+    }, [effectiveStoreId, options?.dateRange]);
 
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, basePath, options?.dateRange]);
+    useEffect(() => {
+        if (!effectiveStoreId) return;
+        fetchOrders();
+    }, [fetchOrders]);
 
     // Fetch products
+    const fetchProducts = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        const { data, error: fetchError } = await supabase
+            .from('store_products')
+            .select('*')
+            .eq('project_id', effectiveStoreId);
+
+        if (fetchError) {
+            console.error('Error fetching products for analytics:', fetchError);
+        } else {
+            setProducts((data || []).map(mapProductFromDB));
+        }
+    }, [effectiveStoreId]);
+
     useEffect(() => {
-        if (!userId || !effectiveStoreId) return;
-
-        const productsRef = collection(db, `${basePath}/products`);
-        const q = query(productsRef);
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Product[];
-                setProducts(data);
-            },
-            (err) => {
-                console.error('Error fetching products for analytics:', err);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, basePath]);
+        if (!effectiveStoreId) return;
+        fetchProducts();
+    }, [fetchProducts]);
 
     // Fetch customers
+    const fetchCustomers = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        const { data, error: fetchError } = await supabase
+            .from('store_customers')
+            .select('*')
+            .eq('project_id', effectiveStoreId);
+
+        if (fetchError) {
+            console.error('Error fetching customers for analytics:', fetchError);
+        } else {
+            setCustomers((data || []).map(mapCustomerFromDB));
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId]);
+
     useEffect(() => {
-        if (!userId || !effectiveStoreId) return;
+        if (!effectiveStoreId) return;
+        fetchCustomers();
+    }, [fetchCustomers]);
 
-        const customersRef = collection(db, `${basePath}/customers`);
-        const q = query(customersRef);
+    // Set up real-time listeners for all three tables
+    useEffect(() => {
+        if (!effectiveStoreId) return;
 
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Customer[];
-                setCustomers(data);
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error fetching customers for analytics:', err);
-                setIsLoading(false);
-            }
-        );
+        const ordersChannel = supabase.channel('analytics_orders_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'store_orders', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchOrders())
+            .subscribe();
 
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, basePath]);
+        const productsChannel = supabase.channel('analytics_products_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'store_products', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchProducts())
+            .subscribe();
+
+        const customersChannel = supabase.channel('analytics_customers_changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'store_customers', filter: `project_id=eq.${effectiveStoreId}` }, () => fetchCustomers())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(ordersChannel);
+            supabase.removeChannel(productsChannel);
+            supabase.removeChannel(customersChannel);
+        };
+    }, [effectiveStoreId, fetchOrders, fetchProducts, fetchCustomers]);
 
     // Calculate total revenue (only paid orders)
     const totalRevenue = useMemo(() => {
@@ -200,7 +204,7 @@ export const useEcommerceAnalytics = (
                 order.items.forEach((item) => {
                     if (!productSales[item.productId]) {
                         productSales[item.productId] = {
-                            name: item.name,
+                            name: item.name || item.productName || 'Unknown Product',
                             totalSold: 0,
                             revenue: 0,
                         };

@@ -175,7 +175,7 @@ const RealEstateDashboard: React.FC = () => {
         updateProperty,
         updatePropertyStatus,
         deleteProperty,
-    } = useRealEstate(user?.uid, activeProjectId);
+    } = useRealEstate(user?.id, activeProjectId);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<Tab>('overview');

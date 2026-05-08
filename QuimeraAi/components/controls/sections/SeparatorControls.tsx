@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
-import { ToggleControl, SliderControl } from '../../ui/EditorControlPrimitives';
+import { ToggleControl, SliderControl , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { AlignJustify, Image as ImageIcon, Settings, Layers } from 'lucide-react';
 import type { ControlsDeps } from '../ControlsShared';
 

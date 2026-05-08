@@ -524,7 +524,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('platform-assets')
@@ -559,7 +559,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `cms_podcast/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('platform-assets')
@@ -591,7 +591,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `cms_video/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Upload] Storage path:', storagePath);
             
             setUploadProgress(50); // Fake progress since supabase-js standard upload doesn't support it
@@ -634,7 +634,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const storagePath = `cms_video/${user?.uid || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
+            const storagePath = `cms_video/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
             console.log('[Video Drop] Storage path:', storagePath);
             
             setUploadProgress(50); // Fake progress
@@ -851,12 +851,12 @@ Text to format:
             modelName = promptConfig?.model || 'gemini-2.5-flash';
 
             const projectId = activeProject?.id || 'modern-cms-editor';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.id);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelName,
                     feature: `modern-cms-${command}`,
@@ -885,7 +885,7 @@ Text to format:
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelName,
                     feature: `modern-cms-${command}`,
@@ -941,12 +941,12 @@ IMPORTANT FORMATTING RULES:
 
             const projectId = activeProject?.id || 'modern-cms-editor';
             const response = await generateMultimodalContentViaProxy(
-                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.uid
+                projectId, finalPrompt, [visionMedia], usedModel, {}, user?.id
             );
 
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: 'modern-cms-vision-write',
@@ -966,7 +966,7 @@ IMPORTANT FORMATTING RULES:
         } catch (error: any) {
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: usedModel,
                     feature: 'modern-cms-vision-write',
@@ -1001,13 +1001,13 @@ IMPORTANT FORMATTING RULES:
             }
 
             const projectId = activeProject?.id || 'modern-cms-seo';
-            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, populatedPrompt, modelName, {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelName,
                     feature: 'modern-cms-generate-seo',
@@ -1022,7 +1022,7 @@ IMPORTANT FORMATTING RULES:
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model: modelName,
                     feature: 'modern-cms-generate-seo',

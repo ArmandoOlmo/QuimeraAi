@@ -167,13 +167,26 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
         { label: t('superadmin.templateEditor.styles.cyberpunk', 'Cyberpunk'), value: 'Cyberpunk' },
     ];
 
+    // Safely resolve a value that might be a bilingual {en, es} object to string
+    const resolveText = (value: any): string => {
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'object' && (value.en || value.es)) {
+            return value.en || value.es || '';
+        }
+        return String(value);
+    };
+
     // Reset form when template changes
     useEffect(() => {
         if (template) {
+            const name = resolveText(template.name);
+            const desc = resolveText(template.description);
+            const cat = resolveText(template.category) || resolveText(template.brandIdentity?.industry);
             setFormData({
-                name: template.name === 'New Template' ? '' : (template.name || ''),
-                description: template.description || '',
-                category: template.category || template.brandIdentity?.industry || '',
+                name: name === 'New Template' ? '' : name,
+                description: desc,
+                category: cat,
                 tags: template.tags || [],
                 industries: template.industries || [],
                 thumbnailUrl: template.thumbnailUrl || '',
@@ -253,16 +266,16 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             let responseText: string;
             if (useProxy) {
                 // High maxOutputTokens for thinking models
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.uid);
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.id);
                 responseText = extractTextFromResponse(proxyResponse);
             } else {
-                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
+                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.id);
             }
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: proxyProjectId,
                     model: modelToUse,
                     feature: 'template-thumbnail-prompt',
@@ -275,7 +288,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: template?.id,
                     model: modelToUse,
                     feature: 'template-thumbnail-prompt',
@@ -334,6 +347,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                 style: thumbnailStyle,
                 destination: 'admin',
                 adminCategory: 'template',
+                adminTags: ['template-thumbnail', 'ai-generated'],
+                adminDescription: `Thumbnail for template: ${name}`,
                 resolution: '2K',
             });
             setGeneratedThumbnail(url);
@@ -470,7 +485,7 @@ Return ONLY the JSON array, no other text.`;
                     promptText,
                     modelToUse,
                     { maxOutputTokens: 8192 }, // High limit to accommodate thinking + output
-                    user?.uid
+                    user?.id
                 );
 
                 // Debug: Log the actual response structure
@@ -499,13 +514,13 @@ Return ONLY the JSON array, no other text.`;
                     throw new Error(t('superadmin.templateEditor.errors.apiInvalid', 'The API did not return a valid response. Try with another template.'));
                 }
             } else {
-                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
+                responseText = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.id);
             }
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: proxyProjectId,
                     model: modelToUse,
                     feature: 'template-industry-suggestion',
@@ -567,7 +582,7 @@ Return ONLY the JSON array, no other text.`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: template?.id,
                     model: modelToUse,
                     feature: 'template-industry-suggestion',
@@ -803,16 +818,16 @@ Name:`;
             let text: string;
             if (useProxy) {
                 // High maxOutputTokens for thinking models
-                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.uid);
+                const proxyResponse = await generateContentViaProxy(proxyProjectId, promptText, modelToUse, { maxOutputTokens: 8192 }, user?.id);
                 text = extractTextFromResponse(proxyResponse);
             } else {
-                text = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.uid);
+                text = await generateContent(promptText, proxyProjectId, modelToUse, {}, user?.id);
             }
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: proxyProjectId,
                     model: modelToUse,
                     feature: 'template-name-generation',
@@ -839,7 +854,7 @@ Name:`;
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: template?.id,
                     model: modelToUse,
                     feature: 'template-name-generation',

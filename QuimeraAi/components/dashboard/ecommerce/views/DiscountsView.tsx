@@ -41,7 +41,7 @@ const DiscountsView: React.FC = () => {
         generateCode,
         getActiveDiscounts,
         getExpiredDiscounts,
-    } = useDiscounts(user?.uid || '', storeId);
+    } = useDiscounts(user?.id || '', storeId);
 
     const [showForm, setShowForm] = useState(false);
     const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);

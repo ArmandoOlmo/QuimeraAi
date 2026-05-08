@@ -167,18 +167,25 @@ async function createServer() {
                 // If domain has agencyLandingTenantId, serve agency landing
                 if (domainInfo.agencyLandingTenantId && !domainInfo.projectId) {
                     console.log(`[SSR] Custom domain ${hostname} -> Agency Landing (tenant: ${domainInfo.agencyLandingTenantId})`);
-                    // Try to resolve the agency landing config
-                    const { getFirestore: getFs } = await import('firebase-admin/firestore');
-                    const adminDb = getFs();
-                    const landingDoc = await adminDb.collection('agencyLandings').doc(domainInfo.agencyLandingTenantId).get();
-                    if (landingDoc.exists) {
+                    // Query tenant data from Supabase
+                    const { createClient } = await import('@supabase/supabase-js');
+                    const supaUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+                    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+                    const adminDb = createClient(supaUrl, supaKey);
+                    const { data: tenant } = await adminDb
+                        .from('tenants')
+                        .select('id, settings')
+                        .eq('id', domainInfo.agencyLandingTenantId)
+                        .single();
+                    if (tenant) {
+                        const landingConfig = tenant.settings?.agencyLanding || tenant.settings || {};
                         return res.status(200).set({ 'Content-Type': 'text/html' }).send(
                             getAgencyLandingRedirectPage({
                                 tenantId: domainInfo.agencyLandingTenantId,
-                                landingId: landingDoc.id,
+                                landingId: tenant.id,
                                 customDomain: hostname,
                                 isAgencyLanding: true,
-                                config: landingDoc.data(),
+                                config: landingConfig,
                             })
                         );
                     }

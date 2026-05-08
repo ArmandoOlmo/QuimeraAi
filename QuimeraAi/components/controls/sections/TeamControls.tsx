@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -58,10 +58,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
 
       {/* Content */}
-      <Input label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(val) => setNestedData('team.title', val)} />
+      <I18nInput label={t('editor.controls.common.title')} value={data?.team?.title} onChange={(val) => setNestedData('team.title', val)} />
       <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.team?.titleFontSize || 'md'} onChange={(v) => setNestedData('team.titleFontSize', v)} />
 
-      <TextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(val) => setNestedData('team.description', val)} rows={2} />
+      <I18nTextArea label={t('editor.controls.common.description')} value={data?.team?.description} onChange={(val) => setNestedData('team.description', val)} rows={2} />
       <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.team?.descriptionFontSize || 'md'} onChange={(v) => setNestedData('team.descriptionFontSize', v)} />
 
 
@@ -79,9 +79,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               setNestedData('team.items', newItems);
             }}
           />
-          <Input label={t('controls.name')} value={member.name} onChange={(val) => setNestedData(`team.items.${index}.name`, val)} className="mt-2" />
-          <Input label={t('controls.role')} value={member.role} onChange={(val) => setNestedData(`team.items.${index}.role`, val)} />
-          <Input label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(val) => setNestedData(`team.items.${index}.bio`, val)} placeholder="Short bio shown on hover" />
+          <I18nInput label={t('controls.name')} value={member.name} onChange={(val) => setNestedData(`team.items.${index}.name`, val)} className="mt-2" />
+          <I18nInput label={t('controls.role')} value={member.role} onChange={(val) => setNestedData(`team.items.${index}.role`, val)} />
+          <I18nInput label={t('controls.bioOverlay')} value={member.bio || ''} onChange={(val) => setNestedData(`team.items.${index}.bio`, val)} placeholder="Short bio shown on hover" />
 
           {/* Link Controls */}
           <div className="mt-3 pt-3 border-t border-q-border/50">

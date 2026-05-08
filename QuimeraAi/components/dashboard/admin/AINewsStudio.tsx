@@ -241,7 +241,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'medium', maxOutputTokens: 4096 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -253,7 +253,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             }
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-news-studio',
                 model: MODEL_TEXT,
                 feature: 'news-studio-chat',
@@ -269,7 +269,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             setMessages(prev => [...prev, errorMsg]);
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-news-studio',
                 model: MODEL_TEXT,
                 feature: 'news-studio-chat',
@@ -519,7 +519,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                 systemPrompt,
                 MODEL_TEXT,
                 { temperature: 1.0, thinkingLevel: 'high', maxOutputTokens: 16384 },
-                user?.uid
+                user?.id
             );
 
             const responseText = extractTextFromResponse(response);
@@ -538,7 +538,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             setPhase('preview');
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-news-studio',
                 model: MODEL_TEXT,
                 feature: 'news-studio-generate',
@@ -554,7 +554,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
             setPhase('conversation');
 
             logApiCall({
-                userId: user?.uid || '',
+                userId: user?.id || '',
                 projectId: 'ai-news-studio',
                 model: MODEL_TEXT,
                 feature: 'news-studio-generate',
@@ -584,7 +584,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
                 featured: generatedNews.featured || false,
                 priority: typeof generatedNews.priority === 'number' ? generatedNews.priority : 0,
                 targeting: { type: 'all' },
-                createdBy: user.uid,
+                createdBy: user.id,
             };
 
             console.log('[AINewsStudio] News data built:', newsData.title);

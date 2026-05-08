@@ -25,7 +25,7 @@ import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
-import { db, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from '../../../firebase';
+
 import { logApiCall } from '../../../services/apiLoggingService';
 import { Skeleton } from '../../ui/skeleton';
 import {
@@ -227,12 +227,12 @@ const FinanceDashboard: React.FC = () => {
         try {
             const response = await generateContentViaProxy(projectId, prompt, model, {
                 temperature: _options?.temperature || 0.7
-            }, user?.uid);
+            }, user?.id);
 
             // Log successful API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model,
                     feature,
@@ -245,7 +245,7 @@ const FinanceDashboard: React.FC = () => {
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     projectId: activeProject?.id,
                     model,
                     feature,
@@ -258,7 +258,40 @@ const FinanceDashboard: React.FC = () => {
     };
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+    const { transactions, addTransaction, updateTransaction, deleteTransaction } = useAccountingData();
+    const expenses = useMemo<ExpenseRecord[]>(() => {
+        return transactions
+            .filter(t => t.type === 'expense')
+            .map(t => {
+                let meta: any = {};
+                try {
+                    if (t.description && t.description.startsWith('{')) {
+                        meta = JSON.parse(t.description);
+                    } else {
+                        meta = { supplier: t.description || 'Desconocido' };
+                    }
+                } catch(e) {}
+                
+                return {
+                    id: t.id,
+                    date: t.date,
+                    supplier: meta.supplier || 'Desconocido',
+                    category: t.category,
+                    subtotal: meta.subtotal || t.amount,
+                    tax: meta.tax || 0,
+                    total: t.amount,
+                    currency: meta.currency || 'MXN',
+                    items: meta.items || [],
+                    confidence: meta.confidence || 100,
+                    notes: meta.notes || '',
+                    status: (t.status === 'approved' ? 'approved' : 'pending') as 'pending' | 'approved',
+                    createdAt: t.created_at,
+                    updatedAt: t.updated_at,
+                    receiptUrl: t.receipt_url
+                };
+            })
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [transactions]);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [selectedExpense, setSelectedExpense] = useState<ExpenseRecord | null>(null);
@@ -379,35 +412,14 @@ const FinanceDashboard: React.FC = () => {
         }));
     }, [expenses, totalExpenses]);
 
-    // Realtime persistence per project
+    // Realtime persistence is handled by useAccountingData hook implicitly via 'transactions'
     useEffect(() => {
-        const userId = user?.uid;
-        const projectId = activeProject?.id;
-        if (!userId || !projectId) {
-            setExpenses([]);
-            return;
+        // Keep selectedExpense in sync if it still exists
+        if (selectedExpense?.id) {
+            const updated = expenses.find(e => e.id === selectedExpense.id) || null;
+            if (updated) setSelectedExpense(updated);
         }
-
-        const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance_expenses');
-        const q = query(expensesRef, orderBy('date', 'desc'));
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ExpenseRecord));
-                setExpenses(data);
-                // Keep selectedExpense in sync if it still exists
-                if (selectedExpense?.id) {
-                    const updated = data.find(e => e.id === selectedExpense.id) || null;
-                    if (updated) setSelectedExpense(updated);
-                }
-            },
-            (err) => {
-                console.error('Error fetching expenses:', err);
-            }
-        );
-        return () => unsubscribe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.uid, activeProject?.id]);
+    }, [expenses, selectedExpense?.id]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -416,7 +428,7 @@ const FinanceDashboard: React.FC = () => {
         setIsUploading(true);
         setUploadError(null);
 
-        const userId = user?.uid;
+        const userId = user?.id;
         const projectId = activeProject?.id;
 
         if (!userId || !projectId) {
@@ -437,26 +449,42 @@ const FinanceDashboard: React.FC = () => {
                 try {
                     const extractedData = await extractExpenseFromReceipt(file, projectId, userId);
 
-                    const newExpense: Omit<ExpenseRecord, 'id'> = {
-                        date: extractedData.date || new Date().toISOString().split('T')[0],
+                    const descriptionJSON = JSON.stringify({
                         supplier: extractedData.supplier || 'Desconocido',
-                        category: extractedData.category || 'Otros',
                         subtotal: extractedData.subtotal || 0,
                         tax: extractedData.tax || 0,
-                        total: extractedData.total || 0,
                         currency: extractedData.currency || 'MXN',
                         items: extractedData.items || [],
                         confidence: extractedData.confidence || 0,
-                        status: 'pending',
-                        createdAt: serverTimestamp()
-                    };
+                        notes: ''
+                    });
 
-                    const expensesRef = collection(db, 'users', userId, 'projects', projectId, 'finance_expenses');
-                    const docRef = await addDoc(expensesRef, { ...newExpense, updatedAt: serverTimestamp() });
+                    const newId = await addTransaction({
+                        type: 'expense',
+                        category: extractedData.category || 'Otros',
+                        amount: extractedData.total || 0,
+                        date: extractedData.date || new Date().toISOString().split('T')[0],
+                        description: descriptionJSON,
+                        status: 'pending',
+                        receipt_url: '' 
+                    });
 
                     // Solo seleccionamos el último si se subieron varios
                     if (files.length === 1 || i === files.length - 1) {
-                        setSelectedExpense({ id: docRef.id, ...newExpense } as ExpenseRecord);
+                        setSelectedExpense({ 
+                            id: newId, 
+                            date: extractedData.date || new Date().toISOString().split('T')[0],
+                            supplier: extractedData.supplier || 'Desconocido',
+                            category: extractedData.category || 'Otros',
+                            subtotal: extractedData.subtotal || 0,
+                            tax: extractedData.tax || 0,
+                            total: extractedData.total || 0,
+                            currency: extractedData.currency || 'MXN',
+                            items: extractedData.items || [],
+                            confidence: extractedData.confidence || 0,
+                            status: 'pending',
+                            createdAt: new Date().toISOString()
+                        } as ExpenseRecord);
                     }
                 } catch (err: any) {
                     console.error(`Error processing file ${file.name}:`, err);
@@ -480,26 +508,38 @@ const FinanceDashboard: React.FC = () => {
 
     const handleConfirmDeleteExpense = useCallback(async () => {
         if (!deleteExpenseId) return;
-        const userId = user?.uid;
-        const projectId = activeProject?.id;
-        if (!userId || !projectId) return;
-        await deleteDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', deleteExpenseId));
+        await deleteTransaction(deleteExpenseId);
         if (selectedExpense?.id === deleteExpenseId) setSelectedExpense(null);
         setDeleteExpenseId(null);
-    }, [deleteExpenseId, user?.uid, activeProject?.id, selectedExpense?.id]);
+    }, [deleteExpenseId, selectedExpense?.id, deleteTransaction]);
 
     const handleUpdateExpense = useCallback(async (id: string, updates: Partial<ExpenseRecord>) => {
-        const userId = user?.uid;
-        const projectId = activeProject?.id;
-        if (!userId || !projectId) return;
-        await updateDoc(doc(db, 'users', userId, 'projects', projectId, 'finance_expenses', id), {
-            ...updates,
-            updatedAt: serverTimestamp(),
-        } as any);
+        const tx = transactions.find(t => t.id === id);
+        if (!tx) return;
+        
+        let meta: any = {};
+        try { if (tx.description && tx.description.startsWith('{')) meta = JSON.parse(tx.description); } catch(e) {}
+        
+        if (updates.supplier !== undefined) meta.supplier = updates.supplier;
+        if (updates.subtotal !== undefined) meta.subtotal = updates.subtotal;
+        if (updates.tax !== undefined) meta.tax = updates.tax;
+        if (updates.currency !== undefined) meta.currency = updates.currency;
+        if (updates.items !== undefined) meta.items = updates.items;
+        if (updates.confidence !== undefined) meta.confidence = updates.confidence;
+        if (updates.notes !== undefined) meta.notes = updates.notes;
+
+        await updateTransaction(id, {
+            ...(updates.category && { category: updates.category }),
+            ...(updates.total !== undefined && { amount: updates.total }),
+            ...(updates.date && { date: updates.date }),
+            ...(updates.status && { status: updates.status }),
+            description: JSON.stringify(meta)
+        });
+
         if (selectedExpense?.id === id) {
             setSelectedExpense(prev => prev ? { ...prev, ...updates } : null);
         }
-    }, [user?.uid, activeProject?.id, selectedExpense?.id]);
+    }, [transactions, updateTransaction, selectedExpense?.id]);
 
     const handleUpdateItem = useCallback((idx: number, field: string, value: any) => {
         if (!selectedExpense) return;

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FeaturesData, PaddingSize, BorderRadiusSize, FontSize, ObjectFit, AnimationType, TextAlignment, FeatureItem } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
@@ -470,9 +471,9 @@ interface FeaturesProps extends FeaturesData {
 
 const Features: React.FC<FeaturesProps> = ({
   glassEffect,
-  title,
-  description,
-  items,
+  title: rawTitle,
+  description: rawDescription,
+  items: rawItems,
   paddingY,
   paddingX,
   colors,
@@ -495,6 +496,27 @@ const Features: React.FC<FeaturesProps> = ({
   onNavigate,
   isPreview
 }) => {
+  const { i18n } = useTranslation();
+  
+  const resolveText = (text: any) => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    if (typeof text === 'object' && text !== null) {
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      return text[preferred] || text.es || text.en || Object.values(text)[0] || '';
+    }
+    return String(text);
+  };
+
+  const title = resolveText(rawTitle);
+  const description = resolveText(rawDescription);
+  const items = (rawItems || []).map(item => ({
+    ...item,
+    title: resolveText(item.title),
+    description: resolveText(item.description),
+    linkText: resolveText(item.linkText)
+  }));
+
   if (featuresVariant === 'cinematic-gym') {
     return <FeaturesCinematicGym {...{ title, description, items, paddingY, paddingX, colors, titleFontSize, descriptionFontSize, gridColumns, imageHeight, imageObjectFit, layoutAlignment, isPreview }} />;
   }

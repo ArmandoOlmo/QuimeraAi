@@ -394,7 +394,7 @@ const LeadsDashboard: React.FC = () => {
         // Persist to Firestore
         const pathSegments = activeProject.status === 'Template'
             ? ['templates', activeProject.id]
-            : ['users', user.uid, 'projects', activeProject.id];
+            : ['users', user.id, 'projects', activeProject.id];
         updateDoc(doc(db, ...pathSegments), { crmConfig: newConfig }).catch(console.error);
     }, [activeProject, user]);
 
@@ -768,13 +768,13 @@ const LeadsDashboard: React.FC = () => {
             `;
 
             const projectId = activeProject?.id || 'leads-analysis';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-ai-analysis',
                     success: true
@@ -798,7 +798,7 @@ const LeadsDashboard: React.FC = () => {
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-ai-analysis',
                     success: false,
@@ -845,13 +845,13 @@ const LeadsDashboard: React.FC = () => {
             `;
 
             const projectId = activeProject?.id || 'leads-email-draft';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-draft-email',
                     success: true
@@ -869,7 +869,7 @@ const LeadsDashboard: React.FC = () => {
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-draft-email',
                     success: false,
@@ -907,7 +907,7 @@ const LeadsDashboard: React.FC = () => {
             // Log action
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'ui-navigation',
                     feature: 'leads-to-email-editor',
                     success: true
@@ -946,13 +946,13 @@ const LeadsDashboard: React.FC = () => {
             `;
 
             const projectId = activeProject?.id || 'leads-conversation-analysis';
-            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.uid);
+            const response = await generateContentViaProxy(projectId, prompt, 'gemini-2.5-flash', {}, user?.id);
             const responseText = extractTextFromResponse(response);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-conversation-analysis',
                     success: true
@@ -964,7 +964,7 @@ const LeadsDashboard: React.FC = () => {
             // Log failed API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: 'gemini-2.5-flash',
                     feature: 'leads-conversation-analysis',
                     success: false,
@@ -2446,7 +2446,7 @@ const LeadsDashboard: React.FC = () => {
                             setShowAddToAudienceModal(false);
                             setSelectedLeadIds([]);
                         }}
-                        userId={user.uid}
+                        userId={user.id}
                         projectId={activeProject.id}
                         leadIds={selectedLeadIds}
                         contactCount={selectedLeadIds.length}

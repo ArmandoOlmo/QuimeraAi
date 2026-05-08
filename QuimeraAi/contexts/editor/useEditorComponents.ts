@@ -8,11 +8,8 @@ import {
     ComponentVariant, ComponentVersion, DesignTokens
 } from '../../types';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
-import {
-    db, doc, setDoc, updateDoc, deleteDoc,
-    collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, getDoc
-} from '../../firebase';
-import type { User } from '../../firebase';
+import { supabase } from '../../supabase';
+import type { User } from '../../firebase'; // Or your updated auth types
 
 interface UseEditorComponentsParams {
     user: User | null;
@@ -26,57 +23,67 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
     const [designTokens, setDesignTokens] = useState<DesignTokens | null>(null);
     const [componentStatus, setComponentStatus] = useState<Record<PageSection, boolean>>({} as Record<PageSection, boolean>);
 
+    // Helper to format custom component from db
+    const formatCustomComponent = (d: any): CustomComponent => ({
+        id: d.id,
+        name: d.name,
+        baseComponent: d.base_component as any,
+        styles: d.styles,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+        createdBy: d.created_by,
+        isPublic: d.is_public,
+        usageCount: d.usage_count,
+        versions: d.versions || [],
+        variants: d.variants || [],
+        activeVariant: d.active_variant,
+        projectsUsing: d.projects_using || []
+    });
+
     // ─── Listeners ───
 
     const setupComponentDefaultsListener = () => {
-        try {
-            const componentDefaultsCol = collection(db, "componentDefaults");
-            const unsubscribe = onSnapshot(componentDefaultsCol, (snapshot) => {
+        const fetchDefaults = async () => {
+            const { data } = await supabase.from('component_defaults').select('*');
+            if (data) {
                 const loadedStyles: any = {};
-                snapshot.forEach((doc) => {
-                    loadedStyles[doc.id] = doc.data().styles;
+                data.forEach((doc) => {
+                    loadedStyles[doc.id] = doc.styles;
                 });
                 if (Object.keys(loadedStyles).length > 0) {
                     setComponentStyles(prev => ({ ...prev, ...loadedStyles }));
                     console.log("✅ Component defaults updated in real-time");
                 }
-            }, (error) => {
-                if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
-                    console.warn("⚠️ Component defaults listener: waiting for permissions");
-                } else {
-                    console.error("Error in component defaults listener:", error);
-                }
-            });
-            return unsubscribe;
-        } catch (e) {
-            console.error("Error setting up component defaults listener:", e);
-            return () => { };
-        }
+            }
+        };
+        fetchDefaults();
+
+        const channel = supabase.channel('public:component_defaults')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'component_defaults' }, () => {
+                fetchDefaults();
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     };
 
     const setupCustomComponentsListener = () => {
-        try {
-            const customComponentsCol = collection(db, 'customComponents');
-            const q = query(customComponentsCol, orderBy('createdAt', 'desc'));
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-                const components = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomComponent));
-                setCustomComponents(components);
-                if (components.length > 0) {
-                    console.log("✅ Custom components updated in real-time:", components.length);
-                }
-            }, (error) => {
-                if (error.code === 'permission-denied' || error.code === 'failed-precondition') {
-                    console.warn("⚠️ Custom components listener: waiting for index or permissions");
-                    setCustomComponents([]);
-                } else {
-                    console.error("Error in custom components listener:", error);
-                }
-            });
-            return unsubscribe;
-        } catch (error) {
-            console.error("Error setting up custom components listener:", error);
-            return () => { };
-        }
+        const fetchCustom = async () => {
+            const { data } = await supabase.from('custom_components').select('*').order('created_at', { ascending: false });
+            if (data) {
+                setCustomComponents(data.map(formatCustomComponent));
+                console.log("✅ Custom components updated in real-time:", data.length);
+            }
+        };
+        fetchCustom();
+
+        const channel = supabase.channel('public:custom_components')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_components' }, () => {
+                fetchCustom();
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     };
 
     // ─── Component Style Management ───
@@ -104,35 +111,30 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
             const customComp = customComponents.find(c => c.id === componentId);
             if (customComp) {
                 const newVersion: ComponentVersion = {
-                    version: (customComp.version || 1) + 1,
-                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                    author: user?.uid || 'unknown',
+                    version: ((customComp.versions?.length || 0) > 0 ? Math.max(...(customComp.versions || []).map(v => v.version)) : 0) + 1,
+                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 } as any, // Firebase legacy format? Let's keep compatible if needed or switch to ISO string
+                    author: user?.uid || user?.id || 'unknown',
                     changes: changeDescription || 'Component updated',
                     snapshot: customComp.styles
                 };
 
                 const updatedVersionHistory = [
-                    ...(customComp.versionHistory || []),
+                    ...(customComp.versions || []),
                     newVersion
                 ].slice(-10);
 
-                const docRef = doc(db, 'customComponents', componentId);
-                await updateDoc(docRef, {
+                await supabase.from('custom_components').update({
                     styles: customComp.styles,
-                    version: newVersion.version,
-                    versionHistory: updatedVersionHistory,
-                    lastModified: serverTimestamp(),
-                    modifiedBy: user?.uid || ''
-                });
+                    versions: updatedVersionHistory,
+                    updated_at: new Date().toISOString()
+                }).eq('id', componentId);
 
                 setCustomComponents(prev => prev.map(c =>
                     c.id === componentId
                         ? {
                             ...c,
-                            version: newVersion.version,
-                            versionHistory: updatedVersionHistory,
-                            lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                            modifiedBy: user?.uid || ''
+                            versions: updatedVersionHistory,
+                            updatedAt: new Date().toISOString()
                         }
                         : c
                 ));
@@ -142,8 +144,11 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
 
             const currentStyle = componentStyles[componentId as EditableComponentID];
             if (currentStyle) {
-                const docRef = doc(db, 'componentDefaults', componentId);
-                await setDoc(docRef, { styles: currentStyle }, { merge: true });
+                await supabase.from('component_defaults').upsert({
+                    id: componentId,
+                    styles: currentStyle,
+                    updated_at: new Date().toISOString()
+                });
                 console.log("Saved standard component", componentId);
             }
         } catch (e) {
@@ -153,26 +158,26 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
     };
 
     const createNewCustomComponent = async (name: string, baseComponent: EditableComponentID): Promise<CustomComponent> => {
-        const newComponentData: Omit<CustomComponent, 'id' | 'createdAt'> = {
-            name, baseComponent,
-            styles: componentStyles[baseComponent],
-            version: 1, versionHistory: [],
-            category: 'other', tags: [], variants: [],
-            isPublic: false, createdBy: user?.uid || '',
-            usageCount: 0, projectsUsing: [],
-            permissions: { canEdit: [], canView: [], isPublic: false }
-        };
-
         try {
-            const customComponentsCol = collection(db, 'customComponents');
-            const docRef = await addDoc(customComponentsCol, { ...newComponentData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
-
-            const createdComponent: CustomComponent = {
-                id: docRef.id, ...newComponentData,
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
+            const now = new Date().toISOString();
+            const insertData = {
+                name,
+                base_component: baseComponent,
+                styles: componentStyles[baseComponent],
+                created_at: now,
+                updated_at: now,
+                created_by: user?.uid || user?.id || null,
+                is_public: false,
+                usage_count: 0,
+                versions: [],
+                variants: [],
+                projects_using: []
             };
 
+            const { data, error } = await supabase.from('custom_components').insert([insertData]).select('*').single();
+            if (error) throw error;
+
+            const createdComponent = formatCustomComponent(data);
             setCustomComponents(prev => [createdComponent, ...prev]);
             return createdComponent;
         } catch (error) {
@@ -183,8 +188,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
 
     const deleteCustomComponent = async (componentId: string): Promise<void> => {
         try {
-            const docRef = doc(db, 'customComponents', componentId);
-            await deleteDoc(docRef);
+            await supabase.from('custom_components').delete().eq('id', componentId);
             setCustomComponents(prev => prev.filter(c => c.id !== componentId));
         } catch (error) {
             console.error("Error deleting custom component:", error);
@@ -196,23 +200,26 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
         const original = customComponents.find(c => c.id === componentId);
         if (!original) throw new Error('Component not found');
 
-        const duplicateData: Omit<CustomComponent, 'id' | 'createdAt'> = {
-            ...original, name: `${original.name} Copy`,
-            version: 1, versionHistory: [],
-            usageCount: 0, projectsUsing: [],
-            createdBy: user?.uid || '',
-        };
-
         try {
-            const customComponentsCol = collection(db, 'customComponents');
-            const docRef = await addDoc(customComponentsCol, { ...duplicateData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
-
-            const newComponent: CustomComponent = {
-                ...duplicateData, id: docRef.id,
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
+            const now = new Date().toISOString();
+            const duplicateData = {
+                name: `${original.name} Copy`,
+                base_component: original.baseComponent,
+                styles: original.styles,
+                created_at: now,
+                updated_at: now,
+                created_by: user?.uid || user?.id || null,
+                is_public: false,
+                usage_count: 0,
+                versions: [],
+                variants: original.variants || [],
+                projects_using: []
             };
 
+            const { data, error } = await supabase.from('custom_components').insert([duplicateData]).select('*').single();
+            if (error) throw error;
+
+            const newComponent = formatCustomComponent(data);
             setCustomComponents(prev => [newComponent, ...prev]);
             return newComponent;
         } catch (error) {
@@ -228,11 +235,14 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
         if (!newName.trim()) throw new Error("Component name cannot be empty.");
 
         try {
-            const docRef = doc(db, 'customComponents', componentId);
-            await updateDoc(docRef, { name: newName.trim(), lastModified: serverTimestamp(), modifiedBy: user?.uid || '' });
+            await supabase.from('custom_components').update({
+                name: newName.trim(),
+                updated_at: new Date().toISOString()
+            }).eq('id', componentId);
+
             setCustomComponents(prev => prev.map(c =>
                 c.id === componentId
-                    ? { ...c, name: newName.trim(), lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 } }
+                    ? { ...c, name: newName.trim(), updatedAt: new Date().toISOString() }
                     : c
             ));
         } catch (error) {
@@ -243,14 +253,14 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
 
     const updateComponentVariants = async (componentId: string, variants: ComponentVariant[], activeVariant?: string): Promise<void> => {
         try {
-            const updateData: any = { variants, lastModified: serverTimestamp(), modifiedBy: user?.uid || '' };
-            if (activeVariant !== undefined) updateData.activeVariant = activeVariant;
+            const updateData: any = { variants, updated_at: new Date().toISOString() };
+            if (activeVariant !== undefined) updateData.active_variant = activeVariant;
 
-            const docRef = doc(db, 'customComponents', componentId);
-            await updateDoc(docRef, updateData);
+            await supabase.from('custom_components').update(updateData).eq('id', componentId);
+
             setCustomComponents(prev => prev.map(c =>
                 c.id === componentId
-                    ? { ...c, variants, activeVariant: activeVariant ?? c.activeVariant, lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 } }
+                    ? { ...c, variants, activeVariant: activeVariant ?? c.activeVariant, updatedAt: new Date().toISOString() }
                     : c
             ));
         } catch (error) {
@@ -264,11 +274,11 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
         if (!component) throw new Error('Component not found');
 
         return JSON.stringify({
-            name: component.name, description: component.description,
-            baseComponent: component.baseComponent, styles: component.styles,
-            category: component.category, tags: component.tags,
-            variants: component.variants, documentation: component.documentation,
-            version: component.version,
+            name: component.name,
+            baseComponent: component.baseComponent, 
+            styles: component.styles,
+            variants: component.variants,
+            versions: component.versions,
         }, null, 2);
     };
 
@@ -279,26 +289,25 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 throw new Error('Invalid component data: missing required fields');
             }
 
-            const newComponentData: Omit<CustomComponent, 'id' | 'createdAt'> = {
-                name: importedData.name, description: importedData.description,
-                baseComponent: importedData.baseComponent, styles: importedData.styles || {},
-                version: 1, versionHistory: [],
-                category: importedData.category || 'other', tags: importedData.tags || [],
-                variants: importedData.variants || [], isPublic: false,
-                createdBy: user?.uid || '', usageCount: 0, projectsUsing: [],
-                permissions: { canEdit: [], canView: [], isPublic: false },
-                documentation: importedData.documentation
+            const now = new Date().toISOString();
+            const newComponentData = {
+                name: importedData.name,
+                base_component: importedData.baseComponent, 
+                styles: importedData.styles || {},
+                versions: importedData.versions || [],
+                variants: importedData.variants || [], 
+                is_public: false,
+                created_by: user?.uid || user?.id || null, 
+                usage_count: 0, 
+                projects_using: [],
+                created_at: now, 
+                updated_at: now
             };
 
-            const customComponentsCol = collection(db, 'customComponents');
-            const docRef = await addDoc(customComponentsCol, { ...newComponentData, createdAt: serverTimestamp(), lastModified: serverTimestamp() });
+            const { data, error } = await supabase.from('custom_components').insert([newComponentData]).select('*').single();
+            if (error) throw error;
 
-            const createdComponent: CustomComponent = {
-                id: docRef.id, ...newComponentData,
-                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }
-            };
-
+            const createdComponent = formatCustomComponent(data);
             setCustomComponents(prev => [createdComponent, ...prev]);
             return createdComponent;
         } catch (error) {
@@ -311,15 +320,17 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
         const component = customComponents.find(c => c.id === componentId);
         if (!component) throw new Error('Component not found');
 
-        const targetVersion = component.versionHistory?.find(v => v.version === versionNumber);
+        const targetVersion = component.versions?.find(v => v.version === versionNumber);
         if (!targetVersion) throw new Error('Version not found');
 
-        const docRef = doc(db, 'customComponents', componentId);
-        await updateDoc(docRef, { styles: targetVersion.snapshot, lastModified: serverTimestamp(), modifiedBy: user?.uid || '' });
+        await supabase.from('custom_components').update({
+            styles: targetVersion.snapshot,
+            updated_at: new Date().toISOString()
+        }).eq('id', componentId);
 
         setCustomComponents(prev => prev.map(c =>
             c.id === componentId
-                ? { ...c, styles: targetVersion.snapshot, lastModified: { seconds: Date.now() / 1000, nanoseconds: 0 }, modifiedBy: user?.uid || '' }
+                ? { ...c, styles: targetVersion.snapshot, updatedAt: new Date().toISOString() }
                 : c
         ));
     };
@@ -336,9 +347,12 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
             const projectsUsing = component.projectsUsing || [];
             if (!projectsUsing.includes(projectId)) {
                 try {
-                    const docRef = doc(db, 'customComponents', compId);
                     const updatedProjects = [...projectsUsing, projectId];
-                    await updateDoc(docRef, { projectsUsing: updatedProjects, usageCount: updatedProjects.length });
+                    await supabase.from('custom_components').update({
+                        projects_using: updatedProjects,
+                        usage_count: updatedProjects.length
+                    }).eq('id', compId);
+                    
                     setCustomComponents(prev => prev.map(c =>
                         c.id === compId ? { ...c, projectsUsing: updatedProjects, usageCount: updatedProjects.length } : c
                     ));
@@ -353,8 +367,12 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
 
     const updateDesignTokens = async (tokens: DesignTokens): Promise<void> => {
         try {
-            const docRef = doc(db, 'settings', 'designTokens');
-            await setDoc(docRef, tokens);
+            await supabase.from('settings').upsert({
+                id: 'designTokens',
+                config: tokens,
+                updated_at: new Date().toISOString(),
+                updated_by: user?.uid || user?.id || null
+            });
             setDesignTokens(tokens);
         } catch (error) {
             console.error("Error updating design tokens:", error);
@@ -368,8 +386,12 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
         const newStatus = { ...componentStatus, [componentId]: isEnabled };
         setComponentStatus(newStatus);
         try {
-            const settingsRef = doc(db, 'settings', 'components');
-            await setDoc(settingsRef, { status: newStatus }, { merge: true });
+            await supabase.from('settings').upsert({
+                id: 'components',
+                config: { status: newStatus },
+                updated_at: new Date().toISOString(),
+                updated_by: user?.uid || user?.id || null
+            });
         } catch (error) {
             console.error('Failed to update component status:', error);
         }

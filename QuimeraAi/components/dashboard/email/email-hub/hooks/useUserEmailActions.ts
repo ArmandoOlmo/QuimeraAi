@@ -278,7 +278,7 @@ export function useUserEmailActions(
                     status: 'draft' as CampaignStatus,
                     stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                     tags: ['visual-editor'],
-                    createdBy: user?.uid || userId,
+                    createdBy: user?.id || userId,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                 };
@@ -534,7 +534,7 @@ export function useUserEmailActions(
                 status: 'draft' as CampaignStatus,
                 stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                 tags: ['duplicate'],
-                createdBy: user?.uid || userId,
+                createdBy: user?.id || userId,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
@@ -731,7 +731,7 @@ export function useUserEmailActions(
             tags: ['automation-email'],
             automationId,
             automationStepId: stepId,
-            createdBy: user?.uid || userId,
+            createdBy: user?.id || userId,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };

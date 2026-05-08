@@ -5,7 +5,7 @@ import { Type, Settings, Layout, RotateCcw, Image as ImageIcon, Maximize2, Trash
 import ColorControl from '../../ui/ColorControl';
 import {
   ToggleControl, SliderControl, Input, TextArea, Select
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import ImagePicker from '../../ui/ImagePicker';
 
@@ -37,7 +37,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Headline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.headline || ''}
                         onChange={(val) => setNestedData('featuresNeon.headline', val)}
                         rows={2}
@@ -52,7 +52,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                         context: 'Features Neon Subheadline' 
                     })}
                 >
-                    <TextArea
+                    <I18nTextArea
                         value={sectionData.subheadline || ''}
                         onChange={(val) => setNestedData('featuresNeon.subheadline', val)}
                         rows={2}
@@ -91,7 +91,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Title` 
                             })}
                         >
-                            <Input
+                            <I18nInput
                                 value={feature.title || ''}
                                 onChange={(val) => setNestedData(`featuresNeon.features.${index}.title`, val)}
                             />
@@ -105,7 +105,7 @@ export const renderFeaturesNeonControls = (deps: ControlsDeps) => {
                                 context: `Features Neon Feature ${index} Description` 
                             })}
                         >
-                            <TextArea
+                            <I18nTextArea
                                 value={feature.description || ''}
                                 onChange={(val) => setNestedData(`featuresNeon.features.${index}.description`, val)}
                                 rows={2}

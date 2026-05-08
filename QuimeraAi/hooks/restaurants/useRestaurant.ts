@@ -14,9 +14,9 @@ export function useRestaurant() {
   const [error, setError] = useState<string | null>(null);
 
   const scope = useMemo<RestaurantScope | null>(() => {
-    if (!user?.uid) return null;
-    return { userId: user.uid, tenantId: tenant?.currentTenant?.id };
-  }, [user?.uid, tenant?.currentTenant?.id]);
+    if (!user?.id) return null;
+    return { userId: user.id, tenantId: tenant?.currentTenant?.id };
+  }, [user?.id, tenant?.currentTenant?.id]);
 
   useEffect(() => {
     if (!scope) {

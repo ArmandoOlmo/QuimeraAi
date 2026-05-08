@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, Select, ToggleControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -30,7 +30,7 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <Input 
+            <I18nInput 
               label={t('editor.ctaLumina.buttonText', 'Texto del Botón')} 
               value={data.ctaLumina[textKey] || ''} 
               onChange={(val) => setNestedData(`ctaLumina.${textKey}`, val)} 
@@ -152,7 +152,7 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.ctaLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'ctaLumina.headline', value: data.ctaLumina.headline, context: 'CTA Lumina Headline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.ctaLumina.headline || ''} 
               onChange={(val) => setNestedData('ctaLumina.headline', val)} 
               rows={2} 
@@ -163,7 +163,7 @@ export const renderCtaLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.ctaLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'ctaLumina.subheadline', value: data.ctaLumina.subheadline || '', context: 'CTA Lumina Subheadline' })}
           >
-            <Input 
+            <I18nInput 
               label="" 
               value={data.ctaLumina.subheadline || ''} 
               onChange={(val) => setNestedData('ctaLumina.subheadline', val)} 

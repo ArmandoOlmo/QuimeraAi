@@ -5,9 +5,23 @@
  * This keeps API keys secure and allows chatbots to work on any domain.
  */
 
-// Configuration
-const PROXY_BASE_URL = import.meta.env.VITE_GEMINI_PROXY_URL ||
-    'https://us-central1-quimeraai.cloudfunctions.net/gemini';
+// Configuration — Use Supabase Edge Function (OpenRouter) instead of Firebase Cloud Function
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
+const AI_PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL ||
+    `${SUPABASE_URL}/functions/v1/ai-proxy`;
+
+/**
+ * Call the AI proxy Edge Function.
+ * The Edge Function is deployed with --no-verify-jwt, so no auth headers are needed.
+ * This routes through OpenRouter for all AI generation.
+ */
+async function callAiProxy(body: Record<string, any>): Promise<Response> {
+    return fetch(AI_PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+}
 
 export interface GeminiProxyConfig {
     temperature?: number;
@@ -109,13 +123,7 @@ export async function generateContentViaProxy(
         };
         if (tools && tools.length > 0) body.tools = tools;
 
-        const response = await fetch(`${PROXY_BASE_URL}-generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body)
-        });
+        const response = await callAiProxy(body);
 
         // Check for 503 capacity error and try fallback
         if (response.status === 503) {
@@ -148,8 +156,11 @@ export async function generateContentViaProxy(
         }
 
         if (!response.ok) {
-            const errorData: GeminiProxyError = await response.json();
-            throw new Error(errorData.error || `Proxy error: ${response.status}`);
+            const errorData = await response.json();
+            const msg = errorData.error || `Proxy error: ${response.status}`;
+            const detail = errorData.details ? ` | Details: ${typeof errorData.details === 'string' ? errorData.details.slice(0, 300) : JSON.stringify(errorData.details).slice(0, 300)}` : '';
+            console.error('[Gemini Proxy] Error:', msg, detail);
+            throw new Error(msg + detail);
         }
 
         const data: GeminiProxyResponse = await response.json();
@@ -217,13 +228,7 @@ export async function generateChatContentViaProxy(
             }
         };
 
-        const response = await fetch(`${PROXY_BASE_URL}-generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body)
-        });
+        const response = await callAiProxy(body);
 
         // Check for 503 capacity error and try fallback
         if (response.status === 503) {
@@ -256,8 +261,11 @@ export async function generateChatContentViaProxy(
         }
 
         if (!response.ok) {
-            const errorData: GeminiProxyError = await response.json();
-            throw new Error(errorData.error || `Proxy error: ${response.status}`);
+            const errorData = await response.json();
+            const msg = errorData.error || `Proxy error: ${response.status}`;
+            const detail = errorData.details ? ` | Details: ${typeof errorData.details === 'string' ? errorData.details.slice(0, 300) : JSON.stringify(errorData.details).slice(0, 300)}` : '';
+            console.error('[Gemini Chat Proxy] Error:', msg, detail);
+            throw new Error(msg + detail);
         }
 
         const data: GeminiProxyResponse = await response.json();
@@ -345,13 +353,7 @@ export async function generateMultimodalContentViaProxy(
         };
         if (tools && tools.length > 0) body.tools = tools;
 
-        const response = await fetch(`${PROXY_BASE_URL}-generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body)
-        });
+        const response = await callAiProxy(body);
 
         // Check for 503 capacity error and try fallback
         if (response.status === 503) {
@@ -395,19 +397,13 @@ export async function* streamContentViaProxy(
     userId?: string
 ): AsyncGenerator<string, void, unknown> {
     try {
-        const response = await fetch(`${PROXY_BASE_URL}-stream`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        const response = await callAiProxy({
                 projectId,
                 prompt,
                 userId,
                 model,
                 config
-            })
-        });
+            });
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -452,12 +448,7 @@ export async function* streamContentViaProxy(
  */
 export async function getUsageStats(projectId: string) {
     try {
-        const response = await fetch(`${PROXY_BASE_URL}-usage/${projectId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await callAiProxy({ action: 'usage', projectId });
 
         if (!response.ok) {
             throw new Error(`Usage stats error: ${response.status}`);
@@ -524,12 +515,7 @@ export async function generateImageViaProxy(
     try {
         // Image generation request - logging disabled for production
 
-        const response = await fetch(`${PROXY_BASE_URL}-image`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        const response = await callAiProxy({
                 userId,
                 projectId: projectId || `image-gen-${userId}`,
                 prompt,
@@ -553,8 +539,7 @@ export async function generateImageViaProxy(
                     themeColors: config.themeColors,
                     depthOfField: config.depthOfField
                 }
-            })
-        });
+            });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));

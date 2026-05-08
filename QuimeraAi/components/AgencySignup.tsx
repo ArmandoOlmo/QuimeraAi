@@ -192,7 +192,7 @@ const AgencySignup: React.FC = () => {
                     action: 'createCheckoutSession',
                     planId,
                     billingCycle,
-                    tenantId: `tenant_${user.uid}`, // Standard tenant ID pattern
+                    tenantId: `tenant_${user.id}`, // Standard tenant ID pattern
                     successUrl: `${window.location.origin}/dashboard?subscription=success&plan=${planId}`,
                     cancelUrl: `${window.location.origin}/agency-signup?cancelled=true`,
                 }

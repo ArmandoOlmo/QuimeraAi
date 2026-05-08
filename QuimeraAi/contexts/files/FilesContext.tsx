@@ -6,23 +6,10 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { FileRecord } from '../../types';
-import {
-    db,
-    storage,
-    doc,
-    collection,
-    getDocs,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    orderBy,
-    serverTimestamp,
-    onSnapshot,
-} from '../../firebase';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
+import { useSafeTenant } from '../tenant';
 
 // Admin Asset Categories
 export type AdminAssetCategory = 
@@ -84,9 +71,11 @@ interface FilesContextType {
 export const FilesContext = createContext<FilesContextType | undefined>(undefined);
 
 export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, userDocument } = useAuth();
+    const { user } = useAuth();
     const projectContext = useSafeProject();
     const activeProjectId = projectContext?.activeProjectId || null;
+    const tenantContext = useSafeTenant();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
     
     // User Files State (project-scoped)
     const [files, setFiles] = useState<FileRecord[]>([]);
@@ -102,40 +91,66 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Load files with real-time updates (scoped to active project)
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setFiles([]);
             setIsFilesLoading(false);
             return;
         }
 
-        setIsFilesLoading(true);
-        const filesPath = `users/${user.uid}/projects/${activeProjectId}/files`;
-        const q = query(
-            collection(db, filesPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchInitialFiles = async () => {
+            setIsFilesLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('files')
+                    .select('*')
+                    .eq('tenant_id', currentTenantId)
+                    .eq('project_id', activeProjectId)
+                    .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const filesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as FileRecord[];
-            setFiles(filesData);
-            setIsFilesLoading(false);
-        }, (error) => {
-            console.error("[FilesContext] Error fetching files:", error);
-            setIsFilesLoading(false);
-        });
+                if (error) throw error;
+
+                const filesData = (data || []).map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    url: f.url,
+                    size: f.size,
+                    type: f.type,
+                    downloadURL: f.url,
+                    storagePath: f.metadata?.storagePath || '',
+                    projectId: f.project_id,
+                    createdAt: f.created_at,
+                    notes: f.metadata?.notes,
+                    summary: f.metadata?.summary
+                })) as FileRecord[];
+                setFiles(filesData);
+            } catch (error) {
+                console.error("[FilesContext] Error fetching files:", error);
+            } finally {
+                setIsFilesLoading(false);
+            }
+        };
+
+        fetchInitialFiles();
+
+        const channel = supabase.channel(`public:files:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'files',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchInitialFiles();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
     // Upload file (to active project)
     const uploadFile = async (file: File): Promise<string | undefined> => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             console.error("[FilesContext] Cannot upload file: No user or active project");
             return undefined;
         }
@@ -143,9 +158,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             const timestamp = Date.now();
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            
-            // Project-scoped storage path
-            const storagePath = `users/${user.uid}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
+            const storagePath = `users/${user.id}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
             
             const { error: uploadError } = await supabase.storage
                 .from('platform-assets')
@@ -157,22 +170,24 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
 
-            const fileRecord: Omit<FileRecord, 'id'> = {
+            const fileRecord = {
+                tenant_id: currentTenantId,
+                project_id: activeProjectId,
                 name: file.name,
-                type: file.type,
+                url: downloadURL,
                 size: file.size,
-                downloadURL,
-                storagePath,
-                projectId: activeProjectId,
-                createdAt: new Date().toISOString(),
+                type: file.type,
+                metadata: {
+                    storagePath
+                },
+                created_at: new Date().toISOString()
             };
 
-            // Project-scoped Firestore path
-            const filesPath = `users/${user.uid}/projects/${activeProjectId}/files`;
-            await addDoc(collection(db, filesPath), fileRecord);
+            const { error } = await supabase
+                .from('files')
+                .insert([fileRecord]);
 
-            // Note: No manual setFiles here — the onSnapshot listener (line 121)
-            // automatically picks up the new document and updates state.
+            if (error) throw error;
 
             return downloadURL;
         } catch (error) {
@@ -186,16 +201,18 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user || !activeProjectId) return;
 
         try {
-            // Delete from Storage
-            await supabase.storage
-                .from('platform-assets')
-                .remove([storagePath]);
+            if (storagePath) {
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([storagePath]);
+            }
 
-            // Delete from Firestore (project-scoped)
-            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
-            await deleteDoc(doc(db, filePath));
+            const { error } = await supabase
+                .from('files')
+                .delete()
+                .eq('id', fileId);
 
-            setFiles(prev => prev.filter(f => f.id !== fileId));
+            if (error) throw error;
         } catch (error) {
             console.error("[FilesContext] Error deleting file:", error);
             throw error;
@@ -207,29 +224,40 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user || !activeProjectId) return;
 
         try {
-            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
-            await updateDoc(doc(db, filePath), { notes });
-            setFiles(prev => prev.map(f =>
-                f.id === fileId ? { ...f, notes } : f
-            ));
+            const file = files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const metadata = { ...file, notes };
+
+            const { error } = await supabase
+                .from('files')
+                .update({ metadata })
+                .eq('id', fileId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[FilesContext] Error updating file notes:", error);
             throw error;
         }
     };
 
-    // Generate file summary (placeholder - would use AI)
+    // Generate file summary
     const generateFileSummary = async (fileId: string, downloadURL: string) => {
         if (!user || !activeProjectId) return;
 
         try {
-            // This would call an AI service to generate a summary
             const summary = "AI-generated summary placeholder";
-            const filePath = `users/${user.uid}/projects/${activeProjectId}/files/${fileId}`;
-            await updateDoc(doc(db, filePath), { summary });
-            setFiles(prev => prev.map(f =>
-                f.id === fileId ? { ...f, summary } : f
-            ));
+            const file = files.find(f => f.id === fileId);
+            if (!file) return;
+
+            const metadata = { ...file, summary };
+
+            const { error } = await supabase
+                .from('files')
+                .update({ metadata })
+                .eq('id', fileId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[FilesContext] Error generating file summary:", error);
             throw error;
@@ -258,12 +286,23 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const fetchGlobalFiles = async () => {
         setIsGlobalFilesLoading(true);
         try {
-            const filesCol = collection(db, 'global_files');
-            const q = query(filesCol, orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(q);
-            const globalFilesList = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
+            const { data, error } = await supabase
+                .from('global_files')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const globalFilesList = (data || []).map(f => ({
+                id: f.id,
+                name: f.name,
+                url: f.url,
+                size: f.size,
+                type: f.type,
+                downloadURL: f.url,
+                storagePath: f.metadata?.storagePath || '',
+                createdAt: f.created_at,
+                uploadedBy: f.metadata?.uploadedBy
             } as FileRecord));
             setGlobalFiles(globalFilesList);
         } catch (error) {
@@ -291,21 +330,27 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
 
-            const fileRecord: Omit<FileRecord, 'id'> = {
+            const fileRecord = {
                 name: file.name,
-                type: file.type,
+                url: downloadURL,
                 size: file.size,
-                downloadURL,
-                storagePath,
-                createdAt: new Date().toISOString(),
-                uploadedBy: user.uid,
+                type: file.type,
+                metadata: {
+                    storagePath,
+                    uploadedBy: user.id
+                },
+                created_at: new Date().toISOString()
             };
 
-            const filesCol = collection(db, 'global_files');
-            const docRef = await addDoc(filesCol, fileRecord);
+            const { data, error } = await supabase
+                .from('global_files')
+                .insert([fileRecord])
+                .select('id')
+                .single();
 
-            const newFile = { ...fileRecord, id: docRef.id } as FileRecord;
-            setGlobalFiles(prev => [newFile, ...prev]);
+            if (error) throw error;
+            
+            await fetchGlobalFiles(); // refresh
             
             return downloadURL;
         } catch (error) {
@@ -316,11 +361,18 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteGlobalFile = async (fileId: string, storagePath: string) => {
         try {
-            await supabase.storage
-                .from('platform-assets')
-                .remove([storagePath]);
+            if (storagePath) {
+                await supabase.storage
+                    .from('platform-assets')
+                    .remove([storagePath]);
+            }
 
-            await deleteDoc(doc(db, 'global_files', fileId));
+            const { error } = await supabase
+                .from('global_files')
+                .delete()
+                .eq('id', fileId);
+
+            if (error) throw error;
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
             console.error("[FilesContext] Error deleting global file:", error);
@@ -335,12 +387,29 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const fetchAdminAssets = async () => {
         setIsAdminAssetsLoading(true);
         try {
-            const assetsCol = collection(db, 'adminAssets');
-            const q = query(assetsCol, orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(q);
-            const assetsList = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
+            const { data, error } = await supabase
+                .from('admin_assets')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const assetsList = (data || []).map(f => ({
+                id: f.id,
+                name: f.name,
+                url: f.url,
+                size: f.size,
+                type: f.type,
+                category: f.category,
+                downloadURL: f.url,
+                storagePath: f.metadata?.storagePath || '',
+                createdAt: f.created_at,
+                uploadedBy: f.metadata?.uploadedBy,
+                description: f.metadata?.description,
+                tags: f.metadata?.tags || [],
+                isAiGenerated: f.metadata?.isAiGenerated || false,
+                aiPrompt: f.metadata?.aiPrompt,
+                usedIn: f.metadata?.usedIn || [],
             } as AdminAssetRecord));
             setAdminAssets(assetsList);
         } catch (error) {
@@ -372,28 +441,31 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
 
-            const assetRecord: Omit<AdminAssetRecord, 'id'> = {
+            const assetRecord = {
                 name: file.name,
-                type: file.type,
+                url: downloadURL,
                 size: file.size,
-                downloadURL,
-                storagePath,
+                type: file.type,
                 category,
-                createdAt: new Date().toISOString(),
-                uploadedBy: user.uid,
-                description: options?.description || '',
-                tags: options?.tags || [],
-                isAiGenerated: options?.isAiGenerated || false,
-                aiPrompt: options?.aiPrompt || '',
-                usedIn: [],
+                metadata: {
+                    storagePath,
+                    uploadedBy: user.id,
+                    description: options?.description || '',
+                    tags: options?.tags || [],
+                    isAiGenerated: options?.isAiGenerated || false,
+                    aiPrompt: options?.aiPrompt || '',
+                    usedIn: [],
+                },
+                created_at: new Date().toISOString()
             };
 
-            const assetsCol = collection(db, 'adminAssets');
-            const docRef = await addDoc(assetsCol, assetRecord);
+            const { error } = await supabase
+                .from('admin_assets')
+                .insert([assetRecord]);
 
-            const newAsset = { ...assetRecord, id: docRef.id } as AdminAssetRecord;
-            setAdminAssets(prev => [newAsset, ...prev]);
+            if (error) throw error;
 
+            await fetchAdminAssets();
             return downloadURL;
         } catch (error) {
             console.error("[FilesContext] Error uploading admin asset:", error);
@@ -410,28 +482,30 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!user) throw new Error('User not authenticated');
 
         try {
-            // For external URLs, we just save the reference without re-uploading
-            const assetRecord: Omit<AdminAssetRecord, 'id'> = {
+            const assetRecord = {
                 name: name || 'External Image',
-                type: 'image/external',
+                url: url,
                 size: 0,
-                downloadURL: url,
-                storagePath: '', // No storage path for external URLs
+                type: 'image/external',
                 category,
-                createdAt: new Date().toISOString(),
-                uploadedBy: user.uid,
-                description: options?.description || '',
-                tags: options?.tags || [],
-                isAiGenerated: false,
-                usedIn: [],
+                metadata: {
+                    storagePath: '',
+                    uploadedBy: user.id,
+                    description: options?.description || '',
+                    tags: options?.tags || [],
+                    isAiGenerated: false,
+                    usedIn: [],
+                },
+                created_at: new Date().toISOString()
             };
 
-            const assetsCol = collection(db, 'adminAssets');
-            const docRef = await addDoc(assetsCol, assetRecord);
+            const { error } = await supabase
+                .from('admin_assets')
+                .insert([assetRecord]);
 
-            const newAsset = { ...assetRecord, id: docRef.id } as AdminAssetRecord;
-            setAdminAssets(prev => [newAsset, ...prev]);
-
+            if (error) throw error;
+            
+            await fetchAdminAssets();
             return url;
         } catch (error) {
             console.error("[FilesContext] Error uploading admin asset from URL:", error);
@@ -441,13 +515,26 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const updateAdminAsset = async (assetId: string, updates: Partial<AdminAssetRecord>) => {
         try {
-            const assetRef = doc(db, 'adminAssets', assetId);
-            await updateDoc(assetRef, {
+            const asset = adminAssets.find(a => a.id === assetId);
+            if (!asset) return;
+
+            // We only support updating metadata fields to match SQL structure simply
+            const metadata = {
+                ...asset, // previous state representation
                 ...updates,
-                updatedAt: new Date().toISOString(),
-            });
-            setAdminAssets(prev => prev.map(asset => 
-                asset.id === assetId ? { ...asset, ...updates } : asset
+                storagePath: asset.storagePath,
+                uploadedBy: asset.uploadedBy
+            };
+
+            const { error } = await supabase
+                .from('admin_assets')
+                .update({ metadata })
+                .eq('id', assetId);
+
+            if (error) throw error;
+            
+            setAdminAssets(prev => prev.map(a => 
+                a.id === assetId ? { ...a, ...updates } : a
             ));
         } catch (error) {
             console.error("[FilesContext] Error updating admin asset:", error);
@@ -457,14 +544,18 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const deleteAdminAsset = async (assetId: string, storagePath: string) => {
         try {
-            // Delete from Storage if it has a storage path (not external URL)
             if (storagePath) {
                 await supabase.storage
                     .from('platform-assets')
                     .remove([storagePath]);
             }
 
-            await deleteDoc(doc(db, 'adminAssets', assetId));
+            const { error } = await supabase
+                .from('admin_assets')
+                .delete()
+                .eq('id', assetId);
+
+            if (error) throw error;
             setAdminAssets(prev => prev.filter(asset => asset.id !== assetId));
         } catch (error) {
             console.error("[FilesContext] Error deleting admin asset:", error);
@@ -516,7 +607,6 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         fetchGlobalFiles,
         uploadGlobalFile,
         deleteGlobalFile,
-        // Admin Assets
         adminAssets,
         isAdminAssetsLoading,
         fetchAdminAssets,

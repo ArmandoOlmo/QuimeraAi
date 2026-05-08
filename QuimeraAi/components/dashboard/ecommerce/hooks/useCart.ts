@@ -1,22 +1,23 @@
 /**
  * useCart Hook
- * Hook para gestión del carrito de compras
+ * Hook para gestión del carrito de compras usando Supabase
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { doc, setDoc, getDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Cart, CartItem, Product, ProductVariant } from '../../../../types/ecommerce';
 
 interface UseCartOptions {
-    persistToFirebase?: boolean;
+    persistToFirebase?: boolean; // legacy prop, mapped to Supabase
 }
 
 export const useCart = (userId: string, storeId?: string, options: UseCartOptions = {}) => {
     const { persistToFirebase = true } = options;
     
+    const effectiveStoreId = storeId || '';
+
     const [cart, setCart] = useState<Cart>({
-        id: '',
+        id: userId,
         userId,
         storeId,
         items: [],
@@ -27,64 +28,124 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Cart path in Firestore
-    const cartPath = storeId
-        ? `users/${userId}/stores/${storeId}/carts/${userId}`
-        : `users/${userId}/carts/${userId}`;
-
-    // Load cart from Firestore
+    // Load cart from Supabase
     useEffect(() => {
         if (!userId || !persistToFirebase) {
             setIsLoading(false);
             return;
         }
 
-        const cartRef = doc(db, cartPath);
-        
-        const unsubscribe = onSnapshot(
-            cartRef,
-            (docSnap) => {
-                if (docSnap.exists()) {
-                    setCart(docSnap.data() as Cart);
-                } else {
-                    // Initialize empty cart
+        const fetchCart = async () => {
+            setIsLoading(true);
+            let query = supabase.from('store_carts').select('*').eq('user_id', userId);
+            
+            if (effectiveStoreId) {
+                query = query.eq('project_id', effectiveStoreId);
+            }
+
+            const { data, error } = await query.maybeSingle();
+
+            if (error) {
+                console.error('Error loading cart:', error);
+                setError(error.message);
+            } else if (data) {
+                setCart({
+                    id: data.id,
+                    userId: data.user_id,
+                    storeId: data.project_id,
+                    items: data.items as CartItem[],
+                    subtotal: Number(data.subtotal),
+                    discountCode: data.discount_code,
+                    discountAmount: Number(data.discount_amount),
+                    createdAt: { seconds: new Date(data.created_at).getTime() / 1000, nanoseconds: 0 } as any,
+                    updatedAt: { seconds: new Date(data.updated_at).getTime() / 1000, nanoseconds: 0 } as any,
+                });
+            } else {
+                // Initialize empty cart state
+                setCart({
+                    id: userId,
+                    userId,
+                    storeId: effectiveStoreId,
+                    items: [],
+                    subtotal: 0,
+                    createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+                    updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+                });
+            }
+            setIsLoading(false);
+        };
+
+        fetchCart();
+
+        // Real-time listener for cart changes
+        const channelFilter = effectiveStoreId 
+            ? `project_id=eq.${effectiveStoreId}` 
+            : `user_id=eq.${userId}`;
+
+        const channel = supabase.channel(`store_carts_${userId}`)
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'store_carts', 
+                filter: channelFilter 
+            }, (payload) => {
+                const data = payload.new;
+                if (data && data.user_id === userId) {
+                    setCart({
+                        id: data.id,
+                        userId: data.user_id,
+                        storeId: data.project_id,
+                        items: data.items as CartItem[],
+                        subtotal: Number(data.subtotal),
+                        discountCode: data.discount_code,
+                        discountAmount: Number(data.discount_amount),
+                        createdAt: { seconds: new Date(data.created_at).getTime() / 1000, nanoseconds: 0 } as any,
+                        updatedAt: { seconds: new Date(data.updated_at).getTime() / 1000, nanoseconds: 0 } as any,
+                    });
+                } else if (payload.eventType === 'DELETE') {
                     setCart({
                         id: userId,
                         userId,
-                        storeId,
+                        storeId: effectiveStoreId,
                         items: [],
                         subtotal: 0,
                         createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
                         updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
                     });
                 }
-                setIsLoading(false);
-            },
-            (err) => {
-                console.error('Error loading cart:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
+            })
+            .subscribe();
 
-        return () => unsubscribe();
-    }, [userId, storeId, cartPath, persistToFirebase]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, persistToFirebase]);
 
-    // Save cart to Firestore
+    // Save cart to Supabase
     const saveCart = useCallback(async (updatedCart: Cart) => {
         if (!persistToFirebase) return;
 
         try {
-            const cartRef = doc(db, cartPath);
-            await setDoc(cartRef, {
-                ...updatedCart,
-                updatedAt: new Date(),
-            });
+            const upsertData = {
+                user_id: updatedCart.userId,
+                project_id: updatedCart.storeId || null,
+                items: updatedCart.items,
+                subtotal: updatedCart.subtotal,
+                discount_code: updatedCart.discountCode || null,
+                discount_amount: updatedCart.discountAmount || 0,
+                updated_at: new Date().toISOString()
+            };
+
+            const { error } = await supabase
+                .from('store_carts')
+                .upsert(upsertData, { onConflict: 'user_id,project_id' }); // Require an index/unique constraint later
+
+            if (error) throw error;
         } catch (err: any) {
             console.error('Error saving cart:', err);
             setError(err.message);
         }
-    }, [cartPath, persistToFirebase]);
+    }, [persistToFirebase]);
 
     // Calculate subtotal
     const calculateSubtotal = useCallback((items: CartItem[]): number => {
@@ -202,13 +263,16 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
         if (persistToFirebase) {
             try {
-                const cartRef = doc(db, cartPath);
-                await deleteDoc(cartRef);
+                let query = supabase.from('store_carts').delete().eq('user_id', userId);
+                if (effectiveStoreId) {
+                    query = query.eq('project_id', effectiveStoreId);
+                }
+                await query;
             } catch (err: any) {
                 console.error('Error clearing cart:', err);
             }
         }
-    }, [userId, storeId, cart.createdAt, cartPath, persistToFirebase]);
+    }, [userId, storeId, effectiveStoreId, cart.createdAt, persistToFirebase]);
 
     // Apply discount code
     const applyDiscount = useCallback(async (discountCode: string, discountAmount: number) => {
@@ -253,24 +317,22 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         );
     }, [cart.items]);
 
-    // Get item quantity
+    // Get item quantity in cart
     const getItemQuantity = useCallback((productId: string, variantId?: string): number => {
         const item = cart.items.find(
             (item) => item.productId === productId && item.variantId === variantId
         );
-        return item?.quantity || 0;
+        return item ? item.quantity : 0;
     }, [cart.items]);
 
     return {
+        // State
         cart,
-        items: cart.items,
-        subtotal: cart.subtotal,
-        total,
-        itemCount,
-        discountCode: cart.discountCode,
-        discountAmount: cart.discountAmount,
         isLoading,
         error,
+        itemCount,
+        total,
+
         // Actions
         addItem,
         removeItem,
@@ -278,22 +340,9 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         clearCart,
         applyDiscount,
         removeDiscount,
+
         // Helpers
         isInCart,
         getItemQuantity,
     };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -103,7 +103,7 @@ export function SubdomainConfigModal({
 
         setIsChecking(true);
         debounceRef.current = setTimeout(async () => {
-            const result = await validateUsername(normalized, user?.uid);
+            const result = await validateUsername(normalized, user?.id);
             setIsChecking(false);
             if (result.valid) {
                 setIsValid(true);
@@ -113,14 +113,14 @@ export function SubdomainConfigModal({
                 setError(result.error || '');
             }
         }, 600);
-    }, [user?.uid, existingSubdomain]);
+    }, [user?.id, existingSubdomain]);
 
     const handleSave = async () => {
         if (!user || !subdomain || !isValid) return;
         setIsSaving(true);
 
         try {
-            const result = await claimSubdomain(subdomain, user.uid, project.id, 'agency');
+            const result = await claimSubdomain(subdomain, user.id, project.id, 'agency');
             if (result.success) {
                 toast.success(t('agency.subdomainSaved', 'Subdominio configurado correctamente'));
                 setExistingSubdomain(subdomain);

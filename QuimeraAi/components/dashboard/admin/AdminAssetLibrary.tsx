@@ -60,7 +60,8 @@ import {
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface AdminAssetLibraryProps {
-    onBack: () => void;
+    onBack?: () => void;
+    noLayout?: boolean;
 }
 
 // Constants for AI Generator
@@ -482,9 +483,20 @@ const AssetItem: React.FC<{
             </div>
         </div>
     );
+
+    if (noLayout) {
+        return content;
+    }
+
+    return (
+        <div className="flex h-screen bg-q-bg text-foreground">
+            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+            {content}
+        </div>
+    );
 };
 
-const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
+const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout }) => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const {
@@ -537,6 +549,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     useEffect(() => {
         fetchAdminAssets();
     }, []);
+
+    ;
 
     // Filtered and sorted assets
     const filteredAssets = useMemo(() => {
@@ -696,6 +710,9 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                 aspectRatio,
                 style,
                 destination: 'admin' as const,
+                adminCategory: selectedCategory,
+                adminTags: [style, aspectRatio].filter(s => s !== 'None'),
+                adminDescription: prompt,
                 resolution,
                 lighting: lighting !== 'None' ? lighting : undefined,
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
@@ -706,22 +723,22 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
 
             const result = await generateImage(prompt, options);
 
-            // If we get a URL back, also save to admin assets with the prompt
             if (result && typeof result === 'string') {
-                const optionsWithMetadata = {
-                    description: prompt,
-                    tags: [style, aspectRatio].filter(s => s !== 'None'),
-                    isAiGenerated: true,
-                    aiPrompt: prompt
-                };
-                
                 if (result.startsWith('data:image/')) {
+                    const optionsWithMetadata = {
+                        description: prompt,
+                        tags: [style, aspectRatio].filter(s => s !== 'None'),
+                        isAiGenerated: true,
+                        aiPrompt: prompt
+                    };
                     const response = await fetch(result);
                     const blob = await response.blob();
                     const file = new File([blob], `AI_${Date.now()}.png`, { type: blob.type });
                     await uploadAdminAsset(file, selectedCategory, optionsWithMetadata);
                 } else {
-                    await uploadAdminAssetFromURL(result, `AI_${Date.now()}.png`, selectedCategory, optionsWithMetadata);
+                    // generateImage already saved it to Supabase admin_assets table
+                    // We just need to refresh the local state
+                    await fetchAdminAssets();
                 }
             }
 
@@ -804,292 +821,25 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
     };
 
     // Migration function for old AI generated global files
-    const [isMigrating, setIsMigrating] = useState(false);
-    const [isScanning, setIsScanning] = useState(false);
-
-    const scanAndExtractBase64FromArticles = async () => {
-        if (!confirm('Esto escaneará los artículos de Blog y Noticias para recuperar cualquier imagen (Base64 o enlaces perdidos) y añadirla a la librería. ¿Continuar?')) return;
-        setIsScanning(true);
-        let extractedCount = 0;
-        let updatedDocsCount = 0;
         
-        try {
-            const base64ToFile = (base64: string, filename: string): File => {
-                const arr = base64.split(',');
-                const mimeMatch = arr[0].match(/:(.*?);/);
-                const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-                const bstr = atob(arr[1]);
-                let n = bstr.length;
-                const u8arr = new Uint8Array(n);
-                while (n--) {
-                    u8arr[n] = bstr.charCodeAt(n);
-                }
-                return new File([u8arr], filename, { type: mime });
-            };
+    ;
+    ;
 
-            const collectionsToScan = [
-                { path: 'appContent/data/articles', label: 'Blog' },
-                { path: 'news', label: 'Noticias' }
-            ];
-
-            // 1. Scan Firebase Storage (user_uploads) for orphaned files
-            if (user?.uid) {
-                const scanStorageFolder = async (folderPath: string) => {
-                    try {
-                        const { data: files, error } = await supabase.storage.from('platform-assets').list(folderPath);
-                        if (error) {
-                            console.warn("Could not list files", error);
-                            return;
-                        }
-                        for (const item of files) {
-                            const fullPath = `${folderPath}/${item.name}`;
-                            const { data: { publicUrl: url } } = supabase.storage.from('platform-assets').getPublicUrl(fullPath);
-                            // Check if it exists in adminAssets
-                            const exists = adminAssets.some(a => a.downloadURL === url);
-                            if (!exists) {
-                                // Metadata
-                                let contentType = item.metadata?.mimetype || 'image/jpeg';
-                                let size = item.metadata?.size || 0;
-                                let timeCreated = item.created_at || new Date().toISOString();
-                                
-                                // Only add if it's an image
-                                if (contentType.startsWith('image/')) {
-                                    const newAsset = {
-                                        name: item.name,
-                                        type: contentType,
-                                        size: size,
-                                        downloadURL: url,
-                                        storagePath: fullPath,
-                                        category: 'ai_generated', // Default category for recovered items
-                                        createdAt: timeCreated,
-                                        uploadedBy: user.uid,
-                                        description: `Recuperada del almacenamiento personal`,
-                                        tags: ['recovered', 'storage'],
-                                        isAiGenerated: true,
-                                        aiPrompt: '',
-                                        usedIn: [],
-                                    };
-                                    await addDoc(collection(db, 'adminAssets'), newAsset);
-                                    extractedCount++;
-                                }
-                            }
-                        }
-                        // Recurse into subfolders
-                        for (const prefixRef of result.prefixes) {
-                            await scanStorageFolder(prefixRef.fullPath);
-                        }
-                    } catch (e) {
-                        console.error("Error scanning folder", folderPath, e);
-                    }
-                };
-                
-                await scanStorageFolder(`user_uploads/${user.uid}`);
-            }
-            
-            // 2. Scan Articles and News
-            for (const col of collectionsToScan) {
-                const colName = col.path;
-                const colLabel = col.label;
-                const colRef = collection(db, colName);
-                const snapshot = await getDocs(query(colRef));
-                
-                for (const docSnapshot of snapshot.docs) {
-                    const data = docSnapshot.data();
-                    let needsUpdate = false;
-                    const updates: Record<string, any> = {};
-                    
-                    // 1. Check featuredImage
-                    if (data.featuredImage && typeof data.featuredImage === 'string') {
-                        if (data.featuredImage.startsWith('data:image/')) {
-                            try {
-                                const file = base64ToFile(data.featuredImage, `${colLabel}_${docSnapshot.id}_featured.png`);
-                                const url = await uploadAdminAsset(file, 'ai_generated', {
-                                    description: `Extraída de ${colLabel} (Imagen Principal)`,
-                                    isAiGenerated: true
-                                });
-                                updates.featuredImage = url;
-                                needsUpdate = true;
-                                extractedCount++;
-                            } catch (e) {
-                                console.error('Failed to extract featured image', e);
-                            }
-                        } else if (data.featuredImage.includes('firebasestorage.googleapis.com')) {
-                            const exists = adminAssets.some(a => a.downloadURL === data.featuredImage);
-                            if (!exists) {
-                                const newAsset = {
-                                    name: `Recuperada de ${colName} (Principal)`,
-                                    type: 'image/jpeg',
-                                    size: 0,
-                                    downloadURL: data.featuredImage,
-                                    storagePath: '',
-                                    category: 'ai_generated',
-                                    createdAt: new Date().toISOString(),
-                                    uploadedBy: 'system',
-                                    description: `Extraída de ${colLabel} (Imagen Principal)`,
-                                    tags: ['recovered', colLabel],
-                                    isAiGenerated: true,
-                                    aiPrompt: '',
-                                    usedIn: [],
-                                };
-                                await addDoc(collection(db, 'adminAssets'), newAsset);
-                                extractedCount++;
-                            }
-                        }
-                    }
-                    
-                    // 2. Check content (HTML) for base64
-                    if (data.content && typeof data.content === 'string') {
-                        let newContent = data.content;
-                        let contentUpdated = false;
-                        
-                        // Extract base64
-                        if (data.content.includes('data:image/')) {
-                            const regex = /src=["'](data:image\/[^"']+)["']/g;
-                            let match;
-                            
-                            while ((match = regex.exec(data.content)) !== null) {
-                                const base64Data = match[1];
-                                try {
-                                    const file = base64ToFile(base64Data, `${colLabel}_${docSnapshot.id}_content_${extractedCount}.png`);
-                                    const url = await uploadAdminAsset(file, 'ai_generated', {
-                                        description: `Extraída de ${colLabel} (Contenido)`,
-                                        isAiGenerated: true
-                                    });
-                                    newContent = newContent.replace(base64Data, url);
-                                    contentUpdated = true;
-                                    extractedCount++;
-                                } catch (e) {
-                                    console.error('Failed to extract content image', e);
-                                }
-                            }
-                        }
-                        
-                        // Extract valid firebase URLs that are missing from library
-                        if (data.content.includes('firebasestorage.googleapis.com')) {
-                            const urlRegex = /src=["'](https:\/\/firebasestorage\.googleapis\.com\/[^"']+)["']/g;
-                            let urlMatch;
-                            while ((urlMatch = urlRegex.exec(data.content)) !== null) {
-                                const foundUrl = urlMatch[1];
-                                // Decode URL entities if present (e.g., &amp;)
-                                const cleanUrl = foundUrl.replace(/&amp;/g, '&');
-                                const exists = adminAssets.some(a => a.downloadURL === cleanUrl);
-                                if (!exists) {
-                                    const newAsset = {
-                                        name: `Recuperada de ${colName} (Contenido)`,
-                                        type: 'image/jpeg',
-                                        size: 0,
-                                        downloadURL: cleanUrl,
-                                        storagePath: '',
-                                        category: 'ai_generated',
-                                        createdAt: new Date().toISOString(),
-                                        uploadedBy: 'system',
-                                        description: `Extraída de ${colLabel} (Contenido)`,
-                                        tags: ['recovered', colLabel],
-                                        isAiGenerated: true,
-                                        aiPrompt: '',
-                                        usedIn: [],
-                                    };
-                                    await addDoc(collection(db, 'adminAssets'), newAsset);
-                                    extractedCount++;
-                                }
-                            }
-                        }
-                        
-                        if (contentUpdated) {
-                            updates.content = newContent;
-                            needsUpdate = true;
-                        }
-                    }
-                    
-                    if (needsUpdate) {
-                        await updateDoc(doc(db, colName, docSnapshot.id), updates);
-                        updatedDocsCount++;
-                    }
-                }
-            }
-            
-            if (extractedCount > 0) {
-                success(`Deep Scan completado: Se recuperaron ${extractedCount} imágenes.`);
-                await fetchAdminAssets();
-            } else {
-                success('Deep Scan completado: No se encontraron imágenes perdidas.');
-            }
-            
-        } catch (error) {
-            console.error('Deep scan error:', error);
-            showError('Error durante el escaneo profundo.');
-        } finally {
-            setIsScanning(false);
-        }
-    };
-    const migrateLegacyAIAssets = async () => {
-        if (!confirm('¿Deseas migrar las imágenes globales antiguas a la nueva categoría "Generadas con IA"? Esto copiará los registros y puede tardar unos segundos.')) return;
-        setIsMigrating(true);
-        try {
-            // 1. Fetch old global files
-            const globalFilesCol = collection(db, 'global_files');
-            const q = query(globalFilesCol);
-            const snapshot = await getDocs(q);
-            
-            // 2. Fetch current admin assets to prevent duplicates
-            const existingUrls = new Set(adminAssets.map(a => a.downloadURL));
-            
-            let migratedCount = 0;
-            const assetsCol = collection(db, 'adminAssets');
-            
-            for (const docSnapshot of snapshot.docs) {
-                const data = docSnapshot.data();
-                if (!existingUrls.has(data.downloadURL)) {
-                    // Create new admin asset record
-                    const newAsset = {
-                        name: data.name || 'Legacy AI Image',
-                        type: data.type || 'image/jpeg',
-                        size: data.size || 0,
-                        downloadURL: data.downloadURL,
-                        storagePath: data.storagePath || '',
-                        category: 'ai_generated',
-                        createdAt: data.createdAt || new Date().toISOString(),
-                        uploadedBy: data.uploadedBy || 'system',
-                        description: 'Migrated legacy AI generated image',
-                        tags: ['legacy', 'migrated'],
-                        isAiGenerated: true,
-                        aiPrompt: '',
-                        usedIn: [],
-                    };
-                    await addDoc(assetsCol, newAsset);
-                    migratedCount++;
-                }
-            }
-            
-            if (migratedCount > 0) {
-                success(`¡Éxito! ${migratedCount} imágenes fueron migradas a la nueva categoría.`);
-                await fetchAdminAssets();
-            } else {
-                success('Todas las imágenes antiguas ya habían sido migradas.');
-            }
-        } catch (error) {
-            console.error('Error migrating legacy assets:', error);
-            showError('Error al migrar las imágenes antiguas.');
-        } finally {
-            setIsMigrating(false);
-        }
-    };
-
-    return (
-        <div className="flex h-screen bg-q-bg text-foreground">
-            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-
-            <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
+    const content = (
+        <>
+        <div className="flex-1 flex flex-col overflow-hidden relative h-full">
+            {!noLayout && <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />}
                 {/* Header */}
                 <header className="h-14 px-2 sm:px-6 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
                     <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
-                        <button
-                            onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
-                        >
-                            <Menu className="w-5 h-5" />
-                        </button>
+                        {!noLayout && (
+                            <button
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
+                        )}
                         <div className="flex items-center gap-1 sm:gap-2">
                             <FolderOpen className="text-primary" size={24} />
                             <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
@@ -1104,23 +854,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                     <div className="flex-1" />
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={scanAndExtractBase64FromArticles}
-                            disabled={isMigrating || isScanning}
-                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 text-xs font-bold transition-colors border border-orange-500/30 disabled:opacity-50"
-                        >
-                            {isScanning ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-                            {isScanning ? 'Escaneando...' : 'Deep Scan Artículos'}
-                        </button>
-                        <button
-                            onClick={migrateLegacyAIAssets}
-                            disabled={isMigrating || isScanning}
-                            className="flex items-center gap-2 h-9 px-3 rounded-lg bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 text-xs font-bold transition-colors border border-indigo-500/30 disabled:opacity-50"
-                        >
-                            {isMigrating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                            {isMigrating ? 'Migrando...' : 'Recuperar Globales'}
-                        </button>
-                        <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} />
+                        
+                        {!noLayout && <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} />}
                     </div>
                 </header>
 
@@ -1435,7 +1170,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                                             <Filter size={14} />
                                         </button>
 
-                                        {/* Selection Mode Toggle */}
+
                                         <button
                                             onClick={() => setIsSelectionMode(!isSelectionMode)}
                                             className={`flex items-center gap-1.5 h-9 px-3 text-sm font-medium transition-all ${isSelectionMode ? 'text-primary' : 'text-q-text-muted hover:text-foreground'}`}
@@ -1632,7 +1367,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                         </div>
                     </div>
                 </main>
-            </div >
+            </div>
 
             <ConfirmationModal
                 isOpen={showBulkDeleteModal}
@@ -1642,7 +1377,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack }) => {
                 message={t('adminAssets.bulkDeleteConfirm', { count: selectedIds.size })}
                 variant="danger"
             />
-        </div >
+        </>
     );
 };
 

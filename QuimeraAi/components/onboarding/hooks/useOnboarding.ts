@@ -4,8 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { supabase } from '../../../supabase';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useAdmin } from '../../../contexts/admin';
@@ -240,32 +239,30 @@ export const useOnboarding = () => {
     // PERSISTENCE
     // =============================================================================
 
-    const getProgressDocRef = useCallback(() => {
-        if (!user) return null;
-        return doc(db, 'users', user.uid, 'onboardingProgress', 'current');
-    }, [user]);
-
     const loadProgress = useCallback(async () => {
-        const docRef = getProgressDocRef();
-        if (!docRef) return;
+        if (!user) return;
 
         try {
             setIsLoading(true);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data() as OnboardingProgress;
-                setProgress(data);
+            const { data, error } = await supabase
+                .from('onboarding_progress')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
+                
+            if (data) {
+                // Map snake_case from DB to camelCase if necessary, or just set it
+                setProgress(data.progress_data as OnboardingProgress);
             }
         } catch (err) {
             console.error('Failed to load onboarding progress:', err);
         } finally {
             setIsLoading(false);
         }
-    }, [getProgressDocRef]);
+    }, [user]);
 
     const saveProgress = useCallback(async (newProgress?: OnboardingProgress) => {
-        const docRef = getProgressDocRef();
-        if (!docRef) return;
+        if (!user) return;
 
         const dataToSave = newProgress || progress;
         if (!dataToSave) return;
@@ -273,13 +270,19 @@ export const useOnboarding = () => {
         try {
             setIsSaving(true);
 
-            // Remove undefined values (Firestore doesn't allow them)
             const cleanData = JSON.parse(JSON.stringify({
                 ...dataToSave,
-                updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                updatedAt: new Date().toISOString(),
             }));
 
-            await setDoc(docRef, cleanData);
+            await supabase
+                .from('onboarding_progress')
+                .upsert({
+                    id: user.id,
+                    progress_data: cleanData,
+                    updated_at: new Date().toISOString()
+                });
+                
             if (!newProgress) {
                 setProgress(cleanData);
             }
@@ -289,19 +292,21 @@ export const useOnboarding = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [getProgressDocRef, progress, t]);
+    }, [user, progress, t]);
 
     const clearProgress = useCallback(async () => {
-        const docRef = getProgressDocRef();
-        if (!docRef) return;
+        if (!user) return;
 
         try {
-            await deleteDoc(docRef);
+            await supabase
+                .from('onboarding_progress')
+                .delete()
+                .eq('id', user.id);
             setProgress(null);
         } catch (err) {
             console.error('Failed to clear onboarding progress:', err);
         }
-    }, [getProgressDocRef]);
+    }, [user]);
 
     // Load progress on mount
     useEffect(() => {
@@ -513,11 +518,11 @@ export const useOnboarding = () => {
                 prompt,
                 promptConfig.model,
                 { temperature: 0.7, maxOutputTokens: 500 },
-                user?.uid
+                user?.id
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'categories', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'categories', true);
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
@@ -632,12 +637,12 @@ export const useOnboarding = () => {
             updateProgress(updates);
 
             // Log successful analysis
-            logOnboardingApiCall(user.uid, 'gemini-2.5-flash', 'website_analysis', true);
+            logOnboardingApiCall(user.id, 'gemini-2.5-flash', 'website_analysis', true);
 
             return result;
         } catch (err: any) {
             console.error('Website analysis failed:', err);
-            logOnboardingApiCall(user?.uid, 'gemini-2.5-flash', 'website_analysis', false, err.message);
+            logOnboardingApiCall(user?.id, 'gemini-2.5-flash', 'website_analysis', false, err.message);
             setError(err.message || 'Failed to analyze website');
             throw err;
         } finally {
@@ -675,11 +680,11 @@ export const useOnboarding = () => {
                 prompt,
                 promptConfig.model,
                 {},
-                user?.uid
+                user?.id
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'description', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'description', true);
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, null);
@@ -734,11 +739,11 @@ export const useOnboarding = () => {
                 prompt,
                 promptConfig.model,
                 {},
-                user?.uid
+                user?.id
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'services', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'services', true);
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, []);
@@ -915,11 +920,11 @@ TEMPLATE #${t.index}: "${t.name}"
                 prompt,                      // prompt text
                 promptConfig.model,          // model from prompt config
                 { temperature: 0.7, maxOutputTokens: 600 },
-                user?.uid                    // userId (optional)
+                user?.id                    // userId (optional)
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'template-rec', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'template-rec', true);
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
@@ -1347,11 +1352,11 @@ TEMPLATE #${t.index}: "${t.name}"
                 prompt,                       // prompt text
                 promptConfig.model,           // model from prompt config
                 { temperature: 0.7, maxOutputTokens: 4000 },
-                user?.uid                     // userId (optional)
+                user?.id                     // userId (optional)
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'image-prompts', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'image-prompts', true);
 
             const text = extractTextFromResponse(response);
             const llmPrompts = safeJsonParse(text, null);
@@ -1485,11 +1490,11 @@ TEMPLATE #${t.index}: "${t.name}"
                 prompt,                       // prompt text
                 promptConfig.model,           // model from prompt config
                 { temperature: 0.7, maxOutputTokens: 2000 },
-                user?.uid                     // userId (optional)
+                user?.id                     // userId (optional)
             );
 
             // Log successful API call
-            logOnboardingApiCall(user?.uid, promptConfig.model, 'content-gen', true);
+            logOnboardingApiCall(user?.id, promptConfig.model, 'content-gen', true);
 
             const text = extractTextFromResponse(response);
             const parsed = safeJsonParse(text, {});
@@ -2068,7 +2073,7 @@ TEMPLATE #${t.index}: "${t.name}"
                             model: 'gemini-3-pro-image-preview', // Use dedicated image model for reliability
                             personGeneration: 'allow_adult', // Allow people in generated images
                             skipFirestore: true, // Bulk mode: skip per-image Firestore writes to avoid resource-exhausted
-                        });
+                        } as any);
 
                         if (imageUrl) {
                             item.status = 'completed';
@@ -2269,27 +2274,27 @@ TEMPLATE #${t.index}: "${t.name}"
             // ============================================================================
             // REGISTER ONBOARDING IMAGES IN PROJECT LIBRARY (fire-and-forget)
             // ============================================================================
-            if (user?.uid && Object.keys(generatedImages).length > 0) {
+            if (user?.id && Object.keys(generatedImages).length > 0) {
                 const registerImages = async () => {
                     try {
-                        const filesCol = collection(db, `users/${user.uid}/projects/${newProject.id}/files`);
-                        for (const [promptKey, imageUrl] of Object.entries(generatedImages)) {
-                            try {
-                                const matchingItem = imageItems.find(item => item.promptKey === promptKey);
-                                await addDoc(filesCol, {
-                                    name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
-                                    storagePath: '',
-                                    downloadURL: imageUrl,
-                                    size: 0,
-                                    type: 'image/jpeg',
-                                    createdAt: serverTimestamp(),
-                                    notes: matchingItem?.prompt || promptKey,
-                                    aiSummary: '',
-                                    projectId: newProject.id,
-                                    projectName: newProject.name,
-                                    source: 'onboarding',
-                                });
-                            } catch (_e) { /* skip */ }
+                        const imagesToInsert = Object.entries(generatedImages).map(([promptKey, imageUrl]) => {
+                            const matchingItem = imageItems.find(item => item.promptKey === promptKey);
+                            return {
+                                name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
+                                storage_path: '',
+                                download_url: imageUrl,
+                                size: 0,
+                                type: 'image/jpeg',
+                                created_at: new Date().toISOString(),
+                                notes: matchingItem?.prompt || promptKey,
+                                ai_summary: '',
+                                project_id: newProject.id,
+                                project_name: newProject.name,
+                                source: 'onboarding',
+                            };
+                        });
+                        if (imagesToInsert.length > 0) {
+                            await supabase.from('files').insert(imagesToInsert);
                         }
                     } catch (_e) { /* skip */ }
                 };
@@ -2297,31 +2302,38 @@ TEMPLATE #${t.index}: "${t.name}"
             }
 
             // Setup ecommerce if enabled
-            if (progress.hasEcommerce && progress.storeSetup && user?.uid) {
+            if (progress.hasEcommerce && progress.storeSetup && user?.id) {
                 if (isDev) console.log('🛒 Setting up ecommerce store...');
 
                 try {
-                    // Enable ecommerce for the project (correct path: users/{userId}/projects/{projectId}/ecommerce/config)
-                    const ecommerceConfigRef = doc(db, 'users', user.uid, 'projects', newProject.id, 'ecommerce', 'config');
-                    await setDoc(ecommerceConfigRef, {
-                        projectId: newProject.id,
-                        projectName: newProject.name,
-                        ecommerceEnabled: true,
-                        storeId: newProject.id, // Use projectId as storeId
-                        storeName: progress.storeSetup.storeName || progress.businessName,
-                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                    });
+                    // Enable ecommerce for the project
+                    await supabase.from('projects').update({
+                        ecommerce_enabled: true,
+                        ecommerce_type: progress.ecommerceType || 'physical'
+                    }).eq('id', newProject.id);
 
-                    // Create the main store document (required by useProjectEcommerce)
-                    const storeRef = doc(db, 'users', user.uid, 'stores', newProject.id);
-                    await setDoc(storeRef, {
-                        name: progress.storeSetup.storeName || `Tienda - ${progress.businessName}`,
-                        projectId: newProject.id,
-                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                        isActive: true,
-                        ownerId: user.uid,
+                    const storeName = progress.storeSetup.storeName || `Tienda - ${progress.businessName}`;
+                    const now = new Date().toISOString();
+
+                    // Create the main store document
+                    await supabase.from('stores').upsert({
+                        id: newProject.id,
+                        name: storeName,
+                        project_id: newProject.id,
+                        created_at: now,
+                        updated_at: now,
+                        is_active: true,
+                        owner_id: user.id,
+                        type: progress.ecommerceType || 'physical',
+                        status: 'draft',
+                        contact_email: progress.contactInfo?.email || user.email || '',
+                        description: progress.description || '',
+                        settings: {
+                            currency: progress.storeSetup?.currency || 'USD',
+                            language: progress.language || 'en',
+                            taxIncluded: true,
+                            requiresShipping: progress.ecommerceType !== 'digital' && (progress.ecommerceType as string) !== 'services'
+                        }
                     });
                     if (isDev) console.log('🏪 Created main store document');
 
@@ -2343,113 +2355,59 @@ TEMPLATE #${t.index}: "${t.name}"
                         linkColor: globalColors.primary,
                         // Button Colors
                         buttonBackground: globalColors.primary,
-                        buttonText: '#ffffff',
-                        buttonSecondaryBackground: globalColors.surface,
-                        buttonSecondaryText: globalColors.text,
+                        buttonTextColor: globalColors.background,
                         buttonHoverBackground: globalColors.secondary,
-                        // Badge Colors
-                        badgeBackground: globalColors.primary,
-                        badgeText: '#ffffff',
-                        saleBadgeBackground: globalColors.error,
-                        saleBadgeText: '#ffffff',
-                        // Price Colors
-                        priceColor: globalColors.heading,
-                        salePriceColor: globalColors.error,
-                        originalPriceColor: globalColors.textMuted,
-                        // Overlay Colors
-                        overlayStart: 'transparent',
-                        overlayEnd: 'rgba(0,0,0,0.7)',
-                        // Border Colors
-                        borderColor: globalColors.border,
-                        dividerColor: globalColors.border,
-                        inputBorderColor: globalColors.border,
-                        // State Colors
-                        successColor: globalColors.success,
-                        warningColor: globalColors.accent,
-                        errorColor: globalColors.error,
-                        infoColor: globalColors.primary,
-                        // Cart & Checkout
-                        cartBadgeBackground: globalColors.error,
-                        cartBadgeText: '#ffffff',
-                        checkoutAccent: globalColors.primary,
-                        // Typography - from template theme
-                        fontFamily: selectedTemplate.theme?.fontFamilyBody || 'Inter, system-ui, sans-serif',
-                        headingFontFamily: selectedTemplate.theme?.fontFamilyHeader || 'Inter, system-ui, sans-serif',
+                        // Typography
+                        fontFamily: newProject.theme.fontFamilyBody,
+                        headingFontFamily: newProject.theme.fontFamilyHeader,
+                        // Styling
+                        borderRadius: newProject.theme.buttonBorderRadius,
+                        cardBorderRadius: newProject.theme.cardBorderRadius,
                     };
 
-                    // Initialize store settings with storefrontTheme
-                    const storeSettingsRef = doc(db, 'users', user.uid, 'stores', newProject.id, 'settings', 'store');
-                    await setDoc(storeSettingsRef, {
-                        storeName: progress.storeSetup.storeName || progress.businessName,
-                        storeEmail: progress.contactInfo?.email || '',
-                        currency: progress.storeSetup.currency,
-                        currencySymbol: progress.storeSetup.currencySymbol,
-                        taxEnabled: false,
-                        taxRate: 0,
-                        taxName: 'IVA',
-                        taxIncluded: false,
-                        shippingZones: [],
-                        freeShippingThreshold: 0,
-                        stripeEnabled: false,
-                        paypalEnabled: false,
-                        cashOnDeliveryEnabled: true,
-                        lowStockNotifications: true,
-                        lowStockThreshold: 5,
-                        notifyOnNewOrder: true,
-                        notifyOnLowStock: true,
-                        sendOrderConfirmation: true,
-                        sendShippingNotification: true,
-                        requirePhone: false,
-                        requireShippingAddress: progress.storeSetup.shippingType !== 'digital_only',
-                        storefrontTheme, // Include the theme from project's globalColors
-                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    // Initialize Store Settings
+                    await supabase.from('store_settings').upsert({
+                        store_id: newProject.id,
+                        store_name: storeName,
+                        contact_email: progress.contactInfo?.email || user.email || '',
+                        sender_email: progress.contactInfo?.email || user.email || '',
+                        currency: progress.storeSetup?.currency || 'USD',
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                        unit_system: 'metric',
+                        weight_unit: 'kg',
+                        created_at: now,
+                        updated_at: now,
+                        theme: storefrontTheme
                     });
+                    if (isDev) console.log('⚙️ Initialized store settings & theme');
 
-                    // Create categories
+                    // Create Categories
                     if (progress.storeSetup.selectedCategories && progress.storeSetup.selectedCategories.length > 0) {
-                        for (let i = 0; i < progress.storeSetup.selectedCategories.length; i++) {
-                            const categoryName = progress.storeSetup.selectedCategories[i];
-                            const categoryId = `cat-${Date.now()}-${i}`;
-                            const categoryRef = doc(db, 'users', user.uid, 'stores', newProject.id, 'categories', categoryId);
-                            await setDoc(categoryRef, {
-                                id: categoryId,
-                                name: categoryName,
-                                slug: categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-                                description: '',
-                                imageUrl: '',
-                                order: i,
-                                isActive: true,
-                                createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                                updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                            });
-                        }
-                        if (isDev) console.log(`🏷️ Created ${progress.storeSetup.selectedCategories.length} categories`);
+                        const categoriesToInsert = progress.storeSetup.selectedCategories.map((catName, index) => ({
+                            id: `cat_${Date.now()}_${index}`,
+                            store_id: newProject.id,
+                            name: catName,
+                            slug: catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+                            description: '',
+                            is_active: true,
+                            order: index,
+                            created_at: now,
+                            updated_at: now,
+                        }));
+                        await supabase.from('store_categories').insert(categoriesToInsert);
+                        if (isDev) console.log('📑 Created store categories');
                     }
 
-                    // Create publicStores document with storefrontTheme from project's globalColors
-                    // This enables the storefront to use the same colors as the project
-                    const publicStoreRef = doc(db, 'publicStores', newProject.id);
-                    await setDoc(publicStoreRef, {
-                        storeId: newProject.id,
-                        storeName: progress.storeSetup.storeName || progress.businessName,
-                        ownerId: user.uid,
-                        isActive: true,
-                        storefrontTheme,
-                        theme: {
-                            primaryColor: globalColors.primary,
-                            secondaryColor: globalColors.secondary,
-                            accentColor: globalColors.accent,
-                            backgroundColor: globalColors.background,
-                            textColor: globalColors.text,
-                            headingColor: globalColors.heading,
-                            fontFamily: selectedTemplate.theme?.fontFamilyBody || 'Inter, system-ui, sans-serif',
-                        },
-                        currencySymbol: progress.storeSetup.currencySymbol,
-                        createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
-                        updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
+                    // Create Public Store Registry
+                    await supabase.from('public_stores').upsert({
+                        project_id: newProject.id,
+                        owner_id: user.id,
+                        name: storeName,
+                        type: progress.ecommerceType || 'physical',
+                        created_at: now,
+                        updated_at: now,
+                        is_active: true
                     });
-
                     if (isDev) console.log('🎨 Created publicStores document with storefrontTheme from project globalColors');
 
                     if (isDev) console.log('✅ Ecommerce store setup complete');

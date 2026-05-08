@@ -9,26 +9,9 @@ import { Project, PageData, ThemeData, PageSection, BrandIdentity, SitePage } fr
 import { initialData } from '../../data/initialData';
 import { createDefaultPages, createPageFromTemplate } from '../../data/defaultPages';
 import { PageTemplateId } from '../../types/onboarding';
-import {
-    db,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    collection,
-    getDocs,
-    query,
-    orderBy,
-    addDoc,
-    serverTimestamp,
-    storage,
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject,
-    writeBatch,
-} from '../../firebase';
+import { supabase } from '../../supabase';
+import { uploadAsset, deleteAsset } from '../../services/StorageService';
+import { StorageError } from '@supabase/storage-js';
 import { useAuth } from '../core/AuthContext';
 import { router } from '../../hooks/useRouter';
 import { useSafeTenant } from '../tenant';
@@ -57,15 +40,10 @@ const normalizeProject = (project: Project): Project => {
 
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
-const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
-    // Personal tenants (format: tenant_{userId}) should use user path
-    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
 
-    if (tenantId && !isPersonalTenant) {
-        return ['tenants', tenantId, 'projects'];
-    }
-    return ['users', userId, 'projects'];
-};
+// Note: In Supabase, projects are in a single 'projects' table
+// We query by user_id and/or tenant_id
+
 
 // Helper to get storage path for project assets
 const getProjectStoragePath = (userId: string, projectId: string, tenantId?: string | null): string => {
@@ -75,11 +53,55 @@ const getProjectStoragePath = (userId: string, projectId: string, tenantId?: str
     return `users/${userId}/projects/${projectId}`;
 };
 
-const cloneProjectValue = <T,>(value: T): T => {
-    if (typeof structuredClone === 'function') {
-        return structuredClone(value);
+export const sanitizeForStorage = <T extends unknown>(obj: T): T => {
+    if (!obj || typeof obj !== 'object') return obj;
+    
+    // Quick check to avoid unnecessary cloning if we know it's a simple type
+    if (Array.isArray(obj) && obj.length === 0) return obj;
+    
+    try {
+        const cache = new Set();
+        const safeStringify = JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                // Strip DOM nodes, React Fiber nodes, and Synthetic Events
+                if (
+                    (typeof HTMLElement !== 'undefined' && value instanceof HTMLElement) ||
+                    value.nodeType ||
+                    value.nativeEvent ||
+                    key.startsWith('__reactFiber') ||
+                    key.startsWith('__reactProps')
+                ) {
+                    return undefined;
+                }
+                if (cache.has(value)) {
+                    return undefined; // Circular reference found, discard key
+                }
+                cache.add(value);
+            }
+            return value;
+        });
+        return JSON.parse(safeStringify);
+    } catch (e) {
+        console.warn('Sanitization fallback failed', e);
+        return {} as T; // Safe fallback
     }
-    return JSON.parse(JSON.stringify(value));
+};
+
+const cloneProjectValue = <T,>(value: T): T => {
+    try {
+        if (typeof structuredClone === 'function') {
+            try {
+                return structuredClone(value);
+            } catch (cloneErr) {
+                console.warn('[ProjectContext] structuredClone failed, falling back to sanitization', cloneErr);
+                return sanitizeForStorage(value);
+            }
+        }
+        return sanitizeForStorage(value);
+    } catch (e) {
+        console.warn('[ProjectContext] All clone methods failed', e);
+        return {} as T;
+    }
 };
 
 const isLikelyImageUrl = (value: string): boolean => {
@@ -409,7 +431,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [registerModule, unregisterModule, undo, redo]);
 
     const getCurrentProjectState = useCallback((): ProjectUndoState => {
-        return { data, theme, componentOrder, sectionVisibility, pages };
+        return sanitizeForStorage({ data, theme, componentOrder, sectionVisibility, pages });
     }, [data, theme, componentOrder, sectionVisibility, pages]);
 
     const pushProjectUndoAction = useCallback((description: string, newState: ProjectUndoState, prevState?: ProjectUndoState) => {
@@ -441,33 +463,40 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [projects]);
 
     // Load templates from Firestore
+    
     const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
         try {
-            const templatesCol = collection(db, 'templates');
-            const q = query(templatesCol, orderBy('lastUpdated', 'desc'));
-            const templateSnapshot = await getDocs(q);
+            const { data: templateSnapshot } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('status', 'Template')
+                .order('last_updated', { ascending: false });
 
             const deletedIds = new Set<string>();
             const activeTemplates: Project[] = [];
 
-            templateSnapshot.docs.forEach(docSnap => {
-                const docData = docSnap.data();
-                // CRITICAL FIX: Also check the local deleted cache to prevent "ghost" templates
-                // from reappearing if Firestore sync is laggy or failed silently
-                if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(docSnap.id)) {
-                    deletedIds.add(docSnap.id);
+            (templateSnapshot || []).forEach(row => {
+                // Map Postgres jsonb to Project fields
+                const docData = {
+                    ...row.data,
+                    id: row.id,
+                    name: row.name,
+                    status: 'Template',
+                    userId: row.user_id,
+                    tenantId: row.tenant_id,
+                    lastUpdated: row.last_updated
+                } as any;
+                
+                if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(row.id)) {
+                    deletedIds.add(row.id);
                 } else {
-                    activeTemplates.push(normalizeProject({
-                        ...docData,
-                        id: docSnap.id,
-                        status: 'Template' as const
-                    } as Project));
+                    activeTemplates.push(normalizeProject(docData as Project));
                 }
             });
 
             if (deletedIds.size > 0) {
                 deletedIds.forEach(id => deletedTemplateIdsRef.current.add(id));
-                localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+                localStorage.setItem('deletedTemplateIds', JSON.stringify(Array.from(deletedTemplateIdsRef.current)));
             }
 
             return { templates: activeTemplates, deletedIds };
@@ -477,42 +506,59 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
+
     // Load user/tenant projects
     const loadUserProjects = useCallback(async (userId: string, tenantId?: string | null) => {
         setIsLoadingProjects(true);
         try {
             let allUserProjects: Project[] = [];
 
-            // Check if this is a personal tenant (format: tenant_{userId})
-            const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-
-            // Always load from user's personal path first
+            // Always load from user's personal path first (Legacy support for null tenant_id)
             try {
-                const userPathSegments = ['users', userId, 'projects'];
-                const userProjectsCol = collection(db, ...userPathSegments);
-                const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
-                const userSnapshot = await getDocs(userQuery);
-                const personalProjects = userSnapshot.docs.map(docSnap => normalizeProject({
-                    ...docSnap.data(),
-                    id: docSnap.id
+                
+                const { data: userSnapshot } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .is('tenant_id', null)
+                    .order('last_updated', { ascending: false });
+                
+                const personalProjects = (userSnapshot || []).map(row => normalizeProject({
+                    ...row.data,
+                    id: row.id,
+                    name: row.name,
+                    userId: row.user_id,
+                    tenantId: row.tenant_id,
+                    status: row.status,
+                    lastUpdated: row.last_updated
                 } as Project));
                 allUserProjects = [...personalProjects];
+
             } catch (err) {
                 console.warn("Could not load personal projects:", err);
             }
 
-            // If there's a tenant (and it's not personal), also load from tenant path
-            if (tenantId && !isPersonalTenant) {
+            // If there's a tenant, also load from tenant path
+            if (tenantId) {
                 try {
-                    const tenantPathSegments = ['tenants', tenantId, 'projects'];
-                    const tenantProjectsCol = collection(db, ...tenantPathSegments);
-                    const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
-                    const tenantSnapshot = await getDocs(tenantQuery);
-                    const tenantProjects = tenantSnapshot.docs.map(docSnap => normalizeProject({
-                        ...docSnap.data(),
-                        id: docSnap.id
+                    
+                    const { data: tenantSnapshot } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('tenant_id', tenantId)
+                        .order('last_updated', { ascending: false });
+                    
+                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject({
+                        ...row.data,
+                        id: row.id,
+                        name: row.name,
+                        userId: row.user_id,
+                        tenantId: row.tenant_id,
+                        status: row.status,
+                        lastUpdated: row.last_updated
                     } as Project));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
+
                 } catch (err) {
                     console.warn("Could not load tenant projects:", err);
                 }
@@ -557,21 +603,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             
             // Then add templates (overwriting any ghost templates in user projects)
             firestoreTemplates.forEach(t => {
-                if (mergedProjectsMap.has(t.id)) {
-                    // Self-healing: A template exists in both collections. 
-                    // This is a "ghost" template in the user collection left by an old bug.
-                    // We can attempt to clean it up asynchronously.
-                    if (userId) {
-                        try {
-                            const ghostRef = doc(db, 'users', userId, 'projects', t.id);
-                            import('firebase/firestore').then(({ deleteDoc }) => {
-                                deleteDoc(ghostRef).catch(() => {});
-                            });
-                        } catch (e) {
-                            // Ignore
-                        }
-                    }
-                }
                 mergedProjectsMap.set(t.id, t);
             });
             
@@ -593,7 +624,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Load projects when user or tenant changes
     useEffect(() => {
         if (user) {
-            loadUserProjects(user.uid, currentTenantId);
+            loadUserProjects(user.id, currentTenantId);
         } else {
             setProjects([]);
             setIsLoadingProjects(false);
@@ -680,12 +711,24 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.log('[ProjectContext] Project not in state, attempting to load from Firebase...');
             try {
                 // Try loading from user's projects
-                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-                const projectRef = doc(db, ...pathSegments, projectId);
-                const projectSnap = await getDoc(projectRef);
+                
+                const { data: projectSnap } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('id', projectId)
+                    .single();
 
-                if (projectSnap.exists()) {
-                    project = normalizeProject({ id: projectSnap.id, ...projectSnap.data() } as Project);
+                if (projectSnap) {
+                    project = normalizeProject({ 
+                        ...projectSnap.data,
+                        id: projectSnap.id,
+                        name: projectSnap.name,
+                        status: projectSnap.status,
+                        userId: projectSnap.user_id,
+                        tenantId: projectSnap.tenant_id,
+                        lastUpdated: projectSnap.last_updated
+                    } as Project);
+
                     console.log('[ProjectContext] Loaded project from Firebase:', project.name);
                     // Add to local state
                     setProjects(prev => {
@@ -694,10 +737,28 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     });
                 } else {
                     // Try loading from templates
-                    const templateRef = doc(db, 'templates', projectId);
-                    const templateSnap = await getDoc(templateRef);
-                    if (templateSnap.exists()) {
-                        project = normalizeProject({ id: templateSnap.id, ...templateSnap.data() } as Project);
+                    
+                    // If not found, templates are also in the projects table with status='Template'
+                    // but we already fetched single() above, so this block might be redundant 
+                    // unless RLS prevented us from seeing it. 
+                    // To replicate exactly, we'll try fetching without RLS restrictions if possible, or just retry
+                    const { data: templateSnap } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', projectId)
+                        .eq('status', 'Template')
+                        .single();
+                    if (templateSnap) {
+                        project = normalizeProject({ 
+                            ...templateSnap.data,
+                            id: templateSnap.id,
+                            name: templateSnap.name,
+                            status: templateSnap.status,
+                            userId: templateSnap.user_id,
+                            tenantId: templateSnap.tenant_id,
+                            lastUpdated: templateSnap.last_updated
+                        } as Project);
+
                         console.log('[ProjectContext] Loaded template from Firebase:', project.name);
                         setProjects(prev => {
                             if (prev.find(p => p.id === projectId)) return prev;
@@ -713,6 +774,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!project) {
             console.error("[ProjectContext] Project not found:", projectId);
             console.error("[ProjectContext] Available project IDs:", projectsRef.current.map(p => p.id));
+            // Always redirect to dashboard if a requested project is missing to prevent infinite loading screens
+            router.navigate('/dashboard');
             return;
         }
 
@@ -748,7 +811,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         activeProjectIdRef.current = projectId;
 
         setActiveProjectId(projectId);
-        setData(project.data);
+        setData(project.data || {});
         setTheme(project.theme);
         setBrandIdentity(project.brandIdentity || initialData.brandIdentity);
         setComponentOrder(project.componentOrder || initialData.componentOrder as PageSection[]);
@@ -819,6 +882,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     const saveProject = useCallback(async () => {
         if (!user || !activeProjectId || !data) return;
 
+        // Never let an empty editor state overwrite a populated project.
+        // This protects against stale tabs/autosave after failed loads or schema mismatches.
+        if (Object.keys(data).length === 0) {
+            console.warn('[ProjectContext] saveProject skipped: refusing to overwrite project with empty PageData', {
+                activeProjectId,
+            });
+            return;
+        }
+
         // CRITICAL: Validate synchronous ref matches the state-based activeProjectId.
         // During rapid project switches, React may batch state updates, causing
         // `activeProjectId` (state) to lag behind `activeProjectIdRef` (synchronous).
@@ -836,7 +908,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Save ALL project fields to ensure Firestore stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Firestore doesn't accept undefined)
-        const updatedProject = removeUndefinedValues({
+        const updatedProject = removeUndefinedValues(sanitizeForStorage({
             // Core page data (from React state)
             data,
             theme,
@@ -874,17 +946,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // CRM Configuration (only include if exists)
             ...(project.crmConfig && { crmConfig: project.crmConfig }),
-        });
+        }));
 
         try {
-            if (isTemplate) {
-                const templateRef = doc(db, 'templates', activeProjectId);
-                await updateDoc(templateRef, updatedProject);
-            } else {
-                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-                const projectRef = doc(db, ...pathSegments, activeProjectId);
-                await updateDoc(projectRef, updatedProject);
-            }
+            
+            // In Supabase, we just update the projects table
+            const { error: updateErr } = await supabase.from('projects').update({
+                name: updatedProject.name || project.name,
+                status: updatedProject.status || project.status,
+                data: updatedProject
+            }).eq('id', activeProjectId);
+            
+            if (updateErr) throw updateErr;
+
 
             setProjects(prev => prev.map(p =>
                 p.id === activeProjectId ? { ...p, ...updatedProject } as Project : p
@@ -909,7 +983,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const snapshot: Partial<Project> = {
             id: activeProjectId,
             name: project.name,
-            userId: project.userId || user.uid, // Fallback to current user
+            userId: project.userId || user.id, // Fallback to current user
 
             // Core page data (from React state - most up to date)
             data,
@@ -970,15 +1044,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // CRITICAL: Fetch latest menus from Firebase to ensure we publish the most recent version
             // This fixes the sync issue where CMSContext saves menus but ProjectContext has stale data
             try {
-                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-                const projectRef = doc(db, ...pathSegments, activeProjectId);
-                const projectSnap = await getDoc(projectRef);
+                
+                const { data: projectSnap } = await supabase.from('projects').select('data').eq('id', activeProjectId).single();
+                if (projectSnap && projectSnap.data) {
+                    const projectData = projectSnap.data as any;
 
-                if (projectSnap.exists()) {
-                    const projectData = projectSnap.data();
                     if (projectData.menus && Array.isArray(projectData.menus)) {
                         snapshot.menus = projectData.menus;
-                        console.log(`🔄 [ProjectContext] Fetched latest menus from Firebase: ${projectData.menus.length} menus`);
+                        console.log(`🔄 [ProjectContext] Fetched latest menus from Supabase: ${projectData.menus.length} menus`);
                     }
                 }
             } catch (menuFetchError) {
@@ -988,11 +1061,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.log(`📸 [ProjectContext] Using editor snapshot for project: ${snapshot.name}`);
 
             // Debug: Log hero data to verify it's correct
+            const heroHeadline = resolveProjectName(snapshot.data?.hero?.headline);
+            const heroImageUrl = snapshot.data?.hero?.imageUrl;
             console.log(`🔍 [ProjectContext] Hero data in snapshot:`, {
                 heroVariant: snapshot.data?.hero?.heroVariant,
-                headline: snapshot.data?.hero?.headline?.substring(0, 30),
+                headline: heroHeadline.substring(0, 30),
                 hasBackgroundImage: !!snapshot.data?.hero?.backgroundImage,
-                imageUrl: snapshot.data?.hero?.imageUrl?.substring(0, 50),
+                imageUrl: typeof heroImageUrl === 'string' ? heroImageUrl.substring(0, 50) : '',
                 primaryCtaLink: snapshot.data?.hero?.primaryCtaLink,
                 primaryCtaLinkType: snapshot.data?.hero?.primaryCtaLinkType,
             });
@@ -1009,18 +1084,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Personal tenants (tenant_{userId}) should be treated as null tenantId 
             // so publishService writes to users/{uid}/projects instead of tenants/{id}/projects
             let targetTenantId = currentTenantId;
-            if (currentTenantId && currentTenantId.startsWith(`tenant_${user.uid}`)) {
+            if (currentTenantId && currentTenantId.startsWith(`tenant_${user.id}`)) {
                 console.log('[ProjectContext] Detected personal tenant, setting targetTenantId to null for publishing');
                 targetTenantId = null;
             }
 
             // Publish using the centralized service with the editor snapshot
             const result = await publishToService({
-                userId: user.uid,
+                userId: user.id,
                 projectId: activeProjectId,
                 tenantId: targetTenantId || null,
                 projectSnapshot: snapshot,
-                saveDraftFirst: true, // Save to Firestore first, then publish
+                saveDraftFirst: true, // Save draft and publish snapshot to Supabase
                 includeEcommerce: true,
                 includeCMS: true,
             });
@@ -1039,28 +1114,39 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // AUTOMATIC DOMAIN SYNC (keep this for domain mapping updates)
             try {
-                const domainsCol = collection(db, 'users', user.uid, 'domains');
-                const domainsSnap = await getDocs(domainsCol);
-                const projectDomains = domainsSnap.docs
-                    .map(d => ({ id: d.id, ...d.data() } as any))
-                    .filter(d => d.projectId === activeProjectId);
+                const { data: projectDomains } = await supabase
+                    .from('custom_domains')
+                    .select('*')
+                    .eq('user_id', user.id);
 
-                if (projectDomains.length > 0) {
-                    console.log(`📡 [ProjectContext] Syncing ${projectDomains.length} domains...`);
+                const domainsForProject = (projectDomains || []).filter((domain: any) => {
+                    const domainData = domain.data || {};
+                    return domainData.projectId === activeProjectId || domainData.project_id === activeProjectId;
+                });
 
-                    for (const domain of projectDomains) {
-                        const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
+                if (domainsForProject.length > 0) {
+                    console.log(`📡 [ProjectContext] Syncing ${domainsForProject.length} domains...`);
 
-                        await setDoc(doc(db, 'customDomains', normalizedDomain), {
-                            domain: normalizedDomain,
-                            projectId: activeProjectId,
-                            userId: user.uid,
-                            status: 'active',
-                            sslStatus: 'active',
-                            dnsVerified: true,
-                            cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
-                            updatedAt: new Date().toISOString()
-                        }, { merge: true });
+                    for (const domain of domainsForProject) {
+                        const normalizedDomain = (domain.domain_name || domain.data?.domain || '').toLowerCase().trim().replace(/^www\./, '');
+                        if (!normalizedDomain) continue;
+                        const domainData = domain.data || {};
+
+                        await supabase.from('custom_domains').upsert({
+                            domain_name: normalizedDomain,
+                            user_id: user.id,
+                            data: {
+                                ...domainData,
+                                domain: normalizedDomain,
+                                projectId: activeProjectId,
+                                status: 'active',
+                                sslStatus: 'active',
+                                dnsVerified: true,
+                                cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                                updatedAt: new Date().toISOString(),
+                            },
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'domain_name' });
                     }
                 }
             } catch (syncError) {
@@ -1124,13 +1210,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = projects.find(p => p.id === activeProjectId);
         if (!project) return;
 
-        const isTemplate = project.status === 'Template';
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const docRef = isTemplate
-            ? doc(db, 'templates', activeProjectId)
-            : doc(db, ...pathSegments, activeProjectId);
+        const projectData = project.data || {};
+        
+        await supabase.from('projects').update({
+            name: newName,
+            data: { ...projectData, name: newName }
+        }).eq('id', activeProjectId);
 
-        await updateDoc(docRef, { name: newName });
         setProjects(prev => prev.map(p =>
             p.id === activeProjectId ? { ...p, name: newName } : p
         ));
@@ -1155,33 +1241,37 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
         }
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        
-        // Strip the id from the project data before saving to Firestore
-        // (Firestore document ID should not be duplicated inside the document)
         const { id: providedId, ...projectData } = project;
         
         const dataToSave = {
             ...projectData,
-            createdAt: serverTimestamp(),
-            lastUpdated: serverTimestamp(),
+            createdAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
         };
 
         let finalId: string;
 
         if (providedId) {
-            // Use the pre-generated ID (e.g., from onboarding: "proj_1234567890")
-            // This ensures the project is created with the exact ID the caller expects
-            const docRef = doc(db, ...pathSegments, providedId);
-            await setDoc(docRef, dataToSave);
+            const { error: insertErr } = await supabase.from('projects').insert({
+                id: providedId,
+                name: project.name,
+                status: project.status || 'Draft',
+                user_id: user.id,
+                tenant_id: currentTenantId,
+                data: dataToSave
+            });
+            if (insertErr) throw insertErr;
             finalId = providedId;
-            console.log(`✅ [ProjectContext] Project created with provided ID: ${finalId}`);
         } else {
-            // Auto-generate ID via addDoc (default behavior)
-            const projectsCol = collection(db, ...pathSegments);
-            const docRef = await addDoc(projectsCol, dataToSave);
+            const { data: docRef, error: insertErr } = await supabase.from('projects').insert({
+                name: project.name,
+                status: project.status || 'Draft',
+                user_id: user.id,
+                tenant_id: currentTenantId,
+                data: dataToSave
+            }).select().single();
+            if (insertErr) throw insertErr;
             finalId = docRef.id;
-            console.log(`✅ [ProjectContext] Project created with auto-generated ID: ${finalId}`);
         }
 
         const newProject = { ...project, id: finalId };
@@ -1189,11 +1279,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             if (prev.some(p => p.id === newProject.id)) return prev;
             return [newProject, ...prev];
         });
-        
-        // NOTE: We do NOT call loadProject here. The callers (useOnboarding,
-        // GlobalAiAssistant, etc.) handle loading the project at the appropriate
-        // time — e.g., after image generation completes during onboarding.
-        // Calling loadProject here would navigate to the editor prematurely.
         
         return finalId;
     };
@@ -1206,38 +1291,23 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!project) return;
 
         const isTemplate = project.status === 'Template';
+        const projectData = project.data || {};
 
         if (isTemplate) {
-            // Templates use the existing soft-delete via isDeleted flag
-            const templateRef = doc(db, 'templates', projectId);
-            await updateDoc(templateRef, { isDeleted: true });
-            
-            // BUG FIX: Sometimes cloned 'Template' status projects live in the user's collection.
-            // If so, the above updateDoc creates/updates in global templates but leaves the personal one intact.
-            // Let's attempt to soft-delete the personal one just in case it exists.
-            try {
-                const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-                const userProjectRef = doc(db, ...pathSegments, projectId);
-                await updateDoc(userProjectRef, {
-                    deletedAt: new Date().toISOString(),
-                    deletedBy: user.uid,
-                });
-            } catch (e) {
-                // Ignore. It's expected to fail if it was truly a global template.
-            }
+            await supabase.from('projects').update({
+                data: { ...projectData, isDeleted: true }
+            }).eq('id', projectId);
 
             deletedTemplateIdsRef.current.add(projectId);
-            localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+            localStorage.setItem('deletedTemplateIds', JSON.stringify(Array.from(deletedTemplateIdsRef.current)));
         } else {
             // Soft-delete: set deletedAt timestamp instead of deleting
-            const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-            const projectRef = doc(db, ...pathSegments, projectId);
-            await updateDoc(projectRef, {
-                deletedAt: new Date().toISOString(),
-                deletedBy: user.uid,
-            });
+            await supabase.from('projects').update({
+                data: { ...projectData, deletedAt: new Date().toISOString(), deletedBy: user.id }
+            }).eq('id', projectId);
+            
             // Move to deleted projects list
-            setDeletedProjects(prev => [{ ...project, deletedAt: new Date().toISOString(), deletedBy: user.uid } as any, ...prev]);
+            setDeletedProjects(prev => [{ ...project, deletedAt: new Date().toISOString(), deletedBy: user.id } as any, ...prev]);
         }
 
         setProjects(prev => prev.filter(p => p.id !== projectId));
@@ -1255,15 +1325,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = deletedProjects.find(p => p.id === projectId);
         if (!project) return;
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const projectRef = doc(db, ...pathSegments, projectId);
+        const updatedData = { ...project };
+        if ('deletedAt' in updatedData) delete (updatedData as any).deletedAt;
+        if ('deletedBy' in updatedData) delete (updatedData as any).deletedBy;
 
-        // Remove the soft-delete fields
-        const { deletedAt, deletedBy, ...cleanProject } = project as any;
-        await updateDoc(projectRef, {
-            deletedAt: null,
-            deletedBy: null,
-        });
+        await supabase.from('projects').update({
+            data: updatedData
+        }).eq('id', projectId);
 
         // Move back to active projects
         setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
@@ -1277,8 +1345,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = deletedProjects.find(p => p.id === projectId);
         if (!project) return;
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        await deleteDoc(doc(db, ...pathSegments, projectId));
+        await supabase.from('projects').delete().eq('id', projectId);
 
         setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
     };
@@ -1286,7 +1353,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Restore project from an automatic backup (calls Supabase Edge Function)
     const restoreFromBackup = async (backupId: string) => {
         try {
-            const { supabase } = await import('@/supabase');
+            const { supabase } = await import('../../supabase');
             const result = await supabase.functions.invoke('onboarding-api', {
                 body: { action: 'restoreProjectFromBackup', backupId }
             });
@@ -1350,32 +1417,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         };
 
         try {
-            // Always save to user's personal path to avoid workspace permission issues
-            const pathSegments = ['users', user.uid, 'projects'];
-            const projectsCol = collection(db, ...pathSegments);
-            const docRef = await addDoc(projectsCol, newProject);
+            const { data: docRef, error: insertErr } = await supabase.from('projects').insert({
+                name: newProject.name,
+                status: 'Draft',
+                user_id: user.id,
+                tenant_id: null, // Personal space
+                data: newProject
+            }).select().single();
+            
+            if (insertErr) throw insertErr;
+
             const templateImageUrls = extractProjectImageUrls(template);
 
             if (templateImageUrls.length > 0) {
-                const batch = writeBatch(db);
-                const projectFilesCol = collection(db, 'users', user.uid, 'projects', docRef.id, 'files');
+                const fileRecords = templateImageUrls.map((downloadURL, index) => ({
+                    name: getImageNameFromUrl(downloadURL, index),
+                    type: inferImageType(downloadURL),
+                    size: 0,
+                    download_url: downloadURL,
+                    storage_path: '',
+                    project_id: docRef.id,
+                    source_template_id: templateId,
+                    notes: 'Imported from template',
+                }));
 
-                templateImageUrls.forEach((downloadURL, index) => {
-                    const fileRef = doc(projectFilesCol);
-                    batch.set(fileRef, {
-                        name: getImageNameFromUrl(downloadURL, index),
-                        type: inferImageType(downloadURL),
-                        size: 0,
-                        downloadURL,
-                        storagePath: '',
-                        projectId: docRef.id,
-                        sourceTemplateId: templateId,
-                        createdAt: now,
-                        notes: 'Imported from template',
-                    });
-                });
-
-                await batch.commit();
+                await supabase.from('project_files').insert(fileRecords);
             }
 
             const createdProject = { ...newProject, id: docRef.id } as Project;
@@ -1427,30 +1493,40 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const storagePath = isTemplate
             ? `templates/${projectId}/thumbnail.png`
-            : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/thumbnail.png`;
+            : `${getProjectStoragePath(user.id, projectId, currentTenantId)}/thumbnail.png`;
 
         console.log('[ProjectContext] Uploading to storage path:', storagePath);
-        const storageRef = ref(storage, storagePath);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
+        
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from('projects')
+            .upload(storagePath, file, { upsert: true });
+
+        if (uploadErr) {
+            console.error('[ProjectContext] Failed to upload thumbnail:', uploadErr);
+            throw uploadErr;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('projects')
+            .getPublicUrl(storagePath);
+
+        const downloadURL = publicUrl;
         console.log('[ProjectContext] Got download URL:', downloadURL);
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const docRef = isTemplate
-            ? doc(db, 'templates', projectId)
-            : doc(db, ...pathSegments, projectId);
-
-        console.log('[ProjectContext] Updating Firestore doc:', isTemplate ? `templates/${projectId}` : pathSegments.join('/') + '/' + projectId);
-
-        // Templates use 'thumbnailUrl', regular projects use 'thumbnail'
-        const updateField = isTemplate ? 'thumbnailUrl' : 'thumbnailUrl'; // Using thumbnailUrl for consistency
+        // Templates use 'thumbnailUrl', regular projects use 'thumbnailUrl'
+        const updateField = 'thumbnailUrl';
         const updateData = {
             [updateField]: downloadURL,
             lastUpdated: new Date().toISOString()
         };
 
-        await updateDoc(docRef, updateData);
-        console.log('[ProjectContext] Firestore updated successfully with field:', updateField);
+        const projectData = project?.data || {};
+
+        await supabase.from('projects').update({
+            data: { ...projectData, ...updateData }
+        }).eq('id', projectId);
+
+        console.log('[ProjectContext] Supabase updated successfully with field:', updateField);
 
         setProjects(prev => prev.map(p =>
             p.id === projectId ? { ...p, thumbnailUrl: downloadURL, lastUpdated: updateData.lastUpdated } : p
@@ -1467,18 +1543,29 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
         const storagePath = isTemplate
             ? `templates/${projectId}/favicon.ico`
-            : `${getProjectStoragePath(user.uid, projectId, currentTenantId)}/favicon.ico`;
+            : `${getProjectStoragePath(user.id, projectId, currentTenantId)}/favicon.ico`;
 
-        const storageRef = ref(storage, storagePath);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
+        const { error: uploadErr } = await supabase.storage
+            .from('projects')
+            .upload(storagePath, file, { upsert: true });
 
-        const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
-        const docRef = isTemplate
-            ? doc(db, 'templates', projectId)
-            : doc(db, ...pathSegments, projectId);
+        if (uploadErr) {
+            console.error('[ProjectContext] Failed to upload favicon:', uploadErr);
+            throw uploadErr;
+        }
 
-        await updateDoc(docRef, { faviconUrl: downloadURL });
+        const { data: { publicUrl } } = supabase.storage
+            .from('projects')
+            .getPublicUrl(storagePath);
+
+        const downloadURL = publicUrl;
+
+        const projectData = project.data || {};
+
+        await supabase.from('projects').update({
+            data: { ...projectData, faviconUrl: downloadURL }
+        }).eq('id', projectId);
+
         setProjects(prev => prev.map(p =>
             p.id === projectId ? { ...p, faviconUrl: downloadURL } : p
         ));
@@ -1503,12 +1590,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             componentOrder: initialData.componentOrder as PageSection[],
             sectionVisibility: initialData.sectionVisibility as Record<PageSection, boolean>,
             status: 'Template',
+            thumbnailUrl: undefined,
+            faviconUrl: undefined,
             createdAt: now,
             lastUpdated: now,
         };
 
-        const templatesCol = collection(db, 'templates');
-        const docRef = await addDoc(templatesCol, newTemplate);
+        const { data: docRef, error: insertErr } = await supabase.from('projects').insert({
+            name: newTemplate.name,
+            status: 'Template',
+            user_id: user?.id,
+            tenant_id: currentTenantId,
+            data: newTemplate
+        }).select().single();
+
+        if (insertErr) throw insertErr;
 
         const createdTemplate = { ...newTemplate, id: docRef.id } as Project;
         setProjects(prev => [createdTemplate, ...prev]);
@@ -1516,8 +1612,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const archiveTemplate = async (templateId: string, isArchived: boolean) => {
-        const templateRef = doc(db, 'templates', templateId);
-        await updateDoc(templateRef, { isArchived });
+        const template = projects.find(p => p.id === templateId);
+        const updatedData = { ...(template?.data || {}), isArchived };
+        await supabase.from('projects').update({
+            data: updatedData
+        }).eq('id', templateId);
+
         setProjects(prev => prev.map(p =>
             p.id === templateId ? { ...p, isArchived } : p
         ));
@@ -1536,8 +1636,15 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             lastUpdated: now,
         };
 
-        const templatesCol = collection(db, 'templates');
-        const docRef = await addDoc(templatesCol, newTemplate);
+        const { data: docRef, error: insertErr } = await supabase.from('projects').insert({
+            name: newTemplate.name,
+            status: 'Template',
+            user_id: user?.id,
+            tenant_id: currentTenantId,
+            data: newTemplate
+        }).select().single();
+
+        if (insertErr) throw insertErr;
 
         const createdTemplate = { ...newTemplate, id: docRef.id } as Project;
         setProjects(prev => [createdTemplate, ...prev]);
@@ -1551,7 +1658,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const refreshProjects = async () => {
         if (user) {
-            await loadUserProjects(user.uid, currentTenantId);
+            await loadUserProjects(user.id, currentTenantId);
         }
     };
 

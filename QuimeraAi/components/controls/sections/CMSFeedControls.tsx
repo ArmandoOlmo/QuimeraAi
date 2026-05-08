@@ -13,7 +13,7 @@ import AnimationControls from '../../ui/AnimationControls';
 import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
@@ -40,9 +40,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <FileText size={14} />
           {t('controls.content')}
         </label>
-        <Input label={t('editor.controls.common.title')} value={feedData.title || ''} onChange={(val) => setNestedData('cmsFeed.title', val)} placeholder="Latest Articles" />
+        <I18nInput label={t('editor.controls.common.title')} value={feedData.title || ''} onChange={(val) => setNestedData('cmsFeed.title', val)} placeholder="Latest Articles" />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={feedData.titleFontSize || 'md'} onChange={(v) => setNestedData('cmsFeed.titleFontSize', v)} />
-        <TextArea label={t('editor.controls.common.description')} value={feedData.description || ''} onChange={(val) => setNestedData('cmsFeed.description', val)} rows={2} placeholder="Stay up to date with our latest content" />
+        <I18nTextArea label={t('editor.controls.common.description')} value={feedData.description || ''} onChange={(val) => setNestedData('cmsFeed.description', val)} rows={2} placeholder="Stay up to date with our latest content" />
         <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={feedData.descriptionFontSize || 'md'} onChange={(v) => setNestedData('cmsFeed.descriptionFontSize', v)} />
       </div>
 
@@ -147,7 +147,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           onChange={(v) => setNestedData('cmsFeed.showReadMore', v)}
         />
         {feedData.showReadMore !== false && (
-          <Input
+          <I18nInput
             label={t('editor.controls.cmsFeed.readMoreText')}
             value={feedData.readMoreText || 'Read More'}
             onChange={(val) => setNestedData('cmsFeed.readMoreText', val)}
@@ -166,7 +166,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <MousePointerClick size={14} />
           {t('editor.controls.cmsFeed.viewAllCta')}
         </label>
-        <Input label={t('editor.controls.cmsFeed.buttonText')} value={feedData.viewAllText || ''} onChange={(val) => setNestedData('cmsFeed.viewAllText', val)} placeholder="View All Articles" />
+        <I18nInput label={t('editor.controls.cmsFeed.buttonText')} value={feedData.viewAllText || ''} onChange={(val) => setNestedData('cmsFeed.viewAllText', val)} placeholder="View All Articles" />
         <Input label={t('editor.controls.cmsFeed.buttonLink')} value={feedData.viewAllLink || ''} onChange={(val) => setNestedData('cmsFeed.viewAllLink', val)} placeholder="/blog" />
       </div>
     </div>

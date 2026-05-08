@@ -1,25 +1,12 @@
 /**
  * useOrders Hook
- * Hook para gestión de pedidos en Firestore
+ * Hook para gestión de pedidos en Supabase
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    doc,
-    serverTimestamp,
-    where,
-    getDocs,
-    limit,
-    Timestamp,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+import { supabase } from '../../../../supabase';
 import { Order, OrderStatus, PaymentStatus, FulfillmentStatus, OrderItem, Address } from '../../../../types/ecommerce';
+import { mapOrderFromDB, mapOrderToDB } from '../../../../utils/ecommerceMappers';
 
 interface UseOrdersOptions {
     status?: OrderStatus;
@@ -35,7 +22,48 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
     const [error, setError] = useState<string | null>(null);
 
     const effectiveStoreId = storeId || '';
-    const ordersPath = `users/${userId}/stores/${effectiveStoreId}/orders`;
+
+    const fetchOrders = useCallback(async () => {
+        if (!effectiveStoreId) return;
+
+        setIsLoading(true);
+        let query = supabase
+            .from('store_orders')
+            .select('*')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false });
+
+        if (options?.limitCount) {
+            query = query.limit(options.limitCount);
+        }
+
+        if (options?.status) {
+            query = query.eq('status', options.status);
+        }
+
+        if (options?.customerId) {
+            query = query.eq('customer_id', options.customerId);
+        }
+
+        if (options?.startDate) {
+            query = query.gte('created_at', options.startDate.toISOString());
+        }
+
+        if (options?.endDate) {
+            query = query.lte('created_at', options.endDate.toISOString());
+        }
+
+        const { data, error: fetchError } = await query;
+
+        if (fetchError) {
+            console.error('Error fetching orders:', fetchError);
+            setError(fetchError.message);
+        } else {
+            setOrders((data || []).map(mapOrderFromDB));
+            setError(null);
+        }
+        setIsLoading(false);
+    }, [effectiveStoreId, options?.limitCount, options?.status, options?.customerId, options?.startDate, options?.endDate]);
 
     useEffect(() => {
         if (!userId || !effectiveStoreId) {
@@ -43,70 +71,47 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             return;
         }
 
-        const ordersRef = collection(db, ordersPath);
-        let q = query(ordersRef, orderBy('createdAt', 'desc'));
+        fetchOrders();
 
-        if (options?.limitCount) {
-            q = query(ordersRef, orderBy('createdAt', 'desc'), limit(options.limitCount));
-        }
-
-        if (options?.status) {
-            q = query(ordersRef, where('status', '==', options.status), orderBy('createdAt', 'desc'));
-        }
-
-        if (options?.customerId) {
-            q = query(ordersRef, where('customerId', '==', options.customerId), orderBy('createdAt', 'desc'));
-        }
-
-        const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-                let data = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Order[];
-
-                // Filter by date range in memory
-                if (options?.startDate) {
-                    const startTs = options.startDate.getTime() / 1000;
-                    data = data.filter((o) => o.createdAt.seconds >= startTs);
+        const channel = supabase.channel('store_orders_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'store_orders',
+                    filter: `project_id=eq.${effectiveStoreId}`
+                },
+                () => {
+                    fetchOrders();
                 }
-                if (options?.endDate) {
-                    const endTs = options.endDate.getTime() / 1000;
-                    data = data.filter((o) => o.createdAt.seconds <= endTs);
-                }
+            )
+            .subscribe();
 
-                setOrders(data);
-                setIsLoading(false);
-                setError(null);
-            },
-            (err) => {
-                console.error('Error fetching orders:', err);
-                setError(err.message);
-                setIsLoading(false);
-            }
-        );
-
-        return () => unsubscribe();
-    }, [userId, effectiveStoreId, options?.status, options?.customerId, options?.limitCount, ordersPath]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, effectiveStoreId, fetchOrders]);
 
     // Generate order number
     const generateOrderNumber = useCallback(async (): Promise<string> => {
-        const ordersRef = collection(db, ordersPath);
-        const q = query(ordersRef, orderBy('createdAt', 'desc'), limit(1));
-        const snapshot = await getDocs(q);
+        const { data } = await supabase
+            .from('store_orders')
+            .select('order_number')
+            .eq('project_id', effectiveStoreId)
+            .order('created_at', { ascending: false })
+            .limit(1);
         
         let nextNumber = 1;
-        if (!snapshot.empty) {
-            const lastOrder = snapshot.docs[0].data() as Order;
-            const lastNumber = parseInt(lastOrder.orderNumber.replace('ORD-', ''), 10);
+        if (data && data.length > 0 && data[0].order_number) {
+            const lastNumber = parseInt(data[0].order_number.replace('ORD-', ''), 10);
             if (!isNaN(lastNumber)) {
                 nextNumber = lastNumber + 1;
             }
         }
 
         return `ORD-${nextNumber.toString().padStart(6, '0')}`;
-    }, [ordersPath]);
+    }, [effectiveStoreId]);
 
     // Create order
     const createOrder = useCallback(
@@ -129,112 +134,131 @@ export const useOrders = (userId: string, storeId?: string, options?: UseOrdersO
             shippingMethod?: string;
             customerNotes?: string;
         }): Promise<string> => {
-            const ordersRef = collection(db, ordersPath);
             const orderNumber = await generateOrderNumber();
 
-            const docRef = await addDoc(ordersRef, {
+            const dbData = mapOrderToDB({
                 ...orderData,
                 orderNumber,
                 discount: orderData.discount || 0,
                 status: 'pending' as OrderStatus,
                 paymentStatus: 'pending' as PaymentStatus,
                 fulfillmentStatus: 'unfulfilled' as FulfillmentStatus,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             });
 
-            return docRef.id;
+            dbData.project_id = effectiveStoreId;
+
+            const { data: insertedOrder, error } = await supabase
+                .from('store_orders')
+                .insert(dbData)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return insertedOrder.id;
         },
-        [ordersPath, generateOrderNumber]
+        [effectiveStoreId, generateOrderNumber]
     );
 
     // Update order status
     const updateOrderStatus = useCallback(
         async (orderId: string, status: OrderStatus) => {
-            const orderRef = doc(db, ordersPath, orderId);
             const updateData: any = {
                 status,
-                updatedAt: serverTimestamp(),
             };
+
+            const now = new Date().toISOString();
 
             // Set timestamps based on status
             if (status === 'cancelled') {
-                updateData.cancelledAt = serverTimestamp();
+                updateData.cancelled_at = now;
             } else if (status === 'refunded') {
-                updateData.refundedAt = serverTimestamp();
+                updateData.refunded_at = now;
             } else if (status === 'shipped') {
-                updateData.shippedAt = serverTimestamp();
-                updateData.fulfillmentStatus = 'fulfilled';
+                updateData.shipped_at = now;
+                updateData.fulfillment_status = 'fulfilled';
             } else if (status === 'delivered') {
-                updateData.deliveredAt = serverTimestamp();
+                updateData.delivered_at = now;
             }
 
-            await updateDoc(orderRef, updateData);
+            const { error } = await supabase
+                .from('store_orders')
+                .update(updateData)
+                .eq('id', orderId);
+
+            if (error) throw error;
         },
-        [ordersPath]
+        []
     );
 
     // Update payment status
     const updatePaymentStatus = useCallback(
         async (orderId: string, paymentStatus: PaymentStatus, paymentIntentId?: string) => {
-            const orderRef = doc(db, ordersPath, orderId);
             const updateData: any = {
-                paymentStatus,
-                updatedAt: serverTimestamp(),
+                payment_status: paymentStatus,
             };
 
             if (paymentIntentId) {
-                updateData.paymentIntentId = paymentIntentId;
+                updateData.payment_intent_id = paymentIntentId;
             }
 
             if (paymentStatus === 'paid') {
-                updateData.paidAt = serverTimestamp();
+                updateData.paid_at = new Date().toISOString();
                 updateData.status = 'paid';
             }
 
-            await updateDoc(orderRef, updateData);
+            const { error } = await supabase
+                .from('store_orders')
+                .update(updateData)
+                .eq('id', orderId);
+
+            if (error) throw error;
         },
-        [ordersPath]
+        []
     );
 
     // Update fulfillment status
     const updateFulfillmentStatus = useCallback(
         async (orderId: string, fulfillmentStatus: FulfillmentStatus) => {
-            const orderRef = doc(db, ordersPath, orderId);
-            await updateDoc(orderRef, {
-                fulfillmentStatus,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_orders')
+                .update({ fulfillment_status: fulfillmentStatus })
+                .eq('id', orderId);
+
+            if (error) throw error;
         },
-        [ordersPath]
+        []
     );
 
     // Add tracking info
     const addTrackingInfo = useCallback(
         async (orderId: string, trackingNumber: string, trackingUrl?: string) => {
-            const orderRef = doc(db, ordersPath, orderId);
-            await updateDoc(orderRef, {
-                trackingNumber,
-                trackingUrl,
-                status: 'shipped',
-                fulfillmentStatus: 'fulfilled',
-                shippedAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_orders')
+                .update({
+                    tracking_number: trackingNumber,
+                    tracking_url: trackingUrl,
+                    status: 'shipped',
+                    fulfillment_status: 'fulfilled',
+                    shipped_at: new Date().toISOString(),
+                })
+                .eq('id', orderId);
+
+            if (error) throw error;
         },
-        [ordersPath]
+        []
     );
 
     // Add internal notes
     const addInternalNotes = useCallback(
         async (orderId: string, notes: string) => {
-            const orderRef = doc(db, ordersPath, orderId);
-            await updateDoc(orderRef, {
-                internalNotes: notes,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('store_orders')
+                .update({ internal_notes: notes })
+                .eq('id', orderId);
+
+            if (error) throw error;
         },
-        [ordersPath]
+        []
     );
 
     // Get order by ID

@@ -20,8 +20,7 @@ import { generateContentViaProxy, extractTextFromResponse, generateMultimodalCon
 import { captureCurrentView } from '../../utils/visionUtils';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
 import { logApiCall } from '../../services/apiLoggingService';
-import { db, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc, serverTimestamp, query, where, getDocs, limit, orderBy } from '../../firebase';
-import { Timestamp } from 'firebase/firestore';
+import { supabase } from '../../supabase';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 import { useTranslation } from 'react-i18next';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
@@ -1139,12 +1138,12 @@ const GlobalAiAssistant: React.FC = () => {
             const designContent = designPrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{summary}}', description).replace('{{availableFonts}}', "Inter, DM Sans, Outfit, Montserrat, Playfair Display").replace('{{allSections}}', "hero, features, testimonials, footer, cta");
 
             const projectId = activeProject?.id || 'headless-generation';
-            const designResponse = await generateContentViaProxy(projectId, designContent, designPrompt.model, {}, user?.uid);
+            const designResponse = await generateContentViaProxy(projectId, designContent, designPrompt.model, {}, user?.id);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: designPrompt.model,
                     feature: 'onboarding-design-plan',
                     success: true
@@ -1158,12 +1157,12 @@ const GlobalAiAssistant: React.FC = () => {
 
             const websiteContent = websitePrompt.template.replace('{{businessName}}', businessName).replace('{{industry}}', industry).replace('{{summary}}', description).replace('{{audience}}', 'General').replace('{{offerings}}', 'Services').replace('{{tone}}', tone || 'Professional').replace('{{goal}}', 'Generate Leads').replace('{{designPlanTypography}}', JSON.stringify(designPlan.typography)).replace('{{designPlanPalette}}', JSON.stringify(designPlan.palette)).replace('{{designPlanComponentOrder}}', JSON.stringify(designPlan.componentOrder)).replace('{{designPlanImageStyle}}', designPlan.imageStyleDescription);
 
-            const websiteResponse = await generateContentViaProxy(projectId, websiteContent, websitePrompt.model, {}, user?.uid);
+            const websiteResponse = await generateContentViaProxy(projectId, websiteContent, websitePrompt.model, {}, user?.id);
 
             // Log API call
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: websitePrompt.model,
                     feature: 'onboarding-website-generation',
                     success: true
@@ -1219,20 +1218,21 @@ const GlobalAiAssistant: React.FC = () => {
                     specialInstructions: '',
                     faqs: [],
                     knowledgeDocuments: [],
+                    knowledgeLinks: [],
                     widgetColor: designPlan.palette?.primary || '#4f46e5',
                     isActive: true,
                     leadCaptureEnabled: true,
                     enableLiveVoice: false,
                     voiceName: 'Zephyr' as const
                 }
-            };
+            } as any;
 
             await addNewProjectRef.current(newProject);
         } catch (error: any) {
             // Log failed API calls
             if (user) {
                 logApiCall({
-                    userId: user.uid,
+                    userId: user.id,
                     model: designPrompt?.model || 'unknown',
                     feature: 'onboarding-generation',
                     success: false,
@@ -1648,7 +1648,7 @@ const GlobalAiAssistant: React.FC = () => {
                 const q = String(args?.query || '').toLowerCase().trim();
                 const entities = args?.entities || ['products', 'orders', 'leads', 'posts', 'appointments', 'campaigns'];
                 const projectId = activeProjectRef.current?.id;
-                const uid = user?.uid;
+                const uid = user?.id;
 
                 if (!uid) return { error: "User not authenticated." };
                 if (!q) return { result: "Please provide a search query." };
@@ -1678,26 +1678,33 @@ const GlobalAiAssistant: React.FC = () => {
                 // because we assume the item is likely relevant or recent. 
                 // Real deep search would require a dedicated search service (e.g. Algolia/Elastic).
                 if (projectId) {
-                    const fetchAndFilter = async (collectionPath: string, filterFn: (data: any) => boolean, mapFn: (data: any) => any) => {
+                    const fetchFromSupabase = async (table: string, filterFn: (data: any) => boolean, mapFn: (data: any) => any) => {
                         try {
-                            const ref = collection(db, collectionPath);
-                            // Fetch recent 50 documents
-                            const qSnap = await getDocs(query(ref, limit(50)));
-                            const matches = qSnap.docs
-                                .map(d => ({ id: d.id, ...d.data() }))
+                            const { data, error } = await supabase
+                                .from(table)
+                                .select('*')
+                                .eq('project_id', projectId)
+                                .limit(50);
+                            
+                            if (error) throw error;
+                            
+                            if (!data) return null;
+
+                            const matches = data
                                 .filter(filterFn)
                                 .map(mapFn)
-                                .slice(0, 5); // Return top 5 matches per category
+                                .slice(0, 5);
+                                
                             return matches.length > 0 ? matches : null;
                         } catch (e) {
-                            console.error(`Search error for ${collectionPath}:`, e);
+                            console.error(`Search error for ${table}:`, e);
                             return null;
                         }
                     };
 
                     if (entities.includes('products')) {
-                        const hits = await fetchAndFilter(
-                            `users/${uid}/stores/${projectId}/products`,
+                        const hits = await fetchFromSupabase(
+                            'products',
                             (p: any) => p.name?.toLowerCase().includes(q),
                             (p: any) => ({ id: p.id, name: p.name, price: p.price, stock: p.inventory?.quantity })
                         );
@@ -1705,26 +1712,26 @@ const GlobalAiAssistant: React.FC = () => {
                     }
 
                     if (entities.includes('orders')) {
-                        const hits = await fetchAndFilter(
-                            `users/${uid}/stores/${projectId}/orders`,
-                            (o: any) => o.id.toLowerCase().includes(q) || o.customer?.name?.toLowerCase().includes(q) || o.customer?.email?.toLowerCase().includes(q),
-                            (o: any) => ({ id: o.id, customer: o.customer?.name, total: o.total, status: o.status, date: o.createdAt?.toDate?.() || o.createdAt })
+                        const hits = await fetchFromSupabase(
+                            'orders',
+                            (o: any) => o.id.toLowerCase().includes(q) || o.customer_name?.toLowerCase().includes(q) || o.customer_email?.toLowerCase().includes(q),
+                            (o: any) => ({ id: o.id, customer: o.customer_name, total: o.total, status: o.status, date: o.created_at })
                         );
                         if (hits) results.orders = hits;
                     }
 
                     if (entities.includes('appointments')) {
-                        const hits = await fetchAndFilter(
-                            `users/${uid}/projects/${projectId}/appointments`,
+                        const hits = await fetchFromSupabase(
+                            'project_appointments',
                             (a: any) => a.title?.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q),
-                            (a: any) => ({ id: a.id, title: a.title, start: a.startDate?.toDate?.() || a.startDate, status: a.status })
+                            (a: any) => ({ id: a.id, title: a.title, start: a.start_date, status: a.status })
                         );
                         if (hits) results.appointments = hits;
                     }
 
                     if (entities.includes('campaigns')) {
-                        const hits = await fetchAndFilter(
-                            `users/${uid}/projects/${projectId}/emailCampaigns`,
+                        const hits = await fetchFromSupabase(
+                            'email_campaigns',
                             (c: any) => c.name?.toLowerCase().includes(q) || c.subject?.toLowerCase().includes(q),
                             (c: any) => ({ id: c.id, name: c.name, subject: c.subject, status: c.status })
                         );
@@ -1994,8 +2001,8 @@ const GlobalAiAssistant: React.FC = () => {
                 if (role !== 'superadmin' && role !== 'owner') {
                     return { error: "Unauthorized: Only Super Admins can update global SEO." };
                 }
-                const payload = { ...args, updatedAt: serverTimestamp() };
-                await setDoc(doc(db, 'globalSettings', 'seo'), payload, { merge: true });
+                const payload = { ...args, updated_at: new Date().toISOString() };
+                await supabase.from('global_settings').upsert({ id: 'seo', ...payload });
                 return { result: "Global SEO settings updated." };
             }
 
@@ -2022,7 +2029,7 @@ const GlobalAiAssistant: React.FC = () => {
 
             // --- APPOINTMENTS ---
             else if (name === 'manage_appointment') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = args?.action as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
@@ -2033,72 +2040,51 @@ const GlobalAiAssistant: React.FC = () => {
                 const startIso = args?.startDate as string | undefined;
                 const endIso = args?.endDate as string | undefined;
 
-                // Project-scoped appointments path
-                const appointmentsPath = `users/${user.uid}/projects/${projectId}/appointments`;
-                const appointmentsCol = collection(db, appointmentsPath);
-
-                const parseDate = (iso?: string) => {
-                    if (!iso) return undefined;
-                    const d = new Date(iso);
-                    if (isNaN(d.getTime())) return undefined;
-                    return dateToTimestamp(d);
-                };
-
                 if (action === 'create') {
-                    const now = dateToTimestamp(new Date());
-                    const startDate = parseDate(startIso) || now;
-                    const endDate = parseDate(endIso) || startDate;
+                    const now = new Date().toISOString();
+                    const startDate = startIso || now;
+                    const endDate = endIso || startDate;
                     const payload: any = {
                         title: title || 'Nueva Cita',
                         status: status || 'scheduled',
-                        startDate,
-                        endDate,
-                        projectId,
-                        createdAt: now,
-                        createdBy: user.uid,
-                        organizerId: user.uid,
+                        start_date: startDate,
+                        end_date: endDate,
+                        project_id: projectId,
+                        created_by: user.id,
+                        organizer_id: user.id,
                     };
                     if (description) payload.description = description;
-                    const docRef = await addDoc(appointmentsCol, payload);
-                    return { result: `Appointment created: ${docRef.id}` };
+                    const { data, error } = await supabase.from('project_appointments').insert(payload).select('id').single();
+                    if (error) return { error: `Failed to create appointment: ${error.message}` };
+                    return { result: `Appointment created: ${data.id}` };
                 }
 
-                if (action === 'update') {
-                    if (!id) return { error: "id required for update." };
-                    const updatePayload: any = { updatedAt: dateToTimestamp(new Date()), updatedBy: user.uid };
+                if (action === 'update' || action === 'status') {
+                    if (!id) return { error: "id required." };
+                    const updatePayload: any = { updated_by: user.id };
                     if (title !== undefined) updatePayload.title = title;
                     if (description !== undefined) updatePayload.description = description;
-                    const parsedStart = parseDate(startIso);
-                    const parsedEnd = parseDate(endIso);
-                    if (parsedStart) updatePayload.startDate = parsedStart;
-                    if (parsedEnd) updatePayload.endDate = parsedEnd;
+                    if (startIso) updatePayload.start_date = startIso;
+                    if (endIso) updatePayload.end_date = endIso;
                     if (status) updatePayload.status = status;
-                    await updateDoc(doc(db, appointmentsPath, id), updatePayload);
+                    
+                    const { error } = await supabase.from('project_appointments').update(updatePayload).eq('id', id);
+                    if (error) return { error: `Failed to update appointment: ${error.message}` };
                     return { result: "Appointment updated." };
-                }
-
-                if (action === 'status') {
-                    if (!id) return { error: "id required for status." };
-                    if (!status) return { error: "status required." };
-                    await updateDoc(doc(db, appointmentsPath, id), {
-                        status,
-                        updatedAt: dateToTimestamp(new Date()),
-                        updatedBy: user.uid,
-                    });
-                    return { result: "Appointment status updated." };
                 }
 
                 if (action === 'delete') {
                     if (!id) return { error: "id required for delete." };
-                    await deleteDoc(doc(db, appointmentsPath, id));
+                    const { error } = await supabase.from('project_appointments').delete().eq('id', id);
+                    if (error) return { error: `Failed to delete appointment: ${error.message}` };
                     return { result: "Appointment deleted." };
                 }
 
                 if (action === 'get') {
                     if (!id) return { error: "id required for get." };
-                    const docSnap = await getDoc(doc(db, appointmentsPath, id));
-                    if (!docSnap.exists()) return { error: "Appointment not found." };
-                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                    const { data, error } = await supabase.from('project_appointments').select('*').eq('id', id).maybeSingle();
+                    if (error || !data) return { error: "Appointment not found." };
+                    return { result: JSON.stringify(data, null, 2) };
                 }
 
                 return { error: "Invalid action for manage_appointment." };
@@ -2106,60 +2092,56 @@ const GlobalAiAssistant: React.FC = () => {
 
             // --- EMAIL ---
             else if (name === 'email_settings') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
                 const updates = args?.updates;
                 if (!updates || typeof updates !== 'object') return { error: "updates object required." };
-                const settingsPath = `users/${user.uid}/projects/${projectId}/settings/email`;
-                await setDoc(doc(db, settingsPath), { ...updates, updatedAt: serverTimestamp() }, { merge: true });
+                const { error } = await supabase.from('email_settings').upsert({ id: projectId, ...updates });
+                if (error) return { error: `Failed to update email settings: ${error.message}` };
                 return { result: "Email settings updated." };
             }
             else if (name === 'email_campaign') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = args?.action as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
-                const campaignsPath = `users/${user.uid}/projects/${projectId}/emailCampaigns`;
 
                 if (action === 'create') {
                     const campaign = (args?.campaign || {}) as any;
-                    const stats = campaign.stats || {
-                        totalRecipients: 0, sent: 0, delivered: 0, opened: 0, uniqueOpens: 0,
-                        clicked: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0,
-                    };
                     const payload = {
                         ...campaign,
+                        project_id: projectId,
                         status: campaign.status || 'draft',
-                        stats,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
                     };
-                    const docRef = await addDoc(collection(db, campaignsPath), payload);
-                    return { result: `Campaign created: ${docRef.id}` };
+                    const { data, error } = await supabase.from('email_campaigns').insert(payload).select('id').single();
+                    if (error) return { error: `Failed to create campaign: ${error.message}` };
+                    return { result: `Campaign created: ${data.id}` };
                 }
 
                 if (action === 'update') {
                     const campaignId = args?.campaignId as string | undefined;
                     if (!campaignId) return { error: "campaignId required for update." };
                     const campaign = (args?.campaign || {}) as any;
-                    await updateDoc(doc(db, campaignsPath, campaignId), { ...campaign, updatedAt: serverTimestamp() });
+                    const { error } = await supabase.from('email_campaigns').update(campaign).eq('id', campaignId);
+                    if (error) return { error: `Failed to update campaign: ${error.message}` };
                     return { result: "Campaign updated." };
                 }
 
                 if (action === 'delete') {
                     const campaignId = args?.campaignId as string | undefined;
                     if (!campaignId) return { error: "campaignId required for delete." };
-                    await deleteDoc(doc(db, campaignsPath, campaignId));
+                    const { error } = await supabase.from('email_campaigns').delete().eq('id', campaignId);
+                    if (error) return { error: `Failed to delete campaign: ${error.message}` };
                     return { result: "Campaign deleted." };
                 }
 
                 if (action === 'get') {
                     const campaignId = args?.campaignId as string | undefined;
                     if (!campaignId) return { error: "campaignId required." };
-                    const docSnap = await getDoc(doc(db, campaignsPath, campaignId));
-                    if (!docSnap.exists()) return { error: "Campaign not found." };
-                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                    const { data, error } = await supabase.from('email_campaigns').select('*').eq('id', campaignId).maybeSingle();
+                    if (error || !data) return { error: "Campaign not found." };
+                    return { result: JSON.stringify(data, null, 2) };
                 }
 
                 return { error: "Invalid action for email_campaign." };
@@ -2167,57 +2149,29 @@ const GlobalAiAssistant: React.FC = () => {
 
             // --- ECOMMERCE ---
             else if (name === 'ecommerce_project') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = args?.action as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
-                const projectName = (args?.projectName as string | undefined) || activeProjectRef.current?.name || 'Mi Proyecto';
                 if (!projectId) return { error: "No active project. Load a project first." };
 
-                const configPath = `users/${user.uid}/projects/${projectId}/ecommerce/config`;
-                const storePath = `users/${user.uid}/stores/${projectId}`;
-
                 if (action === 'enable') {
-                    await setDoc(doc(db, configPath), {
-                        projectId,
-                        projectName,
-                        ecommerceEnabled: true,
-                        storeId: projectId,
-                        storeName: `Tienda - ${projectName}`,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
-                    }, { merge: true });
-
-                    const storeRef = doc(db, storePath);
-                    const storeDoc = await getDoc(storeRef);
-                    if (!storeDoc.exists()) {
-                        await setDoc(storeRef, {
-                            name: `Tienda - ${projectName}`,
-                            projectId,
-                            createdAt: serverTimestamp(),
-                            updatedAt: serverTimestamp(),
-                            isActive: true,
-                            ownerId: user.uid,
-                        });
-                    } else {
-                        await updateDoc(storeRef, { updatedAt: serverTimestamp(), isActive: true });
-                    }
-
+                    await supabase.from('projects').update({ ecommerce_enabled: true }).eq('id', projectId);
                     return { result: "Ecommerce enabled for project." };
                 }
 
                 if (action === 'disable') {
-                    await setDoc(doc(db, configPath), { ecommerceEnabled: false, updatedAt: serverTimestamp() }, { merge: true });
+                    await supabase.from('projects').update({ ecommerce_enabled: false }).eq('id', projectId);
                     return { result: "Ecommerce disabled for project." };
                 }
 
                 return { error: "Invalid action for ecommerce_project." };
             }
             else if (name === 'ecommerce_product') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = args?.action as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
-                const productsPath = `users/${user.uid}/stores/${projectId}/products`;
+                const productsPath = `users/${user.id}/stores/${projectId}/products`;
 
                 const slugify = (s: string) => s
                     .toLowerCase()
@@ -2231,70 +2185,73 @@ const GlobalAiAssistant: React.FC = () => {
                     if (!product?.name) return { error: "product.name required." };
                     const payload = {
                         ...product,
+                        project_id: projectId,
                         slug: product.slug || slugify(product.name),
                         images: product.images || [],
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
                     };
-                    const docRef = await addDoc(collection(db, productsPath), payload);
-                    return { result: `Product created: ${docRef.id}` };
+                    const { data, error } = await supabase.from('store_products').insert({ id: `prod_${Date.now()}`, store_id: projectId, data: payload }).select('id').single();
+                    if (error) return { error: `Failed to create product: ${error.message}` };
+                    return { result: `Product created: ${data.id}` };
                 }
 
                 if (action === 'update') {
                     const productId = args?.productId as string | undefined;
                     if (!productId) return { error: "productId required for update." };
                     const product = (args?.product || {}) as any;
-                    const updatePayload: any = { ...product, updatedAt: serverTimestamp() };
+                    const updatePayload: any = { ...product };
                     if (product?.name && !product.slug) updatePayload.slug = slugify(product.name);
-                    await updateDoc(doc(db, productsPath, productId), updatePayload);
+                    const { error } = await supabase.from('store_products').update({ data: updatePayload }).eq('id', productId);
+                    if (error) return { error: `Failed to update product: ${error.message}` };
                     return { result: "Product updated." };
                 }
 
                 if (action === 'delete') {
                     const productId = args?.productId as string | undefined;
                     if (!productId) return { error: "productId required for delete." };
-                    await deleteDoc(doc(db, productsPath, productId));
+                    const { error } = await supabase.from('store_products').delete().eq('id', productId);
+                    if (error) return { error: `Failed to delete product: ${error.message}` };
                     return { result: "Product deleted." };
                 }
 
                 if (action === 'get') {
                     const productId = args?.productId as string | undefined;
                     if (!productId) return { error: "productId required." };
-                    const docSnap = await getDoc(doc(db, productsPath, productId));
-                    if (!docSnap.exists()) return { error: "Product not found." };
-                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                    const { data, error } = await supabase.from('store_products').select('*').eq('id', productId).maybeSingle();
+                    if (error || !data) return { error: "Product not found." };
+                    return { result: JSON.stringify(data, null, 2) };
                 }
 
                 return { error: "Invalid action for ecommerce_product." };
             }
             else if (name === 'ecommerce_order') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = (args?.action || 'update_status') as string;
                 const orderId = args?.orderId as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
-                const ordersPath = `users/${user.uid}/stores/${projectId}/orders`;
 
                 if (action === 'update_status') {
                     const status = args?.status as string;
                     if (!orderId) return { error: "orderId required." };
                     if (!status) return { error: "status required." };
 
-                    const updateData: any = { status, updatedAt: serverTimestamp() };
-                    if (status === 'cancelled') updateData.cancelledAt = serverTimestamp();
-                    if (status === 'refunded') updateData.refundedAt = serverTimestamp();
-                    if (status === 'shipped') updateData.shippedAt = serverTimestamp();
-                    if (status === 'delivered') updateData.deliveredAt = serverTimestamp();
+                    const updateData: any = { status };
+                    const now = new Date().toISOString();
+                    if (status === 'cancelled') updateData.cancelled_at = now;
+                    if (status === 'refunded') updateData.refunded_at = now;
+                    if (status === 'shipped') updateData.shipped_at = now;
+                    if (status === 'delivered') updateData.delivered_at = now;
 
-                    await updateDoc(doc(db, ordersPath, orderId), updateData);
+                    const { error } = await supabase.from('orders').update(updateData).eq('id', orderId);
+                    if (error) return { error: `Failed to update order: ${error.message}` };
                     return { result: "Order status updated." };
                 }
 
                 if (action === 'get') {
                     if (!orderId) return { error: "orderId required." };
-                    const docSnap = await getDoc(doc(db, ordersPath, orderId));
-                    if (!docSnap.exists()) return { error: "Order not found." };
-                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                    const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
+                    if (error || !data) return { error: "Order not found." };
+                    return { result: JSON.stringify(data, null, 2) };
                 }
 
                 return { error: "Invalid action for ecommerce_order." };
@@ -2302,36 +2259,38 @@ const GlobalAiAssistant: React.FC = () => {
 
             // --- FINANCE ---
             else if (name === 'finance_expense') {
-                if (!user?.uid) return { error: "Not authenticated." };
+                if (!user?.id) return { error: "Not authenticated." };
                 const action = args?.action as string;
                 const projectId = (args?.projectId as string | undefined) || activeProjectRef.current?.id;
                 if (!projectId) return { error: "No active project. Load a project first." };
                 const expenseId = args?.expenseId as string | undefined;
-                const expensesPath = `users/${user.uid}/projects/${projectId}/finance/expenses`;
 
                 if (action === 'create') {
                     const expense = (args?.expense || {}) as any;
-                    const payload = { ...expense, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-                    const docRef = await addDoc(collection(db, expensesPath), payload);
-                    return { result: `Expense created: ${docRef.id}` };
+                    const payload = { ...expense, project_id: projectId };
+                    const { data, error } = await supabase.from('expenses').insert(payload).select('id').single();
+                    if (error) return { error: `Failed to create expense: ${error.message}` };
+                    return { result: `Expense created: ${data.id}` };
                 }
                 if (action === 'update') {
                     if (!expenseId) return { error: "expenseId required for update." };
                     const expense = (args?.expense || {}) as any;
-                    await updateDoc(doc(db, expensesPath, expenseId), { ...expense, updatedAt: serverTimestamp() });
+                    const { error } = await supabase.from('expenses').update(expense).eq('id', expenseId);
+                    if (error) return { error: `Failed to update expense: ${error.message}` };
                     return { result: "Expense updated." };
                 }
                 if (action === 'delete') {
                     if (!expenseId) return { error: "expenseId required for delete." };
-                    await deleteDoc(doc(db, expensesPath, expenseId));
+                    const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
+                    if (error) return { error: `Failed to delete expense: ${error.message}` };
                     return { result: "Expense deleted." };
                 }
 
                 if (action === 'get') {
                     if (!expenseId) return { error: "expenseId required." };
-                    const docSnap = await getDoc(doc(db, expensesPath, expenseId));
-                    if (!docSnap.exists()) return { error: "Expense not found." };
-                    return { result: JSON.stringify({ id: docSnap.id, ...docSnap.data() }, null, 2) };
+                    const { data, error } = await supabase.from('expenses').select('*').eq('id', expenseId).maybeSingle();
+                    if (error || !data) return { error: "Expense not found." };
+                    return { result: JSON.stringify(data, null, 2) };
                 }
                 return { error: "Invalid action for finance_expense." };
             }
@@ -3193,7 +3152,7 @@ const GlobalAiAssistant: React.FC = () => {
                         if (error) {
                             setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
                         } else {
-                            const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                            const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
                             setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
                         }
                     } catch (toolErr: any) {
@@ -3236,7 +3195,7 @@ ${historyText ? `CONVERSACIÓN RECIENTE:\n${historyText}\n` : ''}
 Usuario: ${userMsg}`;
 
                 // Use model, temperature, and maxTokens from admin config
-                const proxyProjectId = activeProject?.id || user?.uid || 'anonymous';
+                const proxyProjectId = activeProject?.id || user?.id || 'anonymous';
                 const chatModel = globalAssistantConfig.model || 'gemini-3-flash-preview';
                 const proxyConfig = {
                     temperature: globalAssistantConfig.temperature ?? 0.7,
@@ -3285,7 +3244,7 @@ Usuario: ${userMsg}`;
                         [{ mimeType: "image/jpeg", data: screenCapture }],
                         chatModel,
                         proxyConfig,
-                        user?.uid,
+                        user?.id,
                         restTools
                     );
                 } else {
@@ -3294,7 +3253,7 @@ Usuario: ${userMsg}`;
                         fullPrompt,
                         chatModel,
                         proxyConfig,
-                        user?.uid,
+                        user?.id,
                         restTools
                     );
                 }
@@ -3315,7 +3274,7 @@ Usuario: ${userMsg}`;
                         if (error) {
                             setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
                         } else {
-                            const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                            const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
                             setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
                         }
                     } catch (toolErr: any) {
@@ -3336,7 +3295,7 @@ Usuario: ${userMsg}`;
                                 if (error) {
                                     setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
                                 } else {
-                                    const resultText = typeof result === 'string' ? result : (result?.result || JSON.stringify(result));
+                                    const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
                                     setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
                                 }
                             } catch (toolErr: any) {
@@ -3561,7 +3520,7 @@ Usuario: ${userMsg}`;
                         </div>
                         {msg.role === 'user' && (
                             <div className="w-8 h-8 rounded-full bg-secondary/50 border border-q-border flex items-center justify-center ml-2 shrink-0 overflow-hidden">
-                                {user?.photoURL ? <img src={user.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-q-text-muted" />}
+                                {userDocument?.photoURL ? <img src={userDocument.photoURL} alt="User" className="w-full h-full object-cover" /> : <UserIcon size={16} className="text-q-text-muted" />}
                             </div>
                         )}
                     </div>

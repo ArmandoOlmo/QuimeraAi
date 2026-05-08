@@ -183,7 +183,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
                 tags: [],
                 acceptsMarketing: true,
                 source: 'cross-module',
-                createdBy: user?.uid || 'admin',
+                createdBy: user?.id || 'admin',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });

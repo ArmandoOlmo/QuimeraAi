@@ -64,7 +64,7 @@ const AnalyticsView: React.FC = () => {
         ordersByStatus,
         conversionMetrics,
         compareWithPreviousPeriod,
-    } = useEcommerceAnalytics(user?.uid || '', storeId);
+    } = useEcommerceAnalytics(user?.id || '', storeId);
 
     // Calculate comparison
     const comparison = useMemo(() => {

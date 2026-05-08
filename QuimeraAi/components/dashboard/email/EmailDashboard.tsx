@@ -42,7 +42,7 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { setView } = useUI();
     const { projects, activeProject, activeProjectId } = useProject();
     const { navigate } = useRouter();
-    const userId = user?.uid || '';
+    const userId = user?.id || '';
 
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [showAllProjects, setShowAllProjects] = useState(false);

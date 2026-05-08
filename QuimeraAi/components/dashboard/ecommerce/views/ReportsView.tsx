@@ -39,9 +39,9 @@ const ReportsView: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { storeId } = useEcommerceContext();
-    const { orders } = useOrders(user?.uid || '', storeId);
-    const { products } = useProducts(user?.uid || '', storeId);
-    const { customers } = useCustomers(user?.uid || '', storeId);
+    const { orders } = useOrders(user?.id || '', storeId);
+    const { products } = useProducts(user?.id || '', storeId);
+    const { customers } = useCustomers(user?.id || '', storeId);
 
     const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
     const [dateRange, setDateRange] = useState<{ start: string; end: string }>({

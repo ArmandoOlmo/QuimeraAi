@@ -74,7 +74,7 @@ export function useAudienceActions(data: AdminEmailDataReturn): AudienceActionsR
                 tags: [],
                 acceptsMarketing: true,
                 source: 'manual',
-                createdBy: user?.uid || 'admin',
+                createdBy: user?.id || 'admin',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
@@ -88,12 +88,12 @@ export function useAudienceActions(data: AdminEmailDataReturn): AudienceActionsR
                 tags: [],
                 acceptsMarketing: true,
                 source: 'manual',
-                createdBy: user?.uid || 'admin',
+                createdBy: user?.id || 'admin',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 tenantId: 'admin',
                 tenantName: 'Super Admin',
-                userId: user?.uid || 'admin',
+                userId: user?.id || 'admin',
                 projectId: 'admin',
             } as CrossTenantAudience, ...prev]);
             setNewAudienceForm({ name: '', description: '' });

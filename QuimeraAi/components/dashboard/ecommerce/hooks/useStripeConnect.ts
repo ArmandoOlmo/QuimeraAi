@@ -7,8 +7,6 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../../../firebase';
 import { supabase } from '../../../../supabase';
 
 // Types
@@ -87,24 +85,26 @@ export const useStripeConnect = (userId: string, storeId: string) => {
     const [error, setError] = useState<string | null>(null);
     const [connectStatus, setConnectStatus] = useState<ConnectAccountStatus | null>(null);
 
-    // Listen to real-time updates from Firestore
+    // Fetch initial status and listen to real-time updates from Supabase
     useEffect(() => {
-        if (!userId || !storeId) return;
+        if (!storeId) return;
 
-        const settingsPath = `users/${userId}/stores/${storeId}/settings/store`;
-        const settingsRef = doc(db, settingsPath);
+        const fetchStatus = async () => {
+            const { data, error } = await supabase
+                .from('store_settings')
+                .select('stripe_connect_account_id, stripe_connect_charges_enabled, stripe_connect_payouts_enabled, stripe_connect_details_submitted, stripe_connect_status')
+                .eq('project_id', storeId)
+                .single();
 
-        const unsubscribe = onSnapshot(settingsRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.data();
-                if (data?.stripeConnectAccountId) {
+            if (!error && data) {
+                if (data.stripe_connect_account_id) {
                     setConnectStatus({
                         connected: true,
-                        accountId: data.stripeConnectAccountId,
-                        chargesEnabled: data.stripeConnectChargesEnabled,
-                        payoutsEnabled: data.stripeConnectPayoutsEnabled,
-                        detailsSubmitted: data.stripeConnectDetailsSubmitted,
-                        status: data.stripeConnectStatus,
+                        accountId: data.stripe_connect_account_id,
+                        chargesEnabled: data.stripe_connect_charges_enabled,
+                        payoutsEnabled: data.stripe_connect_payouts_enabled,
+                        detailsSubmitted: data.stripe_connect_details_submitted,
+                        status: data.stripe_connect_status as 'pending' | 'active' | 'restricted',
                     });
                 } else {
                     setConnectStatus({
@@ -113,12 +113,44 @@ export const useStripeConnect = (userId: string, storeId: string) => {
                     });
                 }
             }
-        }, (err) => {
-            console.error('Error listening to Connect status:', err);
-        });
+        };
 
-        return () => unsubscribe();
-    }, [userId, storeId]);
+        fetchStatus();
+
+        const channel = supabase.channel('store_settings_stripe_connect')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'store_settings',
+                    filter: `project_id=eq.${storeId}`
+                },
+                (payload) => {
+                    const data = payload.new;
+                    if (data.stripe_connect_account_id) {
+                        setConnectStatus({
+                            connected: true,
+                            accountId: data.stripe_connect_account_id,
+                            chargesEnabled: data.stripe_connect_charges_enabled,
+                            payoutsEnabled: data.stripe_connect_payouts_enabled,
+                            detailsSubmitted: data.stripe_connect_details_submitted,
+                            status: data.stripe_connect_status as 'pending' | 'active' | 'restricted',
+                        });
+                    } else {
+                        setConnectStatus({
+                            connected: false,
+                            accountId: null,
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [storeId]);
 
     /**
      * Creates a new Stripe Connect Express account for the store

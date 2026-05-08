@@ -725,7 +725,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
 
     // Plan handlers
     const handleSavePlan = async (plan: StoredPlan) => {
-        const result = await savePlan(plan, user?.uid);
+        const result = await savePlan(plan, user?.id);
         if (result.success) {
             await loadData();
             // Show warning if Stripe sync failed but Firestore succeeded
@@ -754,7 +754,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             variant: 'warning',
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                const result = await archivePlan(planId, user?.uid);
+                const result = await archivePlan(planId, user?.id);
                 if (result.success) {
                     await loadData();
                     if (result.stripeError) {
@@ -768,7 +768,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
     };
 
     const handleRestorePlan = async (planId: string) => {
-        const result = await restorePlan(planId, user?.uid);
+        const result = await restorePlan(planId, user?.id);
         if (result.success) {
             await loadData();
         } else {
@@ -785,7 +785,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setIsRefreshing(true);
-                const result = await initializePlansInFirestore(user?.uid);
+                const result = await initializePlansInFirestore(user?.id);
                 if (result.success) {
                     await loadData();
                 } else {
@@ -806,7 +806,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setIsRefreshing(true);
                 try {
-                    const result = await syncPlansFromHardcoded(user?.uid);
+                    const result = await syncPlansFromHardcoded(user?.id);
                     if (result.success) {
                         await loadData();
                         alert(`Sincronización completada: ${result.plansCreated} creados, ${result.plansUpdated} actualizados`);
@@ -846,7 +846,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
 
                 try {
                     console.log('[Migration] Starting migration...');
-                    const result = await migrateToNewPlanStructure(user?.uid);
+                    const result = await migrateToNewPlanStructure(user?.id);
                     console.log('[Migration] Result:', result);
 
                     // Build detailed message

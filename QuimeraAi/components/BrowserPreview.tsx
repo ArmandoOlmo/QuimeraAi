@@ -41,18 +41,18 @@ const BrowserPreview = forwardRef<HTMLDivElement, BrowserPreviewProps>(({ childr
   const displayPath = `${projectSlug}${activePath}`;
 
   const handleOpenPreview = useCallback(() => {
-    if (!user?.uid || !activeProject?.id) return;
+    if (!user?.id || !activeProject?.id) return;
     
     let previewUrl = '';
     if (activeProject.id === 'agency-landing-mode') {
       if (!currentTenant?.id) return;
       previewUrl = `${window.location.origin}/preview/agency/${currentTenant.id}${activePath}`;
     } else {
-      previewUrl = `${window.location.origin}/preview/${user.uid}/${activeProject.id}${activePath}`;
+      previewUrl = `${window.location.origin}/preview/${user.id}/${activeProject.id}${activePath}`;
     }
     
     window.open(previewUrl, '_blank');
-  }, [user?.uid, activeProject?.id, currentTenant?.id, activePath]);
+  }, [user?.id, activeProject?.id, currentTenant?.id, activePath]);
 
   return (
     <div className={`h-full mx-auto transition-all duration-300 ease-in-out ${widthClasses[previewDevice][previewOrientation]}`}>

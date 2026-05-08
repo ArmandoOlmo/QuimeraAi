@@ -99,7 +99,7 @@ export function PermissionTemplates() {
                 name: `${template.name} (Copia)`,
                 isSystem: false,
                 tenantId: currentTenant.id,
-                createdBy: user.uid,
+                createdBy: user.id,
                 createdAt: Timestamp.now(),
                 usageCount: 0,
             };
@@ -142,7 +142,7 @@ export function PermissionTemplates() {
                     ...templateData,
                     tenantId: currentTenant.id,
                     isSystem: false,
-                    createdBy: user.uid,
+                    createdBy: user.id,
                     createdAt: Timestamp.now(),
                     usageCount: 0,
                 });

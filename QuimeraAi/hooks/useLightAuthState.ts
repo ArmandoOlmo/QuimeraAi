@@ -1,7 +1,7 @@
 /**
  * useLightAuthState Hook
  * 
- * A lightweight hook that checks Firebase authentication state WITHOUT
+ * A lightweight hook that checks Supabase authentication state WITHOUT
  * requiring the full AuthProvider context. Used to determine which 
  * providers to load before the main app renders.
  * 
@@ -10,7 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User, auth } from '../firebase';
+import { supabase } from '../supabase';
+import { User } from '@supabase/supabase-js';
 
 interface LightAuthState {
     user: User | null;
@@ -27,8 +28,6 @@ export const useLightAuthState = (): LightAuthState => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Safari safety: if onAuthStateChanged never fires (IndexedDB lock hang),
-        // force loading to false after 8 seconds to prevent infinite loading
         const timeout = setTimeout(() => {
             setIsLoading((current) => {
                 if (current) {
@@ -38,16 +37,23 @@ export const useLightAuthState = (): LightAuthState => {
             });
         }, 8000);
 
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
             clearTimeout(timeout);
-            console.log('[useLightAuthState] Auth state changed:', firebaseUser ? `authenticated (${firebaseUser.email})` : 'null (signed out)');
-            setUser(firebaseUser);
+            setUser(session?.user ?? null);
             setIsLoading(false);
         });
 
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                clearTimeout(timeout);
+                setUser(session?.user ?? null);
+                setIsLoading(false);
+            }
+        );
+
         return () => {
             clearTimeout(timeout);
-            unsubscribe();
+            subscription.unsubscribe();
         };
     }, []);
 

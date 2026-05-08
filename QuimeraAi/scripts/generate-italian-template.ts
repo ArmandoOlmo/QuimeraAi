@@ -13,7 +13,9 @@
  * 3. Outputs the complete PageData template ready for Firestore
  */
 
-const PROXY_IMAGE_URL = 'https://us-central1-quimeraai.cloudfunctions.net/gemini-image';
+const PROXY_IMAGE_URL = process.env.VITE_SUPABASE_URL 
+    ? `${process.env.VITE_SUPABASE_URL}/functions/v1/ai-proxy`
+    : 'https://elfcrnhffuvntlfuvumd.supabase.co/functions/v1/ai-proxy';
 
 // Your owner email — proxy's isOwner() will recognize this and bypass rate limits
 // NOTE: Replace with your Firebase UID if the owner check fails with email

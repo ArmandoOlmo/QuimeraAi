@@ -2,7 +2,7 @@ import React from 'react';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   Input, TextArea, Select, ToggleControl
-} from '../../ui/EditorControlPrimitives';
+, I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
@@ -30,7 +30,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
         </label>
         
         <div className="mb-4">
-            <Input 
+            <I18nInput 
               label={t('editor.heroLumina.buttonText', 'Texto del Botón')} 
               value={data.heroLumina[textKey] || ''} 
               onChange={(val) => setNestedData(`heroLumina.${textKey}`, val)} 
@@ -213,7 +213,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.headline', 'Headline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.headline', value: data.heroLumina.headline, context: 'Hero Lumina Headline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.heroLumina.headline || ''} 
               onChange={(val) => setNestedData('heroLumina.headline', val)} 
               rows={2} 
@@ -224,7 +224,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
             label={t('editor.heroLumina.subheadline', 'Subheadline')} 
             onAssistClick={() => setAiAssistField({ path: 'heroLumina.subheadline', value: data.heroLumina.subheadline || '', context: 'Hero Lumina Subheadline' })}
           >
-            <TextArea 
+            <I18nTextArea 
               value={data.heroLumina.subheadline || ''} 
               onChange={(val) => setNestedData('heroLumina.subheadline', val)} 
               rows={3} 

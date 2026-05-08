@@ -1,52 +1,18 @@
 /**
  * useAccountingData
- * Tenant-aware Firestore hook for accounting transactions, vendors and products/services.
- * Follows the same multi-tenant path resolution as ProjectContext:
- *   - Personal tenant (tenant_{uid}) → users/{uid}/projects/{pid}/accounting_*
- *   - Team tenant                    → tenants/{tenantId}/projects/{pid}/accounting_*
+ * Tenant-aware Supabase hook for accounting transactions, vendors and products/services.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    db,
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-} from '../firebase';
-import { useAuth } from '../contexts/core/AuthContext';
-import { useSafeTenant } from '../contexts/tenant/TenantContext';
+import { supabase } from '../supabase';
 import { useProject } from '../contexts/project';
 import type { Transaction, Vendor, ProductService } from '../types/finance';
-
-// ---------------------------------------------------------------------------
-// Path resolution (mirrors ProjectContext.getProjectsCollectionPath)
-// ---------------------------------------------------------------------------
-const resolveBasePath = (
-    userId: string,
-    projectId: string,
-    tenantId: string | null | undefined,
-): string => {
-    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-    if (tenantId && !isPersonalTenant) {
-        return `tenants/${tenantId}/projects/${projectId}`;
-    }
-    return `users/${userId}/projects/${projectId}`;
-};
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 export function useAccountingData() {
-    const { user } = useAuth();
-    const tenantContext = useSafeTenant();
     const { activeProjectId } = useProject();
-    const tenantId = tenantContext?.currentTenant?.id ?? null;
 
     // State
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,17 +21,11 @@ export function useAccountingData() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Base path segments
-    const basePath = useMemo(() => {
-        if (!user?.uid || !activeProjectId) return null;
-        return resolveBasePath(user.uid, activeProjectId, tenantId);
-    }, [user?.uid, activeProjectId, tenantId]);
-
     // ---------------------------------------------------------------------------
-    // Real-time subscriptions
+    // Fetch Data
     // ---------------------------------------------------------------------------
-    useEffect(() => {
-        if (!basePath) {
+    const fetchData = useCallback(async () => {
+        if (!activeProjectId) {
             setTransactions([]);
             setVendors([]);
             setProductsServices([]);
@@ -76,94 +36,196 @@ export function useAccountingData() {
         setIsLoading(true);
         setError(null);
 
-        const unsubscribers: (() => void)[] = [];
-
-        // Transactions
         try {
-            const txCol = collection(db, `${basePath}/accounting_transactions`);
-            const txQuery = query(txCol, orderBy('date', 'desc'));
-            const unsubTx = onSnapshot(
-                txQuery,
-                (snap) => {
-                    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
-                    setTransactions(items);
-                    setIsLoading(false);
-                },
-                (err) => {
-                    console.warn('[useAccountingData] transactions listener error:', err);
-                    setError(err.message);
-                    setIsLoading(false);
-                },
-            );
-            unsubscribers.push(unsubTx);
-        } catch (e: any) {
-            console.warn('[useAccountingData] could not subscribe to transactions:', e);
-        }
+            // Fetch Transactions
+            const txPromise = supabase
+                .from('accounting_transactions')
+                .select('*')
+                .eq('project_id', activeProjectId)
+                .order('date', { ascending: false });
 
-        // Vendors
-        try {
-            const vendorCol = collection(db, `${basePath}/accounting_vendors`);
-            const vendorQuery = query(vendorCol, orderBy('name', 'asc'));
-            const unsubV = onSnapshot(
-                vendorQuery,
-                (snap) => {
-                    setVendors(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Vendor)));
-                },
-                (err) => console.warn('[useAccountingData] vendors listener error:', err),
-            );
-            unsubscribers.push(unsubV);
-        } catch (e: any) {
-            console.warn('[useAccountingData] could not subscribe to vendors:', e);
-        }
+            // Fetch Vendors
+            const vendorsPromise = supabase
+                .from('accounting_vendors')
+                .select('*')
+                .eq('project_id', activeProjectId)
+                .order('name', { ascending: true });
 
-        // Products & Services
-        try {
-            const psCol = collection(db, `${basePath}/accounting_products_services`);
-            const psQuery = query(psCol, orderBy('name', 'asc'));
-            const unsubPS = onSnapshot(
-                psQuery,
-                (snap) => {
-                    setProductsServices(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ProductService)));
-                },
-                (err) => console.warn('[useAccountingData] products_services listener error:', err),
-            );
-            unsubscribers.push(unsubPS);
-        } catch (e: any) {
-            console.warn('[useAccountingData] could not subscribe to products_services:', e);
-        }
+            // Fetch Products/Services
+            const psPromise = supabase
+                .from('accounting_products_services')
+                .select('*')
+                .eq('project_id', activeProjectId)
+                .order('name', { ascending: true });
 
-        return () => unsubscribers.forEach((fn) => fn());
-    }, [basePath]);
+            const [txRes, vendorsRes, psRes] = await Promise.all([txPromise, vendorsPromise, psPromise]);
+
+            if (txRes.error) throw txRes.error;
+            if (vendorsRes.error) throw vendorsRes.error;
+            if (psRes.error) throw psRes.error;
+
+            setTransactions(txRes.data.map((d: any) => ({
+                id: d.id,
+                type: d.type,
+                category: d.category,
+                amount: d.amount,
+                date: d.date,
+                description: d.description,
+                vendorId: d.vendor_id,
+                invoiceId: d.invoice_id,
+                referenceNumber: d.reference_number,
+                paymentMethod: d.payment_method,
+                status: d.status,
+                receiptUrl: d.receipt_url,
+                createdAt: d.created_at,
+                updatedAt: d.updated_at
+            })));
+
+            setVendors(vendorsRes.data.map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                email: d.email,
+                phone: d.phone,
+                address: d.address,
+                taxId: d.tax_id,
+                website: d.website,
+                notes: d.notes,
+                totalSpent: d.total_spent,
+                createdAt: d.created_at,
+                updatedAt: d.updated_at
+            })));
+
+            setProductsServices(psRes.data.map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                description: d.description,
+                type: d.type,
+                price: d.price,
+                taxRate: d.tax_rate,
+                sku: d.sku,
+                isActive: d.is_active,
+                createdAt: d.created_at,
+                updatedAt: d.updated_at
+            })));
+
+        } catch (err: any) {
+            console.error('[useAccountingData] fetch error:', err);
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [activeProjectId]);
+
+    // ---------------------------------------------------------------------------
+    // Real-time subscriptions
+    // ---------------------------------------------------------------------------
+    useEffect(() => {
+        fetchData();
+
+        if (!activeProjectId) return;
+
+        const txChannel = supabase.channel(`public:accounting_transactions:project_id=eq.${activeProjectId}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'accounting_transactions', filter: `project_id=eq.${activeProjectId}` },
+                () => fetchData()
+            )
+            .subscribe();
+
+        const vChannel = supabase.channel(`public:accounting_vendors:project_id=eq.${activeProjectId}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'accounting_vendors', filter: `project_id=eq.${activeProjectId}` },
+                () => fetchData()
+            )
+            .subscribe();
+
+        const psChannel = supabase.channel(`public:accounting_products_services:project_id=eq.${activeProjectId}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'accounting_products_services', filter: `project_id=eq.${activeProjectId}` },
+                () => fetchData()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(txChannel);
+            supabase.removeChannel(vChannel);
+            supabase.removeChannel(psChannel);
+        };
+    }, [activeProjectId, fetchData]);
 
     // ---------------------------------------------------------------------------
     // CRUD — Transactions
     // ---------------------------------------------------------------------------
     const addTransaction = useCallback(
         async (data: Omit<Transaction, 'id' | 'createdAt'>) => {
-            if (!basePath) throw new Error('No active project');
-            const colRef = collection(db, `${basePath}/accounting_transactions`);
-            const docRef = await addDoc(colRef, { ...data, createdAt: serverTimestamp() });
-            return docRef.id;
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { data: doc, error } = await supabase
+                .from('accounting_transactions')
+                .insert({
+                    project_id: activeProjectId,
+                    type: data.type,
+                    category: data.category,
+                    amount: data.amount,
+                    date: data.date,
+                    description: data.description,
+                    vendor_id: data.vendorId,
+                    invoice_id: data.invoiceId,
+                    reference_number: data.referenceNumber,
+                    payment_method: data.paymentMethod,
+                    status: data.status,
+                    receipt_url: data.receiptUrl
+                })
+                .select('id')
+                .single();
+                
+            if (error) throw error;
+            return doc.id;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const updateTransaction = useCallback(
         async (id: string, data: Partial<Transaction>) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_transactions/${id}`);
-            await updateDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const payload: any = { updated_at: new Date().toISOString() };
+            if (data.type !== undefined) payload.type = data.type;
+            if (data.category !== undefined) payload.category = data.category;
+            if (data.amount !== undefined) payload.amount = data.amount;
+            if (data.date !== undefined) payload.date = data.date;
+            if (data.description !== undefined) payload.description = data.description;
+            if (data.vendorId !== undefined) payload.vendor_id = data.vendorId;
+            if (data.invoiceId !== undefined) payload.invoice_id = data.invoiceId;
+            if (data.referenceNumber !== undefined) payload.reference_number = data.referenceNumber;
+            if (data.paymentMethod !== undefined) payload.payment_method = data.paymentMethod;
+            if (data.status !== undefined) payload.status = data.status;
+            if (data.receiptUrl !== undefined) payload.receipt_url = data.receiptUrl;
+
+            const { error } = await supabase
+                .from('accounting_transactions')
+                .update(payload)
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const deleteTransaction = useCallback(
         async (id: string) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_transactions/${id}`);
-            await deleteDoc(docRef);
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { error } = await supabase
+                .from('accounting_transactions')
+                .delete()
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     // ---------------------------------------------------------------------------
@@ -171,30 +233,66 @@ export function useAccountingData() {
     // ---------------------------------------------------------------------------
     const addVendor = useCallback(
         async (data: Omit<Vendor, 'id' | 'createdAt' | 'totalSpent'>) => {
-            if (!basePath) throw new Error('No active project');
-            const colRef = collection(db, `${basePath}/accounting_vendors`);
-            const docRef = await addDoc(colRef, { ...data, totalSpent: 0, createdAt: serverTimestamp() });
-            return docRef.id;
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { data: doc, error } = await supabase
+                .from('accounting_vendors')
+                .insert({
+                    project_id: activeProjectId,
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: data.address,
+                    tax_id: data.taxId,
+                    website: data.website,
+                    notes: data.notes,
+                    total_spent: 0
+                })
+                .select('id')
+                .single();
+                
+            if (error) throw error;
+            return doc.id;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const updateVendor = useCallback(
         async (id: string, data: Partial<Vendor>) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_vendors/${id}`);
-            await updateDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const payload: any = { updated_at: new Date().toISOString() };
+            if (data.name !== undefined) payload.name = data.name;
+            if (data.email !== undefined) payload.email = data.email;
+            if (data.phone !== undefined) payload.phone = data.phone;
+            if (data.address !== undefined) payload.address = data.address;
+            if (data.taxId !== undefined) payload.tax_id = data.taxId;
+            if (data.website !== undefined) payload.website = data.website;
+            if (data.notes !== undefined) payload.notes = data.notes;
+            if (data.totalSpent !== undefined) payload.total_spent = data.totalSpent;
+
+            const { error } = await supabase
+                .from('accounting_vendors')
+                .update(payload)
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const deleteVendor = useCallback(
         async (id: string) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_vendors/${id}`);
-            await deleteDoc(docRef);
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { error } = await supabase
+                .from('accounting_vendors')
+                .delete()
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     // ---------------------------------------------------------------------------
@@ -202,30 +300,64 @@ export function useAccountingData() {
     // ---------------------------------------------------------------------------
     const addProductService = useCallback(
         async (data: Omit<ProductService, 'id' | 'createdAt'>) => {
-            if (!basePath) throw new Error('No active project');
-            const colRef = collection(db, `${basePath}/accounting_products_services`);
-            const docRef = await addDoc(colRef, { ...data, createdAt: serverTimestamp() });
-            return docRef.id;
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { data: doc, error } = await supabase
+                .from('accounting_products_services')
+                .insert({
+                    project_id: activeProjectId,
+                    name: data.name,
+                    description: data.description,
+                    type: data.type,
+                    price: data.price,
+                    tax_rate: data.taxRate,
+                    sku: data.sku,
+                    is_active: data.isActive !== undefined ? data.isActive : true
+                })
+                .select('id')
+                .single();
+                
+            if (error) throw error;
+            return doc.id;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const updateProductService = useCallback(
         async (id: string, data: Partial<ProductService>) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_products_services/${id}`);
-            await updateDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const payload: any = { updated_at: new Date().toISOString() };
+            if (data.name !== undefined) payload.name = data.name;
+            if (data.description !== undefined) payload.description = data.description;
+            if (data.type !== undefined) payload.type = data.type;
+            if (data.price !== undefined) payload.price = data.price;
+            if (data.taxRate !== undefined) payload.tax_rate = data.taxRate;
+            if (data.sku !== undefined) payload.sku = data.sku;
+            if (data.isActive !== undefined) payload.is_active = data.isActive;
+
+            const { error } = await supabase
+                .from('accounting_products_services')
+                .update(payload)
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     const deleteProductService = useCallback(
         async (id: string) => {
-            if (!basePath) throw new Error('No active project');
-            const docRef = doc(db, `${basePath}/accounting_products_services/${id}`);
-            await deleteDoc(docRef);
+            if (!activeProjectId) throw new Error('No active project');
+            
+            const { error } = await supabase
+                .from('accounting_products_services')
+                .delete()
+                .eq('id', id);
+                
+            if (error) throw error;
         },
-        [basePath],
+        [activeProjectId],
     );
 
     return {

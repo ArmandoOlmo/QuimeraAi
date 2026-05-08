@@ -1,22 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { sanitizeHtml } from '../utils/sanitize';
 import { useTranslation } from 'react-i18next';
-import {
-    auth,
-    storage,
-    GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    updateProfile,
-    sendEmailVerification,
-    signOut,
-    sendPasswordResetEmail,
-    signInWithPopup,
-    ref,
-    uploadBytes,
-    getDownloadURL
-} from '../firebase';
+import { supabase } from '../supabase';
+
 import { Eye, EyeOff, ArrowRight, Zap, Layout, Image as ImageIcon, Sparkles, CheckCircle, X, PlayCircle, Hexagon, ChevronDown, HelpCircle } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
 
@@ -112,14 +98,13 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
         setError('');
         setIsLoading(true);
         try {
-            await sendPasswordResetEmail(auth, email);
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) throw error;
             setResetEmailSentTo(email);
         } catch (err: any) {
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') {
-                setError(t('auth.errors.userNotFound'));
-            } else {
-                setError(t('auth.errors.resetFailed'));
-            }
+            setError(t('auth.errors.resetFailed') + ' (' + err.message + ')');
         } finally {
             setIsLoading(false);
         }
@@ -128,35 +113,16 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
     const handleGoogleSignIn = async () => {
         setError('');
         setIsLoading(true);
-        const provider = new GoogleAuthProvider();
-
-        // Configuraciones personalizadas para mejorar la experiencia
-        provider.setCustomParameters({
-            prompt: 'select_account', // Siempre mostrar selector de cuenta
-            display: 'popup' // Asegurar que se use popup
-        });
-
         try {
-            console.log('🔐 Intentando login con Google...');
-            const result = await signInWithPopup(auth, provider);
-            console.log('✅ Login exitoso:', result.user.email);
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) throw error;
         } catch (err: any) {
-            console.error('❌ Error en Google Sign In:', err);
-            console.error('Código de error:', err.code);
-            console.error('Mensaje:', err.message);
-
-            // Manejo de errores específicos
-            if (err.code === 'auth/unauthorized-domain') {
-                setError('Dominio no autorizado. Por favor contacta al administrador.');
-            } else if (err.code === 'auth/popup-blocked') {
-                setError('El popup fue bloqueado. Por favor permite popups en tu navegador.');
-            } else if (err.code === 'auth/popup-closed-by-user') {
-                setError('Login cancelado. Por favor intenta de nuevo.');
-            } else if (err.code === 'auth/cancelled-popup-request') {
-                setError('Popup cancelado. Por favor intenta de nuevo.');
-            } else {
-                setError(t('auth.errors.googleSignInFailed') + ' (' + err.code + ')');
-            }
+            setError(t('auth.errors.googleSignInFailed') + ' (' + err.message + ')');
             setIsLoading(false);
         }
     };
@@ -168,20 +134,18 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
 
         if (authMode === 'login') {
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                await userCredential.user.reload();
-                if (!userCredential.user.emailVerified) {
-                    await sendEmailVerification(userCredential.user);
-                    await signOut(auth);
-                    onVerificationEmailSent(email);
-                    setIsLoading(false);
-                    return;
-                }
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
             } catch (err: any) {
-                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                if (err.message.includes('Invalid login credentials')) {
                     setError(t('auth.errors.incorrectCredentials'));
+                } else if (err.message.includes('Email not confirmed')) {
+                    setError('Please verify your email address before logging in.');
                 } else {
-                    setError(t('auth.errors.unknownError'));
+                    setError(t('auth.errors.unknownError') + ' (' + err.message + ')');
                 }
             } finally {
                 setIsLoading(false);
@@ -193,30 +157,45 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 return;
             }
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
                 let photoURL = '';
                 if (profilePhoto) {
-                    const storageRef = ref(storage, `profile-pictures/${user.uid}`);
-                    const snapshot = await uploadBytes(storageRef, profilePhoto);
-                    photoURL = await getDownloadURL(snapshot.ref);
+                    const tempId = Date.now().toString();
+                    const imagePath = `users/temp-avatars/temp-${tempId}`;
+                    
+                    const { error: uploadError } = await supabase.storage
+                        .from('platform-assets')
+                        .upload(imagePath, profilePhoto, { upsert: true });
+                        
+                    if (uploadError) {
+                        console.error('Error uploading profile photo:', uploadError);
+                    } else {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('platform-assets')
+                            .getPublicUrl(imagePath);
+                        photoURL = publicUrl;
+                    }
                 }
 
-                await updateProfile(user, {
-                    displayName: name,
-                    photoURL: photoURL || '',
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            avatar_url: photoURL || '',
+                        }
+                    }
                 });
+                if (error) throw error;
 
-                await sendEmailVerification(user);
-                await signOut(auth);
-
-                onVerificationEmailSent(email);
+                if (data.session === null) {
+                    onVerificationEmailSent(email);
+                }
             } catch (err: any) {
-                if (err.code === 'auth/email-already-in-use') {
+                if (err.message.includes('User already registered')) {
                     setError(t('auth.errors.emailInUse'));
                 } else {
-                    setError(t('auth.errors.createAccountFailed'));
+                    setError(t('auth.errors.createAccountFailed') + ' (' + err.message + ')');
                 }
             } finally {
                 setIsLoading(false);

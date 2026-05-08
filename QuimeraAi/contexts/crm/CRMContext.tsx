@@ -6,21 +6,10 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
 import { Lead, LeadStatus, LeadActivity, LeadTask, ActivityType, LibraryLead } from '../../types';
-import {
-    db,
-    doc,
-    collection,
-    getDocs,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    orderBy,
-    serverTimestamp,
-    onSnapshot,
-} from '../../firebase';
+import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
+import { useSafeTenant } from '../tenant';
 
 interface CRMContextType {
     // Leads
@@ -62,6 +51,8 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { user } = useAuth();
     const projectContext = useSafeProject();
     const activeProjectId = projectContext?.activeProjectId || null;
+    const tenantContext = useSafeTenant();
+    const currentTenantId = tenantContext?.currentTenant?.id || null;
 
     // Leads State
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -77,166 +68,269 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [libraryLeads, setLibraryLeads] = useState<LibraryLead[]>([]);
     const [isLoadingLibraryLeads, setIsLoadingLibraryLeads] = useState(false);
 
-    // Helper to get the collection path for project-scoped data
-    const getCollectionPath = useCallback((collectionName: string) => {
-        if (!user || !activeProjectId) return null;
-        return `users/${user.uid}/projects/${activeProjectId}/${collectionName}`;
-    }, [user, activeProjectId]);
-
-    // Load leads with real-time updates (scoped to active project)
+    // Load leads with real-time updates
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setLeads([]);
             setIsLoadingLeads(false);
             return;
         }
 
-        setIsLoadingLeads(true);
-        const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
-        const q = query(
-            collection(db, leadsPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchLeads = async () => {
+            setIsLoadingLeads(true);
+            try {
+                const { data, error } = await supabase
+                    .from('leads')
+                    .select('*')
+                    .eq('project_id', activeProjectId)
+                    .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const leadsData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as Lead[];
-            setLeads(leadsData);
-            setIsLoadingLeads(false);
-        }, (error) => {
-            console.error("[CRMContext] Error fetching leads:", error);
-            setIsLoadingLeads(false);
-        });
+                if (error) throw error;
+
+                const leadsData = (data || []).map(l => ({
+                    id: l.id,
+                    projectId: l.project_id,
+                    name: l.name,
+                    email: l.email,
+                    phone: l.phone,
+                    company: l.company,
+                    source: l.source,
+                    status: l.status,
+                    value: l.value,
+                    notes: l.notes,
+                    tags: l.tags || [],
+                    createdAt: l.created_at,
+                    updatedAt: l.updated_at,
+                    conversationTranscript: l.conversation_transcript,
+                    aiSummary: l.ai_summary,
+                    metadata: l.metadata
+                })) as Lead[];
+                setLeads(leadsData);
+            } catch (error) {
+                console.error("[CRMContext] Error fetching leads:", error);
+            } finally {
+                setIsLoadingLeads(false);
+            }
+        };
+
+        fetchLeads();
+
+        const channel = supabase.channel(`public:leads:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'leads',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchLeads();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
-    // Load activities (scoped to active project)
+    // Load activities
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setLeadActivities([]);
             return;
         }
 
-        const activitiesPath = `users/${user.uid}/projects/${activeProjectId}/leadActivities`;
-        const q = query(
-            collection(db, activitiesPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchActivities = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('lead_activities')
+                    .select('*')
+                    .eq('project_id', activeProjectId)
+                    .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const activitiesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as LeadActivity[];
-            setLeadActivities(activitiesData);
-        }, (error) => {
-            console.error("[CRMContext] Error fetching activities:", error);
-        });
+                if (error) throw error;
+
+                const activitiesData = (data || []).map(a => ({
+                    id: a.id,
+                    leadId: a.lead_id,
+                    projectId: a.project_id,
+                    type: a.type,
+                    description: a.description,
+                    createdAt: a.created_at,
+                    metadata: a.metadata,
+                    performedBy: a.metadata?.performedBy
+                })) as LeadActivity[];
+                setLeadActivities(activitiesData);
+            } catch (error) {
+                console.error("[CRMContext] Error fetching activities:", error);
+            }
+        };
+
+        fetchActivities();
+
+        const channel = supabase.channel(`public:lead_activities:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'lead_activities',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchActivities();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
-    // Load tasks (scoped to active project)
+    // Load tasks
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setLeadTasks([]);
             return;
         }
 
-        const tasksPath = `users/${user.uid}/projects/${activeProjectId}/leadTasks`;
-        const q = query(
-            collection(db, tasksPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchTasks = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('lead_tasks')
+                    .select('*')
+                    .eq('project_id', activeProjectId)
+                    .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const tasksData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as LeadTask[];
-            setLeadTasks(tasksData);
-        }, (error) => {
-            console.error("[CRMContext] Error fetching tasks:", error);
-        });
+                if (error) throw error;
+
+                const tasksData = (data || []).map(t => ({
+                    id: t.id,
+                    leadId: t.lead_id,
+                    projectId: t.project_id,
+                    title: t.title,
+                    description: t.description,
+                    dueDate: t.due_date,
+                    isCompleted: t.is_completed,
+                    createdAt: t.created_at,
+                    updatedAt: t.updated_at,
+                    assignedTo: t.metadata?.assignedTo
+                })) as LeadTask[];
+                setLeadTasks(tasksData);
+            } catch (error) {
+                console.error("[CRMContext] Error fetching tasks:", error);
+            }
+        };
+
+        fetchTasks();
+
+        const channel = supabase.channel(`public:lead_tasks:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'lead_tasks',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchTasks();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
-    // Load library leads (scoped to active project)
+    // Load library leads
     useEffect(() => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             setLibraryLeads([]);
             setIsLoadingLibraryLeads(false);
             return;
         }
 
-        setIsLoadingLibraryLeads(true);
-        const libraryPath = `users/${user.uid}/projects/${activeProjectId}/libraryLeads`;
-        const q = query(
-            collection(db, libraryPath),
-            orderBy('createdAt', 'desc')
-        );
+        const fetchLibraryLeads = async () => {
+            setIsLoadingLibraryLeads(true);
+            try {
+                const { data, error } = await supabase
+                    .from('library_leads')
+                    .select('*')
+                    .eq('project_id', activeProjectId)
+                    .order('created_at', { ascending: false });
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const leadsData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: activeProjectId,
-                ...docSnapshot.data()
-            })) as LibraryLead[];
-            setLibraryLeads(leadsData);
-            setIsLoadingLibraryLeads(false);
-        }, (error) => {
-            console.error("[CRMContext] Error fetching library leads:", error);
-            setIsLoadingLibraryLeads(false);
-        });
+                if (error) throw error;
+
+                const leadsData = (data || []).map(l => ({
+                    id: l.id,
+                    projectId: l.project_id,
+                    name: l.name,
+                    email: l.email,
+                    phone: l.phone,
+                    company: l.company,
+                    source: l.source,
+                    notes: l.notes,
+                    tags: l.tags || [],
+                    isImported: l.is_imported,
+                    importedAt: l.imported_at,
+                    importedLeadId: l.imported_lead_id,
+                    createdAt: l.created_at,
+                    updatedAt: l.updated_at
+                })) as LibraryLead[];
+                setLibraryLeads(leadsData);
+            } catch (error) {
+                console.error("[CRMContext] Error fetching library leads:", error);
+            } finally {
+                setIsLoadingLibraryLeads(false);
+            }
+        };
+
+        fetchLibraryLeads();
+
+        const channel = supabase.channel(`public:library_leads:project_id=eq.${activeProjectId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'library_leads',
+                filter: `project_id=eq.${activeProjectId}`
+            }, () => {
+                fetchLibraryLeads();
+            })
+            .subscribe();
 
         return () => {
-            unsubscribe();
+            supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId]);
+    }, [user, activeProjectId, currentTenantId]);
 
     // Lead Operations
     const addLead = async (leadData: Omit<Lead, 'id' | 'createdAt' | 'projectId'>): Promise<string | undefined> => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             console.error("[CRMContext] Cannot add lead: No user or active project");
             return undefined;
         }
 
-        // Debug: Log what we're saving
-        console.log('[CRMContext] 📝 addLead called with:', {
-            name: leadData.name,
-            email: leadData.email,
-            source: leadData.source,
-            hasTranscript: !!leadData.conversationTranscript,
-            transcriptLength: leadData.conversationTranscript?.length || 0,
-            transcriptPreview: leadData.conversationTranscript?.substring(0, 200)
-        });
-
         try {
-            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
-            console.log('[CRMContext] 📍 Saving to path:', leadsPath);
+            const newLead = {
+                tenant_id: currentTenantId,
+                project_id: activeProjectId,
+                name: leadData.name,
+                email: leadData.email,
+                phone: leadData.phone,
+                company: leadData.company,
+                source: leadData.source,
+                status: leadData.status,
+                value: leadData.value,
+                notes: leadData.notes,
+                tags: leadData.tags,
+                conversation_transcript: leadData.conversationTranscript,
+                ai_summary: leadData.aiSummary,
+                metadata: leadData.metadata,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
 
-            const docRef = await addDoc(collection(db, leadsPath), {
-                ...leadData,
-                projectId: activeProjectId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            const { data, error } = await supabase
+                .from('leads')
+                .insert([newLead])
+                .select('id')
+                .single();
 
-            console.log('[CRMContext] ✅ Lead saved with ID:', docRef.id);
-            return docRef.id;
+            if (error) throw error;
+            return data.id;
         } catch (error) {
             console.error("[CRMContext] Error adding lead:", error);
             throw error;
@@ -245,39 +339,52 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Bulk Lead Import
     const addLeadsBulk = async (leadsData: Omit<Lead, 'id' | 'createdAt' | 'projectId'>[]): Promise<string[]> => {
-        if (!user || !activeProjectId) {
+        if (!user || !activeProjectId || !currentTenantId) {
             console.error("[CRMContext] Cannot bulk add leads: No user or active project");
             return [];
         }
 
-        console.log(`[CRMContext] 📦 addLeadsBulk called with ${leadsData.length} leads`);
-        const createdIds: string[] = [];
-
         try {
-            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
-            const BATCH_SIZE = 10;
+            const BATCH_SIZE = 100; // Supabase can handle larger batches than Firestore easily
+            const createdIds: string[] = [];
 
             for (let i = 0; i < leadsData.length; i += BATCH_SIZE) {
                 const batch = leadsData.slice(i, i + BATCH_SIZE);
-                const promises = batch.map(leadData => {
-                    // Firestore rejects undefined values — strip them
-                    const sanitized: Record<string, any> = {};
+                const records = batch.map(leadData => {
+                    const sanitized: any = {};
                     Object.entries(leadData).forEach(([key, val]) => {
                         if (val !== undefined) sanitized[key] = val;
                     });
-                    return addDoc(collection(db, leadsPath), {
-                        ...sanitized,
-                        projectId: activeProjectId,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
-                    });
+                    
+                    return {
+                        tenant_id: currentTenantId,
+                        project_id: activeProjectId,
+                        name: sanitized.name,
+                        email: sanitized.email,
+                        phone: sanitized.phone,
+                        company: sanitized.company,
+                        source: sanitized.source,
+                        status: sanitized.status,
+                        value: sanitized.value,
+                        notes: sanitized.notes,
+                        tags: sanitized.tags,
+                        conversation_transcript: sanitized.conversationTranscript,
+                        ai_summary: sanitized.aiSummary,
+                        metadata: sanitized.metadata,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
                 });
-                const refs = await Promise.all(promises);
-                refs.forEach(ref => createdIds.push(ref.id));
-                console.log(`[CRMContext] ✅ Batch ${Math.floor(i / BATCH_SIZE) + 1} complete (${createdIds.length}/${leadsData.length})`);
+
+                const { data, error } = await supabase
+                    .from('leads')
+                    .insert(records)
+                    .select('id');
+
+                if (error) throw error;
+                if (data) data.forEach(d => createdIds.push(d.id));
             }
 
-            console.log(`[CRMContext] ✅ Bulk import complete: ${createdIds.length} leads created`);
             return createdIds;
         } catch (error) {
             console.error("[CRMContext] Error in bulk lead import:", error);
@@ -289,11 +396,15 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const leadPath = `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`;
-            await updateDoc(doc(db, leadPath), {
-                status,
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('leads')
+                .update({ 
+                    status,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', leadId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error updating lead status:", error);
             throw error;
@@ -304,11 +415,26 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const leadPath = `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`;
-            await updateDoc(doc(db, leadPath), {
-                ...data,
-                updatedAt: serverTimestamp(),
-            });
+            const updateData: any = { updated_at: new Date().toISOString() };
+            if (data.name !== undefined) updateData.name = data.name;
+            if (data.email !== undefined) updateData.email = data.email;
+            if (data.phone !== undefined) updateData.phone = data.phone;
+            if (data.company !== undefined) updateData.company = data.company;
+            if (data.source !== undefined) updateData.source = data.source;
+            if (data.status !== undefined) updateData.status = data.status;
+            if (data.value !== undefined) updateData.value = data.value;
+            if (data.notes !== undefined) updateData.notes = data.notes;
+            if (data.tags !== undefined) updateData.tags = data.tags;
+            if (data.conversationTranscript !== undefined) updateData.conversation_transcript = data.conversationTranscript;
+            if (data.aiSummary !== undefined) updateData.ai_summary = data.aiSummary;
+            if (data.metadata !== undefined) updateData.metadata = data.metadata;
+
+            const { error } = await supabase
+                .from('leads')
+                .update(updateData)
+                .eq('id', leadId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error updating lead:", error);
             throw error;
@@ -319,8 +445,12 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const leadPath = `users/${user.uid}/projects/${activeProjectId}/leads/${leadId}`;
-            await deleteDoc(doc(db, leadPath));
+            const { error } = await supabase
+                .from('leads')
+                .delete()
+                .eq('id', leadId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error deleting lead:", error);
             throw error;
@@ -332,16 +462,22 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         leadId: string,
         activity: Omit<LeadActivity, 'id' | 'createdAt' | 'leadId'>
     ) => {
-        if (!user || !activeProjectId) return;
+        if (!user || !activeProjectId || !currentTenantId) return;
 
         try {
-            const activitiesPath = `users/${user.uid}/projects/${activeProjectId}/leadActivities`;
-            await addDoc(collection(db, activitiesPath), {
-                ...activity,
-                leadId,
-                projectId: activeProjectId,
-                createdAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('lead_activities')
+                .insert([{
+                    tenant_id: currentTenantId,
+                    project_id: activeProjectId,
+                    lead_id: leadId,
+                    type: activity.type,
+                    description: activity.description,
+                    metadata: { performedBy: (activity as any).performedBy }, // Simplified
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error adding lead activity:", error);
             throw error;
@@ -357,16 +493,25 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         leadId: string,
         task: Omit<LeadTask, 'id' | 'createdAt' | 'leadId'>
     ) => {
-        if (!user || !activeProjectId) return;
+        if (!user || !activeProjectId || !currentTenantId) return;
 
         try {
-            const tasksPath = `users/${user.uid}/projects/${activeProjectId}/leadTasks`;
-            await addDoc(collection(db, tasksPath), {
-                ...task,
-                leadId,
-                projectId: activeProjectId,
-                createdAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('lead_tasks')
+                .insert([{
+                    tenant_id: currentTenantId,
+                    project_id: activeProjectId,
+                    lead_id: leadId,
+                    title: task.title,
+                    description: task.description,
+                    due_date: task.dueDate || null,
+                    is_completed: task.isCompleted || false,
+                    metadata: { assignedTo: (task as any).assignedTo },
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error adding lead task:", error);
             throw error;
@@ -377,11 +522,18 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const taskPath = `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`;
-            await updateDoc(doc(db, taskPath), {
-                ...data,
-                updatedAt: serverTimestamp(),
-            });
+            const updateData: any = { updated_at: new Date().toISOString() };
+            if (data.title !== undefined) updateData.title = data.title;
+            if (data.description !== undefined) updateData.description = data.description;
+            if (data.dueDate !== undefined) updateData.due_date = data.dueDate;
+            if (data.isCompleted !== undefined) updateData.is_completed = data.isCompleted;
+
+            const { error } = await supabase
+                .from('lead_tasks')
+                .update(updateData)
+                .eq('id', taskId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error updating lead task:", error);
             throw error;
@@ -392,8 +544,12 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const taskPath = `users/${user.uid}/projects/${activeProjectId}/leadTasks/${taskId}`;
-            await deleteDoc(doc(db, taskPath));
+            const { error } = await supabase
+                .from('lead_tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error deleting lead task:", error);
             throw error;
@@ -406,17 +562,27 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Library Lead Operations
     const addLibraryLead = async (leadData: Omit<LibraryLead, 'id' | 'createdAt' | 'isImported'>) => {
-        if (!user || !activeProjectId) return;
+        if (!user || !activeProjectId || !currentTenantId) return;
 
         try {
-            const libraryPath = `users/${user.uid}/projects/${activeProjectId}/libraryLeads`;
-            await addDoc(collection(db, libraryPath), {
-                ...leadData,
-                projectId: activeProjectId,
-                isImported: false,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            const { error } = await supabase
+                .from('library_leads')
+                .insert([{
+                    tenant_id: currentTenantId,
+                    project_id: activeProjectId,
+                    name: leadData.name,
+                    email: leadData.email,
+                    phone: leadData.phone,
+                    company: leadData.company,
+                    source: leadData.source,
+                    notes: leadData.notes,
+                    tags: leadData.tags,
+                    is_imported: false,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error adding library lead:", error);
             throw error;
@@ -427,8 +593,12 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const libraryLeadPath = `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`;
-            await deleteDoc(doc(db, libraryLeadPath));
+            const { error } = await supabase
+                .from('library_leads')
+                .delete()
+                .eq('id', leadId);
+
+            if (error) throw error;
         } catch (error) {
             console.error("[CRMContext] Error deleting library lead:", error);
             throw error;
@@ -436,36 +606,46 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     const importLibraryLead = async (leadId: string) => {
-        if (!user || !activeProjectId) return;
+        if (!user || !activeProjectId || !currentTenantId) return;
 
         try {
             const leadToImport = libraryLeads.find(l => l.id === leadId);
             if (!leadToImport) throw new Error("Lead not found");
 
-            // Create in main CRM (same project)
-            const leadsPath = `users/${user.uid}/projects/${activeProjectId}/leads`;
-            const newLeadRef = await addDoc(collection(db, leadsPath), {
-                name: leadToImport.name,
-                email: leadToImport.email,
-                phone: leadToImport.phone || '',
-                company: leadToImport.company || '',
-                source: leadToImport.source || 'library_import',
-                status: 'new',
-                value: 0,
-                notes: leadToImport.notes || '',
-                tags: [...(leadToImport.tags || []), 'imported'],
-                projectId: activeProjectId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            // Create in main CRM
+            const { data: newLead, error: insertError } = await supabase
+                .from('leads')
+                .insert([{
+                    tenant_id: currentTenantId,
+                    project_id: activeProjectId,
+                    name: leadToImport.name,
+                    email: leadToImport.email,
+                    phone: leadToImport.phone || '',
+                    company: leadToImport.company || '',
+                    source: leadToImport.source || 'library_import',
+                    status: 'new',
+                    value: 0,
+                    notes: leadToImport.notes || '',
+                    tags: [...(leadToImport.tags || []), 'imported'],
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }])
+                .select('id')
+                .single();
+
+            if (insertError) throw insertError;
 
             // Update library lead status
-            const libraryLeadPath = `users/${user.uid}/projects/${activeProjectId}/libraryLeads/${leadId}`;
-            await updateDoc(doc(db, libraryLeadPath), {
-                isImported: true,
-                importedAt: serverTimestamp(),
-                importedLeadId: newLeadRef.id,
-            });
+            const { error: updateError } = await supabase
+                .from('library_leads')
+                .update({
+                    is_imported: true,
+                    imported_at: new Date().toISOString(),
+                    imported_lead_id: newLead.id
+                })
+                .eq('id', leadId);
+
+            if (updateError) throw updateError;
         } catch (error) {
             console.error("[CRMContext] Error importing library lead:", error);
             throw error;

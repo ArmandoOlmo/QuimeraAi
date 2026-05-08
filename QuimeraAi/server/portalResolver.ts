@@ -2,36 +2,28 @@
  * Portal Resolver
  * 
  * Resolves custom portal domains to their associated tenant for white-label support.
- * Uses the portalDomains collection in Firestore for lookups.
+ * Uses the Supabase tenants and custom_domains tables for lookups.
  */
 
-import { initializeApp, cert, getApps, App } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Initialize Firebase Admin (for server-side)
-let app: App;
-let db: Firestore;
+// Initialize Supabase Admin client (server-side with service role)
+let supabaseAdmin: SupabaseClient;
 
-function initializeFirebase() {
-    if (getApps().length === 0) {
-        // In Cloud Run, credentials are automatic via service account
-        // For local dev, use GOOGLE_APPLICATION_CREDENTIALS env var
-        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-            app = initializeApp({
-                credential: cert(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-            });
-        } else {
-            // Cloud Run: uses default credentials
-            app = initializeApp();
-        }
-    } else {
-        app = getApps()[0];
+function initializeSupabase() {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+        console.error('[PortalResolver] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+        throw new Error('Supabase configuration missing for portal resolver');
     }
-    db = getFirestore(app);
+
+    supabaseAdmin = createClient(url, key);
 }
 
 // Initialize on module load
-initializeFirebase();
+initializeSupabase();
 
 // =============================================================================
 // TYPES
@@ -127,51 +119,30 @@ export async function resolvePortalDomain(domain: string): Promise<PortalResolut
     }
 
     try {
-        console.log(`[PortalResolver] Looking up ${normalizedDomain} in Firestore...`);
+        console.log(`[PortalResolver] Looking up ${normalizedDomain} in Supabase...`);
         
-        // Query the portalDomains collection
-        const domainDoc = await db.collection('portalDomains').doc(normalizedDomain).get();
+        // Check tenants with matching branding.customDomain
+        const { data: tenants, error } = await supabaseAdmin
+            .from('tenants')
+            .select('*')
+            .eq('branding->>customDomain', normalizedDomain)
+            .eq('branding->>customDomainVerified', 'true')
+            .limit(1);
 
-        if (!domainDoc.exists) {
-            console.log(`[PortalResolver] Portal domain ${normalizedDomain} not found`);
-            
-            // Also check if it's a tenant with branding.customDomain
-            const tenantQuery = await db.collection('tenants')
-                .where('branding.customDomain', '==', normalizedDomain)
-                .where('branding.customDomainVerified', '==', true)
-                .limit(1)
-                .get();
-            
-            if (tenantQuery.empty) {
-                // Cache negative result
-                portalCache.set(normalizedDomain, { data: null, timestamp: Date.now() });
-                return null;
-            }
-            
-            // Found via tenant query
-            const tenantDoc = tenantQuery.docs[0];
-            const tenantData = tenantDoc.data();
-            
-            const result = buildPortalResult(tenantDoc.id, tenantData, normalizedDomain);
-            portalCache.set(normalizedDomain, { data: result, timestamp: Date.now() });
-            return result;
+        if (error) {
+            console.error(`[PortalResolver] Supabase query error:`, error);
+            return null;
         }
 
-        const data = domainDoc.data()!;
-        
-        // Fetch full tenant data
-        const tenantDoc = await db.collection('tenants').doc(data.tenantId).get();
-        
-        if (!tenantDoc.exists) {
-            console.log(`[PortalResolver] Tenant ${data.tenantId} not found for domain ${normalizedDomain}`);
+        if (!tenants || tenants.length === 0) {
+            console.log(`[PortalResolver] Portal domain ${normalizedDomain} not found`);
+            // Cache negative result
             portalCache.set(normalizedDomain, { data: null, timestamp: Date.now() });
             return null;
         }
-        
-        const tenantData = tenantDoc.data()!;
-        const result = buildPortalResult(data.tenantId, tenantData, normalizedDomain, data.status, data.sslStatus);
-        
-        // Cache the result
+
+        const tenantData = tenants[0];
+        const result = buildPortalResult(tenantData.id, tenantData, normalizedDomain);
         portalCache.set(normalizedDomain, { data: result, timestamp: Date.now() });
         
         console.log(`[PortalResolver] Resolved ${normalizedDomain} -> Tenant ${result.tenantId} (${result.tenantName})`);
@@ -188,11 +159,14 @@ export async function resolvePortalDomain(domain: string): Promise<PortalResolut
  */
 function buildPortalResult(
     tenantId: string,
-    tenantData: FirebaseFirestore.DocumentData,
+    tenantData: any,
     domain: string,
     status: string = 'active',
     sslStatus: string = 'active'
 ): PortalResolutionResult {
+    const branding = tenantData.branding || {};
+    const settings = tenantData.settings || {};
+    
     return {
         tenantId,
         tenantName: tenantData.name || 'Portal',
@@ -200,20 +174,20 @@ function buildPortalResult(
         status: status as any,
         sslStatus: sslStatus as any,
         branding: {
-            logoUrl: tenantData.branding?.logoUrl,
-            primaryColor: tenantData.branding?.primaryColor || '#4f46e5',
-            secondaryColor: tenantData.branding?.secondaryColor || '#10b981',
-            faviconUrl: tenantData.branding?.faviconUrl,
-            companyName: tenantData.branding?.companyName || tenantData.name,
-            customDomain: tenantData.branding?.customDomain,
-            customDomainVerified: tenantData.branding?.customDomainVerified,
-            footerText: tenantData.branding?.footerText,
-            supportEmail: tenantData.branding?.supportEmail,
-            supportUrl: tenantData.branding?.supportUrl,
+            logoUrl: branding.logoUrl,
+            primaryColor: branding.primaryColor || '#4f46e5',
+            secondaryColor: branding.secondaryColor || '#10b981',
+            faviconUrl: branding.faviconUrl,
+            companyName: branding.companyName || tenantData.name,
+            customDomain: branding.customDomain,
+            customDomainVerified: branding.customDomainVerified,
+            footerText: branding.footerText,
+            supportEmail: branding.supportEmail,
+            supportUrl: branding.supportUrl,
         },
-        enabledFeatures: tenantData.settings?.enabledFeatures || ['projects', 'cms', 'leads'],
-        subscriptionPlan: tenantData.subscriptionPlan || 'free',
-        ownerUserId: tenantData.ownerUserId,
+        enabledFeatures: settings.enabledFeatures || ['projects', 'cms', 'leads'],
+        subscriptionPlan: tenantData.subscription_plan || 'free',
+        ownerUserId: tenantData.owner_user_id,
     };
 }
 
@@ -310,10 +284,6 @@ export function generatePortalMetaTags(portal: PortalResolutionResult): string {
 
 /**
  * Normalize domain name
- * - Lowercase
- * - Remove www. prefix
- * - Remove trailing dots
- * - Remove port
  */
 function normalizeDomain(domain: string): string {
     return domain
@@ -328,10 +298,8 @@ function normalizeDomain(domain: string): string {
  * Convert hex color to HSL
  */
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
-    // Remove # if present
     hex = hex.replace(/^#/, '');
     
-    // Parse hex
     const r = parseInt(hex.substring(0, 2), 16) / 255;
     const g = parseInt(hex.substring(2, 4), 16) / 255;
     const b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -418,9 +386,9 @@ export function extractSubdomain(hostname: string): string | null {
 
 /**
  * Resolve agency landing by subdomain
+ * Uses the tenants table with settings->>agencyLandingSubdomain
  */
 export async function resolveAgencyLanding(subdomain: string): Promise<AgencyLandingResolutionResult | null> {
-    // Check cache first
     const cacheKey = `landing:${subdomain}`;
     const cached = landingCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -431,30 +399,30 @@ export async function resolveAgencyLanding(subdomain: string): Promise<AgencyLan
     try {
         console.log(`[PortalResolver] Looking up agency landing for subdomain: ${subdomain}`);
         
-        // Query agencyLandings collection
-        const landingQuery = await db.collection('agencyLandings')
-            .where('subdomain', '==', subdomain)
-            .where('enabled', '==', true)
-            .where('status', '==', 'published')
-            .limit(1)
-            .get();
+        // Query tenants where settings has agencyLandingSubdomain matching
+        const { data: tenants, error } = await supabaseAdmin
+            .from('tenants')
+            .select('*')
+            .eq('settings->>agencyLandingSubdomain', subdomain)
+            .eq('status', 'active')
+            .limit(1);
 
-        if (landingQuery.empty) {
+        if (error || !tenants || tenants.length === 0) {
             console.log(`[PortalResolver] No landing found for subdomain ${subdomain}`);
             landingCache.set(cacheKey, { data: null, timestamp: Date.now() });
             return null;
         }
 
-        const landingDoc = landingQuery.docs[0];
-        const landingData = landingDoc.data();
+        const tenant = tenants[0];
+        const landingConfig = tenant.settings?.agencyLanding || tenant.settings || {};
 
         const result: AgencyLandingResolutionResult = {
-            tenantId: landingData.tenantId,
-            landingId: landingDoc.id,
-            subdomain: landingData.subdomain,
-            customDomain: landingData.customDomain,
+            tenantId: tenant.id,
+            landingId: tenant.id,
+            subdomain,
+            customDomain: tenant.branding?.customDomain,
             isAgencyLanding: true,
-            config: landingData,
+            config: landingConfig,
         };
 
         landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -470,7 +438,7 @@ export async function resolveAgencyLanding(subdomain: string): Promise<AgencyLan
 
 /**
  * Resolve agency landing by custom domain
- * Checks both the agencyLandings collection and the customDomains collection
+ * Checks both the custom_domains table and the tenants table
  */
 export async function resolveAgencyLandingByDomain(domain: string): Promise<AgencyLandingResolutionResult | null> {
     const normalized = normalizeDomain(domain);
@@ -482,68 +450,71 @@ export async function resolveAgencyLandingByDomain(domain: string): Promise<Agen
     }
 
     try {
-        // ===================================================================
-        // CHECK 1: Try agencyLandings collection (legacy path - customDomain field)
-        // ===================================================================
-        const landingQuery = await db.collection('agencyLandings')
-            .where('customDomain', '==', normalized)
-            .where('customDomainVerified', '==', true)
-            .where('enabled', '==', true)
-            .where('status', '==', 'published')
-            .limit(1)
-            .get();
+        // CHECK 1: custom_domains table with agency_landing_tenant_id
+        const { data: domainRows } = await supabaseAdmin
+            .from('custom_domains')
+            .select('*')
+            .eq('domain_name', normalized)
+            .limit(1);
 
-        if (!landingQuery.empty) {
-            const landingDoc = landingQuery.docs[0];
-            const landingData = landingDoc.data();
-
-            const result: AgencyLandingResolutionResult = {
-                tenantId: landingData.tenantId,
-                landingId: landingDoc.id,
-                subdomain: landingData.subdomain,
-                customDomain: landingData.customDomain,
-                isAgencyLanding: true,
-                config: landingData,
-            };
-
-            landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
-            console.log(`[PortalResolver] Resolved landing by domain (agencyLandings): ${normalized} -> Tenant ${result.tenantId}`);
-            return result;
-        }
-
-        // ===================================================================
-        // CHECK 2: Try customDomains collection (new path - agencyLandingTenantId)
-        // This is set by AgencyDomainPanel via DomainsContext.addDomain()
-        // ===================================================================
-        const customDomainDoc = await db.collection('customDomains').doc(normalized).get();
-        if (customDomainDoc.exists) {
-            const cdData = customDomainDoc.data()!;
+        if (domainRows && domainRows.length > 0) {
+            const cdData = domainRows[0];
             
-            if (cdData.agencyLandingTenantId) {
-                console.log(`[PortalResolver] Found agencyLandingTenantId in customDomains: ${cdData.agencyLandingTenantId}`);
+            if (cdData.agency_landing_tenant_id) {
+                console.log(`[PortalResolver] Found agency_landing_tenant_id in custom_domains: ${cdData.agency_landing_tenant_id}`);
                 
-                // Fetch the agency landing config
-                const tenantId = cdData.agencyLandingTenantId;
-                const landingDoc = await db.collection('agencyLandings').doc(tenantId).get();
+                // Fetch the tenant to get the landing config
+                const { data: tenant } = await supabaseAdmin
+                    .from('tenants')
+                    .select('*')
+                    .eq('id', cdData.agency_landing_tenant_id)
+                    .single();
                 
-                if (landingDoc.exists) {
-                    const landingData = landingDoc.data()!;
+                if (tenant) {
+                    const landingConfig = tenant.settings?.agencyLanding || tenant.settings || {};
                     
                     const result: AgencyLandingResolutionResult = {
-                        tenantId,
-                        landingId: landingDoc.id,
-                        subdomain: landingData.subdomain,
+                        tenantId: cdData.agency_landing_tenant_id,
+                        landingId: tenant.id,
+                        subdomain: tenant.settings?.agencyLandingSubdomain,
                         customDomain: normalized,
                         isAgencyLanding: true,
-                        config: landingData,
+                        config: landingConfig,
                     };
 
                     landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
-                    console.log(`[PortalResolver] Resolved landing by domain (customDomains): ${normalized} -> Tenant ${tenantId}`);
+                    console.log(`[PortalResolver] Resolved landing by domain (custom_domains): ${normalized} -> Tenant ${result.tenantId}`);
                     return result;
-                } else {
-                    console.warn(`[PortalResolver] agencyLandings/${tenantId} not found for customDomain ${normalized}`);
                 }
+            }
+        }
+
+        // CHECK 2: tenants where branding.customDomain matches and has agency landing enabled
+        const { data: tenants } = await supabaseAdmin
+            .from('tenants')
+            .select('*')
+            .eq('branding->>customDomain', normalized)
+            .limit(1);
+
+        if (tenants && tenants.length > 0) {
+            const tenant = tenants[0];
+            const hasLanding = tenant.settings?.agencyLanding?.enabled || tenant.settings?.agencyLandingSubdomain;
+            
+            if (hasLanding) {
+                const landingConfig = tenant.settings?.agencyLanding || {};
+                
+                const result: AgencyLandingResolutionResult = {
+                    tenantId: tenant.id,
+                    landingId: tenant.id,
+                    subdomain: tenant.settings?.agencyLandingSubdomain,
+                    customDomain: normalized,
+                    isAgencyLanding: true,
+                    config: landingConfig,
+                };
+
+                landingCache.set(cacheKey, { data: result, timestamp: Date.now() });
+                console.log(`[PortalResolver] Resolved landing by domain (tenants): ${normalized} -> Tenant ${tenant.id}`);
+                return result;
             }
         }
 
@@ -606,30 +577,18 @@ export function clearPortalCache(domain: string): void {
  * Clear cache for a tenant (all associated domains)
  */
 export async function clearTenantPortalCache(tenantId: string): Promise<void> {
-    // Get tenant to find custom domain
     try {
-        const tenantDoc = await db.collection('tenants').doc(tenantId).get();
-        if (tenantDoc.exists) {
-            const customDomain = tenantDoc.data()?.branding?.customDomain;
-            if (customDomain) {
-                clearPortalCache(customDomain);
-            }
+        const { data: tenant } = await supabaseAdmin
+            .from('tenants')
+            .select('branding')
+            .eq('id', tenantId)
+            .single();
+
+        if (tenant?.branding?.customDomain) {
+            clearPortalCache(tenant.branding.customDomain);
         }
     } catch (e) {
         console.warn(`[PortalResolver] Could not clear cache for tenant ${tenantId}:`, e);
-    }
-    
-    // Also clear any entries from portalDomains collection
-    try {
-        const domainsQuery = await db.collection('portalDomains')
-            .where('tenantId', '==', tenantId)
-            .get();
-        
-        for (const doc of domainsQuery.docs) {
-            clearPortalCache(doc.id);
-        }
-    } catch (e) {
-        console.warn(`[PortalResolver] Could not query portal domains for tenant ${tenantId}:`, e);
     }
     
     console.log(`[PortalResolver] Cache cleared for tenant ${tenantId}`);
@@ -666,9 +625,3 @@ export function getPortalCacheStats(): { size: number; entries: string[] } {
         entries: Array.from(portalCache.keys())
     };
 }
-
-
-
-
-
-

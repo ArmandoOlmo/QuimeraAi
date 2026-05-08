@@ -138,7 +138,7 @@ export const PortalProvider: React.FC<PortalProviderProps> = ({ tenantId, childr
                 let isOwner = false;
 
                 if (user) {
-                    const membershipId = getMembershipId(tenantId, user.uid);
+                    const membershipId = getMembershipId(tenantId, user.id);
                     const membershipDoc = await getDoc(doc(db, 'tenantMembers', membershipId));
                     
                     if (membershipDoc.exists()) {
@@ -148,7 +148,7 @@ export const PortalProvider: React.FC<PortalProviderProps> = ({ tenantId, childr
                         } as TenantMembership;
                         userRole = userMembership.role;
                         userPermissions = userMembership.permissions;
-                        isOwner = tenant.ownerUserId === user.uid;
+                        isOwner = tenant.ownerUserId === user.id;
                         setMembership(userMembership);
                     }
                 }
