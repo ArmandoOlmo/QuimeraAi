@@ -409,42 +409,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             </div>
                         </div>
 
-                        {/* Option 1: Nameservers (Preferred if available via Cloudflare) */}
-                        {(domain as any).cloudflareNameservers?.length > 0 && (
-                            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-xs font-bold bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded">{t('domainsDashboard.quickOption')}</span>
-                                    <span className="text-sm font-medium text-foreground">{t('domainsDashboard.changeNameserversCloudflare')}</span>
-                                </div>
-                                <p className="text-xs text-q-text-muted mb-3">
-                                    {t('domainsDashboard.changeNameserversSubtext', { section: t('domainsDashboard.nameservers') })}
-                                </p>
-                                <div className="grid gap-2">
-                                    {(domain as any).cloudflareNameservers.map((ns: string, idx: number) => (
-                                        <div key={idx} className="flex items-center justify-between bg-q-bg p-2 rounded border border-q-border">
-                                            <code className="font-mono font-bold text-foreground">{ns}</code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(ns);
-                                                    alert(t('domainsDashboard.nameserverCopied'));
-                                                }}
-                                                className="p-1 hover:bg-primary/20 rounded text-primary"
-                                            >
-                                                <Copy size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         {/* DNS Records - Step by step guide */}
                         <div className="bg-q-surface/80 rounded-lg p-4 mb-4 border border-q-border">
-                            {(domain as any).cloudflareNameservers?.length > 0 && (
-                                <div className="text-xs font-bold text-q-text-muted uppercase tracking-wider mb-3">
-                                    {t('domainsDashboard.orUseDnsRecords')}
-                                </div>
-                            )}
                             
                             <p className="text-sm text-q-text-muted mb-4" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.dnsProviderInstructions', { section: t('domainsDashboard.dnsRecords') }) }} />
 
@@ -1838,11 +1804,11 @@ const DomainsDashboard: React.FC = () => {
                                             <div>
                                                 <span className="text-xs text-q-text-muted">Valor:</span>
                                                 <div className="flex items-center gap-1">
-                                                    <code className="font-mono font-bold text-primary text-xs break-all">{connectDomainName || 'tudominio.com'}</code>
+                                                    <code className="font-mono font-bold text-primary text-xs break-all">{QUIMERA_DNS.CNAME}</code>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(connectDomainName || 'tudominio.com');
+                                                            navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
                                                             alert(t('domainsDashboard.connectModal.cnameCopied'));
                                                         }}
                                                         className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary flex-shrink-0"
