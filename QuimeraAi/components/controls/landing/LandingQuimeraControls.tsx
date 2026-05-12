@@ -6,6 +6,7 @@ import { Type, Settings, Link as LinkIcon, Image, Layout, CheckSquare, Plus, Tra
 import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { SingleContentSelector } from '../../ui/EcommerceControls';
 import TabbedControls from '../../ui/TabbedControls';
+import ImagePicker from '../../ui/ImagePicker';
 
 // Helper for Anchor Links
 const AnchorLinkControl: React.FC<{ label: string, fieldKey: string, deps: ControlsDeps & { allSections?: any[] } }> = ({ label, fieldKey, deps }) => {
@@ -99,7 +100,15 @@ const AnchorLinkControl: React.FC<{ label: string, fieldKey: string, deps: Contr
 const QuimeraListControl: React.FC<{
     arrayKey: string;
     itemLabel: string;
-    fields: { key: string, label: string, type: 'input' | 'textarea' | 'image' | 'select' | 'checkbox', options?: string[] }[];
+    fields: {
+        key: string,
+        label: string,
+        type: 'input' | 'textarea' | 'image' | 'select' | 'checkbox',
+        options?: string[],
+        destination?: 'user' | 'global' | 'admin',
+        adminCategory?: string,
+        generationContext?: 'background' | 'general',
+    }[];
     deps: ControlsDeps;
     defaultItems?: any[];
 }> = ({ arrayKey, itemLabel, fields, deps, defaultItems }) => {
@@ -172,6 +181,20 @@ const QuimeraListControl: React.FC<{
                                         />
                                         {field.label}
                                     </label>
+                                );
+                            }
+                            if (field.type === 'image') {
+                                return (
+                                    <ImagePicker
+                                        key={field.key}
+                                        label={field.label}
+                                        value={item[field.key] || ''}
+                                        onChange={(url) => handleChange(index, field.key, url)}
+                                        onRemove={() => handleChange(index, field.key, '')}
+                                        destination={field.destination}
+                                        adminCategory={field.adminCategory}
+                                        generationContext={field.generationContext || 'general'}
+                                    />
                                 );
                             }
                             return (
@@ -1342,10 +1365,45 @@ export const renderImageGeneratorQuimeraControls = (deps: ControlsDeps & { porta
         { icon: 'ImageIcon', title: t('imageGeneratorQuimera.feat2Title', 'Sin Derechos de Autor'), description: t('imageGeneratorQuimera.feat2Desc', 'Úsalas libremente en tus artículos, productos y anuncios sin preocuparte por licencias de stock.') },
         { icon: 'Paintbrush', title: t('imageGeneratorQuimera.feat3Title', 'Variaciones y Estilos'), description: t('imageGeneratorQuimera.feat3Desc', 'Cambia el estilo visual fácilmente: 3D, acuarela, minimalista, realista o cyberpunk con un clic.') }
     ];
+    const defaultAiImages = [
+        {
+            url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800',
+            prompt: 'A hyperrealistic photo of a futuristic coffee shop in neon Tokyo...',
+            alt: 'AI generated futuristic coffee shop'
+        },
+        {
+            url: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800',
+            prompt: 'A minimalist logo for a tech startup, geometric, flat vector...',
+            alt: 'AI generated abstract brand design'
+        },
+        {
+            url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800',
+            prompt: 'A professional headshot of a business woman, studio lighting...',
+            alt: 'AI generated professional portrait'
+        }
+    ];
 
     const content = (
         <>
             {renderCommonTextControls(deps, t('imageGeneratorQuimera.title', 'Crea Imágenes Increíbles con IA'), t('imageGeneratorQuimera.subtitle', 'Describe lo que imaginas y deja que Quimera genere visuales profesionales, sin derechos de autor y listos para tu website o redes sociales en segundos.'))}
+            <QuimeraListControl
+                arrayKey="aiImages"
+                itemLabel={t('imageGeneratorQuimera.generatedImage', 'Imagen rotativa')}
+                defaultItems={defaultAiImages}
+                fields={[
+                    {
+                        key: 'url',
+                        label: t('imageGeneratorQuimera.imageUrl', 'Imagen generada'),
+                        type: 'image',
+                        destination: 'admin',
+                        adminCategory: 'ai_generated',
+                        generationContext: 'general'
+                    },
+                    { key: 'prompt', label: t('imageGeneratorQuimera.prompt', 'Prompt'), type: 'textarea' },
+                    { key: 'alt', label: t('imageGeneratorQuimera.alt', 'Texto alternativo'), type: 'input' }
+                ]}
+                deps={deps}
+            />
             <QuimeraListControl
                 arrayKey="features"
                 itemLabel={t('editor.feature', 'Característica')}

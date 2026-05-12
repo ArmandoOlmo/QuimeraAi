@@ -268,6 +268,7 @@ export const BackgroundImageControl: React.FC<{
   const sectionData = (data as any)?.[sectionKey];
   const hasImage = !!sectionData?.backgroundImageUrl;
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerInitialTab, setPickerInitialTab] = useState<'library' | 'generate'>('library');
 
   return (
     <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -286,14 +287,14 @@ export const BackgroundImageControl: React.FC<{
             <div className="absolute bottom-2.5 right-2.5 flex gap-1.5">
               <button 
                 type="button"
-                onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
+                onClick={(e) => { e.preventDefault(); setPickerInitialTab('library'); setShowPicker(true); }}
                 className="p-2 rounded-lg bg-white/15 backdrop-blur-md border border-white/20 text-white hover:bg-white/25 transition-all duration-200"
                 title={t('dashboard.imagePicker.openLibrary')}>
                 <Grid size={14} />
               </button>
               <button 
                 type="button"
-                onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
+                onClick={(e) => { e.preventDefault(); setPickerInitialTab('generate'); setShowPicker(true); }}
                 className="p-2 rounded-lg bg-q-accent/80 backdrop-blur-md border border-q-accent/40 text-white hover:bg-q-accent transition-all duration-200"
                 title={t('dashboard.imagePicker.generateWithAI')}>
                 <Zap size={14} />
@@ -318,7 +319,7 @@ export const BackgroundImageControl: React.FC<{
       {showPicker && (
         <ImagePicker label="" value={sectionData?.backgroundImageUrl || ''}
           onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
-          generationContext="background" defaultOpen onClose={() => setShowPicker(false)}
+          generationContext="background" initialTab={pickerInitialTab} defaultOpen onClose={() => setShowPicker(false)}
         />
       )}
 
@@ -326,13 +327,13 @@ export const BackgroundImageControl: React.FC<{
         <div className="flex gap-2 mt-3">
           <button 
             type="button"
-            onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
+            onClick={(e) => { e.preventDefault(); setPickerInitialTab('library'); setShowPicker(true); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-bg border border-q-border text-q-text-muted hover:text-q-text hover:border-q-accent/30 transition-all text-xs font-medium">
             <Grid size={12} /> Librería
           </button>
           <button 
             type="button"
-            onClick={(e) => { e.preventDefault(); setShowPicker(true); }}
+            onClick={(e) => { e.preventDefault(); setPickerInitialTab('generate'); setShowPicker(true); }}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-q-accent/10 border border-q-accent/20 text-q-accent hover:bg-q-accent/20 transition-all text-xs font-medium">
             <Zap size={12} /> Generar IA
           </button>

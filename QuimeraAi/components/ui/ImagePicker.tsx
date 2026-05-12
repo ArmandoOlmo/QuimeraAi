@@ -33,11 +33,13 @@ interface ImagePickerProps {
     hideUrlInput?: boolean;
     /** Generation context hint for AI image generator. 'background' optimizes for website section backgrounds. */
     generationContext?: 'background' | 'general';
+    /** Initial modal tab when opened programmatically. */
+    initialTab?: 'library' | 'generate' | 'products';
     /** Optional container element to portal the modal into, making it position relative to that container instead of the viewport */
     portalContainer?: HTMLElement | null;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', portalContainer }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer }) => {
     const { t } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
 
@@ -54,7 +56,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const isFilesLoading = filesCtx?.isFilesLoading || false;
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
-    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>('library');
+    const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>(initialTab);
 
     // Handle closing the modal
     const handleClose = () => {
@@ -128,7 +130,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         if (destination === 'admin') {
             sourceFiles = adminAssets;
             if (adminCategory) {
-                sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
+                sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
         }
 

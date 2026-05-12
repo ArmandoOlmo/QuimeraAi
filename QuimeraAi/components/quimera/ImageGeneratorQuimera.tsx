@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Image as ImageIcon, Send, Paintbrush, Layers, Wand2 } from 'lucide-react';
 
@@ -9,6 +9,11 @@ interface ImageGeneratorQuimeraProps {
         title: string;
         description: string;
         icon: string;
+    }>;
+    aiImages?: Array<{
+        url?: string;
+        prompt?: string;
+        alt?: string;
     }>;
     colors?: {
         background?: string;
@@ -25,7 +30,7 @@ interface ImageGeneratorQuimeraProps {
     imagePosition?: 'left' | 'right';
 }
 
-const iconMap: Record<string, React.FC<{ className?: string }>> = {
+const iconMap: Record<string, React.FC<{ className?: string; style?: React.CSSProperties }>> = {
     Sparkles, ImageIcon, Paintbrush, Layers, Wand2
 };
 
@@ -33,6 +38,7 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
     title,
     subtitle,
     features,
+    aiImages,
     colors = {},
     textDropShadow = false,
     isPreviewMode = false,
@@ -74,17 +80,31 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
 
     const displayFeatures = features && features.length > 0 ? features : getDefaultFeatures(t);
 
-    const prompts = [
-        "A hyperrealistic photo of a futuristic coffee shop in neon Tokyo...",
-        "A minimalist logo for a tech startup, geometric, flat vector...",
-        "A professional headshot of a business woman, studio lighting..."
-    ];
-
-    const images = [
-        "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800", // cafe/neon vibe placeholder
-        "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800", // abstract/logo vibe placeholder
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800"  // professional placeholder
-    ];
+    const defaultAiImages = useMemo(() => [
+        {
+            url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800",
+            prompt: "A hyperrealistic photo of a futuristic coffee shop in neon Tokyo...",
+            alt: "AI generated futuristic coffee shop"
+        },
+        {
+            url: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=800",
+            prompt: "A minimalist logo for a tech startup, geometric, flat vector...",
+            alt: "AI generated abstract brand design"
+        },
+        {
+            url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
+            prompt: "A professional headshot of a business woman, studio lighting...",
+            alt: "AI generated professional portrait"
+        }
+    ], []);
+    const rotatingImages = useMemo(() => {
+        const validImages = (aiImages || []).filter((image) => image?.url);
+        return validImages.length > 0 ? validImages : defaultAiImages;
+    }, [aiImages, defaultAiImages]);
+    const prompts = useMemo(
+        () => rotatingImages.map((image) => image.prompt || "Describe the image you want Quimera to generate..."),
+        [rotatingImages]
+    );
 
     // Typing effect simulation
     useEffect(() => {
@@ -94,7 +114,7 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
         }
 
         let timeout: NodeJS.Timeout;
-        const currentPrompt = prompts[promptIndex];
+        const currentPrompt = prompts[promptIndex % prompts.length];
 
         if (!showImage && !isGenerating) {
             // Typing phase
@@ -119,12 +139,12 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
             timeout = setTimeout(() => {
                 setShowImage(false);
                 setTypedText('');
-                setPromptIndex((prev) => (prev + 1) % prompts.length);
+                setPromptIndex((prev) => (prev + 1) % rotatingImages.length);
             }, 4000);
         }
 
         return () => clearTimeout(timeout);
-    }, [typedText, showImage, isGenerating, promptIndex, isPreviewMode]);
+    }, [typedText, showImage, isGenerating, promptIndex, isPreviewMode, prompts, rotatingImages.length]);
 
     return (
         <section className="py-12 md:py-24 px-4 sm:px-6 relative overflow-hidden flex items-center" style={{ backgroundColor: bgColor, color: textColor, minHeight: '80vh' }}>
@@ -214,8 +234,8 @@ const ImageGeneratorQuimera: React.FC<ImageGeneratorQuimeraProps> = ({
                                     {showImage && (
                                         <div className="absolute inset-0 animate-in fade-in zoom-in duration-500">
                                             <img 
-                                                src={images[promptIndex]} 
-                                                alt="AI Generated" 
+                                                src={rotatingImages[promptIndex % rotatingImages.length].url}
+                                                alt={rotatingImages[promptIndex % rotatingImages.length].alt || 'AI Generated'}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
