@@ -12,6 +12,19 @@ import { logApiCall } from '../../services/apiLoggingService';
 import { Modality } from '@google/genai';
 import { supabase } from '../../supabase';
 
+interface EnhancePromptOptions {
+    usage?: 'section-background' | 'component-image' | 'admin-asset' | 'project-library' | 'template-thumbnail';
+    generationContext?: 'background' | 'general';
+    destination?: 'user' | 'global' | 'admin';
+    adminCategory?: string;
+    aspectRatio?: string;
+    style?: string;
+    lighting?: string;
+    cameraAngle?: string;
+    colorGrading?: string;
+    depthOfField?: string;
+}
+
 interface AIContextType {
     // API Key Management
     hasApiKey: boolean | null;
@@ -57,7 +70,7 @@ interface AIContextType {
     ) => Promise<{ success: boolean; generatedImages: Record<string, string>; failedPaths: string[] }>;
 
     // Prompt Enhancement
-    enhancePrompt: (draftPrompt: string, referenceImages?: string[]) => Promise<string>;
+    enhancePrompt: (draftPrompt: string, referenceImages?: string[], options?: EnhancePromptOptions) => Promise<string>;
 }
 
 const AIContext = createContext<AIContextType | undefined>(undefined);
@@ -567,16 +580,79 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         };
     };
 
+    const buildPromptEnhancementInstructions = (
+        draftPrompt: string,
+        referenceImages?: string[],
+        options?: EnhancePromptOptions
+    ): string => {
+        const usage = options?.usage || (options?.generationContext === 'background' ? 'section-background' : 'component-image');
+        const category = options?.adminCategory || 'general';
+        const visualSettings = [
+            options?.aspectRatio ? `Aspect ratio: ${options.aspectRatio}` : null,
+            options?.style && options.style !== 'None' ? `Style: ${options.style}` : null,
+            options?.lighting && options.lighting !== 'None' ? `Lighting: ${options.lighting}` : null,
+            options?.cameraAngle && options.cameraAngle !== 'None' ? `Camera angle: ${options.cameraAngle}` : null,
+            options?.colorGrading && options.colorGrading !== 'None' ? `Color grading: ${options.colorGrading}` : null,
+            options?.depthOfField && options.depthOfField !== 'None' ? `Depth of field: ${options.depthOfField}` : null,
+            referenceImages?.length ? `Reference images provided: ${referenceImages.length}` : null,
+        ].filter(Boolean).join('\n');
+
+        const usageRules: Record<string, string> = {
+            'section-background': `This prompt is for a website section background.
+- Prioritize atmosphere, depth, texture, brand mood, and broad composition.
+- Leave clean negative space for UI/text overlays.
+- Do not add readable text, app screens, buttons, icons, logos, mockups, frames, cards, menus, people staring at camera, or product labels unless the original prompt explicitly asks for them.
+- Avoid busy foreground subjects that would compete with page content.`,
+            'component-image': `This prompt is for a visual inside a website component.
+- Make the subject clear and relevant to the component area.
+- Keep it usable in a UI container, with balanced margins and no clutter.
+- Do not add readable text, fake UI, buttons, captions, watermarks, or brand labels unless explicitly requested.`,
+            'admin-asset': `This prompt is for the Quimera.ai administration asset library, category: ${category}.
+- Optimize for reusable production assets.
+- Match the category exactly; do not invent extra objects or UI.
+- Do not add readable text, watermarks, signatures, labels, app chrome, or decorative elements unrelated to the category.
+- If the category is background, apply background rules with negative space.
+- If the category is logo, describe symbol/mark direction only and avoid text unless the original prompt asks for lettering.`,
+            'project-library': `This prompt is for a project media library image.
+- Keep it directly useful for the user's site.
+- Avoid unnecessary props, fake interfaces, text overlays, watermarks, and unrelated scenery.
+- Preserve the user's original subject and intent.`,
+            'template-thumbnail': `This prompt is for a website template thumbnail.
+- Create a clean visual preview of the website/template mood, not a poster.
+- It may show abstract website layout structure, but avoid readable text, fake brand names, watermarks, and excessive UI details.
+- Keep the composition clear at small sizes with a strong focal hierarchy.`,
+        };
+
+        return `You are Quimera.ai's image prompt enhancer for website and asset generation.
+
+Rewrite the user's draft into one production-ready image generation prompt.
+
+Core rules:
+- Preserve the user's original intent and subject.
+- Add only useful visual details for the target area.
+- Remove or avoid anything that should not visibly appear in the generated image.
+- Do not add text, letters, words, captions, watermarks, signatures, fake UI controls, buttons, menus, or logos unless the user's draft explicitly requests them.
+- Do not mention these instructions in the output.
+- Return only the enhanced prompt as one concise paragraph, no markdown, no labels.
+
+Target area:
+${usageRules[usage] || usageRules['component-image']}
+
+Current settings:
+${visualSettings || 'No extra settings selected.'}
+
+Original prompt:
+${draftPrompt}
+
+Enhanced prompt:`;
+    };
+
     // Enhance prompt using AI
-    const enhancePrompt = async (draftPrompt: string, referenceImages?: string[]): Promise<string> => {
+    const enhancePrompt = async (draftPrompt: string, referenceImages?: string[], options?: EnhancePromptOptions): Promise<string> => {
         const startTime = Date.now();
 
         try {
-            const systemPrompt = `You are a professional prompt engineer. Enhance the following image generation prompt to be more detailed and specific, while maintaining the original intent. Add details about lighting, composition, style, and mood. Keep it concise but descriptive.
-
-Original prompt: ${draftPrompt}
-
-Enhanced prompt:`;
+            const systemPrompt = buildPromptEnhancementInstructions(draftPrompt, referenceImages, options);
 
             if (shouldUseProxy()) {
                 const result = await generateContentViaProxy(

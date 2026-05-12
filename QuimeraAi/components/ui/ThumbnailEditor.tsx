@@ -293,7 +293,13 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
         setIsEnhancingPrompt(true);
         try {
-            const enhanced = await enhancePrompt(thumbnailPrompt);
+            const enhanced = await enhancePrompt(thumbnailPrompt, undefined, {
+                usage: 'template-thumbnail',
+                destination: 'admin',
+                adminCategory: 'template',
+                aspectRatio: '16:9',
+                style: thumbnailStyle,
+            });
             setThumbnailPrompt(enhanced);
         } catch (error) {
             console.error('Error enhancing prompt:', error);
@@ -1036,4 +1042,3 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 };
 
 export default ThumbnailEditor;
-

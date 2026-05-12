@@ -486,7 +486,22 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         if (!prompt.trim()) return;
         setIsEnhancing(true);
         try {
-            const enhanced = await enhancePrompt(prompt, referenceImages.length > 0 ? referenceImages : undefined);
+            const enhanced = await enhancePrompt(
+                prompt,
+                referenceImages.length > 0 ? referenceImages : undefined,
+                {
+                    usage: generationContext === 'background' ? 'section-background' : (effectiveDestination === 'admin' ? 'admin-asset' : 'component-image'),
+                    generationContext,
+                    destination: effectiveDestination,
+                    adminCategory,
+                    aspectRatio,
+                    style,
+                    lighting,
+                    cameraAngle,
+                    colorGrading,
+                    depthOfField,
+                }
+            );
             setPrompt(enhanced);
         } catch (error) {
             console.error(error);

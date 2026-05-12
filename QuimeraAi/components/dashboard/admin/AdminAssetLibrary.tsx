@@ -757,7 +757,22 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
         if (!prompt.trim()) return;
         setIsEnhancing(true);
         try {
-            const enhanced = await enhancePrompt(prompt);
+            const enhanced = await enhancePrompt(
+                prompt,
+                referenceImages.length > 0 ? referenceImages : undefined,
+                {
+                    usage: 'admin-asset',
+                    destination: 'admin',
+                    adminCategory: selectedCategory,
+                    generationContext: selectedCategory === 'background' ? 'background' : 'general',
+                    aspectRatio,
+                    style,
+                    lighting,
+                    cameraAngle,
+                    colorGrading,
+                    depthOfField,
+                }
+            );
             setPrompt(enhanced);
             success(t('adminAssets.enhanced', 'Prompt enhanced!'));
         } catch (error) {
@@ -1382,7 +1397,6 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 };
 
 export default AdminAssetLibrary;
-
 
 
 

@@ -456,7 +456,20 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
         if (!prompt.trim()) return;
         setIsEnhancing(true);
         try {
-            const enhanced = await enhancePrompt(prompt);
+            const enhanced = await enhancePrompt(
+                prompt,
+                referenceImages.length > 0 ? referenceImages : undefined,
+                {
+                    usage: 'project-library',
+                    destination: 'user',
+                    aspectRatio,
+                    style,
+                    lighting,
+                    cameraAngle,
+                    colorGrading,
+                    depthOfField,
+                }
+            );
             setPrompt(enhanced);
             success(t('dashboard.assets.generator.enhanced'));
         } catch (error) {
