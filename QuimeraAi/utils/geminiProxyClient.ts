@@ -501,6 +501,15 @@ export interface ImageProxyResponse {
     };
 }
 
+function dataUrlToProxyImage(image: string): { mimeType: string; data: string } | null {
+    const match = image.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) return null;
+    return {
+        mimeType: match[1] || 'image/jpeg',
+        data: match[2],
+    };
+}
+
 /**
  * Generate image using the secure Gemini proxy
  * This keeps the API key secure on the server side
@@ -514,6 +523,11 @@ export async function generateImageViaProxy(
 ): Promise<ImageProxyResponse> {
     try {
         // Image generation request - logging disabled for production
+
+        const referenceImages = config.referenceImages?.slice(0, 14);
+        const inlineReferenceImages = referenceImages
+            ?.map(dataUrlToProxyImage)
+            .filter((image): image is { mimeType: string; data: string } => Boolean(image));
 
         const response = await callAiProxy({
                 userId,
@@ -529,8 +543,11 @@ export async function generateImageViaProxy(
                 personGeneration: config.personGeneration,
                 temperature: config.temperature,
                 negativePrompt: config.negativePrompt,
-                // Reference images for style transfer (base64 data URLs)
-                referenceImages: config.referenceImages,
+                // Reference images for style transfer.
+                // `referenceImages` is the source-of-truth field; `images` keeps compatibility
+                // with deployed proxy versions that only read the older multimodal field.
+                referenceImages,
+                images: inlineReferenceImages && inlineReferenceImages.length > 0 ? inlineReferenceImages : undefined,
                 // Visual controls
                 config: {
                     lighting: config.lighting,
@@ -676,7 +693,6 @@ export function shouldUseProxy(): boolean {
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
 
 
 

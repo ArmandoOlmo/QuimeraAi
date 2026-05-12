@@ -46,6 +46,30 @@ function isImageModel(model: string): boolean {
     return lowerModel.includes('image') || lowerModel.includes('imagen') || lowerModel.includes('banana');
 }
 
+function imageInputToUrl(input: unknown): string | null {
+    if (!input) return null;
+
+    if (typeof input === 'string') {
+        if (input.startsWith('data:image/') || input.startsWith('http')) return input;
+        return `data:image/jpeg;base64,${input}`;
+    }
+
+    if (typeof input === 'object') {
+        const image = input as Record<string, unknown>;
+        if (typeof image.url === 'string') return image.url;
+        if (typeof image.imageUrl === 'string') return image.imageUrl;
+        if (typeof image.image_url === 'string') return image.image_url;
+        if (typeof image.data === 'string') {
+            const mimeType = typeof image.mimeType === 'string' ? image.mimeType : 'image/jpeg';
+            return image.data.startsWith('data:image/')
+                ? image.data
+                : `data:${mimeType};base64,${image.data}`;
+        }
+    }
+
+    return null;
+}
+
 serve(async (req) => {
     // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
@@ -80,7 +104,7 @@ serve(async (req) => {
             );
         }
 
-        const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, tools } = payload;
+        const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, referenceImages, tools } = payload;
 
         if (!OPENROUTER_API_KEY) {
             throw new Error('OPENROUTER_API_KEY is not configured in Supabase Edge Functions');
@@ -106,15 +130,23 @@ serve(async (req) => {
             }
         }
 
-        // Handle prompt with or without images (vision)
-        if (images && images.length > 0) {
+        const imageInputs = [
+            ...(Array.isArray(referenceImages) ? referenceImages : []),
+            ...(Array.isArray(images) ? images : []),
+        ]
+            .map(imageInputToUrl)
+            .filter((url): url is string => Boolean(url))
+            .filter((url, index, all) => all.indexOf(url) === index)
+            .slice(0, 14);
+
+        // Handle prompt with or without images (vision/reference images)
+        if (imageInputs.length > 0) {
             const contentParts: any[] = [{ type: 'text', text: prompt || ' ' }];
-            for (const img of images) {
-                // OpenRouter expects data url for images: "data:image/jpeg;base64,..."
+            for (const imageUrl of imageInputs) {
                 contentParts.push({
                     type: 'image_url',
                     image_url: {
-                        url: `data:${img.mimeType || 'image/jpeg'};base64,${img.data}`
+                        url: imageUrl
                     }
                 });
             }
@@ -136,7 +168,7 @@ serve(async (req) => {
         }
 
         // Debug log for troubleshooting
-        console.log(`[ai-proxy] Requesting: model=${orModel}, messages=${messages.length}, max_tokens=${maxTokens}, temp=${temperature}${isImageGen ? ', modalities=text+image' : ''}`);
+        console.log(`[ai-proxy] Requesting: model=${orModel}, messages=${messages.length}, images=${imageInputs.length}, max_tokens=${maxTokens}, temp=${temperature}${isImageGen ? ', modalities=text+image' : ''}`);
 
         const orResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
