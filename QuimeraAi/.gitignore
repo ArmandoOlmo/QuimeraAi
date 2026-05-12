@@ -79,3 +79,9 @@ test-results/
 playwright/.auth/
 .vercel
 .env*.local
+
+# Supabase
+supabase/.temp/
+supabase/project-ref
+supabase/linked-project.json
+supabase/.temp
