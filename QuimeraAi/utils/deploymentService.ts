@@ -589,54 +589,18 @@ class DeploymentService {
      */
     async verifyDNS(domainName: string): Promise<DNSVerificationResult> {
         try {
-            // In a real implementation, this would check actual DNS records
-            // For now, we'll simulate the verification
-            console.log(`Verifying DNS for ${domainName}...`);
-
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Simulate verification (70% success rate)
-            const verified = Math.random() > 0.3;
-
-            if (verified) {
-                return {
-                    verified: true,
-                    records: [
-                        {
-                            type: 'A' as const,
-                            host: '@',
-                            value: '76.76.21.21',
-                            verified: true
-                        },
-                        {
-                            type: 'CNAME' as const,
-                            host: 'www',
-                            value: 'cname.vercel-dns.com',
-                            verified: true
-                        }
-                    ]
-                };
-            } else {
-                return {
-                    verified: false,
-                    records: [
-                        {
-                            type: 'A' as const,
-                            host: '@',
-                            value: '76.76.21.21',
-                            verified: false
-                        },
-                        {
-                            type: 'CNAME' as const,
-                            host: 'www',
-                            value: 'cname.vercel-dns.com',
-                            verified: false
-                        }
-                    ],
-                    error: 'DNS records not found or incorrect'
-                };
-            }
+            const { verifyDomainDNS } = await import('../services/domainService');
+            const result = await verifyDomainDNS(domainName);
+            return {
+                verified: result.verified,
+                records: (result.dnsRecords || []).map(record => ({
+                    type: record.type as 'A' | 'CNAME' | 'TXT',
+                    host: record.host,
+                    value: record.value,
+                    verified: !!record.verified,
+                })),
+                error: result.error,
+            };
         } catch (error) {
             return {
                 verified: false,
@@ -654,20 +618,7 @@ class DeploymentService {
      */
     generateDNSRecords(provider: DeploymentProvider = 'vercel') {
         const records = {
-            vercel: [
-                {
-                    type: 'A' as const,
-                    host: '@',
-                    value: '76.76.21.21',
-                    verified: false
-                },
-                {
-                    type: 'CNAME' as const,
-                    host: 'www',
-                    value: 'cname.vercel-dns.com',
-                    verified: false
-                }
-            ],
+            vercel: [],
             cloudflare: [
                 {
                     type: 'CNAME' as const,
@@ -712,55 +663,13 @@ class DeploymentService {
         html: string
     ): Promise<DeploymentResult> {
         try {
-            console.log('Deploying to Vercel via API...');
-
-            // Check for API credentials
-            const VERCEL_TOKEN = import.meta.env.VITE_VERCEL_TOKEN;
-            const VERCEL_TEAM_ID = import.meta.env.VITE_VERCEL_TEAM_ID;
-
-            if (!VERCEL_TOKEN) {
-                console.warn('VITE_VERCEL_TOKEN not found. Using simulation mode.');
-                return await this.simulateDeployment(project, domain, html);
-            }
-
-            const projectName = domain.name.replace(/\./g, '-');
-
-            // 2. Create Deployment
-            const deploymentResponse = await fetch(`https://api.vercel.com/v13/deployments${VERCEL_TEAM_ID ? `?teamId=${VERCEL_TEAM_ID}` : ''}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${VERCEL_TOKEN}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: projectName,
-                    projectSettings: {
-                        framework: null,
-                    },
-                    files: [
-                        {
-                            file: 'index.html',
-                            data: html,
-                        }
-                    ],
-                    target: 'production',
-                }),
-            });
-
-            if (!deploymentResponse.ok) {
-                const errorData = await deploymentResponse.json();
-                throw new Error(`Vercel API error: ${errorData.error?.message || deploymentResponse.statusText}`);
-            }
-
-            const deploymentData = await deploymentResponse.json();
-
+            console.log('Vercel deployment via client-side API is disabled for security.');
+            console.log('Use onboarding-api for domain management; dynamic project publishing is handled by publishService.');
             return {
                 success: true,
-                deploymentUrl: `https://${deploymentData.url}`,
-                deploymentId: deploymentData.id,
-                dnsRecords: this.generateDNSRecords('vercel')
+                deploymentUrl: `https://${domain.name}`,
+                dnsRecords: domain.dnsRecords || this.generateDNSRecords('vercel')
             };
-
         } catch (error) {
             console.error('Vercel deployment failed:', error);
             return {
@@ -773,47 +682,30 @@ class DeploymentService {
     /**
      * Bind a custom domain to the Vercel project via API
      */
-    public async addDomainToVercel(domainName: string): Promise<{ success: boolean; error?: string }> {
+    public async addDomainToVercel(domainName: string, projectId?: string): Promise<{ success: boolean; error?: string }> {
         try {
-            console.log(`Binding domain ${domainName} to Vercel...`);
-            const VERCEL_TOKEN = import.meta.env.VITE_VERCEL_TOKEN;
-            // Retrieve project id from Vercel team variables or use default
-            const VERCEL_PROJECT_ID = import.meta.env.VITE_VERCEL_PROJECT_ID || 'quimera-ai';
-            const VERCEL_TEAM_ID = import.meta.env.VITE_VERCEL_TEAM_ID;
-
-            if (!VERCEL_TOKEN) {
-                throw new Error("Missing VITE_VERCEL_TOKEN. Vercel integration requires the API token.");
+            if (!projectId) {
+                throw new Error("Project ID is required to bind a domain to Vercel.");
             }
 
-            const url = new URL(`https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains`);
-            if (VERCEL_TEAM_ID) {
-                url.searchParams.append('teamId', VERCEL_TEAM_ID);
-            }
-
-            const response = await fetch(url.toString(), {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${VERCEL_TOKEN}`,
-                    'Content-Type': 'application/json',
+            const { supabase } = await import('../supabase');
+            const result = await supabase.functions.invoke('onboarding-api', {
+                body: {
+                    action: 'domains-add',
+                    domain: domainName,
+                    projectId,
                 },
-                body: JSON.stringify({
-                    name: domainName
-                }),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.warn(`[Vercel] Warning adding domain ${domainName}:`, errorData);
-                // 400 with "Domain is already assigned" is fine.
-                if (response.status === 400 && errorData.error?.code === 'forbidden' || errorData.error?.code === 'domain_already_in_use') {
-                    throw new Error(errorData.error?.message || response.statusText);
-                }
-                if (response.status !== 400 || (errorData.error?.code !== 'domain_already_in_use' && errorData.error?.code !== 'domain_already_assigned')) {
-                    throw new Error(`Vercel API error: ${errorData.error?.message || response.statusText}`);
-                }
+            if (result.error) {
+                throw result.error;
             }
 
-            return { success: true };
+            const response = result.data?.data || result.data;
+            return {
+                success: response?.success === true,
+                error: response?.success === true ? undefined : response?.error || 'Unknown Vercel domain binding error',
+            };
         } catch (error) {
             console.error('Failed to bind domain to Vercel:', error);
             return {
@@ -984,4 +876,3 @@ class DeploymentService {
 
 export const deploymentService = DeploymentService.getInstance();
 export default deploymentService;
-

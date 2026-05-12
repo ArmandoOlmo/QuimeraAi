@@ -34,20 +34,20 @@ const DomainsContext = createContext<DomainsContextType | undefined>(undefined);
 
 const mapCustomDomainRow = (row: any): Domain => {
     const data = row.data || {};
-    const domainName = row.domain_name || data.domain || data.name;
+    const domainName = row.domain_name || row.domain || data.domain || data.name;
 
     return {
+        ...data, // Mantener metadata original
         id: domainName,
         name: domainName,
-        projectId: data.projectId || data.project_id || row.project_id,
-        projectUserId: data.projectUserId || data.project_user_id,
+        domain: domainName,
+        projectId: row.project_id || data.projectId || data.project_id,
         userId: row.user_id || data.userId || data.user_id,
-        status: data.status || row.status || 'pending',
-        sslStatus: data.sslStatus || data.ssl_status || row.ssl_status || 'pending',
-        createdAt: data.createdAt || row.created_at || row.updated_at,
-        dnsVerified: data.dnsVerified ?? data.dns_verified ?? row.dns_verified ?? false,
-        cloudRunTarget: data.cloudRunTarget || data.cloud_run_target || row.cloud_run_target,
-        ...data,
+        status: row.status || data.status || 'pending',
+        sslStatus: row.ssl_status || data.sslStatus || data.ssl_status || 'pending',
+        dnsVerified: row.dns_verified ?? data.dnsVerified ?? data.dns_verified ?? false,
+        cloudRunTarget: row.cloud_run_target || data.cloudRunTarget || data.cloud_run_target,
+        updatedAt: row.updated_at || data.updatedAt,
     } as any;
 };
 
@@ -182,38 +182,43 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [user, activeProjectId, currentTenantId]);
 
     // Add domain
-    const addDomain = async (domain: Domain) => {
+    const addDomain = async (domain: Partial<Domain>) => {
         if (!user) return;
 
         try {
-            const { id: _tempId, ...domainDataWithoutId } = domain;
-            const projectIdToUse = domain.projectId || activeProjectId;
-            const projectUserIdToUse = domain.projectUserId || user.id;
-            const normalizedDomain = domain.name.toLowerCase().replace(/^www\./, '');
-            const domainId = normalizedDomain; 
+            const domainDataWithoutId = { ...domain };
+            delete (domainDataWithoutId as any).id;
 
-            // Sync to global customDomains table
-            await supabase.from('custom_domains').upsert({
-                domain_name: normalizedDomain,
-                user_id: user.id, // Who created the domain entry
-                data: toCustomDomainData({
-                    ...domain,
-                    projectId: projectIdToUse || undefined,
-                    projectUserId: projectUserIdToUse,
-                    status: 'ssl_pending',
-                    sslStatus: 'provisioning',
-                    dnsVerified: false,
-                    cloudRunTarget: 'cname.vercel-dns.com', // Legacy property name, points to Vercel now
-                }, normalizedDomain),
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'domain_name' });
+            const projectIdToUse = domain.projectId || activeProjectId;
+            if (!projectIdToUse) {
+                throw new Error("No hay un proyecto activo para vincular este dominio");
+            }
+
+            const normalizedDomain = domain.name!.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+            const domainId = normalizedDomain;
+
+            const { addCustomDomainToProject } = await import('../../services/domainService');
+            const mappingResult = await addCustomDomainToProject(normalizedDomain, projectIdToUse);
+
+            if (!mappingResult.success) {
+                throw new Error(mappingResult.error || "No se pudo vincular el dominio a Vercel");
+            }
+
+            const projectUserIdToUse = mappingResult.projectUserId || domain.projectUserId || user.id;
 
             const newDomain = {
                 ...domainDataWithoutId,
                 id: domainId,
+                name: mappingResult.domain || normalizedDomain,
                 projectId: projectIdToUse,
                 projectUserId: projectUserIdToUse,
-                status: 'ssl_pending',
+                status: (mappingResult.status as Domain['status']) || 'pending',
+                sslStatus: (mappingResult.sslStatus as Domain['sslStatus']) || 'provisioning',
+                dnsVerified: mappingResult.dnsVerified ?? false,
+                data: {
+                    ...(domainDataWithoutId.data || {}),
+                    dnsRecords: mappingResult.dnsRecords || []
+                }
             } as Domain;
 
             setDomains(prev => {
@@ -221,41 +226,8 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
                 return [newDomain, ...filtered];
             });
 
-            console.log(`✅ [DomainsContext] Domain added with ID: ${domainId}, projectId: ${projectIdToUse}`);
-
-            // AUTOMATIC: Bind custom domain to Vercel Project
-            try {
-                console.log(`🔐 [DomainsContext] Binding domain to Vercel: ${normalizedDomain}`);
-                const DeploymentService = (await import('../../utils/deploymentService')).DeploymentService;
-                const deploymentService = DeploymentService.getInstance();
-                const mappingResult = await deploymentService.addDomainToVercel(normalizedDomain);
-
-                if (mappingResult.success) {
-                    console.log(`✅ [DomainsContext] Domain successfully added to Vercel.`);
-
-                    const newStatus = 'pending';
-                    const newSslStatus = 'provisioning';
-                    
-                    await supabase.from('custom_domains').update({
-                        data: toCustomDomainData({
-                            ...newDomain,
-                            status: newStatus,
-                            sslStatus: newSslStatus,
-                        }, normalizedDomain),
-                        updated_at: new Date().toISOString()
-                    }).eq('domain_name', normalizedDomain);
-
-                    setDomains(prev => prev.map(d =>
-                        d.id === domainId
-                            ? { ...d, status: newStatus, sslStatus: newSslStatus }
-                            : d
-                    ));
-                } else {
-                    console.warn(`⚠️ [DomainsContext] Vercel mapping failed:`, mappingResult.error);
-                }
-            } catch (mappingError: any) {
-                console.error(`❌ [DomainsContext] Vercel mapping error:`, mappingError);
-            }
+            console.log(`✅ [DomainsContext] Domain added: ${domainId}`);
+            await fetchUserDomains(user.id);
         } catch (error) {
             console.error("[DomainsContext] Error adding domain:", error);
             throw error;
@@ -332,78 +304,18 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Verify domain (DNS check)
     const verifyDomain = async (id: string): Promise<boolean> => {
-        if (!user) return false;
+        const domain = domains.find(d => d.id === id);
+        if (!domain || !user) return false;
 
         try {
-            const domain = domains.find(d => d.id === id);
-            if (!domain) return false;
-
             console.log(`🔍 [DomainsContext] Verifying domain: ${domain.name}`);
-            const normalizedDomain = domain.name.toLowerCase().trim().replace(/^www\./, '');
-
-            await updateDomain(id, { status: 'verifying' });
-
-            // AUTO-RECOVERY
-            try {
-                const { checkCloudRunDomainMappingStatus, createCloudRunDomainMapping } = await import('../../services/domainService');
-                const mappingStatus = await checkCloudRunDomainMappingStatus(normalizedDomain);
-
-                if (!mappingStatus.exists) {
-                    console.log(`⚠️ [DomainsContext] Cloud Run mapping missing. Attempting to create...`);
-                    const createResult = await createCloudRunDomainMapping(normalizedDomain);
-                    if (createResult.success) {
-                        await updateDomain(id, {
-                            cloudRunMappingCreated: true,
-                            sslStatus: 'provisioning',
-                            status: 'ssl_pending' 
-                        });
-                    }
-                } else if (mappingStatus.ready) {
-                    await updateDomain(id, { sslStatus: 'active' });
-                } else {
-                    await updateDomain(id, { sslStatus: 'provisioning' });
-                }
-            } catch (e) {
-                console.warn("⚠️ [DomainsContext] Failed to check/recover Cloud Run status:", e);
-            }
-
-            // REAL VERIFICATION
-            try {
-                const testUrl = `https://${normalizedDomain}`;
-                console.log(`🔍 [DomainsContext] Testing URL: ${testUrl}`);
-
-                await fetch(testUrl, { method: 'HEAD', mode: 'no-cors', cache: 'no-cache' });
-                console.log(`✅ [DomainsContext] Domain ${normalizedDomain} is reachable`);
-
-                await supabase.from('custom_domains').update({
-                    data: toCustomDomainData({
-                        ...domain,
-                        status: 'active',
-                        sslStatus: 'active',
-                        dnsVerified: true,
-                    }, normalizedDomain),
-                    updated_at: new Date().toISOString()
-                }).eq('domain_name', normalizedDomain);
-
-                await updateDomain(id, {
-                    status: 'active',
-                    sslStatus: 'active',
-                    verifiedAt: new Date().toISOString(),
-                });
-
-                return true;
-            } catch (fetchError: any) {
-                console.log(`⏳ [DomainsContext] Domain ${normalizedDomain} not ready yet: ${fetchError.message}`);
-
-                await updateDomain(id, {
-                    status: 'pending',
-                    sslStatus: 'pending',
-                });
-                return false;
-            }
-        } catch (error: any) {
-            console.error("❌ [DomainsContext] Error verifying domain:", error);
-            await updateDomain(id, { status: 'error' });
+            const { syncDomainMapping } = await import('../../services/domainService');
+            const result = await syncDomainMapping(domain.name, domain.projectId);
+            
+            await fetchUserDomains(user.id);
+            return result.success && (result.status === 'active' || result.dnsVerified);
+        } catch (e) {
+            console.error('Error verifying domain:', e);
             return false;
         }
     };

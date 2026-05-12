@@ -145,6 +145,13 @@ export interface DNSVerificationResult {
         found: string[];
         verified: boolean;
     }[];
+    dnsRecords?: DNSRecord[];
+    verification?: {
+        type: string;
+        domain: string;
+        value: string;
+        reason?: string;
+    }[];
     error?: string;
     checkedAt: string;
 }

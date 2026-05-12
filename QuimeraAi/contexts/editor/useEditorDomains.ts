@@ -26,17 +26,23 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
 
             if (error) throw error;
 
-            const userDomains = (data || []).map(row => ({
-                id: row.domain,
-                name: row.domain,
-                projectId: row.project_id,
-                userId: row.user_id,
-                status: row.status,
-                sslStatus: row.ssl_status,
-                createdAt: row.updated_at,
-                dnsVerified: row.dns_verified,
-                cloudRunTarget: row.cloud_run_target,
-            } as any));
+            const userDomains = (data || []).map(row => {
+                const rowData = row.data || {};
+                const domainName = row.domain_name || row.domain || rowData.domain || rowData.name;
+                return {
+                    id: domainName,
+                    name: domainName,
+                    projectId: rowData.projectId || rowData.project_id || row.project_id,
+                    projectUserId: rowData.projectUserId || rowData.project_user_id,
+                    userId: row.user_id || rowData.userId || rowData.user_id,
+                    status: rowData.status || row.status,
+                    sslStatus: rowData.sslStatus || rowData.ssl_status || row.ssl_status,
+                    createdAt: row.created_at || row.updated_at,
+                    dnsVerified: rowData.dnsVerified ?? rowData.dns_verified ?? row.dns_verified,
+                    dnsRecords: rowData.dnsRecords || [],
+                    cloudRunTarget: rowData.cloudRunTarget || rowData.cloud_run_target || row.cloud_run_target,
+                } as any;
+            });
 
             setDomains(userDomains);
         } catch (error) {
@@ -51,32 +57,23 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
         setDomains(prev => [newDomain, ...prev]);
 
         try {
-            if (domainData.provider === 'External' && domainData.projectId) {
-                try {
-                    const { addCustomDomainToProject } = await import('../../services/domainService');
-                    const result = await addCustomDomainToProject(domainData.name, domainData.projectId);
-
-                    if (result.success && result.dnsRecords) {
-                        newDomain.dnsRecords = result.dnsRecords;
-                        newDomain.verificationToken = result.verificationToken;
-                        newDomain.status = 'pending';
-                    }
-                } catch (cfError) {
-                    console.warn('Cloud Function call failed, falling back to local storage:', cfError);
-                }
+            if (!domainData.projectId) {
+                throw new Error('Project ID is required to add a domain');
             }
 
             const normalizedDomain = domainData.name.toLowerCase().replace(/^www\./, '');
-            await supabase.from('custom_domains').upsert({
-                domain: normalizedDomain,
-                project_id: domainData.projectId || null,
-                user_id: user.id,
-                status: newDomain.status || 'pending',
-                ssl_status: newDomain.sslStatus || 'pending',
-                dns_verified: false,
-                cloud_run_target: 'quimera-ssr-575386543550.us-central1.run.app',
-                updated_at: new Date().toISOString()
-            });
+            const { addCustomDomainToProject } = await import('../../services/domainService');
+            const result = await addCustomDomainToProject(normalizedDomain, domainData.projectId);
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to add domain');
+            }
+
+            newDomain.dnsRecords = result.dnsRecords;
+            newDomain.verificationToken = result.verificationToken;
+            newDomain.status = (result.status as any) || 'pending';
+            newDomain.sslStatus = (result.sslStatus as any) || 'provisioning';
+            newDomain.dnsVerified = result.dnsVerified ?? false;
 
             setDomains(prev => prev.map(d => d.id === domainData.id ? { ...newDomain, id: normalizedDomain } : d));
         } catch (e) {
@@ -98,7 +95,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
             if (data.status !== undefined) syncData.status = data.status;
             if (data.sslStatus !== undefined) syncData.ssl_status = data.sslStatus;
             
-            await supabase.from('custom_domains').update(syncData).eq('domain', normalizedDomain);
+            await supabase.from('custom_domains').update(syncData).or(`domain_name.eq.${normalizedDomain},domain.eq.${normalizedDomain}`);
         } catch (e) {
             console.error("Error updating domain", e);
         }
@@ -121,7 +118,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
                 }
             }
 
-            await supabase.from('custom_domains').delete().eq('domain', normalizedDomain);
+            await supabase.from('custom_domains').delete().or(`domain_name.eq.${normalizedDomain},domain.eq.${normalizedDomain}`);
         } catch (e) {
             console.error("Error deleting domain", e);
         }
@@ -226,7 +223,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
                     status: 'active',
                     ssl_status: 'active',
                     dns_verified: true
-                }).eq('domain', normalizedDomain);
+                }).or(`domain_name.eq.${normalizedDomain},domain.eq.${normalizedDomain}`);
 
                 await updateDomain(domainId, {
                     status: 'active',

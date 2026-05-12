@@ -17,8 +17,16 @@ export async function addCustomDomainToProject(
 ): Promise<{
     success: boolean;
     domain: string;
+    projectId?: string;
+    projectUserId?: string;
+    projectTenantId?: string | null;
+    status?: string;
+    sslStatus?: string;
+    dnsVerified?: boolean;
     dnsRecords: DNSRecord[];
+    verification?: Array<{ type: string; domain: string; value: string; reason?: string }>;
     verificationToken?: string;
+    vercelProjectId?: string;
     error?: string;
 }> {
     try {
@@ -69,8 +77,9 @@ export async function removeCustomDomainFromProject(domain: string): Promise<{ s
 export async function verifyDomainDNS(domain: string): Promise<DNSVerificationResult> {
     try {
         const { supabase } = await import('../supabase');
+        // Usamos la nueva acción unificada sync-domain-mapping
         const result = await supabase.functions.invoke('onboarding-api', {
-            body: { action: 'domains-verifyDNS', domain }
+            body: { action: 'sync-domain-mapping', domain }
         });
 
         if (result.error) throw result.error;
@@ -84,6 +93,48 @@ export async function verifyDomainDNS(domain: string): Promise<DNSVerificationRe
             records: [],
             error: error.message || 'DNS verification failed',
             checkedAt: new Date().toISOString()
+        };
+    }
+}
+
+/**
+ * Synchronizes domain mapping and status with Vercel and local DB
+ */
+export async function syncDomainMapping(domain: string, projectId?: string): Promise<{
+    success: boolean;
+    domain?: string;
+    verified?: boolean;
+    status: string;
+    sslStatus: string;
+    dnsVerified: boolean;
+    dnsRecords: DNSRecord[];
+    records?: DNSVerificationResult['records'];
+    checkedAt?: string;
+    config?: any;
+    error?: string;
+}> {
+    try {
+        const { supabase } = await import('../supabase');
+        const result = await supabase.functions.invoke('onboarding-api', {
+            body: { action: 'sync-domain-mapping', domain, projectId }
+        });
+
+        if (result.error) throw result.error;
+        return result.data?.data || result.data;
+
+    } catch (error: any) {
+        console.error('[DomainService] Error syncing domain mapping:', error);
+        return {
+            success: false,
+            domain,
+            verified: false,
+            status: 'error',
+            sslStatus: 'pending',
+            dnsVerified: false,
+            dnsRecords: [],
+            records: [],
+            checkedAt: new Date().toISOString(),
+            error: error.message || 'Domain sync failed'
         };
     }
 }
@@ -428,8 +479,6 @@ export async function setupFullDomainMapping(
         };
     }
 }
-
-
 
 
 

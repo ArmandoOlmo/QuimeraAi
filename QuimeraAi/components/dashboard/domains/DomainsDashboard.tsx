@@ -18,14 +18,13 @@ import { Domain } from '../../../types';
 
 // --- IMPORTS ---
 import { useTranslation } from 'react-i18next';
-import { CLOUD_RUN_DNS_CONFIG } from '../../../types/domains';
+import { DNSRecord } from '../../../types/domains';
 
-// --- QUIMERA DNS CONFIG (Vercel Integration) ---
-// Vercel Anycast IP for A records
-const QUIMERA_DNS = {
-    IP: '76.76.21.21',
-    // www CNAME should point to cname.vercel-dns.com
-    CNAME: 'cname.vercel-dns.com'
+const getDomainDnsRecords = (domain: Domain): DNSRecord[] => {
+    const dataRecords = (domain as any).data?.dnsRecords;
+    if (Array.isArray(dataRecords) && dataRecords.length > 0) return dataRecords;
+    if (Array.isArray(domain.dnsRecords) && domain.dnsRecords.length > 0) return domain.dnsRecords;
+    return [];
 };
 
 // --- STEP INDICATOR COMPONENT ---
@@ -83,24 +82,15 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
         setVerificationMessage(null);
 
         try {
-            // If domain has Cloudflare setup, use nameserver verification
-            if (hasCloudflareSetup) {
-                const { verifyExternalDomainNameservers } = await import('../../../services/domainService');
-                const result = await verifyExternalDomainNameservers(domain.name);
-
-                if (result.verified) {
-                    setVerificationMessage({ text: result.message, status: 'success' });
-                    await refetch(); // Refresh domain list
-                } else {
-                    setVerificationMessage({ text: result.message, status: 'pending' });
-                }
+            const success = await verifyDomain(domain.id);
+            if (success) {
+                setVerificationMessage({ text: t('domainsDashboard.domainSyncSuccess'), status: 'success' });
             } else {
-                // Legacy verification for domains without Cloudflare
-                await verifyDomain(domain.id);
+                setVerificationMessage({ text: t('domainsDashboard.domainSyncErrorGeneric'), status: 'pending' });
             }
-        } catch (error: any) {
-            console.error('[DomainCard] Verification error:', error);
-            setVerificationMessage({ text: error.message || t('domainsDashboard.domainErrorMessage'), status: 'error' });
+        } catch (e: any) {
+            console.error('Error verifying domain:', e);
+            setVerificationMessage({ text: e.message || 'Error', status: 'error' });
         } finally {
             setIsVerifying(false);
         }
@@ -165,13 +155,13 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const deploymentLogs = getDomainDeploymentLogs(domain.id);
     const isDeploymentInProgress = false; // Desbloqueado forzosamente para permitir cambios
 
-    const handleDomainClick = async () => {
-        if (domain.status === 'active' && domain.projectId) {
+    const handleSyncMapping = async () => {
+        if (domain.projectId) {
             try {
                 const { supabase } = await import('../../../supabase');
                 const result = await supabase.functions.invoke('onboarding-api', {
                     body: {
-                        action: 'syncDomainMapping',
+                        action: 'sync-domain-mapping',
                         domain: domain.name,
                         projectId: domain.projectId
                     }
@@ -180,6 +170,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                 if (result.error) throw result.error;
 
                 alert(t('domainsDashboard.domainSyncSuccess'));
+                await refetch();
             } catch (e: any) {
                 console.error('Error syncing domain:', e);
                 alert(t('domainsDashboard.domainSyncError', { message: e.message || t('domainsDashboard.domainSyncErrorGeneric') }));
@@ -415,84 +406,47 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                             <p className="text-sm text-q-text-muted mb-4" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.dnsProviderInstructions', { section: t('domainsDashboard.dnsRecords') }) }} />
 
                             <div className="space-y-4">
-                                {/* Step 1: A Record */}
-                                <div className="bg-secondary/30 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">1</span>
-                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.recordA')}</span>
-                                        <span className="text-xs text-q-text-muted ml-1">{t('domainsDashboard.forMainDomain')}</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3 bg-q-bg p-3 rounded border border-q-border">
-                                        <div>
-                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
-                                            <code className="font-mono font-bold text-blue-500">A</code>
+                                {getDomainDnsRecords(domain).map((record: any, idx: number) => (
+                                    <div key={idx} className="bg-secondary/30 rounded-lg p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                                            <span className="text-sm font-bold text-foreground">{record.type} Record</span>
                                         </div>
-                                        <div>
-                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
-                                            <code className="font-mono font-bold text-foreground">@</code>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
-                                                    <code className="font-mono font-bold text-primary">76.76.21.21</code>
+                                        <div className="grid grid-cols-3 gap-3 bg-q-bg p-3 rounded border border-q-border">
+                                            <div>
+                                                <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
+                                                <code className={`font-mono font-bold ${record.type === 'A' ? 'text-blue-500' : 'text-green-500'}`}>{record.type}</code>
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
+                                                <code className="font-mono font-bold text-foreground">{record.host || '@'}</code>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
+                                                        <code className="font-mono font-bold text-primary text-xs">{record.value}</code>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(record.value);
+                                                            alert(`Copiado: ${record.value}`);
+                                                        }}
+                                                        className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
+                                                        title={t('copy')}
+                                                    >
+                                                        <Copy size={14} />
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText('76.76.21.21');
-                                                        alert(t('domainsDashboard.ipCopiedAlert'));
-                                                    }}
-                                                    className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
-                                                    title={t('domainsDashboard.copyIP')}
-                                                >
-                                                    <Copy size={14} />
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Step 2: CNAME Record */}
-                                <div className="bg-secondary/30 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center">2</span>
-                                        <span className="text-sm font-bold text-foreground">{t('domainsDashboard.recordCNAME')}</span>
-                                        <span className="text-xs text-q-text-muted ml-1">{t('domainsDashboard.forWwwDomain', { domain: domain.name })}</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3 bg-q-bg p-3 rounded border border-q-border">
-                                        <div>
-                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.typeLabel')}</span>
-                                            <code className="font-mono font-bold text-green-500">CNAME</code>
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.hostNameLabel')}</span>
-                                            <code className="font-mono font-bold text-foreground">www</code>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-1">{t('domainsDashboard.valuePointsTo')}</span>
-                                                    <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
-                                                        alert(t('domainsDashboard.cnameCopiedAlert'));
-                                                    }}
-                                                    className="p-1 hover:bg-primary/20 rounded text-primary ml-2"
-                                                    title={t('domainsDashboard.copyCNAME')}
-                                                >
-                                                    <Copy size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                ))}
 
                                 {/* Step 3: Wait & Verify */}
                                 <div className="bg-secondary/30 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">3</span>
+                                        <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">{getDomainDnsRecords(domain).length + 1}</span>
                                         <span className="text-sm font-bold text-foreground">{t('domainsDashboard.saveAndVerify')}</span>
                                     </div>
                                     <p className="text-xs text-q-text-muted ml-8" dangerouslySetInnerHTML={{ __html: t('domainsDashboard.saveAndVerifyText') }} />
@@ -590,53 +544,39 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                                 {t('domainsDashboard.dnsRecordsRequired')}
                             </h4>
 
-                            <div className="space-y-3 mb-4">
-                                {/* A Record */}
-                                <div className="bg-q-surface rounded-lg p-4 border border-q-border">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded mr-2">A</span>
-                                            <span className="text-sm text-q-text-muted">Host: <code className="font-mono font-bold">@</code></span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(QUIMERA_DNS.IP);
-                                                    alert(t('domainsDashboard.ipCopiedAlert'));
-                                                }}
-                                                className="p-2 hover:bg-secondary rounded-md text-q-text-muted hover:text-primary transition-colors"
-                                            >
-                                                <Copy size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* CNAME Record */}
-                                <div className="bg-q-surface rounded-lg p-4 border border-q-border">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded mr-2">CNAME</span>
-                                            <span className="text-sm text-q-text-muted">Host: <code className="font-mono font-bold">www</code></span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <code className="font-mono font-bold text-primary text-xs">{QUIMERA_DNS.CNAME}</code>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
-                                                    alert(t('domainsDashboard.cnameCopiedAlert'));
-                                                }}
-                                                className="p-2 hover:bg-secondary rounded-md text-q-text-muted hover:text-primary transition-colors"
-                                            >
-                                                <Copy size={14} />
-                                            </button>
+                            {/* DNS Records Table */}
+                            <div className="space-y-4">
+                                {getDomainDnsRecords(domain).map((record: any, idx: number) => (
+                                    <div key={idx} className="bg-q-surface rounded-lg p-4 border border-q-border">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <span className={`text-xs font-bold ${record.type === 'A' ? 'bg-blue-500/20 text-blue-500' : 'bg-green-500/20 text-green-500'} px-2 py-0.5 rounded mr-2`}>
+                                                    {record.type}
+                                                </span>
+                                                <span className="text-sm text-q-text-muted">Host: <code className="font-mono font-bold">{record.host || '@'}</code></span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <span className="text-[10px] text-q-text-muted uppercase font-bold block mb-0.5">{t('domainsDashboard.valuePointsTo')}</span>
+                                                    <code className="font-mono font-bold text-foreground text-xs">{record.value}</code>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(record.value);
+                                                        alert(`Copiado: ${record.value}`);
+                                                    }}
+                                                    className="p-1.5 hover:bg-primary/20 rounded text-primary"
+                                                    title={t('copy')}
+                                                >
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
 
-                            <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <div className="flex items-center gap-2 p-3 mt-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                                 <Clock size={14} className="text-blue-500 flex-shrink-0" />
                                 <p className="text-xs text-q-text-muted">
                                     {t('domainsDashboard.dnsPropagationNote')}
@@ -1228,31 +1168,16 @@ const DomainsDashboard: React.FC = () => {
         setCloudflareError(null);
 
         try {
-            // Simple: Just save the domain and let user configure DNS manually
-            // No need for Cloudflare setup - user will add A record pointing to our Load Balancer IP
-            const normalizedDomain = connectDomainName.toLowerCase().trim().replace(/^www\./, '');
-
-            // Find the selected project to get its userId (owner)
-            const selectedProject = projects.find(p => p.id === connectProjectId);
-            const projectUserId = selectedProject?.userId; // Owner of the project
+            const normalizedDomain = connectDomainName.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
 
             await addDomain({
-                id: `dom_${Date.now()}`,
                 name: normalizedDomain,
-                status: 'pending',
-                provider: 'External',
                 projectId: connectProjectId,
-                projectUserId: projectUserId, // Store project owner for cross-user deployment
-                createdAt: new Date().toISOString(),
-                // Store DNS config for reference
-                dnsConfig: {
-                    aRecord: QUIMERA_DNS.IP,
-                    cnameRecord: normalizedDomain
-                }
+                provider: 'External'
             });
 
             setIsConnectModalOpen(false);
-            alert(t('domainsDashboard.domainAddedAlert', { domain: normalizedDomain, ip: QUIMERA_DNS.IP }));
+            alert(t('domainsDashboard.domainAddedAlertGeneric', 'Dominio añadido. Sigue las instrucciones para configurar los registros DNS.'));
             await refetch();
 
         } catch (error: any) {
@@ -1751,74 +1676,16 @@ const DomainsDashboard: React.FC = () => {
                                 </select>
                             </div>
 
-                            {/* DNS Instructions - Like Shopify */}
+                            {/* DNS Instructions */}
                             <div className="mb-6 bg-secondary/30 rounded-xl p-4 border border-q-border">
                                 <h4 className="text-sm font-bold text-foreground mb-4 flex items-center">
                                     <Globe size={16} className="mr-2 text-primary" />
-                                    {t('domainsDashboard.dnsInstructions', 'Configura estos registros DNS')}:
+                                    {t('domainsDashboard.dnsInstructions', 'Configura estos registros DNS')}
                                 </h4>
-
-                                {/* DNS Records Table */}
-                                <div className="space-y-3">
-                                    {/* A Record */}
-                                    <div className="bg-q-surface rounded-lg p-3 border border-q-border">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-bold bg-blue-500/20 text-blue-500 px-2 py-0.5 rounded">A</span>
-                                            <span className="text-xs text-q-text-muted">{t('domainsDashboard.forRootDomain', 'Para el dominio raíz')}</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div>
-                                                <span className="text-xs text-q-text-muted">Host:</span>
-                                                <code className="block font-mono font-bold">@</code>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs text-q-text-muted">Valor:</span>
-                                                <div className="flex items-center gap-1">
-                                                    <code className="font-mono font-bold text-primary">{QUIMERA_DNS.IP}</code>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(QUIMERA_DNS.IP);
-                                                            alert(t('domainsDashboard.connectModal.ipCopied'));
-                                                        }}
-                                                        className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary"
-                                                    >
-                                                        <Copy size={12} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* CNAME Record */}
-                                    <div className="bg-q-surface rounded-lg p-3 border border-q-border">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-bold bg-green-500/20 text-green-500 px-2 py-0.5 rounded">CNAME</span>
-                                            <span className="text-xs text-q-text-muted">{t('domainsDashboard.forWww', 'Para www')}</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div>
-                                                <span className="text-xs text-q-text-muted">Host:</span>
-                                                <code className="block font-mono font-bold">www</code>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs text-q-text-muted">Valor:</span>
-                                                <div className="flex items-center gap-1">
-                                                    <code className="font-mono font-bold text-primary text-xs break-all">{QUIMERA_DNS.CNAME}</code>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(QUIMERA_DNS.CNAME);
-                                                            alert(t('domainsDashboard.connectModal.cnameCopied'));
-                                                        }}
-                                                        className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary flex-shrink-0"
-                                                    >
-                                                        <Copy size={12} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="bg-q-surface rounded-lg p-3 border border-q-border">
+                                    <p className="text-sm text-q-text-muted">
+                                        {t('domainsDashboard.connectModal.recordsAfterSave', 'Los registros DNS recomendados por Vercel aparecerán en la tarjeta del dominio después de guardarlo.')}
+                                    </p>
                                 </div>
 
                                 {/* Quick steps */}

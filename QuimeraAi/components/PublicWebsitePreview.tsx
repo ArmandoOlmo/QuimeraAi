@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../supabase';
 import { resolveI18nField, resolveI18nSectionData } from '../utils/i18nContent';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage, AiAssistantConfig } from '../types';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
@@ -323,6 +324,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // Parse URL params from pathname: /preview/userId/projectId or /preview/projectId
   // Also supports hash: #preview/userId/projectId (legacy)
   const getIdsFromURL = () => {
+    if (propProjectId) {
+      console.log('[PublicWebsitePreview] Using explicit props:', { userId: propUserId || null, projectId: propProjectId });
+      return { userId: propUserId || null, projectId: propProjectId };
+    }
+
     // First check pathname (new format): /preview/userId/projectId or /preview/projectId
     const pathname = window.location.pathname;
     if (pathname.startsWith('/preview/')) {
@@ -575,7 +581,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
             if (!projectResult.error && projectResult.data) {
               const row = projectResult.data as any;
-              const rawData = isEditorPreviewRoute ? (row.data || row.published_data) : (row.published_data || row.data);
+              const sourceData = isEditorPreviewRoute ? (row.data || row.published_data) : (row.published_data || row.data);
+              const rawData = sourceData?.data && typeof sourceData.data === 'object'
+                ? { ...sourceData, ...sourceData.data }
+                : sourceData;
 
               if (rawData) {
                 projectData = {
