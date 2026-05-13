@@ -57,6 +57,10 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       let items = (data || []).map(item => ({
         ...item,
+        body: item.content, // Map content to body for the UI
+        cta: item.link_url || item.link_text ? { label: item.link_text || '', url: item.link_url || '' } : undefined,
+        tags: item.tags || [],
+        videoUrl: item.video_url,
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
@@ -139,9 +143,12 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           created_at: now,
           updated_at: now,
           created_by: user.id,
+          content: newsData.body, // Reverse map body to content
+          link_url: newsData.cta?.url,
+          link_text: newsData.cta?.label,
+          tags: newsData.tags || [],
+          video_url: newsData.videoUrl,
           image_url: newsData.imageUrl,
-          link_url: newsData.linkUrl,
-          link_text: newsData.linkText,
           publish_at: newsData.publishAt,
           expire_at: newsData.expireAt,
           translation_group: newsData.translationGroup,
@@ -156,6 +163,9 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         delete cleanedPayload.expireAt;
         delete cleanedPayload.translationGroup;
         delete cleanedPayload.createdBy;
+        delete cleanedPayload.body; // Remove UI fields before sending to Supabase
+        delete cleanedPayload.cta;
+        delete cleanedPayload.videoUrl;
 
         const { error } = await supabase
           .from(TABLES.NEWS)
@@ -189,15 +199,20 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       try {
         const now = new Date().toISOString();
-        const payload = {
+        const payload: Record<string, unknown> = {
           ...updates,
           updated_at: now,
           updated_by: user.id,
         };
         
+        if (updates.body !== undefined) payload.content = updates.body;
+        if (updates.cta !== undefined) {
+          payload.link_url = updates.cta.url;
+          payload.link_text = updates.cta.label;
+        }
+        if (updates.tags !== undefined) payload.tags = updates.tags;
+        if (updates.videoUrl !== undefined) payload.video_url = updates.videoUrl;
         if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
-        if (updates.linkUrl !== undefined) payload.link_url = updates.linkUrl;
-        if (updates.linkText !== undefined) payload.link_text = updates.linkText;
         if (updates.publishAt !== undefined) payload.publish_at = updates.publishAt;
         if (updates.expireAt !== undefined) payload.expire_at = updates.expireAt;
         if (updates.translationGroup !== undefined) payload.translation_group = updates.translationGroup;
@@ -211,6 +226,9 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         delete cleanedData.translationGroup;
         delete cleanedData.updatedBy;
         delete cleanedData.createdBy;
+        delete cleanedData.body;
+        delete cleanedData.cta;
+        delete cleanedData.videoUrl;
 
         const { error } = await supabase
           .from(TABLES.NEWS)
@@ -260,21 +278,23 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: newId,
           title: `${original.title} (copia)`,
           excerpt: original.excerpt,
-          content: original.content,
+          content: original.body || '',
           category: original.category,
           status: 'draft',
           priority: original.priority,
           featured: original.featured,
           targeting: original.targeting,
           language: original.language,
+          tags: original.tags || [],
           views: 0,
           clicks: 0,
           created_at: now,
           updated_at: now,
           created_by: user.id,
           image_url: original.imageUrl,
-          link_url: original.linkUrl,
-          link_text: original.linkText,
+          link_url: original.cta?.url,
+          link_text: original.cta?.label,
+          video_url: original.videoUrl,
           publish_at: original.publishAt,
           expire_at: original.expireAt,
           translation_group: original.translationGroup,
@@ -331,6 +351,10 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const items = (newsData || []).map(item => ({
         ...item,
+        body: item.content,
+        cta: item.link_url || item.link_text ? { label: item.link_text || '', url: item.link_url || '' } : undefined,
+        tags: item.tags || [],
+        videoUrl: item.video_url,
         createdAt: item.created_at,
         updatedAt: item.updated_at,
         publishAt: item.publish_at,

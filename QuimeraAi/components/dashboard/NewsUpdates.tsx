@@ -26,6 +26,12 @@ import {
     MoreVertical,
 } from 'lucide-react';
 
+type RenderableNewsItem = NewsItem & {
+    content?: string;
+    linkUrl?: string;
+    linkText?: string;
+};
+
 interface NewsUpdatesProps {
     className?: string;
     maxItems?: number;
@@ -64,6 +70,24 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
     const visibleNews = showAll ? userNews : userNews.slice(0, maxItems);
     const hasMore = userNews.length > maxItems && !showAll;
 
+    const getNewsBody = (news: NewsItem) => {
+        const item = news as RenderableNewsItem;
+        return item.body || item.content || '';
+    };
+
+    const getNewsCta = (news: NewsItem) => {
+        const item = news as RenderableNewsItem;
+        if (item.cta?.url || item.cta?.label) return item.cta;
+        if (item.linkUrl || item.linkText) {
+            return {
+                label: item.linkText || t('dashboard.news.learnMore', 'Ver más'),
+                url: item.linkUrl || '',
+                isExternal: false,
+            };
+        }
+        return undefined;
+    };
+
     // Handle card click
     const handleCardClick = async (news: NewsItem) => {
         await markAsRead(news.id);
@@ -75,11 +99,12 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
         e.stopPropagation();
         await trackClick(news.id);
 
-        if (news.cta?.url) {
-            if (news.cta.isExternal) {
-                window.open(news.cta.url, '_blank', 'noopener,noreferrer');
+        const cta = getNewsCta(news);
+        if (cta?.url) {
+            if (cta.isExternal) {
+                window.open(cta.url, '_blank', 'noopener,noreferrer');
             } else {
-                window.location.href = news.cta.url;
+                window.location.href = cta.url;
             }
         }
     };
@@ -271,6 +296,12 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                     {news.title}
                                 </h3>
 
+                                {news.excerpt && (
+                                    <p className="text-sm text-white/80 line-clamp-2 mb-3 drop-shadow">
+                                        {news.excerpt}
+                                    </p>
+                                )}
+
                                 {/* Date */}
                                 <div className="flex items-center gap-1.5 text-white/70">
                                     <Clock size={12} />
@@ -406,17 +437,17 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                             )}
 
                             {/* Body */}
-                            {selectedNews.body && (
+                            {getNewsBody(selectedNews) && (
                                 <div
-                                className="prose prose-sm prose-invert max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary"
-                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedNews.body || '') }}
+                                    className="prose prose-sm prose-invert max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary"
+                                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(getNewsBody(selectedNews)) }}
                                 />
                             )}
 
                             {/* Tags */}
-                            {selectedNews.tags.length > 0 && (
+                            {(selectedNews.tags || []).length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-q-border">
-                                    {selectedNews.tags.map(tag => (
+                                    {(selectedNews.tags || []).map(tag => (
                                         <span
                                             key={tag}
                                             className="px-3 py-1.5 bg-secondary rounded-full text-xs font-medium text-q-text-muted"
@@ -438,13 +469,13 @@ const NewsUpdates: React.FC<NewsUpdatesProps> = ({
                                 {t('dashboard.news.dismiss', 'Descartar')}
                             </button>
 
-                            {selectedNews.cta && (
+                            {getNewsCta(selectedNews) && (
                                 <button
                                     onClick={e => handleCtaClick(e, selectedNews)}
                                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition-colors"
                                 >
-                                    {selectedNews.cta.label}
-                                    {selectedNews.cta.isExternal && <ExternalLink size={16} />}
+                                    {getNewsCta(selectedNews)?.label || t('dashboard.news.learnMore', 'Ver más')}
+                                    {getNewsCta(selectedNews)?.isExternal && <ExternalLink size={16} />}
                                 </button>
                             )}
                         </div>

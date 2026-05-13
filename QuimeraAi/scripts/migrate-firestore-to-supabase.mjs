@@ -137,6 +137,20 @@ async function upsertBatch(table, rows, conflictColumn = 'id') {
   return inserted;
 }
 
+/** List all top-level collections in Firestore */
+async function discoverCollections() {
+  console.log('\n🔍 Discovering top-level collections...');
+  try {
+    const collections = await firestore.listCollections();
+    const names = collections.map(col => col.id);
+    console.log(`  Found ${names.length} collections: ${names.join(', ')}`);
+    return names;
+  } catch (e) {
+    console.error('  ❌ Error listing collections:', e.message);
+    return [];
+  }
+}
+
 // ============================================================
 // MIGRATION STEPS
 // ============================================================
@@ -614,14 +628,103 @@ async function migratePlans() {
   console.log('  ℹ️  No plans collection found');
 }
 
-// 14. Discover and list ALL top-level Firestore collections
-async function discoverCollections() {
-  console.log('\n🔍 Discovering all Firestore collections...');
-  const collections = await firestore.listCollections();
-  const names = collections.map(c => c.id);
-  console.log(`  Found ${names.length} collections: ${names.join(', ')}`);
-  return names;
+// 14. Migrate App Content (Blog, Landing Config)
+async function migrateAppContent() {
+  console.log('\n📦 Migrating App Content (Blog & Landing Config)...');
+
+  // 1. Articles (Blog/Help)
+  const articlesSnap = await firestore.collection('appContent/data/articles').get();
+  if (articlesSnap.size > 0) {
+    const articles = articlesSnap.docs.map(doc => {
+      const data = sanitizeData(doc.data());
+      return {
+        id: doc.id,
+        slug: data.slug || doc.id.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        title: data.title || 'Untitled',
+        excerpt: data.excerpt || '',
+        content: data.body || data.content || '',
+        category: data.category || 'blog',
+        tags: data.tags || [],
+        image_url: data.imageUrl || data.featuredImage || null,
+        author: data.createdBy || data.author || 'Quimera AI',
+        status: data.status || 'published',
+        featured: !!data.featured,
+        priority: data.priority || 0,
+        language: data.language || 'es',
+        translation_group: data.translationGroup || null,
+        read_time: data.readTime || 1,
+        views: data.views || 0,
+        published_at: data.publishAt || data.publishedAt || data.createdAt || new Date().toISOString(),
+        created_at: data.createdAt || new Date().toISOString(),
+        updated_at: data.updatedAt || new Date().toISOString()
+      };
+    });
+    await upsertBatch('app_articles', articles);
+    console.log(`  ✅ Migrated ${articles.length} articles from appContent/data/articles`);
+  }
+
+  // 2. Landing Config
+  const landingDoc = await firestore.doc('globalSettings/landingPage').get();
+  if (landingDoc.exists) {
+    const data = sanitizeData(landingDoc.data());
+    const config = {
+      id: 'landing',
+      hero_title: data.hero?.title || null,
+      hero_subtitle: data.hero?.subtitle || null,
+      hero_image: data.hero?.image || null,
+      features: data.features || [],
+      cta_text: data.cta?.primaryCTA?.text || null,
+      cta_link: data.cta?.primaryCTA?.href || null,
+      data: data, // Store the full config object for the UI
+      updated_at: data.lastUpdated || new Date().toISOString()
+    };
+    await upsertBatch('app_landing_config', [config]);
+    console.log(`  ✅ Migrated landing config from globalSettings/landingPage (with full data payload)`);
+  }
 }
+
+// 15. Migrate News root collection
+async function migrateNews() {
+  console.log('\n📦 Migrating News root collection...');
+  const newsSnap = await firestore.collection('news').get();
+  if (newsSnap.size > 0) {
+    const newsItems = newsSnap.docs.map(doc => {
+      const data = sanitizeData(doc.data());
+      const cta = data.cta || {};
+
+      return {
+        id: doc.id,
+        title: data.title || 'Untitled',
+        excerpt: data.excerpt || '',
+        content: data.body || data.content || '',
+        category: data.category || 'update',
+        status: data.status || 'published',
+        priority: data.priority || 0,
+        featured: !!data.featured,
+        image_url: data.imageUrl || null,
+        link_url: data.link_url || data.linkUrl || cta.url || cta.href || cta.primaryCTA?.href || null,
+        link_text: data.link_text || data.linkText || cta.label || cta.text || cta.primaryCTA?.text || null,
+        targeting: data.targeting || { type: 'all' },
+        tags: data.tags || [],
+        video_url: data.videoUrl || data.video_url || null,
+        language: data.language || 'es',
+        translation_group: data.translationGroup || data.translation_group || null,
+        views: data.views || 0,
+        clicks: data.clicks || 0,
+        publish_at: data.publishAt || data.publishedAt || data.createdAt || new Date().toISOString(),
+        expire_at: data.expireAt || data.expire_at || null,
+        created_by: data.createdBy || 'Quimera AI',
+        updated_by: data.updatedBy || 'Quimera AI',
+        created_at: data.createdAt || new Date().toISOString(),
+        updated_at: data.updatedAt || new Date().toISOString()
+      };
+    });
+    await upsertBatch('news_items', newsItems);
+    console.log(`  ✅ Migrated ${newsItems.length} news items to news_items`);
+  }
+}
+
+// 16. Discover and list ALL top-level Firestore collections
 
 // ============================================================
 // MAIN
@@ -662,6 +765,8 @@ async function main() {
   await migrateGlobalSettings();
   await migratePlans();
   await migrateTemplates();
+  await migrateAppContent();
+  await migrateNews();
   await migrateTenants();
   await migrateTenantMembers();
   await migrateProjects(ownerUIDs);
