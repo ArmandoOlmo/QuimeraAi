@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { CMSPost, Menu } from '../../types';
 import { supabase } from '../../supabase';
 import type { User } from '../../firebase'; // keep using User interface
+import { getUsableImageUrl } from '../../utils/imageUrl';
 
 interface UseEditorCMSParams {
     user: User | null;
@@ -56,7 +57,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                     slug: p.slug || '',
                     content: p.content || '',
                     excerpt: p.excerpt || '',
-                    featuredImage: p.featured_image || '',
+                    featuredImage: getUsableImageUrl(p.featured_image),
                     categoryId: p.category || '',
                     status: p.status as any,
                     tags: p.tags || [],
@@ -158,7 +159,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                 slug: data.slug,
                 content: data.content,
                 excerpt: data.excerpt,
-                featured_image: data.featuredImage,
+                featured_image: getUsableImageUrl(data.featuredImage) || null,
                 category: data.categoryId,
                 status: data.status,
                 tags: data.tags,

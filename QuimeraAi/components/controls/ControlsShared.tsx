@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import ColorControl from '../ui/ColorControl';
 import ImagePicker from '../ui/ImagePicker';
-import { ToggleControl, PositionGridControl, SliderControl } from '../ui/EditorControlPrimitives';
+import { ToggleControl, PositionGridControl, SliderControl, Input, Select } from '../ui/EditorControlPrimitives';
+import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../ui/EcommerceControls';
 
 // ─── Shared Props Interface ─────────────────────────────────────────────────
 export interface SectionControlsProps {
@@ -22,7 +23,7 @@ export interface SectionControlsProps {
   /** For AI text assist in text fields */
   setAiAssistField?: (field: { path: string; value: string; context: string } | null) => void;
   /** For file uploads */
-  uploadImageAndGetURL?: (...args: any[]) => Promise<string>;
+  uploadFile?: (...args: any[]) => Promise<string | undefined>;
   /** Active project reference (used by header for favicon, etc.) */
   activeProject?: any;
   /** Update project favicon (header-specific) */
@@ -304,7 +305,7 @@ export const BackgroundImageControl: React.FC<{
                 onClick={(e) => { e.preventDefault(); setNestedData(`${sectionKey}.backgroundImageUrl`, ''); }}
                 className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                 title={t('common.remove')}>
-                <X size={14} />
+                <Trash2 size={14} />
               </button>
             </div>
           </>
@@ -317,9 +318,16 @@ export const BackgroundImageControl: React.FC<{
       </div>
 
       {showPicker && (
-        <ImagePicker label="" value={sectionData?.backgroundImageUrl || ''}
+        <ImagePicker
+          label=""
+          value={sectionData?.backgroundImageUrl || ''}
           onChange={(url) => setNestedData(`${sectionKey}.backgroundImageUrl`, url)}
-          generationContext="background" initialTab={pickerInitialTab} defaultOpen onClose={() => setShowPicker(false)}
+          onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
+          generationContext="background"
+          initialTab={pickerInitialTab}
+          destination="user"
+          defaultOpen
+          onClose={() => setShowPicker(false)}
         />
       )}
 
@@ -548,6 +556,159 @@ export interface ControlsDeps {
   menus?: any[];
   categories?: any[];
   navigate?: (route: string) => void;
-  uploadImageAndGetURL?: (...args: any[]) => Promise<string>;
+  uploadFile?: (...args: any[]) => Promise<string | undefined>;
   [key: string]: any;
 }
+
+// ─── CtaLinkPicker ──────────────────────────────────────────────────────────
+// Reusable link picker for CTA buttons. Lets the user switch between linking
+// to a page section, a product, a collection, a content page or a manual URL.
+export type CtaLinkType = 'section' | 'product' | 'collection' | 'content' | 'manual';
+
+export interface CtaLinkPickerProps {
+  linkType?: CtaLinkType;
+  linkValue?: string;
+  onLinkTypeChange: (type: CtaLinkType) => void;
+  onLinkChange: (value: string) => void;
+  /** Default link value when switching to 'section' (e.g. '#cta', '#features') */
+  defaultSectionValue?: string;
+  /** Store / project id needed by product & collection pickers */
+  storeId?: string;
+  /** Category grid (optional, used by the collection picker) */
+  gridCategories?: any[];
+  t: (key: string, opts?: any) => string;
+}
+
+const CTA_SECTION_OPTIONS = [
+  { value: '/', label: 'Inicio' },
+  { value: '/#features', label: 'Features' },
+  { value: '/#services', label: 'Services' },
+  { value: '/#pricing', label: 'Pricing' },
+  { value: '/#testimonials', label: 'Testimonials' },
+  { value: '/#team', label: 'Team' },
+  { value: '/#faq', label: 'FAQ' },
+  { value: '/#contact', label: 'Contact' },
+  { value: '/#cta', label: 'CTA' },
+  { value: '/#portfolio', label: 'Portfolio' },
+  { value: '/#heroSplit', label: 'Hero Split' },
+  { value: '/#leads', label: 'Leads' },
+  { value: '/#newsletter', label: 'Newsletter' },
+  { value: '/#howItWorks', label: 'How It Works' },
+  { value: '/#video', label: 'Video' },
+  { value: '/#slideshow', label: 'Slideshow' },
+  { value: '/#map', label: 'Map' },
+  { value: '/#menu', label: 'Menu' },
+  { value: '/#banner', label: 'Banner' },
+  { value: '/#products', label: 'Products' },
+  { value: '/tienda', label: 'Tienda' },
+];
+
+export const CtaLinkPicker: React.FC<CtaLinkPickerProps> = ({
+  linkType,
+  linkValue,
+  onLinkTypeChange,
+  onLinkChange,
+  defaultSectionValue = '/#cta',
+  storeId,
+  gridCategories = [],
+  t,
+}) => {
+  const activeType: CtaLinkType = linkType || 'section';
+
+  const TYPE_OPTIONS: { value: CtaLinkType; label: string }[] = [
+    { value: 'section', label: t('editor.controls.cta.linkSection', { defaultValue: 'Sección' }) },
+    { value: 'product', label: t('editor.controls.cta.linkProduct', { defaultValue: 'Producto' }) },
+    { value: 'collection', label: t('editor.controls.cta.linkCollection', { defaultValue: 'Colección' }) },
+    { value: 'content', label: t('editor.controls.cta.linkContent', { defaultValue: 'Contenido' }) },
+    { value: 'manual', label: t('editor.controls.cta.linkManual', { defaultValue: 'URL' }) },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {/* Link Type Selector */}
+      <div className="flex bg-q-bg p-1 rounded-md border border-q-border">
+        {TYPE_OPTIONS.map((type) => (
+          <button
+            type="button"
+            key={type.value}
+            onClick={() => {
+              onLinkTypeChange(type.value);
+              if (type.value === 'section') {
+                onLinkChange(defaultSectionValue);
+              } else if (type.value !== 'manual') {
+                onLinkChange('');
+              }
+            }}
+            className={`flex-1 py-1.5 text-[10px] font-medium rounded-sm transition-colors ${activeType === type.value
+              ? 'bg-q-accent text-q-bg'
+              : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
+              }`}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Section Selector */}
+      {activeType === 'section' && (
+        <Select
+          value={linkValue || defaultSectionValue}
+          onChange={(val) => onLinkChange(val)}
+          options={CTA_SECTION_OPTIONS}
+          noMargin
+        />
+      )}
+
+      {/* Manual URL Input */}
+      {activeType === 'manual' && (
+        <Input
+          label=""
+          value={linkValue || ''}
+          onChange={(e: any) => onLinkChange(typeof e === 'string' ? e : e.target.value)}
+          placeholder="https://... o /pagina"
+          className="mb-0"
+        />
+      )}
+
+      {/* Product Picker */}
+      {activeType === 'product' && (
+        <SingleProductSelector
+          storeId={storeId || ''}
+          selectedProductId={linkValue && (linkValue.includes('/tienda/producto/') || linkValue.includes('product/'))
+            ? linkValue.split('/').pop()
+            : undefined}
+          onSelect={(id) => {
+            onLinkChange(id ? `/product/${id}` : '');
+          }}
+          label={t('editor.controls.common.selectProduct', { defaultValue: 'Seleccionar producto' })}
+        />
+      )}
+
+      {/* Collection Picker */}
+      {activeType === 'collection' && (
+        <SingleCollectionSelector
+          storeId={storeId || ''}
+          gridCategories={gridCategories}
+          selectedCollectionId={linkValue && (linkValue.includes('/tienda/categoria/') || linkValue.includes('category/') || linkValue.includes('collection/'))
+            ? linkValue.split('/').pop()
+            : undefined}
+          onSelect={(id) => {
+            onLinkChange(id ? `/collection/${id}` : '');
+          }}
+          label={t('controls.seleccionarColeccin', { defaultValue: 'Seleccionar colección' })}
+        />
+      )}
+
+      {/* Content Picker */}
+      {activeType === 'content' && (
+        <SingleContentSelector
+          selectedContentPath={linkValue}
+          onSelect={(path) => {
+            onLinkChange(path || '');
+          }}
+          label={t('editor.controls.common.selectContent', { defaultValue: 'Seleccionar contenido' })}
+        />
+      )}
+    </div>
+  );
+};

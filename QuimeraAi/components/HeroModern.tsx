@@ -74,7 +74,7 @@ interface HeroProps extends HeroData {
 
 const HeroModern: React.FC<HeroProps> = ({
   textLayout = 'center',
-  headline, subheadline, primaryCta, secondaryCta, imageUrl,
+  headline, subheadline, primaryCta, secondaryCta, imageUrl, backgroundImageUrl,
   colors, borderRadius,
   paddingY = 'md', paddingX = 'md',
   headlineFontSize = 'lg', subheadlineFontSize = 'lg',
@@ -87,9 +87,14 @@ const HeroModern: React.FC<HeroProps> = ({
   primaryCtaLink = '/#cta',
   secondaryCtaLink = '/#features',
   onNavigate,
+  glassEffect,
+  backgroundOverlayEnabled,
 }) => {
   const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
   const { getColor } = useDesignTokens();
+
+  // Use backgroundImageUrl from SectionBackground wrapper, fallback to imageUrl
+  const effectiveImageUrl = backgroundImageUrl || imageUrl;
 
   // Component colors take priority - user colors override defaults
   const actualColors = {
@@ -113,9 +118,11 @@ const HeroModern: React.FC<HeroProps> = ({
   );
 
   return (
-    <section className="relative w-full flex flex-col overflow-hidden"
+    <section className={`relative w-full flex flex-col overflow-hidden${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}
       style={{ minHeight: heroHeight ? `${heroHeight}vh` : '80vh' }}>
       {/* === ANIMATED MESH GRADIENT BACKGROUND === */}
+      {/* Hidden when a background image is supplied (via either prop or SectionBackground wrapper) */}
+      {!effectiveImageUrl && (
       <div className="absolute inset-0 z-0">
         {/* Radial gradient overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(79,70,229,0.25),rgba(0,0,0,0))]" />
@@ -128,23 +135,32 @@ const HeroModern: React.FC<HeroProps> = ({
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)]" />
       </div>
+      )}
 
       {/* Imagen de Fondo Full Bleed con Parallax Effect */}
-      {imageUrl && (
+      {/* Only render the inner <img> when imageUrl is set directly AND the user hasn't supplied
+          a backgroundImageUrl override. When backgroundImageUrl is set, SectionBackground handles
+          BOTH the image rendering AND the color/opacity overlay, so we must NOT re-render the
+          image here (it would mask the user's overlay color and even the user's image entirely
+          if the template ships its own imageUrl). */}
+      {imageUrl && !backgroundImageUrl && (
         <div className="absolute inset-0 z-0 transform-gpu">
           <img
             src={imageUrl}
             alt="Hero Background"
             className="w-full h-full object-cover scale-105 transition-transform duration-1000"
           />
+          {/* Decorative gradient overlays — only when overlay enabled */}
+          {backgroundOverlayEnabled !== false && (
+          <>
           {/* Gradient Overlay Mejorado con múltiples capas - Opacidad configurable */}
-          <div className="absolute inset-0 hidden md:block bg-gradient-to-b from-black via-black to-black"
+          <div className={`absolute inset-0 hidden md:block bg-gradient-to-b from-black via-black to-black${glassEffect ? ' backdrop-blur-md' : ''}`}
             style={{
               background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.3 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) * 0.7 / 100}), rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}))`
             }}
           ></div>
           {/* Mobile: lighter top, stronger bottom so image is visible */}
-          <div className="absolute inset-0 md:hidden"
+          <div className={`absolute inset-0 md:hidden${glassEffect ? ' backdrop-blur-md' : ''}`}
             style={{
               background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,${(overlayOpacity ?? gradientOpacity) / 100}) 100%)`
             }}
@@ -154,6 +170,8 @@ const HeroModern: React.FC<HeroProps> = ({
           {/* Efectos de luz decorativos opcionales */}
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/25 via-transparent to-transparent opacity-50"></div>
           <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500/15 via-transparent to-transparent opacity-40"></div>
+          </>
+          )}
         </div>
       )}
 

@@ -51,7 +51,7 @@ CREATE INDEX IF NOT EXISTS store_stock_notifications_email_idx ON public.store_s
 
 -- 4. API Keys
 CREATE TABLE IF NOT EXISTS public.api_keys (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     key_hash TEXT NOT NULL,
@@ -64,7 +64,7 @@ CREATE INDEX IF NOT EXISTS api_keys_project_id_idx ON public.api_keys(project_id
 
 -- 5. Blocked Dates (for appointments)
 CREATE TABLE IF NOT EXISTS public.blocked_dates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     date DATE NOT NULL,
     reason TEXT,
@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS blocked_dates_project_id_idx ON public.blocked_dates(
 
 -- 6. Permission Templates (for tenant roles)
 CREATE TABLE IF NOT EXISTS public.permission_templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,

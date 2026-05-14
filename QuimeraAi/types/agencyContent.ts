@@ -15,6 +15,7 @@ export interface AgencyArticle {
     content: string;
     excerpt: string;
     featuredImage: string;
+    imageUrl?: string;       // Alias for database compatibility (maps to image_url)
     status: 'published' | 'draft';
     featured: boolean;
     category: AgencyArticleCategory;

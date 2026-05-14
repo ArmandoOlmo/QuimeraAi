@@ -1417,11 +1417,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         };
 
         try {
+            // Resolve the user's primary tenant so the new project is correctly scoped.
+            // Falls back to null for legacy "personal" workspace if no membership exists.
+            let resolvedTenantId: string | null = currentTenantId || null;
+            if (!resolvedTenantId && user?.id) {
+                const { data: memberRow } = await supabase
+                    .from('tenant_members')
+                    .select('tenant_id')
+                    .eq('user_id', user.id)
+                    .limit(1)
+                    .maybeSingle();
+                if (memberRow?.tenant_id) {
+                    resolvedTenantId = memberRow.tenant_id;
+                }
+            }
+
             const { data: docRef, error: insertErr } = await supabase.from('projects').insert({
                 name: newProject.name,
                 status: 'Draft',
                 user_id: user.id,
-                tenant_id: null, // Personal space
+                tenant_id: resolvedTenantId,
                 data: newProject
             }).select().single();
             

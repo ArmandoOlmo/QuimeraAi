@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Restaurants (Settings)
 CREATE TABLE IF NOT EXISTS public.restaurants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     owner_id UUID NOT NULL REFERENCES auth.users(id),
     name TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE INDEX IF NOT EXISTS restaurants_public_slug_idx ON public.restaurants(pub
 
 -- 2. Restaurant Menu Items
 CREATE TABLE IF NOT EXISTS public.restaurant_menu_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -59,7 +59,7 @@ CREATE INDEX IF NOT EXISTS menu_items_restaurant_id_idx ON public.restaurant_men
 
 -- 3. Restaurant Reservations
 CREATE TABLE IF NOT EXISTS public.restaurant_reservations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
     customer_name TEXT NOT NULL,
@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS reservations_restaurant_id_idx ON public.restaurant_r
 
 -- 4. Restaurant Marketing Outputs
 CREATE TABLE IF NOT EXISTS public.restaurant_marketing_outputs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
     type TEXT NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.restaurant_marketing_outputs (
 
 -- 5. Restaurant Review Templates
 CREATE TABLE IF NOT EXISTS public.restaurant_review_templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
     type TEXT NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS public.restaurant_review_templates (
 
 -- 6. Restaurant Analytics Events
 CREATE TABLE IF NOT EXISTS public.restaurant_analytics_events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
     restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
     event_name TEXT NOT NULL,

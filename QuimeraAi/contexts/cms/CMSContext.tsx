@@ -12,6 +12,7 @@ import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { getUsableImageUrl } from '../../utils/imageUrl';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -158,7 +159,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     slug: p.slug || '',
                     content: p.content || '',
                     excerpt: p.excerpt || '',
-                    featuredImage: p.featured_image || '',
+                    featuredImage: getUsableImageUrl(p.featured_image),
                     categoryId: p.category || '',
                     status: p.status as any,
                     tags: p.tags || [],
@@ -211,7 +212,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 slug: post.slug,
                 content: post.content,
                 excerpt: post.excerpt,
-                featured_image: post.featuredImage,
+                featured_image: getUsableImageUrl(post.featuredImage) || null,
                 category: post.categoryId,
                 status: post.status,
                 tags: post.tags,

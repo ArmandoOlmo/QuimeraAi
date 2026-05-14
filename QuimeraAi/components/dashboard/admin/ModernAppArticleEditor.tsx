@@ -57,6 +57,7 @@ import {
     generateTranslationGroupId,
 } from '../../../utils/articleTranslation';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import { getUsableImageUrl, isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
 
 interface ModernAppArticleEditorProps {
     article: AppArticle | null;
@@ -90,7 +91,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     const [slug, setSlug] = useState(article?.slug || '');
     const [status, setStatus] = useState<'draft' | 'published'>(article?.status || 'draft');
     const [excerpt, setExcerpt] = useState(article?.excerpt || '');
-    const [featuredImage, setFeaturedImage] = useState(article?.featuredImage || '');
+    const [featuredImage, setFeaturedImage] = useState(getUsableImageUrl(article?.featuredImage));
     const [category, setCategory] = useState<AppArticleCategory>(article?.category || 'blog');
     const [featured, setFeatured] = useState(article?.featured || false);
     const [tags, setTags] = useState<string[]>(article?.tags || []);
@@ -262,10 +263,19 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
 
     const handleSelectAdminAsset = (url: string) => {
         if (!editor) return;
+        const imageUrl = normalizeImageUrl(url);
+        if (!imageUrl) {
+            showToast('Esta imagen no tiene una URL valida', 'error');
+            return;
+        }
+        if (isLegacyFirebaseStorageUrl(imageUrl)) {
+            showToast('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.', 'error');
+            return;
+        }
         if (contentImagePickerMode === 'replace') {
-            editor.chain().focus().setImage({ src: url }).run();
+            editor.chain().focus().setImage({ src: imageUrl }).run();
         } else {
-            editor.chain().focus().setImage({ src: url }).run();
+            editor.chain().focus().setImage({ src: imageUrl }).run();
         }
         setShowContentImagePicker(false);
         showToast('Imagen de librería insertada', 'success');
@@ -394,7 +404,7 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
                 slug: finalSlug,
                 content: currentContent,
                 excerpt,
-                featuredImage,
+                featuredImage: getUsableImageUrl(featuredImage),
                 status,
                 featured,
                 category,
@@ -637,7 +647,7 @@ Text to format:
                 slug: finalSlug,
                 content: currentContent,
                 excerpt,
-                featuredImage,
+                featuredImage: getUsableImageUrl(featuredImage),
                 status,
                 featured,
                 category,
@@ -921,7 +931,7 @@ Text to format:
                 <ImageGeneratorModal
                     isOpen={showContentImageGenerator}
                     onClose={() => setShowContentImageGenerator(false)}
-                    destination="admin"
+                    destination="global"
                     adminCategory="article"
                     onImageGenerated={(imageUrl: string) => {
                         if (editor) {

@@ -15,7 +15,7 @@ import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl,
   I18nInput, I18nTextArea
 } from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CtaLinkPicker } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -110,9 +110,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* ========== BACKGROUND IMAGE ========== */}
       <BackgroundImageControl 
         sectionKey="hero" 
-        data={data.hero || {}} 
+        data={data} 
         setNestedData={setNestedData} 
-        onUpload={(file) => uploadImageAndGetURL(file)} 
       />
 
 
@@ -156,10 +155,65 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <I18nTextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={`${t('editor.controls.hero.subheadline')} ${t('editor.controls.common.size', { defaultValue: 'Size' })}`} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <I18nInput label={t('editor.controls.hero.primaryCta')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
-          <I18nInput label={t('editor.controls.hero.secondaryCta')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
+      {/* ========== PRIMARY CTA ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+          <MousePointerClick size={14} />
+          {t('editor.controls.hero.primaryCta', { defaultValue: 'Botón Principal' })}
+        </label>
+
+        <I18nInput
+          label={t('editor.controls.common.buttonText', { defaultValue: 'Texto del botón' })}
+          value={data.hero.primaryCta}
+          onChange={(val) => setNestedData('hero.primaryCta', val)}
+        />
+
+        <div className="mt-3">
+          <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">
+            {t('controls.primaryLink', { defaultValue: 'Enlace' })}
+          </label>
+          <CtaLinkPicker
+            t={t}
+            linkType={data.hero.primaryCtaLinkType}
+            linkValue={data.hero.primaryCtaLink}
+            onLinkTypeChange={(type) => setNestedData('hero.primaryCtaLinkType', type)}
+            onLinkChange={(val) => setNestedData('hero.primaryCtaLink', val)}
+            defaultSectionValue="/#cta"
+            storeId={activeProject?.id || ''}
+            gridCategories={data.categoryGrid?.categories || []}
+          />
+        </div>
+      </div>
+
+      {/* ========== SECONDARY CTA ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+          <MousePointerClick size={14} />
+          {t('editor.controls.hero.secondaryCta', { defaultValue: 'Botón Secundario' })}
+        </label>
+
+        <I18nInput
+          label={t('editor.controls.common.buttonText', { defaultValue: 'Texto del botón' })}
+          value={data.hero.secondaryCta}
+          onChange={(val) => setNestedData('hero.secondaryCta', val)}
+        />
+
+        <div className="mt-3">
+          <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">
+            {t('controls.secondaryLink', { defaultValue: 'Enlace' })}
+          </label>
+          <CtaLinkPicker
+            t={t}
+            linkType={data.hero.secondaryCtaLinkType}
+            linkValue={data.hero.secondaryCtaLink}
+            onLinkTypeChange={(type) => setNestedData('hero.secondaryCtaLinkType', type)}
+            onLinkChange={(val) => setNestedData('hero.secondaryCtaLink', val)}
+            defaultSectionValue="/#features"
+            storeId={activeProject?.id || ''}
+            gridCategories={data.categoryGrid?.categories || []}
+          />
         </div>
       </div>
 
@@ -258,11 +312,6 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <I18nTextArea value={data.hero.subheadline} onChange={(val) => setNestedData('hero.subheadline', val)} rows={3} />
         </AIFormControl>
         <FontSizeSelector label={t('controls.subheadlineSize')} value={data.hero.subheadlineFontSize || 'lg'} onChange={(v) => setNestedData('hero.subheadlineFontSize', v)} />
-
-        <div className="grid grid-cols-2 gap-4">
-          <I18nInput label={t('controls.primaryCTA')} value={data.hero.primaryCta} onChange={(val) => setNestedData('hero.primaryCta', val)} />
-          <I18nInput label={t('controls.secondaryCTA')} value={data.hero.secondaryCta} onChange={(val) => setNestedData('hero.secondaryCta', val)} />
-        </div>
       </div>
 
       {/* Logo / Headline Image — optional override */}
@@ -286,258 +335,64 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
-      {/* Primary CTA Link */}
+      {/* Primary CTA — text + link */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
-          <Link size={14} />
-          Enlace Botón Principal
+          <MousePointerClick size={14} />
+          {t('editor.controls.hero.primaryCta', { defaultValue: 'Botón Principal' })}
         </label>
 
-        {/* Link Type Selector */}
-        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
-          {[
-            { value: 'section', label: 'Sección' },
-            { value: 'product', label: 'Producto' },
-            { value: 'collection', label: 'Colección' },
-            { value: 'content', label: 'Contenido' },
-            { value: 'manual', label: 'URL' },
-          ].map(type => (
-            <button type="button"               key={type.value}
-              onClick={() => {
-                setNestedData('hero.primaryCtaLinkType', type.value);
-                if (type.value === 'section') {
-                  setNestedData('hero.primaryCtaLink', '#cta');
-                } else if (type.value !== 'manual') {
-                  setNestedData('hero.primaryCtaLink', '');
-                }
-              }}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${(data.hero.primaryCtaLinkType || 'section') === type.value
-                ? 'bg-q-accent text-q-bg'
-                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
-                }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
+        <I18nInput
+          label={t('editor.controls.common.buttonText', { defaultValue: 'Texto del botón' })}
+          value={data.hero.primaryCta}
+          onChange={(val) => setNestedData('hero.primaryCta', val)}
+        />
 
-        {/* Section Selector */}
-        {(data.hero.primaryCtaLinkType || 'section') === 'section' && (
-            <Select
-              value={data.hero.primaryCtaLink || '/#cta'}
-              onChange={(val) => setNestedData('hero.primaryCtaLink', val)}
-              options={[
-                { value: '/', label: 'Inicio' },
-                { value: '/#features', label: 'Features' },
-                { value: '/#services', label: 'Services' },
-                { value: '/#pricing', label: 'Pricing' },
-                { value: '/#testimonials', label: 'Testimonials' },
-                { value: '/#team', label: 'Team' },
-                { value: '/#faq', label: 'FAQ' },
-                { value: '/#contact', label: 'Contact' },
-                { value: '/#cta', label: 'CTA' },
-                { value: '/#portfolio', label: 'Portfolio' },
-                { value: '/#heroSplit', label: 'Hero Split' },
-                { value: '/#leads', label: 'Leads' },
-                { value: '/#newsletter', label: 'Newsletter' },
-                { value: '/#howItWorks', label: 'How It Works' },
-                { value: '/#video', label: 'Video' },
-                { value: '/#slideshow', label: 'Slideshow' },
-                { value: '/#map', label: 'Map' },
-                { value: '/#menu', label: 'Menu' },
-                { value: '/#banner', label: 'Banner' },
-                { value: '/#products', label: 'Products' },
-                { value: '/tienda', label: 'Tienda' },
-              ]}
-              noMargin
-            />
-        )}
-
-        {/* Manual URL Input */}
-        {data.hero.primaryCtaLinkType === 'manual' && (
-          <Input
-            label=""
-            value={data.hero.primaryCtaLink || ''}
-            onChange={(val) => setNestedData('hero.primaryCtaLink', val)}
-            placeholder="https://... o /pagina"
-            className="mb-0"
-          />
-        )}
-
-        {/* Product Picker */}
-        {data.hero.primaryCtaLinkType === 'product' && (
-          <SingleProductSelector
-            storeId={activeProject?.id || ''}
-            selectedProductId={data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/producto/') || data.hero.primaryCtaLink.includes('product/'))
-              ? data.hero.primaryCtaLink.split('/').pop()
-              : undefined}
-            onSelect={(id) => {
-              if (id) {
-                setNestedData('hero.primaryCtaLink', `/product/${id}`);
-              } else {
-                setNestedData('hero.primaryCtaLink', '');
-              }
-            }}
-            label={t('editor.controls.common.selectProduct')}
-          />
-        )}
-
-        {/* Collection Picker */}
-        {data.hero.primaryCtaLinkType === 'collection' && (
-          <SingleCollectionSelector
+        <div className="mt-3">
+          <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">
+            {t('controls.primaryLink', { defaultValue: 'Enlace' })}
+          </label>
+          <CtaLinkPicker
+            t={t}
+            linkType={data.hero.primaryCtaLinkType}
+            linkValue={data.hero.primaryCtaLink}
+            onLinkTypeChange={(type) => setNestedData('hero.primaryCtaLinkType', type)}
+            onLinkChange={(val) => setNestedData('hero.primaryCtaLink', val)}
+            defaultSectionValue="/#cta"
             storeId={activeProject?.id || ''}
             gridCategories={data.categoryGrid?.categories || []}
-            selectedCollectionId={data.hero.primaryCtaLink && (data.hero.primaryCtaLink.includes('/tienda/categoria/') || data.hero.primaryCtaLink.includes('category/'))
-              ? data.hero.primaryCtaLink.split('/').pop()
-              : undefined}
-            onSelect={(id) => {
-              if (id) {
-                setNestedData('hero.primaryCtaLink', `/collection/${id}`);
-              } else {
-                setNestedData('hero.primaryCtaLink', '');
-              }
-            }}
-            label={t('controls.seleccionarColeccin')}
           />
-        )}
-
-        {/* Content Picker */}
-        {data.hero.primaryCtaLinkType === 'content' && (
-          <SingleContentSelector
-            selectedContentPath={data.hero.primaryCtaLink}
-            onSelect={(path) => {
-              setNestedData('hero.primaryCtaLink', path || '');
-            }}
-            label={t('editor.controls.common.selectContent')}
-          />
-        )}
+        </div>
       </div>
 
-      {/* Secondary CTA Link */}
+      {/* Secondary CTA — text + link */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
-          <Link size={14} />
-          Enlace Botón Secundario
+          <MousePointerClick size={14} />
+          {t('editor.controls.hero.secondaryCta', { defaultValue: 'Botón Secundario' })}
         </label>
 
-        {/* Link Type Selector */}
-        <div className="flex bg-q-bg p-1 rounded-md border border-q-border mb-3">
-          {[
-            { value: 'section', label: 'Sección' },
-            { value: 'product', label: 'Producto' },
-            { value: 'collection', label: 'Colección' },
-            { value: 'content', label: 'Contenido' },
-            { value: 'manual', label: 'URL' },
-          ].map(type => (
-            <button type="button"               key={type.value}
-              onClick={() => {
-                setNestedData('hero.secondaryCtaLinkType', type.value);
-                if (type.value === 'section') {
-                  setNestedData('hero.secondaryCtaLink', '#features');
-                } else if (type.value !== 'manual') {
-                  setNestedData('hero.secondaryCtaLink', '');
-                }
-              }}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-sm transition-colors ${(data.hero.secondaryCtaLinkType || 'section') === type.value
-                ? 'bg-q-accent text-q-bg'
-                : 'text-q-text-secondary hover:text-q-text-primary hover:bg-q-bg'
-                }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
+        <I18nInput
+          label={t('editor.controls.common.buttonText', { defaultValue: 'Texto del botón' })}
+          value={data.hero.secondaryCta}
+          onChange={(val) => setNestedData('hero.secondaryCta', val)}
+        />
 
-        {/* Section Selector */}
-        {(data.hero.secondaryCtaLinkType || 'section') === 'section' && (
-            <Select
-              value={data.hero.secondaryCtaLink || '/#features'}
-              onChange={(val) => setNestedData('hero.secondaryCtaLink', val)}
-              options={[
-                { value: '/', label: 'Inicio' },
-                { value: '/#features', label: 'Features' },
-                { value: '/#services', label: 'Services' },
-                { value: '/#pricing', label: 'Pricing' },
-                { value: '/#testimonials', label: 'Testimonials' },
-                { value: '/#team', label: 'Team' },
-                { value: '/#faq', label: 'FAQ' },
-                { value: '/#contact', label: 'Contact' },
-                { value: '/#cta', label: 'CTA' },
-                { value: '/#portfolio', label: 'Portfolio' },
-                { value: '/#heroSplit', label: 'Hero Split' },
-                { value: '/#leads', label: 'Leads' },
-                { value: '/#newsletter', label: 'Newsletter' },
-                { value: '/#howItWorks', label: 'How It Works' },
-                { value: '/#video', label: 'Video' },
-                { value: '/#slideshow', label: 'Slideshow' },
-                { value: '/#map', label: 'Map' },
-                { value: '/#menu', label: 'Menu' },
-                { value: '/#banner', label: 'Banner' },
-                { value: '/#products', label: 'Products' },
-                { value: '/tienda', label: 'Tienda' },
-              ]}
-              noMargin
-            />
-        )}
-
-        {/* Manual URL Input */}
-        {data.hero.secondaryCtaLinkType === 'manual' && (
-          <Input
-            label=""
-            value={data.hero.secondaryCtaLink || ''}
-            onChange={(val) => setNestedData('hero.secondaryCtaLink', val)}
-            placeholder="https://... o /pagina"
-            className="mb-0"
-          />
-        )}
-
-        {/* Product Picker */}
-        {data.hero.secondaryCtaLinkType === 'product' && (
-          <SingleProductSelector
-            storeId={activeProject?.id || ''}
-            selectedProductId={data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/producto/') || data.hero.secondaryCtaLink.includes('product/'))
-              ? data.hero.secondaryCtaLink.split('/').pop()
-              : undefined}
-            onSelect={(id) => {
-              if (id) {
-                setNestedData('hero.secondaryCtaLink', `/product/${id}`);
-              } else {
-                setNestedData('hero.secondaryCtaLink', '');
-              }
-            }}
-            label={t('editor.controls.common.selectProduct')}
-          />
-        )}
-
-        {/* Collection Picker */}
-        {data.hero.secondaryCtaLinkType === 'collection' && (
-          <SingleCollectionSelector
+        <div className="mt-3">
+          <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">
+            {t('controls.secondaryLink', { defaultValue: 'Enlace' })}
+          </label>
+          <CtaLinkPicker
+            t={t}
+            linkType={data.hero.secondaryCtaLinkType}
+            linkValue={data.hero.secondaryCtaLink}
+            onLinkTypeChange={(type) => setNestedData('hero.secondaryCtaLinkType', type)}
+            onLinkChange={(val) => setNestedData('hero.secondaryCtaLink', val)}
+            defaultSectionValue="/#features"
             storeId={activeProject?.id || ''}
             gridCategories={data.categoryGrid?.categories || []}
-            selectedCollectionId={data.hero.secondaryCtaLink && (data.hero.secondaryCtaLink.includes('/tienda/categoria/') || data.hero.secondaryCtaLink.includes('category/'))
-              ? data.hero.secondaryCtaLink.split('/').pop()
-              : undefined}
-            onSelect={(id) => {
-              if (id) {
-                setNestedData('hero.secondaryCtaLink', `/collection/${id}`);
-              } else {
-                setNestedData('hero.secondaryCtaLink', '');
-              }
-            }}
-            label={t('controls.seleccionarColeccin')}
           />
-        )}
-
-        {/* Content Picker */}
-        {data.hero.secondaryCtaLinkType === 'content' && (
-          <SingleContentSelector
-            selectedContentPath={data.hero.secondaryCtaLink}
-            onSelect={(path) => {
-              setNestedData('hero.secondaryCtaLink', path || '');
-            }}
-            label={t('editor.controls.common.selectContent')}
-          />
-        )}
+        </div>
       </div>
 
     </div>
@@ -547,9 +402,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
     <div className="space-y-4">      {/* ========== BACKGROUND IMAGE ========== */}
       <BackgroundImageControl 
         sectionKey="hero" 
-        data={data.hero || {}} 
+        data={data} 
         setNestedData={setNestedData} 
-        onUpload={(file) => uploadImageAndGetURL(file)} 
       />
 
 

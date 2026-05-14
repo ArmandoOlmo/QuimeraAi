@@ -435,7 +435,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
                     return <Hero key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />;
                 })();
-                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background} backgroundOverlayEnabled={heroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={heroData?.backgroundOverlayOpacity} backgroundOverlayColor={heroData?.backgroundOverlayColor} backgroundPosition={heroData?.backgroundPosition}>{heroComponent}</SectionBackground>;
+                return <SectionBackground backgroundImageUrl={heroData?.backgroundImageUrl} backgroundColor={heroData?.colors?.background} backgroundOverlayEnabled={heroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={heroData?.backgroundOverlayOpacity} backgroundOverlayColor={heroData?.backgroundOverlayColor} backgroundPosition={heroData?.backgroundPosition} glassEffect={heroData?.glassEffect}>{heroComponent}</SectionBackground>;
             }
 
             case 'heroSplit':

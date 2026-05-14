@@ -152,6 +152,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                   setNestedData('header.logoType', 'image');
                 }
               }}
+              onRemove={() => setNestedData('header.logoImageUrl', '')}
             />
             <div className="mt-3 grid grid-cols-2 gap-3">
               <SliderControl

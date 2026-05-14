@@ -14,7 +14,7 @@ import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, PositionGridControl, SliderControl
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CtaLinkPicker } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -74,17 +74,43 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
             {/* CTAs */}
             <div className="bg-q-surface/50 p-3 rounded-md border border-q-border mt-3">
-              <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+              <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Link size={12} />
                 Call to Actions
               </label>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <I18nInput label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, val)} />
-                <Input label={t('controls.primaryLink')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, val)} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <I18nInput label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, val)} />
-                <Input label={t('controls.secondaryLink')} value={slide.secondaryCtaLink || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, val)} />
+              <div className="space-y-3">
+                {/* Primary CTA */}
+                <I18nInput label={t('controls.primaryCta')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCta`, val)} className="mb-0" />
+                <div>
+                  <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">{t('controls.primaryLink')}</label>
+                  <CtaLinkPicker
+                    t={t}
+                    linkType={slide.primaryCtaLinkType}
+                    linkValue={slide.primaryCtaLink}
+                    onLinkTypeChange={(type) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLinkType`, type)}
+                    onLinkChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.primaryCtaLink`, val)}
+                    defaultSectionValue="/#cta"
+                    storeId={activeProject?.id || ''}
+                    gridCategories={data.categoryGrid?.categories || []}
+                  />
+                </div>
+                {/* Secondary CTA */}
+                <div className="pt-3 border-t border-q-border/40 space-y-3">
+                  <I18nInput label={t('controls.secondaryCta')} value={slide.secondaryCta || ''} onChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCta`, val)} className="mb-0" />
+                  <div>
+                    <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">{t('controls.secondaryLink')}</label>
+                    <CtaLinkPicker
+                      t={t}
+                      linkType={slide.secondaryCtaLinkType}
+                      linkValue={slide.secondaryCtaLink}
+                      onLinkTypeChange={(type) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLinkType`, type)}
+                      onLinkChange={(val) => setNestedData(`heroGallery.slides.${slideIndex}.secondaryCtaLink`, val)}
+                      defaultSectionValue="/#features"
+                      storeId={activeProject?.id || ''}
+                      gridCategories={data.categoryGrid?.categories || []}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

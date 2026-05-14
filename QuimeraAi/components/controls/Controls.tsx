@@ -135,7 +135,7 @@ const Controls: React.FC = () => {
     setEditorSectionVisibility(updater);
   };
 
-  const { uploadImageAndGetURL } = useFiles();
+  const { uploadFile } = useFiles();
   const { menus, categories } = useCMS();
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus: rawComponentStatus, componentStyles } = useAdmin();
@@ -320,7 +320,8 @@ const Controls: React.FC = () => {
   // ─── Deps object passed to all section renderers ──────────────────────────
   const deps: ControlsDeps = {
     data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon,
-    menus, categories, navigate, uploadImageAndGetURL,
+    uploadFile,
+    menus, categories, navigate,
     heroProducts, heroCategories, isLoadingHeroProducts,
     heroProductSearch, setHeroProductSearch,
     showHeroImagePicker, setShowHeroImagePicker,

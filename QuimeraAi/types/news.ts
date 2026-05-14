@@ -44,7 +44,7 @@ export interface NewsItem {
   body: string;           // Rich text HTML content
 
   // Media
-  imageUrl?: string;      // Featured image
+  imageUrl?: string | null; // Featured image
   videoUrl?: string;      // Video URL (YouTube, Vimeo, or direct)
 
   // CTA

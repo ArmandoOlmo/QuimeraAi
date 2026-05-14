@@ -46,17 +46,21 @@ const Hero: React.FC<HeroProps> = (props) => {
 
   const {
     textLayout = 'left-top',
-    headline, headlineImageUrl, subheadline, primaryCta, secondaryCta, imageUrl,
+    headline, headlineImageUrl, subheadline, primaryCta, secondaryCta, imageUrl, backgroundImageUrl,
     colors, borderRadius,
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
     secondaryButtonStyle = 'solid',
     secondaryButtonOpacity = 100,
     heroHeight,
     overlayOpacity,
+    backgroundOverlayEnabled,
     primaryCtaLink = '/#cta',
     secondaryCtaLink = '/#features',
     onNavigate,
   } = props;
+
+  // backgroundImageUrl (set from the editor's BackgroundImageControl) takes priority over imageUrl (template default)
+  const effectiveImageUrl = backgroundImageUrl || imageUrl;
 
   const { getColor } = useDesignTokens();
 
@@ -95,8 +99,12 @@ const Hero: React.FC<HeroProps> = (props) => {
   };
 
   // ─── Background Image ───
+  // When backgroundImageUrl is set (via BackgroundImageControl), SectionBackground wrapper handles
+  // image rendering AND the color/opacity overlay. To avoid double-render that would mask the user's
+  // overlay color, we skip Hero's own BackgroundImage when backgroundImageUrl is the source.
+  const shouldRenderInternalImage = !!imageUrl && !backgroundImageUrl;
   const BackgroundImage = () => {
-    if (isPendingImage(imageUrl)) {
+    if (isPendingImage(effectiveImageUrl)) {
       return (
         <div className="absolute inset-0 z-0">
           <ImagePlaceholder
@@ -111,24 +119,28 @@ const Hero: React.FC<HeroProps> = (props) => {
     return (
       <div className="absolute inset-0 z-0">
         <img
-          src={imageUrl}
+          src={effectiveImageUrl}
           alt="Hero background"
           className="w-full h-full object-cover"
-          key={imageUrl}
+          key={effectiveImageUrl}
         />
-        {/* Dark overlay for readability — stronger bottom gradient on mobile */}
-        <div
-          className={`absolute inset-0 hidden md:block ${glassEffect ? 'backdrop-blur-md' : ''}`}
-          style={{
-            background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
-          }}
-        />
-        <div
-          className={`absolute inset-0 md:hidden ${glassEffect ? 'backdrop-blur-md' : ''}`}
-          style={{
-            background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${((overlayOpacity ?? 50) + 20) / 100}) 100%)`
-          }}
-        />
+        {/* Dark overlay for readability — respects "Activar superposición" toggle */}
+        {backgroundOverlayEnabled !== false && (
+          <>
+            <div
+              className={`absolute inset-0 hidden md:block ${glassEffect ? 'backdrop-blur-md' : ''}`}
+              style={{
+                background: `linear-gradient(to bottom, rgba(0,0,0,${(overlayOpacity ?? 50) / 100}), rgba(0,0,0,${((overlayOpacity ?? 50) + 15) / 100}))`
+              }}
+            />
+            <div
+              className={`absolute inset-0 md:hidden ${glassEffect ? 'backdrop-blur-md' : ''}`}
+              style={{
+                background: `linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,${((overlayOpacity ?? 50) + 20) / 100}) 100%)`
+              }}
+            />
+          </>
+        )}
       </div>
     );
   };
@@ -257,7 +269,7 @@ const Hero: React.FC<HeroProps> = (props) => {
         backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#0f172a', 0.4) : (actualColors.background || '#0f172a'),
       }}
     >
-      <BackgroundImage />
+      {shouldRenderInternalImage && <BackgroundImage />}
 
       {/* Main content container — max-w-7xl + px-6 matches the floating header */}
       <div

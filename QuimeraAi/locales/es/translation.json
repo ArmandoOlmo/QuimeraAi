@@ -3986,6 +3986,13 @@
         "overlayOpacity": "Opacidad de Superposición",
         "overlayOpacityHelp": "Controla la oscuridad de la superposición de degradado en la imagen de fondo"
       },
+      "cta": {
+        "linkSection": "Sección",
+        "linkProduct": "Producto",
+        "linkCollection": "Colección",
+        "linkContent": "Contenido",
+        "linkManual": "URL"
+      },
       "chatbot": {
         "configuration": "Configuración del Chatbot IA",
         "description": "¡El chatbot ha sido actualizado! Configúralo en el Panel de Asistente IA para funciones avanzadas.",

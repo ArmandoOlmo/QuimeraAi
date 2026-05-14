@@ -15,6 +15,7 @@ import {
   NewsStats,
   DEFAULT_NEWS_TARGETING,
 } from '../../types/news';
+import { getUsableImageUrl } from '../../utils/imageUrl';
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
@@ -65,7 +66,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
         expireAt: item.expire_at,
-        imageUrl: item.image_url,
+        imageUrl: getUsableImageUrl(item.image_url),
         linkUrl: item.link_url,
         linkText: item.link_text,
         createdBy: item.created_by,
@@ -137,35 +138,31 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         const payload = {
           id: newId,
-          ...newsData,
+          title: newsData.title,
+          excerpt: newsData.excerpt,
+          content: newsData.body,
+          category: newsData.category,
+          status: newsData.status,
+          priority: newsData.priority,
+          featured: newsData.featured,
+          image_url: getUsableImageUrl(newsData.imageUrl) || null,
+          link_url: newsData.cta?.url || null,
+          link_text: newsData.cta?.label || null,
+          targeting: newsData.targeting || DEFAULT_NEWS_TARGETING,
           views: 0,
           clicks: 0,
+          publish_at: newsData.publishAt || null,
+          expire_at: newsData.expireAt || null,
           created_at: now,
           updated_at: now,
           created_by: user.id,
-          content: newsData.body, // Reverse map body to content
-          link_url: newsData.cta?.url,
-          link_text: newsData.cta?.label,
           tags: newsData.tags || [],
-          video_url: newsData.videoUrl,
-          image_url: newsData.imageUrl,
-          publish_at: newsData.publishAt,
-          expire_at: newsData.expireAt,
-          translation_group: newsData.translationGroup,
+          video_url: newsData.videoUrl || null,
+          language: newsData.language || 'es',
+          translation_group: newsData.translationGroup || null,
         };
 
         const cleanedPayload = removeUndefinedFields(payload as Record<string, unknown>);
-        // Need to explicitly delete camelCase versions from cleanedPayload
-        delete cleanedPayload.imageUrl;
-        delete cleanedPayload.linkUrl;
-        delete cleanedPayload.linkText;
-        delete cleanedPayload.publishAt;
-        delete cleanedPayload.expireAt;
-        delete cleanedPayload.translationGroup;
-        delete cleanedPayload.createdBy;
-        delete cleanedPayload.body; // Remove UI fields before sending to Supabase
-        delete cleanedPayload.cta;
-        delete cleanedPayload.videoUrl;
 
         const { error } = await supabase
           .from(TABLES.NEWS)
@@ -200,42 +197,62 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const now = new Date().toISOString();
         const payload: Record<string, unknown> = {
-          ...updates,
           updated_at: now,
           updated_by: user.id,
         };
-        
+
+        if (updates.title !== undefined) payload.title = updates.title;
+        if (updates.excerpt !== undefined) payload.excerpt = updates.excerpt;
         if (updates.body !== undefined) payload.content = updates.body;
         if (updates.cta !== undefined) {
-          payload.link_url = updates.cta.url;
-          payload.link_text = updates.cta.label;
+          payload.link_url = updates.cta?.url || null;
+          payload.link_text = updates.cta?.label || null;
         }
+        if (updates.category !== undefined) payload.category = updates.category;
+        if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.priority !== undefined) payload.priority = updates.priority;
+        if (updates.featured !== undefined) payload.featured = updates.featured;
+        if (updates.targeting !== undefined) payload.targeting = updates.targeting;
         if (updates.tags !== undefined) payload.tags = updates.tags;
-        if (updates.videoUrl !== undefined) payload.video_url = updates.videoUrl;
-        if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+        if (updates.videoUrl !== undefined) payload.video_url = updates.videoUrl || null;
+        if (updates.imageUrl !== undefined) payload.image_url = getUsableImageUrl(updates.imageUrl) || null;
         if (updates.publishAt !== undefined) payload.publish_at = updates.publishAt;
         if (updates.expireAt !== undefined) payload.expire_at = updates.expireAt;
+        if (updates.language !== undefined) payload.language = updates.language;
         if (updates.translationGroup !== undefined) payload.translation_group = updates.translationGroup;
 
         const cleanedData = removeUndefinedFields(payload as Record<string, unknown>);
-        delete cleanedData.imageUrl;
-        delete cleanedData.linkUrl;
-        delete cleanedData.linkText;
-        delete cleanedData.publishAt;
-        delete cleanedData.expireAt;
-        delete cleanedData.translationGroup;
-        delete cleanedData.updatedBy;
-        delete cleanedData.createdBy;
-        delete cleanedData.body;
-        delete cleanedData.cta;
-        delete cleanedData.videoUrl;
 
-        const { error } = await supabase
+        const { data: updatedRows, error } = await supabase
           .from(TABLES.NEWS)
           .update(cleanedData)
-          .eq('id', id);
+          .eq('id', id)
+          .select('*');
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'PGRST116' || error.message?.includes('0 rows') || error.message?.includes('Cannot coerce')) {
+            throw new Error('Permiso denegado: no tienes permisos para editar esta noticia. Verifica tu rol de usuario en la base de datos.');
+          }
+          throw error;
+        }
+
+        if (!updatedRows || updatedRows.length === 0) {
+          throw new Error('No se encontró la noticia para actualizar. Verifica que tengas permisos o que la noticia exista.');
+        }
+
+        if (Object.prototype.hasOwnProperty.call(cleanedData, 'image_url')) {
+          const { error: articleSyncError } = await supabase
+            .from('app_articles')
+            .update({
+              image_url: cleanedData.image_url,
+              updated_at: now,
+            })
+            .eq('id', id);
+
+          if (articleSyncError) {
+            console.warn('[NewsContext] Could not sync image_url to app_articles:', articleSyncError.message);
+          }
+        }
 
         setNewsItems(prev =>
           prev.map(item => (item.id === id ? { ...item, ...updates, updatedAt: now, updatedBy: user.id } : item))
@@ -291,7 +308,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           created_at: now,
           updated_at: now,
           created_by: user.id,
-          image_url: original.imageUrl,
+          image_url: getUsableImageUrl(original.imageUrl) || null,
           link_url: original.cta?.url,
           link_text: original.cta?.label,
           video_url: original.videoUrl,
@@ -359,7 +376,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updatedAt: item.updated_at,
         publishAt: item.publish_at,
         expireAt: item.expire_at,
-        imageUrl: item.image_url,
+        imageUrl: getUsableImageUrl(item.image_url),
         linkUrl: item.link_url,
         linkText: item.link_text,
         createdBy: item.created_by,

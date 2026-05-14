@@ -14,7 +14,7 @@ import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector, SliderControl
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CtaLinkPicker } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -91,13 +91,25 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
               {/* CTA */}
               <div className="bg-q-surface/50 p-3 rounded-md border border-q-border mt-3">
-                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
+                <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Link size={12} />
                   Call to Action
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <I18nInput label={t('controls.textoBotn')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, val)} />
-                  <Input label={t('controls.enlaceDelBotn')} value={slide.primaryCtaLink || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, val)} />
+                <div className="space-y-3">
+                  <I18nInput label={t('controls.textoBotn')} value={slide.primaryCta || ''} onChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCta`, val)} className="mb-0" />
+                  <div>
+                    <label className="block text-[10px] font-semibold text-q-text-secondary uppercase tracking-wider mb-1.5">{t('controls.enlaceDelBotn')}</label>
+                    <CtaLinkPicker
+                      t={t}
+                      linkType={slide.primaryCtaLinkType}
+                      linkValue={slide.primaryCtaLink}
+                      onLinkTypeChange={(type) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLinkType`, type)}
+                      onLinkChange={(val) => setNestedData(`heroNova.slides.${slideIndex}.primaryCtaLink`, val)}
+                      defaultSectionValue="/#cta"
+                      storeId={activeProject?.id || ''}
+                      gridCategories={data.categoryGrid?.categories || []}
+                    />
+                  </div>
                 </div>
               </div>
 

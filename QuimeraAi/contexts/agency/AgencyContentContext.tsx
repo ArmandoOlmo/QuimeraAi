@@ -25,6 +25,7 @@ import {
 import { supabase } from '../../supabase';
 import { useTenant } from '../tenant/TenantContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { getUsableImageUrl } from '../../utils/imageUrl';
 
 // =============================================================================
 // CONTEXT
@@ -84,7 +85,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
                     publishedAt: item.published_at,
-                    imageUrl: item.image_url,
+                    imageUrl: getUsableImageUrl(item.image_url),
                     readTime: item.read_time,
                     translationGroup: item.translation_group,
                     title: resolveProjectName(item.title),
@@ -136,7 +137,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
                     publishedAt: item.published_at,
-                    imageUrl: item.image_url,
+                    imageUrl: getUsableImageUrl(item.image_url),
                     readTime: item.read_time,
                     translationGroup: item.translation_group,
                     title: resolveProjectName(item.title),
@@ -171,7 +172,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
             const payload = {
                 ...data,
                 tenant_id: tenantId,
-                image_url: imageUrl,
+                image_url: getUsableImageUrl(imageUrl) || null,
                 translation_group: translationGroup,
                 read_time: newReadTime,
                 published_at: article.status === 'published' && !publishedAt ? now : publishedAt,

@@ -32,8 +32,10 @@ ALTER TABLE public.app_articles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read access for published app articles" ON public.app_articles
     FOR SELECT TO public USING (status = 'published');
 
-CREATE POLICY "Admin full access to app articles" ON public.app_articles
-    FOR ALL TO authenticated USING (auth.uid() IN (SELECT id FROM users WHERE role = 'superadmin'));
+CREATE POLICY "Admin and owner full access to app articles" ON public.app_articles
+    FOR ALL TO authenticated USING (
+        auth.uid() IN (SELECT id FROM users WHERE role IN ('superadmin', 'admin', 'owner'))
+    );
 
 -- App Navigation
 CREATE TABLE IF NOT EXISTS public.app_navigation (
@@ -194,6 +196,8 @@ CREATE TABLE IF NOT EXISTS public.news_items (
     link_url text,
     link_text text,
     targeting jsonb DEFAULT '{"type": "all"}'::jsonb,
+    tags jsonb DEFAULT '[]'::jsonb,
+    video_url text,
     language text DEFAULT 'es',
     translation_group text,
     views integer DEFAULT 0,
@@ -208,9 +212,23 @@ CREATE TABLE IF NOT EXISTS public.news_items (
 
 ALTER TABLE public.news_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authenticated users read published news" ON public.news_items
-    FOR SELECT TO authenticated USING (status = 'published');
+-- Anyone (including anon) can read published news
+CREATE POLICY "Public read published news" ON public.news_items
+    FOR SELECT TO public USING (status = 'published');
 
+-- Authenticated users can create news items
+CREATE POLICY "Authenticated users can create news" ON public.news_items
+    FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Creators can update their own news items
+CREATE POLICY "News creators can update own news" ON public.news_items
+    FOR UPDATE TO authenticated USING (auth.uid()::text = created_by) WITH CHECK (true);
+
+-- Creators can delete their own news items
+CREATE POLICY "News creators can delete own news" ON public.news_items
+    FOR DELETE TO authenticated USING (auth.uid()::text = created_by);
+
+-- Superadmins have full access to all news items
 CREATE POLICY "Admin full access to news" ON public.news_items
     FOR ALL TO authenticated USING (auth.uid() IN (SELECT id FROM users WHERE role = 'superadmin'));
 
@@ -232,8 +250,21 @@ CREATE TABLE IF NOT EXISTS public.news_user_states (
 
 ALTER TABLE public.news_user_states ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users read/write own news states" ON public.news_user_states
-    FOR ALL TO authenticated USING (user_id = auth.uid());
+-- Users can read their own news states
+CREATE POLICY "Users read own news states" ON public.news_user_states
+    FOR SELECT TO authenticated USING (user_id = auth.uid());
+
+-- Users can insert their own news states
+CREATE POLICY "Users insert own news states" ON public.news_user_states
+    FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+-- Users can update their own news states
+CREATE POLICY "Users update own news states" ON public.news_user_states
+    FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- Users can delete their own news states
+CREATE POLICY "Users delete own news states" ON public.news_user_states
+    FOR DELETE TO authenticated USING (user_id = auth.uid());
 
 
 -- Setup trigger for updated_at

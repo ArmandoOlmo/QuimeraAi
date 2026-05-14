@@ -72,7 +72,7 @@ interface HeroProps extends HeroData {
 
 const HeroGradient: React.FC<HeroProps> = ({
     textLayout = 'left-top',
-    headline, subheadline, primaryCta, secondaryCta, imageUrl,
+    headline, subheadline, primaryCta, secondaryCta, imageUrl, backgroundImageUrl,
     colors, borderRadius,
     paddingY = 'md', paddingX = 'md',
     headlineFontSize = 'lg', subheadlineFontSize = 'lg',
@@ -87,6 +87,10 @@ const HeroGradient: React.FC<HeroProps> = ({
 }) => {
     const layout = getHeroLayoutClasses(textLayout as HeroTextLayout);
     const { getColor } = useDesignTokens();
+
+    // When a SectionBackground image is supplied, hide the decorative animated layers
+    // so the image is fully visible.
+    const hasBackgroundImage = !!backgroundImageUrl;
 
     // Component colors take priority over Design Tokens
     const actualColors = {
@@ -110,9 +114,10 @@ const HeroGradient: React.FC<HeroProps> = ({
     return (
         <section
             className="relative w-full overflow-hidden"
-            style={{ background: actualColors.background, minHeight: heroHeight ? `${heroHeight}vh` : undefined }}
+            style={{ background: hasBackgroundImage ? 'transparent' : actualColors.background, minHeight: heroHeight ? `${heroHeight}vh` : undefined }}
         >
-            {/* Animated Gradient Background */}
+            {/* Animated Gradient Background - hidden when a SectionBackground image is supplied */}
+            {!hasBackgroundImage && (
             <div className="absolute inset-0 z-0">
                 <div
                     className="absolute top-0 -right-1/4 w-[800px] h-[800px] rounded-full blur-3xl opacity-20 animate-pulse"
@@ -137,8 +142,10 @@ const HeroGradient: React.FC<HeroProps> = ({
                     }}
                 ></div>
             </div>
+            )}
 
-            {/* Grid Pattern Overlay */}
+            {/* Grid Pattern Overlay - hidden when a SectionBackground image is supplied */}
+            {!hasBackgroundImage && (
             <div
                 className="absolute inset-0 z-0 opacity-[0.02]"
                 style={{
@@ -146,6 +153,7 @@ const HeroGradient: React.FC<HeroProps> = ({
                     backgroundSize: '50px 50px'
                 }}
             ></div>
+            )}
 
             <div className={`relative z-10 container mx-auto ${paddingXClasses[paddingX]} ${paddingYClasses[paddingY]} flex items-center`}>
                 <div className={`grid md:grid-cols-2 gap-12 items-center w-full`}>

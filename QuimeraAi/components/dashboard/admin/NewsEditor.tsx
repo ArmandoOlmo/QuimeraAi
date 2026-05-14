@@ -86,12 +86,22 @@ import {
     getNewsLanguageName,
 } from '../../../utils/newsTranslation';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import { getUsableImageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
 
 interface NewsEditorProps {
     news: NewsItem | null;
     onClose: () => void;
     onTranslationCreated?: (translatedNews: NewsItem) => void;
 }
+
+/** Format an ISO string into YYYY-MM-DDTHH:mm for datetime-local inputs */
+const toDatetimeLocal = (isoString?: string | null): string => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCreated }) => {
     const { t } = useTranslation();
@@ -106,7 +116,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
     // Form State
     const [title, setTitle] = useState(news?.title || '');
     const [excerpt, setExcerpt] = useState(news?.excerpt || '');
-    const [imageUrl, setImageUrl] = useState(news?.imageUrl || '');
+    const [imageUrl, setImageUrl] = useState(getUsableImageUrl(news?.imageUrl));
     const [videoUrl, setVideoUrl] = useState(news?.videoUrl || '');
     const [category, setCategory] = useState<NewsCategory>(news?.category || 'update');
     const [tags, setTags] = useState<string[]>(news?.tags || []);
@@ -121,8 +131,8 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
     const [ctaExternal, setCtaExternal] = useState(news?.cta?.isExternal || false);
 
     // Scheduling State
-    const [publishAt, setPublishAt] = useState(news?.publishAt || '');
-    const [expireAt, setExpireAt] = useState(news?.expireAt || '');
+    const [publishAt, setPublishAt] = useState(toDatetimeLocal(news?.publishAt));
+    const [expireAt, setExpireAt] = useState(toDatetimeLocal(news?.expireAt));
 
     // Targeting State
     const [targetType, setTargetType] = useState<NewsTargetType>(news?.targeting?.type || 'all');
@@ -497,6 +507,10 @@ Text to format:
         await performSave(false);
     };
 
+    const handleFeaturedImageChange = (url: string) => {
+        setImageUrl(getUsableImageUrl(url));
+    };
+
     const performSave = async (isAutoSave: boolean = false) => {
         if (!title.trim()) {
             if (!isAutoSave) showToast(t('superadmin.news.titleRequired', 'El título es requerido'), 'error');
@@ -506,11 +520,12 @@ Text to format:
         setIsSaving(true);
 
         try {
+            const normalizedImageUrl = getUsableImageUrl(imageUrl);
             const newsData: Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'clicks'> = {
                 title: title.trim(),
                 excerpt: excerpt.trim(),
                 body: editor?.getHTML() || '',
-                imageUrl: imageUrl || undefined,
+                imageUrl: normalizedImageUrl || null,
                 videoUrl: videoUrl || undefined,
                 category,
                 tags,
@@ -533,10 +548,7 @@ Text to format:
                 ...(news?.translationStatus ? { translationStatus: news.translationStatus } : {}),
             };
 
-            // Determine if this is a real Firestore document (not a synthetic ID from AI/translation creation)
-            const isRealFirestoreDoc = isEditing && news && !news.id.startsWith('news_');
-
-            if (isRealFirestoreDoc && news) {
+            if (isEditing && news?.id) {
                 await updateNews(news.id, newsData);
             } else {
                 await createNews(newsData);
@@ -585,11 +597,12 @@ Text to format:
             const currentBody = editor.getHTML() || '';
 
             // Build the current news data to save first
+            const normalizedImageUrl = getUsableImageUrl(imageUrl);
             const currentNewsData: Omit<NewsItem, 'id' | 'createdAt' | 'updatedAt' | 'views' | 'clicks'> = {
                 title: title.trim(),
                 excerpt: excerpt.trim(),
                 body: currentBody,
-                imageUrl: imageUrl || undefined,
+                imageUrl: normalizedImageUrl || null,
                 videoUrl: videoUrl || undefined,
                 category,
                 tags,
@@ -612,8 +625,7 @@ Text to format:
 
             // Save the original first
             let savedId: string;
-            const isOriginalInFirestore = isEditing && news && !news.id.startsWith('news_');
-            if (isOriginalInFirestore && news) {
+            if (isEditing && news?.id) {
                 await updateNews(news.id, currentNewsData);
                 savedId = news.id;
             } else {
@@ -720,7 +732,7 @@ Text to format:
             <div className="flex flex-col flex-1 min-w-0">
                 {/* ── CMS-style Header (merged, no sub-header) ── */}
                 <header className="h-12 px-3 lg:px-4 border-b border-q-border flex items-center bg-q-bg z-20 sticky top-0">
-                    {/* Left Section - Back + Icon */}
+                    {/* Left Section - Icon */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsMobileSidebarOpen(true)}
@@ -728,7 +740,6 @@ Text to format:
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} />
                         <Sparkles className="text-primary w-5 h-5 hidden md:block" />
                         <span className="text-sm font-bold text-foreground hidden md:inline">
                             {isEditing
@@ -785,6 +796,7 @@ Text to format:
                         >
                             <MoreVertical size={16} />
                         </button>
+                        <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} />
                     </div>
                 </header>
 
@@ -898,7 +910,15 @@ Text to format:
                                         <ImageIcon size={14} />
                                         {t('superadmin.news.featuredImage', 'Imagen Destacada')}
                                     </label>
-                                    <ImagePicker label="" value={imageUrl} onChange={setImageUrl} hideUrlInput={true} destination="admin" adminCategory="article" />
+                                    <ImagePicker
+                                        label=""
+                                        value={imageUrl}
+                                        onChange={handleFeaturedImageChange}
+                                        hideUrlInput={true}
+                                        destination="admin"
+                                        adminCategory="article"
+                                        onRemove={() => setImageUrl('')}
+                                    />
                                 </div>
 
                                 {/* Excerpt */}
@@ -994,7 +1014,7 @@ Text to format:
                                 {/* Category */}
                                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
-                                        {t('superadmin.news.category', 'Categoría')}
+                                        {t('superadmin.news.categoryLabel', 'Categoría')}
                                     </label>
                                     <select
                                         value={category}

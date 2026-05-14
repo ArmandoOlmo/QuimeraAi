@@ -3986,6 +3986,13 @@
         "overlayOpacity": "Overlay Opacity",
         "overlayOpacityHelp": "Controls the darkness of the gradient overlay on the background image"
       },
+      "cta": {
+        "linkSection": "Section",
+        "linkProduct": "Product",
+        "linkCollection": "Collection",
+        "linkContent": "Content",
+        "linkManual": "URL"
+      },
       "chatbot": {
         "configuration": "AI Chatbot Configuration",
         "description": "The chatbot has been upgraded! Configure it in the AI Assistant Dashboard for advanced features.",

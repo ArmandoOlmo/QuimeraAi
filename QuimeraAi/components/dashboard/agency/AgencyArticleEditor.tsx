@@ -62,7 +62,7 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
     const { saveArticle, loadArticles } = useAgencyContent();
     const { getPrompt } = useAdmin();
     const { showToast } = useToast();
-    const { uploadImageAndGetURL } = useFiles();
+    const { uploadAdminAsset } = useFiles();
 
     // Form State
     const [title, setTitle] = useState(article?.title || '');
@@ -182,11 +182,14 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
         const file = e.target.files?.[0];
         if (file && editor) {
             try {
-                const url = await uploadImageAndGetURL(file, 'agency_content');
+                const url = await uploadAdminAsset(file, 'article', {
+                    description: `Agency article content image: ${title}`,
+                });
                 editor.chain().focus().setImage({ src: url }).run();
-            } catch (error) {
+                showToast('Imagen subida correctamente', 'success');
+            } catch (error: any) {
                 console.error("Image upload failed", error);
-                showToast("Error al subir la imagen", 'error');
+                showToast(error.message || "Error al subir la imagen", 'error');
             }
         }
     };
@@ -265,6 +268,7 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
                 content: currentContent,
                 excerpt,
                 featuredImage,
+                imageUrl: featuredImage, // Map to imageUrl for database compatibility
                 status,
                 featured,
                 category,
@@ -614,7 +618,15 @@ Text to format:
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">Imagen Destacada</label>
-                                    <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} />
+                                    <ImagePicker
+                                        label=""
+                                        value={featuredImage}
+                                        onChange={setFeaturedImage}
+                                        destination="admin"
+                                        adminCategory="article"
+                                        hideUrlInput={true}
+                                        onRemove={() => setFeaturedImage('')}
+                                    />
                                 </div>
 
                                 {/* Excerpt */}

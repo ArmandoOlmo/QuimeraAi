@@ -958,7 +958,7 @@ const LandingPageContent: React.FC = () => {
 
   const componentsMap: Record<PageSection, React.ReactNode> = {
     hero: (
-      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition}>
+      <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition} glassEffect={mergedHeroData?.glassEffect}>
         {(() => {
           const hbr = mergedHeroData.buttonBorderRadius || theme.buttonBorderRadius;
           const nav = handleLinkNavigation;

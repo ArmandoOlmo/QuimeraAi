@@ -162,6 +162,11 @@ export interface HeroData {
     secondaryCta: string;
     imageUrl: string;
     backgroundImage?: string;
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
+    backgroundPosition?: string;
     imageStyle: ImageStyle;
     imageDropShadow: boolean;
     imageBorderRadius: BorderRadiusSize;
@@ -257,8 +262,10 @@ export interface HeroGallerySlide {
     subheadline?: string;
     primaryCta?: string;
     primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
     secondaryCta?: string;
     secondaryCtaLink?: string;
+    secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
     backgroundImage?: string;
     backgroundColor?: string;
     /** @deprecated Use backgroundImage instead */
@@ -320,6 +327,7 @@ export interface HeroNovaSlide {
     subheadline?: string;
     primaryCta?: string;
     primaryCtaLink?: string;
+    primaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
     /** Media type: 'image' or 'video' */
     mediaType?: 'image' | 'video';
     /** Image URL for background */

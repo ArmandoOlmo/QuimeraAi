@@ -11,6 +11,7 @@ import { searchFiles } from '../../utils/fileHelpers';
 import { FileRecord } from '../../types';
 import ImageGeneratorPanel from './ImageGeneratorPanel';
 import ImageDetailModal from './ImageDetailModal';
+import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 interface ImagePickerProps {
     label: string;
@@ -25,7 +26,7 @@ interface ImagePickerProps {
     onClose?: () => void;
     /** Optional callback to remove/clear the image or item (shows trash icon) */
     onRemove?: () => void;
-    /** Destination for uploads and generation. Defaults to 'user' (project files). 'global' is kept as a legacy alias for 'admin'. */
+    /** Destination for uploads and generation. Defaults to 'user' (project files). */
     destination?: 'user' | 'global' | 'admin';
     /** Admin category for filtering and uploading when destination is 'admin' */
     adminCategory?: string;
@@ -43,9 +44,9 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const { t } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
 
-    // Determine the actual destination. Templates and legacy "global" calls use the admin asset library.
+    // Determine the actual destination.
     const requestedDestination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
-    const destination: 'user' | 'admin' = requestedDestination === 'global' ? 'admin' : requestedDestination;
+    const destination: 'user' | 'admin' | 'global' = requestedDestination;
 
     const filesCtx = useSafeFiles();
     const files = filesCtx?.files || [];
@@ -53,6 +54,9 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const adminAssets = filesCtx?.adminAssets || [];
     const fetchAdminAssets = filesCtx?.fetchAdminAssets || (async () => {});
     const uploadAdminAsset = filesCtx?.uploadAdminAsset || (async () => { throw new Error("Files context missing"); });
+    const globalFiles = filesCtx?.globalFiles || [];
+    const fetchGlobalFiles = filesCtx?.fetchGlobalFiles || (async () => {});
+    const uploadGlobalFile = filesCtx?.uploadGlobalFile || (async () => { throw new Error("Files context missing"); });
     const isFilesLoading = filesCtx?.isFilesLoading || false;
     const { success, error: showError } = useToast();
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
@@ -66,10 +70,12 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
     };
 
-    // Fetch the admin asset library only when this picker is in admin context.
+    // Fetch the selected shared library only when this picker is open.
     useEffect(() => {
         if (destination === 'admin' && isLibraryOpen) {
             fetchAdminAssets();
+        } else if (destination === 'global' && isLibraryOpen) {
+            fetchGlobalFiles();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [destination, isLibraryOpen]);
@@ -105,12 +111,32 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         if (adminCategory) setSelectedAdminCategory(adminCategory);
     }, [adminCategory]);
 
+    const handleSelectImageUrl = (urlValue: unknown) => {
+        const selectedImageUrl = normalizeImageUrl(urlValue);
+        if (!selectedImageUrl) {
+            showError('Esta imagen no tiene una URL valida.');
+            return;
+        }
+
+        if (isLegacyFirebaseStorageUrl(selectedImageUrl)) {
+            showError('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
+            return;
+        }
+
+        onChange(selectedImageUrl);
+        handleClose();
+        success(t('dashboard.imagePicker.imageSelected'));
+    };
+
     const handleFileUpload = async (file: File) => {
         try {
             if (destination === 'admin') {
                 await uploadAdminAsset(file, (selectedAdminCategory as any) || 'other', {
                     description: 'Uploaded via ImagePicker'
                 });
+                success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
+            } else if (destination === 'global') {
+                await uploadGlobalFile(file);
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             } else {
                 await uploadFile(file);
@@ -132,6 +158,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             if (adminCategory) {
                 sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
+        } else if (destination === 'global') {
+            sourceFiles = globalFiles;
         }
 
         let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
@@ -146,7 +174,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         return result;
-    }, [files, adminAssets, searchQuery, activeProjectId, destination, adminCategory]);
+    }, [files, adminAssets, globalFiles, searchQuery, activeProjectId, destination, adminCategory]);
 
     return (
         <>
@@ -193,10 +221,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     >
                                         <Zap size={14} />
                                     </button>
-                                    {onRemove && (
+                                    {value && (
                                         <button
                                             type="button"
-                                            onClick={onRemove}
+                                            onClick={onRemove || (() => onChange(''))}
                                             className="p-2 rounded-lg bg-red-500/60 backdrop-blur-md border border-red-500/30 text-white hover:bg-red-500/80 transition-all duration-200"
                                             title={t('common.remove')}
                                         >
@@ -301,7 +329,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                         <div className="flex items-center gap-1.5 text-q-text-secondary">
                                             <FolderOpen size={14} className="text-q-accent" />
                                             <span className="text-xs font-medium text-q-text">
-                                                {destination === 'admin' ? 'Librería de administración' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
+                                                {destination === 'admin' ? 'Librería de administración' : destination === 'global' ? 'Librería global' : activeProject?.name || t('dashboard.imagePicker.assetLibrary')}
                                             </span>
                                             <span className="text-[10px] px-1.5 py-0.5 bg-q-surface rounded">
                                                 {imageFiles.length} {imageFiles.length === 1 ? t('dashboard.imagePicker.image') : t('dashboard.imagePicker.images')}
@@ -309,6 +337,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             {destination === 'admin' && (
                                                 <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded border border-blue-500/20 ml-2">
                                                     ADMIN
+                                                </span>
+                                            )}
+                                            {destination === 'global' && (
+                                                <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 rounded border border-emerald-500/20 ml-2">
+                                                    GLOBAL
                                                 </span>
                                             )}
                                         </div>
@@ -374,26 +407,36 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     <div className="flex-grow overflow-y-auto custom-scrollbar">
                                         {imageFiles.length > 0 ? (
                                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                                {imageFiles.map(file => (
-                                                    <div
-                                                        key={file.id}
-                                                        onClick={() => { onChange(file.downloadURL); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
-                                                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === file.downloadURL ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
-                                                    >
-                                                        <img src={file.downloadURL} alt={file.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                                        {value === file.downloadURL ? (
-                                                            <div className="absolute inset-0 bg-q-accent/20 flex items-center justify-center">
-                                                                <div className="bg-q-accent text-q-bg rounded-full p-2">
-                                                                    <Check size={20} />
+                                                {imageFiles.map(file => {
+                                                    const fileUrl = normalizeImageUrl(file.downloadURL);
+                                                    const isLegacyImage = isLegacyFirebaseStorageUrl(fileUrl);
+                                                    const isSelected = normalizeImageUrl(value) === fileUrl;
+
+                                                    return (
+                                                        <div
+                                                            key={file.id}
+                                                            onClick={() => handleSelectImageUrl(fileUrl)}
+                                                            className={`aspect-square rounded-lg overflow-hidden border-2 group relative transition-all ${isLegacyImage ? 'cursor-not-allowed opacity-60 border-red-500/40' : 'cursor-pointer'} ${isSelected ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
+                                                        >
+                                                            <img src={fileUrl} alt={file.name} className={`w-full h-full object-cover transition-transform ${isLegacyImage ? 'grayscale' : 'group-hover:scale-110'}`} />
+                                                            {isLegacyImage ? (
+                                                                <div className="absolute inset-0 bg-black/65 flex items-center justify-center p-2">
+                                                                    <span className="text-white text-[10px] font-bold text-center uppercase tracking-wide">Migrar a Supabase</span>
                                                                 </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                            ) : isSelected ? (
+                                                                <div className="absolute inset-0 bg-q-accent/20 flex items-center justify-center">
+                                                                    <div className="bg-q-accent text-q-bg rounded-full p-2">
+                                                                        <Check size={20} />
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <span className="text-white text-xs font-bold">{t('dashboard.imagePicker.select')}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         ) : searchQuery ? (
                                             <div className="h-full flex flex-col items-center justify-center text-q-text-secondary">
@@ -469,7 +512,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                                 {productImages.map(product => (
                                                     <div
                                                         key={product.id}
-                                                        onClick={() => { onChange(product.imageUrl); handleClose(); success(t('dashboard.imagePicker.imageSelected')); }}
+                                                        onClick={() => handleSelectImageUrl(product.imageUrl)}
                                                         className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer group relative transition-all ${value === product.imageUrl ? 'border-q-accent ring-2 ring-q-accent/50' : 'border-transparent hover:border-q-text-secondary'}`}
                                                     >
                                                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
@@ -505,12 +548,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                             <ImageGeneratorPanel
                                     destination={destination}
                                     adminCategory={adminCategory}
+                                    projectId={activeProjectId || undefined}
                                     className="h-full"
                                     generationContext={generationContext}
                                     onUseImage={(url) => {
-                                        onChange(url);
-                                        handleClose();
-                                        success(t('dashboard.imagePicker.imageSelected'));
+                                        handleSelectImageUrl(url);
                                     }}
                                 // No onClose passed here because we don't want the X button in the panel header
                                 />

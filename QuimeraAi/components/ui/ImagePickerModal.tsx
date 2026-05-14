@@ -10,6 +10,7 @@ import { X, Search, Image, Check, Star, Upload, Loader2, FolderOpen } from 'luci
 import { useFiles } from '../../contexts/files';
 import { BRAND_ASSETS } from '../../constants/brandAssets';
 import { FileRecord } from '../../types';
+import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 interface ImagePickerModalProps {
     isOpen: boolean;
@@ -128,8 +129,9 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     }, [allImages, searchQuery]);
 
     const handleSelect = () => {
-        if (selectedUrl) {
-            onSelect(selectedUrl);
+        const imageUrl = normalizeImageUrl(selectedUrl);
+        if (imageUrl && !isLegacyFirebaseStorageUrl(imageUrl)) {
+            onSelect(imageUrl);
             onClose();
         }
     };
@@ -241,41 +243,59 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                         )
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                            {filteredImages.map((img) => (
-                                <button
-                                    key={img.id}
-                                    onClick={() => setSelectedUrl(img.downloadURL)}
-                                    className={`relative aspect-square rounded-md overflow-hidden border transition-all ${selectedUrl === img.downloadURL
-                                            ? 'border-primary ring-2 ring-primary/30'
-                                            : 'border-q-border/50 hover:border-primary/40'
-                                        }`}
-                                >
-                                    <img
-                                        src={img.downloadURL}
-                                        alt={img.name}
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                    />
-                                    {/* System asset badge */}
-                                    {img.isSystemAsset && (
-                                        <div className="absolute top-1 right-1">
-                                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                                        </div>
-                                    )}
-                                    {/* Selected indicator */}
-                                    {selectedUrl === img.downloadURL && (
-                                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                                                <Check size={16} className="text-primary-foreground" />
+                            {filteredImages.map((img) => {
+                                const imageUrl = normalizeImageUrl(img.downloadURL);
+                                const isLegacyImage = isLegacyFirebaseStorageUrl(imageUrl);
+                                const isSelected = selectedUrl === imageUrl;
+
+                                return (
+                                    <button
+                                        key={img.id}
+                                        onClick={() => {
+                                            if (isLegacyImage) {
+                                                setUploadError('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
+                                                return;
+                                            }
+                                            setSelectedUrl(imageUrl);
+                                            setUploadError(null);
+                                        }}
+                                        className={`relative aspect-square rounded-md overflow-hidden border transition-all ${isLegacyImage ? 'cursor-not-allowed opacity-60 border-destructive/50' : ''} ${isSelected
+                                                ? 'border-primary ring-2 ring-primary/30'
+                                                : 'border-q-border/50 hover:border-primary/40'
+                                            }`}
+                                    >
+                                        <img
+                                            src={imageUrl}
+                                            alt={img.name}
+                                            className={`w-full h-full object-cover ${isLegacyImage ? 'grayscale' : ''}`}
+                                            loading="lazy"
+                                        />
+                                        {isLegacyImage && (
+                                            <div className="absolute inset-0 bg-black/65 flex items-center justify-center p-2">
+                                                <span className="text-white text-[10px] font-bold text-center uppercase tracking-wide">Migrar a Supabase</span>
                                             </div>
+                                        )}
+                                        {/* System asset badge */}
+                                        {img.isSystemAsset && (
+                                            <div className="absolute top-1 right-1">
+                                                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                                            </div>
+                                        )}
+                                        {/* Selected indicator */}
+                                        {isSelected && (
+                                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                                                    <Check size={16} className="text-primary-foreground" />
+                                                </div>
+                                            </div>
+                                        )}
+                                        {/* Name tooltip on hover */}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 hover:opacity-100 transition-opacity">
+                                            <p className="text-xs text-white truncate">{img.name}</p>
                                         </div>
-                                    )}
-                                    {/* Name tooltip on hover */}
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 hover:opacity-100 transition-opacity">
-                                        <p className="text-xs text-white truncate">{img.name}</p>
-                                    </div>
-                                </button>
-                            ))}
+                                    </button>
+                                );
+                            })}
                             {/* Loading indicator for more images */}
                             {isAdminAssetsLoading && (
                                 <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">

@@ -90,24 +90,44 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [isAdminAssetsLoading, setIsAdminAssetsLoading] = useState(false);
 
     // Load files with real-time updates (scoped to active project)
+    // We rely on RLS to filter by tenant, so we don't strictly need currentTenantId here.
+    // If currentTenantId isn't loaded yet, we fall back to a tenant_members lookup.
     useEffect(() => {
-        if (!user || !activeProjectId || !currentTenantId) {
+        if (!user || !activeProjectId) {
             setFiles([]);
             setIsFilesLoading(false);
             return;
         }
 
+        let cancelled = false;
+
+        const resolveTenantId = async (): Promise<string | null> => {
+            if (currentTenantId) return currentTenantId;
+            const { data: memberRow } = await supabase
+                .from('tenant_members')
+                .select('tenant_id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .maybeSingle();
+            return memberRow?.tenant_id || null;
+        };
+
         const fetchInitialFiles = async () => {
             setIsFilesLoading(true);
             try {
-                const { data, error } = await supabase
+                const tenantId = await resolveTenantId();
+                let query = supabase
                     .from('files')
                     .select('*')
-                    .eq('tenant_id', currentTenantId)
                     .eq('project_id', activeProjectId)
                     .order('created_at', { ascending: false });
+                if (tenantId) {
+                    query = query.eq('tenant_id', tenantId);
+                }
+                const { data, error } = await query;
 
                 if (error) throw error;
+                if (cancelled) return;
 
                 const filesData = (data || []).map(f => ({
                     id: f.id,
@@ -126,7 +146,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             } catch (error) {
                 console.error("[FilesContext] Error fetching files:", error);
             } finally {
-                setIsFilesLoading(false);
+                if (!cancelled) setIsFilesLoading(false);
             }
         };
 
@@ -144,14 +164,31 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             .subscribe();
 
         return () => {
+            cancelled = true;
             supabase.removeChannel(channel);
         };
     }, [user, activeProjectId, currentTenantId]);
 
     // Upload file (to active project)
     const uploadFile = async (file: File): Promise<string | undefined> => {
-        if (!user || !activeProjectId || !currentTenantId) {
+        if (!user || !activeProjectId) {
             console.error("[FilesContext] Cannot upload file: No user or active project");
+            return undefined;
+        }
+
+        // Resolve tenant_id - either from context or by looking it up
+        let tenantId = currentTenantId;
+        if (!tenantId) {
+            const { data: memberRow } = await supabase
+                .from('tenant_members')
+                .select('tenant_id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .maybeSingle();
+            tenantId = memberRow?.tenant_id || null;
+        }
+        if (!tenantId) {
+            console.error("[FilesContext] Cannot upload file: User has no tenant membership");
             return undefined;
         }
 
@@ -171,7 +208,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .getPublicUrl(storagePath);
 
             const fileRecord = {
-                tenant_id: currentTenantId,
+                tenant_id: tenantId,
                 project_id: activeProjectId,
                 name: file.name,
                 url: downloadURL,

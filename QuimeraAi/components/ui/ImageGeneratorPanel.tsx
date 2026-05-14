@@ -33,13 +33,17 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const { generateImage, enhancePrompt } = useAI();
     const filesCtx = useSafeFiles();
     const uploadFile = filesCtx?.uploadFile || (async () => { throw new Error("Files context missing"); });
+    const uploadGlobalFile = filesCtx?.uploadGlobalFile || (async () => { throw new Error("Files context missing"); });
     const uploadAdminAsset = filesCtx?.uploadAdminAsset || (async () => { throw new Error("Files context missing"); });
     const files = filesCtx?.files || [];
+    const globalFiles = filesCtx?.globalFiles || [];
     const adminAssets = filesCtx?.adminAssets || [];
+    const fetchGlobalFiles = filesCtx?.fetchGlobalFiles || (async () => {});
     const fetchAdminAssets = filesCtx?.fetchAdminAssets || (async () => {});
+    const hasActiveProject = filesCtx?.hasActiveProject || false;
     const { activeProjectId } = useProject();
     const { t } = useTranslation();
-    const effectiveDestination: 'user' | 'admin' = destination === 'global' ? 'admin' : destination;
+    const effectiveDestination: 'user' | 'global' | 'admin' = destination;
 
     // Translation-dependent constants
     const ASPECT_RATIOS = [
@@ -201,6 +205,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     useEffect(() => {
         if (effectiveDestination === 'admin') {
             fetchAdminAssets();
+        } else if (effectiveDestination === 'global') {
+            fetchGlobalFiles();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveDestination]);
@@ -209,10 +215,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const effectiveProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
         let sourceFiles = files;
-        if (effectiveDestination === 'admin') {
+        if (effectiveDestination === 'global') {
+            sourceFiles = globalFiles;
+        } else if (effectiveDestination === 'admin') {
             sourceFiles = adminAssets;
             if (adminCategory) {
-                sourceFiles = sourceFiles.filter(f => f.category === adminCategory);
+                sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
         }
         
@@ -224,7 +232,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, effectiveDestination]);
+    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, effectiveDestination]);
 
     // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {
@@ -301,6 +309,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 console.log('✅ [ImageGeneratorPanel] Image was already saved by AIContext proxy');
                 setSavedToLibrary(true);
                 setSavedImageUrl(imageDataUrl);
+                if (effectiveDestination === 'admin') {
+                    await fetchAdminAssets();
+                } else if (effectiveDestination === 'global') {
+                    await fetchGlobalFiles();
+                }
                 return imageDataUrl;
             }
 
@@ -320,6 +333,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 console.log('✅ [ImageGeneratorPanel] Saved fallback to admin library');
                 setSavedToLibrary(true);
                 savedUrl = imageDataUrl; // Use data URL or fetch admin URL later
+            } else if (effectiveDestination === 'global') {
+                savedUrl = await uploadGlobalFile(file);
+                console.log('✅ [ImageGeneratorPanel] Saved fallback to global library:', savedUrl);
+                if (savedUrl) {
+                    setSavedToLibrary(true);
+                    setSavedImageUrl(savedUrl);
+                }
             } else if (hasActiveProject) {
                 // Save to user's project files
                 savedUrl = await uploadFile(file);
@@ -449,6 +469,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             };
 
             console.log('✨ [ImageGeneratorPanel] Quimera options:', options);
+            console.log('✨ [ImageGeneratorPanel] effectiveProjectId:', effectiveProjectId, 'destination:', effectiveDestination);
 
             const imageDataUrl = await generateImage(prompt, options);
             setGeneratedImage(imageDataUrl);
@@ -794,7 +815,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-q-border hover:border-q-accent/50 bg-q-bg/30 hover:bg-q-accent/10 text-q-text-secondary hover:text-q-accent transition-all text-xs font-medium group"
                                 >
                                     <Grid size={14} className="group-hover:text-q-accent transition-colors" />
-                                    <span>{t('editor.browseLibrary', { defaultValue: 'Browse Library' })}</span>
+                                    <span>{t('editor.browseLibrary', { defaultValue: effectiveDestination === 'admin' ? 'Browse Admin Library' : 'Browse Library' })}</span>
                                     <span className="text-[10px] opacity-60">({libraryImages.length})</span>
                                 </button>
 
@@ -1043,7 +1064,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             {/* Library Browser Modal */}
             {showLibraryBrowser && createPortal(
                 <div
-                    className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    className="fixed inset-0 z-[100020] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setShowLibraryBrowser(false)}
                 >
                     <div

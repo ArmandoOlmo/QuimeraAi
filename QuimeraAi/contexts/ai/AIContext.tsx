@@ -202,20 +202,46 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     const resolveProjectTenantId = async (projectId?: string, tenantId?: string | null): Promise<string | null> => {
         if (tenantId) return tenantId;
-        if (!projectId) return null;
 
-        const { data, error } = await supabase
-            .from('projects')
-            .select('tenant_id')
-            .eq('id', projectId)
-            .maybeSingle();
+        if (projectId) {
+            const { data, error } = await supabase
+                .from('projects')
+                .select('tenant_id')
+                .eq('id', projectId)
+                .maybeSingle();
 
-        if (error) {
-            console.warn('[AIContext] Could not resolve project tenant for generated image:', error);
-            return null;
+            if (!error && data?.tenant_id) {
+                return data.tenant_id;
+            }
+
+            if (error) {
+                console.warn('[AIContext] Could not resolve project tenant for generated image:', error);
+            }
         }
 
-        return data?.tenant_id || null;
+        // Fallback: use the current user's primary tenant from tenant_members
+        if (user?.id) {
+            const { data: memberData, error: memberError } = await supabase
+                .from('tenant_members')
+                .select('tenant_id')
+                .eq('user_id', user.id)
+                .limit(1)
+                .maybeSingle();
+
+            if (!memberError && memberData?.tenant_id) {
+                // Update the project record so future lookups succeed
+                if (projectId) {
+                    await supabase
+                        .from('projects')
+                        .update({ tenant_id: memberData.tenant_id })
+                        .eq('id', projectId)
+                        .is('tenant_id', null);
+                }
+                return memberData.tenant_id;
+            }
+        }
+
+        return null;
     };
 
     const saveGeneratedImageToLibrary = async (
@@ -282,7 +308,10 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
             const tenantId = await resolveProjectTenantId(options?.projectId, options?.tenantId);
             if (!options?.projectId || !tenantId) {
-                console.warn('[AIContext] Generated image was not saved to project library: missing projectId or tenantId.');
+                console.warn('[AIContext] Generated image was not saved to project library: missing projectId or tenantId.', {
+                    projectId: options?.projectId,
+                    tenantId,
+                });
                 return;
             }
 
@@ -301,7 +330,11 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 },
                 created_at: now,
             }]);
-            if (error) throw error;
+            if (error) {
+                console.error('[AIContext] Failed to save generated image to files table:', error);
+                throw error;
+            }
+            console.log('✅ [AIContext] Generated image saved to project library:', fileName);
         } catch (error) {
             console.warn('[AIContext] Generated image saved to storage but not linked to library:', error);
         }

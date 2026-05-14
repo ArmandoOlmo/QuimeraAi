@@ -29,6 +29,7 @@ import {
     DEFAULT_COOKIE_POLICY_EN,
 } from '../../types/appContent';
 import { supabase } from '../../supabase';
+import { getUsableImageUrl } from '../../utils/imageUrl';
 
 // =============================================================================
 // UTILITY: Strip undefined values (Firestore rejects them)
@@ -103,7 +104,8 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
                     publishedAt: item.published_at,
-                    imageUrl: item.image_url,
+                    imageUrl: getUsableImageUrl(item.image_url),
+                    featuredImage: getUsableImageUrl(item.image_url), // Add featuredImage mapping for UI parity
                     readTime: item.read_time,
                     translationGroup: item.translation_group,
                 })) as AppArticle[];
@@ -151,7 +153,8 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
                     publishedAt: item.published_at,
-                    imageUrl: item.image_url,
+                    imageUrl: getUsableImageUrl(item.image_url),
+                    featuredImage: getUsableImageUrl(item.image_url),
                     readTime: item.read_time,
                     translationGroup: item.translation_group,
                 })) as AppArticle[];
@@ -172,18 +175,30 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
     // Save article
     const saveArticle = useCallback(async (article: AppArticle): Promise<AppArticle> => {
         try {
-            const { id, createdAt, updatedAt, publishedAt, imageUrl, readTime, translationGroup, ...data } = article;
+            const { id, createdAt, updatedAt, publishedAt, imageUrl, featuredImage, readTime, translationGroup, ...data } = article;
             const now = new Date().toISOString();
+            const resolvedImageUrl = getUsableImageUrl(featuredImage || imageUrl) || null;
 
             // Calculate read time (approx 200 words per minute)
             const wordCount = article.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
             const newReadTime = Math.max(1, Math.ceil(wordCount / 200));
 
             const payload = stripUndefined({
-                ...data,
-                image_url: imageUrl,
+                title: data.title,
+                slug: data.slug,
+                excerpt: data.excerpt,
+                content: data.content,
+                category: data.category,
+                tags: data.tags || [],
+                image_url: resolvedImageUrl,
+                author: data.author,
+                status: data.status,
+                featured: data.featured,
+                priority: (data as any).priority ?? 0,
+                language: data.language || 'es',
                 translation_group: translationGroup,
                 read_time: newReadTime,
+                views: data.views ?? 0,
                 published_at: article.status === 'published' && !publishedAt ? now : publishedAt,
             });
 
@@ -191,19 +206,37 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
 
             if (id && id.length > 0) {
                 // Update existing
-                const { error } = await supabase
+                const { data: updatedRow, error } = await supabase
                     .from(TABLES.ARTICLES)
                     .update(payload)
-                    .eq('id', id);
+                    .eq('id', id)
+                    .select('id,image_url')
+                    .maybeSingle();
 
                 if (error) throw error;
+                if (!updatedRow) throw new Error('No se encontró el artículo para actualizar');
+
+                const { error: newsSyncError } = await supabase
+                    .from('news_items')
+                    .update({
+                        image_url: resolvedImageUrl,
+                        updated_at: now,
+                    })
+                    .eq('id', id);
+
+                if (newsSyncError) {
+                    console.warn('[AppContentContext] Could not sync image_url to news_items:', newsSyncError.message);
+                }
                 
                 savedArticle = {
                     ...article,
+                    imageUrl: resolvedImageUrl,
+                    featuredImage: resolvedImageUrl || '',
                     readTime: newReadTime,
                     updatedAt: now,
                     publishedAt: payload.published_at
                 } as AppArticle;
+                setArticles(prev => prev.map(item => item.id === id ? savedArticle : item));
             } else {
                 // Create new
                 const newId = `article_${Date.now()}`;
@@ -222,12 +255,15 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                 savedArticle = {
                     ...article,
                     id: newId,
+                    imageUrl: resolvedImageUrl,
+                    featuredImage: resolvedImageUrl || '',
                     readTime: newReadTime,
                     views: 0,
                     createdAt: now,
                     updatedAt: now,
                     publishedAt: payload.published_at
                 } as AppArticle;
+                setArticles(prev => [savedArticle, ...prev]);
             }
             
             return savedArticle;
@@ -353,7 +389,8 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
 
             if (!error && data) {
                 setLandingConfig({
-                    ...data,
+                    ...data.data, // Spread original data from jsonb column
+                    ...data,      // Overlay flat columns
                     heroTitle: data.hero_title,
                     heroSubtitle: data.hero_subtitle,
                     heroImage: data.hero_image,
@@ -392,7 +429,8 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
 
             if (!error && data) {
                 setLandingConfig({
-                    ...data,
+                    ...(data.data || {}), // Spread original data from jsonb column if exists
+                    ...data,              // Overlay flat columns
                     heroTitle: data.hero_title,
                     heroSubtitle: data.hero_subtitle,
                     heroImage: data.hero_image,
@@ -421,6 +459,7 @@ export const AppContentProvider: React.FC<{ children: ReactNode }> = ({ children
                 features: config.features,
                 cta_text: config.ctaText,
                 cta_link: config.ctaLink,
+                data: config, // Save the full config object to avoid losing extra fields (testimonials, etc)
                 updated_at: new Date().toISOString()
             };
             
@@ -634,4 +673,3 @@ export const useSafeAppContent = (): AppContentContextType | undefined => {
 };
 
 export default AppContentContext;
-

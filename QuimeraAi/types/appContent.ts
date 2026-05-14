@@ -34,6 +34,7 @@ export interface AppArticle {
   slug: string;
   content: string;
   excerpt: string;
+  imageUrl?: string | null; // DB/API alias for featuredImage (image_url)
   featuredImage: string;
   status: 'published' | 'draft';
   featured: boolean; // Para destacar en front page

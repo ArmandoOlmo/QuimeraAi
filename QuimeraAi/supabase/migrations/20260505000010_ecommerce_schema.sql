@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Store Settings
 CREATE TABLE IF NOT EXISTS public.store_settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     store_name TEXT NOT NULL,
     store_email TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS store_settings_project_id_idx ON public.store_setting
 
 -- 2. Store Categories
 CREATE TABLE IF NOT EXISTS public.store_categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     slug TEXT NOT NULL,
@@ -48,11 +48,12 @@ CREATE TABLE IF NOT EXISTS public.store_categories (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.store_categories ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS store_categories_project_id_idx ON public.store_categories(project_id);
 
 -- 3. Store Products
 CREATE TABLE IF NOT EXISTS public.store_products (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     category_id UUID REFERENCES public.store_categories(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
@@ -87,7 +88,7 @@ CREATE INDEX IF NOT EXISTS store_products_slug_idx ON public.store_products(slug
 
 -- 4. Store Customers
 CREATE TABLE IF NOT EXISTS public.store_customers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     first_name TEXT NOT NULL,
@@ -110,7 +111,7 @@ CREATE INDEX IF NOT EXISTS store_customers_project_id_idx ON public.store_custom
 
 -- 5. Store Orders
 CREATE TABLE IF NOT EXISTS public.store_orders (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES public.store_customers(id) ON DELETE SET NULL,
     order_number TEXT NOT NULL,
@@ -143,7 +144,7 @@ CREATE INDEX IF NOT EXISTS store_orders_project_id_idx ON public.store_orders(pr
 
 -- 6. Store Order Items
 CREATE TABLE IF NOT EXISTS public.store_order_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID NOT NULL REFERENCES public.store_orders(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE RESTRICT,
     variant_id TEXT,
@@ -159,7 +160,7 @@ CREATE INDEX IF NOT EXISTS store_order_items_order_id_idx ON public.store_order_
 
 -- 7. Store Reviews
 CREATE TABLE IF NOT EXISTS public.store_reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE CASCADE,
     customer_name TEXT NOT NULL,
@@ -180,7 +181,7 @@ CREATE INDEX IF NOT EXISTS store_reviews_product_id_idx ON public.store_reviews(
 
 -- 8. Store Discounts
 CREATE TABLE IF NOT EXISTS public.store_discounts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     code TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -260,7 +261,7 @@ CREATE TRIGGER update_store_discounts_updated_at BEFORE UPDATE ON public.store_d
 
 -- 10. Store Users (Auth & Memberships)
 CREATE TABLE IF NOT EXISTS public.store_users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     email TEXT NOT NULL,
     display_name TEXT NOT NULL,
@@ -290,7 +291,7 @@ CREATE INDEX IF NOT EXISTS store_users_email_idx ON public.store_users(email);
 
 -- 11. Store User Segments
 CREATE TABLE IF NOT EXISTS public.store_user_segments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -305,7 +306,7 @@ CREATE INDEX IF NOT EXISTS store_user_segments_project_id_idx ON public.store_us
 
 -- 12. Store User Activities
 CREATE TABLE IF NOT EXISTS public.store_user_activities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES public.store_users(id) ON DELETE CASCADE,
     type TEXT NOT NULL,
@@ -327,7 +328,7 @@ ADD COLUMN IF NOT EXISTS stripe_connect_status TEXT;
 
 -- 11. Store Carts
 CREATE TABLE IF NOT EXISTS public.store_carts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     user_id UUID NOT NULL, -- The tenant owner's user_id or the customer's user_id, depending on use-case
     items JSONB NOT NULL DEFAULT '[]',
@@ -343,7 +344,7 @@ CREATE INDEX IF NOT EXISTS store_carts_user_id_idx ON public.store_carts(user_id
 
 -- 12. Store Stock Notifications
 CREATE TABLE IF NOT EXISTS public.store_stock_notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE CASCADE,
     product_name TEXT NOT NULL,
