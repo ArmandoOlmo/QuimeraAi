@@ -1,21 +1,23 @@
 import type { Project } from '../types';
 
 /**
- * Extract the thumbnail from the active Hero section only.
- * If the active Hero has no image, return null so the Quimera fallback renders.
+ * Extract the thumbnail from any visible Hero section.
+ * If no Hero has an image, return null so the Quimera fallback renders.
  */
 export const getDynamicThumbnailUrl = (project: Project | null | undefined): string | null => {
   if (!project) return null;
-  const homePage = project.pages?.find(page => page.isHomePage) || project.pages?.[0];
-  const order = homePage?.sections || project.componentOrder;
-  const heroSection = order?.find(section =>
-    isHeroSection(section) && project.sectionVisibility?.[section] !== false
-  );
-  const data = heroSection && homePage?.sectionData?.[heroSection]
-    ? homePage.sectionData
-    : project.data;
 
-  return extractActiveHeroImage(data, order, project.sectionVisibility);
+  const homePage = project.pages?.find(page => page.isHomePage) || project.pages?.[0];
+  const pageSources = homePage
+    ? [homePage, ...(project.pages || []).filter(page => page !== homePage)]
+    : [];
+
+  for (const page of pageSources) {
+    const pageThumbnail = extractActiveHeroImage(page?.sectionData, page?.sections, project.sectionVisibility);
+    if (pageThumbnail) return pageThumbnail;
+  }
+
+  return extractActiveHeroImage(project.data, project.componentOrder, project.sectionVisibility);
 };
 
 export const extractActiveHeroImage = (
@@ -23,15 +25,18 @@ export const extractActiveHeroImage = (
   componentOrder: readonly string[] | null | undefined,
   sectionVisibility?: Record<string, boolean>
 ): string | null => {
-  if (!data || !componentOrder?.length) return null;
+  if (!data) return null;
 
-  const heroSection = componentOrder.find(section =>
-    isHeroSection(section) && sectionVisibility?.[section] !== false
-  );
+  const orderedHeroSections = componentOrder?.length
+    ? componentOrder.filter(section => isHeroSection(section) && sectionVisibility?.[section] !== false)
+    : Object.keys(data).filter(isHeroSection);
 
-  if (!heroSection) return null;
+  for (const heroSection of orderedHeroSections) {
+    const heroImage = getHeroImage(data[heroSection]);
+    if (heroImage) return heroImage;
+  }
 
-  return getHeroImage(data[heroSection]);
+  return null;
 };
 
 const isHeroSection = (section: string): boolean => {
@@ -42,18 +47,21 @@ const getHeroImage = (hero: any): string | null => {
   if (!hero || typeof hero !== 'object') return null;
 
   const directImage = firstValidUrl(
-    hero.imageUrl,
+    hero.backgroundImageUrl,
     hero.backgroundImage,
-    hero.backgroundImageUrl
+    hero.imageUrl
   );
   if (directImage) return directImage;
 
-  if (Array.isArray(hero.slides)) {
-    for (const slide of hero.slides) {
+  for (const slideList of [hero.slides, hero.items]) {
+    if (!Array.isArray(slideList)) continue;
+
+    for (const slide of slideList) {
       const slideImage = firstValidUrl(
+        slide?.backgroundImageUrl,
         slide?.backgroundImage,
         slide?.imageUrl,
-        slide?.backgroundImageUrl
+        slide?.image?.url
       );
       if (slideImage) return slideImage;
 
@@ -69,8 +77,8 @@ const getLegacyGalleryImage = (images: any): string | null => {
   if (!Array.isArray(images)) return null;
 
   for (const image of images) {
-    if (typeof image === 'string' && image.trim()) return image;
-    if (typeof image?.url === 'string' && image.url.trim()) return image.url;
+    if (typeof image === 'string' && isUsableImageUrl(image)) return image.trim();
+    if (typeof image?.url === 'string' && isUsableImageUrl(image.url)) return image.url.trim();
   }
 
   return null;
@@ -78,8 +86,13 @@ const getLegacyGalleryImage = (images: any): string | null => {
 
 const firstValidUrl = (...urls: unknown[]): string | null => {
   for (const url of urls) {
-    if (typeof url === 'string' && url.trim()) return url;
+    if (typeof url === 'string' && isUsableImageUrl(url)) return url.trim();
   }
 
   return null;
+};
+
+const isUsableImageUrl = (url: string): boolean => {
+  const value = url.trim();
+  return Boolean(value) && !value.startsWith('data:') && value !== '#';
 };
