@@ -31,7 +31,7 @@ import {
   ChevronDown as ChevronDownIcon,
   User
 } from 'lucide-react';
-import CtaSection from './CtaSection';
+import CTASection from './CTASection';
 
 import LanguageSelector from './ui/LanguageSelector';
 import ImageCarousel from './ImageCarousel';
@@ -839,7 +839,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         return renderSuiteSection(section, Testimonials);
 
       case 'cta':
-        return renderSuiteSection(section, CtaSection);
+        return renderSuiteSection(section, CTASection);
       case 'faq':
         return renderSuiteSection(section, Faq);
       case 'separator1':

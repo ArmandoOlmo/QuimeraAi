@@ -1,0 +1,426 @@
+--- contexts/project/ProjectContext.tsx.bak	2026-05-03 17:24:34
++++ contexts/project/ProjectContext.tsx	2026-05-03 17:24:35
+@@ -9,26 +9,9 @@
+ import { initialData } from '../../data/initialData';
+ import { createDefaultPages, createPageFromTemplate } from '../../data/defaultPages';
+ import { PageTemplateId } from '../../types/onboarding';
+-import {
+-    db,
+-    doc,
+-    getDoc,
+-    setDoc,
+-    updateDoc,
+-    deleteDoc,
+-    collection,
+-    getDocs,
+-    query,
+-    orderBy,
+-    addDoc,
+-    serverTimestamp,
+-    storage,
+-    ref,
+-    uploadBytes,
+-    getDownloadURL,
+-    deleteObject,
+-    writeBatch,
+-} from '../../firebase';
++import { supabase } from '../../supabase';
++import { uploadAsset, deleteAsset } from '../../services/StorageService';
++import { StorageError } from '@supabase/storage-js';
+ import { useAuth } from '../core/AuthContext';
+ import { router } from '../../hooks/useRouter';
+ import { useSafeTenant } from '../tenant';
+@@ -57,15 +40,10 @@
+ 
+ // Helper to get the correct projects collection path
+ // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
+-const getProjectsCollectionPath = (userId: string, tenantId?: string | null): string[] => {
+-    // Personal tenants (format: tenant_{userId}) should use user path
+-    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+ 
+-    if (tenantId && !isPersonalTenant) {
+-        return ['tenants', tenantId, 'projects'];
+-    }
+-    return ['users', userId, 'projects'];
+-};
++// Note: In Supabase, projects are in a single 'projects' table
++// We query by user_id and/or tenant_id
++
+ 
+ // Helper to get storage path for project assets
+ const getProjectStoragePath = (userId: string, projectId: string, tenantId?: string | null): string => {
+@@ -441,27 +419,34 @@
+     }, [projects]);
+ 
+     // Load templates from Firestore
++    
+     const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
+         try {
+-            const templatesCol = collection(db, 'templates');
+-            const q = query(templatesCol, orderBy('lastUpdated', 'desc'));
+-            const templateSnapshot = await getDocs(q);
++            const { data: templateSnapshot } = await supabase
++                .from('projects')
++                .select('*')
++                .eq('status', 'Template')
++                .order('updated_at', { ascending: false });
+ 
+             const deletedIds = new Set<string>();
+             const activeTemplates: Project[] = [];
+ 
+-            templateSnapshot.docs.forEach(docSnap => {
+-                const docData = docSnap.data();
+-                // CRITICAL FIX: Also check the local deleted cache to prevent "ghost" templates
+-                // from reappearing if Firestore sync is laggy or failed silently
+-                if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(docSnap.id)) {
+-                    deletedIds.add(docSnap.id);
++            (templateSnapshot || []).forEach(row => {
++                // Map Postgres jsonb to Project fields
++                const docData = {
++                    ...row.data,
++                    id: row.id,
++                    name: row.name,
++                    status: 'Template',
++                    userId: row.user_id,
++                    tenantId: row.tenant_id,
++                    lastUpdated: row.updated_at
++                } as any;
++                
++                if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(row.id)) {
++                    deletedIds.add(row.id);
+                 } else {
+-                    activeTemplates.push(normalizeProject({
+-                        ...docData,
+-                        id: docSnap.id,
+-                        status: 'Template' as const
+-                    } as Project));
++                    activeTemplates.push(normalizeProject(docData as Project));
+                 }
+             });
+ 
+@@ -477,6 +462,7 @@
+         }
+     };
+ 
++
+     // Load user/tenant projects
+     const loadUserProjects = useCallback(async (userId: string, tenantId?: string | null) => {
+         setIsLoadingProjects(true);
+@@ -488,15 +474,25 @@
+ 
+             // Always load from user's personal path first
+             try {
+-                const userPathSegments = ['users', userId, 'projects'];
+-                const userProjectsCol = collection(db, ...userPathSegments);
+-                const userQuery = query(userProjectsCol, orderBy('lastUpdated', 'desc'));
+-                const userSnapshot = await getDocs(userQuery);
+-                const personalProjects = userSnapshot.docs.map(docSnap => normalizeProject({
+-                    ...docSnap.data(),
+-                    id: docSnap.id
++                
++                const { data: userSnapshot } = await supabase
++                    .from('projects')
++                    .select('*')
++                    .eq('user_id', userId)
++                    .is('tenant_id', null)
++                    .order('updated_at', { ascending: false });
++                
++                const personalProjects = (userSnapshot || []).map(row => normalizeProject({
++                    ...row.data,
++                    id: row.id,
++                    name: row.name,
++                    userId: row.user_id,
++                    tenantId: row.tenant_id,
++                    status: row.status,
++                    lastUpdated: row.updated_at
+                 } as Project));
+                 allUserProjects = [...personalProjects];
++
+             } catch (err) {
+                 console.warn("Could not load personal projects:", err);
+             }
+@@ -504,15 +500,24 @@
+             // If there's a tenant (and it's not personal), also load from tenant path
+             if (tenantId && !isPersonalTenant) {
+                 try {
+-                    const tenantPathSegments = ['tenants', tenantId, 'projects'];
+-                    const tenantProjectsCol = collection(db, ...tenantPathSegments);
+-                    const tenantQuery = query(tenantProjectsCol, orderBy('lastUpdated', 'desc'));
+-                    const tenantSnapshot = await getDocs(tenantQuery);
+-                    const tenantProjects = tenantSnapshot.docs.map(docSnap => normalizeProject({
+-                        ...docSnap.data(),
+-                        id: docSnap.id
++                    
++                    const { data: tenantSnapshot } = await supabase
++                        .from('projects')
++                        .select('*')
++                        .eq('tenant_id', tenantId)
++                        .order('updated_at', { ascending: false });
++                    
++                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject({
++                        ...row.data,
++                        id: row.id,
++                        name: row.name,
++                        userId: row.user_id,
++                        tenantId: row.tenant_id,
++                        status: row.status,
++                        lastUpdated: row.updated_at
+                     } as Project));
+                     allUserProjects = [...allUserProjects, ...tenantProjects];
++
+                 } catch (err) {
+                     console.warn("Could not load tenant projects:", err);
+                 }
+@@ -680,12 +685,24 @@
+             console.log('[ProjectContext] Project not in state, attempting to load from Firebase...');
+             try {
+                 // Try loading from user's projects
+-                const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-                const projectRef = doc(db, ...pathSegments, projectId);
+-                const projectSnap = await getDoc(projectRef);
++                
++                const { data: projectSnap } = await supabase
++                    .from('projects')
++                    .select('*')
++                    .eq('id', projectId)
++                    .single();
+ 
+-                if (projectSnap.exists()) {
+-                    project = normalizeProject({ id: projectSnap.id, ...projectSnap.data() } as Project);
++                if (projectSnap) {
++                    project = normalizeProject({ 
++                        ...projectSnap.data,
++                        id: projectSnap.id,
++                        name: projectSnap.name,
++                        status: projectSnap.status,
++                        userId: projectSnap.user_id,
++                        tenantId: projectSnap.tenant_id,
++                        lastUpdated: projectSnap.updated_at
++                    } as Project);
++
+                     console.log('[ProjectContext] Loaded project from Firebase:', project.name);
+                     // Add to local state
+                     setProjects(prev => {
+@@ -694,10 +711,28 @@
+                     });
+                 } else {
+                     // Try loading from templates
+-                    const templateRef = doc(db, 'templates', projectId);
+-                    const templateSnap = await getDoc(templateRef);
+-                    if (templateSnap.exists()) {
+-                        project = normalizeProject({ id: templateSnap.id, ...templateSnap.data() } as Project);
++                    
++                    // If not found, templates are also in the projects table with status='Template'
++                    // but we already fetched single() above, so this block might be redundant 
++                    // unless RLS prevented us from seeing it. 
++                    // To replicate exactly, we'll try fetching without RLS restrictions if possible, or just retry
++                    const { data: templateSnap } = await supabase
++                        .from('projects')
++                        .select('*')
++                        .eq('id', projectId)
++                        .eq('status', 'Template')
++                        .single();
++                    if (templateSnap) {
++                        project = normalizeProject({ 
++                            ...templateSnap.data,
++                            id: templateSnap.id,
++                            name: templateSnap.name,
++                            status: templateSnap.status,
++                            userId: templateSnap.user_id,
++                            tenantId: templateSnap.tenant_id,
++                            lastUpdated: templateSnap.updated_at
++                        } as Project);
++
+                         console.log('[ProjectContext] Loaded template from Firebase:', project.name);
+                         setProjects(prev => {
+                             if (prev.find(p => p.id === projectId)) return prev;
+@@ -877,14 +912,16 @@
+         });
+ 
+         try {
+-            if (isTemplate) {
+-                const templateRef = doc(db, 'templates', activeProjectId);
+-                await updateDoc(templateRef, updatedProject);
+-            } else {
+-                const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-                const projectRef = doc(db, ...pathSegments, activeProjectId);
+-                await updateDoc(projectRef, updatedProject);
+-            }
++            
++            // In Supabase, we just update the projects table
++            const { error: updateErr } = await supabase.from('projects').update({
++                name: updatedProject.name || project.name,
++                status: updatedProject.status || project.status,
++                data: updatedProject
++            }).eq('id', activeProjectId);
++            
++            if (updateErr) throw updateErr;
++
+ 
+             setProjects(prev => prev.map(p =>
+                 p.id === activeProjectId ? { ...p, ...updatedProject } as Project : p
+@@ -970,12 +1007,11 @@
+             // CRITICAL: Fetch latest menus from Firebase to ensure we publish the most recent version
+             // This fixes the sync issue where CMSContext saves menus but ProjectContext has stale data
+             try {
+-                const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-                const projectRef = doc(db, ...pathSegments, activeProjectId);
+-                const projectSnap = await getDoc(projectRef);
++                
++                const { data: projectSnap } = await supabase.from('projects').select('data').eq('id', activeProjectId).single();
++                if (projectSnap && projectSnap.data) {
++                    const projectData = projectSnap.data as any;
+ 
+-                if (projectSnap.exists()) {
+-                    const projectData = projectSnap.data();
+                     if (projectData.menus && Array.isArray(projectData.menus)) {
+                         snapshot.menus = projectData.menus;
+                         console.log(`🔄 [ProjectContext] Fetched latest menus from Firebase: ${projectData.menus.length} menus`);
+@@ -1125,117 +1161,14 @@
+         if (!project) return;
+ 
+         const isTemplate = project.status === 'Template';
+-        const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-        const docRef = isTemplate
+-            ? doc(db, 'templates', activeProjectId)
+-            : doc(db, ...pathSegments, activeProjectId);
+-
+-        await updateDoc(docRef, { name: newName });
+-        setProjects(prev => prev.map(p =>
+-            p.id === activeProjectId ? { ...p, name: newName } : p
+-        ));
+-    };
+-
+-    // Add new project (with limit check)
+-    const addNewProject = async (project: Project): Promise<string | void> => {
+-        if (!user) return;
+-
+-        // Count current user projects (excluding templates)
+-        const userProjects = projects.filter(p => p.status !== 'Template');
+-        const currentProjectCount = userProjects.length;
+-
+-        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
+-        const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+-        if (loadingAuth) return; // Wait for auth to be sure
+-        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
+-            // Show upgrade modal if available
+-            if (upgradeContext) {
+-                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+-            }
+-            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+-        }
+-
+-        const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+         
+-        // Strip the id from the project data before saving to Firestore
+-        // (Firestore document ID should not be duplicated inside the document)
+-        const { id: providedId, ...projectData } = project;
+-        
+-        const dataToSave = {
+-            ...projectData,
+-            createdAt: serverTimestamp(),
+-            lastUpdated: serverTimestamp(),
+-        };
+-
+-        let finalId: string;
+-
+-        if (providedId) {
+-            // Use the pre-generated ID (e.g., from onboarding: "proj_1234567890")
+-            // This ensures the project is created with the exact ID the caller expects
+-            const docRef = doc(db, ...pathSegments, providedId);
+-            await setDoc(docRef, dataToSave);
+-            finalId = providedId;
+-            console.log(`✅ [ProjectContext] Project created with provided ID: ${finalId}`);
+-        } else {
+-            // Auto-generate ID via addDoc (default behavior)
+-            const projectsCol = collection(db, ...pathSegments);
+-            const docRef = await addDoc(projectsCol, dataToSave);
+-            finalId = docRef.id;
+-            console.log(`✅ [ProjectContext] Project created with auto-generated ID: ${finalId}`);
+-        }
+-
+-        const newProject = { ...project, id: finalId };
+-        setProjects(prev => {
+-            if (prev.some(p => p.id === newProject.id)) return prev;
+-            return [newProject, ...prev];
+-        });
+-        
+-        // NOTE: We do NOT call loadProject here. The callers (useOnboarding,
+-        // GlobalAiAssistant, etc.) handle loading the project at the appropriate
+-        // time — e.g., after image generation completes during onboarding.
+-        // Calling loadProject here would navigate to the editor prematurely.
+-        
+-        return finalId;
+-    };
+-
+-    // Delete project (soft-delete: marks with deletedAt instead of removing)
+-    const deleteProject = async (projectId: string) => {
+-        if (!user) return;
+-
+-        const project = projects.find(p => p.id === projectId);
+-        if (!project) return;
+-
+-        const isTemplate = project.status === 'Template';
+-
+-        if (isTemplate) {
+-            // Templates use the existing soft-delete via isDeleted flag
+-            const templateRef = doc(db, 'templates', projectId);
+-            await updateDoc(templateRef, { isDeleted: true });
+-            
+-            // BUG FIX: Sometimes cloned 'Template' status projects live in the user's collection.
+-            // If so, the above updateDoc creates/updates in global templates but leaves the personal one intact.
+-            // Let's attempt to soft-delete the personal one just in case it exists.
+-            try {
+-                const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-                const userProjectRef = doc(db, ...pathSegments, projectId);
+-                await updateDoc(userProjectRef, {
+-                    deletedAt: new Date().toISOString(),
+-                    deletedBy: user.id,
+-                });
+-            } catch (e) {
+-                // Ignore. It's expected to fail if it was truly a global template.
+-            }
++            const project = projectsRef.current.find(p => p.id === projectId);
++            if (!project) return;
++            const updatedData = { ...project, deletedAt: new Date().toISOString() };
++            await supabase.from('projects').update({
++                data: updatedData
++            }).eq('id', projectId);
+ 
+-            deletedTemplateIdsRef.current.add(projectId);
+-            localStorage.setItem('deletedTemplateIds', JSON.stringify([...deletedTemplateIdsRef.current]));
+-        } else {
+-            // Soft-delete: set deletedAt timestamp instead of deleting
+-            const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-            const projectRef = doc(db, ...pathSegments, projectId);
+-            await updateDoc(projectRef, {
+-                deletedAt: new Date().toISOString(),
+-                deletedBy: user.id,
+-            });
+             // Move to deleted projects list
+             setDeletedProjects(prev => [{ ...project, deletedAt: new Date().toISOString(), deletedBy: user.id } as any, ...prev]);
+         }
+@@ -1255,15 +1188,15 @@
+         const project = deletedProjects.find(p => p.id === projectId);
+         if (!project) return;
+ 
+-        const pathSegments = getProjectsCollectionPath(user.id, currentTenantId);
+-        const projectRef = doc(db, ...pathSegments, projectId);
++        
++            const project = deletedProjects.find(p => p.id === projectId);
++            if (!project) return;
++            const updatedData = { ...project };
++            delete updatedData.deletedAt;
++            await supabase.from('projects').update({
++                data: updatedData
++            }).eq('id', projectId);
+ 
+-        // Remove the soft-delete fields
+-        const { deletedAt, deletedBy, ...cleanProject } = project as any;
+-        await updateDoc(projectRef, {
+-            deletedAt: null,
+-            deletedBy: null,
+-        });
+ 
+         // Move back to active projects
+         setDeletedProjects(prev => prev.filter(p => p.id !== projectId));

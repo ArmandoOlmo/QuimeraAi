@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+  <script type="module" src="/@vite/client"></script>
+
+  <!-- Theme initialization script - runs BEFORE any rendering to prevent flash -->
+  <script>
+    (function () {
+      try {
+        // Theme initialization
+        var savedTheme = localStorage.getItem('themeMode');
+        var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
+        document.documentElement.classList.add(theme);
+
+        // Onboarding mode detection (?onboarding=ai or ?onboarding=classic)
+        var params = new URLSearchParams(window.location.search);
+        var onboardingParam = params.get('onboarding');
+        if (onboardingParam === 'ai') {
+          localStorage.setItem('onboardingMode', 'ai-studio');
+          localStorage.setItem('autoOpenStudio', 'true');
+          params.delete('onboarding');
+          var newUrl = params.toString()
+            ? window.location.pathname + '?' + params.toString()
+            : window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        } else if (onboardingParam === 'classic') {
+          localStorage.setItem('onboardingMode', 'classic');
+          localStorage.removeItem('autoOpenStudio');
+          params.delete('onboarding');
+          var newUrl2 = params.toString()
+            ? window.location.pathname + '?' + params.toString()
+            : window.location.pathname;
+          window.history.replaceState({}, '', newUrl2);
+        }
+      } catch (e) {
+        // If localStorage fails, default to dark
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <!-- Favicon: SVG fallback, will be replaced dynamically by GlobalSEO from Firestore config -->
+  <link rel="icon" type="image/png"
+    href="/logos/quimera-icon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quimera.ai | AI Website Builder for High-Converting Experiences</title>
+  <meta name="description"
+    content="Build, localize, and scale marketing websites using AI. Templates, CMS, localization, and analytics included. Powered by Quimera.ai." />
+  <!-- AI Crawler Optimization -->
+  <meta name="ai:crawlable" content="true" />
+  <meta name="ai:site_type" content="SaaS Platform" />
+  <meta name="ai:description" content="Quimera.ai is an AI-powered website builder that enables businesses to create, localize, and scale professional marketing websites. Features include drag-and-drop editing, AI content generation, CMS, ecommerce, custom domains, SEO tools, and multi-language support." />
+  <meta name="ai:topics" content="AI website builder, no-code platform, landing page builder, CMS, ecommerce, SEO, web design, SaaS" />
+  <!-- Performance: Preconnect to critical third-party origins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+
+  <!-- DNS-prefetch for less critical origins (fallback for older browsers) -->
+  <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
+  <link rel="dns-prefetch" href="https://storage.googleapis.com">
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+  <link rel="dns-prefetch" href="https://securetoken.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+
+  <!-- Performance Optimization: Load only essential UI fonts. Project fonts are loaded dynamically. -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:wght@100&display=swap"
+    rel="stylesheet">
+  <!-- Critical CSS to prevent FOUC before main.css loads -->
+  <style>
+    /* Minimal defaults - prevents some flash of white */
+    html.dark {
+    }
+
+    html.light {
+    }
+
+    html.black {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body {
+      background-color: inherit;
+      color: inherit;
+      font-family: 'Ubuntu', 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+
+    html {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body,
+    #root {
+      min-height: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Hide content until React hydrates */
+    #root:empty::before {
+      content: '';
+      display: block;
+      height: 100vh;
+      background: inherit;
+    }
+  </style>
+  <!-- importmap removed: Vite handles module resolution from node_modules -->
+</head>
+
+<body>
+  <div id="root"><!--ssr-outlet--></div>
+  <div id="portal-root"></div>
+  <script type="module" src="/entry-client.tsx?t=1777917394927"></script>
+</body>
+
+</html>
