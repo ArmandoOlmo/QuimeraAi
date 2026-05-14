@@ -284,7 +284,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         try {
-            await supabase.from('custom_domains').delete().eq('domain_name', normalizedDomain);
+            await supabase.from('custom_domains').delete().or(`domain_name.eq.${normalizedDomain},domain.eq.${normalizedDomain}`);
             console.log(`✅ [DomainsContext] Direct delete from custom_domains succeeded`);
         } catch (e) {
             console.error(`❌ [DomainsContext] Delete failed:`, e);

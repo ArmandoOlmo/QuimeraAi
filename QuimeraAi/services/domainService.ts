@@ -8,6 +8,38 @@
 
 import { DNSRecord, CustomDomainMapping, DNSVerificationResult, CLOUD_RUN_DNS_CONFIG } from '../types/domains';
 
+async function throwFunctionError(error: unknown): Promise<never> {
+    const fallbackMessage = error instanceof Error ? error.message : 'Edge Function request failed';
+    const response = (error as { context?: Response })?.context;
+
+    if (response && typeof response.clone === 'function') {
+        try {
+            const body = await response.clone().json();
+            const message = body?.error || body?.message || body?.data?.error;
+            if (message) {
+                throw new Error(String(message), { cause: error });
+            }
+        } catch (parsedError) {
+            if (parsedError instanceof Error && parsedError.cause === error) {
+                throw parsedError;
+            }
+        }
+
+        try {
+            const text = await response.clone().text();
+            if (text) {
+                throw new Error(text, { cause: error });
+            }
+        } catch (parsedError) {
+            if (parsedError instanceof Error && parsedError.cause === error) {
+                throw parsedError;
+            }
+        }
+    }
+
+    throw new Error(fallbackMessage, { cause: error });
+}
+
 /**
  * Add a custom domain to a project
  */
@@ -35,7 +67,7 @@ export async function addCustomDomainToProject(
             body: { action: 'domains-add', domain, projectId }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -59,7 +91,7 @@ export async function removeCustomDomainFromProject(domain: string): Promise<{ s
             body: { action: 'domains-remove', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -82,7 +114,7 @@ export async function verifyDomainDNS(domain: string): Promise<DNSVerificationRe
             body: { action: 'sync-domain-mapping', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -119,7 +151,7 @@ export async function syncDomainMapping(domain: string, projectId?: string): Pro
             body: { action: 'sync-domain-mapping', domain, projectId }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -152,7 +184,7 @@ export async function checkDomainSSLStatus(domain: string): Promise<{
             body: { action: 'domains-checkSSL', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -301,7 +333,7 @@ export async function setupExternalDomainWithCloudflare(
             body: { action: 'domains-setupExternalWithCloudflare', domain, projectId }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -327,7 +359,7 @@ export async function verifyExternalDomainNameservers(
             body: { action: 'domains-verifyExternalNameservers', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -353,7 +385,7 @@ export async function migrateExistingDomainToCloudflare(
             body: { action: 'domains-migrateToCloudflare', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -407,7 +439,7 @@ export async function createCloudRunDomainMapping(
             body: { action: 'domains-createMapping', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -436,7 +468,7 @@ export async function checkCloudRunDomainMappingStatus(domain: string): Promise<
             body: { action: 'domains-checkMappingStatus', domain }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -464,7 +496,7 @@ export async function setupFullDomainMapping(
             body: { action: 'domains-setupFull', domain, projectId }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) await throwFunctionError(result.error);
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -479,10 +511,5 @@ export async function setupFullDomainMapping(
         };
     }
 }
-
-
-
-
-
 
 

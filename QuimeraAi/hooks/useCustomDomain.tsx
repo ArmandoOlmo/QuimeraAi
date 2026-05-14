@@ -253,8 +253,8 @@ export function useCustomDomain(): CustomDomainState {
                 const domainData = domainDoc.data || {};
                 const domainStatus = domainData.status || domainDoc.status || 'pending';
 
-                if (domainStatus !== 'active') {
-                    console.warn(`[CustomDomain] Domain ${normalizedDomain} is not active (status: ${domainStatus})`);
+                if (domainStatus === 'error') {
+                    console.warn(`[CustomDomain] Domain ${normalizedDomain} has an error status`);
                     setState({
                         isCustomDomain: true,
                         isLoading: false,
@@ -265,6 +265,10 @@ export function useCustomDomain(): CustomDomainState {
                         projectData: null,
                     });
                     return;
+                }
+
+                if (domainStatus !== 'active') {
+                    console.warn(`[CustomDomain] Domain ${normalizedDomain} is ${domainStatus}; rendering because the request reached this Vercel domain.`);
                 }
 
                 const projectId = domainData.projectId || domainData.project_id || domainDoc.project_id || domainDoc.projectId;
