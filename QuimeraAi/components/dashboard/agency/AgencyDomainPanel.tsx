@@ -1,7 +1,7 @@
 /**
  * AgencyDomainPanel
  * Complete custom domain configuration for agency landing pages.
- * Reuses the same DNS infrastructure as project domains (Load Balancer IP, Cloud Run SSL),
+ * Reuses the same Vercel DNS infrastructure as project domains,
  * but binds the domain to an agencyLandingTenantId instead of a projectId.
  */
 
@@ -30,8 +30,8 @@ import {
 } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 
-// Load Balancer IP (same as projects)
-const QUIMERA_DNS_IP = '130.211.43.242';
+const VERCEL_APEX_IP = '76.76.21.21';
+const VERCEL_CNAME_TARGET = 'cname.vercel-dns.com';
 
 const AgencyDomainPanel: React.FC = () => {
     const { t } = useTranslation();
@@ -84,8 +84,8 @@ const AgencyDomainPanel: React.FC = () => {
                 // No projectId — this is for the agency landing
                 createdAt: new Date().toISOString(),
                 dnsConfig: {
-                    aRecord: QUIMERA_DNS_IP,
-                    cnameRecord: normalized,
+                    aRecord: VERCEL_APEX_IP,
+                    cnameRecord: VERCEL_CNAME_TARGET,
                 },
             });
 
@@ -337,15 +337,15 @@ const AgencyDomainPanel: React.FC = () => {
                                         <div>
                                             <span className="text-[10px] text-q-text-muted uppercase font-bold block">Valor</span>
                                             <div className="flex items-center gap-1">
-                                                <code className="font-mono font-bold text-primary">{QUIMERA_DNS_IP}</code>
+                                                <code className="font-mono font-bold text-primary">{VERCEL_APEX_IP}</code>
                                                 <button
-                                                    onClick={() => copyToClipboard(QUIMERA_DNS_IP, 'IP')}
+                                                    onClick={() => copyToClipboard(VERCEL_APEX_IP, 'IP')}
                                                     className="p-1 hover:bg-secondary rounded text-q-text-muted hover:text-primary transition-colors"
                                                     title="Copiar IP"
                                                 >
                                                     <Copy size={12} />
                                                 </button>
-                                                <span id={`copy-feedback-${QUIMERA_DNS_IP}`} className="text-green-500 text-xs font-bold" />
+                                                <span id={`copy-feedback-${VERCEL_APEX_IP}`} className="text-green-500 text-xs font-bold" />
                                             </div>
                                         </div>
                                     </div>
@@ -472,13 +472,13 @@ const AgencyDomainPanel: React.FC = () => {
                             <div className="space-y-2 text-xs">
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded text-[10px]">A</span>
-                                    <span className="text-q-text-muted">@ →</span>
-                                    <code className="font-mono font-bold text-primary">{QUIMERA_DNS_IP}</code>
+                                    <span className="text-q-text-muted">@ -&gt;</span>
+                                    <code className="font-mono font-bold text-primary">{VERCEL_APEX_IP}</code>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold bg-green-500/20 text-green-500 px-1.5 py-0.5 rounded text-[10px]">CNAME</span>
-                                    <span className="text-q-text-muted">www →</span>
-                                    <code className="font-mono font-bold text-primary">{newDomainName || 'miagencia.com'}</code>
+                                    <span className="text-q-text-muted">www -&gt;</span>
+                                    <code className="font-mono font-bold text-primary">{VERCEL_CNAME_TARGET}</code>
                                 </div>
                             </div>
                         </div>
@@ -537,9 +537,9 @@ const AgencyDomainPanel: React.FC = () => {
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
                     <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">💡 Tips:</p>
                     <ul className="text-xs text-q-text-muted space-y-0.5 list-disc list-inside">
-                        <li><strong>GoDaddy:</strong> DNS → Registros DNS. Si ya existe un registro A con @, edítalo.</li>
-                        <li><strong>Namecheap:</strong> Advanced DNS → Host Records. Usa @ como Host.</li>
-                        <li><strong>Google Domains:</strong> DNS → Registros personalizados.</li>
+                        <li><strong>GoDaddy:</strong> DNS - Registros DNS. Si ya existe un registro A con @, edítalo.</li>
+                        <li><strong>Namecheap:</strong> Advanced DNS - Host Records. Usa @ como Host.</li>
+                        <li><strong>Google Domains:</strong> DNS - Registros personalizados.</li>
                     </ul>
                 </div>
             )}

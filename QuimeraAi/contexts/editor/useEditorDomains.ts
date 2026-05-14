@@ -191,7 +191,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
 
     const deployDomain = async (
         domainId: string,
-        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' = 'cloud_run'
+        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' = 'vercel'
     ): Promise<boolean> => {
         if (!user) return false;
 
@@ -229,7 +229,7 @@ export const useEditorDomains = ({ user, projects }: UseEditorDomainsParams) => 
                     status: 'active',
                     sslStatus: 'active',
                     deployment: {
-                        provider: 'cloud_run',
+                        provider: 'vercel',
                         deploymentUrl: `https://${domain.name}`,
                         lastDeployedAt: new Date().toISOString(),
                         status: 'success'

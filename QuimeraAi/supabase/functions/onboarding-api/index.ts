@@ -291,6 +291,7 @@ async function syncDomainMapping(userId: string, payload: Record<string, unknown
 
   const status = getDomainStatus({ verified, sslStatus, config });
   const dnsRecords = buildDnsRecords(domain, vercelResults, config);
+  const statusError = status === "error" ? getDomainErrorMessage(config) : null;
   
   const now = new Date().toISOString();
   const nextData = {
@@ -308,6 +309,7 @@ async function syncDomainMapping(userId: string, payload: Record<string, unknown
     dns_verified: verified,
     dnsRecords,
     vercelConfig: config,
+    error: statusError,
     updatedAt: now,
   };
 
@@ -343,6 +345,7 @@ async function syncDomainMapping(userId: string, payload: Record<string, unknown
     })),
     dnsRecords,
     config,
+    error: statusError,
     checkedAt: now,
   };
 }
@@ -586,6 +589,17 @@ function isDomainMisconfigured(config: Record<string, unknown> | null): boolean 
     (Array.isArray(value.conflicts) && value.conflicts.length > 0) ||
     (Array.isArray(value.errors) && value.errors.length > 0)
   );
+}
+
+function getDomainErrorMessage(config: Record<string, unknown> | null): string {
+  const errors = (config as any)?.errors;
+  if (Array.isArray(errors) && errors.length > 0) {
+    const first = errors[0];
+    const message = first?.message || first?.error || first?.reason;
+    if (message) return String(message);
+  }
+
+  return "El DNS no apunta a Vercel. Configura el A record de @ hacia 76.76.21.21 y el CNAME de www hacia cname.vercel-dns.com.";
 }
 
 function buildDnsRecords(

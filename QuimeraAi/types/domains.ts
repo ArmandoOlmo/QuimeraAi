@@ -45,7 +45,7 @@ export interface Domain {
     id: string;
     name: string;
     status: DomainStatus;
-    provider: 'Quimera' | 'External';
+    provider: 'Quimera' | 'External' | 'Vercel';
     projectId?: string;
     projectUserId?: string; // User ID of the project owner (needed for deployment lookup)
     projectTenantId?: string; // Tenant ID if project belongs to a tenant
@@ -114,21 +114,18 @@ export interface CustomDomainMapping {
 
 // =============================================================================
 // DNS CONFIGURATION
-// Cloud Run direct CNAME (works without domain mapping in GCP)
+// Vercel custom domain records
 // =============================================================================
 export const CLOUD_RUN_DNS_CONFIG = {
-    // Direct Cloud Run URL
-    cloudRunUrl: 'quimera-ssr-575386543550.us-central1.run.app',
+    // Kept for backward compatibility with existing imports.
+    cloudRunUrl: 'quimera.ai',
 
-    // Google Load Balancer IP (quimera-domains-lb)
-    // This is the IP users should use for A records
+    // Vercel apex record.
     aRecords: [
-        '130.211.43.242'
+        '76.76.21.21'
     ],
-    // CNAME target for www subdomain
-    // www should CNAME to the root domain (e.g. www.example.com → example.com)
-    // This ensures www resolves to the same LB IP via the A record
-    cnameTarget: 'root-domain', // Dynamic: use the actual domain name
+    // Vercel www record.
+    cnameTarget: 'cname.vercel-dns.com',
     // TXT record prefix for verification
     txtPrefix: '_quimera-verify'
 } as const;

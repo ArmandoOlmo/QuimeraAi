@@ -197,7 +197,7 @@ export async function checkDomainSSLStatus(domain: string): Promise<{
 }
 
 /**
- * Get DNS configuration for Cloud Run
+ * Get DNS configuration for Vercel custom domains.
  */
 export function getDNSConfiguration(): typeof CLOUD_RUN_DNS_CONFIG {
     return CLOUD_RUN_DNS_CONFIG;
@@ -289,7 +289,7 @@ export function getSSLStatusMessage(status: string): string {
 }
 
 // =============================================================================
-// SIMPLIFIED EXTERNAL DOMAIN SETUP (via Cloudflare)
+// LEGACY EXTERNAL DOMAIN SETUP
 // =============================================================================
 
 export interface ExternalDomainSetupResult {
@@ -511,5 +511,4 @@ export async function setupFullDomainMapping(
         };
     }
 }
-
 

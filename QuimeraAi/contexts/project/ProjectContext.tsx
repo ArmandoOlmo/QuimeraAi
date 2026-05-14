@@ -1125,7 +1125,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                                 status: 'active',
                                 sslStatus: 'active',
                                 dnsVerified: true,
-                                cloudRunTarget: 'quimera-ssr-575386543550.us-central1.run.app',
+                                cloudRunTarget: 'cname.vercel-dns.com',
+                                provider: 'Vercel',
                                 updatedAt: new Date().toISOString(),
                             },
                             updated_at: new Date().toISOString()

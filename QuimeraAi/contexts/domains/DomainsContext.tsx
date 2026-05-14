@@ -59,7 +59,10 @@ const toCustomDomainData = (domain: Partial<Domain>, normalizedDomain: string) =
     status: domain.status || 'pending',
     sslStatus: domain.sslStatus || 'pending',
     dnsVerified: domain.dnsVerified ?? false,
-    cloudRunTarget: domain.cloudRunTarget || 'quimera-ssr-575386543550.us-central1.run.app',
+    cloudRunTarget: domain.cloudRunTarget || 'cname.vercel-dns.com',
+    provider: domain.provider || 'Vercel',
+    deployment: domain.deployment,
+    dnsRecords: domain.dnsRecords || (domain as any).data?.dnsRecords || [],
     updatedAt: new Date().toISOString(),
 });
 
@@ -245,10 +248,18 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
             
             const updatedDomain = { ...(domain || {}), ...data } as Partial<Domain>;
             
-            await supabase.from('custom_domains').update({
+            const updatePayload: Record<string, any> = {
                 data: toCustomDomainData(updatedDomain, normalizedDomain),
                 updated_at: new Date().toISOString()
-            }).eq('domain_name', normalizedDomain);
+            };
+
+            if (data.projectId !== undefined) updatePayload.project_id = data.projectId;
+            if (data.status !== undefined) updatePayload.status = data.status;
+            if (data.sslStatus !== undefined) updatePayload.ssl_status = data.sslStatus;
+            if (data.dnsVerified !== undefined) updatePayload.dns_verified = data.dnsVerified;
+            if (data.cloudRunTarget !== undefined) updatePayload.cloud_run_target = data.cloudRunTarget;
+
+            await supabase.from('custom_domains').update(updatePayload).eq('domain_name', normalizedDomain);
 
             setDomains(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
             
@@ -323,7 +334,7 @@ export const DomainsProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Deploy domain
     const deployDomain = async (
         domainId: string,
-        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom' = 'cloud_run'
+        provider: 'vercel' | 'cloudflare' | 'netlify' | 'cloud_run' | 'custom' = 'vercel'
     ): Promise<boolean> => {
         if (!user) return false;
 

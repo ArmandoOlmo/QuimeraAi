@@ -69,8 +69,9 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     const [deployConfirmOpen, setDeployConfirmOpen] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('cloud_run');
+    const [deployProvider] = useState<'vercel' | 'cloudflare' | 'netlify' | 'cloud_run'>('vercel');
     const [verificationMessage, setVerificationMessage] = useState<{ text: string; status: 'success' | 'error' | 'pending' } | null>(null);
+    const shouldShowDnsInstructions = !!domain.projectId && (domain.status === 'pending' || domain.status === 'error');
 
     // Check if domain has Cloudflare nameservers (simplified flow)
     const hasCloudflareSetup = !!(domain as any).cloudflareNameservers?.length;
@@ -305,7 +306,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         <StepIndicator
                             step={2}
                             label={t('domainsDashboard.stepDns')}
-                            completed={domain.status === 'ssl_pending' || domain.status === 'active' || domain.status === 'deployed'}
+                            completed={!!domain.dnsVerified || domain.status === 'ssl_pending' || domain.status === 'active' || domain.status === 'deployed'}
                             active={domain.status === 'pending' || domain.status === 'pending_nameservers' || domain.status === 'verifying' || domain.status === 'error'}
                         />
                         <div className="flex-1 h-0.5 bg-border" />
@@ -346,15 +347,36 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
                         </p>
                     )}
                     {domain.status === 'error' && (
-                        <p className="text-xs text-red-500 bg-red-500/10 p-2 rounded flex items-center gap-1.5">
-                            <XCircle size={14} className="shrink-0" /> Error: {domain.deployment?.error || t('domainsDashboard.domainErrorMessage')}
-                        </p>
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                            <p className="text-xs text-red-500 font-bold flex items-center gap-1.5 mb-2">
+                                <XCircle size={14} className="shrink-0" />
+                                Falta configurar el DNS del dominio.
+                            </p>
+                            <p className="text-xs text-q-text-muted mb-2">
+                                Ve al proveedor donde compraste el dominio, abre la zona DNS y cambia estos registros. Luego vuelve aquí y pulsa Reintentar.
+                            </p>
+                            <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                                <div className="rounded-md bg-q-bg/80 border border-q-border p-2">
+                                    <span className="block text-q-text-muted font-bold uppercase text-[10px] mb-1">Apex / dominio raíz</span>
+                                    <code className="font-mono text-foreground">A @ -&gt; 76.76.21.21</code>
+                                </div>
+                                <div className="rounded-md bg-q-bg/80 border border-q-border p-2">
+                                    <span className="block text-q-text-muted font-bold uppercase text-[10px] mb-1">WWW</span>
+                                    <code className="font-mono text-foreground">CNAME www -&gt; cname.vercel-dns.com</code>
+                                </div>
+                            </div>
+                            {(domain as any).error || domain.deployment?.error ? (
+                                <p className="text-[11px] text-red-500/80 mt-2">
+                                    Detalle: {(domain as any).error || domain.deployment?.error}
+                                </p>
+                            ) : null}
+                        </div>
                     )}
 
                 </div>
 
                 {/* SSL PROVISIONING NOTIFICATION */}
-                {(domain.sslStatus === 'pending' || domain.sslStatus === 'provisioning') && domain.status !== 'pending' && (
+                {(domain.sslStatus === 'pending' || domain.sslStatus === 'provisioning') && domain.status !== 'pending' && domain.status !== 'error' && (
                     <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-5 mb-4">
                         <div className="flex items-start gap-3 mb-3">
                             <div className="p-2 bg-purple-500/20 rounded-lg flex-shrink-0 animate-pulse">
@@ -384,7 +406,7 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
 
 
                 {/* DNS INSTRUCTIONS - Show when domain is pending */}
-                {domain.status === 'pending' && domain.projectId && (
+                {shouldShowDnsInstructions && (
                     <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl p-5 mb-4">
                         <div className="flex items-start gap-3 mb-4">
                             <div className="p-2 bg-blue-500/20 rounded-lg flex-shrink-0">
@@ -1446,9 +1468,9 @@ const DomainsDashboard: React.FC = () => {
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
-                                                                <code className="font-mono font-extrabold text-primary text-lg">130.211.43.242</code>
+                                                                <code className="font-mono font-extrabold text-primary text-lg">76.76.21.21</code>
                                                                 <button
-                                                                    onClick={() => { navigator.clipboard.writeText('130.211.43.242'); alert(t('domainsDashboard.guide.ipCopiedToClipboard')); }}
+                                                                    onClick={() => { navigator.clipboard.writeText('76.76.21.21'); alert(t('domainsDashboard.guide.ipCopiedToClipboard')); }}
                                                                     className="p-1.5 hover:bg-primary/20 rounded-lg text-primary transition-colors"
                                                                     title={t('domainsDashboard.guide.copyIpTitle')}
                                                                 >
@@ -1478,7 +1500,7 @@ const DomainsDashboard: React.FC = () => {
                                                         <div>
                                                             <span className="text-[10px] text-q-text-muted uppercase font-bold tracking-wider block mb-1">{t('domainsDashboard.guide.valueColumn')}</span>
                                                             <div className="flex items-center gap-2">
-                                                                <code className="font-mono font-extrabold text-primary text-base">tudominio.com</code>
+                                                                <code className="font-mono font-extrabold text-primary text-base">cname.vercel-dns.com</code>
                                                             </div>
                                                             <p className="text-[10px] text-q-text-muted mt-0.5">{t('domainsDashboard.guide.cnameValueHint')}</p>
                                                         </div>
