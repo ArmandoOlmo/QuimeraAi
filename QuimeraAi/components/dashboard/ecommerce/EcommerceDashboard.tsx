@@ -28,7 +28,6 @@ import {
     ChevronDown,
     Plus,
     Check,
-    Layers,
     Sparkles,
 } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
@@ -62,6 +61,8 @@ import { useOrders } from './hooks/useOrders';
 import { useReviews } from './hooks/useReviews';
 import { useProjectEcommerce } from './hooks/useProjectEcommerce';
 import { useProducts } from './hooks/useProducts';
+import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 
 // Import DemoDataSeeder
 import DemoDataSeeder from './components/DemoDataSeeder';
@@ -440,22 +441,25 @@ const EcommerceDashboard: React.FC = () => {
                                                 </p>
                                             </div>
 
-                                            {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => (
-                                                <button
-                                                    key={project.id}
-                                                    onClick={() => handleProjectSelect(project.id)}
-                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
-                                                        }`}
-                                                >
-                                                    {project.thumbnailUrl ? (
+                                            {projects.filter(p => p.status !== 'Template').slice(0, 5).map((project) => {
+                                                const thumbnailUrl = getDynamicThumbnailUrl(project);
+
+                                                return (
+                                                    <button
+                                                        key={project.id}
+                                                        onClick={() => handleProjectSelect(project.id)}
+                                                        className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted transition-colors ${project.id === effectiveProjectId ? 'bg-primary/10' : ''
+                                                            }`}
+                                                    >
+                                                    {thumbnailUrl ? (
                                                         <img
-                                                            src={project.thumbnailUrl}
+                                                            src={thumbnailUrl}
                                                             alt={project.name}
                                                             className="w-10 h-10 rounded-lg object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                                                            <Layers size={16} className="text-q-text-muted" />
+                                                        <div className="w-10 h-10 rounded-lg overflow-hidden">
+                                                            <ProjectThumbnailFallback logoClassName="h-5 w-5" />
                                                         </div>
                                                     )}
                                                     <div className="flex-1 text-left min-w-0">
@@ -470,7 +474,8 @@ const EcommerceDashboard: React.FC = () => {
                                                         <Check size={16} className="text-primary flex-shrink-0" />
                                                     )}
                                                 </button>
-                                            ))}
+                                                );
+                                            })}
 
                                             <div className="border-t border-q-border/50 mt-2 pt-2 px-2">
                                                 <button

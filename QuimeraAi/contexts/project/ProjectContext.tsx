@@ -20,6 +20,7 @@ import { useSafeAdmin } from '../admin';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -173,27 +174,7 @@ const extractProjectImageUrls = (project: Partial<Project>): string[] => {
 
 // Helper to extract the hero image URL based on whatever Hero component is being used
 export const extractHeroImage = (data: Partial<PageData> | null, componentOrder: PageSection[] | undefined): string | null => {
-    if (!data) return null;
-    
-    // Find the first hero-like component in the order
-    const heroSection = componentOrder?.find((s) => ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'].includes(s));
-    
-    if (heroSection === 'hero') return data.hero?.imageUrl || data.hero?.backgroundImage || null;
-    if (heroSection === 'heroSplit') return data.heroSplit?.imageUrl || null;
-    if (heroSection === 'heroGallery') return data.heroGallery?.slides?.[0]?.backgroundImage || null;
-    if (heroSection === 'heroWave') return data.heroWave?.slides?.[0]?.backgroundImage || null;
-    if (heroSection === 'heroNova') return data.heroNova?.slides?.[0]?.backgroundImage || data.heroNova?.slides?.[0]?.imageUrl || null;
-    if (heroSection === 'heroLead') return data.heroLead?.imageUrl || null;
-    
-    // Fallback if no hero in componentOrder
-    return data.hero?.imageUrl || data.hero?.backgroundImage ||
-           data.heroSplit?.imageUrl ||
-           data.heroGallery?.slides?.[0]?.backgroundImage ||
-           data.heroWave?.slides?.[0]?.backgroundImage ||
-           data.heroNova?.slides?.[0]?.backgroundImage ||
-           data.heroNova?.slides?.[0]?.backgroundImage ||
-           data.heroNova?.slides?.[0]?.imageUrl ||
-           data.heroLead?.imageUrl || null;
+    return extractActiveHeroImage(data as Record<string, any> | null, componentOrder);
 };
 
 // Helper to generate HTML export
@@ -938,8 +919,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Assets (only include if exists)
             ...(project.faviconUrl && { faviconUrl: project.faviconUrl }),
-            // Auto-sync hero image as project thumbnail for easy identification in dashboard
-            thumbnailUrl: extractHeroImage(data, componentOrder) || project.thumbnailUrl || null,
+            // Auto-sync only the active Hero image; do not keep stale thumbnails.
+            thumbnailUrl: extractActiveHeroImage(data as Record<string, any>, componentOrder, sectionVisibility) || null,
 
             // A/B Testing (only include if exists)
             ...(project.abTests && { abTests: project.abTests }),

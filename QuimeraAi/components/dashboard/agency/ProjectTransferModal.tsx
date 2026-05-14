@@ -13,13 +13,14 @@ import {
     AlertCircle,
     Loader2,
     FolderOutput,
-    Globe,
 } from 'lucide-react';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant';
 import { Project } from '../../../types';
 import { Tenant } from '../../../types/multiTenant';
 import { toast } from 'react-hot-toast';
+import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 
 // ============================================================================
 // TYPES
@@ -53,6 +54,7 @@ export function ProjectTransferModal({
         newProjectId?: string;
         message?: string;
     } | null>(null);
+    const thumbnailUrl = getDynamicThumbnailUrl(project);
 
     if (!isOpen) return null;
 
@@ -165,15 +167,15 @@ export function ProjectTransferModal({
                     {/* Project Preview */}
                     <div className="mb-6 p-4 rounded-xl bg-secondary/30 border border-q-border/50">
                         <div className="flex items-center gap-3">
-                            {project.thumbnailUrl ? (
+                            {thumbnailUrl ? (
                                 <img
-                                    src={project.thumbnailUrl}
+                                    src={thumbnailUrl}
                                     alt={project.name}
                                     className="h-12 w-16 rounded-lg object-cover border border-q-border/50"
                                 />
                             ) : (
-                                <div className="h-12 w-16 rounded-lg bg-secondary flex items-center justify-center border border-q-border/50">
-                                    <Globe size={20} className="text-q-text-muted" />
+                                <div className="h-12 w-16 rounded-lg overflow-hidden">
+                                    <ProjectThumbnailFallback logoClassName="h-6 w-6" />
                                 </div>
                             )}
                             <div>

@@ -33,6 +33,8 @@ import { useRouter } from '../../hooks/useRouter';
 import QuimeraLoader from '../ui/QuimeraLoader';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
+import ProjectThumbnailFallback from '../dashboard/ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import { ROUTES } from '../../routes/config';
 import HeaderBackButton from '../ui/HeaderBackButton';
 
@@ -453,6 +455,7 @@ interface ProjectCardProps {
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate, isSelected, onToggleSelect }) => {
     const { t } = useTranslation();
+    const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
     return (
         <div className={`group relative bg-q-surface/50 hover:bg-q-surface border rounded-2xl overflow-hidden transition-all duration-300 text-left hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
@@ -470,16 +473,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
             <button onClick={onSelect} className="w-full text-left">
                 {/* Thumbnail */}
                 <div className="aspect-video relative overflow-hidden bg-muted">
-                    {project.thumbnailUrl ? (
+                    {thumbnailUrl ? (
                         <img
-                            src={project.thumbnailUrl}
+                            src={thumbnailUrl}
                             alt={project.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                            <Layers size={40} className="text-q-text-muted/30" />
-                        </div>
+                        <ProjectThumbnailFallback />
                     )}
 
                     {/* Status Badge */}
@@ -527,6 +528,7 @@ interface ProjectListItemProps {
 
 const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate, isSelected, onToggleSelect }) => {
     const { t } = useTranslation();
+    const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
     return (
         <div className={`w-full flex items-center gap-4 p-4 bg-q-surface/50 hover:bg-q-surface border rounded-xl transition-all text-left group ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-q-border hover:border-primary/50'}`}>
@@ -544,16 +546,14 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
             <button onClick={onSelect} className="flex-1 flex items-center gap-4 text-left min-w-0">
                 {/* Thumbnail */}
                 <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    {project.thumbnailUrl ? (
+                    {thumbnailUrl ? (
                         <img
-                            src={project.thumbnailUrl}
+                            src={thumbnailUrl}
                             alt={project.name}
                             className="w-full h-full object-cover"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-                            <Layers size={18} className="text-q-text-muted/30" />
-                        </div>
+                        <ProjectThumbnailFallback logoClassName="h-6 w-6" />
                     )}
                 </div>
 
@@ -590,4 +590,3 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
 };
 
 export default CMSProjectSelectorPage;
-

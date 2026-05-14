@@ -4,6 +4,8 @@ import { Trash2, RotateCcw, AlertTriangle, Clock, Loader2, X, ChevronDown, Chevr
 import { useProject } from '../../contexts/project';
 import { Project } from '../../types';
 import Modal from '../ui/Modal';
+import ProjectThumbnailFallback from './ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 
 const TrashBin: React.FC = () => {
     const { t } = useTranslation();
@@ -121,6 +123,7 @@ const TrashBin: React.FC = () => {
                             const daysLeft = deletedAt ? getDaysRemaining(deletedAt) : 30;
                             const isRestoring = restoringId === project.id;
                             const isDeleting = deletingId === project.id;
+                            const thumbnailUrl = getDynamicThumbnailUrl(project);
 
                             return (
                                 <div
@@ -131,16 +134,14 @@ const TrashBin: React.FC = () => {
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                         {/* Thumbnail or fallback */}
                                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary/50 border border-q-border/30">
-                                            {project.thumbnailUrl ? (
+                                            {thumbnailUrl ? (
                                                 <img
-                                                    src={project.thumbnailUrl}
+                                                    src={thumbnailUrl}
                                                     alt={project.name}
                                                     className="w-full h-full object-cover opacity-60"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <Trash2 size={16} className="text-q-text-muted/40" />
-                                                </div>
+                                                <ProjectThumbnailFallback logoClassName="h-6 w-6" />
                                             )}
                                         </div>
 

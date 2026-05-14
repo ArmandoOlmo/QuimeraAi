@@ -11,6 +11,7 @@ import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import ThumbnailEditor from '../ui/ThumbnailEditor';
 import Modal from '../ui/Modal';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
+import ProjectThumbnailFallback from './ProjectThumbnailFallback';
 
 interface ProjectCardProps {
   project: Project;
@@ -66,6 +67,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   const themeColors = getProjectColors();
+  const thumbnailUrl = getDynamicThumbnailUrl(project);
 
   // Check if user can delete templates (only owner and superadmin)
   const canDeleteTemplate = () => {
@@ -73,9 +75,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     const userRole = userDocument?.role || '';
     return ['owner', 'superadmin'].includes(userRole);
   };
-
-  // Dinámicamente obtiene la imagen que esté en el hero principal (usando el helper global)
-  const getDynamicThumbnailUrlHandler = () => getDynamicThumbnailUrl(project);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -216,12 +215,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         }}
         aria-label={t('project.aria.open', { name: project.name })}
       >
-        <img
-          src={getDynamicThumbnailUrlHandler()}
-          alt={`${project.name} preview`}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
-        />
+        {thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={`${project.name} preview`}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <ProjectThumbnailFallback logoClassName={compact ? 'h-12 w-12' : 'h-20 w-20'} />
+        )}
 
         {/* Dark Gradient Overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />

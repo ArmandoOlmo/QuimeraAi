@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Project } from '../../types';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project';
-import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, ExternalLink, Download, Calendar, Zap } from 'lucide-react';
+import { Pencil, Trash2, Copy, Clock, Loader2, MoreVertical, Download, Zap } from 'lucide-react';
 import { trackProjectOpened, trackProjectDeleted } from '../../utils/analytics';
 import { downloadProjectAsJSON } from '../../utils/projectExporter';
 import Modal from '../ui/Modal';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
+import ProjectThumbnailFallback from './ProjectThumbnailFallback';
 
 interface ProjectListItemProps {
   project: Project;
@@ -26,6 +27,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isTemplate = project.status === 'Template';
+  const thumbnailUrl = getDynamicThumbnailUrl(project);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -152,16 +154,14 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, tokenUsage, 
     >
       {/* Thumbnail */}
       <div className="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-muted">
-        {getDynamicThumbnailUrl(project) ? (
+        {thumbnailUrl ? (
           <img
-            src={getDynamicThumbnailUrl(project)}
+            src={thumbnailUrl}
             alt={project.name}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-q-text-muted">
-            <ExternalLink size={24} />
-          </div>
+          <ProjectThumbnailFallback logoClassName="h-7 w-7" />
         )}
       </div>
 

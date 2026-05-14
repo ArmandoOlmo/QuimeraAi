@@ -1,50 +1,85 @@
-import { Project } from '../types';
+import type { Project } from '../types';
 
 /**
- * Extract the best possible thumbnail image from a project's data.
- * Checks various hero variants and banners to find a suitable preview image.
+ * Extract the thumbnail from the active Hero section only.
+ * If the active Hero has no image, return null so the Quimera fallback renders.
  */
 export const getDynamicThumbnailUrl = (project: Project | null | undefined): string | null => {
   if (!project) return null;
-  if (!project.data) return project.thumbnailUrl || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop';
-  
-  const pd = project.data;
+  const homePage = project.pages?.find(page => page.isHomePage) || project.pages?.[0];
+  const order = homePage?.sections || project.componentOrder;
+  const heroSection = order?.find(section =>
+    isHeroSection(section) && project.sectionVisibility?.[section] !== false
+  );
+  const data = heroSection && homePage?.sectionData?.[heroSection]
+    ? homePage.sectionData
+    : project.data;
 
-  // 1. Direct imageUrl or backgroundImageUrl from simple heroes
-  const simpleHeroes = [
-    pd.hero, 
-    pd.heroNova, 
-    pd.heroWave, 
-    pd.heroSplit, 
-    pd.heroLead, 
-    pd.heroLumina, 
-    pd.heroNeon
-  ];
-  
-  for (const hero of simpleHeroes) {
-    if (hero?.imageUrl && typeof hero.imageUrl === 'string' && hero.imageUrl.trim() !== '') return hero.imageUrl;
-    if (hero?.backgroundImageUrl && typeof hero.backgroundImageUrl === 'string' && hero.backgroundImageUrl.trim() !== '') return hero.backgroundImageUrl;
-  }
+  return extractActiveHeroImage(data, order, project.sectionVisibility);
+};
 
-  // 2. Check slides for heroes that use them (heroGallery, heroWave, heroNova, heroNeon)
-  const slideHeroes = [pd.heroGallery, pd.heroWave, pd.heroNova, pd.heroNeon];
-  for (const hero of slideHeroes) {
-    if (hero?.slides && Array.isArray(hero.slides) && hero.slides.length > 0) {
-      const firstSlide = hero.slides[0];
-      if (firstSlide?.backgroundImage && typeof firstSlide.backgroundImage === 'string' && firstSlide.backgroundImage.trim() !== '') return firstSlide.backgroundImage;
-      if (firstSlide?.imageUrl && typeof firstSlide.imageUrl === 'string' && firstSlide.imageUrl.trim() !== '') return firstSlide.imageUrl;
+export const extractActiveHeroImage = (
+  data: Record<string, any> | null | undefined,
+  componentOrder: readonly string[] | null | undefined,
+  sectionVisibility?: Record<string, boolean>
+): string | null => {
+  if (!data || !componentOrder?.length) return null;
+
+  const heroSection = componentOrder.find(section =>
+    isHeroSection(section) && sectionVisibility?.[section] !== false
+  );
+
+  if (!heroSection) return null;
+
+  return getHeroImage(data[heroSection]);
+};
+
+const isHeroSection = (section: string): boolean => {
+  return section === 'hero' || /^hero[A-Z]/.test(section);
+};
+
+const getHeroImage = (hero: any): string | null => {
+  if (!hero || typeof hero !== 'object') return null;
+
+  const directImage = firstValidUrl(
+    hero.imageUrl,
+    hero.backgroundImage,
+    hero.backgroundImageUrl
+  );
+  if (directImage) return directImage;
+
+  if (Array.isArray(hero.slides)) {
+    for (const slide of hero.slides) {
+      const slideImage = firstValidUrl(
+        slide?.backgroundImage,
+        slide?.imageUrl,
+        slide?.backgroundImageUrl
+      );
+      if (slideImage) return slideImage;
+
+      const legacySlideImage = getLegacyGalleryImage(slide?.images);
+      if (legacySlideImage) return legacySlideImage;
     }
   }
 
-  // 3. Legacy or specific heroGallery handling
-  if (pd.heroGallery?.images && Array.isArray(pd.heroGallery.images) && pd.heroGallery.images.length > 0 && typeof pd.heroGallery.images[0] === 'string' && pd.heroGallery.images[0] !== '') {
-    return pd.heroGallery.images[0];
-  }
-  
-  // 4. Fallback to banners
-  const bannerC = pd.banner || pd.logoBanner;
-  if (bannerC?.imageUrl && typeof bannerC.imageUrl === 'string' && bannerC.imageUrl.trim() !== '') return bannerC.imageUrl;
-  if (bannerC?.backgroundImageUrl && typeof bannerC.backgroundImageUrl === 'string' && bannerC.backgroundImageUrl.trim() !== '') return bannerC.backgroundImageUrl;
+  return getLegacyGalleryImage(hero.images);
+};
 
-  return project.thumbnailUrl || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop';
+const getLegacyGalleryImage = (images: any): string | null => {
+  if (!Array.isArray(images)) return null;
+
+  for (const image of images) {
+    if (typeof image === 'string' && image.trim()) return image;
+    if (typeof image?.url === 'string' && image.url.trim()) return image.url;
+  }
+
+  return null;
+};
+
+const firstValidUrl = (...urls: unknown[]): string | null => {
+  for (const url of urls) {
+    if (typeof url === 'string' && url.trim()) return url;
+  }
+
+  return null;
 };

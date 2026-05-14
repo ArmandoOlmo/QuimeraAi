@@ -19,6 +19,8 @@ import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types';
 import { ProjectTransferModal } from './ProjectTransferModal';
 import { SubdomainConfigModal } from './SubdomainConfigModal';
+import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 
 // ============================================================================
 // COMPONENT
@@ -130,23 +132,24 @@ export function AgencyProjects() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredProjects.map(project => (
-                        <div
-                            key={project.id}
-                            className="group rounded-xl border border-q-border/50 bg-q-surface hover:border-q-border hover:shadow-lg transition-all duration-200 overflow-hidden"
-                        >
+                    {filteredProjects.map(project => {
+                        const thumbnailUrl = getDynamicThumbnailUrl(project);
+
+                        return (
+                            <div
+                                key={project.id}
+                                className="group rounded-xl border border-q-border/50 bg-q-surface hover:border-q-border hover:shadow-lg transition-all duration-200 overflow-hidden"
+                            >
                             {/* Thumbnail */}
                             <div className="aspect-video w-full bg-secondary/50 relative overflow-hidden">
-                                {project.thumbnailUrl ? (
+                                {thumbnailUrl ? (
                                     <img
-                                        src={project.thumbnailUrl}
+                                        src={thumbnailUrl}
                                         alt={project.name}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <Globe size={32} className="text-q-text-muted/30" />
-                                    </div>
+                                    <ProjectThumbnailFallback />
                                 )}
 
                                 {/* Status Badge */}
@@ -225,7 +228,8 @@ export function AgencyProjects() {
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

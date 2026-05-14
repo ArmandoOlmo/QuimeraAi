@@ -20,6 +20,7 @@ import { useProject } from '../../contexts/project';
 import { Project } from '../../types/components';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import { resolveProjectName as _resolveProjectName } from '../../utils/resolveProjectName';
+import ProjectThumbnailFallback from './ProjectThumbnailFallback';
 
 interface ProjectSwitcherProps {
     collapsed?: boolean;
@@ -122,14 +123,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
         onCreateProject?.();
     };
 
-    const getProjectInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
+    const activeProjectThumbnailUrl = getDynamicThumbnailUrl(activeProject);
 
     const getStatusBadge = (status: string) => {
         if (status === 'Published') {
@@ -207,14 +201,14 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             >
                 {/* Project avatar */}
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/80 to-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
-                    {getDynamicThumbnailUrl(activeProject) ? (
+                    {activeProjectThumbnailUrl ? (
                         <img
-                            src={getDynamicThumbnailUrl(activeProject)}
+                            src={activeProjectThumbnailUrl}
                             alt={resolveProjectName(activeProject.name)}
                             className="w-full h-full object-cover"
                         />
                     ) : activeProject ? (
-                        getProjectInitials(resolveProjectName(activeProject.name))
+                        <ProjectThumbnailFallback logoClassName="h-5 w-5" />
                     ) : (
                         <FolderKanban size={16} />
                     )}
@@ -292,6 +286,7 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                         ) : (
                             filteredProjects.map((project) => {
                                 const isActive = project.id === activeProjectId;
+                                const thumbnailUrl = getDynamicThumbnailUrl(project);
 
                                 return (
                                     <button
@@ -313,14 +308,14 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
                                                 : 'bg-gradient-to-br from-q-text-muted/60 to-q-text-muted/40'
                                             }
                                         `}>
-                                            {getDynamicThumbnailUrl(project) ? (
+                                            {thumbnailUrl ? (
                                                 <img
-                                                    src={getDynamicThumbnailUrl(project)}
+                                                    src={thumbnailUrl}
                                                     alt={resolveProjectName(project.name)}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                getProjectInitials(resolveProjectName(project.name))
+                                                <ProjectThumbnailFallback logoClassName="h-5 w-5" />
                                             )}
                                         </div>
 

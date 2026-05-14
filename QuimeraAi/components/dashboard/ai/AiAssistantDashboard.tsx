@@ -29,6 +29,8 @@ import SocialChatInbox from './SocialChatInbox';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 
 type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
 
@@ -330,6 +332,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     {sortedProjects.map(project => {
                                         const projectStats = getStatsForProject(project.id);
                                         const hasActivity = projectStats && projectStats.activeConversations > 0;
+                                        const thumbnailUrl = getDynamicThumbnailUrl(project);
 
                                         return (
                                             <button
@@ -349,11 +352,15 @@ const AiAssistantDashboard: React.FC = () => {
 
                                                 {/* Thumbnail Section */}
                                                 <div className="relative h-40 overflow-hidden">
-                                                    <img
-                                                        src={project.thumbnailUrl || 'https://placehold.co/600x400/1e293b/ffffff?text=Project'}
-                                                        alt={project.name}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    />
+                                                    {thumbnailUrl ? (
+                                                        <img
+                                                            src={thumbnailUrl}
+                                                            alt={project.name}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        />
+                                                    ) : (
+                                                        <ProjectThumbnailFallback />
+                                                    )}
                                                     <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                                                 </div>
 
