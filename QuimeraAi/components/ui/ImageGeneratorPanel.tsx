@@ -40,6 +40,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const adminAssets = filesCtx?.adminAssets || [];
     const fetchGlobalFiles = filesCtx?.fetchGlobalFiles || (async () => {});
     const fetchAdminAssets = filesCtx?.fetchAdminAssets || (async () => {});
+    const refreshFiles = filesCtx?.refreshFiles || (async () => {});
     const hasActiveProject = filesCtx?.hasActiveProject || false;
     const { activeProjectId } = useProject();
     const { t } = useTranslation();
@@ -309,10 +310,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 console.log('✅ [ImageGeneratorPanel] Image was already saved by AIContext proxy');
                 setSavedToLibrary(true);
                 setSavedImageUrl(imageDataUrl);
+                // Refresh the relevant library so the new image is available in the picker
+                // immediately, without waiting for a realtime event or a manual reload.
                 if (effectiveDestination === 'admin') {
                     await fetchAdminAssets();
                 } else if (effectiveDestination === 'global') {
                     await fetchGlobalFiles();
+                } else {
+                    await refreshFiles();
                 }
                 return imageDataUrl;
             }

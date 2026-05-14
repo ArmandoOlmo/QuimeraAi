@@ -44,6 +44,10 @@ interface FilesContextType {
     updateFileNotes: (fileId: string, notes: string) => Promise<void>;
     generateFileSummary: (fileId: string, downloadURL: string) => Promise<void>;
     uploadImageAndGetURL: (file: File, path: string) => Promise<string>;
+    /** Manually refetch project files (useful after async writes like AI image generation) */
+    refreshFiles: () => Promise<void>;
+    /** Optimistically insert a file in local state before the network confirms it */
+    addFileLocally: (file: FileRecord) => void;
     
     // Project info
     hasActiveProject: boolean;
@@ -89,6 +93,71 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [adminAssets, setAdminAssets] = useState<AdminAssetRecord[]>([]);
     const [isAdminAssetsLoading, setIsAdminAssetsLoading] = useState(false);
 
+    // Reusable fetch for project files. Exposed via context so consumers can
+    // trigger an explicit refresh after async writes (AI generation, uploads, …).
+    const refreshFiles = useCallback(async () => {
+        if (!user || !activeProjectId) {
+            setFiles([]);
+            setIsFilesLoading(false);
+            return;
+        }
+
+        setIsFilesLoading(true);
+        try {
+            let tenantId = currentTenantId;
+            if (!tenantId) {
+                const { data: memberRow } = await supabase
+                    .from('tenant_members')
+                    .select('tenant_id')
+                    .eq('user_id', user.id)
+                    .limit(1)
+                    .maybeSingle();
+                tenantId = memberRow?.tenant_id || null;
+            }
+
+            let query = supabase
+                .from('files')
+                .select('*')
+                .eq('project_id', activeProjectId)
+                .order('created_at', { ascending: false });
+            if (tenantId) {
+                query = query.eq('tenant_id', tenantId);
+            }
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const filesData = (data || []).map(f => ({
+                id: f.id,
+                name: f.name,
+                url: f.url,
+                size: f.size,
+                type: f.type,
+                downloadURL: f.url,
+                storagePath: f.metadata?.storagePath || '',
+                projectId: f.project_id,
+                createdAt: f.created_at,
+                notes: f.metadata?.notes,
+                summary: f.metadata?.summary
+            })) as FileRecord[];
+            setFiles(filesData);
+        } catch (error) {
+            console.error("[FilesContext] Error fetching files:", error);
+        } finally {
+            setIsFilesLoading(false);
+        }
+    }, [user, activeProjectId, currentTenantId]);
+
+    // Optimistically prepend a freshly created file so the UI updates instantly
+    // (the realtime subscription / next refreshFiles will reconcile if needed).
+    const addFileLocally = useCallback((file: FileRecord) => {
+        setFiles(prev => {
+            if (prev.some(f => f.id === file.id || (file.downloadURL && f.downloadURL === file.downloadURL))) {
+                return prev;
+            }
+            return [file, ...prev];
+        });
+    }, []);
+
     // Load files with real-time updates (scoped to active project)
     // We rely on RLS to filter by tenant, so we don't strictly need currentTenantId here.
     // If currentTenantId isn't loaded yet, we fall back to a tenant_members lookup.
@@ -99,58 +168,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             return;
         }
 
-        let cancelled = false;
-
-        const resolveTenantId = async (): Promise<string | null> => {
-            if (currentTenantId) return currentTenantId;
-            const { data: memberRow } = await supabase
-                .from('tenant_members')
-                .select('tenant_id')
-                .eq('user_id', user.id)
-                .limit(1)
-                .maybeSingle();
-            return memberRow?.tenant_id || null;
-        };
-
-        const fetchInitialFiles = async () => {
-            setIsFilesLoading(true);
-            try {
-                const tenantId = await resolveTenantId();
-                let query = supabase
-                    .from('files')
-                    .select('*')
-                    .eq('project_id', activeProjectId)
-                    .order('created_at', { ascending: false });
-                if (tenantId) {
-                    query = query.eq('tenant_id', tenantId);
-                }
-                const { data, error } = await query;
-
-                if (error) throw error;
-                if (cancelled) return;
-
-                const filesData = (data || []).map(f => ({
-                    id: f.id,
-                    name: f.name,
-                    url: f.url,
-                    size: f.size,
-                    type: f.type,
-                    downloadURL: f.url,
-                    storagePath: f.metadata?.storagePath || '',
-                    projectId: f.project_id,
-                    createdAt: f.created_at,
-                    notes: f.metadata?.notes,
-                    summary: f.metadata?.summary
-                })) as FileRecord[];
-                setFiles(filesData);
-            } catch (error) {
-                console.error("[FilesContext] Error fetching files:", error);
-            } finally {
-                if (!cancelled) setIsFilesLoading(false);
-            }
-        };
-
-        fetchInitialFiles();
+        refreshFiles();
 
         const channel = supabase.channel(`public:files:project_id=eq.${activeProjectId}`)
             .on('postgres_changes', {
@@ -159,15 +177,36 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 table: 'files',
                 filter: `project_id=eq.${activeProjectId}`
             }, () => {
-                fetchInitialFiles();
+                refreshFiles();
             })
             .subscribe();
 
         return () => {
-            cancelled = true;
             supabase.removeChannel(channel);
         };
-    }, [user, activeProjectId, currentTenantId]);
+    }, [user, activeProjectId, refreshFiles]);
+
+    // Listen for cross-context notifications (e.g. AIContext just persisted a
+    // generated image) so the relevant library refreshes without a page reload.
+    useEffect(() => {
+        const handleLibraryUpdated = (e: Event) => {
+            const detail = (e as CustomEvent<{ destination?: 'user' | 'admin' | 'global'; projectId?: string }>).detail || {};
+            const dest = detail.destination || 'user';
+            if (dest === 'user') {
+                if (!detail.projectId || detail.projectId === activeProjectId) {
+                    refreshFiles();
+                }
+            } else if (dest === 'admin') {
+                fetchAdminAssets();
+            } else if (dest === 'global') {
+                fetchGlobalFiles();
+            }
+        };
+
+        window.addEventListener('quimera:library-updated', handleLibraryUpdated);
+        return () => window.removeEventListener('quimera:library-updated', handleLibraryUpdated);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeProjectId, refreshFiles]);
 
     // Upload file (to active project)
     const uploadFile = async (file: File): Promise<string | undefined> => {
@@ -207,6 +246,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
 
+            const createdAt = new Date().toISOString();
             const fileRecord = {
                 tenant_id: tenantId,
                 project_id: activeProjectId,
@@ -217,14 +257,30 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 metadata: {
                     storagePath
                 },
-                created_at: new Date().toISOString()
+                created_at: createdAt
             };
 
-            const { error } = await supabase
+            const { data: inserted, error } = await supabase
                 .from('files')
-                .insert([fileRecord]);
+                .insert([fileRecord])
+                .select('*')
+                .single();
 
             if (error) throw error;
+
+            if (inserted) {
+                addFileLocally({
+                    id: inserted.id,
+                    name: inserted.name,
+                    url: inserted.url,
+                    size: inserted.size,
+                    type: inserted.type,
+                    downloadURL: inserted.url,
+                    storagePath: inserted.metadata?.storagePath || storagePath,
+                    projectId: inserted.project_id,
+                    createdAt: inserted.created_at,
+                } as FileRecord);
+            }
 
             return downloadURL;
         } catch (error) {
@@ -637,6 +693,8 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         updateFileNotes,
         generateFileSummary,
         uploadImageAndGetURL,
+        refreshFiles,
+        addFileLocally,
         hasActiveProject: !!activeProjectId,
         activeProjectId,
         globalFiles,

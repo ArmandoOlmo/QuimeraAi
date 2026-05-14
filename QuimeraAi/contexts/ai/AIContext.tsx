@@ -244,6 +244,20 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         return null;
     };
 
+    const notifyLibraryUpdated = (
+        destination: 'user' | 'admin' | 'global',
+        projectId?: string,
+    ) => {
+        if (typeof window === 'undefined') return;
+        try {
+            window.dispatchEvent(new CustomEvent('quimera:library-updated', {
+                detail: { destination, projectId },
+            }));
+        } catch (err) {
+            console.warn('[AIContext] Could not dispatch library update event:', err);
+        }
+    };
+
     const saveGeneratedImageToLibrary = async (
         publicUrl: string,
         storagePath: string,
@@ -285,6 +299,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     created_at: now,
                 }]);
                 if (error) throw error;
+                notifyLibraryUpdated('admin');
                 return;
             }
 
@@ -303,6 +318,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     created_at: now,
                 }]);
                 if (error) throw error;
+                notifyLibraryUpdated('global');
                 return;
             }
 
@@ -335,6 +351,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 throw error;
             }
             console.log('✅ [AIContext] Generated image saved to project library:', fileName);
+            notifyLibraryUpdated('user', options.projectId);
         } catch (error) {
             console.warn('[AIContext] Generated image saved to storage but not linked to library:', error);
         }
