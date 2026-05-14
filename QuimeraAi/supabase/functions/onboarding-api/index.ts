@@ -35,6 +35,8 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
+const DEFAULT_VERCEL_PROJECT_ID = "prj_4GK6GRGJfWkQpwBzfj5P2NMiI4Is";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -450,7 +452,8 @@ function resolveVercelProjectId(project?: Record<string, unknown> | null, domain
     (deployment?.vercelProjectId as string | undefined) ||
     (domainData?.vercelProjectId as string | undefined) ||
     Deno.env.get("VERCEL_PROJECT_ID") ||
-    Deno.env.get("VERCEL_PROJECT_NAME");
+    Deno.env.get("VERCEL_PROJECT_NAME") ||
+    DEFAULT_VERCEL_PROJECT_ID;
 
   if (!vercelProjectId) {
     throw new Error("VERCEL_PROJECT_ID is not configured");

@@ -39,6 +39,8 @@ const normalizeProject = (project: Project): Project => {
     return project;
 };
 
+const VERCEL_PROJECT_ID = 'prj_4GK6GRGJfWkQpwBzfj5P2NMiI4Is';
+
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
 
@@ -1226,6 +1228,12 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         const dataToSave = {
             ...projectData,
+            vercelProjectId: (projectData as any).vercelProjectId || VERCEL_PROJECT_ID,
+            vercel_project_id: (projectData as any).vercel_project_id || VERCEL_PROJECT_ID,
+            deployment: {
+                ...((projectData as any).deployment || {}),
+                vercelProjectId: ((projectData as any).deployment || {}).vercelProjectId || VERCEL_PROJECT_ID,
+            },
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
         };
