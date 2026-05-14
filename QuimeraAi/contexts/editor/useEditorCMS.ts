@@ -13,6 +13,15 @@ interface UseEditorCMSParams {
     activeProjectId: string | null;
 }
 
+const getProjectTag = (projectId: string) => `project:${projectId}`;
+
+const withProjectTag = (tags: string[] | undefined, projectId: string): string[] => {
+    const projectTag = getProjectTag(projectId);
+    return Array.from(new Set([...(tags || []).filter(tag => !tag.startsWith('project:')), projectTag]));
+};
+
+const getUserId = (user: User): string => (user as any).id || (user as any).uid;
+
 export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
@@ -41,18 +50,20 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
             setIsLoadingCMS(true);
             try {
                 // Determine user ID (fallback to uid for legacy compat)
-                const userId = user.id || (user as any).uid;
+                const userId = getUserId(user);
 
                 const { data, error } = await supabase
                     .from('posts')
                     .select('*')
                     .eq('user_id', userId)
+                    .contains('tags', [getProjectTag(activeProjectId)])
                     .order('updated_at', { ascending: false });
 
                 if (error) throw error;
 
                 const postsData = (data || []).map(p => ({
                     id: p.id,
+                    projectId: activeProjectId,
                     title: p.title,
                     slug: p.slug || '',
                     content: p.content || '',
@@ -62,6 +73,8 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                     status: p.status as any,
                     tags: p.tags || [],
                     authorId: p.user_id,
+                    seoTitle: p.seo_title || '',
+                    seoDescription: p.seo_description || '',
                     createdAt: p.created_at,
                     updatedAt: p.updated_at,
                     publishedAt: p.published_at,
@@ -78,7 +91,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
         fetchPosts();
 
-        const userId = user.id || (user as any).uid;
+        const userId = getUserId(user);
         const channel = supabase.channel(`public:posts:user_id=eq.${userId}`)
             .on('postgres_changes', {
                 event: '*',
@@ -100,8 +113,8 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
     };
 
     const saveCMSPost = async (post: CMSPost) => {
-        if (!user) return;
-        const userId = user.id || (user as any).uid;
+        if (!user || !activeProjectId) return;
+        const userId = getUserId(user);
 
         try {
             const { id, ...data } = post;
@@ -154,6 +167,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
             // --- END FIX ---
 
             // Save to Supabase
+            const tags = withProjectTag(data.tags, activeProjectId);
             const postData = {
                 title: data.title,
                 slug: data.slug,
@@ -162,7 +176,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                 featured_image: getUsableImageUrl(data.featuredImage) || null,
                 category: data.categoryId,
                 status: data.status,
-                tags: data.tags,
+                tags,
                 author_name: data.authorName,
                 is_featured: data.isFeatured,
                 published_at: data.status === 'published' ? (data.publishedAt || new Date().toISOString()) : null,

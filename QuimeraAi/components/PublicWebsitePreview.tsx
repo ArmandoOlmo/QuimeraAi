@@ -526,12 +526,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               const { data, error } = await supabase
                 .from('posts')
                 .select('*')
+                .contains('tags', [`project:${resolvedProjectId}`])
                 .order('published_at', { ascending: false });
 
               if (!error && data && data.length > 0) {
                 const posts = data.map(d => ({
                   id: d.id,
-                  projectId: d.project_id,
+                  projectId: resolvedProjectId,
                   title: d.title,
                   slug: d.slug,
                   content: d.content,
@@ -576,6 +577,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                   .select('*')
                   .eq('tenant_id', projectResult.data.tenant_id)
                   .eq('status', 'published')
+                  .contains('tags', [`project:${resolvedProjectId}`])
                   .order('published_at', { ascending: false })
               : { data: [], error: null };
 
@@ -604,7 +606,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             if (!postsResult.error && postsResult.data && postsResult.data.length > 0) {
               const posts = postsResult.data.map(d => ({
                   id: d.id,
-                  projectId: d.project_id,
+                  projectId: resolvedProjectId,
                   title: d.title,
                   slug: d.slug,
                   content: d.content,

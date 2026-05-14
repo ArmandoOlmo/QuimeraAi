@@ -54,6 +54,13 @@ const defaultMenus: Menu[] = [
     }
 ];
 
+const getProjectTag = (projectId: string) => `project:${projectId}`;
+
+const withProjectTag = (tags: string[] | undefined, projectId: string): string[] => {
+    const projectTag = getProjectTag(projectId);
+    return Array.from(new Set([...(tags || []).filter(tag => !tag.startsWith('project:')), projectTag]));
+};
+
 export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const projectContext = useSafeProject();
@@ -144,17 +151,14 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     .from('posts')
                     .select('*')
                     .eq('tenant_id', currentTenantId)
+                    .contains('tags', [getProjectTag(activeProjectId)])
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
-                // We're filtering client-side or just letting the posts table mix projects?
-                // Wait, if posts belong to a project, let's filter by project? Or are posts global per tenant?
-                // In Firebase, the path was: users/USER/projects/PROJECT/posts
-                // Our schema doesn't have a project_id column in posts! Oh! Let's check my SQL for posts!
-                // ... Oh I forgot `project_id text` in `posts` table schema. I will filter manually here and later add it if necessary.
                 setCmsPosts((data || []).map(p => ({
                     id: p.id,
+                    projectId: activeProjectId,
                     title: p.title,
                     slug: p.slug || '',
                     content: p.content || '',
@@ -164,6 +168,8 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     status: p.status as any,
                     tags: p.tags || [],
                     authorId: p.user_id,
+                    seoTitle: p.seo_title || '',
+                    seoDescription: p.seo_description || '',
                     createdAt: p.created_at,
                     updatedAt: p.updated_at,
                     publishedAt: p.published_at,
@@ -200,10 +206,11 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     const saveCMSPost = async (post: CMSPost): Promise<string> => {
-        if (!user || !currentTenantId) return '';
+        if (!user || !currentTenantId || !activeProjectId) return '';
 
         try {
             const userId = user?.id || (user as any)?.uid;
+            const tags = withProjectTag(post.tags, activeProjectId);
             
             const postData = {
                 tenant_id: currentTenantId,
@@ -215,7 +222,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 featured_image: getUsableImageUrl(post.featuredImage) || null,
                 category: post.categoryId,
                 status: post.status,
-                tags: post.tags,
+                tags,
                 author_name: post.authorName,
                 is_featured: post.isFeatured,
                 published_at: post.status === 'published' ? (post.publishedAt || new Date().toISOString()) : null,

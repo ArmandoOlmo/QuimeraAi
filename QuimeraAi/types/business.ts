@@ -367,10 +367,12 @@ export interface CMSPost {
     status: 'draft' | 'published';
     authorId: string;
     author?: string;         // Editable author display name
+    authorName?: string;     // Supabase author display name
     showAuthor?: boolean;    // Toggle author visibility on public page (default: true)
     showDate?: boolean;      // Toggle date visibility on public page (default: true)
     publishedAt?: string;    // Editable publication date
     categoryId?: string;     // Link to a CMSCategory for grouping
+    tags?: string[];         // Includes project:<projectId> for project scoping
     podcastAudioUrl?: string; // URL to a podcast audio file for this article
     podcastVideoUrl?: string; // URL to a video file for this article
     seoTitle: string;
@@ -378,6 +380,7 @@ export interface CMSPost {
     createdAt: string;
     updatedAt: string;
     projectId?: string;    // Link to project (for filtering posts by project)
+    isFeatured?: boolean;  // Featured article flag
     isDemoPost?: boolean;  // Flag to identify demo posts created during onboarding
     sortOrder?: number;    // Manual sort position (used for profile categories)
 }
@@ -548,7 +551,6 @@ export interface BrandIdentity {
     logoUrl?: string;
     tagline?: string;
 }
-
 
 
 

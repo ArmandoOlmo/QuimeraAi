@@ -50,7 +50,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
             .single();
 
         const tenantId = projectResult.data?.tenant_id;
-        const promises: Promise<any>[] = [
+        const promises: any[] = [
             // 1. Get published posts. The remote posts table is tenant-scoped, not project-scoped.
             tenantId
                 ? supabase
@@ -58,6 +58,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                     .select('*')
                     .eq('tenant_id', tenantId)
                     .eq('status', 'published')
+                    .contains('tags', [`project:${projectId}`])
                     .order('published_at', { ascending: false })
                 : Promise.resolve({ data: [], error: null }),
         ];

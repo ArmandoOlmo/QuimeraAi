@@ -86,12 +86,32 @@ function isFirebaseStorageUrl(s) {
   );
 }
 
+function stripFirebaseUrlsFromString(s) {
+  if (!isFirebaseStorageUrl(s)) return s;
+
+  const trimmed = s.trim();
+  if (
+    /^gs:\/\/quimeraai[^"'\s<>)]*$/.test(trimmed) ||
+    /^https?:\/\/firebasestorage\.googleapis\.com[^"'\s<>)]*$/.test(trimmed) ||
+    /^https?:\/\/[^"'\s<>)]*firebasestorage\.app[^"'\s<>)]*$/.test(trimmed) ||
+    /^https?:\/\/storage\.googleapis\.com\/quimeraai[^"'\s<>)]*$/.test(trimmed)
+  ) {
+    return '';
+  }
+
+  return s
+    .replace(/https?:\/\/firebasestorage\.googleapis\.com[^"'\s<>)]*/g, '')
+    .replace(/https?:\/\/[^"'\s<>)]*firebasestorage\.app[^"'\s<>)]*/g, '')
+    .replace(/https?:\/\/storage\.googleapis\.com\/quimeraai[^"'\s<>)]*/g, '')
+    .replace(/gs:\/\/quimeraai[^"'\s<>)]*/g, '');
+}
+
 function stripFirebaseUrls(obj, stats = { stripped: 0 }) {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'string') {
     if (isFirebaseStorageUrl(obj)) {
       stats.stripped++;
-      return '';
+      return stripFirebaseUrlsFromString(obj);
     }
     return obj;
   }

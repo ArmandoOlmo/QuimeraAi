@@ -416,6 +416,8 @@ async function collectCMSData(
             query = query.eq('tenant_id', tenantId);
         }
 
+        query = query.contains('tags', [`project:${projectId}`]);
+
         const { data: postsData } = await query;
 
         if (postsData && postsData.length > 0) {
