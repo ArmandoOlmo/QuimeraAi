@@ -254,7 +254,7 @@ const generateStaticHTML = (project: Project): string => {
     };
 
     // Check for ecommerce
-    const hasEcommerce = componentOrder.some(key =>
+    const hasEcommerce = (componentOrder || []).some(key =>
         ['featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown'].includes(key) &&
         componentStatus?.[key] !== false && sectionVisibility?.[key] !== false
     );
@@ -283,7 +283,7 @@ const generateStaticHTML = (project: Project): string => {
     };
 
     // Generate main content sections
-    const sectionsHtml = componentOrder
+    const sectionsHtml = (componentOrder || [])
         .filter(key => componentStatus?.[key] !== false && sectionVisibility?.[key] !== false && key !== 'header' && key !== 'footer')
         .map(key => {
             const renderer = renderers[key] || ((d) => `<section class="py-20 text-center border-b border-white/5 text-white/20">Component ${key} Placeholder</section>`);
