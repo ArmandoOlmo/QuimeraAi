@@ -199,7 +199,7 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                                     <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-primary/10 text-primary"><Sparkles size={18} /></div><span className="text-sm font-semibold">{t('superadmin.unifiedMedia.generator', 'Generador de Imagenes IA')}</span></div>
                                     <span className={`text-q-text-muted transition-transform duration-200 ${showGenerator ? 'rotate-180' : ''}`}><ChevronRight size={18} className="rotate-90" /></span>
                                 </div>
-                                {showGenerator && <div className="border-b border-q-border"><ImageGeneratorPanel destination="admin" hideHeader /></div>}
+                                {showGenerator && <div className="border-b border-q-border"><ImageGeneratorPanel destination="admin" hideHeader projectId={ADMIN_VISUAL_KIT_PROJECT_ID} /></div>}
                                 <div className="p-4 border-b border-q-border flex flex-wrap items-center gap-3">
                                     <div className="flex items-center gap-2 flex-1 min-w-[150px] bg-secondary/40 rounded-lg px-3 py-1.5">
                                         <Search size={14} className="text-q-text-muted flex-shrink-0" />
