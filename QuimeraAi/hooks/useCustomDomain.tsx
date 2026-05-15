@@ -16,8 +16,7 @@ const KNOWN_DOMAINS = [
     'localhost',
     '127.0.0.1',
     'quimera.ai',
-    'quimeraai.web.app',
-    'quimera-502e2.web.app',
+    'www.quimera.ai',
     'vercel.app',
 ];
 
@@ -42,11 +41,6 @@ function isCustomDomainHostname(hostname: string): boolean {
         if (normalizedHost === known || normalizedHost.endsWith(`.${known}`)) {
             return false;
         }
-    }
-
-    // Firebase preview channels
-    if (normalizedHost.includes('--') && normalizedHost.includes('.web.app')) {
-        return false;
     }
 
     // Local development ports

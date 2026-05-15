@@ -8,7 +8,7 @@ import './i18n'; // Inicializar i18next
 import './utils/seedHelpArticles';
 
 // ─── Global Image Error Interceptor ──────────────────────────────────
-// Firebase Storage returns 402 (Payment Required) for all images.
+// Some legacy storage URLs can return 402 (Payment Required) for all images.
 // This capture-phase listener intercepts broken images globally and
 // replaces them with an elegant SVG placeholder — no per-component changes needed.
 document.addEventListener('error', (e) => {
@@ -22,8 +22,8 @@ document.addEventListener('error', (e) => {
             src.includes('quimeraai.appspot.com')
         ) {
             // Prevent infinite error loops
-            if (img.dataset.firebaseFallback) return;
-            img.dataset.firebaseFallback = 'true';
+            if (img.dataset.legacyStorageFallback) return;
+            img.dataset.legacyStorageFallback = 'true';
 
             // Generate an inline SVG placeholder
             const w = img.width || img.clientWidth || 400;
@@ -49,7 +49,7 @@ document.addEventListener('error', (e) => {
 
 // CRITICAL: Unregister Service Worker for custom domains to ensure fresh SSR content
 // The PWA/SW caches HTML and causes stale data issues on custom domains
-const isCustomDomain = !window.location.hostname.includes('quimeraai.web.app') && 
+const isCustomDomain = !window.location.hostname.includes('vercel.app') &&
                        !window.location.hostname.includes('localhost') &&
                        !window.location.hostname.includes('127.0.0.1');
 

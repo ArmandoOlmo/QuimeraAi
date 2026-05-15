@@ -13,6 +13,7 @@ interface ImportMetaEnv {
     readonly VITE_GOOGLE_CLIENT_SECRET: string;
     readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
     readonly VITE_GEMINI_PROXY_URL: string;
+    readonly VITE_MCP_API_BASE_URL?: string;
     // Security: Owner/Admin email from environment variable
     readonly VITE_OWNER_EMAIL: string;
     readonly MODE: string;
@@ -25,7 +26,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
-
 
 
 

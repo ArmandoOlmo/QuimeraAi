@@ -77,25 +77,21 @@ Crea un archivo `.env` en la raíz del proyecto:
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=quimera.ai
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-
-# Google Gemini API Key (requerido para funciones de IA)
-VITE_GEMINI_API_KEY=tu_api_key_de_google_aqui
-# O usa: VITE_GOOGLE_AI_API_KEY=tu_api_key_de_google_aqui
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-**Importante para Deployment:** Las variables de entorno en deployment deben tener el prefijo `VITE_` para que sean accesibles en el cliente. Configura `VITE_GEMINI_API_KEY` o `VITE_GOOGLE_AI_API_KEY` en tu plataforma de deployment (Vercel, Netlify, Firebase Hosting, etc.).
+**Importante para Deployment:** el cliente solo debe recibir variables `VITE_`. Las llaves server-side, como `SUPABASE_SERVICE_ROLE_KEY`, van únicamente en Vercel.
 
-4. **Configurar Firestore**
+4. **Configurar Supabase**
 
-Crea las siguientes colecciones en Firebase:
-- `users/` - Datos de usuarios
-- `settings/` - Configuraciones globales
-- `componentStyles/` - Estilos de componentes
-- `customComponents/` - Componentes personalizados
+Aplica las migraciones:
+
+```bash
+npx supabase db push
+```
 
 5. **Inicializar datos**
 
@@ -350,33 +346,13 @@ npm run build
 
 Genera archivos optimizados en `/dist`
 
-### Plataformas de Deployment
-
-#### Google Cloud Run (Recomendado)
-
-Para deployment en Google Cloud Run con la API de Google Gemini correctamente configurada, consulta la guía completa:
-
-📖 **[GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md)**
-
-Quick start:
-```bash
-gcloud run deploy quimeraai \
-  --source . \
-  --build-arg VITE_GEMINI_API_KEY=tu_api_key_aqui \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-#### Firebase Hosting
+### Vercel
 
 ```bash
 npm run deploy
 ```
 
-#### Vercel / Netlify
-
-Asegúrate de configurar las variables de entorno en tu plataforma. Ver: [DEPLOYMENT_API_KEY_SETUP.md](DEPLOYMENT_API_KEY_SETUP.md)
+Vercel aloja el frontend, API routes, MCP y cron jobs. Supabase aloja Postgres, Auth, Storage y Edge Functions.
 
 ### Variables de Entorno
 

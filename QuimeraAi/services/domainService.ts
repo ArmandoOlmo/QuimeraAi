@@ -2,7 +2,7 @@
  * Domain Service
  * 
  * Client-side service for managing custom domains.
- * Communicates with Cloud Functions for domain operations.
+ * Communicates with Supabase/Vercel endpoints for domain operations.
  */
 
 
@@ -320,7 +320,7 @@ export interface NameserverVerificationResult {
  * 
  * This automatically:
  * 1. Creates a Cloudflare DNS zone
- * 2. Configures DNS records to point to Cloud Run
+ * 2. Configures DNS records to point to Vercel
  * 3. Returns nameservers for the user to update at their registrar
  */
 export async function setupExternalDomainWithCloudflare(
@@ -427,7 +427,7 @@ export interface FullDomainSetupResult {
 }
 
 /**
- * Create Cloud Run domain mapping for automatic SSL certificate
+ * Create Vercel domain mapping for automatic SSL certificate.
  * This is required for end-to-end SSL with custom domains
  */
 export async function createCloudRunDomainMapping(
@@ -443,7 +443,7 @@ export async function createCloudRunDomainMapping(
         return result.data?.data || result.data;
 
     } catch (error: any) {
-        console.error('[DomainService] Error creating Cloud Run mapping:', error);
+        console.error('[DomainService] Error creating Vercel domain mapping:', error);
         return {
             success: false,
             domain,
@@ -453,7 +453,7 @@ export async function createCloudRunDomainMapping(
 }
 
 /**
- * Check Cloud Run domain mapping status
+ * Check Vercel domain mapping status.
  */
 export async function checkCloudRunDomainMappingStatus(domain: string): Promise<{
     domain: string;
@@ -483,7 +483,7 @@ export async function checkCloudRunDomainMappingStatus(domain: string): Promise<
 }
 
 /**
- * Full domain setup: Creates both Cloud Run mapping (SSL) and Cloudflare zone (DNS)
+ * Full domain setup: creates both Vercel mapping (SSL) and Cloudflare zone (DNS).
  * This is the "one-click" solution for external domains
  */
 export async function setupFullDomainMapping(
@@ -511,4 +511,3 @@ export async function setupFullDomainMapping(
         };
     }
 }
-

@@ -54,7 +54,7 @@ export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
         <div className="flex h-screen bg-q-bg text-q-text">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
                 {/* Global Header for the Media Manager */}
                 <header className="h-16 px-4 md:px-8 border-b border-q-border flex flex-col justify-center bg-q-bg z-20 sticky top-0 flex-shrink-0">
                     <div className="flex items-center justify-between">
@@ -99,7 +99,7 @@ export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-hidden relative">
+                <div className="flex-1 min-h-0 overflow-hidden relative flex flex-col">
                     {activeTab === 'library' && (
                         <UnifiedMediaLibrary onBack={onBack} />
                     )}

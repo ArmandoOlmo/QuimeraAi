@@ -2,7 +2,7 @@
  * Name.com Service
  * 
  * Client-side service for interacting with Name.com domain registration
- * via Cloud Functions (for security - API keys stay on server).
+ * via Vercel API routes (for security - API keys stay on server).
  */
 
 
@@ -245,7 +245,6 @@ export function getTLD(domain: string): string {
     const parts = domain.split('.');
     return parts.length > 1 ? `.${parts.slice(1).join('.')}` : '';
 }
-
 
 
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import ProgressBar3D from './ProgressBar3D';
 import { searchFiles } from '../../utils/fileHelpers';
+import { normalizeReferenceImagesForGeneration } from '../../utils/imageReferenceHelpers';
 import { useVisualIdentityKit } from '../../hooks/useVisualIdentityKit';
 import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../types/visualIdentity';
 import type { ImageReferenceCategory } from '../../types/visualIdentity';
@@ -368,6 +369,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 // immediately, without waiting for a realtime event or a manual reload.
                 if (effectiveDestination === 'admin') {
                     await fetchAdminAssets();
+                    if (mediaCtx) await mediaCtx.fetchMediaAssets();
                 } else if (effectiveDestination === 'global') {
                     await fetchGlobalFiles();
                 } else {
@@ -535,6 +537,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 : [];
             const aiPromptHints = activeKitRefs.map(r => r.aiPromptHint!).filter(Boolean);
 
+            const rawRefList = allReferenceUrls.size > 0 ? Array.from(allReferenceUrls) : [];
+            const normalizedRefList = rawRefList.length > 0
+                ? await normalizeReferenceImagesForGeneration(rawRefList)
+                : [];
+
             const options = {
                 aspectRatio,
                 style,
@@ -549,7 +556,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
-                referenceImages: allReferenceUrls.size > 0 ? Array.from(allReferenceUrls) : undefined,
+                referenceImages: normalizedRefList.length > 0 ? normalizedRefList : undefined,
                 projectId: effectiveProjectId || undefined,
                 adminCategory,
                 adminTags: [style, aspectRatio].filter(s => s !== 'None'),

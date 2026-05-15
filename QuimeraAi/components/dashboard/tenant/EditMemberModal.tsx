@@ -128,7 +128,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             const membershipRef = doc(db, 'tenants', currentTenant.id, 'members', member.userId);
             await deleteDoc(membershipRef);
 
-            // Note: Ideally we should also remove from user's tenant list, but that requires Cloud Functions
+            // Note: Ideally we should also remove from user's tenant list via a server-side API route.
             // or client-side batch updates. For now, we just remove membership record.
 
             onSuccess?.();

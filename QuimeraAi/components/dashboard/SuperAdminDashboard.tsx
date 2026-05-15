@@ -9,7 +9,7 @@ import {
     ArrowLeft, Menu, MessageSquare, PackageSearch, Palette,
     FlaskConical, Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail
+    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail, ServerCog
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -26,6 +26,7 @@ const TemplateManagement = React.lazy(() => import('./admin/TemplateManagement')
 const ComponentsDashboard = React.lazy(() => import('./admin/ComponentsDashboard'));
 const FinancialDashboard = React.lazy(() => import('./admin/FinancialDashboard'));
 const MediaManagerView = React.lazy(() => import('./admin/MediaManagerView'));
+const AdminMcpManager = React.lazy(() => import('./admin/AdminMcpManager'));
 const GlobalAssistantSettings = React.lazy(() => import('./admin/GlobalAssistantSettings'));
 const GlobalSEOSettings = React.lazy(() => import('./admin/GlobalSEOSettings'));
 const AnalyticsDashboard = React.lazy(() => import('./admin/AnalyticsDashboard'));
@@ -88,6 +89,7 @@ const ADMIN_ROUTES: Record<string, string> = {
     'analytics': ROUTES.ADMIN_ANALYTICS,
     'images': ROUTES.ADMIN_IMAGES,
     'admin-assets': ROUTES.ADMIN_ASSETS,
+    'mcp': ROUTES.ADMIN_MCP,
     'global-assistant': ROUTES.ADMIN_GLOBAL_ASSISTANT,
     'global-seo': ROUTES.ADMIN_GLOBAL_SEO,
     'app-info': ROUTES.ADMIN_APP_INFO,
@@ -270,6 +272,7 @@ const SuperAdminDashboard = () => {
         { id: 'landing-editor', title: t('superadmin.landingEditor', 'Editor Landing Page'), description: t('superadmin.landingEditorDesc', 'Editar componentes de la landing page con vista previa en tiempo real'), icon: <Layout size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_EDITOR, isNew: true, allowedRoles: ['owner', 'superadmin'] },
 
         // Development & Design
+        { id: 'mcp', title: 'MCP / API Keys', description: 'Crear y revocar llaves para agentes, scopes y acceso al MCP.', icon: <ServerCog size={24} />, category: 'development', route: ROUTES.ADMIN_MCP, isNew: true, allowedRoles: ['owner', 'superadmin'] },
         { id: 'design-tokens', title: t('superadmin.designTokens'), description: t('superadmin.designTokensDesc'), icon: <Palette size={24} />, category: 'development', route: ROUTES.ADMIN_DESIGN_TOKENS, allowedRoles: ['owner', 'superadmin', 'admin'] },
 
         // Analytics & Testing
@@ -344,6 +347,7 @@ const SuperAdminDashboard = () => {
             case 'components': return <ComponentsDashboard onBack={handleBack} />;
             case 'images': return <MediaManagerView onBack={handleBack} />;
             case 'admin-assets': return <MediaManagerView onBack={handleBack} />;
+            case 'mcp': return <AdminMcpManager onBack={handleBack} />;
             case 'global-assistant': return <GlobalAssistantSettings onBack={handleBack} />;
             case 'global-seo': return <GlobalSEOSettings onBack={handleBack} />;
             case 'app-info': return <AppInformationSettings onBack={handleBack} />;

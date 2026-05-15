@@ -105,7 +105,7 @@ export interface CustomDomainMapping {
     createdAt: string;
     updatedAt: string;
     verifiedAt?: string;
-    // Cloud Run specific
+    // Hosting provider specific
     cloudRunService?: string;
     cloudRunRegion?: string;
     // Agency Landing Page binding (alternative to projectId)

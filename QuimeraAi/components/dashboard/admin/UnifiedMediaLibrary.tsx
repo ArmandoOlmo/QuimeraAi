@@ -145,7 +145,7 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
     };
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex min-h-0 flex-1 w-full bg-q-bg text-foreground">
             <aside className="w-56 flex-shrink-0 bg-q-surface border-r border-q-border hidden md:flex flex-col overflow-y-auto">
                 <div className="p-4 border-b border-q-border">
                     <div className="flex items-center gap-2"><FolderOpen size={18} className="text-q-accent" /><h2 className="font-semibold text-sm">{t('superadmin.imageLibraryManagement.folders', 'Carpetas')}</h2></div>
@@ -168,7 +168,7 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                 <div className="p-4 border-t border-q-border"><p className="text-xs text-q-text-secondary">{t('superadmin.unifiedMedia.fileCount', { count: mediaAssets.length })}</p></div>
             </aside>
 
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 flex min-h-0 flex-col overflow-hidden relative">
                 <DashboardWaveRibbons className="absolute inset-x-0 top-[7rem] h-64 z-0 pointer-events-none overflow-hidden" />
                 <header className="h-14 px-4 sm:px-6 border-b border-q-border flex items-center justify-between bg-q-surface/50 backdrop-blur-sm sticky top-0 z-40">
                     <div className="flex items-center gap-4">
@@ -187,20 +187,20 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
-                    <div className="max-w-7xl mx-auto space-y-6">
+                <main className="relative z-[2] h-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8">
+                    <div className="mx-auto w-full max-w-7xl space-y-6">
                         {showKitManager ? (
-                            <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden flex-1 min-h-0">
+                            <div className="overflow-hidden rounded-2xl border border-q-border bg-q-surface/80">
                                 <VisualIdentityKitManager onBack={() => setShowKitManager(false)} projectId={ADMIN_VISUAL_KIT_PROJECT_ID} kitScope="admin" />
                             </div>
                         ) : (
-                            <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
-                                <div className="border-b border-q-border flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setShowGenerator(!showGenerator)}>
+                            <div className="overflow-hidden rounded-2xl border border-q-border bg-q-surface/80">
+                                <div className="flex shrink-0 cursor-pointer items-center justify-between border-b border-q-border px-4 py-3 transition-colors hover:bg-muted/30" onClick={() => setShowGenerator(!showGenerator)}>
                                     <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-primary/10 text-primary"><Sparkles size={18} /></div><span className="text-sm font-semibold">{t('superadmin.unifiedMedia.generator', 'Generador de Imagenes IA')}</span></div>
                                     <span className={`text-q-text-muted transition-transform duration-200 ${showGenerator ? 'rotate-180' : ''}`}><ChevronRight size={18} className="rotate-90" /></span>
                                 </div>
-                                {showGenerator && <div className="border-b border-q-border"><ImageGeneratorPanel destination="admin" hideHeader projectId={ADMIN_VISUAL_KIT_PROJECT_ID} /></div>}
-                                <div className="p-4 border-b border-q-border flex flex-wrap items-center gap-3">
+                                {showGenerator && <div className="shrink-0 border-b border-q-border"><ImageGeneratorPanel destination="admin" hideHeader projectId={ADMIN_VISUAL_KIT_PROJECT_ID} /></div>}
+                                <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-q-border p-4">
                                     <div className="flex items-center gap-2 flex-1 min-w-[150px] bg-secondary/40 rounded-lg px-3 py-1.5">
                                         <Search size={14} className="text-q-text-muted flex-shrink-0" />
                                         <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('superadmin.unifiedMedia.search', 'Buscar...')} className="flex-1 bg-transparent outline-none text-xs min-w-0" />
@@ -212,13 +212,13 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                                     <DragDropZone onFileSelect={handleUpload} accept="image/*" maxSizeMB={10} variant="compact"><button className="flex items-center gap-1.5 bg-q-accent text-q-bg px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition-colors whitespace-nowrap"><Upload size={14} /> {t('superadmin.unifiedMedia.upload', 'Subir')}</button></DragDropZone>
                                 </div>
                                 {showFilters && (
-                                    <div className="p-4 border-b border-q-border bg-secondary/30 grid grid-cols-2 sm:grid-cols-3 gap-4 animate-fade-in-up">
+                                    <div className="grid shrink-0 animate-fade-in-up grid-cols-2 gap-4 border-b border-q-border bg-secondary/30 p-4 sm:grid-cols-3">
                                         <div><label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('superadmin.unifiedMedia.sortLabel', 'Ordenar por')}</label><select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="w-full px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none"><option value="date">{t('superadmin.unifiedMedia.date', 'Fecha')}</option><option value="name">{t('superadmin.unifiedMedia.name', 'Nombre')}</option><option value="size">{t('superadmin.unifiedMedia.size', 'Tamano')}</option></select></div>
                                         <div><label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('superadmin.unifiedMedia.orderLabel', 'Orden')}</label><button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-q-bg border border-q-border rounded-lg hover:bg-secondary transition-colors"><span>{sortOrder === 'asc' ? t('superadmin.unifiedMedia.ascending', 'Ascendente') : t('superadmin.unifiedMedia.descending', 'Descendente')}</span><ArrowUpDown size={14} /></button></div>
                                     </div>
                                 )}
                                 {isSelectionMode && selectedIds.size > 0 && (
-                                    <div className="mx-4 mt-4 p-3 bg-primary/10 rounded-lg border border-primary/30 flex items-center justify-between animate-fade-in-up">
+                                    <div className="mx-4 mt-4 flex shrink-0 animate-fade-in-up items-center justify-between rounded-lg border border-primary/30 bg-primary/10 p-3">
                                         <span className="text-sm font-medium">{selectedIds.size} {t('superadmin.media.selected', 'seleccionados')}</span>
                                         <div className="flex gap-2"><button onClick={selectAll} className="px-3 py-1.5 text-xs font-bold bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors">{t('superadmin.unifiedMedia.selectAll', 'Seleccionar todo')}</button><button onClick={() => setShowBulkDeleteModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"><Trash2 size={14} /> {t('superadmin.unifiedMedia.delete', 'Eliminar')}</button></div>
                                     </div>

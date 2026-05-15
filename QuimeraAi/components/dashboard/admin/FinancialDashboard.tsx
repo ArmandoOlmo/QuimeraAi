@@ -142,7 +142,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
             const user = auth.currentUser;
             if (!user) throw new Error('Not authenticated');
             const token = await user.getIdToken();
-            const res = await fetch('https://us-central1-quimeraai.cloudfunctions.net/syncBillingToFirestore', {
+            const res = await fetch('/api/billing/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             });

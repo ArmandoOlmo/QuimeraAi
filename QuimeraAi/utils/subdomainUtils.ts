@@ -32,8 +32,8 @@ export interface SubdomainInfo {
 /** Quimera's own base domains (without subdomain prefix) */
 const QUIMERA_BASE_DOMAINS = [
   'quimera.ai',
-  'quimeraai.web.app',
-  'quimera-502e2.web.app',
+  'www.quimera.ai',
+  'vercel.app',
 ];
 
 /** Development domains where we use query params for subdomain simulation */

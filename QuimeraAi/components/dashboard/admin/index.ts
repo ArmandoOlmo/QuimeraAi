@@ -25,6 +25,7 @@ export { default as LandingChatbotAdmin } from './LandingChatbotAdmin';
 export { default as LandingChatSimulator } from './LandingChatSimulator';
 export { default as ImageLibraryManagement } from './ImageLibraryManagement';
 export { default as AdminAssetLibrary } from './AdminAssetLibrary';
+export { default as AdminMcpManager } from './AdminMcpManager';
 export { default as UnifiedMediaLibrary } from './UnifiedMediaLibrary';
 export { default as ContentAssetMapper } from './ContentAssetMapper';
 export { default as MediaManagerView } from './MediaManagerView';

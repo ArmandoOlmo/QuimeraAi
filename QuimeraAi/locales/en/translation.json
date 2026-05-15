@@ -7204,7 +7204,7 @@
     "customDomains": "Custom Domains",
     "customDomainsDesc": "Connect your own domain or buy a new one. Automatic DNS and SSL via Cloudflare.",
     "ssrCDN": "SSR & CDN",
-    "ssrCDNDesc": "Server-side rendering on Cloud Run with global CDN for ultra-fast load times.",
+    "ssrCDNDesc": "Vercel-hosted rendering with global CDN for fast load times.",
     "subdomains": "Subdomains",
     "subdomainsDesc": "Every user automatically gets username.quimera.ai. No configuration needed.",
     "stat1Value": "30+",

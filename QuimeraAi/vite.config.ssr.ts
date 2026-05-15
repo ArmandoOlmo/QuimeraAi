@@ -12,7 +12,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     // SECURITY: API keys are NOT injected into the SSR bundle.
-    // All AI calls go through the secure Cloud Functions proxy.
+    // All AI calls go through the secure server-side proxy.
 
     return {
         plugins: [react()],
@@ -56,7 +56,6 @@ export default defineConfig(({ mode }) => {
         }
     };
 });
-
 
 
 

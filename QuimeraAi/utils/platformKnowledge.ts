@@ -228,11 +228,11 @@ export const PLATFORM_TECH_STACK = `
 - **Frontend:** React 18 + TypeScript, Vite build system
 - **Styling:** Tailwind CSS with custom design tokens
 - **State Management:** React Context API (Auth, Project, AI, CRM, CMS, UI, etc.)
-- **Backend:** Firebase (Authentication, Firestore, Cloud Storage, Cloud Functions)
+- **Backend:** Supabase (Auth, Postgres, Storage, Edge Functions) + Vercel API routes
 - **AI Models:** Google Gemini API (2.5 Flash, 3.0 Flash/Pro, 3.1 Flash-Lite, 3.1 Flash Live, Imagen 4.0)
 - **Rich Text:** TipTap editor with custom extensions
 - **i18n:** react-i18next with full Spanish/English support
-- **Deployment:** Firebase Hosting with custom domains
+- **Deployment:** Vercel with custom domains
 - **Real-time:** Gemini Live API (WebSocket) for voice interactions
 `;
 
@@ -692,4 +692,3 @@ QUALITY REQUIREMENTS:
 Output ONLY valid JSON. No markdown fences, no explanations, no commentary.
 `;
 }
-

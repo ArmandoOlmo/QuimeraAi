@@ -139,6 +139,7 @@ export const ROUTES = {
   ADMIN_COMPONENTS: '/admin/components',
   ADMIN_IMAGES: '/admin/images',
   ADMIN_ASSETS: '/admin/assets',
+  ADMIN_MCP: '/admin/mcp',
   ADMIN_GLOBAL_ASSISTANT: '/admin/global-assistant',
   ADMIN_DESIGN_TOKENS: '/admin/design-tokens',
   ADMIN_ANALYTICS: '/admin/analytics',
@@ -572,7 +573,6 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     parent: ROUTES.SETTINGS,
   },
-
   // =========================================================================
   // INVITE ROUTE (Public - Accept Team Invitations)
   // =========================================================================
@@ -856,6 +856,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_MCP,
+    view: 'superadmin',
+    adminView: 'mcp',
+    type: 'admin',
+    title: 'MCP / API Keys',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin'],
     parent: ROUTES.SUPERADMIN,
   },
   {

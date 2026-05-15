@@ -1,8 +1,7 @@
 import { BillingData } from '../types';
-import { auth } from '../firebase';
+import { supabase } from '../supabase';
 
-// Cloud Function URL for billing metrics
-const BILLING_API_URL = 'https://us-central1-quimeraai.cloudfunctions.net/getBillingMetrics';
+const BILLING_API_URL = '/api/billing/metrics';
 
 // Mock data as fallback
 const MOCK_DATA: BillingData = {
@@ -39,13 +38,13 @@ const MOCK_DATA: BillingData = {
 };
 
 /**
- * Fetch billing data from Stripe via Cloud Function
+ * Fetch billing data from Stripe via Vercel API route.
  * Falls back to empty/mock data if API fails
  */
 export const fetchBillingData = async (): Promise<BillingData> => {
   try {
-    // SECURITY: Include Firebase ID token for owner-only auth
-    const token = await auth.currentUser?.getIdToken();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
     const response = await fetch(BILLING_API_URL, {
       method: 'GET',
       headers: {
@@ -78,9 +77,9 @@ export const fetchBillingData = async (): Promise<BillingData> => {
  */
 export const savePlan = async (plan: BillingData['plans'][0]): Promise<{ success: boolean; productId?: string; error?: string }> => {
   try {
-    // SECURITY: Include Firebase ID token for owner-only auth
-    const token = await auth.currentUser?.getIdToken();
-    const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/createOrUpdatePlan', {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const response = await fetch('/api/billing/plans', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,9 +107,9 @@ export const savePlan = async (plan: BillingData['plans'][0]): Promise<{ success
  */
 export const archivePlanApi = async (productId: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    // SECURITY: Include Firebase ID token for owner-only auth
-    const token = await auth.currentUser?.getIdToken();
-    const response = await fetch('https://us-central1-quimeraai.cloudfunctions.net/archivePlan', {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const response = await fetch('/api/billing/plans/archive', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

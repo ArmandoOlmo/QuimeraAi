@@ -204,8 +204,8 @@ Los módulos se comunican a través de:
 
 1. **Event System:** Eventos propagados cuando ocurren acciones (nuevo lead, nueva orden, cita creada)
 2. **Shared Context:** Estado global accesible desde cualquier módulo
-3. **Firebase Firestore:** Persistencia en tiempo real con listeners reactivos
-4. **Cloud Functions:** Procesamiento serverless para operaciones complejas
+3. **Supabase Postgres:** Persistencia multi-tenant y realtime cuando aplica
+4. **Vercel API Routes / Supabase Edge Functions:** Procesamiento server-side
 
 ---
 
@@ -218,10 +218,10 @@ Los módulos se comunican a través de:
 | Tipo | Web Application SaaS |
 | Arquitectura | Multi-Tenant |
 | Renderizado | Client-Side con SSR para sitios públicos |
-| API | REST + Cloud Functions |
-| Base de Datos | Firebase Firestore (NoSQL) |
-| Storage | Firebase Storage |
-| Autenticación | Firebase Authentication |
+| API | Vercel API Routes + Supabase Edge Functions |
+| Base de Datos | Supabase Postgres |
+| Storage | Supabase Storage |
+| Autenticación | Supabase Auth |
 
 ### 4.2 Arquitectura Multi-Tenant
 
@@ -306,17 +306,17 @@ Los créditos se asignan mensualmente según el plan y pueden comprarse paquetes
 
 ### 4.8 Escalabilidad
 
-- **Horizontal:** Cloud Functions escalan automáticamente
-- **Storage:** Firebase Storage con CDN global
-- **Base de datos:** Firestore con sharding automático
+- **Horizontal:** Vercel Functions y Supabase escalan por servicio
+- **Storage:** Supabase Storage
+- **Base de datos:** Supabase Postgres
 - **Límites soft:** Configurables por plan sin cambios de infraestructura
 
 ### 4.9 Seguridad
 
 | Capa | Implementación |
 |------|----------------|
-| Autenticación | Firebase Auth con tokens JWT |
-| Autorización | Firestore Security Rules + Cloud Functions |
+| Autenticación | Supabase Auth con tokens JWT |
+| Autorización | Supabase RLS + Vercel API Routes |
 | Datos en tránsito | HTTPS obligatorio |
 | Datos en reposo | Encriptación GCP por defecto |
 | Validación | Client-side + Server-side |

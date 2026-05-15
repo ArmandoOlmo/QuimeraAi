@@ -36,7 +36,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         error: null,
     });
 
-    // (Removed Cloud Functions declarations, using Supabase client inline)
+    // Uses Supabase client inline.
 
     // Fetch store user data from Firestore
     const fetchStoreUser = useCallback(async (email: string): Promise<StoreUser | null> => {
@@ -274,7 +274,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
             throw new Error('No hay sesión activa');
         }
 
-        // Note: Profile updates are done via Cloud Functions for security
+        // Note: Profile updates should be done via server-side API routes for security.
         // For now, just refresh the user data
         await refreshUser();
     }, [state.user]);
@@ -328,7 +328,6 @@ export const useStoreAuthOptional = (): StoreAuthContextType | null => {
 };
 
 export default StoreAuthContext;
-
 
 
 

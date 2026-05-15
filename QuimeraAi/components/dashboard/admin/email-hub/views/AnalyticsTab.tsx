@@ -312,7 +312,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                     <div className="bg-q-bg/50 rounded-lg p-4 border border-q-border">
                         <p className="text-sm text-q-text font-medium mb-2">Resend Webhook URL</p>
                         <code className="text-xs text-q-accent bg-q-bg px-3 py-1.5 rounded block break-all">
-                            https://us-central1-quimeraai.cloudfunctions.net/resendWebhook
+                            https://www.quimera.ai/api/webhooks/resend
                         </code>
                     </div>
                     <div className="text-sm text-q-text-secondary space-y-2">

@@ -6,8 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   // SECURITY: Gemini API keys are NEVER embedded in the client bundle.
-  // All AI API calls go through the secure Cloud Functions proxy.
-  // Firebase config keys (VITE_FIREBASE_*) are public by design and safe to expose.
+  // All AI API calls go through the server-side Supabase/Vercel proxy.
 
   return {
     server: {
@@ -76,7 +75,7 @@ export default defineConfig(({ mode }) => {
               }
             },
             {
-               // IMPORTANT: Video/Audio files from Firebase Storage must BYPASS the SW entirely.
+               // IMPORTANT: Legacy remote video/audio files must BYPASS the SW entirely.
                // iOS Safari requires HTTP 206 Partial Content (Range requests) for video playback.
                // The Service Worker strips these headers, causing videos to show 00:00 and fail to play.
                urlPattern: ({ url }) => {
@@ -92,7 +91,7 @@ export default defineConfig(({ mode }) => {
                }
              },
             {
-              // Cache Firebase Storage images (NOT videos - those use NetworkOnly above)
+            // Cache legacy Firebase Storage images during migration (NOT videos - those use NetworkOnly above)
               urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
@@ -149,12 +148,12 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       // SECURITY: API keys are NOT injected into the client bundle.
-      // All AI calls go through the secure proxy (Cloud Functions).
+      // All AI calls go through the secure server-side proxy.
       // These are set to null to prevent any client-side fallback from working.
       'process.env.API_KEY': 'null',
       'process.env.GEMINI_API_KEY': 'null',
     },
-    // SECURITY: Only expose VITE_ prefixed variables (Firebase public config).
+    // SECURITY: Only expose VITE_ prefixed variables.
     // Do NOT expose GEMINI_ or GOOGLE_AI_ prefixed vars to the client.
     envPrefix: ['VITE_'],
     resolve: {

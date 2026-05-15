@@ -645,7 +645,7 @@ class DeploymentService {
                 {
                     type: 'A' as const,
                     host: '@',
-                    value: '172.67.140.40', // Typical Cloud Run / Load Balancer IP if custom
+                    value: '76.76.21.21',
                     verified: false
                 }
             ]

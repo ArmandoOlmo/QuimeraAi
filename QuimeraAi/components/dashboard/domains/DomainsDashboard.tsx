@@ -780,7 +780,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setResults([]);
 
         try {
-            // Use Name.com API via Cloud Functions
+            // Use Name.com API via server-side API route
             const { searchDomains } = await import('../../../services/nameComService');
             const searchResults = await searchDomains(query.trim());
 

@@ -53,8 +53,8 @@ export interface PlanStats {
 
 const PLANS_TABLE = 'subscription_plans';
 
-// Stripe Cloud Functions URLs
-const STRIPE_API_BASE = 'https://us-central1-quimeraai.cloudfunctions.net';
+// Stripe API routes are hosted on Vercel.
+const STRIPE_API_BASE = '/api/stripe';
 const CREATE_UPDATE_PLAN_URL = `${STRIPE_API_BASE}/createOrUpdatePlan`;
 const ARCHIVE_PLAN_URL = `${STRIPE_API_BASE}/archivePlan`;
 
@@ -774,4 +774,3 @@ export default {
     migrateToNewPlanStructure,
     isMigrationNeeded,
 };
-

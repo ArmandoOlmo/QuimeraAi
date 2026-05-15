@@ -12,7 +12,7 @@
  *   node scripts/migrate-firestore-to-supabase.mjs
  *
  * Prerequisites:
- *   - gcloud auth application-default login
+ *   - SUPABASE_SERVICE_ROLE_KEY configured locally
  *   - SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars (or hardcoded below)
  */
 

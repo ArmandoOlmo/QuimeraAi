@@ -166,7 +166,7 @@ const FEATURE_GROUPS: FeatureGroup[] = [
         nameKey: 'features.ssrCDN',
         nameFallback: 'SSR & CDN',
         descKey: 'features.ssrCDNDesc',
-        descFallback: 'Server-side rendering on Cloud Run with global CDN for ultra-fast load times.',
+        descFallback: 'Vercel-hosted rendering with global CDN for fast load times.',
       },
       {
         icon: <Link2 size={28} />,

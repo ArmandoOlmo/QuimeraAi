@@ -104,10 +104,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
 
     // Get webhook URL based on environment
     const getWebhookUrl = (channel: ChannelTab) => {
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? 'https://us-central1-YOUR_PROJECT.cloudfunctions.net'
-            : 'https://us-central1-YOUR_PROJECT.cloudfunctions.net';
-        return `${baseUrl}/socialChannels-${channel}Webhook`;
+        return `${window.location.origin}/api/social/${channel}/webhook`;
     };
 
     const channels: { id: ChannelTab; name: string; icon: React.ReactNode; color: string; enabled: boolean }[] = [
@@ -613,4 +610,3 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
 };
 
 export default SocialChannelsSettings;
-
