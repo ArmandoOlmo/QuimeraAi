@@ -169,6 +169,8 @@ const ALLOWED_MODELS = [
     'imagen-4.0-fast-generate-001',
     // Legacy alias (kept for backwards compatibility - maps to gemini-3.1-flash-image-preview)
     'imagen-4.0-nano-banana-002',
+    // OpenAI image generation model (via OpenRouter)
+    'gpt-5.4-image-2',               // GPT-5.4 Image 2 - Apr 2026
 ];
 
 function isValidModel(model: string): boolean {
@@ -198,8 +200,24 @@ function mapModelToOpenRouter(model: string): string {
         // Legacy
         'gemini-1.5-flash': 'google/gemini-flash-1.5',
         'gemini-1.5-pro': 'google/gemini-pro-1.5',
+        // Gemini image generation models (OpenRouter)
+        'gemini-3.1-flash-image-preview': 'google/gemini-3.1-flash-image-preview',
+        'gemini-3-pro-image-preview': 'google/gemini-3-pro-image-preview',
+        'gemini-2.5-flash-image': 'google/gemini-2.5-flash-image',
+        'gemini-2.0-flash-image': 'google/gemini-2.0-flash-image',
+        'gemini-2.0-flash-exp-image-generation': 'google/gemini-2.0-flash-exp-image-generation',
+        'gemini-2.0-flash-preview-image-generation': 'google/gemini-2.0-flash-preview-image-generation',
+        // Imagen models (OpenRouter)
+        'imagen-3.0-generate-001': 'google/gemini-2.5-flash-image',
+        'imagen-3.0-fast-generate-001': 'google/gemini-2.5-flash-image',
+        'imagen-4.0-generate-001': 'google/gemini-3-pro-image-preview',
+        'imagen-4.0-ultra-generate-001': 'google/gemini-3-pro-image-preview',
+        'imagen-4.0-fast-generate-001': 'google/gemini-2.5-flash-image',
+        'imagen-4.0-nano-banana-002': 'google/gemini-3.1-flash-image-preview',
+        // OpenAI image generation model (OpenRouter)
+        'gpt-5.4-image-2': 'openai/gpt-5.4-image-2',
     };
-    return MODEL_MAP[model] || 'google/gemini-2.5-flash';
+    return MODEL_MAP[model] || 'google/gemini-3.1-flash-image-preview';
 }
 
 // Rate limiting configuration
@@ -491,6 +509,8 @@ const MODEL_TOKEN_MULTIPLIERS: Record<string, number> = {
     // Fast image models: 3x multiplier
     'imagen-3.0-fast-generate-001': 3,
     'imagen-4.0-fast-generate-001': 3,
+    // OpenAI image model: 8x multiplier (GPT-5.4 Image 2)
+    'gpt-5.4-image-2': 8,
 };
 
 /** Tokens required for 1 credit base unit */
@@ -680,6 +700,7 @@ function getOperationTypeFromModel(model: string): string {
     if (model.includes('imagen') || model.includes('image')) {
         if (model.includes('fast')) return 'image_generation_fast';
         if (model.includes('ultra')) return 'image_generation_ultra';
+        if (model.includes('gpt')) return 'image_generation_openai';
         return 'image_generation';
     }
     if (model.includes('pro')) return 'ai_assistant_complex';
@@ -1416,7 +1437,7 @@ export const generateImage = functions.runWith({ timeoutSeconds: 300, memory: '5
         const userId = sanitizeString(req.body.userId, 128);
         const projectId = sanitizeString(req.body.projectId, 100);
         const prompt = sanitizeString(req.body.prompt, 10000);
-        const model = sanitizeString(req.body.model, 50) || 'gemini-3-pro-image-preview';
+        const model = sanitizeString(req.body.model, 50) || 'gemini-3.1-flash-image-preview';
         const aspectRatio = sanitizeString(req.body.aspectRatio, 10) || '1:1';
         const style = sanitizeString(req.body.style, 50);
         const resolution = sanitizeString(req.body.resolution, 10) || '1K';
@@ -1427,6 +1448,8 @@ export const generateImage = functions.runWith({ timeoutSeconds: 300, memory: '5
         const negativePrompt = sanitizeString(req.body.negativePrompt, 2000);
         const referenceImages = Array.isArray(req.body.referenceImages) ?
             req.body.referenceImages.slice(0, 14) : []; // Max 14 images
+        const aiPromptHints = Array.isArray(req.body.aiPromptHints) ?
+            req.body.aiPromptHints.slice(0, 10).map((h: unknown) => sanitizeString(String(h), 500)).filter(Boolean) : []; // Max 10 hints, 500 chars each
         const config = req.body.config || {};
 
         // Validate required fields
@@ -1467,6 +1490,18 @@ export const generateImage = functions.runWith({ timeoutSeconds: 300, memory: '5
 
         // Build enhanced prompt
         let enhancedPrompt = prompt;
+
+        // Visual Identity Kit: prepend structured hints when provided
+        if (aiPromptHints.length > 0) {
+            const hintParts = ['CRITICAL VISUAL REFERENCES — You MUST incorporate these elements:'];
+            for (const hint of aiPromptHints) {
+                hintParts.push(`- ${hint}`);
+            }
+            hintParts.push('The reference images provided show what these elements look like. Replicate them faithfully.');
+            hintParts.push(`USER PROMPT: ${prompt}`);
+            enhancedPrompt = hintParts.join('\n');
+        }
+
         if (style && style !== 'None') {
             enhancedPrompt = `${prompt}, ${style} style`;
         }
@@ -1493,9 +1528,9 @@ export const generateImage = functions.runWith({ timeoutSeconds: 300, memory: '5
         // Uses Gemini image models available on OpenRouter
         // ============================================================
         if (OPENROUTER_CONFIG.enabled) {
-            // All image generation uses the highest quality, most recent model
-            // gemini-2.5-flash-image is fast + high quality; gemini-3-pro is highest quality but slow
-            const orModel = 'google/gemini-2.5-flash-image';
+            // Use the model sent from the frontend, mapped to OpenRouter format.
+            // Supports both Google (gemini-*) and OpenAI (gpt-*) image models.
+            const orModel = mapModelToOpenRouter(model);
             console.log(`[gemini-image] OpenRouter image gen: model=${orModel} (from ${model}), prompt length: ${enhancedPrompt.length}`);
 
             // Build content parts for the user message

@@ -19,23 +19,48 @@ interface RetryOptions {
 }
 
 /**
- * Checks if an error is a chunk loading failure
+ * Checks if an error is a chunk / dynamic-import loading failure.
+ *
+ * Important: do NOT treat every "Failed to fetch" as a chunk error — that is the
+ * generic message for failed `fetch()` calls (APIs, image proxy, etc.) and will
+ * mis-trigger the "New Version Available" UI and auto-reload logic.
  */
 export function isChunkLoadError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  
+
+  if (error.name === 'ChunkLoadError') {
+    return true;
+  }
+
   const message = error.message.toLowerCase();
-  return (
-    message.includes('failed to fetch dynamically imported module') ||
-    message.includes('loading chunk') ||
-    message.includes('loading css chunk') ||
-    message.includes('failed to load') ||
-    message.includes('dynamically imported module') ||
-    message.includes('importing a module script failed') ||
-    // Vite-specific errors
-    message.includes('unable to preload css') ||
-    message.includes('failed to fetch')
-  );
+
+  const explicitChunkOrImportSignals = [
+    'failed to fetch dynamically imported module',
+    'error loading dynamically imported module',
+    'loading chunk',
+    'loading css chunk',
+    'dynamically imported module',
+    'importing a module script failed',
+    'unable to preload css',
+    'importmap',
+  ];
+
+  if (explicitChunkOrImportSignals.some((s) => message.includes(s))) {
+    return true;
+  }
+
+  // "Failed to fetch" only when clearly tied to scripts/modules (not generic API fetch)
+  if (message.includes('failed to fetch')) {
+    const moduleContext =
+      message.includes('module') ||
+      message.includes('chunk') ||
+      message.includes('import') ||
+      message.includes('script') ||
+      /\.m?js(\?|$)/i.test(message);
+    return moduleContext;
+  }
+
+  return false;
 }
 
 /**

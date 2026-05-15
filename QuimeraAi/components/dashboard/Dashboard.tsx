@@ -24,7 +24,7 @@ import FirstVisitWelcomeBanner from './FirstVisitWelcomeBanner';
 
 // Section Content Components
 import DashboardProjectsSection, { ProjectsViewAllAction } from './DashboardProjectsSection';
-import DashboardTemplatesSection, { TemplatesSizeToggle } from './DashboardTemplatesSection';
+import DashboardTemplatesSection from './DashboardTemplatesSection';
 import DashboardLeadsSection, { LeadsViewAllAction } from './DashboardLeadsSection';
 import DashboardNewsSection from './DashboardNewsSection';
 
@@ -90,7 +90,7 @@ const Dashboard: React.FC = () => {
             icon: LayoutTemplate,
             isCollapsed: templatesCollapsed,
             onToggle: () => setTemplatesCollapsed((p) => !p),
-            rightAction: <TemplatesSizeToggle />,
+            rightAction: undefined,
             content: <DashboardTemplatesSection templates={filters.templates} />,
         },
         leads: {

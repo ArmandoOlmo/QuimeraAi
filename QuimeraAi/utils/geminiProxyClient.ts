@@ -484,6 +484,8 @@ export interface ImageGenerationConfig {
     depthOfField?: string;
     // Reference images for style transfer (base64 data URLs)
     referenceImages?: string[];
+    // Visual Identity Kit hints (sent as structured instructions to the AI)
+    aiPromptHints?: string[];
 }
 
 /**
@@ -548,6 +550,8 @@ export async function generateImageViaProxy(
                 // with deployed proxy versions that only read the older multimodal field.
                 referenceImages,
                 images: inlineReferenceImages && inlineReferenceImages.length > 0 ? inlineReferenceImages : undefined,
+                // Visual Identity Kit hints
+                aiPromptHints: config.aiPromptHints,
                 // Visual controls
                 config: {
                     lighting: config.lighting,

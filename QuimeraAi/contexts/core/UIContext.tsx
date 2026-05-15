@@ -156,8 +156,9 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     });
 
     // Theme - Load from localStorage (with SSR safety check)
+    // Default is 'black' for the full immersive experience; users can switch later.
     const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-        if (typeof window === 'undefined') return 'dark';
+        if (typeof window === 'undefined') return 'black';
         try {
             const saved = localStorage.getItem('themeMode');
             if (saved && ['light', 'dark', 'black'].includes(saved)) {
@@ -166,7 +167,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         } catch (e) {
             // localStorage not available
         }
-        return 'dark';
+        return 'black';
     });
 
     // Sidebar Order - Load from localStorage (with SSR safety check)

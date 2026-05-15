@@ -4969,7 +4969,10 @@
     "appointmentsQuimera": "Appointments",
     "bioPageQuimera": "Smart Bio Page",
     "emailMarketingQuimera": "AI Newsletters",
-    "separatorSection": "Separator 5"
+    "separatorSection": "Separator 5",
+    "modelNanoBananaDesc": "Pro-level visual quality at Flash speed. Best for fast iterations with references.",
+    "modelGptImageDesc": "Combines GPT-5.4 reasoning with GPT Image 2. Best for complex, detailed compositions.",
+    "credits": "credits"
   },
   "email": {
     "title": "Email",
@@ -13597,5 +13600,22 @@
         "desc": "Description"
       }
     }
+  },
+  "visualKit": {
+    "title": "Project Visual Kit",
+    "references": "references",
+    "active": "active",
+    "addReference": "Add Reference",
+    "addFirst": "Add First Reference",
+    "emptyTitle": "No visual references",
+    "emptyDesc": "Add visual references to maintain consistency across all generated images. Define characters, backgrounds, elements and styles the AI will use as a guide.",
+    "image": "Image",
+    "pasteUrl": "Or paste URL...",
+    "changeImage": "Change image",
+    "saveToKit": "Save to Kit",
+    "save": "Save",
+    "labelPlaceholder": "e.g. Main character",
+    "hintPlaceholder": "e.g. This character MUST appear...",
+    "toggleTooltip": "Toggle project visual identity references"
   }
 }

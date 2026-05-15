@@ -430,6 +430,15 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         projectId?: string;
         tenantId?: string | null;
         generationContext?: 'background' | 'general';
+        // Visual Identity Kit options
+        visualReferences?: Array<{
+            category: string;
+            label: string;
+            aiPromptHint?: string;
+            position?: string;
+            description?: string;
+        }>;
+        aiPromptHints?: string[];
     }): Promise<string> => {
         const startTime = Date.now();
 
@@ -437,8 +446,54 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             // Build enhanced prompt
             let enhancedPrompt = prompt;
 
+            // Visual Identity Kit: prepend structured instructions when references are present
+            if (options?.aiPromptHints && options.aiPromptHints.length > 0) {
+                const parts: string[] = ['CRITICAL VISUAL REFERENCES — You MUST incorporate these elements into the generated image:'];
+
+                // Group hints by category using visualReferences
+                if (options.visualReferences && options.visualReferences.length > 0) {
+                    const grouped = new Map<string, typeof options.visualReferences>();
+                    for (const ref of options.visualReferences) {
+                        const list = grouped.get(ref.category) || [];
+                        list.push(ref);
+                        grouped.set(ref.category, list);
+                    }
+
+                    const categoryLabels: Record<string, string> = {
+                        character: 'CHARACTER (must appear exactly as described):',
+                        background: 'BACKGROUND/ENVIRONMENT:',
+                        product: 'PRODUCT (must match exactly):',
+                        element: 'BRAND ELEMENTS (icons, patterns, graphics):',
+                        style: 'STYLE REFERENCE:',
+                        environment: 'SETTING/ENVIRONMENT:',
+                        prop: 'PROPS/OBJECTS:',
+                        lighting: 'LIGHTING STYLE:',
+                    };
+
+                    for (const [category, refs] of grouped) {
+                        const label = categoryLabels[category] || `${category.toUpperCase()}:`;
+                        parts.push(`\n${label}`);
+                        for (const ref of refs) {
+                            const hint = ref.aiPromptHint || ref.description || ref.label;
+                            let line = `- ${hint}`;
+                            if (ref.position) line += ` (Position: ${ref.position})`;
+                            parts.push(line);
+                        }
+                    }
+                } else {
+                    // Fallback: just list the hints
+                    for (const hint of options.aiPromptHints) {
+                        parts.push(`- ${hint}`);
+                    }
+                }
+
+                parts.push(`\nThe reference images provided alongside this prompt show exactly what these elements look like. Replicate them faithfully.`);
+                parts.push(`\nUSER PROMPT: ${prompt}`);
+                enhancedPrompt = parts.join('\n');
+            }
+
             // Background context: prepend background-specific instructions
-            if (options?.generationContext === 'background') {
+            if (options?.generationContext === 'background' && !options?.aiPromptHints) {
                 enhancedPrompt = `Create a wide, seamless background image suitable for a website section. The image should have no central focal subject, work well as a backdrop behind text and UI elements, and have smooth edges with no hard borders. ${enhancedPrompt}`;
             }
 
@@ -480,6 +535,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         colorGrading: options?.colorGrading,
                         themeColors: options?.themeColors,
                         depthOfField: options?.depthOfField,
+                        // Visual Identity Kit
+                        aiPromptHints: options?.aiPromptHints,
                     },
                     options?.projectId
                 );

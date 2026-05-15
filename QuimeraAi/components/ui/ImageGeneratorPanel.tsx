@@ -12,6 +12,10 @@ import {
 } from 'lucide-react';
 import ProgressBar3D from './ProgressBar3D';
 import { searchFiles } from '../../utils/fileHelpers';
+import { useVisualIdentityKit } from '../../hooks/useVisualIdentityKit';
+import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../types/visualIdentity';
+import type { ImageReferenceCategory } from '../../types/visualIdentity';
+import AddToVisualKitModal from './AddToVisualKitModal';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global' | 'admin';
@@ -124,15 +128,27 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         { label: t('editor.tiltShift'), value: 'Tilt-Shift Effect' }
     ];
 
-    // Quimera AI Model - Nano Banana 2 (gemini-3.1-flash-image-preview)
-    const DEFAULT_MODEL = {
-        id: 'nano-banana-2',
-        label: 'Quimera Nano Banana 2',
-        value: 'gemini-3.1-flash-image-preview',
-        icon: Zap,
-        badge: 'NEW',
-        color: 'from-yellow-400 to-amber-600'
-    };
+    // Available image generation models via OpenRouter
+    const IMAGE_MODELS = useMemo(() => [
+        {
+            id: 'nano-banana-2',
+            label: 'Nano Banana 2',
+            provider: 'Google',
+            value: 'gemini-3.1-flash-image-preview',
+            icon: Zap,
+            credits: '5x',
+            description: t('editor.modelNanoBananaDesc', { defaultValue: 'Pro-level visual quality at Flash speed. Best for fast iterations with references.' })
+        },
+        {
+            id: 'gpt-5.4-image-2',
+            label: 'GPT-5.4 Image 2',
+            provider: 'OpenAI',
+            value: 'gpt-5.4-image-2',
+            icon: Sparkles,
+            credits: '8x',
+            description: t('editor.modelGptImageDesc', { defaultValue: 'Combines GPT-5.4 reasoning with GPT Image 2. Best for complex, detailed compositions.' })
+        }
+    ], [t]);
 
     const THINKING_LEVELS = [
         { label: t('editor.none', { defaultValue: 'None' }), value: 'none' },
@@ -143,7 +159,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
     // State
     const [prompt, setPrompt] = useState('');
-    const selectedModel = 'gemini-3.1-flash-image-preview';
+    const [selectedModel, setSelectedModel] = useState(IMAGE_MODELS[0].value);
+    const [showModelSelector, setShowModelSelector] = useState(false);
+    const [showKitSaveModal, setShowKitSaveModal] = useState(false);
     const [thinkingLevel, setThinkingLevel] = useState('high');
     const [personGeneration, setPersonGeneration] = useState('allow_adult');
     const [temperature, setTemperature] = useState(1.0);
@@ -178,6 +196,22 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Visual Identity Kit
+    const effectiveProjectId = projectId || (hasActiveProject ? activeProjectId : undefined);
+    const { kit, defaultReferences, defaultReferenceUrls, getContextualReferenceUrls } = useVisualIdentityKit(effectiveProjectId);
+    const [kitEnabled, setKitEnabled] = useState(true);
+
+    // Pre-load kit references when the kit is enabled
+    useEffect(() => {
+        if (!kitEnabled || !kit || defaultReferenceUrls.length === 0) return;
+        setReferenceImages(prev => {
+            const newRefs = defaultReferenceUrls.filter(url => !prev.includes(url));
+            if (newRefs.length === 0) return prev;
+            const combined = [...prev, ...newRefs].slice(0, 14);
+            return combined;
+        });
+    }, [kitEnabled, kit, defaultReferenceUrls]);
 
     // Listen to external commands to add reference images
     useEffect(() => {
@@ -451,6 +485,20 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         }, 500);
 
         try {
+            // Collect all references: manual + kit (always/default) + contextual
+            const allReferenceUrls = new Set(referenceImages);
+            if (kitEnabled && kit) {
+                // Add contextual references triggered by the prompt
+                const contextualUrls = getContextualReferenceUrls(prompt);
+                contextualUrls.forEach(url => allReferenceUrls.add(url));
+            }
+
+            // Collect aiPromptHints from active kit references
+            const activeKitRefs = kitEnabled && kit
+                ? kit.references.filter(r => allReferenceUrls.has(r.imageUrl) && r.aiPromptHint)
+                : [];
+            const aiPromptHints = activeKitRefs.map(r => r.aiPromptHint!).filter(Boolean);
+
             const options = {
                 aspectRatio,
                 style,
@@ -465,12 +513,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
-                referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-                projectId: effectiveProjectId || undefined, // Use effectiveProjectId to ensure user projects get it
+                referenceImages: allReferenceUrls.size > 0 ? Array.from(allReferenceUrls) : undefined,
+                projectId: effectiveProjectId || undefined,
                 adminCategory,
                 adminTags: [style, aspectRatio].filter(s => s !== 'None'),
                 adminDescription: prompt,
                 generationContext,
+                visualReferences: activeKitRefs.length > 0 ? activeKitRefs : undefined,
+                aiPromptHints: aiPromptHints.length > 0 ? aiPromptHints : undefined,
             };
 
             console.log('✨ [ImageGeneratorPanel] Quimera options:', options);
@@ -547,9 +597,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         setReferenceImages([]);
     };
 
-    const currentModel = DEFAULT_MODEL;
-    const isVisionPro = true;
-
     return (
         <div className={`bg-q-bg text-q-text font-sans flex flex-col h-full overflow-hidden ${className}`}>
             <style>{`
@@ -576,8 +623,72 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                             {t('editor.generatingForBackground', { defaultValue: 'Generating for: Background' })}
                         </span>
                     )}
+                    {/* Model Selector */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowModelSelector(!showModelSelector)}
+                            className="flex items-center gap-2 bg-q-surface hover:bg-muted border border-q-border/50 rounded-lg px-3 py-1.5 text-xs font-medium text-q-text transition-colors"
+                        >
+                            {(() => {
+                                const m = IMAGE_MODELS.find(m => m.value === selectedModel);
+                                const Icon = m?.icon || Sparkles;
+                                return <><Icon size={14} className="text-q-accent" /><span>{m?.label || selectedModel}</span><ChevronDown size={12} className="text-q-text-secondary" /></>;
+                            })()}
+                        </button>
+                        {showModelSelector && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setShowModelSelector(false)} />
+                                <div className="absolute top-full left-0 mt-2 w-72 bg-q-surface border border-q-border rounded-xl shadow-2xl z-40 overflow-hidden">
+                                    {IMAGE_MODELS.map(model => {
+                                        const Icon = model.icon;
+                                        const isSelected = selectedModel === model.value;
+                                        return (
+                                            <button
+                                                key={model.id}
+                                                onClick={() => { setSelectedModel(model.value); setShowModelSelector(false); }}
+                                                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-q-bg ${isSelected ? 'bg-q-bg ring-1 ring-inset ring-q-accent/30' : ''}`}
+                                            >
+                                                <div className="mt-0.5 shrink-0">
+                                                    <Icon size={18} className={isSelected ? 'text-q-accent' : 'text-q-text-secondary'} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-semibold text-q-text">{model.label}</span>
+                                                        <span className="text-[10px] text-q-text-secondary bg-q-bg px-1.5 py-0.5 rounded">{model.provider}</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-q-text-secondary mt-0.5 leading-tight">{model.description}</p>
+                                                    <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-q-accent">
+                                                        <Zap size={10} /> {model.credits} {t('editor.credits', { defaultValue: 'credits' })}
+                                                    </span>
+                                                </div>
+                                                {isSelected && (
+                                                    <CheckCircle2 size={16} className="text-q-accent shrink-0 mt-0.5" />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-1">
+                    {/* Visual Kit Toggle */}
+                    {kit && kit.references.length > 0 && (
+                        <button
+                            onClick={() => setKitEnabled(!kitEnabled)}
+                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all border ${
+                                kitEnabled
+                                    ? 'bg-q-accent/10 text-q-accent border-q-accent/30'
+                                    : 'bg-q-surface text-q-text-secondary border-q-border/50 hover:text-q-text'
+                            }`}
+                            title={t('visualKit.toggleTooltip', { defaultValue: 'Toggle project visual identity references' })}
+                        >
+                            <Palette size={12} />
+                            <span>Kit</span>
+                            <span className={`w-2 h-2 rounded-full ${kitEnabled ? 'bg-q-accent' : 'bg-q-text-secondary/30'}`} />
+                        </button>
+                    )}
                     {onCollapse && (
                         <button
                             onClick={onCollapse}
@@ -652,6 +763,13 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                 <ImageIcon size={20} />
                                                 <span>{t('editor.useAsReference', { defaultValue: 'Use as Reference' })}</span>
                                             </button>
+                                            <button
+                                                onClick={() => setShowKitSaveModal(true)}
+                                                className="flex items-center gap-2 bg-q-surface hover:bg-muted text-q-accent px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg transition-all hover:-translate-y-0.5"
+                                            >
+                                                <Palette size={20} />
+                                                <span>{t('visualKit.saveToKit', { defaultValue: 'Save to Kit' })}</span>
+                                            </button>
                                         </div>
                                         <div className="w-full h-full relative group cursor-pointer" onClick={() => setShowImageDetail(true)}>
                                             <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
@@ -659,7 +777,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                                 <div className="flex justify-between items-end">
                                                     <div>
                                                         <p className="text-white/80 text-sm font-medium">Prompt: {prompt.substring(0, 50)}...</p>
-                                                        <p className="text-white/50 text-xs">Model: Quimera Nano Banana 2 • Res: {resolution}</p>
+                                                        <p className="text-white/50 text-xs">Model: {IMAGE_MODELS.find(m => m.value === selectedModel)?.label || 'Nano Banana 2'} • Res: {resolution}</p>
                                                     </div>
                                                     <div className="flex gap-2">
                                                         <a
@@ -826,17 +944,26 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
                                 {referenceImages.length > 0 && (
                                     <div className="flex flex-wrap gap-2 pt-2">
-                                        {referenceImages.map((img, idx) => (
-                                            <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden group border border-q-border">
-                                                <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                                >
-                                                    <X size={14} className="text-white" />
-                                                </button>
-                                            </div>
-                                        ))}
+                                        {referenceImages.map((img, idx) => {
+                                            const isKitRef = kitEnabled && defaultReferenceUrls.includes(img);
+                                            const kitRef = isKitRef ? defaultReferences.find(r => r.imageUrl === img) : null;
+                                            return (
+                                                <div key={idx} className={`relative w-12 h-12 rounded-lg overflow-hidden group border ${isKitRef ? 'ring-1 ring-q-accent/50' : 'border-q-border'}`}>
+                                                    <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                    {isKitRef && kitRef && (
+                                                        <span className={`absolute bottom-0 left-0 right-0 text-[8px] font-bold text-center truncate px-0.5 py-px ${IMAGE_REFERENCE_CATEGORY_COLORS[kitRef.category] || 'bg-q-surface/80 text-q-text'}`}>
+                                                            {kitRef.label.substring(0, 8)}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
+                                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                    >
+                                                        <X size={14} className="text-white" />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -907,7 +1034,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
                                 </summary>
                                 <div className="pt-4 space-y-5">
-                                    {/* Nano Banana 2 Thinking Level */}
+                                    {/* Thinking Level (Gemini models only) */}
+                                    {selectedModel.startsWith('gemini-') && (
                                     <div className="space-y-3">
                                         <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Thinking Level</label>
                                         <div className="flex gap-1">
@@ -922,6 +1050,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                             ))}
                                         </div>
                                     </div>
+                                    )}
 
                                     {/* Negative Prompt */}
                                     <div className="space-y-3">
@@ -1033,7 +1162,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Model</span>
-                                            <span className="text-sm font-medium">{generatedOptions?.model || 'Nano Banana 2'}</span>
+                                            <span className="text-sm font-medium">{generatedOptions?.model ? (IMAGE_MODELS.find(m => m.value === generatedOptions.model)?.label || generatedOptions.model) : IMAGE_MODELS[0].label}</span>
                                         </div>
                                         <div className="bg-black/20 p-3 rounded-lg border border-q-border/50">
                                             <span className="text-[10px] text-q-text-secondary uppercase block">Ratio</span>
@@ -1194,6 +1323,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 </div>,
                 document.getElementById('portal-root') || document.body
             )}
+
+            {/* Save to Visual Kit Modal */}
+            <AddToVisualKitModal
+                isOpen={showKitSaveModal}
+                onClose={() => setShowKitSaveModal(false)}
+                imageUrl={savedImageUrl || generatedImage || ''}
+                projectId={effectiveProjectId}
+            />
         </div>
     );
 };

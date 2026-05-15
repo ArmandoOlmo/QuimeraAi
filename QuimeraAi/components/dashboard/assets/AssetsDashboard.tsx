@@ -13,6 +13,7 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
 import ImageGeneratorPanel from '../../ui/ImageGeneratorPanel';
+import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
     Zap,
@@ -22,7 +23,8 @@ import {
     ChevronDown,
     Check,
     Layers,
-    Sparkles
+    Sparkles,
+    Palette
 } from 'lucide-react';
 
 const AssetsDashboard: React.FC = () => {
@@ -40,6 +42,7 @@ const AssetsDashboard: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const [isGeneratorCollapsed, setIsGeneratorCollapsed] = useState(false);
+    const [showKitManager, setShowKitManager] = useState(false);
 
     const selectableProjects = projects.filter(p => p.status !== 'Template');
 
@@ -109,12 +112,36 @@ const AssetsDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Back Button */}
-                    <HeaderBackButton onClick={() => setView('dashboard')} />
+                    <div className="flex items-center gap-2">
+                        {/* Kit Visual Toggle */}
+                        <button
+                            onClick={() => setShowKitManager(!showKitManager)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                showKitManager
+                                    ? 'bg-primary/10 text-primary border-primary/30'
+                                    : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground'
+                            }`}
+                        >
+                            <Palette size={14} />
+                            <span>{t('visualKit.title', { defaultValue: 'Kit Visual' })}</span>
+                        </button>
+                        {/* Back Button */}
+                        <HeaderBackButton onClick={() => setView('dashboard')} />
+                    </div>
                 </header>
 
                 {/* Main Content - Single Card Container */}
                 <main className="flex-1 overflow-auto relative z-[2] p-4 md:p-6 lg:p-8">
+                    {showKitManager ? (
+                        <div className="max-w-7xl mx-auto">
+                            <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden h-[calc(100vh-12rem)]">
+                                <VisualIdentityKitManager
+                                    onBack={() => setShowKitManager(false)}
+                                    projectId={effectiveProjectId || undefined}
+                                />
+                            </div>
+                        </div>
+                    ) : (
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
                             {/* Generator Toggle Bar - same format open & closed */}
@@ -158,6 +185,7 @@ const AssetsDashboard: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                    )}
                 </main>
 
 

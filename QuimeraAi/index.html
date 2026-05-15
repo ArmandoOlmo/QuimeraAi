@@ -8,7 +8,7 @@
       try {
         // Theme initialization
         var savedTheme = localStorage.getItem('themeMode');
-        var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'dark';
+        var theme = savedTheme && ['light', 'dark', 'black'].includes(savedTheme) ? savedTheme : 'black';
         document.documentElement.classList.add(theme);
 
         // Onboarding mode detection (?onboarding=ai or ?onboarding=classic)
