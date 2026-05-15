@@ -83,6 +83,37 @@ CREATE TABLE IF NOT EXISTS public.store_products (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Legacy: store_products may already exist from an older schema missing columns.
+-- CREATE TABLE IF NOT EXISTS will not add missing columns; align schema before indexes.
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+-- No FK here: legacy store_categories.id may be text; FK is enforced on fresh CREATE TABLE only.
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS category_id UUID;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS short_description TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS compare_at_price NUMERIC;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS cost_price NUMERIC;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS sku TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS barcode TEXT;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 0;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS track_inventory BOOLEAN DEFAULT true;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER DEFAULT 5;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS has_variants BOOLEAN DEFAULT false;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS variants JSONB DEFAULT '[]';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS options JSONB DEFAULT '[]';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS is_digital BOOLEAN DEFAULT false;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS weight NUMERIC;
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS weight_unit TEXT DEFAULT 'kg';
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.store_products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 CREATE INDEX IF NOT EXISTS store_products_project_id_idx ON public.store_products(project_id);
 CREATE INDEX IF NOT EXISTS store_products_slug_idx ON public.store_products(slug);
 
@@ -106,6 +137,23 @@ CREATE TABLE IF NOT EXISTS public.store_customers (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS total_orders INTEGER DEFAULT 0;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS total_spent NUMERIC DEFAULT 0;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS last_order_at TIMESTAMPTZ;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS default_shipping_address JSONB;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS default_billing_address JSONB;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS addresses JSONB DEFAULT '[]';
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS accepts_marketing BOOLEAN DEFAULT false;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.store_customers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS store_customers_project_id_idx ON public.store_customers(project_id);
 
@@ -140,13 +188,42 @@ CREATE TABLE IF NOT EXISTS public.store_orders (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Legacy: store_orders may exist without full ecommerce columns
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS customer_id UUID;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS order_number TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS customer_email TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS subtotal NUMERIC DEFAULT 0;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS discount NUMERIC DEFAULT 0;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS discount_code TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS shipping_cost NUMERIC DEFAULT 0;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS tax_amount NUMERIC DEFAULT 0;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS total NUMERIC DEFAULT 0;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS shipping_address JSONB;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS billing_address JSONB;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending';
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS fulfillment_status TEXT DEFAULT 'unfulfilled';
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS payment_intent_id TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS tracking_number TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS tracking_url TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS carrier TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.store_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 CREATE INDEX IF NOT EXISTS store_orders_project_id_idx ON public.store_orders(project_id);
 
 -- 6. Store Order Items
+-- FKs omitted: legacy store_orders.id / store_products.id types may not match UUID in all environments.
 CREATE TABLE IF NOT EXISTS public.store_order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID NOT NULL REFERENCES public.store_orders(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE RESTRICT,
+    order_id UUID NOT NULL,
+    product_id UUID NOT NULL,
     variant_id TEXT,
     name TEXT NOT NULL,
     sku TEXT,
@@ -162,7 +239,7 @@ CREATE INDEX IF NOT EXISTS store_order_items_order_id_idx ON public.store_order_
 CREATE TABLE IF NOT EXISTS public.store_reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,
     customer_name TEXT NOT NULL,
     customer_email TEXT NOT NULL,
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -245,7 +322,7 @@ CREATE POLICY "Owners can manage products" ON public.store_products FOR ALL USIN
 CREATE POLICY "Owners can manage customers" ON public.store_customers FOR ALL USING (is_project_owner_or_tenant(project_id));
 CREATE POLICY "Owners can manage orders" ON public.store_orders FOR ALL USING (is_project_owner_or_tenant(project_id));
 CREATE POLICY "Owners can manage order items" ON public.store_order_items FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.store_orders o WHERE o.id = order_id AND is_project_owner_or_tenant(o.project_id))
+    EXISTS (SELECT 1 FROM public.store_orders o WHERE o.id::text = store_order_items.order_id::text AND is_project_owner_or_tenant(o.project_id))
 );
 CREATE POLICY "Owners can manage reviews" ON public.store_reviews FOR ALL USING (is_project_owner_or_tenant(project_id));
 CREATE POLICY "Owners can manage discounts" ON public.store_discounts FOR ALL USING (is_project_owner_or_tenant(project_id));
@@ -339,6 +416,15 @@ CREATE TABLE IF NOT EXISTS public.store_carts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]';
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS subtotal NUMERIC DEFAULT 0;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS discount_code TEXT;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS discount_amount NUMERIC DEFAULT 0;
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.store_carts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 CREATE INDEX IF NOT EXISTS store_carts_project_id_idx ON public.store_carts(project_id);
 CREATE INDEX IF NOT EXISTS store_carts_user_id_idx ON public.store_carts(user_id);
 
@@ -346,7 +432,7 @@ CREATE INDEX IF NOT EXISTS store_carts_user_id_idx ON public.store_carts(user_id
 CREATE TABLE IF NOT EXISTS public.store_stock_notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
-    product_id UUID NOT NULL REFERENCES public.store_products(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,
     product_name TEXT NOT NULL,
     product_slug TEXT,
     product_image TEXT,
@@ -355,6 +441,16 @@ CREATE TABLE IF NOT EXISTS public.store_stock_notifications (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS product_id UUID;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS product_name TEXT;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS product_slug TEXT;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS product_image TEXT;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS notified BOOLEAN DEFAULT false;
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.store_stock_notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS store_stock_notifications_project_id_idx ON public.store_stock_notifications(project_id);
 CREATE INDEX IF NOT EXISTS store_stock_notifications_product_id_idx ON public.store_stock_notifications(product_id);

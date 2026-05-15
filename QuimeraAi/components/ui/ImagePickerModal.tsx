@@ -8,6 +8,8 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Search, Image, Check, Star, Upload, Loader2, FolderOpen } from 'lucide-react';
 import { useFiles } from '../../contexts/files';
+import { useSafeMedia } from '../../contexts/media';
+import type { MediaCategory } from '../../types/media';
 import { BRAND_ASSETS } from '../../constants/brandAssets';
 import { FileRecord } from '../../types';
 import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
@@ -32,6 +34,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         adminAssets, isAdminAssetsLoading, fetchAdminAssets, uploadAdminAsset,
         files, isFilesLoading, uploadFile 
     } = useFiles();
+    const mediaCtx = useSafeMedia();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -41,8 +44,12 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
     // Fetch assets when modal opens and reset state when closed
     useEffect(() => {
         if (isOpen) {
-            if (!useProjectLibrary && adminAssets.length === 0) {
-                fetchAdminAssets();
+            if (!useProjectLibrary) {
+                if (mediaCtx) {
+                    mediaCtx.fetchMediaAssets();
+                } else if (adminAssets.length === 0) {
+                    fetchAdminAssets();
+                }
             }
         } else {
             // Reset state when modal closes
@@ -75,12 +82,17 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         try {
             if (useProjectLibrary) {
                 await uploadFile(file);
-                // `files` auto-updates via onSnapshot in context, no fetch needed.
             } else {
-                await uploadAdminAsset(file, 'other', {
-                    description: 'Uploaded from image picker',
-                });
-                await fetchAdminAssets();
+                if (mediaCtx) {
+                    await mediaCtx.uploadMediaAsset(file, 'other', {
+                        description: 'Uploaded from image picker',
+                    });
+                } else {
+                    await uploadAdminAsset(file, 'other', {
+                        description: 'Uploaded from image picker',
+                    });
+                    await fetchAdminAssets();
+                }
             }
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -104,7 +116,10 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             isSystemAsset: true,
         }));
 
-        const sourceList = useProjectLibrary ? files : adminAssets;
+        const sourceList = useProjectLibrary ? files : 
+            (mediaCtx && mediaCtx.mediaAssets.length > 0 
+                ? mediaCtx.mediaAssets.map(a => ({ ...a as unknown as FileRecord, downloadURL: a.url, projectId: '' }))
+                : adminAssets);
         
         const userImages = sourceList
             .filter(file => file.type?.startsWith('image/'))
@@ -155,7 +170,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                         <h2 className="text-lg font-semibold text-foreground truncate">{title}</h2>
                         <span className="hidden sm:inline-flex items-center gap-1 h-6 px-2 rounded-md border border-q-border bg-muted/50 text-xs text-q-text-muted">
                             <FolderOpen size={12} />
-                            {useProjectLibrary ? t('restaurants.projectLibrary', 'Project') : 'Administración'}
+                            {useProjectLibrary ? t('restaurants.projectLibrary', 'Project') : 'Administraci?n'}
                         </span>
                     </div>
                     <button
@@ -176,7 +191,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('common.search', 'Buscar imágenes...')}
+                            placeholder={t('common.search', 'Buscar im?genes...')}
                             className="flex-1 bg-transparent outline-none text-sm"
                         />
                         {searchQuery && (
@@ -216,7 +231,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                             )}
                         </button>
                         <span className="text-xs text-q-text-muted">
-                            {t('landingEditor.maxFileSize', 'Máx. 5MB • PNG, JPG, SVG')}
+                            {t('landingEditor.maxFileSize', 'M?x. 5MB ��� PNG, JPG, SVG')}
                         </span>
                     </div>
 
@@ -231,14 +246,14 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 {/* Image Grid */}
                 <div className="flex-1 overflow-y-auto p-4">
                     {filteredImages.length === 0 ? (
-                        (useProjectLibrary ? isFilesLoading : isAdminAssetsLoading) ? (
+                        (useProjectLibrary ? isFilesLoading : (mediaCtx?.isMediaLoading ?? isAdminAssetsLoading)) ? (
                             <div className="flex items-center justify-center h-40">
                                 <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-40 text-q-text-muted">
                                 <Image size={40} className="mb-2 opacity-50" />
-                                <p className="text-sm">{t('landingEditor.noImagesFound', 'No se encontraron imágenes')}</p>
+                                <p className="text-sm">{t('landingEditor.noImagesFound', 'No se encontraron im?genes')}</p>
                             </div>
                         )
                     ) : (
@@ -309,7 +324,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                 {/* Footer */}
                 <div className="flex items-center justify-between p-4 border-t border-q-border bg-q-surface/95">
                     <p className="text-xs text-q-text-muted">
-                        {filteredImages.length} {t('landingEditor.imagesAvailable', 'imágenes disponibles')}
+                        {filteredImages.length} {t('landingEditor.imagesAvailable', 'im?genes disponibles')}
                     </p>
                     <div className="flex gap-2">
                         <button

@@ -25,6 +25,8 @@ interface VisualIdentityKitManagerProps {
     onBack?: () => void;
     /** Optional project ID override */
     projectId?: string;
+    /** `admin` = platform admin kit (templates / admin content), default `project` */
+    kitScope?: 'project' | 'admin';
 }
 
 const CATEGORIES: ImageReferenceCategory[] = [
@@ -38,7 +40,7 @@ const USAGE_OPTIONS = [
     { value: 'contextual', label: 'Contextual', desc: 'Solo si el prompt lo menciona' },
 ] as const;
 
-export default function VisualIdentityKitManager({ onBack, projectId }: VisualIdentityKitManagerProps) {
+export default function VisualIdentityKitManager({ onBack, projectId, kitScope = 'project' }: VisualIdentityKitManagerProps) {
     const { t } = useTranslation();
     const { activeProjectId } = useProject();
     const effectiveProjectId = projectId || activeProjectId;
@@ -162,11 +164,22 @@ export default function VisualIdentityKitManager({ onBack, projectId }: VisualId
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-q-text">
-                                {t('visualKit.title', { defaultValue: 'Kit Visual del Proyecto' })}
+                                {kitScope === 'admin'
+                                    ? t('visualKit.adminTitle', { defaultValue: 'Kit visual de administración' })
+                                    : t('visualKit.title', { defaultValue: 'Kit Visual del Proyecto' })}
                             </h2>
                             <p className="text-xs text-q-text-secondary">
-                                {totalRefs} {t('visualKit.references', { defaultValue: 'referencias' })} ({activeRefs} {t('visualKit.active', { defaultValue: 'activas' })})
+                                {kitScope === 'admin'
+                                    ? t('visualKit.adminSubtitle', {
+                                        defaultValue: 'Referencias para plantillas, artículos y contenido de la plataforma.',
+                                    })
+                                    : `${totalRefs} ${t('visualKit.references', { defaultValue: 'referencias' })} (${activeRefs} ${t('visualKit.active', { defaultValue: 'activas' })})`}
                             </p>
+                            {kitScope === 'admin' && (
+                                <p className="text-[11px] text-q-text-secondary/80 mt-0.5">
+                                    {totalRefs} {t('visualKit.references', { defaultValue: 'referencias' })} · {activeRefs} {t('visualKit.active', { defaultValue: 'activas' })}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -180,6 +193,14 @@ export default function VisualIdentityKitManager({ onBack, projectId }: VisualId
                     </button>
                 </div>
             </header>
+
+            {kitScope === 'admin' && (
+                <div className="px-6 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-200/90">
+                    {t('visualKit.adminScopeBanner', {
+                        defaultValue: 'Estas referencias se usan al generar imágenes en esta librería de administración.',
+                    })}
+                </div>
+            )}
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">

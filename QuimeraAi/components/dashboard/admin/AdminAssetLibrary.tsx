@@ -58,6 +58,11 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
+import { useVisualIdentityKit } from '../../../hooks/useVisualIdentityKit';
+import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../../types/visualIdentity';
+import type { VisualReference } from '../../../types/visualIdentity';
+import { ADMIN_VISUAL_KIT_PROJECT_ID } from '../../../constants/adminVisualKit';
 
 interface AdminAssetLibraryProps {
     onBack?: () => void;
@@ -531,6 +536,18 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
     const [isDragging, setIsDragging] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<AdminAssetCategory>('article');
 
+    const [showKitManager, setShowKitManager] = useState(false);
+    const [kitEnabled, setKitEnabled] = useState(true);
+    const hasPreloadedKitRefs = useRef(false);
+
+    const {
+        kit,
+        defaultReferences,
+        defaultReferenceUrls,
+        getContextualReferenceUrls,
+        reload: reloadVisualKit,
+    } = useVisualIdentityKit(ADMIN_VISUAL_KIT_PROJECT_ID);
+
     // Library State
     const [showFilters, setShowFilters] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -548,9 +565,31 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 
     useEffect(() => {
         fetchAdminAssets();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    ;
+    useEffect(() => {
+        if (!showKitManager) {
+            void reloadVisualKit();
+        }
+    }, [showKitManager, reloadVisualKit]);
+
+    useEffect(() => {
+        if (!kitEnabled || !kit || defaultReferenceUrls.length === 0 || hasPreloadedKitRefs.current) return;
+        hasPreloadedKitRefs.current = true;
+        setReferenceImages(prev => {
+            const newRefs = defaultReferenceUrls.filter(url => !prev.includes(url));
+            if (newRefs.length === 0) return prev;
+            return [...prev, ...newRefs].slice(0, 14);
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [kitEnabled, kit]);
+
+    useEffect(() => {
+        if (!kitEnabled) {
+            hasPreloadedKitRefs.current = false;
+        }
+    }, [kitEnabled]);
 
     // Filtered and sorted assets
     const filteredAssets = useMemo(() => {
@@ -706,6 +745,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
         if (!prompt.trim()) return;
         setIsGenerating(true);
         try {
+            const allReferenceUrls = new Set(referenceImages);
+            if (kitEnabled && kit) {
+                const contextualUrls = getContextualReferenceUrls(prompt);
+                contextualUrls.forEach(url => allReferenceUrls.add(url));
+            }
+
+            const activeKitRefs: VisualReference[] = kitEnabled && kit
+                ? kit.references.filter(r => allReferenceUrls.has(r.imageUrl) && r.aiPromptHint)
+                : [];
+            const aiPromptHints = activeKitRefs.map(r => r.aiPromptHint!).filter(Boolean);
+
             const options = {
                 aspectRatio,
                 style,
@@ -718,7 +768,9 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                 cameraAngle: cameraAngle !== 'None' ? cameraAngle : undefined,
                 colorGrading: colorGrading !== 'None' ? colorGrading : undefined,
                 depthOfField: depthOfField !== 'None' ? depthOfField : undefined,
-                referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+                referenceImages: allReferenceUrls.size > 0 ? Array.from(allReferenceUrls) : undefined,
+                visualReferences: activeKitRefs.length > 0 ? activeKitRefs : undefined,
+                aiPromptHints: aiPromptHints.length > 0 ? aiPromptHints : undefined,
             };
 
             const result = await generateImage(prompt, options);
@@ -744,7 +796,12 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 
             success(t('adminAssets.generated', 'Image generated and saved!'));
             setPrompt('');
-            setReferenceImages([]);
+            if (kitEnabled && defaultReferenceUrls.length > 0) {
+                setReferenceImages(defaultReferenceUrls.slice(0, 14));
+            } else {
+                setReferenceImages([]);
+            }
+            hasPreloadedKitRefs.current = true;
         } catch (error) {
             console.error(error);
             showError(t('adminAssets.generateError', 'Failed to generate image'));
@@ -835,11 +892,6 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
         }
     };
 
-    // Migration function for old AI generated global files
-        
-    ;
-    ;
-
     const content = (
         <>
         <div className="flex-1 flex flex-col overflow-hidden relative h-full">
@@ -869,7 +921,18 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                     <div className="flex-1" />
 
                     <div className="flex items-center gap-3">
-                        
+                        <button
+                            type="button"
+                            onClick={() => setShowKitManager(!showKitManager)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                showKitManager
+                                    ? 'bg-primary/10 text-primary border-primary/30'
+                                    : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground'
+                            }`}
+                        >
+                            <Palette size={14} />
+                            <span>{t('adminAssets.kitVisual', { defaultValue: 'Kit visual' })}</span>
+                        </button>
                         {!noLayout && <HeaderBackButton onClick={onBack} label={t('common.back', 'Back')} />}
                     </div>
                 </header>
@@ -888,8 +951,16 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 
                 <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative z-[2]">
                     <div className="max-w-7xl mx-auto space-y-8">
-
-                        {/* Single Card Container for Generator + Library */}
+                        {showKitManager ? (
+                            <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden min-h-[calc(100vh-10rem)]">
+                                <VisualIdentityKitManager
+                                    onBack={() => setShowKitManager(false)}
+                                    projectId={ADMIN_VISUAL_KIT_PROJECT_ID}
+                                    kitScope="admin"
+                                />
+                            </div>
+                        ) : (
+                        <>
                         <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
 
                             {/* AI IMAGE GENERATOR */}
@@ -928,9 +999,26 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
 
                                     {/* Reference Images */}
                                     <div>
-                                        <div className="flex justify-between items-center mb-2">
+                                        <div className="flex justify-between items-center mb-2 gap-2 flex-wrap">
                                             <label className="block text-xs font-bold text-q-text-muted uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
-                                            <span className="text-xs text-q-text-muted">{referenceImages.length}/14</span>
+                                            <div className="flex items-center gap-2">
+                                                {kit && kit.references.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setKitEnabled(!kitEnabled)}
+                                                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium border transition-colors ${
+                                                            kitEnabled
+                                                                ? 'bg-primary/10 text-primary border-primary/30'
+                                                                : 'bg-secondary text-muted-foreground border-border'
+                                                        }`}
+                                                        title={t('visualKit.toggleTooltip', { defaultValue: 'Toggle visual kit references' })}
+                                                    >
+                                                        <Palette size={10} />
+                                                        Kit
+                                                    </button>
+                                                )}
+                                                <span className="text-xs text-q-text-muted">{referenceImages.length}/14</span>
+                                            </div>
                                         </div>
 
                                         <input
@@ -950,9 +1038,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                         >
                                             {referenceImages.length > 0 ? (
                                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2 mb-2">
-                                                    {referenceImages.map((img, idx) => (
-                                                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-q-border">
+                                                    {referenceImages.map((img, idx) => {
+                                                        const isKitRef = kitEnabled && defaultReferenceUrls.includes(img);
+                                                        const kitRef = isKitRef ? defaultReferences.find(r => r.imageUrl === img) : null;
+                                                        return (
+                                                        <div key={idx} className={`relative aspect-square rounded-md overflow-hidden group border ${isKitRef ? 'ring-1 ring-primary/40 border-primary/20' : 'border-q-border'}`}>
                                                             <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
+                                                            {isKitRef && kitRef && (
+                                                                <span className={`absolute bottom-0 left-0 right-0 text-[8px] font-bold text-center truncate px-0.5 py-px ${IMAGE_REFERENCE_CATEGORY_COLORS[kitRef.category] || 'bg-secondary/90 text-foreground'}`}>
+                                                                    {kitRef.label.substring(0, 8)}
+                                                                </span>
+                                                            )}
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
                                                                 className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
@@ -960,7 +1056,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                                                 <X size={10} />
                                                             </button>
                                                         </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                     {referenceImages.length < 14 && (
                                                         <button
                                                             onClick={() => referenceFileInputRef.current?.click()}
@@ -1380,6 +1477,8 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                                 </div>
                             </div>
                         </div>
+                        </>
+                        )}
                     </div>
                 </main>
             </div>

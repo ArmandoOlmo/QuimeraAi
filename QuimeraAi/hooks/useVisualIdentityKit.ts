@@ -4,7 +4,7 @@
  * Used by ImageGeneratorPanel to auto-load brand references across all generation areas.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../supabase';
 import type { VisualReference, VisualIdentityKit, ImageReferenceCategory } from '../types/visualIdentity';
 
@@ -39,12 +39,17 @@ export function useVisualIdentityKit(projectId?: string): UseVisualIdentityKitRe
   const [kit, setKit] = useState<VisualIdentityKit | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const attemptedRef = useRef<string | null>(null);
 
   const loadKit = useCallback(async () => {
     if (!projectId) {
       setKit(null);
+      attemptedRef.current = null;
       return;
     }
+
+    // Skip if we already attempted to load this exact projectId
+    if (attemptedRef.current === projectId) return;
 
     setIsLoading(true);
     setError(null);
@@ -65,9 +70,12 @@ export function useVisualIdentityKit(projectId?: string): UseVisualIdentityKitRe
         references,
         updatedAt: new Date().toISOString(),
       });
+      attemptedRef.current = projectId;
     } catch (err) {
       console.error('[useVisualIdentityKit] Failed to load kit:', err);
       setError(err instanceof Error ? err.message : 'Failed to load visual identity kit');
+      // Mark as attempted even on failure to prevent infinite retry loops
+      attemptedRef.current = projectId;
     } finally {
       setIsLoading(false);
     }
@@ -214,6 +222,12 @@ export function useVisualIdentityKit(projectId?: string): UseVisualIdentityKitRe
     }
   }, []);
 
+  /** Manual reload - resets the attempt tracker to force a re-fetch */
+  const reload = useCallback(async () => {
+    attemptedRef.current = null;
+    await loadKit();
+  }, [loadKit]);
+
   return {
     kit,
     isLoading,
@@ -225,7 +239,7 @@ export function useVisualIdentityKit(projectId?: string): UseVisualIdentityKitRe
     addReference,
     updateReference,
     deleteReference,
-    reload: loadKit,
+    reload,
     getAllReferenceUrls,
   };
 }

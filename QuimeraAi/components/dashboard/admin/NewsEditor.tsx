@@ -918,6 +918,8 @@ Text to format:
                                         destination="admin"
                                         adminCategory="article"
                                         onRemove={() => setImageUrl('')}
+                                        contentId={news?.id || ''}
+                                        contentType="news"
                                     />
                                 </div>
 

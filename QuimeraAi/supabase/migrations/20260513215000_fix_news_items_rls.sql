@@ -20,6 +20,10 @@ DROP POLICY IF EXISTS "Public read published news" ON public.news_items;
 DROP POLICY IF EXISTS "Authenticated users can create news" ON public.news_items;
 DROP POLICY IF EXISTS "News creators can update own news" ON public.news_items;
 DROP POLICY IF EXISTS "News creators can delete own news" ON public.news_items;
+DROP POLICY IF EXISTS "Public read published news" ON public.news_items;
+DROP POLICY IF EXISTS "Admin and owner can create news" ON public.news_items;
+DROP POLICY IF EXISTS "Admin and owner can update news" ON public.news_items;
+DROP POLICY IF EXISTS "Admin and owner can delete news" ON public.news_items;
 DROP POLICY IF EXISTS "Admin full access to news" ON public.news_items;
 
 -- Create new policies

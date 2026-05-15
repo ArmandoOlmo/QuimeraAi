@@ -25,6 +25,7 @@ import { PlansProvider } from './PlansContext';
 import { EditorProvider } from './EditorContext';
 import { ProjectProvider } from './project';
 import { FilesProvider } from './files';
+import { MediaProvider } from './media';
 import { CRMProvider } from './crm';
 import { CMSProvider } from './cms';
 import { AdminProvider } from './admin';
@@ -51,29 +52,31 @@ const FeatureProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
         <AdminProvider>
             <ProjectProvider>
                 <FilesProvider>
-                    <CRMProvider>
-                        <CMSProvider>
-                            <DomainsProvider>
-                                <AIProvider>
-                                    <AgencyProvider>
-                                        <AgencyContentProvider>
-                                            <NewsProvider>
-                                                <UpgradeProvider>
-                                                    <UndoProvider>
-                                                        <BioPageProvider>
-                                                            <EditorProvider>
-                                                                {children}
-                                                            </EditorProvider>
-                                                        </BioPageProvider>
-                                                    </UndoProvider>
-                                                </UpgradeProvider>
-                                            </NewsProvider>
-                                        </AgencyContentProvider>
-                                    </AgencyProvider>
-                                </AIProvider>
-                            </DomainsProvider>
-                        </CMSProvider>
-                    </CRMProvider>
+                    <MediaProvider>
+                        <CRMProvider>
+                            <CMSProvider>
+                                <DomainsProvider>
+                                    <AIProvider>
+                                        <AgencyProvider>
+                                            <AgencyContentProvider>
+                                                <NewsProvider>
+                                                    <UpgradeProvider>
+                                                        <UndoProvider>
+                                                            <BioPageProvider>
+                                                                <EditorProvider>
+                                                                    {children}
+                                                                </EditorProvider>
+                                                            </BioPageProvider>
+                                                        </UndoProvider>
+                                                    </UpgradeProvider>
+                                                </NewsProvider>
+                                            </AgencyContentProvider>
+                                        </AgencyProvider>
+                                    </AIProvider>
+                                </DomainsProvider>
+                            </CMSProvider>
+                        </CRMProvider>
+                    </MediaProvider>
                 </FilesProvider>
             </ProjectProvider>
         </AdminProvider>

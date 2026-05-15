@@ -1,38 +1,53 @@
+/**
+ * MediaManagerView
+ * Area de Medios unificada con 4 pestañas:
+ * 1. Libreria Unificada (antes AdminAssets + GlobalFiles)
+ * 2. Kit Visual (promovido desde toggle a pestaña)
+ * 3. Archivos de Usuarios (auditoria)
+ * 4. Contenido Asociado (trazabilidad bidireccional)
+ */
+
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image as ImageIcon, FolderOpen, User, Menu } from 'lucide-react';
-import AdminAssetLibrary from './AdminAssetLibrary';
-import ImageLibraryManagement from './ImageLibraryManagement';
+import {
+    Image as ImageIcon, FolderOpen, User, Menu,
+    Palette, Link2,
+} from 'lucide-react';
+import UnifiedMediaLibrary from './UnifiedMediaLibrary';
 import TenantMediaAuditor from './TenantMediaAuditor';
+import ContentAssetMapper from './ContentAssetMapper';
 import DashboardSidebar from '../DashboardSidebar';
+import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { ADMIN_VISUAL_KIT_PROJECT_ID } from '../../../constants/adminVisualKit';
 
 export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
     const { t } = useTranslation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
-    // Tabs configuration
-    const [activeTab, setActiveTab] = useState<'platform' | 'global' | 'tenants'>('platform');
+
+    const [activeTab, setActiveTab] = useState<'library' | 'kit' | 'tenants' | 'content'>('library');
 
     const tabs = [
         {
-            id: 'platform',
-            label: t('superadmin.media.platformAssets', 'Assets de Plataforma'),
+            id: 'library' as const,
+            label: t('superadmin.media.library', 'Libreria'),
             icon: <FolderOpen size={18} />,
-            component: <AdminAssetLibrary noLayout={true} onBack={onBack} />
         },
         {
-            id: 'global',
-            label: t('superadmin.media.globalAssets', 'Archivos Globales'),
-            icon: <ImageIcon size={18} />,
-            component: <ImageLibraryManagement noLayout={true} onBack={onBack} />
+            id: 'kit' as const,
+            label: t('superadmin.media.kitVisual', 'Kit Visual'),
+            icon: <Palette size={18} />,
         },
         {
-            id: 'tenants',
+            id: 'tenants' as const,
             label: t('superadmin.media.tenantAssets', 'Archivos de Usuarios'),
             icon: <User size={18} />,
-            component: <TenantMediaAuditor />
-        }
+        },
+        {
+            id: 'content' as const,
+            label: t('superadmin.media.contentAssets', 'Contenido Asociado'),
+            icon: <Link2 size={18} />,
+        },
     ] as const;
 
     return (
@@ -51,28 +66,28 @@ export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
                                 <Menu className="w-5 h-5" />
                             </button>
                             <ImageIcon className="text-q-accent w-6 h-6 hidden sm:block" />
-                            <h1 className="text-xl font-bold text-q-text">
-                                {t('superadmin.mediaManager', 'Librería de Medios')}
-                            </h1>
+                        <h1 className="text-xl font-bold text-q-text">
+                            {t('superadmin.mediaManager', 'Libreria de Medios')}
+                        </h1>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <HeaderBackButton onClick={onBack} label={t('common.back', 'Volver')} />
+                            <HeaderBackButton onClick={onBack} label="Volver" />
                         </div>
                     </div>
                 </header>
 
-                {/* Sub-header with Quimera Style Tabs */}
+                {/* Tabs */}
                 <div className="px-4 md:px-8 py-4 border-b border-q-border bg-q-surface/50">
                     <div className="flex space-x-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id)}
                                 className={`
                                     flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap
-                                    ${activeTab === tab.id 
-                                        ? 'bg-q-accent/20 text-q-accent border border-q-accent/30 shadow-sm shadow-q-accent/10' 
+                                    ${activeTab === tab.id
+                                        ? 'bg-q-accent/20 text-q-accent border border-q-accent/30 shadow-sm shadow-q-accent/10'
                                         : 'bg-q-surface text-q-text-secondary border border-q-border hover:bg-q-surface-overlay hover:text-q-text'}
                                 `}
                             >
@@ -84,8 +99,24 @@ export default function MediaManagerView({ onBack }: { onBack?: () => void }) {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-hidden relative bg-q-bg">
-                    {tabs.find(t => t.id === activeTab)?.component}
+                <div className="flex-1 overflow-hidden relative">
+                    {activeTab === 'library' && (
+                        <UnifiedMediaLibrary onBack={onBack} />
+                    )}
+                    {activeTab === 'kit' && (
+                        <div className="h-full overflow-auto">
+                            <VisualIdentityKitManager
+                                projectId={ADMIN_VISUAL_KIT_PROJECT_ID}
+                                kitScope="admin"
+                            />
+                        </div>
+                    )}
+                    {activeTab === 'tenants' && (
+                        <TenantMediaAuditor />
+                    )}
+                    {activeTab === 'content' && (
+                        <ContentAssetMapper />
+                    )}
                 </div>
             </div>
         </div>

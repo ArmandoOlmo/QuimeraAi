@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useAI } from '../../contexts/ai';
 import { useSafeFiles } from '../../contexts/files';
+import { useSafeMedia } from '../../contexts/media';
+import type { MediaCategory } from '../../types/media';
 import { useProject } from '../../contexts/project';
 import { useTranslation } from 'react-i18next';
 import {
@@ -36,6 +38,7 @@ interface ImageGeneratorPanelProps {
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination = 'user', adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
     const { generateImage, enhancePrompt } = useAI();
     const filesCtx = useSafeFiles();
+    const mediaCtx = useSafeMedia();
     const uploadFile = filesCtx?.uploadFile || (async () => { throw new Error("Files context missing"); });
     const uploadGlobalFile = filesCtx?.uploadGlobalFile || (async () => { throw new Error("Files context missing"); });
     const uploadAdminAsset = filesCtx?.uploadAdminAsset || (async () => { throw new Error("Files context missing"); });
@@ -150,11 +153,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         }
     ], [t]);
 
-    const THINKING_LEVELS = [
-        { label: t('editor.none', { defaultValue: 'None' }), value: 'none' },
-        { label: t('editor.low', { defaultValue: 'Low' }), value: 'low' },
-        { label: t('editor.medium', { defaultValue: 'Medium' }), value: 'medium' },
-        { label: t('editor.high', { defaultValue: 'High' }), value: 'high' },
+    const THINKING_LEVELS: { label: string; value: string; badge: string }[] = [
+        { label: t('editor.none', { defaultValue: 'None' }), value: 'none', badge: '1X' },
+        { label: t('editor.low', { defaultValue: 'Low' }), value: 'low', badge: '2X' },
+        { label: t('editor.medium', { defaultValue: 'Medium' }), value: 'medium', badge: '3X' },
+        { label: t('editor.high', { defaultValue: 'High' }), value: 'high', badge: '4X' },
     ];
 
     // State
@@ -196,22 +199,31 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasPreloadedRef = useRef(false);
 
     // Visual Identity Kit
     const effectiveProjectId = projectId || (hasActiveProject ? activeProjectId : undefined);
     const { kit, defaultReferences, defaultReferenceUrls, getContextualReferenceUrls } = useVisualIdentityKit(effectiveProjectId);
     const [kitEnabled, setKitEnabled] = useState(true);
 
-    // Pre-load kit references when the kit is enabled
+    // Reset preloaded flag when project changes so we can auto-load the new project's references
     useEffect(() => {
-        if (!kitEnabled || !kit || defaultReferenceUrls.length === 0) return;
+        hasPreloadedRef.current = false;
+    }, [effectiveProjectId]);
+
+    // Pre-load kit references once when the kit first becomes available
+    useEffect(() => {
+        if (!kitEnabled || !kit || defaultReferenceUrls.length === 0 || hasPreloadedRef.current) return;
+        hasPreloadedRef.current = true;
         setReferenceImages(prev => {
             const newRefs = defaultReferenceUrls.filter(url => !prev.includes(url));
             if (newRefs.length === 0) return prev;
             const combined = [...prev, ...newRefs].slice(0, 14);
             return combined;
         });
-    }, [kitEnabled, kit, defaultReferenceUrls]);
+    // Only re-run when kitEnabled or kit availability changes (not defaultReferenceUrls)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [kitEnabled, kit]);
 
     // Listen to external commands to add reference images
     useEffect(() => {
@@ -238,10 +250,18 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const [loadingLibraryImage, setLoadingLibraryImage] = useState<string | null>(null);
 
     useEffect(() => {
-        if (effectiveDestination === 'admin') {
-            fetchAdminAssets();
-        } else if (effectiveDestination === 'global') {
-            fetchGlobalFiles();
+        if (mediaCtx) {
+            if (effectiveDestination === 'admin') {
+                mediaCtx.fetchMediaAssets(adminCategory as MediaCategory);
+            } else if (effectiveDestination === 'global') {
+                mediaCtx.fetchMediaAssets();
+            }
+        } else {
+            if (effectiveDestination === 'admin') {
+                fetchAdminAssets();
+            } else if (effectiveDestination === 'global') {
+                fetchGlobalFiles();
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveDestination]);
@@ -251,9 +271,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const libraryImages = useMemo(() => {
         let sourceFiles = files;
         if (effectiveDestination === 'global') {
-            sourceFiles = globalFiles;
+            sourceFiles = mediaCtx?.mediaAssets?.length ? mediaCtx.mediaAssets : globalFiles;
         } else if (effectiveDestination === 'admin') {
-            sourceFiles = adminAssets;
+            sourceFiles = mediaCtx?.mediaAssets?.length ? mediaCtx.mediaAssets : adminAssets;
             if (adminCategory) {
                 sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
@@ -364,17 +384,33 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             let savedUrl: string | undefined;
 
             if (effectiveDestination === 'admin') {
-                await uploadAdminAsset(file, (adminCategory as any) || 'ai_generated', {
-                    description: `Generated AI image: ${promptText.substring(0, 50)}...`,
-                    isAiGenerated: true,
-                    aiPrompt: promptText,
-                });
-                console.log('✅ [ImageGeneratorPanel] Saved fallback to admin library');
+                if (mediaCtx) {
+                    savedUrl = await mediaCtx.uploadMediaAsset(file, (adminCategory as MediaCategory) || 'ai_generated', {
+                        description: `Generated AI image: ${promptText.substring(0, 50)}...`,
+                        isAiGenerated: true,
+                        aiPrompt: promptText,
+                    });
+                } else {
+                    await uploadAdminAsset(file, (adminCategory as any) || 'ai_generated', {
+                        description: `Generated AI image: ${promptText.substring(0, 50)}...`,
+                        isAiGenerated: true,
+                        aiPrompt: promptText,
+                    });
+                }
+                console.log('✅ [ImageGeneratorPanel] Saved to admin library');
                 setSavedToLibrary(true);
-                savedUrl = imageDataUrl; // Use data URL or fetch admin URL later
+                savedUrl = savedUrl || imageDataUrl;
             } else if (effectiveDestination === 'global') {
-                savedUrl = await uploadGlobalFile(file);
-                console.log('✅ [ImageGeneratorPanel] Saved fallback to global library:', savedUrl);
+                if (mediaCtx) {
+                    savedUrl = await mediaCtx.uploadMediaAsset(file, 'other', {
+                        description: `Generated AI image: ${promptText.substring(0, 50)}...`,
+                        isAiGenerated: true,
+                        aiPrompt: promptText,
+                    });
+                } else {
+                    savedUrl = await uploadGlobalFile(file);
+                }
+                console.log('✅ [ImageGeneratorPanel] Saved to global library:', savedUrl);
                 if (savedUrl) {
                     setSavedToLibrary(true);
                     setSavedImageUrl(savedUrl);
@@ -1027,27 +1063,40 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                         </div>
 
                         {/* Advanced Collapsible */}
-                        <div className="pt-2 border-t border-q-border">
+                        <div className="pt-2 border-t border-dashed border-q-border/70">
                             <details className="group">
                                 <summary className="flex items-center justify-between cursor-pointer list-none text-q-text font-medium text-sm py-2">
-                                    <span className="flex items-center gap-2"><Settings2 size={16} /> Advanced Settings</span>
-                                    <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+                                    <span className="flex items-center gap-2">
+                                        <Settings2 size={16} className="text-q-text-secondary shrink-0" aria-hidden />
+                                        {t('editor.advancedSettings', { defaultValue: 'Advanced Settings' })}
+                                    </span>
+                                    <ChevronDown size={16} className="shrink-0 text-q-text-secondary transition-transform group-open:rotate-180" aria-hidden />
                                 </summary>
                                 <div className="pt-4 space-y-5">
                                     {/* Thinking Level (Gemini models only) */}
                                     {selectedModel.startsWith('gemini-') && (
-                                    <div className="space-y-3">
-                                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Thinking Level</label>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide flex items-center gap-1.5">
+                                            <Brain size={12} className="text-q-text-secondary shrink-0" aria-hidden />
+                                            <span>{t('editor.thinkingLevel', { defaultValue: 'Thinking Level' })}</span>
+                                        </label>
                                         <div className="flex gap-1">
-                                            {THINKING_LEVELS.map(level => (
+                                            {THINKING_LEVELS.map(level => {
+                                                const selected = thinkingLevel === level.value;
+                                                return (
                                                 <button
                                                     key={level.value}
+                                                    type="button"
+                                                    title={`${level.badge} — ${level.label}`}
+                                                    aria-label={`${level.badge}, ${level.label}`}
+                                                    aria-pressed={selected}
                                                     onClick={() => setThinkingLevel(level.value)}
-                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${thinkingLevel === level.value ? 'bg-q-accent text-primary-foreground border-transparent' : 'bg-q-bg text-q-text-secondary border-q-border/50 hover:text-q-text'}`}
+                                                    className={`flex-1 flex items-center justify-center min-h-9 rounded-lg transition-all border font-mono text-xs font-bold tracking-tight ${selected ? 'bg-q-accent text-primary-foreground border-transparent' : 'bg-q-bg text-q-text-secondary border-q-border/50 hover:text-q-text'}`}
                                                 >
-                                                    {level.label}
+                                                    {level.badge}
                                                 </button>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                     )}

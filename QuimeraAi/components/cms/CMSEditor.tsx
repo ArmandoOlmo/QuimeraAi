@@ -845,7 +845,7 @@ IMPORTANT FORMATTING RULES:
 
                             <div>
                                 <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.featuredImage')}</label>
-                                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} />
+                                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} contentId={post?.id || ''} contentType="post" />
                             </div>
 
                             <div>

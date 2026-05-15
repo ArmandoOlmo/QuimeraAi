@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useSafeFiles } from '../../contexts/files';
+import { useSafeMedia } from '../../contexts/media';
+import type { MediaCategory } from '../../types/media';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
@@ -38,9 +40,13 @@ interface ImagePickerProps {
     initialTab?: 'library' | 'generate' | 'products';
     /** Optional container element to portal the modal into, making it position relative to that container instead of the viewport */
     portalContainer?: HTMLElement | null;
+    /** Content ID to auto-track which content uses this image (enables used_in tracking) */
+    contentId?: string;
+    /** Content type hint for tracking (e.g. 'article', 'news', 'template') */
+    contentType?: string;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer, contentId, contentType }) => {
     const { t } = useTranslation();
     const { activeProjectId, activeProject } = useProject();
 
@@ -62,6 +68,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const [isLibraryOpen, setIsLibraryOpen] = useState(defaultOpen);
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>(initialTab);
 
+    const mediaCtx = useSafeMedia();
+
     // Handle closing the modal
     const handleClose = () => {
         setIsLibraryOpen(false);
@@ -72,10 +80,20 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
     // Fetch the selected shared library only when this picker is open.
     useEffect(() => {
-        if (destination === 'admin' && isLibraryOpen) {
-            fetchAdminAssets();
-        } else if (destination === 'global' && isLibraryOpen) {
-            fetchGlobalFiles();
+        if (!isLibraryOpen) return;
+        if (mediaCtx) {
+            if (destination === 'admin') {
+                mediaCtx.fetchMediaAssets(adminCategory as MediaCategory);
+            } else if (destination === 'global') {
+                mediaCtx.fetchMediaAssets();
+            }
+        } else {
+            // Legacy fallback while FilesContext still provides these
+            if (destination === 'admin') {
+                fetchAdminAssets();
+            } else if (destination === 'global') {
+                fetchGlobalFiles();
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [destination, isLibraryOpen]);
@@ -111,7 +129,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         if (adminCategory) setSelectedAdminCategory(adminCategory);
     }, [adminCategory]);
 
-    const handleSelectImageUrl = (urlValue: unknown) => {
+    const handleSelectImageUrl = async (urlValue: unknown) => {
         const selectedImageUrl = normalizeImageUrl(urlValue);
         if (!selectedImageUrl) {
             showError('Esta imagen no tiene una URL valida.');
@@ -124,6 +142,18 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         onChange(selectedImageUrl);
+
+        // Auto-track: register this image as used by the current content
+        if (contentId && mediaCtx) {
+            const asset = mediaCtx.mediaAssets.find(a => a.url === selectedImageUrl || a.downloadURL === selectedImageUrl);
+            if (asset) {
+                const usageEntry = contentType ? `${contentType}:${contentId}` : contentId;
+                if (!asset.usedIn?.includes(usageEntry)) {
+                    await mediaCtx.linkAssetToContent(asset.id, contentId, contentType || 'article');
+                }
+            }
+        }
+
         handleClose();
         success(t('dashboard.imagePicker.imageSelected'));
     };
@@ -131,12 +161,24 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
     const handleFileUpload = async (file: File) => {
         try {
             if (destination === 'admin') {
-                await uploadAdminAsset(file, (selectedAdminCategory as any) || 'other', {
-                    description: 'Uploaded via ImagePicker'
-                });
+                if (mediaCtx) {
+                    await mediaCtx.uploadMediaAsset(file, (selectedAdminCategory as MediaCategory) || 'other', {
+                        description: 'Uploaded via ImagePicker'
+                    });
+                } else {
+                    await uploadAdminAsset(file, (selectedAdminCategory as any) || 'other', {
+                        description: 'Uploaded via ImagePicker'
+                    });
+                }
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             } else if (destination === 'global') {
-                await uploadGlobalFile(file);
+                if (mediaCtx) {
+                    await mediaCtx.uploadMediaAsset(file, 'other', {
+                        description: 'Uploaded via ImagePicker'
+                    });
+                } else {
+                    await uploadGlobalFile(file);
+                }
                 success(t('dashboard.imagePicker.uploadSuccess', { name: file.name }));
             } else {
                 await uploadFile(file);
@@ -154,12 +196,32 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         // Choose source array based on destination.
         let sourceFiles = files;
         if (destination === 'admin') {
-            sourceFiles = adminAssets;
-            if (adminCategory) {
-                sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
+            // Use unified media context if available, fall back to old adminAssets
+            if (mediaCtx && mediaCtx.mediaAssets.length > 0) {
+                sourceFiles = mediaCtx.mediaAssets
+                    .filter(a => adminCategory ? a.category === adminCategory : true)
+                    .map(a => ({
+                        id: a.id, name: a.name, url: a.url, downloadURL: a.downloadURL,
+                        size: a.size, type: a.type, storagePath: a.storagePath || '',
+                        projectId: '', createdAt: a.createdAt
+                    } as unknown as FileRecord));
+            } else {
+                sourceFiles = adminAssets;
+                if (adminCategory) {
+                    sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
+                }
             }
         } else if (destination === 'global') {
-            sourceFiles = globalFiles;
+            // Use unified media context if available
+            if (mediaCtx && mediaCtx.mediaAssets.length > 0) {
+                sourceFiles = mediaCtx.mediaAssets.map(a => ({
+                    id: a.id, name: a.name, url: a.url, downloadURL: a.downloadURL,
+                    size: a.size, type: a.type, storagePath: a.storagePath || '',
+                    projectId: '', createdAt: a.createdAt
+                } as unknown as FileRecord));
+            } else {
+                sourceFiles = globalFiles;
+            }
         }
 
         let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
@@ -174,7 +236,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         }
 
         return result;
-    }, [files, adminAssets, globalFiles, searchQuery, activeProjectId, destination, adminCategory]);
+    }, [files, adminAssets, globalFiles, mediaCtx?.mediaAssets, searchQuery, activeProjectId, destination, adminCategory]);
 
     return (
         <>

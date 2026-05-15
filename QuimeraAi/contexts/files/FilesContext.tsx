@@ -54,21 +54,35 @@ interface FilesContextType {
     activeProjectId: string | null;
     
     // Global Files (Super Admin - General reuse)
+    /** @deprecated Use MediaContext (useMedia/useSafeMedia) instead. See contexts/media/ */
     globalFiles: FileRecord[];
+    /** @deprecated Use MediaContext (useMedia/useSafeMedia) instead. */
     isGlobalFilesLoading: boolean;
+    /** @deprecated Use mediaCtx.fetchMediaAssets() instead. */
     fetchGlobalFiles: () => Promise<void>;
+    /** @deprecated Use mediaCtx.uploadMediaAsset() instead. */
     uploadGlobalFile: (file: File) => Promise<string>;
+    /** @deprecated Use mediaCtx.deleteMediaAsset() instead. */
     deleteGlobalFile: (fileId: string, storagePath: string) => Promise<void>;
 
     // Admin Assets (Super Admin - App Content Assets)
+    /** @deprecated Use MediaContext (useMedia/useSafeMedia) instead. See contexts/media/ */
     adminAssets: AdminAssetRecord[];
+    /** @deprecated Use mediaCtx.isMediaLoading instead. */
     isAdminAssetsLoading: boolean;
+    /** @deprecated Use mediaCtx.fetchMediaAssets() instead. */
     fetchAdminAssets: () => Promise<void>;
+    /** @deprecated Use mediaCtx.uploadMediaAsset() instead. */
     uploadAdminAsset: (file: File, category: AdminAssetCategory, options?: { description?: string; tags?: string[]; isAiGenerated?: boolean; aiPrompt?: string }) => Promise<string>;
+    /** @deprecated Use mediaCtx.uploadMediaAssetFromURL() instead. */
     uploadAdminAssetFromURL: (url: string, name: string, category: AdminAssetCategory, options?: { description?: string; tags?: string[] }) => Promise<string>;
+    /** @deprecated Use mediaCtx.updateMediaAsset() instead. */
     updateAdminAsset: (assetId: string, updates: Partial<AdminAssetRecord>) => Promise<void>;
+    /** @deprecated Use mediaCtx.deleteMediaAsset() instead. */
     deleteAdminAsset: (assetId: string, storagePath: string) => Promise<void>;
+    /** @deprecated Use mediaCtx.linkAssetToContent() instead. */
     linkAssetToArticle: (assetId: string, articleId: string) => Promise<void>;
+    /** @deprecated Use mediaCtx.unlinkAssetFromContent() instead. */
     unlinkAssetFromArticle: (assetId: string, articleId: string) => Promise<void>;
 }
 
