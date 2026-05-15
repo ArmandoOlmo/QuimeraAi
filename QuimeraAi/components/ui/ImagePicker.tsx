@@ -196,8 +196,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
         // Choose source array based on destination.
         let sourceFiles = files;
         if (destination === 'admin') {
-            // Use unified media context if available, fall back to old adminAssets
-            if (mediaCtx && mediaCtx.mediaAssets.length > 0) {
+            // Use unified media context if available
+            if (mediaCtx) {
                 sourceFiles = mediaCtx.mediaAssets
                     .filter(a => adminCategory ? a.category === adminCategory : true)
                     .map(a => ({
@@ -205,15 +205,17 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                         size: a.size, type: a.type, storagePath: a.storagePath || '',
                         projectId: '', createdAt: a.createdAt
                     } as unknown as FileRecord));
-            } else {
+            } else if (adminAssets.length > 0) {
                 sourceFiles = adminAssets;
                 if (adminCategory) {
                     sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
                 }
+            } else {
+                sourceFiles = [];
             }
         } else if (destination === 'global') {
             // Use unified media context if available
-            if (mediaCtx && mediaCtx.mediaAssets.length > 0) {
+            if (mediaCtx) {
                 sourceFiles = mediaCtx.mediaAssets.map(a => ({
                     id: a.id, name: a.name, url: a.url, downloadURL: a.downloadURL,
                     size: a.size, type: a.type, storagePath: a.storagePath || '',
@@ -237,6 +239,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
         return result;
     }, [files, adminAssets, globalFiles, mediaCtx?.mediaAssets, searchQuery, activeProjectId, destination, adminCategory]);
+
+    const isLibraryLoading = mediaCtx ? mediaCtx.isMediaLoading : isFilesLoading;
 
     return (
         <>
