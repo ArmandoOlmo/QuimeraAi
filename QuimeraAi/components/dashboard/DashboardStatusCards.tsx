@@ -200,15 +200,15 @@ const DashboardStatusCards: React.FC = () => {
                 </span>
             </button>
 
-            {/* Collapsible grid */}
+            {/* Collapsible grid — padding + overflow-visible when open so hover shadows are not clipped */}
             <div
-                className="transition-all duration-400 ease-in-out overflow-hidden"
+                className={`transition-all duration-400 ease-in-out ${isCollapsed ? 'overflow-hidden' : 'overflow-visible'}`}
                 style={{
-                    maxHeight: isCollapsed ? '0px' : '600px',
+                    maxHeight: isCollapsed ? '0px' : '640px',
                     opacity: isCollapsed ? 0 : 1,
                 }}
             >
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 py-1 pb-4">
                     {visibleCards.map((card, idx) => {
                         const Icon = card.icon;
                         const metric = getMetric(card.id);
@@ -221,7 +221,7 @@ const DashboardStatusCards: React.FC = () => {
                                    bg-q-surface/80 dark:bg-q-surface/40 backdrop-blur-xl
                                    p-3 sm:p-5 text-left min-h-[100px] sm:min-h-[140px]
                                    shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]
-                                   hover:scale-[1.03] hover:shadow-xl hover:shadow-primary/10
+                                   hover:scale-[1.02] hover:shadow-md hover:shadow-primary/5
                                    hover:border-q-border transition-all duration-300 ease-out
                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                                 style={{ animationDelay: `${idx * 60}ms` }}

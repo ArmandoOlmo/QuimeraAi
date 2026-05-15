@@ -75,20 +75,8 @@ const DashboardHelpGuide: React.FC<DashboardHelpGuideProps> = ({
 
     return (
         <section className="w-full animate-fade-in">
-            <div className="relative flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0 max-h-[400px]">
-                {/* Floating Image - Outside the box */}
-                <div className="hidden lg:flex relative z-10 flex-shrink-0 -mr-6 items-end">
-                    <img
-                        src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FALeTxAC97FPhl7ymtEhAn.jpg?alt=media&token=e1ed6666-f72c-41bc-ad51-165161f361c2"
-                        alt="Quimera AI Guide"
-                        className="w-auto h-full max-h-[400px] object-contain drop-shadow-2xl"
-                        loading="lazy"
-                        decoding="async"
-                    />
-                </div>
-
-                {/* Content Box */}
-                <div className="relative flex-1 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden lg:pl-10 max-h-[400px]">
+            <div className="relative">
+                <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden">
                     {/* Background decoration */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 

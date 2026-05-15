@@ -39,8 +39,6 @@ const normalizeProject = (project: Project): Project => {
     return project;
 };
 
-const VERCEL_PROJECT_ID = 'prj_4GK6GRGJfWkQpwBzfj5P2NMiI4Is';
-
 // Helper to get the correct projects collection path
 // Returns tenant path if tenantId provided (and not a personal tenant), otherwise user path
 
@@ -1227,17 +1225,23 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         const { id: providedId, ...projectData } = project;
         
-        const dataToSave = {
+        const deploymentData = (projectData as any).deployment || {};
+        const dataToSave: Record<string, any> = {
             ...projectData,
-            vercelProjectId: (projectData as any).vercelProjectId || VERCEL_PROJECT_ID,
-            vercel_project_id: (projectData as any).vercel_project_id || VERCEL_PROJECT_ID,
-            deployment: {
-                ...((projectData as any).deployment || {}),
-                vercelProjectId: ((projectData as any).deployment || {}).vercelProjectId || VERCEL_PROJECT_ID,
-            },
+            deployment: { ...deploymentData },
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
         };
+
+        if ((projectData as any).vercelProjectId) {
+            dataToSave.vercelProjectId = (projectData as any).vercelProjectId;
+        }
+        if ((projectData as any).vercel_project_id) {
+            dataToSave.vercel_project_id = (projectData as any).vercel_project_id;
+        }
+        if (deploymentData.vercelProjectId) {
+            dataToSave.deployment.vercelProjectId = deploymentData.vercelProjectId;
+        }
 
         let finalId: string;
 

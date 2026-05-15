@@ -548,11 +548,11 @@ const toolHandlers: Record<string, ToolHandler> = {
       .single();
 
     if (error) throw error;
-    const { component_order, section_visibility, data: templateData, pages, ...metadata } = template;
+    const { component_order, section_visibility, data: templateData, pages: returnedPages, ...metadata } = template;
     return {
       status: 'success',
       template: metadata,
-      contentSummary: summarizeTemplateContent({ component_order, section_visibility, data: templateData, pages }),
+      contentSummary: summarizeTemplateContent({ component_order, section_visibility, data: templateData, pages: returnedPages }),
     };
   },
 
@@ -640,11 +640,11 @@ const toolHandlers: Record<string, ToolHandler> = {
       .single();
 
     if (error) throw error;
-    const { component_order, section_visibility, data: templateData, pages, ...metadata } = template;
+    const { component_order, section_visibility, data: templateData, pages: returnedPages, ...metadata } = template;
     return {
       status: 'success',
       template: metadata,
-      contentSummary: summarizeTemplateContent({ component_order, section_visibility, data: templateData, pages }),
+      contentSummary: summarizeTemplateContent({ component_order, section_visibility, data: templateData, pages: returnedPages }),
     };
   },
 

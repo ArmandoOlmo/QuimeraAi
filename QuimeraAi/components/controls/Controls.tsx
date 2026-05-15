@@ -594,7 +594,7 @@ const Controls: React.FC = () => {
       )}
 
       {/* Left Panel: Sections List - Desktop */}
-      <div className={`bg-q-surface/50 border-r border-q-border/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
+      <div className={`bg-q-surface/50 w-64 lg:w-72 flex-shrink-0 flex flex-col overflow-hidden
         fixed inset-y-0 left-0 z-40 transform duration-300 ease-in-out
         md:relative md:inset-auto md:z-auto md:transform-none md:h-full hidden md:flex`}>
         <div className="flex-1 min-h-0 overflow-hidden">

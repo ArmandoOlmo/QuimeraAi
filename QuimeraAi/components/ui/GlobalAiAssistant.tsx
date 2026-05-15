@@ -3434,7 +3434,7 @@ Usuario: ${userMsg}`;
     const drawerContent = (
         <div id="global-ai-assistant-drawer" className={`fixed z-[10000] bg-q-surface border border-q-border shadow-2xl rounded-3xl flex flex-col overflow-hidden transition-all duration-300 animate-drawer-slide-up ${isExpanded ? 'inset-4' : 'bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[420px] h-[65vh] md:h-[550px]'}`}>
             {/* Drawer Header */}
-            <div className="p-4 flex justify-between items-center bg-primary text-primary-foreground shrink-0 select-none cursor-move" onMouseDown={(e) => {
+            <div className="p-4 flex justify-between items-center bg-q-surface border-b border-q-border shrink-0 select-none cursor-move" onMouseDown={(e) => {
                 // Determine if we should implement drag logic here or assume user handles it globally
                 // For now just add cursor-move as requested "Si desea mover el usuario ese modal" implies potential drag desire
                 // But the primary request is the minimize button.
@@ -3449,34 +3449,29 @@ Usuario: ${userMsg}`;
                     {/* Minimize Button - Sets isMinimized=true, hides drawer */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setIsMinimized(true); setIsOpen(false); }}
-                        className="p-1.5 hover:bg-primary-foreground/10 rounded-md transition-colors text-primary-foreground/80 hover:text-primary-foreground z-10"
+                        className="p-1.5 hover:bg-secondary/50 rounded-md transition-colors text-q-text-muted hover:text-foreground z-10"
                         title="Minimizar (a burbuja)"
                     >
                         <Minus size={20} />
                     </button>
 
                     <div className="relative">
-                        <img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-white/10 rounded-full p-1 border border-white/20" />
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-primary ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-400'}`} />
+                        <img src={LOGO_URL} alt="Quimera Logo" className="w-10 h-10 object-contain bg-secondary/30 rounded-full p-1 border border-q-border" />
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-q-surface ${isLiveActive ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm leading-tight">Quimera Assistant</h3>
-                        <p className="text-[10px] opacity-90 font-medium">
+                        <h3 className="font-semibold text-sm leading-tight text-foreground">Quimera Assistant</h3>
+                        <p className="text-[10px] text-q-text-muted font-medium truncate max-w-[200px]">
                             {isLiveActive ? 'Escuchando...' : activeProject ? `En: ${activeProject.name}` : 'Dashboard Mode'}
                         </p>
                     </div>
                 </div>
 
-                <div className="flex gap-1 items-center">
-                    <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors hidden md:flex">
+                <div className="flex gap-1 items-center text-q-text-muted">
+                    <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors hidden md:flex">
                         {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                     </button>
-                    {/* Kept existing close button or remove if minimize is enough? 
-                        User asked for minimize on top left. Usually right side has close/expand. 
-                        Keeping close button as it stops session too. 
-                    */}
-                    {/* Close Button - Completely closes drawer (back to center bar) */}
-                    <button onClick={() => { setIsOpen(false); setIsMinimized(false); stopLiveSession(); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors">
+                    <button onClick={() => { setIsOpen(false); setIsMinimized(false); stopLiveSession(); }} className="p-1.5 hover:bg-secondary/50 hover:text-foreground rounded-md transition-colors">
                         <ChevronDown size={18} />
                     </button>
                 </div>

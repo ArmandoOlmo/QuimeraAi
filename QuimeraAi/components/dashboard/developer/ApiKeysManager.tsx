@@ -204,6 +204,48 @@ const readJsonResponse = async (response: Response) => {
   return raw ? JSON.parse(raw) : {};
 };
 
+const formatMcpApiError = (payload: any, fallback: string) => {
+  const message = payload?.error || fallback;
+  return payload?.details ? `${message} ${payload.details}` : message;
+};
+
+let accessTokenRequest: Promise<string> | null = null;
+
+const readSupabaseAccessToken = async (): Promise<string> => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw new Error(error.message || 'No se pudo validar la sesión de Supabase.');
+
+  const token = data.session?.access_token;
+  if (!token) throw new Error('No hay sesión activa de Supabase.');
+  return token;
+};
+
+const getSupabaseAccessToken = async (): Promise<string> => {
+  accessTokenRequest ||= readSupabaseAccessToken().finally(() => {
+    accessTokenRequest = null;
+  });
+  return accessTokenRequest;
+};
+
+const fetchMcpKeys = async (url: string, init: RequestInit = {}) => {
+  const buildInit = (token: string): RequestInit => {
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    return { ...init, headers };
+  };
+
+  const token = await getSupabaseAccessToken();
+  let response = await fetch(url, buildInit(token));
+  let payload = await readJsonResponse(response);
+
+  if (response.status === 401) {
+    response = await fetch(url, buildInit(await getSupabaseAccessToken()));
+    payload = await readJsonResponse(response);
+  }
+
+  return { response, payload };
+};
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -249,15 +291,8 @@ export function ApiKeysManager() {
 
     setIsLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('No hay sesión activa de Supabase.');
-
-      const response = await fetch(getMcpKeysUrl(currentTenant.id), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const payload = await readJsonResponse(response);
-      if (!response.ok) throw new Error(payload.error || 'Error al cargar API keys');
+      const { response, payload } = await fetchMcpKeys(getMcpKeysUrl(currentTenant.id));
+      if (!response.ok) throw new Error(formatMcpApiError(payload, 'Error al cargar API keys'));
 
       const keys: ApiKey[] = (payload.keys || []).map((key: any) => ({
         id: key.id,
@@ -276,7 +311,7 @@ export function ApiKeysManager() {
       setApiKeys(keys);
     } catch (err) {
       console.error('Error loading API keys:', err);
-      setError('Error al cargar las API keys');
+      setError(err instanceof Error ? err.message : 'Error al cargar las API keys');
     } finally {
       setIsLoading(false);
     }
@@ -288,15 +323,10 @@ export function ApiKeysManager() {
 
   const handleCreateKey = async (data: CreateApiKeyData): Promise<string | undefined> => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('No hay sesión activa de Supabase.');
-
-      const response = await fetch(getMcpKeysUrl(), {
+      const { response, payload } = await fetchMcpKeys(getMcpKeysUrl(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: 'create',
@@ -306,8 +336,7 @@ export function ApiKeysManager() {
           expiresInDays: data.expiresInDays,
         }),
       });
-      const payload = await readJsonResponse(response);
-      if (!response.ok) throw new Error(payload.error || 'Error al crear la API key');
+      if (!response.ok) throw new Error(formatMcpApiError(payload, 'Error al crear la API key'));
 
       if (payload.success) {
         await loadApiKeys();
@@ -327,15 +356,10 @@ export function ApiKeysManager() {
   const confirmRevokeKey = async () => {
     if (!revokeConfirmId) return;
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('No hay sesión activa de Supabase.');
-
-      const response = await fetch(getMcpKeysUrl(), {
+      const { response, payload } = await fetchMcpKeys(getMcpKeysUrl(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: 'revoke',
@@ -343,13 +367,12 @@ export function ApiKeysManager() {
           keyId: revokeConfirmId,
         }),
       });
-      const payload = await readJsonResponse(response);
-      if (!response.ok) throw new Error(payload.error || 'Error al revocar la API key');
+      if (!response.ok) throw new Error(formatMcpApiError(payload, 'Error al revocar la API key'));
 
       await loadApiKeys();
     } catch (err) {
       console.error('Error revoking key:', err);
-      setError('Error al revocar la API key');
+      setError(err instanceof Error ? err.message : 'Error al revocar la API key');
     } finally {
       setRevokeConfirmId(null);
     }

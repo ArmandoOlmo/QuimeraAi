@@ -74,7 +74,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         <section className="w-full">
             <div className="flex flex-col justify-center py-3 lg:py-6">
                 {/* Greeting Header with CTA */}
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6 mb-3 lg:mb-4 overflow-visible">
                     <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-q-text flex items-center flex-wrap">
                         {/* Logo - conditional: tenant logo > App logo */}
                         {tenantContext?.currentTenant?.branding?.logoUrl ? (
@@ -108,11 +108,11 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </h1>
 
                     {/* Right-side CTA buttons */}
-                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:gap-3 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:gap-3 flex-shrink-0 py-1 pb-3 overflow-visible">
                         {/* Create with AI CTA - Opens AI Website Studio */}
                         <button
                             onClick={handleOpenAIStudio}
-                            className="group relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-yellow-500/25 hover:shadow-yellow-500/40 transition-all duration-500 lg:hover:scale-105 hover:bg-right flex-1 sm:flex-initial"
+                            className="group relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl shadow-md shadow-yellow-500/20 hover:shadow-md hover:shadow-yellow-500/30 transition-all duration-500 lg:hover:scale-[1.02] hover:bg-right flex-1 sm:flex-initial"
                             aria-label={t('dashboard.createWithAI')}
                         >
                             <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/30 rounded-lg sm:rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors flex-shrink-0">

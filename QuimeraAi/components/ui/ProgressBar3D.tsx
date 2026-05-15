@@ -11,7 +11,7 @@ type ProgressBarSize = 'sm' | 'md' | 'lg';
 interface ProgressBar3DProps {
     /** 0–100 percentage filled */
     percentage: number;
-    /** CSS color or gradient for the fill. Defaults to primary. */
+    /** CSS color or gradient for the fill. Defaults to accent. */
     color?: string;
     /** Gradient string (from/to) for the fill. Overrides color if set. */
     gradient?: { from: string; to: string };
@@ -24,10 +24,12 @@ interface ProgressBar3DProps {
 }
 
 const SIZE_MAP: Record<ProgressBarSize, { track: number; radius: number }> = {
-    sm: { track: 6, radius: 4 },
-    md: { track: 10, radius: 6 },
-    lg: { track: 14, radius: 8 },
+    sm: { track: 10, radius: 5 },
+    md: { track: 14, radius: 7 },
+    lg: { track: 18, radius: 9 },
 };
+
+const ACCENT_FILL = 'var(--q-accent)';
 
 const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
     percentage,
@@ -40,10 +42,12 @@ const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
     const clamped = Math.max(0, Math.min(100, percentage));
     const { track, radius } = SIZE_MAP[size];
 
-    // Build fill background
+    const accent = color || ACCENT_FILL;
     const fillBg = gradient
         ? `linear-gradient(to right, ${gradient.from}, ${gradient.to})`
-        : color || 'hsl(var(--primary))';
+        : accent;
+
+    const glowColor = gradient?.to || accent;
 
     return (
         <div
@@ -56,7 +60,6 @@ const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
                     'inset 0 2px 4px rgba(0,0,0,0.45), inset 0 -1px 2px rgba(255,255,255,0.06), 0 1px 0 rgba(255,255,255,0.05)',
             }}
         >
-            {/* ── Filled portion ──────────────────────────────────────── */}
             {clamped > 0 && (
                 <div
                     className="absolute inset-y-0 left-0"
@@ -66,10 +69,9 @@ const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
                         background: fillBg,
                         transition: 'width 0.7s cubic-bezier(.4,0,.2,1)',
                         boxShadow:
-                            `0 0 10px ${color || 'hsl(var(--primary))'}, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.2)`,
+                            `0 0 12px color-mix(in srgb, ${glowColor} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.2)`,
                     }}
                 >
-                    {/* Diagonal stripes overlay */}
                     <div
                         className={animate ? 'progress3d-stripes' : ''}
                         style={{
@@ -81,7 +83,6 @@ const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
                             backgroundSize: '17px 17px',
                         }}
                     />
-                    {/* Top-half gloss / shine */}
                     <div
                         style={{
                             position: 'absolute',
@@ -97,7 +98,6 @@ const ProgressBar3D: React.FC<ProgressBar3DProps> = ({
                 </div>
             )}
 
-            {/* inline keyframes (scoped via className) */}
             <style>{`
                 @keyframes progress3d-move {
                     0%   { background-position: 0 0; }

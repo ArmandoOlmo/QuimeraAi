@@ -875,8 +875,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                   <ProgressBar3D
                     percentage={isOwner ? 100 : (creditsUsage?.percentage || 0)}
-                    color={isOwner ? '#a855f7' : (creditsUsage?.color || 'hsl(var(--primary))')}
-                    size="sm"
+                    color="var(--q-accent)"
+                    size="md"
                   />
 
                   <div className="mt-2 flex justify-between items-center px-1">

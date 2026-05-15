@@ -65,7 +65,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             });
         }, 8000);
 
+        let authChangeRunId = 0;
+
         const handleAuthChange = async (supabaseUser: User | null) => {
+            const runId = ++authChangeRunId;
             clearTimeout(timeout);
             console.log('[AuthProvider] Auth state changed:', supabaseUser ? `id=${supabaseUser.id}, email=${supabaseUser.email}` : 'null (signed out)');
             setUser(supabaseUser);
@@ -109,6 +112,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         }
                     }
 
+                    if (runId !== authChangeRunId) return;
+
                     setUserDocument({ ...finalUserDoc, id: supabaseUser.id });
                     const effectiveRole = determineRole(supabaseUser.email!, finalUserDoc.role || 'user');
                     console.log('[AuthProvider] User doc loaded. role:', finalUserDoc.role, 'effectiveRole:', effectiveRole, 'tenantId:', finalUserDoc.tenantId);
@@ -136,11 +141,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         photoURL: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || '',
                         role: fallbackRole as any,
                     };
+                    if (runId !== authChangeRunId) return;
+
                     setUserDocument(fallbackDoc);
                     const effectiveRole = determineRole(supabaseUser.email!, fallbackRole || 'user');
                     setUserPermissions(getPermissions(effectiveRole));
                 }
             } else {
+                if (runId !== authChangeRunId) return;
+
                 setUserDocument(null);
                 setUserPermissions(getPermissions('user'));
             }
@@ -156,12 +165,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
-                // Ignore initial setup events if they fire right after getSession
-                handleAuthChange(session?.user ?? null);
+                setTimeout(() => {
+                    void handleAuthChange(session?.user ?? null);
+                }, 0);
             }
         );
 
         return () => {
+            authChangeRunId++;
             clearTimeout(timeout);
             subscription.unsubscribe();
         };
@@ -223,7 +234,6 @@ export const useAuth = (): AuthContextType => {
 export const useSafeAuth = (): AuthContextType | null => {
     return useContext(AuthContext) || null;
 };
-
 
 
 
