@@ -246,8 +246,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveDestination]);
 
-    // Filter project images for the library browser
-    const effectiveProjectId = activeProjectId || projectId;
+    // Filter project images for the library browser (active editor project vs explicit prop)
+    const libraryProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
         let sourceFiles = files;
         if (effectiveDestination === 'global') {
@@ -260,14 +260,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         }
         
         let result = sourceFiles.filter(f => f.type?.startsWith('image/'));
-        if (effectiveDestination === 'user' && effectiveProjectId) {
-            result = result.filter(f => f.projectId === effectiveProjectId);
+        if (effectiveDestination === 'user' && libraryProjectId) {
+            result = result.filter(f => f.projectId === libraryProjectId);
         }
         if (librarySearchQuery) {
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, effectiveProjectId, effectiveDestination]);
+    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, libraryProjectId, effectiveDestination]);
 
     // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {

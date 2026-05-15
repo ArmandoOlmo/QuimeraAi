@@ -7,18 +7,18 @@
 import React, { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { useProject } from '../../contexts/project';
-import { useVisualIdentityKit } from '../../hooks/useVisualIdentityKit';
+import { useProject } from '../../../contexts/project';
+import { useVisualIdentityKit } from '../../../hooks/useVisualIdentityKit';
 import {
     IMAGE_REFERENCE_CATEGORY_LABELS,
     IMAGE_REFERENCE_CATEGORY_COLORS,
-} from '../../types/visualIdentity';
-import type { ImageReferenceCategory, VisualReference } from '../../types/visualIdentity';
+} from '../../../types/visualIdentity';
+import type { ImageReferenceCategory, VisualReference } from '../../../types/visualIdentity';
 import {
     X, Plus, Trash2, Edit3, Palette, Star, Tag,
     Zap, Image as ImageIcon, Layers, ArrowUpDown, CheckCircle2
 } from 'lucide-react';
-import ImagePicker from '../ui/ImagePicker';
+import ImagePicker from '../../ui/ImagePicker';
 
 interface VisualIdentityKitManagerProps {
     /** Called when user wants to close/return */
