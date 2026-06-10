@@ -1,57 +1,31 @@
-import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { AppProviders, LightProviders } from './contexts/AppProviders';
 import { useLightAuthState } from './hooks/useLightAuthState';
 import { useAuth } from './contexts/core/AuthContext';
-import { useUI } from './contexts/core/UIContext';
-import { useProject } from './contexts/project';
-import { useSafeAdmin } from './contexts/admin';
 import { Router } from './routes';
 import { useRouter } from './hooks/useRouter';
 import { ROUTES, getRouteConfig } from './routes/config';
-import GlobalSEO from './components/GlobalSEO';
-import { useSEO } from './hooks/useSEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeMonitoring, setUserContext, clearUserContext } from './utils/monitoring';
-import { auth, signOut } from './firebase';
-import { View, AdminView } from './types/ui';
-import LandingChatbotWidget from './components/LandingChatbotWidget';
 import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './hooks/useCustomDomain';
 import { detectSubdomain, SubdomainInfo } from './utils/subdomainUtils';
-import AdPixelsInjector from './components/AdPixelsInjector';
 import { lazyWithRetry } from './utils/lazyWithRetry';
-// Side-effect import: triggers Firestore prefetch for /preview/ routes IMMEDIATELY
-import './utils/previewPrefetch';
 
 // Lazy-loaded components for code-splitting with retry logic
 // Using lazyWithRetry to handle chunk loading failures after deployments
+const AuthenticatedAppContent = lazyWithRetry(() => import('./components/app/AuthenticatedAppContent'));
 const ProfileModal = lazyWithRetry(() => import('./components/dashboard/ProfileModal'));
-const GlobalAiAssistant = lazyWithRetry(() => import('./components/ui/GlobalAiAssistant'));
-const OnboardingModal = lazyWithRetry(() => import('./components/onboarding/OnboardingModal'));
-const AIWebsiteStudio = lazyWithRetry(() => import('./components/onboarding/AIWebsiteStudio'));
-const ViewRouter = lazyWithRetry(() => import('./components/ViewRouter'));
 const PublicLandingPage = lazyWithRetry(() => import('./components/PublicLandingPage'));
 const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebsitePreview'));
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
 const AgencyCheckoutPage = lazyWithRetry(() => import('./components/checkout/AgencyCheckoutPage'));
+const LandingChatbotWidget = lazyWithRetry(() => import('./components/LandingChatbotWidget'), { retries: 2 });
 
 // Minimal loading fallback for lazy components — invisible (no spinner, no branding)
 const MinimalLoader = () => (
   <div className="min-h-screen bg-background" />
 );
-
-// =============================================================================
-// GLOBAL AD PIXELS - App-wide tracking for analytics
-// =============================================================================
-
-const GlobalAdPixels: React.FC = () => {
-  const adminContext = useSafeAdmin();
-
-  // Safe fallback if AdminProvider is not available or still initializing
-  if (!adminContext || !adminContext.globalAdPixels) return null;
-
-  return <AdPixelsInjector config={adminContext.globalAdPixels} />;
-};
 
 // =============================================================================
 // PREVIEW ROUTE CHECK (Clean URLs - no hash)
@@ -85,78 +59,11 @@ const isCheckoutRoute = () => {
   return path.startsWith('/pay/');
 };
 
-// =============================================================================
-// APP CONTENT - Authenticated User Content
-// =============================================================================
-
-interface AppContentProps {
-  routeView: View;
-  routeAdminView: AdminView | null;
-  routeProjectId: string | null;
-}
-
-const AppContent: React.FC<AppContentProps> = ({
-  routeView,
-  routeAdminView,
-  routeProjectId
-}) => {
-  const { userDocument } = useAuth();
-  const { view, setView, setAdminView, isSidebarOpen, setIsSidebarOpen, previewRef } = useUI();
-  const { activeProjectId, loadProject, data, isLoadingProjects } = useProject();
-  const seoConfig = useSEO();
-  const loadingRouteProjectRef = useRef<string | null>(null);
-
-  // Sync route state with contexts
-  useEffect(() => {
-    if (routeView && routeView !== view) {
-      setView(routeView);
-    }
-    if (routeView === 'superadmin') {
-      const targetAdminView = routeAdminView || 'main';
-      setAdminView(targetAdminView);
-    }
-    // Load project when:
-    // 1. Route has a projectId AND
-    // 2. Projects have finished loading AND
-    // 3. We haven't already started loading this specific projectId AND
-    // 4. (projectId changed OR we don't have data yet)
-    const needsLoad = routeProjectId !== activeProjectId || !data;
-    const shouldLoadProject = routeProjectId && !isLoadingProjects && needsLoad && loadingRouteProjectRef.current !== routeProjectId;
-    
-    if (shouldLoadProject) {
-      loadingRouteProjectRef.current = routeProjectId;
-      loadProject(routeProjectId, false, false);
-    } else if (routeProjectId === activeProjectId && data) {
-      // Clear the ref once successfully loaded so it can be reloaded if needed
-      loadingRouteProjectRef.current = null;
-    }
-  }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects, data]);
-
-  return (
-    <>
-      <GlobalSEO config={seoConfig} />
-      <Suspense fallback={<MinimalLoader />}>
-        <ViewRouter
-          view={view}
-          userDocument={userDocument}
-          activeProjectId={activeProjectId}
-          data={data}
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-          previewRef={previewRef}
-        />
-      </Suspense>
-      <Suspense fallback={null}>
-        <GlobalAiAssistant />
-      </Suspense>
-      <Suspense fallback={null}>
-        <OnboardingModal />
-      </Suspense>
-      <Suspense fallback={null}>
-        <AIWebsiteStudio />
-      </Suspense>
-    </>
-  );
+const shouldShowLandingChatbot = (user: unknown) => {
+  if (user) return false;
+  if (isPreviewRoute()) return false;
+  if (window.location.pathname.startsWith('/store/')) return false;
+  return true;
 };
 
 // =============================================================================
@@ -164,8 +71,10 @@ const AppContent: React.FC<AppContentProps> = ({
 // =============================================================================
 
 const AuthGate: React.FC = () => {
-  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument, isUserOwner } = useAuth();
+  const { user, loadingAuth, verificationEmail, setVerificationEmail, isProfileModalOpen, closeProfileModal, userDocument, isUserOwner, logout } = useAuth();
   const { navigate } = useRouter();
+  const [mountLandingChatbot, setMountLandingChatbot] = useState(false);
+  const showLandingChatbot = shouldShowLandingChatbot(user);
 
   useEffect(() => {
     if (user && userDocument) {
@@ -180,16 +89,19 @@ const AuthGate: React.FC = () => {
   }, [user, userDocument]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     setVerificationEmail(null);
     navigate(ROUTES.LOGIN);
   };
 
+  useEffect(() => {
+    if (!showLandingChatbot) {
+      setMountLandingChatbot(false);
+    }
+  }, [showLandingChatbot]);
+
   return (
     <>
-      {/* Global Ad Tracking Pixels - Always active for app-wide analytics */}
-      <GlobalAdPixels />
-
       <Router
         user={user ? { 
           uid: user.id, 
@@ -204,7 +116,11 @@ const AuthGate: React.FC = () => {
       >
         {({ view, adminView, projectId }) => (
           <>
-            <AppContent routeView={view} routeAdminView={adminView} routeProjectId={projectId} />
+            {user && (
+              <Suspense fallback={<MinimalLoader />}>
+                <AuthenticatedAppContent routeView={view} routeAdminView={adminView} routeProjectId={projectId} />
+              </Suspense>
+            )}
             {isProfileModalOpen && (
               <Suspense fallback={null}>
                 <ProfileModal isOpen={isProfileModalOpen} onClose={closeProfileModal} />
@@ -214,7 +130,25 @@ const AuthGate: React.FC = () => {
         )}
       </Router>
       {/* Landing Chatbot - Only render on public marketing pages (home, login, register, etc.) */}
-      {!user && !isPreviewRoute() && !window.location.pathname.startsWith('/store/') && <LandingChatbotWidget />}
+      {showLandingChatbot && !mountLandingChatbot && (
+        <button
+          type="button"
+          aria-label="Abrir chat de Quimera"
+          onClick={() => setMountLandingChatbot(true)}
+          className="fixed z-[9999] flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#fbb92b] shadow-[0_18px_45px_rgba(0,0,0,0.35)] transition-transform hover:scale-105 active:scale-95"
+          style={{
+            top: 'calc(100dvh - max(76px, calc(env(safe-area-inset-bottom) + 76px)))',
+            right: 'max(20px, env(safe-area-inset-right))',
+          }}
+        >
+          <img src="/logos/quimera-icon.svg" alt="" className="h-8 w-8 object-contain" />
+        </button>
+      )}
+      {showLandingChatbot && mountLandingChatbot && (
+        <Suspense fallback={null}>
+          <LandingChatbotWidget initialOpen />
+        </Suspense>
+      )}
     </>
   );
 };
@@ -241,6 +175,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     initializeMonitoring();
+  }, []);
+
+  useEffect(() => {
+    if (!isPreviewRoute()) return;
+
+    void import('./utils/previewPrefetch')
+      .then((module) => module.startPreviewPrefetch())
+      .catch((error) => {
+        console.warn('[PreviewPrefetch] Could not start preview prefetch:', error);
+      });
   }, []);
 
   useEffect(() => {

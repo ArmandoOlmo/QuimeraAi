@@ -18,9 +18,35 @@ import { initialData } from '../data/initialData';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
+import { getSafeImageUrl, isFirebaseStorageUrl } from '../utils/imageUrlHelper';
 import SectionBackground from './ui/SectionBackground';
 import { usePublicRealEstateListings } from '../hooks/usePublicRealEstateListings';
 import { Property } from '../types/realEstate';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+
+function replaceBrokenFirebaseStorageUrls<T>(value: T): T {
+  if (typeof value === 'string') {
+    return (isFirebaseStorageUrl(value)
+      ? getSafeImageUrl(value, { label: 'Imagen pendiente' })
+      : value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => replaceBrokenFirebaseStorageUrls(item)) as T;
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+        key,
+        replaceBrokenFirebaseStorageUrls(item),
+      ])
+    ) as T;
+  }
+
+  return value;
+}
 
 // Core components — needed immediately for first paint
 import Header from './Header';
@@ -439,7 +465,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         if (prefetch) {
           const prefetched = await prefetch;
           if (prefetched.project) {
-            projectData = prefetched.project as Project;
+            projectData = replaceBrokenFirebaseStorageUrls(prefetched.project) as Project;
             if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts as CMSPost[]);
             if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
             if (prefetched.categories && prefetched.categories.length > 0) {
@@ -463,7 +489,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         const ssrData = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__ : null;
 
         if (ssrData?.project) {
-          projectData = { id: ssrData.projectId, ...ssrData.project } as Project;
+          projectData = replaceBrokenFirebaseStorageUrls({ id: ssrData.projectId, ...ssrData.project }) as Project;
 
           console.log('[PublicWebsitePreview] ✅ Using SSR-injected data (no Firestore call)', {
             projectName: projectData.name,
@@ -566,9 +592,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         // STEP 1: Try Supabase published_data, then draft data for editor previews.
         if (!projectData && resolvedProjectId) {
           try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const canLoadDraftData = isEditorPreviewRoute && Boolean(sessionData.session);
+            const projectSelect = canLoadDraftData
+              ? 'id, tenant_id, user_id, name, published_data, data'
+              : 'id, tenant_id, user_id, name, published_data';
             const projectResult = await supabase
               .from('projects')
-              .select('id, tenant_id, user_id, name, published_data, data')
+              .select(projectSelect)
               .eq('id', resolvedProjectId)
               .maybeSingle();
             const postsResult = projectResult.data?.tenant_id
@@ -583,7 +614,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
             if (!projectResult.error && projectResult.data) {
               const row = projectResult.data as any;
-              const sourceData = isEditorPreviewRoute ? (row.data || row.published_data) : (row.published_data || row.data);
+              const sourceData = canLoadDraftData ? (row.data || row.published_data) : row.published_data;
               const rawData = sourceData?.data && typeof sourceData.data === 'object'
                 ? { ...sourceData, ...sourceData.data }
                 : sourceData;
@@ -591,10 +622,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               if (rawData) {
                 projectData = {
                   id: resolvedProjectId,
+                  tenantId: row.tenant_id,
                   userId: row.user_id,
                   name: row.name || rawData.name,
                   ...rawData,
                 } as Project;
+                projectData = replaceBrokenFirebaseStorageUrls(projectData);
                 console.log('[PublicWebsitePreview] ✅ Loaded from Supabase:', {
                   source: rawData === row.data ? 'data' : 'published_data',
                   hasCategories: !!rawData?.categories,
@@ -631,11 +664,18 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           setProject(projectData);
 
           // Fire-and-forget: tenant branding check (non-blocking)
+          const tenantId = (projectData as any).tenantId;
           const ownerUserId = projectData.userId || userId;
-          if (ownerUserId) {
-            supabase.from('tenants').select('branding').eq('owner_user_id', ownerUserId).limit(1).then(({ data, error }) => {
-              if (!error && data && data.length > 0) {
-                const branding = data[0].branding as any;
+          const brandingQuery = tenantId && UUID_RE.test(tenantId)
+            ? supabase.from('tenants').select('branding').eq('id', tenantId).maybeSingle()
+            : ownerUserId && UUID_RE.test(ownerUserId)
+              ? supabase.from('tenants').select('branding').eq('owner_user_id', ownerUserId).maybeSingle()
+              : null;
+
+          if (brandingQuery) {
+            brandingQuery.then(({ data, error }) => {
+              if (!error && data) {
+                const branding = (data as any).branding;
                 if (branding?.companyName || branding?.logoUrl) {
                   setHasWhiteLabelBranding(true);
                 }
@@ -721,29 +761,47 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           setActivePost(post);
           window.scrollTo(0, 0);
         } else if (project?.id) {
-          // 3. Fallback: Fetch specific post from Firestore (Fail-safe)
+          // 3. Fallback: Fetch specific post from Supabase (Fail-safe)
           // This handles cases where the post exists but wasn't in the initial batch or cmsPosts hasn't loaded properly
-          console.log('[PublicWebsitePreview] Post not in loaded list, fetching directly from Firestore...');
+          console.log('[PublicWebsitePreview] Post not in loaded list, fetching directly from Supabase...');
           setLoadingPost(true);
 
           try {
-            // Try publicStores first (Published content)
-            const publicPostsRef = collection(db, 'publicStores', project.id, 'posts');
-            const q = query(publicPostsRef, where('slug', '==', slug), limit(1));
-            const snap = await getDocs(q);
+            const { data: postRow, error: postError } = await supabase
+              .from('posts')
+              .select('*')
+              .eq('slug', slug)
+              .eq('status', 'published')
+              .contains('tags', [`project:${project.id}`])
+              .maybeSingle();
 
-            if (!snap.empty) {
-              const fetchedPost = { id: snap.docs[0].id, ...snap.docs[0].data() } as CMSPost;
+            if (!postError && postRow) {
+              const fetchedPost = {
+                id: postRow.id,
+                projectId: project.id,
+                title: postRow.title,
+                slug: postRow.slug,
+                content: postRow.content,
+                excerpt: postRow.excerpt,
+                featuredImage: postRow.featured_image,
+                status: postRow.status,
+                author: postRow.author,
+                seoTitle: postRow.seo_title,
+                seoDescription: postRow.seo_description,
+                publishedAt: postRow.published_at,
+                createdAt: postRow.created_at,
+                updatedAt: postRow.updated_at,
+              } as CMSPost;
               console.log('[PublicWebsitePreview] ✅ Successfully fetched post directly:', fetchedPost.title);
               setStoreView({ type: 'none' });
               setActivePage(null);
               setActivePost(fetchedPost);
               window.scrollTo(0, 0);
             } else {
-              console.warn('[PublicWebsitePreview] Post not found in Firestore either for slug:', slug);
+              console.warn('[PublicWebsitePreview] Post not found in Supabase either for slug:', slug, postError);
             }
           } catch (err) {
-            console.error('[PublicWebsitePreview] Error fetching post directly:', err);
+            console.error('[PublicWebsitePreview] Error fetching post directly from Supabase:', err);
           } finally {
             setLoadingPost(false);
           }
@@ -1038,13 +1096,31 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         console.log('[PublicWebsitePreview] Post not in loaded list, fetching directly...');
         setLoadingPost(true);
         try {
-          // Try publicStores first
-          const publicPostsRef = collection(db, 'publicStores', project.id, 'posts');
-          const q = query(publicPostsRef, where('slug', '==', slug), limit(1));
-          const snap = await getDocs(q);
+          const { data: postRow, error: postError } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('slug', slug)
+            .eq('status', 'published')
+            .contains('tags', [`project:${project.id}`])
+            .maybeSingle();
 
-          if (!snap.empty) {
-            const fetchedPost = { id: snap.docs[0].id, ...snap.docs[0].data() } as CMSPost;
+          if (!postError && postRow) {
+            const fetchedPost = {
+              id: postRow.id,
+              projectId: project.id,
+              title: postRow.title,
+              slug: postRow.slug,
+              content: postRow.content,
+              excerpt: postRow.excerpt,
+              featuredImage: postRow.featured_image,
+              status: postRow.status,
+              author: postRow.author,
+              seoTitle: postRow.seo_title,
+              seoDescription: postRow.seo_description,
+              publishedAt: postRow.published_at,
+              createdAt: postRow.created_at,
+              updatedAt: postRow.updated_at,
+            } as CMSPost;
             setStoreView({ type: 'none' });
             setActivePage(null);
             setActiveCategorySlug(null);
@@ -1053,10 +1129,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             updatePageSEO({ title: fetchedPost.title, description: fetchedPost.excerpt, image: fetchedPost.featuredImage, type: 'article', path: `/blog/${slug}` });
             window.scrollTo(0, 0);
           } else {
-            console.warn('[PublicWebsitePreview] Blog post not found directly for slug:', slug);
+            console.warn('[PublicWebsitePreview] Blog post not found directly for slug:', slug, postError);
           }
         } catch (e) {
-          console.error('[PublicWebsitePreview] Error fetching direct post:', e);
+          console.error('[PublicWebsitePreview] Error fetching direct post from Supabase:', e);
         } finally {
           setLoadingPost(false);
         }

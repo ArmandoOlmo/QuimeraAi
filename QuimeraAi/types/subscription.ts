@@ -136,6 +136,9 @@ export type AiCreditOperation =
     | 'image_generation'              // Generación de imagen
     | 'image_generation_fast'         // Imagen con modelo rápido
     | 'image_generation_ultra'        // Imagen alta resolución
+    | 'video_generation_seedance'   // Video Seedance 2.0
+    | 'video_generation_veo'        // Video Google Veo 3.1
+    | 'video_generation_omni'       // Video Gemini Omni
     | 'chatbot_message'               // Mensaje de chatbot
     | 'ai_assistant_request'          // Request al asistente IA
     | 'ai_assistant_complex'          // Request complejo (ediciones múltiples)
@@ -154,6 +157,9 @@ export const AI_CREDIT_COSTS: Record<AiCreditOperation, number> = {
     image_generation: 4,              // ~$0.04 costo real (Imagen 3.0)
     image_generation_fast: 2,         // ~$0.02 costo real (Imagen 4.0 Fast)
     image_generation_ultra: 8,        // ~$0.08 costo real (Imagen 4.0 Ultra)
+    video_generation_seedance: 121,   // Fallback mínimo: Seedance 2.0, 4s, 720p. El flujo real usa customCredits dinámicos.
+    video_generation_veo: 320,        // Fallback mínimo: Veo 3.1, 4s, audio. El flujo real usa customCredits dinámicos.
+    video_generation_omni: 480,       // Fallback conservador hasta que OpenRouter publique pricing Omni.
     chatbot_message: 1,               // ~$0.01 costo real (promedio 5 msgs)
     ai_assistant_request: 1,          // ~$0.01 costo real
     ai_assistant_complex: 3,          // ~$0.03 costo real
@@ -835,7 +841,6 @@ export function getAgencyPlans(): SubscriptionPlan[] {
 export function getIndividualPlans(): SubscriptionPlan[] {
     return Object.values(SUBSCRIPTION_PLANS).filter(plan => !plan.isAgencyPlan);
 }
-
 
 
 

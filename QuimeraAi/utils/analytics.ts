@@ -1,4 +1,6 @@
 // Analytics functionality - gracefully degrades if Firebase Analytics is not available
+import { isDevelopmentHostname } from './subdomainUtils';
+
 let analytics: any = null;
 let analyticsInitialized = false;
 
@@ -10,6 +12,10 @@ const initAnalytics = async () => {
   try {
     // Only initialize in browser environment
     if (typeof window !== 'undefined') {
+      if (isDevelopmentHostname(window.location.hostname)) {
+        return null;
+      }
+
       const { getAnalytics } = await import('firebase/analytics');
       const { app } = await import('../firebase');
       analytics = getAnalytics(app);
@@ -206,4 +212,3 @@ export const trackImageUploaded = (fileType: string, fileSize: number) => {
     file_size_kb: Math.round(fileSize / 1024),
   });
 };
-

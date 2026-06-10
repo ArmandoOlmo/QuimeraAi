@@ -3,9 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './src/styles/main.css'; // Tailwind v4 + Theme (OKLCH from tweakcn)
 import App from './App';
 import './i18n'; // Inicializar i18next
+import './utils/serviceWorkerCleanup';
 
-// Help Center utilities (available in browser console for seeding)
-import './utils/seedHelpArticles';
+// Help Center seeding utilities are only needed locally. Loading them in
+// production pulls Firestore plus a large article dataset into the public boot.
+if (import.meta.env.DEV) {
+  void import('./utils/seedHelpArticles');
+}
 
 // ─── Global Image Error Interceptor ──────────────────────────────────
 // Some legacy storage URLs can return 402 (Payment Required) for all images.
@@ -46,30 +50,6 @@ document.addEventListener('error', (e) => {
         }
     }
 }, true); // 'true' = capture phase — runs before React handlers
-
-// CRITICAL: Unregister Service Worker for custom domains to ensure fresh SSR content
-// The PWA/SW caches HTML and causes stale data issues on custom domains
-const isCustomDomain = !window.location.hostname.includes('vercel.app') &&
-                       !window.location.hostname.includes('localhost') &&
-                       !window.location.hostname.includes('127.0.0.1');
-
-if (isCustomDomain && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => {
-      registration.unregister();
-      console.log('[PWA] Service Worker unregistered for custom domain:', window.location.hostname);
-    });
-  });
-  // Also clear caches to ensure fresh content
-  if ('caches' in window) {
-    caches.keys().then((names) => {
-      names.forEach((name) => {
-        caches.delete(name);
-        console.log('[PWA] Cache deleted:', name);
-      });
-    });
-  }
-}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

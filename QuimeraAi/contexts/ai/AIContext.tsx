@@ -8,7 +8,11 @@ import { AiAssistantConfig, Project } from '../../types';
 import { useAuth } from '../core/AuthContext';
 import { getGoogleGenAI, syncApiKeyFromAiStudio, setCachedApiKey, fetchGoogleApiKey, getCachedApiKey } from '../../utils/genAiClient';
 import { generateImageViaProxy, generateContentViaProxy, extractTextFromResponse, shouldUseProxy } from '../../utils/geminiProxyClient';
+import { downloadVideoBlob, generateVideoViaProxy } from '../../utils/videoProxyClient';
+import type { VideoGenerationOptions } from '../../types/videoGeneration';
+import { calculateVideoGenerationCredits, estimateOpenRouterVideoCostUsd, getCreditOperationForVideoModel } from '../../constants/curatedVideoModels';
 import { logApiCall } from '../../services/apiLoggingService';
+import { canPerformOperation, consumeCreditsWithPoolDetection } from '../../services/aiCreditsService';
 import { Modality } from '@google/genai';
 import { supabase } from '../../supabase';
 
@@ -62,6 +66,8 @@ interface AIContextType {
         generationContext?: 'background' | 'general';
     }) => Promise<string>;
 
+    generateVideo: (prompt: string, options?: VideoGenerationOptions) => Promise<string>;
+
     // Batch Image Generation
     generateProjectImagesWithProgress: (
         project: Project,
@@ -94,7 +100,7 @@ const defaultAiAssistantConfig: AiAssistantConfig = {
 };
 
 export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, currentTenant } = useAuth();
 
     // API Key State
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -218,6 +224,8 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 console.warn('[AIContext] Could not resolve project tenant for generated image:', error);
             }
         }
+
+        if (currentTenant) return currentTenant;
 
         // Fallback: use the current user's primary tenant from tenant_members
         if (user?.id) {
@@ -476,6 +484,131 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         );
 
         return publicUrlData.publicUrl;
+    };
+
+    const uploadGeneratedVideoFromUrl = async (
+        videoUrl: string,
+        prompt: string,
+        options?: VideoGenerationOptions
+    ): Promise<string> => {
+        const blob = await downloadVideoBlob(videoUrl);
+        const mimeType = blob.type || 'video/mp4';
+        const ext = mimeType.includes('webm') ? 'webm' : 'mp4';
+        const fileName = `ai-video-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+        return uploadGeneratedImageBlob(blob, fileName, mimeType, prompt, {
+            destination: options?.destination,
+            adminCategory: options?.adminCategory,
+            adminTags: options?.adminTags,
+            adminDescription: options?.adminDescription,
+            projectId: options?.projectId,
+            tenantId: options?.tenantId,
+        });
+    };
+
+    const generateVideo = async (
+        prompt: string,
+        options?: VideoGenerationOptions
+    ): Promise<string> => {
+        const startTime = Date.now();
+
+        if (!options?.model) {
+            throw new Error('Video model is required');
+        }
+
+        const destination = options.destination || 'user';
+        const creditOperation = getCreditOperationForVideoModel(options.model);
+        const videoCredits = calculateVideoGenerationCredits({
+            modelId: options.model,
+            duration: options.duration,
+            resolution: options.resolution,
+            size: options.size,
+            aspectRatio: options.aspectRatio,
+            generateAudio: options.generateAudio,
+            pricingSkus: options.pricingSkus,
+        });
+        const openRouterCostUsd = estimateOpenRouterVideoCostUsd({
+            modelId: options.model,
+            duration: options.duration,
+            resolution: options.resolution,
+            size: options.size,
+            aspectRatio: options.aspectRatio,
+            generateAudio: options.generateAudio,
+            pricingSkus: options.pricingSkus,
+        });
+        const tenantId = await resolveProjectTenantId(options.projectId, options.tenantId);
+        const shouldChargeCredits = destination === 'user';
+
+        if (shouldChargeCredits) {
+            if (!tenantId || !user?.id) {
+                throw new Error('No se pudo validar el tenant para consumir créditos de video.');
+            }
+
+            const creditCheck = await canPerformOperation(tenantId, creditOperation, videoCredits);
+            if (!creditCheck.hasCredits) {
+                throw new Error(creditCheck.message || `No hay suficientes créditos para generar este video. Necesitas ${creditCheck.creditsRequired} créditos.`);
+            }
+        }
+
+        const { videoUrl } = await generateVideoViaProxy(
+            user?.id || 'anonymous',
+            prompt,
+            options,
+            options.projectId,
+            {
+                onProgress: options.onProgress,
+            }
+        );
+
+        await logApiCall({
+            endpoint: 'openrouter/videos',
+            model: options.model,
+            promptTokens: prompt.length,
+            completionTokens: 0,
+            totalTokens: prompt.length,
+            latencyMs: Date.now() - startTime,
+            success: true,
+            userId: user?.id,
+        } as any);
+
+        const savedVideoUrl = await uploadGeneratedVideoFromUrl(videoUrl, prompt, {
+            ...options,
+            tenantId,
+        });
+
+        if (shouldChargeCredits && tenantId && user?.id) {
+            const creditResult = await consumeCreditsWithPoolDetection(
+                tenantId,
+                user.id,
+                creditOperation,
+                {
+                    projectId: options.projectId,
+                    model: options.model,
+                    customCredits: videoCredits,
+                    description: `Generación de video (${options.model})`,
+                    metadata: {
+                        destination,
+                        quimera_credits: videoCredits,
+                        estimated_openrouter_cost_usd: openRouterCostUsd,
+                        duration: options.duration,
+                        resolution: options.resolution,
+                        aspect_ratio: options.aspectRatio,
+                        size: options.size,
+                        generate_audio: options.generateAudio,
+                        has_start_frame: Boolean(options.frameImages?.some(frame => frame.frameType === 'first_frame')),
+                        has_end_frame: Boolean(options.frameImages?.some(frame => frame.frameType === 'last_frame')),
+                        input_references_count: options.inputReferences?.length || 0,
+                        saved_video_url: savedVideoUrl,
+                    },
+                }
+            );
+
+            if (!creditResult.success) {
+                throw new Error(creditResult.error || 'No se pudieron consumir los créditos de la generación de video.');
+            }
+        }
+
+        return savedVideoUrl;
     };
 
     const generateImage = async (prompt: string, options?: {
@@ -894,6 +1027,7 @@ Enhanced prompt:`;
         setAiAssistantConfig,
         saveAiAssistantConfig,
         generateImage,
+        generateVideo,
         generateProjectImagesWithProgress,
         enhancePrompt,
     };

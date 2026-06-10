@@ -1,5 +1,17 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @plugin "@tailwindcss/typography";
+
+@source "../../api/**/*.{js,jsx,ts,tsx}";
+@source "../../components/**/*.{js,jsx,ts,tsx}";
+@source "../../constants/**/*.{js,jsx,ts,tsx}";
+@source "../../contexts/**/*.{js,jsx,ts,tsx}";
+@source "../../data/**/*.{js,jsx,ts,tsx}";
+@source "../../hooks/**/*.{js,jsx,ts,tsx}";
+@source "../../routes/**/*.{js,jsx,ts,tsx}";
+@source "../../services/**/*.{js,jsx,ts,tsx}";
+@source "../../src/**/*.{js,jsx,ts,tsx}";
+@source "../../supabase/**/*.{js,jsx,ts,tsx}";
+@source "../../utils/**/*.{js,jsx,ts,tsx}";
 
 /* ============================================
    QUIMERA THEME CSS VARIABLES

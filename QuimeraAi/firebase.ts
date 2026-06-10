@@ -59,16 +59,47 @@ import {
   Timestamp,
   increment
 } from "firebase/firestore";
+import { isDevelopmentHostname } from "./utils/subdomainUtils";
+
+const configuredFirebaseProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const configuredAuthDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+const firebaseHostedAuthDomain = configuredFirebaseProjectId
+  ? `${configuredFirebaseProjectId}.firebaseapp.com`
+  : configuredAuthDomain;
+
+// Custom app domains serve the SPA, so Firebase Auth's hidden iframe would load
+// a second copy of Quimera inside mobile Safari/Chrome. Use Firebase Hosting's
+// auth handler domain for SDK internals instead.
+const authDomain = configuredAuthDomain === 'quimera.ai' || configuredAuthDomain === 'www.quimera.ai'
+  ? firebaseHostedAuthDomain
+  : configuredAuthDomain;
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  authDomain,
+  projectId: configuredFirebaseProjectId,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+const shouldEnableFirebaseAnalytics = (): boolean => {
+  if (typeof window === 'undefined') return false;
+
+  const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '');
+  if (isDevelopmentHostname(hostname)) return false;
+
+  // Analytics/Installations are only valid on platform-owned app domains.
+  // Custom client domains are served by the SPA but are not allowed Firebase
+  // referrers, so initializing analytics there creates noisy 403s.
+  return (
+    hostname === 'quimera.ai' ||
+    hostname.endsWith('.quimera.ai') ||
+    hostname === 'quimera-ai.vercel.app' ||
+    hostname.endsWith('.quimera-ai.vercel.app')
+  );
 };
 
 // Validate that required configuration is present
@@ -194,6 +225,10 @@ let _analytics: ReturnType<typeof import("firebase/analytics").getAnalytics> | n
 export const getAnalyticsInstance = async () => {
   if (!_analytics && typeof window !== 'undefined') {
     try {
+      if (!shouldEnableFirebaseAnalytics()) {
+        return null;
+      }
+
       const { getAnalytics, isSupported } = await import("firebase/analytics");
       const supported = await isSupported();
       if (supported && firebaseConfig.measurementId) {
@@ -211,7 +246,7 @@ export const getAnalyticsInstance = async () => {
 
 
 // Initialize Analytics after page load (non-blocking)
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && shouldEnableFirebaseAnalytics()) {
   // Use requestIdleCallback or setTimeout to defer analytics
   const initAnalytics = () => {
     getAnalyticsInstance().catch(console.warn);

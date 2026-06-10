@@ -11,7 +11,7 @@ import { Image, Upload, Zap, Grid, X, Check, Search, FolderOpen, ShoppingBag, Ma
 import DragDropZone from './DragDropZone';
 import { searchFiles } from '../../utils/fileHelpers';
 import { FileRecord } from '../../types';
-import ImageGeneratorPanel from './ImageGeneratorPanel';
+import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import ImageDetailModal from './ImageDetailModal';
 import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
@@ -611,7 +611,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
 
                             {/* GENERATE TAB - REPLACED WITH ImageGeneratorPanel */}
                             {activeTab === 'generate' && (
-                            <ImageGeneratorPanel
+                            <MediaGeneratorPanel
                                     destination={destination}
                                     adminCategory={adminCategory}
                                     projectId={activeProjectId || undefined}
@@ -620,7 +620,6 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                     onUseImage={(url) => {
                                         handleSelectImageUrl(url);
                                     }}
-                                // No onClose passed here because we don't want the X button in the panel header
                                 />
                             )}
                         </div>

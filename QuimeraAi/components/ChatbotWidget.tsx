@@ -25,6 +25,8 @@ import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 interface ChatbotWidgetProps {
     isPreview?: boolean;
     // Props for standalone mode (outside EditorProvider)
@@ -186,17 +188,48 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 return;
             }
             try {
-                const { data: postsData, error } = await supabase
-                    .from('posts')
-                    .select('id, title, content, excerpt')
-                    .in('id', articleIds.slice(0, 20));
+                const limitedArticleIds = articleIds.slice(0, 20);
+                const uuidArticleIds = limitedArticleIds.filter(id => UUID_RE.test(id));
+                const legacyArticleIds = limitedArticleIds.filter(id => !UUID_RE.test(id));
 
-                if (error) {
-                    console.warn('[ChatbotWidget] Failed to load CMS articles from Supabase:', error);
-                    return;
+                const postRows: any[] = [];
+
+                if (uuidArticleIds.length > 0) {
+                    const { data: postsData, error } = await supabase
+                        .from('posts')
+                        .select('id, title, content, excerpt')
+                        .in('id', uuidArticleIds);
+
+                    if (error) {
+                        console.warn('[ChatbotWidget] Failed to load CMS articles from Supabase:', error);
+                    } else if (postsData) {
+                        postRows.push(...postsData);
+                    }
                 }
 
-                const articles = (postsData || []).map((p: any) => ({
+                if (legacyArticleIds.length > 0) {
+                    const legacyResults = await Promise.all(
+                        legacyArticleIds.map(legacyId =>
+                            supabase
+                                .from('posts')
+                                .select('id, title, content, excerpt')
+                                .contains('tags', [`legacy:${legacyId}`])
+                                .eq('status', 'published')
+                                .limit(1)
+                        )
+                    );
+
+                    for (const result of legacyResults) {
+                        if (result.error) {
+                            console.warn('[ChatbotWidget] Failed to resolve legacy CMS article:', result.error);
+                        } else if (result.data) {
+                            postRows.push(...result.data);
+                        }
+                    }
+                }
+
+                const uniquePosts = Array.from(new Map(postRows.map((p: any) => [p.id, p])).values());
+                const articles = uniquePosts.map((p: any) => ({
                     id: p.id,
                     title: p.title || 'Untitled',
                     content: p.content || p.excerpt || ''

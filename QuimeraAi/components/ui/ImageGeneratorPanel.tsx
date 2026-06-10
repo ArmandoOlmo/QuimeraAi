@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useAI } from '../../contexts/ai';
+import { useSafeAI } from '../../contexts/ai';
 import { useSafeFiles } from '../../contexts/files';
 import { useSafeMedia } from '../../contexts/media';
 import type { MediaCategory } from '../../types/media';
@@ -10,7 +10,7 @@ import {
     Zap, Loader2, Wand2, X, Download, Upload, Image as ImageIcon, Plus,
     AlertTriangle, Sparkles, Brain, Users, Thermometer, Eye,
     ChevronDown, Settings2, Palette, Camera, Sun, Check, CheckCircle2,
-    PanelLeftClose, Search, Grid
+    PanelLeftClose, Search, Grid, Square, RectangleHorizontal, RectangleVertical, Monitor
 } from 'lucide-react';
 import ProgressBar3D from './ProgressBar3D';
 import { searchFiles } from '../../utils/fileHelpers';
@@ -37,7 +37,11 @@ interface ImageGeneratorPanelProps {
 }
 
 const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination = 'user', adminCategory, className = '', onClose, onCollapse, hidePreview = false, hideHeader = false, onImageGenerated, onUseImage, projectId, generationContext = 'general' }) => {
-    const { generateImage, enhancePrompt } = useAI();
+    const ai = useSafeAI();
+    const generateImage = ai?.generateImage || (async () => {
+        throw new Error('AIProvider is not available yet.');
+    });
+    const enhancePrompt = ai?.enhancePrompt || (async (draftPrompt: string) => draftPrompt);
     const filesCtx = useSafeFiles();
     const mediaCtx = useSafeMedia();
     const uploadFile = filesCtx?.uploadFile || (async () => { throw new Error("Files context missing"); });
@@ -56,12 +60,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
     // Translation-dependent constants
     const ASPECT_RATIOS = [
-        { label: '1:1', value: '1:1', icon: '■' },
-        { label: '16:9', value: '16:9', icon: '▬' },
-        { label: '9:16', value: '9:16', icon: '▮' },
-        { label: '4:3', value: '4:3', icon: '▭' },
-        { label: '3:4', value: '3:4', icon: '▯' },
-        { label: '21:9', value: '21:9', icon: '━' },
+        { label: '1:1', value: '1:1', Icon: Square },
+        { label: '16:9', value: '16:9', Icon: RectangleHorizontal },
+        { label: '9:16', value: '9:16', Icon: RectangleVertical },
+        { label: '4:3', value: '4:3', Icon: RectangleHorizontal },
+        { label: '3:4', value: '3:4', Icon: RectangleVertical },
+        { label: '21:9', value: '21:9', Icon: RectangleHorizontal },
     ];
 
     const STYLES = [
@@ -171,8 +175,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     const [temperature, setTemperature] = useState(1.0);
     const [negativePrompt, setNegativePrompt] = useState('');
     const [aspectRatio, setAspectRatio] = useState(generationContext === 'background' ? '16:9' : '1:1');
+    const [showAspectRatioSelector, setShowAspectRatioSelector] = useState(false);
     const [style, setStyle] = useState(generationContext === 'background' ? 'Photorealistic' : 'None');
     const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('2K');
+    const [showResolutionSelector, setShowResolutionSelector] = useState(false);
     const [lighting, setLighting] = useState('None');
     const [cameraAngle, setCameraAngle] = useState('None');
     const [colorGrading, setColorGrading] = useState('None');
@@ -1018,16 +1024,43 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Aspect Ratio</label>
                                 <span className="text-xs text-q-accent font-mono font-bold">{aspectRatio}</span>
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                {ASPECT_RATIOS.slice(0, 6).map(ratio => (
+                            <div className="relative">
+                                {(() => {
+                                    const selectedRatio = ASPECT_RATIOS.find(ratio => ratio.value === aspectRatio) || ASPECT_RATIOS[0];
+                                    const SelectedIcon = selectedRatio.Icon;
+                                    return (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAspectRatioSelector(prev => !prev)}
+                                            className="w-full flex items-center justify-between gap-3 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text transition-colors hover:border-q-accent/50"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <SelectedIcon size={17} strokeWidth={2} className="text-q-accent" />
+                                                <span className="font-bold">{selectedRatio.value}</span>
+                                            </span>
+                                            <ChevronDown size={16} className={`text-q-text-secondary transition-transform ${showAspectRatioSelector ? 'rotate-180' : ''}`} />
+                                        </button>
+                                    );
+                                })()}
+                                {showAspectRatioSelector && (
+                                    <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-lg border border-q-border bg-q-surface shadow-xl">
+                                        {ASPECT_RATIOS.slice(0, 6).map(ratio => (
                                     <button
                                         key={ratio.value}
-                                        onClick={() => setAspectRatio(ratio.value)}
-                                        className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border transition-all ${aspectRatio === ratio.value ? 'border-q-accent bg-q-accent/10 text-q-accent' : 'border-q-border hover:bg-q-bg text-q-text-secondary hover:text-q-accent'}`}
+                                        type="button"
+                                        onClick={() => {
+                                            setAspectRatio(ratio.value);
+                                            setShowAspectRatioSelector(false);
+                                        }}
+                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${aspectRatio === ratio.value ? 'bg-q-accent/10 text-q-accent' : 'text-q-text-secondary hover:bg-q-bg hover:text-q-accent'}`}
+                                        title={ratio.label}
                                     >
-                                        <span className="text-sm font-bold">{ratio.value}</span>
+                                        <ratio.Icon size={17} strokeWidth={2} />
+                                        <span className="font-bold">{ratio.value}</span>
                                     </button>
-                                ))}
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1037,16 +1070,43 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                 <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Resolution</label>
                                 <span className="text-xs text-q-accent font-mono font-bold">{resolution}</span>
                             </div>
-                            <div className="flex gap-2">
-                                {RESOLUTIONS.map(res => (
-                                    <button
-                                        key={res.value}
-                                        onClick={() => setResolution(res.value as '1K' | '2K' | '4K')}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${resolution === res.value ? 'border-q-accent bg-q-accent/10 text-q-accent' : 'border-q-border hover:bg-q-bg text-q-text-secondary hover:text-q-text'}`}
-                                    >
-                                        {res.label}
-                                    </button>
-                                ))}
+                            <div className="relative">
+                                {(() => {
+                                    const selectedResolution = RESOLUTIONS.find(res => res.value === resolution) || RESOLUTIONS[1];
+                                    return (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowResolutionSelector(prev => !prev)}
+                                            className="w-full flex items-center justify-between gap-3 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text transition-colors hover:border-q-accent/50"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Monitor size={17} strokeWidth={2} className="text-q-accent" />
+                                                <span className="font-bold">{selectedResolution.label}</span>
+                                            </span>
+                                            <ChevronDown size={16} className={`text-q-text-secondary transition-transform ${showResolutionSelector ? 'rotate-180' : ''}`} />
+                                        </button>
+                                    );
+                                })()}
+                                {showResolutionSelector && (
+                                    <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-lg border border-q-border bg-q-surface shadow-xl">
+                                        {RESOLUTIONS.map(res => (
+                                            <button
+                                                key={res.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    setResolution(res.value as '1K' | '2K' | '4K');
+                                                    setShowResolutionSelector(false);
+                                                }}
+                                                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${resolution === res.value ? 'bg-q-accent/10 text-q-accent' : 'text-q-text-secondary hover:bg-q-bg hover:text-q-accent'}`}
+                                                title={`${res.label} - ${res.desc}`}
+                                            >
+                                                <Monitor size={17} strokeWidth={2} />
+                                                <span className="font-bold">{res.label}</span>
+                                                <span className="ml-auto text-xs font-medium opacity-70">{res.desc}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -90,7 +90,7 @@ export function detectSubdomain(hostname: string): SubdomainInfo {
   // -------------------------------------------------------------------
   // DEV MODE: Use query param ?subdomain= for local testing
   // -------------------------------------------------------------------
-  if (DEV_DOMAINS.some(d => normalizedHost === d)) {
+  if (isDevelopmentHostname(normalizedHost)) {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const simulated = params.get('subdomain');
@@ -155,6 +155,29 @@ export function detectSubdomain(hostname: string): SubdomainInfo {
 // =============================================================================
 
 /**
+ * Check if a hostname belongs to local development.
+ * Includes private LAN IPs so physical phones can test the Vite server.
+ */
+export function isDevelopmentHostname(hostname: string): boolean {
+  const normalizedHost = hostname.toLowerCase().replace(/:\d+$/, '');
+
+  if (DEV_DOMAINS.includes(normalizedHost) || normalizedHost === '0.0.0.0' || normalizedHost === '::1') {
+    return true;
+  }
+
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(normalizedHost)) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(normalizedHost)) return true;
+
+  const match = normalizedHost.match(/^172\.(\d{1,2})\.\d{1,3}\.\d{1,3}$/);
+  if (match) {
+    const secondOctet = Number(match[1]);
+    return secondOctet >= 16 && secondOctet <= 31;
+  }
+
+  return false;
+}
+
+/**
  * Check if a subdomain is reserved (cannot be used as username)
  */
 export function isReservedSubdomain(sub: string): boolean {
@@ -170,7 +193,7 @@ export function getAppUrl(): string {
   if (typeof window === 'undefined') return 'https://app.quimera.ai';
 
   const hostname = window.location.hostname.toLowerCase();
-  if (DEV_DOMAINS.some(d => hostname === d)) {
+  if (isDevelopmentHostname(hostname)) {
     const port = window.location.port ? `:${window.location.port}` : '';
     return `${window.location.protocol}//${hostname}${port}?subdomain=app`;
   }
@@ -187,7 +210,7 @@ export function getMarketingUrl(): string {
   if (typeof window === 'undefined') return 'https://quimera.ai';
 
   const hostname = window.location.hostname.toLowerCase();
-  if (DEV_DOMAINS.some(d => hostname === d)) {
+  if (isDevelopmentHostname(hostname)) {
     const port = window.location.port ? `:${window.location.port}` : '';
     return `${window.location.protocol}//${hostname}${port}`;
   }
@@ -204,7 +227,7 @@ export function getUserSiteUrl(username: string): string {
   if (typeof window === 'undefined') return `https://${username}.quimera.ai`;
 
   const hostname = window.location.hostname.toLowerCase();
-  if (DEV_DOMAINS.some(d => hostname === d)) {
+  if (isDevelopmentHostname(hostname)) {
     const port = window.location.port ? `:${window.location.port}` : '';
     return `${window.location.protocol}//${hostname}${port}?subdomain=${username}`;
   }

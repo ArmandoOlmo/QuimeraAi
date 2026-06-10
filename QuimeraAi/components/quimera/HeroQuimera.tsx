@@ -9,6 +9,7 @@ interface HeroQuimeraProps {
     buttonLink?: string;
     secondaryButtonText?: string;
     secondaryButtonLink?: string;
+    showBadge?: boolean;
     badgeText?: string;
     colors?: {
         background?: string;
@@ -40,6 +41,7 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
     buttonLink = '/register',
     secondaryButtonText,
     secondaryButtonLink = '/contact',
+    showBadge = true,
     badgeText,
     colors = {},
     textDropShadow = false,
@@ -392,13 +394,15 @@ const HeroQuimera: React.FC<HeroQuimeraProps> = ({
             <div className={`relative z-10 w-full max-w-7xl mx-auto flex flex-col ${alignItems} font-body`}>
                 
                 {/* Agency Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium mb-8 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
-                    </span>
-                    {displayBadge}
-                </div>
+                {showBadge && (
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium mb-8 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                        </span>
+                        {displayBadge}
+                    </div>
+                )}
 
                 <h1 className={`text-4xl sm:text-5xl lg:text-[5.5rem] font-black mb-6 tracking-tight animate-fade-in-up leading-tight ${textDropShadow ? 'drop-shadow-2xl' : ''} font-header heading-caps`} style={{ animationDelay: '0.2s', maxWidth: '1000px', textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     <span dangerouslySetInnerHTML={{ __html: displayTitle.replace(/IA/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">IA</span>`).replace(/AI/g, `<span class="text-transparent bg-clip-text" style="background-image: linear-gradient(to right, ${accentColor}, ${accentColor}80)">AI</span>`) }} />

@@ -12,7 +12,7 @@ import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import ProjectSelectorPage from './ProjectSelectorPage';
 import FileHistory from '../FileHistory';
-import ImageGeneratorPanel from '../../ui/ImageGeneratorPanel';
+import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
 import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
@@ -74,6 +74,13 @@ const AssetsDashboard: React.FC = () => {
     const handleProjectSelect = async (projectId: string) => {
         setSelectedProjectId(projectId);
         await loadProject(projectId, false, false);
+    };
+
+    const handleCreateVideo = (imageUrl: string) => {
+        window.dispatchEvent(new CustomEvent('assets:create-video-from-image', {
+            detail: { imageUrl, mode: 'start' },
+        }));
+        setIsGeneratorCollapsed(false);
     };
 
     // Show project selector if no project selected
@@ -154,7 +161,7 @@ const AssetsDashboard: React.FC = () => {
                                         <Sparkles size={18} />
                                     </div>
                                     <span className="text-sm font-semibold text-foreground">
-                                        {t('editor.imageGenerator', 'Generador de Imágenes')}
+                                        {t('editor.mediaGenerator', { defaultValue: 'Generador de Medios' })}
                                     </span>
                                 </div>
                                 <ChevronDown
@@ -165,7 +172,7 @@ const AssetsDashboard: React.FC = () => {
 
                             {/* Generator Panel Content (collapsible) */}
                             <div className={`border-b border-q-border ${isGeneratorCollapsed ? 'hidden' : 'block'}`}>
-                                    <ImageGeneratorPanel
+                                    <MediaGeneratorPanel
                                         destination="user"
                                         className=""
                                         hideHeader
@@ -181,6 +188,7 @@ const AssetsDashboard: React.FC = () => {
                                         window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: base64 }));
                                         setIsGeneratorCollapsed(false);
                                     }}
+                                    onCreateVideo={handleCreateVideo}
                                 />
                             </div>
                         </div>

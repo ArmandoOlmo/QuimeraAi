@@ -13,6 +13,7 @@ import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { getUsableImageUrl } from '../../utils/imageUrl';
+import { resolveProjectMenus } from '../../utils/mapSupabaseProject';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -106,16 +107,17 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             try {
                 const { data: projectData, error } = await supabase
                     .from('projects')
-                    .select('menus, categories')
+                    .select('menus, categories, data')
                     .eq('id', activeProjectId)
                     .single();
 
                 if (error) throw error;
 
                 if (projectData) {
-                    if (projectData.menus && Array.isArray(projectData.menus)) {
-                        console.log('[CMSContext] ✅ Loaded menus from project:', projectData.menus.length);
-                        setMenus(projectData.menus.map(normalizeMenu));
+                    const resolvedMenus = resolveProjectMenus(projectData);
+                    if (resolvedMenus.length > 0) {
+                        console.log('[CMSContext] ✅ Loaded menus from project:', resolvedMenus.length);
+                        setMenus(resolvedMenus.map(normalizeMenu));
                     } else {
                         console.log('[CMSContext] No menus found in project, using defaults');
                         setMenus(defaultMenus);
@@ -284,9 +286,21 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             setMenus(updatedMenusList);
 
+            const { data: existingRow } = await supabase
+                .from('projects')
+                .select('data')
+                .eq('id', activeProjectId)
+                .single();
+
+            const existingData =
+                existingRow?.data && typeof existingRow.data === 'object' ? existingRow.data : {};
+
             const { error } = await supabase
                 .from('projects')
-                .update({ menus: updatedMenusList })
+                .update({
+                    menus: updatedMenusList,
+                    data: { ...existingData, menus: updatedMenusList },
+                })
                 .eq('id', activeProjectId);
 
             if (error) throw error;
@@ -304,9 +318,21 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const updatedMenusList = menus.filter(m => m.id !== menuId);
             setMenus(updatedMenusList);
 
+            const { data: existingRow } = await supabase
+                .from('projects')
+                .select('data')
+                .eq('id', activeProjectId)
+                .single();
+
+            const existingData =
+                existingRow?.data && typeof existingRow.data === 'object' ? existingRow.data : {};
+
             const { error } = await supabase
                 .from('projects')
-                .update({ menus: updatedMenusList })
+                .update({
+                    menus: updatedMenusList,
+                    data: { ...existingData, menus: updatedMenusList },
+                })
                 .eq('id', activeProjectId);
 
             if (error) throw error;

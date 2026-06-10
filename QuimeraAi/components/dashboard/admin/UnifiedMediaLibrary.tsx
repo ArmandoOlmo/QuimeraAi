@@ -13,7 +13,7 @@ import type { MediaCategory, MediaAssetRecord } from '../../../types/media';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import DragDropZone from '../../ui/DragDropZone';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
-import ImageGeneratorPanel from '../../ui/ImageGeneratorPanel';
+import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
 import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { formatBytes, formatFileDate } from '../../../utils/fileHelpers';
@@ -23,7 +23,7 @@ import {
     CheckSquare, Square, ChevronLeft, ChevronRight, Sparkles, X,
     Copy, FolderOpen, Image as ImageIcon, Grid,
     Eye, HardDrive, Calendar, Loader2, Palette, Star, Menu,
-    FileText, Layout, ShoppingBag, User, Wand2,
+    FileText, Layout, ShoppingBag, User, Wand2, Film,
 } from 'lucide-react';
 import { useAppContent } from '../../../contexts/appContent';
 
@@ -53,6 +53,7 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const [showGenerator, setShowGenerator] = useState(false);
+    const [initialVideoStartFrame, setInitialVideoStartFrame] = useState<string | undefined>(undefined);
     const [showKitManager, setShowKitManager] = useState(false);
     const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -135,6 +136,16 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
 
     const handleCopyUrl = async (url: string) => { await navigator.clipboard.writeText(url); success(t('superadmin.unifiedMedia.copiedUrl', 'URL copiada')); };
     const handleUseAsReference = (url: string) => { window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: url })); success(t('superadmin.unifiedMedia.referenceAdded', 'Agregado como referencia')); };
+    const handleCreateVideo = (url: string) => {
+        setInitialVideoStartFrame(url);
+        setShowGenerator(true);
+        window.setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('assets:create-video-from-image', {
+                detail: { imageUrl: url, mode: 'start' },
+            }));
+        }, 0);
+        success(t('mediaGeneration.createVideo', { defaultValue: 'Create video' }));
+    };
     const getArticleName = (articleId: string) => { const article = articles.find(a => a.id === articleId); return article?.title || articleId; };
 
     const iconComponents: Record<string, React.ReactNode> = {
@@ -196,10 +207,10 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                         ) : (
                             <div className="overflow-hidden rounded-2xl border border-q-border bg-q-surface/80">
                                 <div className="flex shrink-0 cursor-pointer items-center justify-between border-b border-q-border px-4 py-3 transition-colors hover:bg-muted/30" onClick={() => setShowGenerator(!showGenerator)}>
-                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-primary/10 text-primary"><Sparkles size={18} /></div><span className="text-sm font-semibold">{t('superadmin.unifiedMedia.generator', 'Generador de Imagenes IA')}</span></div>
+                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-primary/10 text-primary"><Sparkles size={18} /></div><span className="text-sm font-semibold">{t('editor.mediaGenerator', { defaultValue: 'Generador de Medios IA' })}</span></div>
                                     <span className={`text-q-text-muted transition-transform duration-200 ${showGenerator ? 'rotate-180' : ''}`}><ChevronRight size={18} className="rotate-90" /></span>
                                 </div>
-                                {showGenerator && <div className="shrink-0 border-b border-q-border"><ImageGeneratorPanel destination="admin" hideHeader projectId={ADMIN_VISUAL_KIT_PROJECT_ID} /></div>}
+                                {showGenerator && <div className="shrink-0 border-b border-q-border"><MediaGeneratorPanel destination="admin" hideHeader projectId={ADMIN_VISUAL_KIT_PROJECT_ID} adminCategory={selectedFolder !== 'all' ? selectedFolder : 'ai_generated'} defaultMode={initialVideoStartFrame ? 'video' : 'image'} initialStartFrame={initialVideoStartFrame} /></div>}
                                 <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-q-border p-4">
                                     <div className="flex items-center gap-2 flex-1 min-w-[150px] bg-secondary/40 rounded-lg px-3 py-1.5">
                                         <Search size={14} className="text-q-text-muted flex-shrink-0" />
@@ -233,16 +244,26 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                                             {paginatedAssets.map(asset => {
                                                 const cfg = MEDIA_CATEGORY_MAP[asset.category];
                                                 const isSelected = selectedIds.has(asset.id);
+                                                const isVideoAsset = asset.type?.startsWith('video/');
                                                 return (
                                                     <div key={asset.id} className={`rounded-xl transition-all duration-200 group relative overflow-hidden h-full ${isSelected ? 'ring-2 ring-q-accent' : ''} cursor-pointer`} onClick={() => { if (isSelectionMode) toggleSelect(asset.id); }} onDoubleClick={() => { if (!isSelectionMode) setPreviewAsset(asset); }}>
                                                         <div className="aspect-square w-full bg-secondary/30 relative overflow-hidden">
-                                                            <img src={asset.downloadURL || asset.url} alt={asset.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                                                            {isVideoAsset ? (
+                                                                <video src={asset.downloadURL || asset.url} className="w-full h-full object-cover" muted playsInline />
+                                                            ) : (
+                                                                <img src={asset.downloadURL || asset.url} alt={asset.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                                                            )}
                                                             <div className="absolute top-2 left-2 z-10"><span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full border backdrop-blur-sm ${cfg?.color || 'bg-gray-500/10 text-gray-500 border-gray-500/30'}`}>{cfg && iconComponents[cfg.icon]}</span></div>
                                                             {asset.isAiGenerated && <div className="absolute top-2 right-2 z-10"><span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-violet-500/80 text-white backdrop-blur-sm"><Sparkles size={10} /></span></div>}
                                                             {isSelectionMode && <div className="absolute top-2 right-2 z-10"><button onClick={(e) => { e.stopPropagation(); toggleSelect(asset.id); }} className="p-1.5 bg-white dark:bg-gray-800 rounded-md shadow-lg">{isSelected ? <CheckSquare size={18} className="text-q-accent" /> : <Square size={18} className="text-q-text-muted" />}</button></div>}
                                                             {!isSelectionMode && (
                                                                 <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleUseAsReference(asset.downloadURL); }} className="p-1.5 bg-violet-500 hover:bg-violet-600 text-white rounded-md shadow-lg transition-transform hover:scale-110" title={t('superadmin.unifiedMedia.useAsRef', 'Usar como referencia')}><Zap size={14} /></button>
+                                                                    {!isVideoAsset && (
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleUseAsReference(asset.downloadURL || asset.url); }} className="p-1.5 bg-violet-500 hover:bg-violet-600 text-white rounded-md shadow-lg transition-transform hover:scale-110" title={t('superadmin.unifiedMedia.useAsRef', 'Usar como referencia')}><Zap size={14} /></button>
+                                                                    )}
+                                                                    {!isVideoAsset && (
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleCreateVideo(asset.downloadURL || asset.url); }} className="p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md shadow-lg transition-transform hover:scale-110" title={t('mediaGeneration.createVideo', { defaultValue: 'Create video' })}><Film size={14} /></button>
+                                                                    )}
                                                                     <button onClick={(e) => { e.stopPropagation(); handleCopyUrl(asset.downloadURL); }} className="p-1.5 bg-primary hover:bg-primary/80 text-primary-foreground rounded-md shadow-lg transition-transform hover:scale-110" title={t('superadmin.unifiedMedia.copyUrl', 'Copiar URL')}><Copy size={14} /></button>
                                                                     <button onClick={(e) => { e.stopPropagation(); setPreviewAsset(asset); }} className="p-1.5 bg-white/90 text-gray-700 rounded-md shadow-lg transition-transform hover:scale-110" title={t('superadmin.unifiedMedia.viewDetails', 'Ver detalles')}><Eye size={14} /></button>
                                                                 </div>
@@ -282,7 +303,16 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                             <button onClick={() => setPreviewAsset(null)} className="p-2 rounded-full hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"><X size={20} /></button>
                         </div>
                         <div className="flex-1 overflow-auto">
-                            <div className="flex-1 bg-black/90 flex items-center justify-center relative min-h-[300px]"><div className="absolute inset-0 opacity-30 blur-3xl scale-110" style={{ backgroundImage: `url(${previewAsset.downloadURL})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /><img src={previewAsset.downloadURL} alt={previewAsset.name} className="max-w-full max-h-[400px] object-contain shadow-2xl relative z-10" /></div>
+                            <div className="flex-1 bg-black/90 flex items-center justify-center relative min-h-[300px]">
+                                {!previewAsset.type?.startsWith('video/') && (
+                                    <div className="absolute inset-0 opacity-30 blur-3xl scale-110" style={{ backgroundImage: `url(${previewAsset.downloadURL})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                                )}
+                                {previewAsset.type?.startsWith('video/') ? (
+                                    <video src={previewAsset.downloadURL} controls className="relative z-10 max-h-[520px] max-w-full" />
+                                ) : (
+                                    <img src={previewAsset.downloadURL} alt={previewAsset.name} className="max-w-full max-h-[400px] object-contain shadow-2xl relative z-10" />
+                                )}
+                            </div>
                             <div className="p-4 border-t border-q-border">
                                 <div className="grid grid-cols-3 gap-3 mb-4">
                                     <div className="bg-q-bg border border-q-border rounded-lg p-3"><div className="flex items-center gap-1.5 mb-1"><HardDrive size={12} className="text-q-text-muted" /><span className="text-[10px] text-q-text-muted uppercase">{t('superadmin.unifiedMedia.size', 'Tamano')}</span></div><p className="text-sm font-medium">{formatBytes(previewAsset.size)}</p></div>

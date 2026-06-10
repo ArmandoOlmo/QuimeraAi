@@ -8,6 +8,8 @@
  * Note: SSR server provides SEO tags and initial state, but React does full rendering.
  */
 
+import './utils/serviceWorkerCleanup';
+
 // Global error handler to capture errors
 window.onerror = function (message, source, lineno, colno, error) {
     console.error('[entry-client] Error:', message, 'at', source, lineno, colno);
@@ -17,7 +19,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './src/styles/main.css';
-import { Project } from './types/project';
+import type { Project } from './types/project';
 import './i18n';
 
 // =============================================================================
@@ -142,8 +144,6 @@ if (hasSSRData && initialData) {
         );
     });
 }
-
-
 
 
 

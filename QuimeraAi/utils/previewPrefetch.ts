@@ -8,6 +8,9 @@
  */
 
 import { supabase } from '../supabase';
+import { resolveProjectMenus } from './mapSupabaseProject';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
 export interface PrefetchedPreviewData {
     project: any | null;
@@ -42,10 +45,16 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
     }
 
     try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const canLoadDraftData = Boolean(sessionData.session);
+        const projectSelect = canLoadDraftData
+            ? 'id, tenant_id, user_id, name, published_data, data'
+            : 'id, tenant_id, user_id, name, published_data';
+
         // Fire requests in parallel: project + posts + tenant branding
         const projectResult = await supabase
             .from('projects')
-            .select('id, tenant_id, user_id, name, published_data, data')
+            .select(projectSelect)
             .eq('id', projectId)
             .single();
 
@@ -63,14 +72,23 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                 : Promise.resolve({ data: [], error: null }),
         ];
 
-        // Also fetch tenant branding if we have userId
-        if (userId) {
+        // Also fetch tenant branding. Prefer tenant_id because legacy project user_id values
+        // can be Firebase IDs, while tenants.owner_user_id is a UUID column in Supabase.
+        if (tenantId && UUID_RE.test(tenantId)) {
+            promises.push(
+                supabase
+                    .from('tenants')
+                    .select('branding')
+                    .eq('id', tenantId)
+                    .maybeSingle()
+            );
+        } else if (userId && UUID_RE.test(userId)) {
             promises.push(
                 supabase
                     .from('tenants')
                     .select('branding')
                     .eq('owner_user_id', userId)
-                    .single()
+                    .maybeSingle()
             );
         }
 
@@ -87,17 +105,21 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         // Process project data
         if (projectResult.data) {
             const row = projectResult.data;
-            // /preview routes are editor previews, so prefer draft data.
-            // Public domains use PublicWebsitePreview's non-prefetch path and prefer published_data.
-            const sourceData = row.data || row.published_data || {};
+            // Prefer draft data only when a Supabase session is available.
+            // Public preview/domain loads should use the published snapshot.
+            const sourceData = (canLoadDraftData ? row.data : row.published_data) || row.published_data || {};
             project = {
                 id: row.id,
+                tenantId: row.tenant_id,
                 userId: row.user_id,
                 name: row.name || sourceData.name,
                 ...sourceData,
             };
-            menus = project.menus && Array.isArray(project.menus) ? project.menus : [];
+            menus = resolveProjectMenus(row);
             categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
+            if (menus.length > 0) {
+                project.menus = menus;
+            }
         }
 
         // Process posts

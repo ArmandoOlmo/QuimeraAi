@@ -1,6 +1,5 @@
 import React from 'react';
-import Modal from './Modal';
-import ImageGeneratorPanel from './ImageGeneratorPanel';
+import MediaGeneratorModal from '../media-generator/MediaGeneratorModal';
 
 interface ImageGeneratorModalProps {
     isOpen: boolean;
@@ -9,32 +8,16 @@ interface ImageGeneratorModalProps {
     adminCategory?: string;
     onImageGenerated?: (imageUrl: string) => void;
     onUseImage?: (imageUrl: string) => void;
+    onVideoGenerated?: (videoUrl: string) => void;
+    onUseVideo?: (videoUrl: string) => void;
     projectId?: string;
-    /** Generation context hint. 'background' optimizes for website section backgrounds. */
     generationContext?: 'background' | 'general';
+    defaultMode?: 'image' | 'video';
 }
 
-const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = ({ isOpen, onClose, destination, adminCategory, onImageGenerated, onUseImage, projectId, generationContext }) => {
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            maxWidth="max-w-5xl"
-            fullScreenMobile
-        >
-            <ImageGeneratorPanel
-                destination={destination}
-                adminCategory={adminCategory}
-                onClose={onClose}
-                className="h-[85vh] sm:h-[85vh]"
-                onImageGenerated={onImageGenerated}
-                onUseImage={onUseImage}
-                projectId={projectId}
-                generationContext={generationContext}
-            />
-        </Modal>
-    );
+/** @deprecated Use MediaGeneratorModal — kept for backward compatibility */
+const ImageGeneratorModal: React.FC<ImageGeneratorModalProps> = (props) => {
+    return <MediaGeneratorModal {...props} defaultMode={props.defaultMode ?? 'image'} />;
 };
 
 export default ImageGeneratorModal;
-

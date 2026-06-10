@@ -82,6 +82,29 @@ interface PreChatFormData {
     phone?: string;
 }
 
+const toPlainText = (value: unknown): string => {
+    if (typeof value === 'string') return value;
+    if (value == null) return '';
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) return value.map(toPlainText).filter(Boolean).join('\n');
+    if (typeof value === 'object') {
+        const record = value as Record<string, unknown>;
+        const localized = record.es || record.en || record.text || record.content || record.value;
+        if (localized && localized !== value) return toPlainText(localized);
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return '';
+        }
+    }
+    return String(value);
+};
+
+const truncateText = (value: unknown, maxLength: number): string => {
+    const text = toPlainText(value);
+    return `${text.slice(0, maxLength)}${text.length > maxLength ? '...(content truncated)' : ''}`;
+};
+
 // =============================================================================
 // LEAD DETECTION & SCORING
 // =============================================================================
@@ -583,7 +606,7 @@ ${suggestAvailableSlots()}
             ADDITIONAL KNOWLEDGE BASE (from uploaded documents):
             ${config.knowledgeDocuments.map((doc, idx) => `
             [Document ${idx + 1}: ${doc.name}]
-            ${doc.content.slice(0, 5000)}${doc.content.length > 5000 ? '...(content truncated)' : ''}
+            ${truncateText(doc.content, 5000)}
             `).join('\n\n')}
             ` : ''}
             
@@ -592,7 +615,7 @@ ${suggestAvailableSlots()}
             ${config.knowledgeLinks.filter(l => l.status === 'ready').map((link, idx) => `
             [${link.type === 'youtube' ? 'YouTube' : 'Website'} ${idx + 1}: ${link.title}]
             Source: ${link.url}
-            ${link.content.slice(0, 4000)}${link.content.length > 4000 ? '...(content truncated)' : ''}
+            ${truncateText(link.content, 4000)}
             `).join('\n\n')}
             ` : ''}
             
@@ -602,7 +625,7 @@ ${suggestAvailableSlots()}
             CMS ARTICLES KNOWLEDGE BASE (from blog/content management):
             ${cmsArticles.map((article, idx) => `
             [Article ${idx + 1}: ${article.title}]
-            ${article.content.slice(0, 3000)}${article.content.length > 3000 ? '...(content truncated)' : ''}
+            ${truncateText(article.content, 3000)}
             `).join('\n\n')}
             ` : ''}
         `;
@@ -1928,12 +1951,12 @@ ${suggestAvailableSlots()}
                                                 hr: ({ node, ...props }) => <hr className="my-4 border-current opacity-20" {...props} />,
                                             }}
                                         >
-                                            {msg.text}
+                                            {toPlainText(msg.text)}
                                         </ReactMarkdown>
                                     ) : (
                                         <span className="flex items-center gap-1">
                                             {msg.isVoiceMessage && <Mic size={10} className="text-purple-400 flex-shrink-0" />}
-                                            {msg.text}
+                                            {toPlainText(msg.text)}
                                         </span>
                                     )}
                                 </div>
@@ -2276,4 +2299,3 @@ ${suggestAvailableSlots()}
 };
 
 export default ChatCore;
-

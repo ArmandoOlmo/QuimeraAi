@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { detectSubdomain } from '../utils/subdomainUtils';
+import { detectSubdomain, isDevelopmentHostname } from '../utils/subdomainUtils';
 
 // Domains that are NOT custom domains (our own app domains)
 // Custom domains like quimeraapp.com ARE treated as custom domains
@@ -35,6 +35,10 @@ interface CustomDomainState {
  */
 function isCustomDomainHostname(hostname: string): boolean {
     const normalizedHost = hostname.toLowerCase().replace(/^www\./, '');
+
+    if (isDevelopmentHostname(normalizedHost)) {
+        return false;
+    }
 
     // Check against known domains
     for (const known of KNOWN_DOMAINS) {
@@ -276,7 +280,7 @@ export function useCustomDomain(): CustomDomainState {
                     try {
                         const { data: projectDoc, error: projectError } = await supabase
                             .from('projects')
-                            .select('*')
+                            .select('id, name, published_data, tenant_id, user_id')
                             .eq('id', projectId)
                             .maybeSingle();
 

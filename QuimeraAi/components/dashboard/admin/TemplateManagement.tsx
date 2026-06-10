@@ -179,6 +179,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         // Direct column mappings for fields that have their own columns
         if (updates.theme !== undefined) supabaseUpdates.theme = updates.theme;
         if (updates.brandIdentity !== undefined) supabaseUpdates.brand_identity = updates.brandIdentity;
+        if (updatedTemplate.menus !== undefined) supabaseUpdates.menus = updatedTemplate.menus;
 
         // Rebuild the `data` JSONB — this is the full project snapshot
         // that loadGlobalTemplates spreads via `...row.data`

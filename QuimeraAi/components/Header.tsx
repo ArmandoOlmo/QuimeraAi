@@ -3,12 +3,11 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle } from '../types';
-import { useSafeProject } from '../contexts/project';
 import { getIconComponent } from './ui/IconSelector';
 import { Menu, X, ArrowRight, ShoppingCart, Home, FileText, Briefcase, Lightbulb, Calendar, Mail, Info } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
 
-import { GlobalSearch } from './ecommerce/search';
+const HeaderGlobalSearch = React.lazy(() => import('./HeaderGlobalSearch'));
 
 const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   none: 'rounded-none',
@@ -322,8 +321,6 @@ const Header: React.FC<HeaderData & {
     }, [style]);
     // Use prop if provided, else measured value
     const resolvedTopBarOffset = topBarOffsetProp ?? measuredTopBarOffset;
-    // Use safe versions of hooks that work outside ProjectProvider (for public preview)
-    const projectContext = useSafeProject();
     const previewRef = containerRef || null;
 
 
@@ -633,117 +630,6 @@ const Header: React.FC<HeaderData & {
       </button>
     );
 
-    // Get storeId and data for global search
-    const storeId = projectContext?.activeProjectId || undefined;
-    const pageData = projectContext?.data;
-
-    // Build searchable sections from page content
-    const searchableSections = useMemo(() => {
-      const sections: Array<{ id: string; title: string; href: string; description?: string }> = [];
-
-      if (pageData) {
-        // Add hero section
-        if (pageData.hero?.headline) {
-          sections.push({
-            id: 'hero',
-            title: resolveText(pageData.hero.headline),
-            description: resolveText(pageData.hero.subheadline),
-            href: '/'
-          });
-        }
-
-        // Add features section
-        if (pageData.features?.title) {
-          sections.push({
-            id: 'features',
-            title: resolveText(pageData.features.title),
-            description: resolveText(pageData.features.subtitle),
-            href: '#features'
-          });
-        }
-
-        // Add services section
-        if (pageData.services?.title) {
-          sections.push({
-            id: 'services',
-            title: resolveText(pageData.services.title),
-            description: resolveText(pageData.services.subtitle),
-            href: '#services'
-          });
-        }
-
-        // Add testimonials section
-        if (pageData.testimonials?.title) {
-          sections.push({
-            id: 'testimonials',
-            title: resolveText(pageData.testimonials.title),
-            description: resolveText(pageData.testimonials.subtitle),
-            href: '#testimonials'
-          });
-        }
-
-        // Add pricing section
-        if (pageData.pricing?.title) {
-          sections.push({
-            id: 'pricing',
-            title: resolveText(pageData.pricing.title),
-            description: resolveText(pageData.pricing.subtitle),
-            href: '#pricing'
-          });
-        }
-
-        // Add FAQ section
-        if (pageData.faq?.title) {
-          sections.push({
-            id: 'faq',
-            title: resolveText(pageData.faq.title),
-            description: resolveText(pageData.faq.subtitle),
-            href: '#faq'
-          });
-        }
-
-        // Add portfolio section
-        if (pageData.portfolio?.title) {
-          sections.push({
-            id: 'portfolio',
-            title: resolveText(pageData.portfolio.title),
-            description: resolveText(pageData.portfolio.subtitle),
-            href: '#portfolio'
-          });
-        }
-
-        // Add team section
-        if (pageData.team?.title) {
-          sections.push({
-            id: 'team',
-            title: resolveText(pageData.team.title),
-            description: resolveText(pageData.team.subtitle),
-            href: '#team'
-          });
-        }
-
-        // Add CTA section
-        if (pageData.cta?.headline) {
-          sections.push({
-            id: 'cta',
-            title: resolveText(pageData.cta.headline),
-            description: resolveText(pageData.cta.subheadline),
-            href: '#cta'
-          });
-        }
-
-        // Add store link
-        sections.push({
-          id: 'store',
-          title: resolveText('Tienda'),
-          description: resolveText('Ver todos los productos'),
-          href: '/tienda'
-        });
-      }
-
-      return sections;
-    }, [pageData]);
-
     const handleProductClick = (productId: string) => {
       window.location.hash = `#product/${productId}`;
     };
@@ -767,15 +653,15 @@ const Header: React.FC<HeaderData & {
               </div>
               <div className="hidden nav:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                 {showSearch && (
-                  <GlobalSearch
-                    storeId={storeId}
+                  <React.Suspense fallback={null}>
+                    <HeaderGlobalSearch
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
                     placeholder={resolvedSearchPlaceholder}
                     primaryColor={colors?.accent}
                     textColor={finalTextColor}
-                    sections={searchableSections}
                   />
+                  </React.Suspense>
                 )}
                 {showCart && <CartButton />}
                 {showLanguageSelector && <LanguageSelector variant="minimal" />}
@@ -795,15 +681,15 @@ const Header: React.FC<HeaderData & {
               </div>
               <div className="hidden nav:flex flex-1 justify-end items-center gap-4">
                 {showSearch && (
-                  <GlobalSearch
-                    storeId={storeId}
+                  <React.Suspense fallback={null}>
+                    <HeaderGlobalSearch
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
                     placeholder={resolvedSearchPlaceholder}
                     primaryColor={colors?.accent}
                     textColor={finalTextColor}
-                    sections={searchableSections}
                   />
+                  </React.Suspense>
                 )}
                 {showCart && <CartButton />}
                 {showLanguageSelector && <LanguageSelector variant="minimal" />}
@@ -822,15 +708,15 @@ const Header: React.FC<HeaderData & {
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`ml-8 flex items-center gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
-                    <GlobalSearch
-                      storeId={storeId}
-                      onProductClick={handleProductClick}
+                    <React.Suspense fallback={null}>
+                    <HeaderGlobalSearch
+                    onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
                       placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={finalTextColor}
-                      sections={searchableSections}
-                    />
+                  />
+                  </React.Suspense>
                   )}
                   {showCart && <CartButton />}
                   {showLanguageSelector && <LanguageSelector variant="minimal" />}
@@ -848,15 +734,15 @@ const Header: React.FC<HeaderData & {
                 <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`flex items-center ml-4 gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
-                    <GlobalSearch
-                      storeId={storeId}
-                      onProductClick={handleProductClick}
+                    <React.Suspense fallback={null}>
+                    <HeaderGlobalSearch
+                    onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
                       placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={finalTextColor}
-                      sections={searchableSections}
-                    />
+                  />
+                  </React.Suspense>
                   )}
                   {showCart && <CartButton />}
                   {showLanguageSelector && <LanguageSelector variant="minimal" />}
@@ -1208,9 +1094,9 @@ const Header: React.FC<HeaderData & {
                 {/* Mobile Search */}
                 {showSearch && (
                   <div className="mb-6">
-                    <GlobalSearch
-                      storeId={storeId}
-                      onProductClick={(productId) => {
+                    <React.Suspense fallback={null}>
+                    <HeaderGlobalSearch
+                    onProductClick={(productId) => {
                         handleProductClick(productId);
                         setIsMenuOpen(false);
                       }}
@@ -1221,8 +1107,8 @@ const Header: React.FC<HeaderData & {
                       placeholder={resolvedSearchPlaceholder}
                       primaryColor={colors?.accent}
                       textColor={colors?.text}
-                      sections={searchableSections}
-                    />
+                  />
+                  </React.Suspense>
                   </div>
                 )}
 

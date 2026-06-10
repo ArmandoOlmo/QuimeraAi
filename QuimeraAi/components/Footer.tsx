@@ -7,6 +7,8 @@ import BusinessHours from './BusinessHours';
 import { supabase } from '../supabase';
 import { getNeonGlowStyles } from '../utils/colorUtils';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+
 // Quimera logo URL for the badge
 import { useAppLogo } from '../hooks/useAppLogo';
 
@@ -95,6 +97,7 @@ const Footer: React.FC<FooterData & {
       const match = path.match(/\/preview\/([^/]+)\//);
       if (!match) return;
       const userId = match[1];
+      if (!UUID_RE.test(userId)) return;
       // Fetch tenant doc to check for White Label branding
       const checkTenantBranding = async () => {
         try {
@@ -102,10 +105,10 @@ const Footer: React.FC<FooterData & {
             .from('tenants')
             .select('branding')
             .eq('owner_user_id', userId)
-            .limit(1);
+            .maybeSingle();
             
-          if (!error && data && data.length > 0) {
-            const branding = data[0].branding as any;
+          if (!error && data) {
+            const branding = (data as any).branding;
             if (branding?.companyName || branding?.logoUrl) {
               setAutoHideBranding(true);
             }
@@ -320,4 +323,3 @@ const Footer: React.FC<FooterData & {
   };
 
 export default Footer;
-

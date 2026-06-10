@@ -4,7 +4,7 @@
  * Ahora con contenido dinámico gestionado desde el panel de Super Admin
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowRight,
@@ -31,11 +31,8 @@ import {
   ChevronDown as ChevronDownIcon,
   User
 } from 'lucide-react';
-import CTASection from './CTASection';
-
 import LanguageSelector from './ui/LanguageSelector';
 import ImageCarousel from './ImageCarousel';
-import Separator from './Separator';
 import { useSafeAppContent } from '../contexts/appContent';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
 import { useLandingPlans } from '../hooks/useLandingPlans';
@@ -45,55 +42,55 @@ import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fon
 import { resolveI18nSectionData } from '../utils/i18nContent';
 import Header from './Header';
 import SectionBackground from './ui/SectionBackground';
-import Hero from './Hero';
-import HeroModern from './HeroModern';
-import HeroGradient from './HeroGradient';
-import Features from './Features';
-import Pricing from './Pricing';
-import Testimonials from './Testimonials';
-import Faq from './Faq';
 
-// Import Quimera Suite Components
-import HeroQuimera from './quimera/HeroQuimera';
-import FeaturesQuimera from './quimera/FeaturesQuimera';
-import PricingQuimera from './quimera/PricingQuimera';
-import TestimonialsQuimera from './quimera/TestimonialsQuimera';
-import FaqQuimera from './quimera/FaqQuimera';
-import CtaQuimera from './quimera/CtaQuimera';
-import PlatformShowcaseQuimera from './quimera/PlatformShowcaseQuimera';
-import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
-import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
-import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
-import MetricsQuimera from './quimera/MetricsQuimera';
-import WhatIsQuimeraSection from './quimera/WhatIsQuimeraSection';
-import TemplatesPreviewQuimera from './quimera/TemplatesPreviewQuimera';
-import AiWebStudioQuimera from './quimera/AiWebStudioQuimera';
-import ContentManagerQuimera from './quimera/ContentManagerQuimera';
-import ImageGeneratorQuimera from './quimera/ImageGeneratorQuimera';
-import ChatbotWorkflowQuimera from './quimera/ChatbotWorkflowQuimera';
-import ChatbotBuilderQuimera from './quimera/ChatbotBuilderQuimera';
-import LeadsManagerQuimera from './quimera/LeadsManagerQuimera';
-import AppointmentsQuimera from './quimera/AppointmentsQuimera';
-import BioPageQuimera from './quimera/BioPageQuimera';
-import EmailMarketingQuimera from './quimera/EmailMarketingQuimera';
+const CTASection = lazy(() => import('./CTASection'));
+const Separator = lazy(() => import('./Separator'));
+const Hero = lazy(() => import('./Hero'));
+const HeroModern = lazy(() => import('./HeroModern'));
+const HeroGradient = lazy(() => import('./HeroGradient'));
+const Features = lazy(() => import('./Features'));
+const Pricing = lazy(() => import('./Pricing'));
+const Testimonials = lazy(() => import('./Testimonials'));
+const Faq = lazy(() => import('./Faq'));
 
-// Import Lumina components
-import HeroLumina from './HeroLumina';
-import FeaturesLumina from './FeaturesLumina';
-import CtaLumina from './CtaLumina';
-import PortfolioLumina from './PortfolioLumina';
-import PricingLumina from './PricingLumina';
-import TestimonialsLumina from './TestimonialsLumina';
-import FaqLumina from './FaqLumina';
+const HeroQuimera = lazy(() => import('./quimera/HeroQuimera'));
+const FeaturesQuimera = lazy(() => import('./quimera/FeaturesQuimera'));
+const PricingQuimera = lazy(() => import('./quimera/PricingQuimera'));
+const TestimonialsQuimera = lazy(() => import('./quimera/TestimonialsQuimera'));
+const FaqQuimera = lazy(() => import('./quimera/FaqQuimera'));
+const CtaQuimera = lazy(() => import('./quimera/CtaQuimera'));
+const PlatformShowcaseQuimera = lazy(() => import('./quimera/PlatformShowcaseQuimera'));
+const AiCapabilitiesQuimera = lazy(() => import('./quimera/AiCapabilitiesQuimera'));
+const IndustrySolutionsQuimera = lazy(() => import('./quimera/IndustrySolutionsQuimera'));
+const AgencyWhiteLabelQuimera = lazy(() => import('./quimera/AgencyWhiteLabelQuimera'));
+const MetricsQuimera = lazy(() => import('./quimera/MetricsQuimera'));
+const WhatIsQuimeraSection = lazy(() => import('./quimera/WhatIsQuimeraSection'));
+const TemplatesPreviewQuimera = lazy(() => import('./quimera/TemplatesPreviewQuimera'));
+const AiWebStudioQuimera = lazy(() => import('./quimera/AiWebStudioQuimera'));
+const ContentManagerQuimera = lazy(() => import('./quimera/ContentManagerQuimera'));
+const ImageGeneratorQuimera = lazy(() => import('./quimera/ImageGeneratorQuimera'));
+const ChatbotWorkflowQuimera = lazy(() => import('./quimera/ChatbotWorkflowQuimera'));
+const ChatbotBuilderQuimera = lazy(() => import('./quimera/ChatbotBuilderQuimera'));
+const LeadsManagerQuimera = lazy(() => import('./quimera/LeadsManagerQuimera'));
+const AppointmentsQuimera = lazy(() => import('./quimera/AppointmentsQuimera'));
+const BioPageQuimera = lazy(() => import('./quimera/BioPageQuimera'));
+const EmailMarketingQuimera = lazy(() => import('./quimera/EmailMarketingQuimera'));
 
-// Import Neon components
-import HeroNeon from './HeroNeon';
-import FeaturesNeon from './FeaturesNeon';
-import CtaNeon from './CtaNeon';
-import PortfolioNeon from './PortfolioNeon';
-import PricingNeon from './PricingNeon';
-import TestimonialsNeon from './TestimonialsNeon';
-import FaqNeon from './FaqNeon';
+const HeroLumina = lazy(() => import('./HeroLumina'));
+const FeaturesLumina = lazy(() => import('./FeaturesLumina'));
+const CtaLumina = lazy(() => import('./CtaLumina'));
+const PortfolioLumina = lazy(() => import('./PortfolioLumina'));
+const PricingLumina = lazy(() => import('./PricingLumina'));
+const TestimonialsLumina = lazy(() => import('./TestimonialsLumina'));
+const FaqLumina = lazy(() => import('./FaqLumina'));
+
+const HeroNeon = lazy(() => import('./HeroNeon'));
+const FeaturesNeon = lazy(() => import('./FeaturesNeon'));
+const CtaNeon = lazy(() => import('./CtaNeon'));
+const PortfolioNeon = lazy(() => import('./PortfolioNeon'));
+const PricingNeon = lazy(() => import('./PricingNeon'));
+const TestimonialsNeon = lazy(() => import('./TestimonialsNeon'));
+const FaqNeon = lazy(() => import('./FaqNeon'));
 
 // --- Brand Assets ---
 import useAppLogo, { QUIMERA_DEFAULT_LOGO, QUIMERA_FULL_LOGO } from '../hooks/useAppLogo';
@@ -113,6 +110,59 @@ interface PublicLandingPageProps {
   onNavigateToBlog?: () => void;
   onNavigateToArticle?: (slug: string) => void;
 }
+
+interface DeferredLandingSectionProps {
+  section: PreviewSection;
+  index: number;
+  isPreviewMode: boolean;
+  children: React.ReactNode;
+}
+
+const DeferredLandingSection: React.FC<DeferredLandingSectionProps> = ({
+  section,
+  index,
+  isPreviewMode,
+  children,
+}) => {
+  const shouldRenderImmediately = isPreviewMode || index <= 1;
+  const [shouldRender, setShouldRender] = useState(shouldRenderImmediately);
+
+  useEffect(() => {
+    if (shouldRender) return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setShouldRender(true);
+      return;
+    }
+
+    const placeholder = document.querySelector(`[data-deferred-section-id="${section.id}"]`);
+    if (!placeholder) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '900px 0px' }
+    );
+
+    observer.observe(placeholder);
+    return () => observer.disconnect();
+  }, [section.id, shouldRender]);
+
+  if (shouldRender) return <>{children}</>;
+
+  return (
+    <section
+      id={`section-${section.type}`}
+      data-section-id={section.id}
+      data-deferred-section-id={section.id}
+      aria-hidden="true"
+      className="min-h-[360px] w-full"
+    />
+  );
+};
 
 // Social icons mapping
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
@@ -518,6 +568,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
 
     // Default order if no sections loaded
     if (previewSections.length === 0) {
+      if (!sectionsLoaded && !isPreviewMode) return [];
       return defaultOrder.map((type, index) => ({
         id: type,
         type,
@@ -718,7 +769,9 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
           backgroundPosition={section.data?.backgroundPosition}
           glassEffect={glassEffect}
         >
-          <Component {...resolvedData} isPreviewMode={isPreviewMode} />
+          <Suspense fallback={null}>
+            <Component {...resolvedData} isPreviewMode={isPreviewMode} />
+          </Suspense>
         </SectionBackground>
       </section>
     );
@@ -736,12 +789,14 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         const heroData = resolveI18nSectionData(section.data, i18n.language);
         return (
           <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id}>
-            <HeroQuimera
-              {...heroData}
-              showDecoration={heroData.showDecoration !== false}
-              showParticles={heroData.showParticles !== false}
-              isPreviewMode={isPreviewMode}
-            />
+            <Suspense fallback={null}>
+              <HeroQuimera
+                {...heroData}
+                showDecoration={heroData.showDecoration !== false}
+                showParticles={heroData.showParticles !== false}
+                isPreviewMode={isPreviewMode}
+              />
+            </Suspense>
           </section>
         );
       }
@@ -826,11 +881,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       // ── LEGACY & CORE SECTIONS ──
       // ── LEGACY & CORE SECTIONS ──
       case 'hero':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Hero {...section.data} /></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><Hero {...section.data} /></Suspense></section>;
       case 'heroModern':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><HeroModern {...section.data} /></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroModern {...section.data} /></Suspense></section>;
       case 'heroGradient':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><HeroGradient {...section.data} /></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroGradient {...section.data} /></Suspense></section>;
       case 'features':
         return renderSuiteSection(section, Features);
       case 'pricing':
@@ -848,7 +903,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'separator4':
       case 'separator5': {
         const separatorData = section.data || {};
-        return separatorData ? <Separator key={section.id} data={separatorData} /> : null;
+        return separatorData ? (
+          <Suspense key={section.id} fallback={null}>
+            <Separator data={separatorData} />
+          </Suspense>
+        ) : null;
       }
 
       default:
@@ -963,7 +1022,16 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       />
 
       {/* === DYNAMICALLY ORDERED SECTIONS === */}
-      {orderedSections.map(section => renderSection(section))}
+      {orderedSections.map((section, index) => (
+        <DeferredLandingSection
+          key={section.id}
+          section={section}
+          index={index}
+          isPreviewMode={isPreviewMode}
+        >
+          {renderSection(section)}
+        </DeferredLandingSection>
+      ))}
 
       {/* === FOOTER === */}
       <footer

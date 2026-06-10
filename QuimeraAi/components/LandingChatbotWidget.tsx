@@ -14,7 +14,6 @@ import { MessageSquare, X, Send, Loader2, Bot, HelpCircle, Sparkles, Mic, PhoneO
 import { Modality, LiveServerMessage } from '@google/genai';
 import { useSafeAdmin } from '../contexts/admin';
 import { LandingChatbotConfig, defaultLandingChatbotConfig, LandingChatMessage, LandingChatbotColors, defaultChatbotColors } from '../types/landingChatbot';
-import { db, collection, addDoc, serverTimestamp } from '../firebase';
 import { savePlatformLead } from '../services/platformLeadService';
 import { isProxyMode, getGoogleGenAI } from '../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse } from '../utils/geminiProxyClient';
@@ -106,7 +105,11 @@ const hexToRgba = (hex: string, alpha: number): string => {
 // MAIN COMPONENT
 // =============================================================================
 
-const LandingChatbotWidget: React.FC = () => {
+interface LandingChatbotWidgetProps {
+    initialOpen?: boolean;
+}
+
+const LandingChatbotWidget: React.FC<LandingChatbotWidgetProps> = ({ initialOpen = false }) => {
     const { t } = useTranslation();
     const adminContext = useSafeAdmin();
 
@@ -177,7 +180,7 @@ Personalidad:
     };
 
     // State
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(initialOpen);
     const [isMinimized, setIsMinimized] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -502,19 +505,6 @@ Asistente:`;
         if (!leadFormData.email) return;
 
         try {
-            // 1. Save to legacy landingChatbot collection
-            await addDoc(collection(db, 'landingChatbot', 'leads', 'items'), {
-                ...leadFormData,
-                source: 'landing-chatbot',
-                status: 'new',
-                score: 50,
-                sessionId,
-                conversationPreview: messages.slice(-3).map(m => m.content).join(' | '),
-                tags: ['landing', 'chatbot'],
-                createdAt: serverTimestamp(),
-            });
-
-            // 2. Also save to root-level platformLeads for the admin dashboard
             await savePlatformLead({
                 name: leadFormData.name,
                 email: leadFormData.email,
@@ -806,7 +796,14 @@ Asistente:`;
     // =========================================================================
     const footerTriggerContent = isMinimized ? (
         // MODE 1: MINIMIZED BUBBLE (Bottom-Right)
-        <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <div
+            className="fixed z-[9999] pointer-events-none"
+            style={{
+                animation: 'fadeIn 0.3s ease',
+                top: 'calc(100dvh - max(80px, calc(env(safe-area-inset-bottom) + 80px)))',
+                right: 'max(24px, env(safe-area-inset-right))',
+            }}
+        >
             <button
                 onClick={() => { setIsMinimized(false); setIsOpen(true); }}
                 className={`pointer-events-auto shrink-0 flex items-center justify-center w-14 h-14 rounded-full shadow-xl transition-all hover:scale-105 active:scale-95 border ${isLiveActive ? 'animate-pulse' : ''}`}
@@ -828,7 +825,13 @@ Asistente:`;
         </div>
     ) : (
         // MODE 2: DEFAULT CENTER BAR (Bottom-Center)
-        <div className="fixed bottom-6 inset-x-0 z-[9999] px-6 pointer-events-none" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <div
+            className="fixed inset-x-0 z-[9999] px-6 pointer-events-none"
+            style={{
+                animation: 'fadeIn 0.3s ease',
+                top: 'calc(100dvh - max(86px, calc(env(safe-area-inset-bottom) + 86px)))',
+            }}
+        >
             <div
                 className={`assistant-footer-trigger pointer-events-auto mx-auto flex items-center gap-3 px-5 py-3 border rounded-full shadow-xl transition-all max-w-md w-full ${isLiveActive ? 'animate-pulse' : ''}`}
                 style={{

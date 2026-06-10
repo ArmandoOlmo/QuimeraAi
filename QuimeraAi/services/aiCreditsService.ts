@@ -15,6 +15,61 @@ import {
     calculateCreditsUsagePercentage,
 } from '../types/subscription';
 
+async function consumeCreditsServerSide(params: {
+    tenantId: string;
+    authorizedTenantId?: string;
+    userId: string;
+    operation: AiCreditOperation;
+    creditsUsed: number;
+    description: string;
+    metadata: Record<string, any>;
+}): Promise<{
+    success: boolean;
+    creditsUsed: number;
+    creditsRemaining: number;
+    transactionId?: string;
+    error?: string;
+}> {
+    const { data, error } = await supabase.functions.invoke('ai-proxy', {
+        body: {
+            action: 'credits_consume',
+            tenant_id: params.tenantId,
+            authorized_tenant_id: params.authorizedTenantId || params.tenantId,
+            user_id: params.userId,
+            operation: params.operation,
+            credits_used: params.creditsUsed,
+            description: params.description,
+            metadata: params.metadata,
+        },
+    });
+
+    if (error) {
+        console.error('[aiCreditsService] credits_consume function error:', error);
+        return {
+            success: false,
+            creditsUsed: 0,
+            creditsRemaining: 0,
+            error: error.message || 'Error al consumir créditos. Por favor intenta de nuevo.',
+        };
+    }
+
+    if (!data?.success) {
+        return {
+            success: false,
+            creditsUsed: 0,
+            creditsRemaining: Number(data?.creditsRemaining || 0),
+            error: data?.error || 'Error al consumir créditos. Por favor intenta de nuevo.',
+        };
+    }
+
+    return {
+        success: true,
+        creditsUsed: Number(data.creditsUsed || params.creditsUsed),
+        creditsRemaining: Number(data.creditsRemaining || 0),
+        transactionId: data.transactionId,
+    };
+}
+
 // =============================================================================
 // CREDIT CONSUMPTION
 // =============================================================================
@@ -55,11 +110,11 @@ export async function consumeCredits(
             };
         }
 
-        const transaction = {
-            tenant_id: tenantId,
-            user_id: userId,
+        return await consumeCreditsServerSide({
+            tenantId,
+            userId,
             operation,
-            credits_used: creditsToUse,
+            creditsUsed: creditsToUse,
             description: options?.description || getOperationDescription(operation),
             metadata: {
                 project_id: options?.projectId,
@@ -67,27 +122,8 @@ export async function consumeCredits(
                 tokens_input: options?.tokensInput,
                 tokens_output: options?.tokensOutput,
                 ...options?.metadata
-            }
-        };
-
-        const { data: docRef, error: txError } = await supabase
-            .from('ai_credits_transactions')
-            .insert(transaction)
-            .select('id')
-            .single();
-
-        if (txError) throw txError;
-
-        await updateUsageStats(tenantId, creditsToUse, operation, options?.projectId);
-
-        const usage = await getCreditsUsage(tenantId);
-
-        return {
-            success: true,
-            creditsUsed: creditsToUse,
-            creditsRemaining: usage?.creditsRemaining ?? 0,
-            transactionId: docRef.id,
-        };
+            },
+        });
 
     } catch (error) {
         console.error('[aiCreditsService] Error consuming credits:', error);
@@ -557,6 +593,9 @@ function getOperationDescription(operation: AiCreditOperation): string {
         image_generation: 'Generación de imagen',
         image_generation_fast: 'Generación de imagen (rápida)',
         image_generation_ultra: 'Generación de imagen (alta resolución)',
+        video_generation_seedance: 'Generación de video (Seedance)',
+        video_generation_veo: 'Generación de video (Veo 3.1)',
+        video_generation_omni: 'Generación de video (Omni)',
         chatbot_message: 'Mensaje de chatbot',
         ai_assistant_request: 'Solicitud al asistente IA',
         ai_assistant_complex: 'Solicitud compleja al asistente IA',
@@ -665,11 +704,12 @@ export async function consumeCreditsFromSharedPool(
             };
         }
 
-        const transaction = {
-            tenant_id: agencyTenantId,
-            user_id: userId,
+        return await consumeCreditsServerSide({
+            tenantId: agencyTenantId,
+            authorizedTenantId: subClientTenantId,
+            userId,
             operation,
-            credits_used: creditsToUse,
+            creditsUsed: creditsToUse,
             description: options?.description || getOperationDescription(operation),
             metadata: {
                 project_id: options?.projectId,
@@ -678,28 +718,8 @@ export async function consumeCreditsFromSharedPool(
                 tokens_output: options?.tokensOutput,
                 sub_client_tenant_id: subClientTenantId,
                 ...options?.metadata
-            }
-        };
-
-        const { data: docRef, error: txError } = await supabase
-            .from('ai_credits_transactions')
-            .insert(transaction)
-            .select('id')
-            .single();
-
-        if (txError) throw txError;
-
-        await updateUsageStats(agencyTenantId, creditsToUse, operation);
-        await updateSubClientUsageInPool(agencyTenantId, subClientTenantId, creditsToUse);
-
-        const usage = await getCreditsUsage(agencyTenantId);
-
-        return {
-            success: true,
-            creditsUsed: creditsToUse,
-            creditsRemaining: usage?.creditsRemaining ?? 0,
-            transactionId: docRef.id,
-        };
+            },
+        });
     } catch (error) {
         console.error('[aiCreditsService] Error consuming credits from shared pool:', error);
         return {

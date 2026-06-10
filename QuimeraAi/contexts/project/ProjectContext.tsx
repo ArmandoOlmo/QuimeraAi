@@ -21,6 +21,7 @@ import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
+import { mapSupabaseRowToProject, resolveProjectMenus } from '../../utils/mapSupabaseProject';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -457,16 +458,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const activeTemplates: Project[] = [];
 
             (templateSnapshot || []).forEach(row => {
-                // Map Postgres jsonb to Project fields
-                const docData = {
-                    ...row.data,
-                    id: row.id,
-                    name: row.name,
-                    status: 'Template',
-                    userId: row.user_id,
-                    tenantId: row.tenant_id,
-                    lastUpdated: row.last_updated
-                } as any;
+                const docData = mapSupabaseRowToProject(row);
                 
                 if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(row.id)) {
                     deletedIds.add(row.id);
@@ -504,15 +496,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     .is('tenant_id', null)
                     .order('last_updated', { ascending: false });
                 
-                const personalProjects = (userSnapshot || []).map(row => normalizeProject({
-                    ...row.data,
-                    id: row.id,
-                    name: row.name,
-                    userId: row.user_id,
-                    tenantId: row.tenant_id,
-                    status: row.status,
-                    lastUpdated: row.last_updated
-                } as Project));
+                const personalProjects = (userSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
                 allUserProjects = [...personalProjects];
 
             } catch (err) {
@@ -529,15 +513,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                         .eq('tenant_id', tenantId)
                         .order('last_updated', { ascending: false });
                     
-                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject({
-                        ...row.data,
-                        id: row.id,
-                        name: row.name,
-                        userId: row.user_id,
-                        tenantId: row.tenant_id,
-                        status: row.status,
-                        lastUpdated: row.last_updated
-                    } as Project));
+                    const tenantProjects = (tenantSnapshot || []).map(row => normalizeProject(mapSupabaseRowToProject(row)));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
 
                 } catch (err) {
@@ -700,15 +676,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     .single();
 
                 if (projectSnap) {
-                    project = normalizeProject({ 
-                        ...projectSnap.data,
-                        id: projectSnap.id,
-                        name: projectSnap.name,
-                        status: projectSnap.status,
-                        userId: projectSnap.user_id,
-                        tenantId: projectSnap.tenant_id,
-                        lastUpdated: projectSnap.last_updated
-                    } as Project);
+                    project = normalizeProject(mapSupabaseRowToProject(projectSnap));
 
                     console.log('[ProjectContext] Loaded project from Firebase:', project.name);
                     // Add to local state
@@ -730,15 +698,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                         .eq('status', 'Template')
                         .single();
                     if (templateSnap) {
-                        project = normalizeProject({ 
-                            ...templateSnap.data,
-                            id: templateSnap.id,
-                            name: templateSnap.name,
-                            status: templateSnap.status,
-                            userId: templateSnap.user_id,
-                            tenantId: templateSnap.tenant_id,
-                            lastUpdated: templateSnap.last_updated
-                        } as Project);
+                        project = normalizeProject(mapSupabaseRowToProject(templateSnap));
 
                         console.log('[ProjectContext] Loaded template from Firebase:', project.name);
                         setProjects(prev => {
@@ -887,6 +847,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const isTemplate = project.status === 'Template';
         const now = new Date().toISOString();
 
+        // Menus are owned by CMSContext (projects.menus column). Fetch the latest
+        // version so autosave keeps data.menus in sync and never drops navigation.
+        let latestMenus = project.menus || [];
+        try {
+            const { data: menuRow } = await supabase
+                .from('projects')
+                .select('menus, data')
+                .eq('id', activeProjectId)
+                .single();
+            if (menuRow) {
+                latestMenus = resolveProjectMenus(menuRow);
+            }
+        } catch (menuFetchError) {
+            console.warn('[ProjectContext] Could not fetch latest menus for save:', menuFetchError);
+        }
+
         // Save ALL project fields to ensure Firestore stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Firestore doesn't accept undefined)
         const updatedProject = removeUndefinedValues(sanitizeForStorage({
@@ -901,9 +877,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // Multi-page architecture
             ...(pages.length > 0 && { pages }),
 
-            // NOTE: Navigation menus are managed by CMSContext directly
-            // DO NOT include them here to avoid overwriting CMSContext changes
-            // The menus are saved/loaded via CMSContext.saveMenu/loadMenus
+            // Keep menus in the data snapshot aligned with the CMS column
+            ...(latestMenus.length > 0 && { menus: latestMenus }),
 
             // SEO configuration (only include if exists)
             ...(project.seoConfig && { seoConfig: project.seoConfig }),
@@ -932,17 +907,22 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         try {
             
             // In Supabase, we just update the projects table
-            const { error: updateErr } = await supabase.from('projects').update({
+            const supabaseUpdate: Record<string, any> = {
                 name: updatedProject.name || project.name,
                 status: updatedProject.status || project.status,
-                data: updatedProject
-            }).eq('id', activeProjectId);
+                data: updatedProject,
+            };
+            if (latestMenus.length > 0) {
+                supabaseUpdate.menus = latestMenus;
+            }
+
+            const { error: updateErr } = await supabase.from('projects').update(supabaseUpdate).eq('id', activeProjectId);
             
             if (updateErr) throw updateErr;
 
 
             setProjects(prev => prev.map(p =>
-                p.id === activeProjectId ? { ...p, ...updatedProject } as Project : p
+                p.id === activeProjectId ? { ...p, ...updatedProject, menus: latestMenus } as Project : p
             ));
         } catch (error) {
             console.error("Error saving project:", error);
@@ -1022,17 +1002,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 return false;
             }
 
-            // CRITICAL: Fetch latest menus from Firebase to ensure we publish the most recent version
-            // This fixes the sync issue where CMSContext saves menus but ProjectContext has stale data
+            // CRITICAL: Fetch latest menus from the dedicated column (CMSContext source of truth)
             try {
-                
-                const { data: projectSnap } = await supabase.from('projects').select('data').eq('id', activeProjectId).single();
-                if (projectSnap && projectSnap.data) {
-                    const projectData = projectSnap.data as any;
-
-                    if (projectData.menus && Array.isArray(projectData.menus)) {
-                        snapshot.menus = projectData.menus;
-                        console.log(`🔄 [ProjectContext] Fetched latest menus from Supabase: ${projectData.menus.length} menus`);
+                const { data: projectSnap } = await supabase.from('projects').select('menus, data').eq('id', activeProjectId).single();
+                if (projectSnap) {
+                    const latestMenus = resolveProjectMenus(projectSnap);
+                    if (latestMenus.length > 0) {
+                        snapshot.menus = latestMenus;
+                        console.log(`🔄 [ProjectContext] Fetched latest menus from Supabase: ${latestMenus.length} menus`);
                     }
                 }
             } catch (menuFetchError) {
@@ -1224,6 +1201,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         const { id: providedId, ...projectData } = project;
+        const projectMenus = Array.isArray((projectData as any).menus) ? (projectData as any).menus : [];
         
         const deploymentData = (projectData as any).deployment || {};
         const dataToSave: Record<string, any> = {
@@ -1252,7 +1230,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 status: project.status || 'Draft',
                 user_id: user.id,
                 tenant_id: currentTenantId,
-                data: dataToSave
+                data: dataToSave,
+                ...(projectMenus.length > 0 && { menus: projectMenus }),
             });
             if (insertErr) throw insertErr;
             finalId = providedId;
@@ -1262,7 +1241,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 status: project.status || 'Draft',
                 user_id: user.id,
                 tenant_id: currentTenantId,
-                data: dataToSave
+                data: dataToSave,
+                ...(projectMenus.length > 0 && { menus: projectMenus }),
             }).select().single();
             if (insertErr) throw insertErr;
             finalId = docRef.id;
@@ -1394,6 +1374,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         const now = new Date().toISOString();
+        const templateMenus = template.menus ? cloneProjectValue(template.menus) : [];
         const newProject: Omit<Project, 'id'> = {
             name: newName || `${template.name} Copy`,
             data: cloneProjectValue(template.data),
@@ -1402,6 +1383,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             componentOrder: [...(template.componentOrder || initialData.componentOrder as PageSection[])],
             sectionVisibility: cloneProjectValue(template.sectionVisibility || initialData.sectionVisibility as Record<PageSection, boolean>),
             pages: template.pages ? cloneProjectValue(template.pages) : undefined,
+            menus: templateMenus.length > 0 ? templateMenus : undefined,
             sourceTemplateId: templateId,
             thumbnailUrl: template.thumbnailUrl,
             faviconUrl: template.faviconUrl,
@@ -1431,7 +1413,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 status: 'Draft',
                 user_id: user.id,
                 tenant_id: resolvedTenantId,
-                data: newProject
+                data: newProject,
+                ...(templateMenus.length > 0 && { menus: templateMenus }),
             }).select().single();
             
             if (insertErr) throw insertErr;

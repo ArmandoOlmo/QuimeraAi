@@ -1,18 +1,16 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   // SECURITY: Gemini API keys are NEVER embedded in the client bundle.
   // All AI API calls go through the server-side Supabase/Vercel proxy.
-
   return {
     server: {
       port: 3000,
       host: true, // Permite acceso desde cualquier IP (equivalente a '0.0.0.0' pero más compatible)
-      open: true, // Abre el navegador automáticamente
+      open: false, // Open manually after the dev server is ready; auto-open can race the optimizer.
       // SPA fallback - todas las rutas van a index.html
       historyApiFallback: true,
       // HMR configuration to reduce WebSocket errors
@@ -27,125 +25,11 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
-        manifest: {
-          name: 'Quimera AI',
-          short_name: 'Quimera',
-          description: 'AI-powered website builder',
-          theme_color: '#3b82f6',
-          background_color: '#ffffff',
-          display: 'standalone',
-          icons: [
-            {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
-            }
-          ]
-        },
-        workbox: {
-          // IMPORTANT: Do NOT cache HTML files - they must always come fresh from the server
-          // This prevents stale SSR data issues on custom domains
-          globPatterns: ['**/*.{js,css,ico,png,svg,woff,woff2}'],
-          // Force immediate update
-          skipWaiting: true,
-          clientsClaim: true,
-          // Increase limit for large JS chunks
-          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
-          // CRITICAL: Use NetworkFirst for navigation requests so SSR HTML is always fresh
-          navigateFallback: null, // Disable navigate fallback to force network
-          runtimeCaching: [
-            {
-              // HTML documents - ALWAYS go to network first (critical for SSR)
-              urlPattern: ({ request }) => request.mode === 'navigate',
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'pages',
-                networkTimeoutSeconds: 3,
-                plugins: [{
-                  cacheWillUpdate: async () => null // Never cache navigation responses
-                }]
-              }
-            },
-            {
-               // IMPORTANT: Legacy remote video/audio files must BYPASS the SW entirely.
-               // iOS Safari requires HTTP 206 Partial Content (Range requests) for video playback.
-               // The Service Worker strips these headers, causing videos to show 00:00 and fail to play.
-               urlPattern: ({ url }) => {
-                 if (!url.hostname.includes('firebasestorage.googleapis.com')) return false;
-                 const path = url.pathname.toLowerCase();
-                 return path.includes('.mp4') || path.includes('.webm') || path.includes('.mov') ||
-                        path.includes('.avi') || path.includes('.mp3') || path.includes('.wav') ||
-                        path.includes('.ogg') || path.includes('.m4a') || path.includes('.aac');
-               },
-               handler: 'NetworkOnly',
-               options: {
-                 cacheName: 'firebase-media-bypass'
-               }
-             },
-            {
-            // Cache legacy Firebase Storage images during migration (NOT videos - those use NetworkOnly above)
-              urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'firebase-images',
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              // Cache Google Storage assets
-              urlPattern: /^https:\/\/storage\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-storage',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              // Cache Google Fonts
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'google-fonts-stylesheets'
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-webfonts',
-                expiration: {
-                  maxEntries: 30,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            }
-          ]
-        }
-      })
-    ],
+      // PWA/Service Worker is intentionally disabled.
+      // The previous Workbox build precached every JS/CSS chunk and took
+      // control immediately, which caused mobile Safari/Chrome reload loops
+      // and tab crashes during production updates.
+    ].filter(Boolean),
     define: {
       // SECURITY: API keys are NOT injected into the client bundle.
       // All AI calls go through the secure server-side proxy.
@@ -161,10 +45,29 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       }
     },
+    optimizeDeps: {
+      // Only crawl the actual app entry. Without this, Vite also scans
+      // auxiliary HTML files such as scratch_editor.html and playwright-report.
+      entries: ['index.html'],
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-dev-runtime',
+        'react/jsx-runtime',
+        'i18next',
+        'react-i18next',
+        'i18next-browser-languagedetector',
+        'html-parse-stringify',
+        'void-elements',
+        'p-retry',
+      ],
+    },
     // Build optimizations for performance
     build: {
       chunkSizeWarningLimit: 500,
       minify: 'terser',
+      modulePreload: false,
       // Generate manifest for SSR server to read asset paths
       manifest: true,
       terserOptions: {
@@ -183,60 +86,7 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
-          manualChunks: {
-            // Firebase in its own chunk
-            firebase: [
-              'firebase/app',
-              'firebase/auth',
-              'firebase/firestore',
-              'firebase/storage',
-              'firebase/analytics'
-            ],
-            // React ecosystem
-            react: ['react', 'react-dom'],
-            // Radix UI components
-            radix: [
-              '@radix-ui/react-dialog',
-              '@radix-ui/react-tooltip',
-              '@radix-ui/react-collapsible',
-              '@radix-ui/react-separator',
-              '@radix-ui/react-slot'
-            ],
-            // TipTap editor (large) - Note: @tiptap/pm excluded as it has non-standard exports
-            editor: [
-              '@tiptap/react',
-              '@tiptap/starter-kit',
-              '@tiptap/extension-link',
-              '@tiptap/extension-image',
-              '@tiptap/extension-color',
-              '@tiptap/extension-highlight',
-              '@tiptap/extension-placeholder',
-              '@tiptap/extension-text-align',
-              '@tiptap/extension-text-style',
-              '@tiptap/extension-underline',
-              '@tiptap/extension-table',
-              '@tiptap/extension-table-cell',
-              '@tiptap/extension-table-header',
-              '@tiptap/extension-table-row',
-              '@tiptap/extension-bubble-menu'
-            ],
-            // Charts library
-            charts: ['recharts'],
-            // Drag and drop
-            dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-            // i18n
-            i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-            // AI/Generative — only loaded when AI features are used
-            'google-ai': ['@google/genai'],
-            // Animation library
-            animation: ['framer-motion'],
-            // Heavy utility libraries — loaded on demand
-            'export-utils': ['html2canvas', 'html2canvas-pro', 'jspdf', 'jspdf-autotable', 'xlsx'],
-            // Markdown renderer
-            markdown: ['marked', 'react-markdown'],
-            // Stripe payments
-            stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js']
-          }
+          manualChunks: undefined,
         }
       }
     }

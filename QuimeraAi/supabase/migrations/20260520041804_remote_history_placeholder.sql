@@ -1,0 +1,3 @@
+-- Placeholder for a migration that already exists in the remote Supabase
+-- migration history but was not present in this local checkout.
+-- Keeping this timestamp locally allows subsequent migrations to be pushed.

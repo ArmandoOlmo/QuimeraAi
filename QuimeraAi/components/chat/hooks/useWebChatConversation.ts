@@ -4,11 +4,6 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { 
-    collection, doc, addDoc, updateDoc, getDoc, setDoc,
-    Timestamp, query, where, getDocs, limit
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
 import { SocialConversation, SocialMessage } from '../../../types/socialChat';
 
 // =============================================================================
@@ -39,6 +34,15 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
     const messageCountRef = useRef(0);
     // Use a ref to track conversation ID for immediate access (state updates are async)
     const conversationIdRef = useRef<string | null>(null);
+    const shouldPersist = Boolean(userId);
+
+    const getFirestore = useCallback(async () => {
+        const [{ db }, firestore] = await Promise.all([
+            import('../../../firebase'),
+            import('firebase/firestore'),
+        ]);
+        return { db, ...firestore };
+    }, []);
 
     // ==========================================================================
     // CREATE OR GET CONVERSATION
@@ -51,6 +55,9 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.warn('[useWebChatConversation] No projectId provided');
             return null;
         }
+        if (!shouldPersist) {
+            return null;
+        }
 
         // If we already have a conversation for this session, return it
         if (conversationId) {
@@ -61,6 +68,16 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         setError(null);
 
         try {
+            const {
+                db,
+                collection,
+                addDoc,
+                Timestamp,
+                query,
+                where,
+                getDocs,
+                limit,
+            } = await getFirestore();
             // Check if there's an existing active conversation for this session
             const conversationsRef = collection(db, 'socialConversations');
             const existingQuery = query(
@@ -121,7 +138,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             setIsLoading(false);
             return null;
         }
-    }, [projectId, conversationId]);
+    }, [projectId, conversationId, shouldPersist, getFirestore]);
 
     // ==========================================================================
     // SAVE MESSAGE
@@ -135,11 +152,14 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         const targetConvId = convId || conversationIdRef.current || conversationId;
         
         if (!projectId || !targetConvId) {
-            console.warn('[useWebChatConversation] Cannot save message: missing projectId or conversationId');
+            return false;
+        }
+        if (!shouldPersist) {
             return false;
         }
 
         try {
+            const { db, collection, doc, addDoc, updateDoc, Timestamp } = await getFirestore();
             const now = Timestamp.now();
             
             // Create the message document
@@ -176,7 +196,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error saving message:', err);
             return false;
         }
-    }, [projectId, conversationId]);
+    }, [projectId, conversationId, shouldPersist, getFirestore]);
 
     // ==========================================================================
     // UPDATE PARTICIPANT INFO
@@ -187,11 +207,14 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
     ): Promise<boolean> => {
         const targetConvId = conversationIdRef.current || conversationId;
         if (!targetConvId) {
-            console.warn('[useWebChatConversation] No conversation to update');
+            return false;
+        }
+        if (!shouldPersist) {
             return false;
         }
 
         try {
+            const { db, doc, updateDoc } = await getFirestore();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             const updates: Partial<SocialConversation> = {};
             
@@ -206,7 +229,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error updating participant:', err);
             return false;
         }
-    }, [conversationId]);
+    }, [conversationId, shouldPersist, getFirestore]);
 
     // ==========================================================================
     // CLOSE CONVERSATION
@@ -217,8 +240,12 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         if (!targetConvId) {
             return false;
         }
+        if (!shouldPersist) {
+            return false;
+        }
 
         try {
+            const { db, doc, updateDoc } = await getFirestore();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             await updateDoc(conversationRef, {
                 status: 'closed',
@@ -229,7 +256,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error closing conversation:', err);
             return false;
         }
-    }, [conversationId]);
+    }, [conversationId, shouldPersist, getFirestore]);
 
     // ==========================================================================
     // LINK TO LEAD
@@ -240,8 +267,12 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         if (!targetConvId) {
             return false;
         }
+        if (!shouldPersist) {
+            return false;
+        }
 
         try {
+            const { db, doc, updateDoc } = await getFirestore();
             const conversationRef = doc(db, 'socialConversations', targetConvId);
             await updateDoc(conversationRef, {
                 leadId,
@@ -252,7 +283,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error linking to lead:', err);
             return false;
         }
-    }, [conversationId]);
+    }, [conversationId, shouldPersist, getFirestore]);
 
     // ==========================================================================
     // SAVE FULL TRANSCRIPT
@@ -262,6 +293,9 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
         messages: WebChatMessage[]
     ): Promise<boolean> => {
         if (!projectId) {
+            return false;
+        }
+        if (!shouldPersist) {
             return false;
         }
 
@@ -281,7 +315,7 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
             console.error('[useWebChatConversation] Error saving transcript:', err);
             return false;
         }
-    }, [projectId, getOrCreateConversation, saveMessage]);
+    }, [projectId, shouldPersist, getOrCreateConversation, saveMessage]);
 
     // ==========================================================================
     // RETURN
@@ -307,4 +341,3 @@ export const useWebChatConversation = (projectId: string, userId?: string) => {
 };
 
 export default useWebChatConversation;
-

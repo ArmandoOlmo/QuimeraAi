@@ -259,6 +259,11 @@ export const renderHeroQuimeraControls = (deps: ControlsDeps & { portalContainer
                     <Type size={14} />
                     {t('editor.heroQuimeraControls.content', 'Contenido')}
                 </label>
+                <ToggleControl
+                    label={t('editor.heroQuimeraControls.showBadge', 'Mostrar Badge')}
+                    checked={data.showBadge !== false}
+                    onChange={(v) => setNestedData('showBadge', v)}
+                />
                 <AIFormControl label={t('editor.heroQuimeraControls.badgeText', 'Texto del Badge')} onAssistClick={() => setAiAssistField?.({ path: 'badgeText', value: data.badgeText, context: 'Hero Badge' })}>
                     <I18nInput value={data.badgeText || ''} onChange={(val) => setNestedData('badgeText', val)} placeholder="QuimeraAi Agency OS 2.0" label="" />
                 </AIFormControl>

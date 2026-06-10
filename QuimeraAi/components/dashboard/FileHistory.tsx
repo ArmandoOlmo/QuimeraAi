@@ -6,7 +6,7 @@ import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { useAssetLibrary } from '../../hooks/useAssetLibrary';
 import { FileRecord } from '../../types';
-import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Calendar, HardDrive, Search, Filter, ArrowUpDown, CheckSquare, Square, Wand2, Loader2, Plus, ImageIcon, AlertTriangle } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Calendar, HardDrive, Search, Filter, ArrowUpDown, CheckSquare, Square, Wand2, Loader2, Plus, ImageIcon, AlertTriangle, Film } from 'lucide-react';
 import DragDropZone from '../ui/DragDropZone';
 import ImageDetailModal from '../ui/ImageDetailModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
@@ -67,10 +67,12 @@ const FileItem: React.FC<{
     onToggleSelect?: () => void;
     isSelectionMode?: boolean;
     onAddToReference?: (base64Data: string) => Promise<void>;
+    onCreateVideo?: (imageUrl: string) => void;
     onDelete?: (file: FileRecord) => void;
-}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference, onDelete }) => {
+}> = ({ file, variant, onPreview, isSelected, onToggleSelect, isSelectionMode, onAddToReference, onCreateVideo, onDelete }) => {
     const { t } = useTranslation();
     const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
     const [isAdding, setIsAdding] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
 
@@ -157,6 +159,14 @@ const FileItem: React.FC<{
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         draggable={false}
                     />
+                ) : isVideo ? (
+                    <video
+                        src={file.downloadURL}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                    />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-primary bg-secondary/50">
                         <FileText size={48} />
@@ -198,6 +208,18 @@ const FileItem: React.FC<{
                         )}
                     </button>
                 )}
+                {isImage && !isSelectionMode && onCreateVideo && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onCreateVideo(file.downloadURL);
+                        }}
+                        className="absolute top-10 right-2 z-10 p-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md shadow-lg transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+                        title={t('mediaGeneration.createVideo', { defaultValue: 'Create video' })}
+                    >
+                        <Film size={14} />
+                    </button>
+                )}
 
                 {/* Delete button - shown on hover when not in selection mode */}
                 {!isSelectionMode && onDelete && (
@@ -225,9 +247,10 @@ const FileItem: React.FC<{
 interface FileHistoryProps {
     variant?: 'widget' | 'full' | 'gallery-only';
     onAddReferenceImage?: (base64Data: string) => Promise<void>;
+    onCreateVideo?: (imageUrl: string) => void;
 }
 
-const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddReferenceImage }) => {
+const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddReferenceImage, onCreateVideo }) => {
     const { t } = useTranslation();
     const { files, isFilesLoading, uploadFile, deleteFile, hasActiveProject } = useFiles();
     const { projects, activeProject } = useProject();
@@ -1045,6 +1068,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                                                         onToggleSelect={() => library.toggleSelection(file.id)}
                                                         isSelectionMode={library.isSelectionMode}
                                                         onAddToReference={onAddReferenceImage || (variant !== 'widget' ? addImageToReference : undefined)}
+                                                        onCreateVideo={onCreateVideo}
                                                         onDelete={(f) => { setFileToDelete(f); setShowDeleteConfirm(true); }}
                                                     />
                                                 </div>

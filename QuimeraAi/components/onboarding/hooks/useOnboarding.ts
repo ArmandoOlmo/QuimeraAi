@@ -8,7 +8,7 @@ import { supabase } from '../../../supabase';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useProject } from '../../../contexts/project';
 import { useAdmin } from '../../../contexts/admin';
-import { useEditor } from '../../../contexts/EditorContext';
+import { useSafeEditor } from '../../../contexts/EditorContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { useTranslation } from 'react-i18next';
@@ -211,7 +211,10 @@ export const useOnboarding = () => {
         loadProject,
     } = useProject();
     const { getPrompt } = useAdmin();
-    const { generateImage } = useEditor();
+    const editor = useSafeEditor();
+    const generateImage = editor?.generateImage || (async () => {
+        throw new Error('EditorProvider is not available yet.');
+    });
 
     // Get setIsOnboardingOpen from UIContext (same context that OnboardingModal uses)
     const { setIsOnboardingOpen } = useUI();

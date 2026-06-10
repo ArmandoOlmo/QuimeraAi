@@ -21,67 +21,11 @@ import { TenantProvider } from './tenant';
 import { AppContentProvider } from './appContent';
 import { PlansProvider } from './PlansContext';
 
-// Feature Contexts — deferred until authenticated
-import { EditorProvider } from './EditorContext';
-import { ProjectProvider } from './project';
-import { FilesProvider } from './files';
-import { MediaProvider } from './media';
-import { CRMProvider } from './crm';
-import { CMSProvider } from './cms';
-import { AdminProvider } from './admin';
-import { DomainsProvider } from './domains';
-import { AIProvider } from './ai';
-import { UpgradeProvider } from './UpgradeContext';
-import { AgencyProvider } from './agency/AgencyContext';
-import { AgencyContentProvider } from './agency/AgencyContentContext';
-import { NewsProvider } from './news';
-import { UndoProvider } from './undo';
-import { BioPageProvider } from './bioPage';
-
 interface AppProvidersProps {
     children: ReactNode;
 }
 
-/**
- * FeatureProviders — Only mounted when user is authenticated.
- * This prevents ~12 Firestore queries and heavy module initialization
- * from running before the user even logs in.
- */
-const FeatureProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
-    return (
-        <AdminProvider>
-            <ProjectProvider>
-                <FilesProvider>
-                    <MediaProvider>
-                        <CRMProvider>
-                            <CMSProvider>
-                                <DomainsProvider>
-                                    <AIProvider>
-                                        <AgencyProvider>
-                                            <AgencyContentProvider>
-                                                <NewsProvider>
-                                                    <UpgradeProvider>
-                                                        <UndoProvider>
-                                                            <BioPageProvider>
-                                                                <EditorProvider>
-                                                                    {children}
-                                                                </EditorProvider>
-                                                            </BioPageProvider>
-                                                        </UndoProvider>
-                                                    </UpgradeProvider>
-                                                </NewsProvider>
-                                            </AgencyContentProvider>
-                                        </AgencyProvider>
-                                    </AIProvider>
-                                </DomainsProvider>
-                            </CMSProvider>
-                        </CRMProvider>
-                    </MediaProvider>
-                </FilesProvider>
-            </ProjectProvider>
-        </AdminProvider>
-    );
-};
+const FeatureProviders = lazy(() => import('./AppFeatureProviders'));
 
 /**
  * AuthGatedProviders — Gates feature providers behind authentication.
@@ -97,8 +41,13 @@ const AuthGatedProviders: React.FC<{ children: ReactNode }> = ({ children }) => 
         return <>{children}</>;
     }
 
-    // User is authenticated — mount all feature providers
-    return <FeatureProviders>{children}</FeatureProviders>;
+    // User is authenticated — mount all feature providers.
+    // Keep these imports out of public landing boot; they pull editor/export/domain code.
+    return (
+        <Suspense fallback={null}>
+            <FeatureProviders>{children}</FeatureProviders>
+        </Suspense>
+    );
 };
 
 /**
@@ -149,4 +98,3 @@ export const LightProviders: React.FC<AppProvidersProps> = ({ children }) => {
 };
 
 export default AppProviders;
-

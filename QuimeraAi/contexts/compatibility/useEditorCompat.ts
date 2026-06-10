@@ -27,7 +27,54 @@ import { useCRM } from '../crm';
 import { useCMS } from '../cms';
 import { useAdmin } from '../admin';
 import { useDomains } from '../domains';
-import { useAI } from '../ai';
+import { useSafeAI } from '../ai';
+import { AiAssistantConfig } from '../../types';
+
+const fallbackAiAssistantConfig: AiAssistantConfig = {
+    agentName: 'Quimera Bot',
+    tone: 'Professional',
+    languages: 'English, Spanish',
+    businessProfile: '',
+    productsServices: '',
+    policiesContact: '',
+    specialInstructions: '',
+    faqs: [],
+    knowledgeDocuments: [],
+    knowledgeLinks: [],
+    widgetColor: '#4f46e5',
+    isActive: true,
+    leadCaptureEnabled: true,
+    enableLiveVoice: false,
+    voiceName: 'Zephyr',
+};
+
+const missingAIProviderError = () => new Error('AIProvider is not available yet.');
+
+const fallbackAI = {
+    hasApiKey: null,
+    promptForKeySelection: async () => {
+        throw missingAIProviderError();
+    },
+    handleApiError: (error: any) => {
+        console.error(error);
+    },
+    aiAssistantConfig: fallbackAiAssistantConfig,
+    saveAiAssistantConfig: async () => {
+        throw missingAIProviderError();
+    },
+    generateImage: async () => {
+        throw missingAIProviderError();
+    },
+    generateVideo: async () => {
+        throw missingAIProviderError();
+    },
+    generateProjectImagesWithProgress: async () => ({
+        success: false,
+        generatedImages: {},
+        failedPaths: [],
+    }),
+    enhancePrompt: async (draftPrompt: string) => draftPrompt,
+};
 
 /**
  * Hook de compatibilidad con la interfaz del viejo EditorContext
@@ -53,7 +100,7 @@ export const useEditorCompat = () => {
     const cms = useCMS();
     const admin = useAdmin();
     const domains = useDomains();
-    const ai = useAI();
+    const ai = useSafeAI() || fallbackAI;
 
     // Construir objeto compatible con la vieja interfaz
     return {
@@ -239,6 +286,7 @@ export const useEditorCompat = () => {
         aiAssistantConfig: ai.aiAssistantConfig,
         saveAiAssistantConfig: ai.saveAiAssistantConfig,
         generateImage: ai.generateImage,
+        generateVideo: ai.generateVideo,
         generateProjectImagesWithProgress: ai.generateProjectImagesWithProgress,
         enhancePrompt: ai.enhancePrompt,
 
@@ -253,7 +301,6 @@ export const useEditorCompat = () => {
         setSidebarOrder: () => {},
     };
 };
-
 
 
 
