@@ -850,18 +850,25 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Menus are owned by CMSContext (projects.menus column). Fetch the latest
         // version so autosave keeps data.menus in sync and never drops navigation.
         let latestMenus = project.menus || [];
+        let menuRow: { menus?: unknown; data?: unknown; status?: string; published_at?: string | null } | null = null;
         try {
-            const { data: menuRow } = await supabase
+            const { data: fetchedRow } = await supabase
                 .from('projects')
-                .select('menus, data')
+                .select('menus, data, status, published_at')
                 .eq('id', activeProjectId)
                 .single();
+            menuRow = fetchedRow;
             if (menuRow) {
                 latestMenus = resolveProjectMenus(menuRow);
             }
         } catch (menuFetchError) {
             console.warn('[ProjectContext] Could not fetch latest menus for save:', menuFetchError);
         }
+
+        const persistedStatus =
+            menuRow?.published_at || menuRow?.status === 'Published' || project.status === 'Published'
+                ? 'Published'
+                : (project.status || 'Draft');
 
         // Save ALL project fields to ensure Firestore stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Firestore doesn't accept undefined)
@@ -909,7 +916,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             // In Supabase, we just update the projects table
             const supabaseUpdate: Record<string, any> = {
                 name: updatedProject.name || project.name,
-                status: updatedProject.status || project.status,
+                status: isTemplate ? 'Template' : persistedStatus,
                 data: updatedProject,
             };
             if (latestMenus.length > 0) {
@@ -922,7 +929,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
             setProjects(prev => prev.map(p =>
-                p.id === activeProjectId ? { ...p, ...updatedProject, menus: latestMenus } as Project : p
+                p.id === activeProjectId
+                    ? { ...p, ...updatedProject, status: isTemplate ? 'Template' : persistedStatus, menus: latestMenus } as Project
+                    : p
             ));
         } catch (error) {
             console.error("Error saving project:", error);
@@ -1062,6 +1071,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 console.error('[ProjectContext] Publish failed:', result.error);
                 return false;
             }
+
+            setProjects(prev => prev.map(p =>
+                p.id === activeProjectId ? { ...p, status: 'Published' } : p
+            ));
 
             console.log(`✅ [ProjectContext] Project published successfully at ${result.publishedAt}`);
             if (result.stats) {

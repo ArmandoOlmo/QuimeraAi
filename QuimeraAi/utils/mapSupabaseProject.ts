@@ -2,6 +2,15 @@ import { Project } from '../types';
 
 type SupabaseProjectRow = Record<string, any>;
 
+/** Derive dashboard status from the row; published_at is the source of truth for live sites. */
+function resolveProjectStatus(row: SupabaseProjectRow): Project['status'] {
+    const rawStatus = row.status ?? row.data?.status;
+    if (rawStatus === 'Template') return 'Template';
+    if (row.published_at) return 'Published';
+    if (rawStatus === 'Published') return 'Published';
+    return 'Draft';
+}
+
 /** Resolve menus from the dedicated column or the legacy data JSONB field. */
 export function resolveProjectMenus(row: SupabaseProjectRow): any[] {
     if (Array.isArray(row.menus) && row.menus.length > 0) {
@@ -35,7 +44,7 @@ export function mapSupabaseRowToProject(row: SupabaseProjectRow): Project {
         data: pageData,
         id: row.id,
         name: row.name ?? dataPayload.name,
-        status: row.status ?? dataPayload.status,
+        status: resolveProjectStatus(row),
         userId: row.user_id ?? dataPayload.userId,
         tenantId: row.tenant_id ?? dataPayload.tenantId,
         lastUpdated: row.last_updated ?? dataPayload.lastUpdated,

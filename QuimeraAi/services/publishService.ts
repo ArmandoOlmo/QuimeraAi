@@ -310,6 +310,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             .update({
                 published_data: publishData,
                 published_at: publishedAt,
+                status: 'Published',
             })
             .eq('id', projectId);
 
@@ -485,6 +486,7 @@ export async function unpublishProject(projectId: string): Promise<boolean> {
             .update({
                 published_data: null,
                 published_at: null,
+                status: 'Draft',
             })
             .eq('id', projectId);
 
