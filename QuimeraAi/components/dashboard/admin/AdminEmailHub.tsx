@@ -5,7 +5,7 @@
  * the modularised hooks and passes the relevant props to each tab view.
  *
  * Architecture:
- *   - useAdminEmailData:  real-time Firestore data + computed stats
+ *   - useAdminEmailData:  real-time Supabase data + computed stats
  *   - useAdminEmailActions: campaign CRUD, editor state, send/test
  *   - useAudienceActions: audience CRUD, CSV import, member management
  *   - useAIEmailStudio: AI text/voice chat, AI-driven creation

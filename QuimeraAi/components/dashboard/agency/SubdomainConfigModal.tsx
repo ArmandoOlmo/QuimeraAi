@@ -49,9 +49,9 @@ export function SubdomainConfigModal({
 
         const checkExisting = async () => {
             try {
-                // Check if project already has a subdomain by looking in Firestore
-                const { collection, query, where, getDocs, limit } = await import('firebase/firestore');
-                const { db } = await import('../../../firebase');
+                // Check if project already has a subdomain by looking in Supabase
+                const { collection, query, where, getDocs, limit } = await import('@/utils/compatData');
+                const { db } = await import('@/utils/compatData');
                 const subdomainsRef = collection(db, 'subdomains');
                 const q = query(
                     subdomainsRef,

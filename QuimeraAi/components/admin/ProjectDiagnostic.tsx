@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/core/AuthContext';
-import { db, collection, getDocs, doc, getDoc, setDoc } from '../../firebase';
+import { db, collection, getDocs, doc, getDoc, setDoc } from '@/utils/compatData';
 
 interface ProjectFingerprint {
   id: string;
@@ -197,7 +197,7 @@ const ProjectDiagnostic: React.FC = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>🔍 Project Diagnostic Tool</h1>
-      <p style={styles.subtitle}>Compares draft (Firestore) vs published (publicStores) data</p>
+      <p style={styles.subtitle}>Compares draft (Supabase) vs published (publicStores) data</p>
 
       <button onClick={diagnose} disabled={loading} style={styles.button}>
         {loading ? '⏳ Analyzing...' : '🔄 Re-scan Projects'}
@@ -217,7 +217,7 @@ const ProjectDiagnostic: React.FC = () => {
 
           <div style={styles.columns}>
             <div style={styles.column}>
-              <h3 style={styles.columnTitle}>📝 Draft (Firestore)</h3>
+              <h3 style={styles.columnTitle}>📝 Draft (Supabase)</h3>
               <table style={styles.table}>
                 <tbody>
                   <Row label="Hero Headline" value={proj.draft.heroHeadline} mismatch={proj.mismatches.includes('Hero Headline')} />

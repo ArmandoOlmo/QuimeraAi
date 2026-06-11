@@ -9,3 +9,18 @@ entrypoint = "./functions/send-invite-email/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-invite-email/*.html" ]
+
+[functions.stripe-api]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/stripe-api/index.ts"
+
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/stripe-webhook/index.ts"
+
+[functions.email-api]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/email-api/index.ts"

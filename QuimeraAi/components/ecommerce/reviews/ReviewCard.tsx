@@ -5,7 +5,8 @@
 
 import React, { useState } from 'react';
 import { ThumbsUp, Check, User, Image as ImageIcon } from 'lucide-react';
-import { Review } from '../../../types/ecommerce';
+import { Review, StoredTimestamp } from '../../../types/ecommerce';
+import { timestampToDate } from '../../../utils/timestampUtils';
 import RatingStars from './RatingStars';
 import { ReviewColors } from './ReviewSummary';
 
@@ -46,8 +47,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
     const [isVoting, setIsVoting] = useState(false);
     const [showImages, setShowImages] = useState(false);
 
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',

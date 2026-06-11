@@ -104,7 +104,7 @@ const AuthGate: React.FC = () => {
     <>
       <Router
         user={user ? { 
-          uid: user.id, 
+          id: user.id, 
           email: user.email || null, 
           emailVerified: !!(user.email_confirmed_at || user.user_metadata?.email_verified) 
         } : null}
@@ -330,7 +330,7 @@ const App: React.FC = () => {
   // Determine if the current path is a private/admin route that requires auth.
   // If so, always use AppProviders to prevent provider tree destruction during
   // auth state resolution (lightAuth can briefly report isAuthenticated=false
-  // before Firebase resolves, which would mount LightProviders then switch to
+  // before Supabase resolves, which would mount LightProviders then switch to
   // AppProviders — destroying the entire provider tree and causing a logout redirect).
   const currentPath = window.location.pathname;
   const currentRouteConfig = getRouteConfig(currentPath);

@@ -19,7 +19,7 @@ import {
     orderBy,
     onSnapshot,
     serverTimestamp,
-} from '../firebase';
+} from '@/utils/compatData';
 import { useTenant } from '../contexts/tenant';
 import { useAuth } from '../contexts/core/AuthContext';
 import {

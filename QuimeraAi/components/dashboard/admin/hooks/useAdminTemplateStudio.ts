@@ -31,6 +31,7 @@ import { generateComponentColorMappings, generateHeroWaveGradientColors } from '
 import { generateAiAssistantConfig, GlobalColors } from '../../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../../utils/legacyMigration';
 import { extractHeroImage } from '../../../../contexts/project/ProjectContext';
+import { analyzeWebsite } from '../../../../utils/analyzeWebsiteClient';
 import { PageSection, SitePage } from '../../../../types';
 import { supabase } from '../../../../supabase';
 
@@ -373,15 +374,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`;
         setMessages(prev => [...prev, { role: 'model', text: t('aiWebsiteStudio.extraction.analyzing'), timestamp: Date.now() }]);
 
         try {
-            // 1. Call the Supabase edge function
-            const response = await supabase.functions.invoke('onboarding-api', {
-                body: { action: 'analyzeWebsite', url }
-            });
-            const cfData = response.data?.data || response.data;
-
-            if (!cfData.success || !cfData.result) {
-                throw new Error('Analysis returned no data');
-            }
+            const cfData = await analyzeWebsite(url);
 
             const result = cfData.result;
             const pagesScraped = (cfData as any).meta?.pagesScraped || 1;

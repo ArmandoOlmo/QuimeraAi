@@ -142,7 +142,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     // redirect to the dashboard. Skip during initial loading to avoid flicker.
     const requiredService = VIEW_SERVICE_MAP[view];
     React.useEffect(() => {
-        if (isLoadingServices) return; // Wait for Firestore data
+        if (isLoadingServices) return; // Wait for Supabase data
         if (requiredService && !canAccessService(requiredService)) {
             replace(ROUTES.DASHBOARD);
         }

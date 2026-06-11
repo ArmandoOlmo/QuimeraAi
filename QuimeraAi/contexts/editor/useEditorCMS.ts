@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { CMSPost, Menu } from '../../types';
 import { supabase } from '../../supabase';
-import type { User } from '../../firebase'; // keep using User interface
+import type { User } from '@/utils/compatData'; // keep using User interface
 import { getUsableImageUrl } from '../../utils/imageUrl';
 
 interface UseEditorCMSParams {

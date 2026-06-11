@@ -703,6 +703,7 @@ const getPageTitle = (templateId: PageTemplateId): string => {
         'faq': 'Preguntas Frecuentes',
         'cart': 'Carrito',
         'checkout': 'Finalizar Compra',
+        'menu': 'Menú',
     };
     return titles[templateId];
 };
@@ -724,6 +725,7 @@ const getPageSlug = (templateId: PageTemplateId): string => {
         'faq': '/preguntas-frecuentes',
         'cart': '/carrito',
         'checkout': '/checkout',
+        'menu': '/menu',
     };
     return slugs[templateId];
 };

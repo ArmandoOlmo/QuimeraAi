@@ -37,6 +37,8 @@ import { useStoreUsers } from '../hooks/useStoreUsers';
 import { StoreUser, StoreUserRole, StoreUserStatus, DEFAULT_ROLE_CONFIGS } from '../../../../types/storeUsers';
 import { useEcommerceTheme } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
+import type { StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 import StoreUserDetailDrawer from '../components/StoreUserDetailDrawer';
 
 const StoreUsersView: React.FC = () => {
@@ -81,18 +83,18 @@ const StoreUsersView: React.FC = () => {
     const filteredUsers = users;
 
     // Format helpers
-    const formatDate = (timestamp?: { seconds: number }) => {
+    const formatDate = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
         });
     };
 
-    const formatDateTime = (timestamp?: { seconds: number }) => {
+    const formatDateTime = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleString('es-MX', {
+        return timestampToDate(timestamp).toLocaleString('es-MX', {
             day: '2-digit',
             month: 'short',
             hour: '2-digit',

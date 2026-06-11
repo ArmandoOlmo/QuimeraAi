@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                <DashboardWaveRibbons />
+                {!isDashboard && <DashboardWaveRibbons />}
 
                 <DashboardHeader
                     isDashboard={isDashboard}
@@ -140,8 +140,16 @@ const Dashboard: React.FC = () => {
                     onNavigateBack={() => goBack()}
                 />
 
-                <main id="main-content" className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 scroll-smooth" role="main">
-                    <div className="max-w-7xl mx-auto space-y-6 lg:space-y-10">
+                <main
+                    id="main-content"
+                    className={`flex-1 overflow-y-auto scroll-smooth ${
+                        isDashboard
+                            ? 'quimera-dashboard-home-bg p-3 sm:p-6 lg:p-8'
+                            : 'p-3 sm:p-6 lg:p-8'
+                    }`}
+                    role="main"
+                >
+                    <div className="relative z-[1] max-w-7xl mx-auto space-y-6 lg:space-y-10">
 
                         {/* ─── Dashboard Home View ─────────────────────────────────── */}
                         {isDashboard && (
@@ -169,24 +177,26 @@ const Dashboard: React.FC = () => {
                                 )}
 
                                 {/* Draggable Dashboard Sections */}
-                                {sectionOrder.map((sectionId) => {
-                                    const config = sectionConfig[sectionId];
-                                    return (
-                                        <DashboardDraggableSection
-                                            key={sectionId}
-                                            sectionId={sectionId}
-                                            title={config.title}
-                                            icon={config.icon}
-                                            isCollapsed={config.isCollapsed}
-                                            onToggleCollapse={config.onToggle}
-                                            wrapperClasses={getWrapperClasses(sectionId)}
-                                            dragHandlers={dragHandlers}
-                                            rightAction={config.rightAction}
-                                        >
-                                            {config.content}
-                                        </DashboardDraggableSection>
-                                    );
-                                })}
+                                <div className="quimera-dashboard-section-deck space-y-6 lg:space-y-8">
+                                    {sectionOrder.map((sectionId) => {
+                                        const config = sectionConfig[sectionId];
+                                        return (
+                                            <DashboardDraggableSection
+                                                key={sectionId}
+                                                sectionId={sectionId}
+                                                title={config.title}
+                                                icon={config.icon}
+                                                isCollapsed={config.isCollapsed}
+                                                onToggleCollapse={config.onToggle}
+                                                wrapperClasses={getWrapperClasses(sectionId)}
+                                                dragHandlers={dragHandlers}
+                                                rightAction={config.rightAction}
+                                            >
+                                                {config.content}
+                                            </DashboardDraggableSection>
+                                        );
+                                    })}
+                                </div>
                             </>
                         )}
 

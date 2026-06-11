@@ -1,7 +1,7 @@
 /**
  * useAdminEmailData
  *
- * Custom hook that handles all Firestore realtime subscriptions and computed
+ * Custom hook that handles all Supabase realtime subscriptions and computed
  * statistics for the Admin Email Hub. Encapsulates data fetching, filtering,
  * and aggregation logic.
  */
@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAdmin } from '../../../../../contexts/admin/AdminContext';
 import {
     db, collection, query, orderBy, onSnapshot,
-} from '../../../../../firebase';
+} from '@/utils/compatData';
 import type { EmailAutomation } from '../../../../../types/email';
 import type { CampaignStatus } from '../../../../../types/email';
 import type {

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { PageSection, CustomComponent } from '../../../types';
-import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Code, FileText, Image, LayoutGrid, AlertCircle, RefreshCw, Layers, MousePointerClick, Zap, Package, AlignCenter, X } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit2, Shield, Eye, Settings, Layout, Code, FileText, Image, LayoutGrid, AlertCircle, RefreshCw, Layers, MousePointerClick, Zap, Package, AlignCenter, X, BookOpen } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import ComponentDocumentationViewer from './ComponentDocumentationViewer';
@@ -35,7 +35,7 @@ const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (che
     </div>
 );
 
-const componentNames: Record<PageSection, string> = {
+const componentNames: Partial<Record<PageSection, string>> = {
     hero: 'Hero Section',
     heroSplit: 'Hero Split (Angled)',
     features: 'Features Section',
@@ -51,7 +51,6 @@ const componentNames: Record<PageSection, string> = {
     team: 'Team Section',
     video: 'Video Section',
     howItWorks: 'How It Works Section',
-    howItWorksDesc: 'Step by step guide',
     map: 'Location Map',
     menu: 'Restaurant Menu',
     banner: 'Banner Section',
@@ -74,7 +73,7 @@ const componentNames: Record<PageSection, string> = {
     announcementBar: 'Announcement Bar',
 };
 
-const componentCategories: Record<PageSection, string> = {
+const componentCategories: Partial<Record<PageSection, string>> = {
     hero: 'hero',
     heroSplit: 'hero',
     features: 'content',
@@ -220,7 +219,7 @@ const ComponentLibrary: React.FC = () => {
                             <span className="text-sm text-q-text-secondary font-medium">Category:</span>
                             <select
                                 value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
                                 className="px-3 py-1 bg-q-surface border border-q-border rounded-lg text-q-text text-sm focus:outline-none focus:ring-2 focus:ring-q-accent"
                             >
                                 {categories.map(cat => (

@@ -1080,8 +1080,8 @@ Name:`;
                                             type="button"
                                             onClick={() => setShowThumbnailGenerator(!showThumbnailGenerator)}
                                             className={`p-1.5 text-xs rounded-lg transition-colors ${showThumbnailGenerator
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                                ? 'bg-q-accent text-q-text-on-accent'
+                                                : 'bg-primary/10 text-q-accent hover:bg-primary/20'
                                                 }`}
                                             title={t('superadmin.templateEditor.generateIATitle', 'Generate with AI')}
                                         >
@@ -1103,18 +1103,18 @@ Name:`;
                                         </div>
                                     )}
                                 </div>
-
+                                
                                 {/* AI Generator - Compact */}
                                 {showThumbnailGenerator && (
-                                    <div className="mt-3 p-3 bg-purple-900/10 rounded-lg border border-purple-500/20">
+                                    <div className="mt-3 quimera-ai-launcher">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] font-medium text-purple-300">{t('superadmin.templateEditor.generatorTitle', 'AI Generator')}</span>
+                                            <span className="text-[10px] font-semibold text-q-text-secondary">{t('superadmin.templateEditor.generatorTitle', 'AI Generator')}</span>
                                             <div className="flex gap-1">
                                                 <button
                                                     type="button"
                                                     onClick={generateThumbnailPromptSuggestion}
                                                     disabled={isEnhancingPrompt}
-                                                    className="text-[10px] px-1.5 py-0.5 text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                                                    className="text-[10px] px-1.5 py-0.5 text-q-accent hover:text-q-accent/80 disabled:opacity-50"
                                                 >
                                                     {isEnhancingPrompt ? <Loader2 size={10} className="animate-spin" /> : t('superadmin.templateEditor.suggest', 'Suggest')}
                                                 </button>
@@ -1122,7 +1122,7 @@ Name:`;
                                                     type="button"
                                                     onClick={handleEnhancePrompt}
                                                     disabled={isEnhancingPrompt || !thumbnailPrompt}
-                                                    className="text-[10px] px-1.5 py-0.5 text-q-accent hover:text-white disabled:opacity-50"
+                                                    className="text-[10px] px-1.5 py-0.5 text-q-accent hover:text-q-accent/80 disabled:opacity-50"
                                                 >
                                                     {t('superadmin.templateEditor.enhance', 'Enhance')}
                                                 </button>
@@ -1133,7 +1133,7 @@ Name:`;
                                             value={thumbnailPrompt}
                                             onChange={(e) => setThumbnailPrompt(e.target.value)}
                                             placeholder={t('superadmin.templateEditor.describePlaceholder', 'Describe the image...')}
-                                            className="w-full bg-q-bg border border-q-border rounded-lg p-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none resize-none h-16"
+                                            className="w-full bg-transparent border border-q-border/70 rounded-xl p-2 text-xs text-q-text placeholder:text-q-text-secondary/55 focus:ring-1 focus:ring-q-accent outline-none resize-none h-16"
                                         />
 
                                         {/* Style Pills - Horizontal Scroll */}
@@ -1144,8 +1144,8 @@ Name:`;
                                                     type="button"
                                                     onClick={() => setThumbnailStyle(s.value)}
                                                     className={`px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors ${thumbnailStyle === s.value
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-q-surface-overlay text-q-text-secondary'
+                                                        ? 'bg-q-accent text-q-text-on-accent'
+                                                        : 'bg-q-surface-overlay/50 text-q-text-secondary hover:text-q-text'
                                                         }`}
                                                 >
                                                     {s.label}
@@ -1157,7 +1157,7 @@ Name:`;
                                             type="button"
                                             onClick={handleGenerateThumbnail}
                                             disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
-                                            className="w-full py-1.5 mt-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-lg disabled:opacity-40 flex items-center justify-center gap-1.5"
+                                            className="w-full py-2 mt-1 bg-q-accent text-q-text-on-accent text-xs font-semibold rounded-full disabled:opacity-40 flex items-center justify-center gap-1.5"
                                         >
                                             {isGeneratingThumbnail ? (
                                                 <><Loader2 size={12} className="animate-spin" /> {t('superadmin.templateEditor.generating', 'Generating...')}</>
@@ -1169,7 +1169,7 @@ Name:`;
                                         {/* Generated Preview */}
                                         {generatedThumbnail && (
                                             <div className="mt-3">
-                                                <div className="relative aspect-video w-full bg-q-surface-overlay rounded-lg overflow-hidden mb-2">
+                                                <div className="relative aspect-video w-full bg-q-surface-overlay/50 rounded-xl overflow-hidden mb-2 border border-q-border/60">
                                                     <img src={generatedThumbnail} alt="Generated" className="w-full h-full object-cover" />
                                                     <button
                                                         type="button"
@@ -1183,7 +1183,7 @@ Name:`;
                                                 <button
                                                     type="button"
                                                     onClick={applyGeneratedThumbnail}
-                                                    className="w-full py-1.5 bg-q-accent text-q-bg text-xs font-medium rounded-lg flex items-center justify-center gap-1"
+                                                    className="w-full py-2 bg-q-surface-overlay/50 text-q-text text-xs font-semibold rounded-xl border border-q-border/60 flex items-center justify-center gap-1 hover:bg-q-surface-overlay"
                                                 >
                                                     <Save size={12} /> {t('superadmin.templateEditor.useImage', 'Use this image')}
                                                 </button>

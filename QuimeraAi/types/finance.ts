@@ -24,8 +24,9 @@ export interface ExpenseRecord {
   items?: (string | ExpenseItem)[];    // Lista de ítems comprados
   confidence: number;  // Nivel de confianza de la IA (0-1)
   status: 'pending' | 'approved' | 'rejected';
+  notes?: string;
   originalFileUrl?: string; // URL opcional de la imagen original
-  createdAt: any;      // Timestamp de Firestore
+  createdAt: any;      // Timestamp de Supabase
 }
 
 // --- Accounting Module Types ---
@@ -59,18 +60,24 @@ export interface Transaction {
   description: string;
   amount: number;
   type: TransactionType;
-  account: string;          // Account name or code
+  account?: string;          // Account name or code
   category: string;         // Income/Expense category
   counterpartyId?: string;  // Vendor or Client ID
   counterpartyName?: string;
   reference?: string;       // Invoice #, receipt #, etc.
+  /** @deprecated Use counterpartyId */
+  vendorId?: string;
+  invoiceId?: string;
+  referenceNumber?: string;
+  paymentMethod?: string;
+  receiptUrl?: string;
   notes?: string;
-  currency: string;
-  aiVerified: boolean;      // Whether AI has categorized this
+  currency?: string;
+  aiVerified?: boolean;      // Whether AI has categorized this
   aiConfidence?: number;    // 0-1 confidence score
   aiSuggestedCategory?: string;
   aiSuggestedAccount?: string;
-  status: 'pending' | 'verified' | 'reconciled';
+  status: 'pending' | 'verified' | 'reconciled' | string;
   tags?: string[];
   createdAt: any;
   updatedAt?: any;
@@ -95,9 +102,16 @@ export interface Invoice {
   clientEmail: string;
   clientAddress?: string;
   clientPhone?: string;
+  /** @deprecated Use clientName */
+  customerName?: string;
+  /** @deprecated Use clientEmail */
+  customerEmail?: string;
+  /** @deprecated Use clientAddress */
+  customerAddress?: string;
   items: InvoiceItem[];
   subtotal: number;
   taxTotal: number;
+  discountTotal?: number;
   total: number;
   currency: string;
   status: InvoiceStatus;
@@ -119,12 +133,14 @@ export interface ProductService {
   id: string;
   name: string;
   description?: string;
+  type?: string;
   price: number;
-  currency: string;
-  category: string;
+  currency?: string;
+  category?: string;
   unit?: string;           // e.g. "hour", "unit", "project"
-  taxable: boolean;
+  taxable?: boolean;
   taxRate?: number;        // Default tax rate percentage
+  sku?: string;
   isActive: boolean;
   createdAt: any;
   updatedAt?: any;
@@ -140,10 +156,11 @@ export interface Vendor {
   category?: string;
   defaultAccount?: string;  // Default expense account
   taxId?: string;           // RFC, NIF, etc.
+  website?: string;
   notes?: string;
-  totalSpent: number;       // Running total of payments
+  totalSpent?: number;       // Running total of payments
   lastTransactionDate?: string;
-  isActive: boolean;
+  isActive?: boolean;
   createdAt: any;
   updatedAt?: any;
 }

@@ -819,7 +819,7 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
 
         const now = new Date().toISOString();
         const newPost: CMSPost = {
-            id: '',  // Empty ID — parent (CMSDashboard) will save via saveCMSPost which generates the Firebase ID
+            id: '',  // Empty ID — parent (CMSDashboard) will save via saveCMSPost which generates the Supabase ID
             title: String(generatedPost.title || 'Untitled'),
             slug: String(generatedPost.slug || `post-${Date.now()}`),
             content: String(generatedPost.content || '<p>Contenido generado por IA</p>'),

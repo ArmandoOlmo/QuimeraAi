@@ -3,7 +3,7 @@
  * Provides default Kanban stages and custom fields for each industry type.
  */
 
-import { CRMCustomStage, CRMCustomFieldDef, CRMIndustryType } from '../../types';
+import { CRMCustomStage, CRMCustomFieldDef, CRMIndustryType } from '../types';
 
 // =============================================================================
 // STAGE PRESETS PER INDUSTRY

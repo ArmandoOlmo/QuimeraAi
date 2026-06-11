@@ -95,11 +95,13 @@ const MediaGeneratorPanel: React.FC<MediaGeneratorPanelProps> = ({
     const showModeToggle = allowedModes.length > 1;
 
     return (
-        <div className={`flex flex-col h-full overflow-hidden ${className}`}>
+        <div className={`flex flex-col h-full overflow-hidden bg-q-bg text-q-text ${className}`}>
             {!hideHeader && (
-                <header className="flex items-center justify-between border-b border-q-border bg-q-bg/80 backdrop-blur-md px-4 md:px-6 py-3 shrink-0 z-20 gap-3">
+                <header className="flex items-center justify-between border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        <Wand2 size={20} className="text-q-accent shrink-0" />
+                        <span className="h-8 w-8 rounded-xl bg-primary/10 text-q-accent flex items-center justify-center shrink-0">
+                            <Wand2 size={18} />
+                        </span>
                         <h2 className="text-sm md:text-lg font-bold truncate">
                             {t('editor.mediaGenerator', { defaultValue: 'Media Generator' })}
                         </h2>
@@ -123,7 +125,7 @@ const MediaGeneratorPanel: React.FC<MediaGeneratorPanelProps> = ({
             )}
 
             {hideHeader && showModeToggle && (
-                <div className="px-4 py-2 border-b border-q-border shrink-0">
+                <div className="px-4 py-2 border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl shrink-0">
                     <MediaModeToggle mode={mode} onChange={setMode} allowedModes={allowedModes} />
                 </div>
             )}

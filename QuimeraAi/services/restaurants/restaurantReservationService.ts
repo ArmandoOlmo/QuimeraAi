@@ -1,5 +1,5 @@
-import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from '../../firebase';
-import { db } from '../../firebase';
+import { addDoc, collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { RestaurantReservation, RestaurantReservationStatus } from '../../types/restaurants';
 import { getReservationsPath, getRestaurantTenantId, RestaurantScope } from './restaurantPaths';
 

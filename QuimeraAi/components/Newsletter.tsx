@@ -44,12 +44,12 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 };
 
 interface NewsletterProps extends NewsletterData {
-  cardBorderRadius: BorderRadiusSize;
-  buttonBorderRadius: BorderRadiusSize;
+  cardBorderRadius?: BorderRadiusSize;
+  buttonBorderRadius?: BorderRadiusSize;
 }
 
 const Newsletter: React.FC<NewsletterProps> = ({
-  glassEffect, title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius, buttonBorderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cardOpacity, showCardBorder }) => {
+  glassEffect, title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius = 'xl', buttonBorderRadius = 'xl', titleFontSize = 'md', descriptionFontSize = 'md', cardOpacity, showCardBorder }) => {
   // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
   const headingColor = colors?.heading || colors?.cardHeading || '#ffffff';
   const textColor = colors?.text || colors?.cardText || '#ffffff';

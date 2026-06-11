@@ -142,7 +142,7 @@ export interface AgencyLandingConfig {
     // Domain & Publishing
     domain: AgencyDomainConfig;
     isPublished: boolean;
-    publishedAt?: any; // Firestore Timestamp
+    publishedAt?: any; // Supabase Timestamp
     
     // SEO
     seo: AgencyLandingSEO;

@@ -213,12 +213,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
 
-          <I18nInput
+          <input
             ref={faviconInputRef}
             type="file"
             accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
             className="hidden"
-            onChange={async (e) => {
+            onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
               if (file && activeProject) {
                 setIsUploadingFavicon(true);
@@ -567,12 +567,12 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             )}
           </div>
 
-          <I18nInput
+          <input
             ref={faviconInputRef}
             type="file"
             accept=".ico,.png,.svg,image/png,image/svg+xml,image/x-icon"
             className="hidden"
-            onChange={async (e) => {
+            onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
               if (file && activeProject) {
                 setIsUploadingFavicon(true);

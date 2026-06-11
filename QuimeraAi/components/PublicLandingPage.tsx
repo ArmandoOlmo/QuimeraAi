@@ -40,6 +40,7 @@ import { supabase } from '../supabase';
 import { savePlatformLead } from '../services/platformLeadService';
 import { fontStacks, resolveFontFamily, loadGoogleFontsSync } from '../utils/fontLoader';
 import { resolveI18nSectionData } from '../utils/i18nContent';
+import { isLegacyStorageUrl } from '../utils/imageUrl';
 import Header from './Header';
 import SectionBackground from './ui/SectionBackground';
 
@@ -383,7 +384,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
   // Get dynamic content from AppContent context
   const appContent = useSafeAppContent();
 
-  // Get dynamic pricing plans from Firestore (connected to Super Admin)
+  // Get dynamic pricing plans from Supabase (connected to Super Admin)
   // Only shows plans that have showInLanding = true in Super Admin
   const { plans: dynamicPlans, isLoading: isLoadingPlans } = useLandingPlans();
 
@@ -586,7 +587,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
     return sortedSections;
   }, [isPreviewMode, previewSections]);
 
-  // Pricing plans are now loaded dynamically from Firestore via useLandingPlans hook
+  // Pricing plans are now loaded dynamically from Supabase via useLandingPlans hook
   // This connects the Super Admin plan management with the public landing page
 
   // Handle navigation item click
@@ -881,11 +882,11 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       // ── LEGACY & CORE SECTIONS ──
       // ── LEGACY & CORE SECTIONS ──
       case 'hero':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><Hero {...section.data} /></Suspense></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><Hero {...(section.data as any)} /></Suspense></section>;
       case 'heroModern':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroModern {...section.data} /></Suspense></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroModern {...(section.data as any)} /></Suspense></section>;
       case 'heroGradient':
-        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroGradient {...section.data} /></Suspense></section>;
+        return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroGradient {...(section.data as any)} /></Suspense></section>;
       case 'features':
         return renderSuiteSection(section, Features);
       case 'pricing':
@@ -905,7 +906,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         const separatorData = section.data || {};
         return separatorData ? (
           <Suspense key={section.id} fallback={null}>
-            <Separator data={separatorData} />
+            <Separator data={{ height: 48, ...separatorData } as any} />
           </Suspense>
         ) : null;
       }
@@ -963,6 +964,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       <Header
         style={headerPreview?.style || 'floating-glass'}
         layout={headerPreview?.layout || 'minimal'}
+        height={headerPreview?.height ?? 72}
         isSticky={headerPreview?.isSticky ?? true}
         glassEffect={headerPreview?.glassEffect ?? true}
         links={navigation.header.items.map(item => ({
@@ -972,7 +974,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         logoType={headerPreview?.logoType || 'both'}
         logoText={headerPreview?.logoText || navigation.header.logo?.text || 'Quimera.ai'}
         logoImageUrl={
-          (headerPreview?.logoImageUrl && !headerPreview.logoImageUrl.includes('firebasestorage')) 
+          (headerPreview?.logoImageUrl && !isLegacyStorageUrl(headerPreview.logoImageUrl)) 
             ? headerPreview.logoImageUrl 
             : (globalAppLogoUrl === QUIMERA_DEFAULT_LOGO ? QUIMERA_FULL_LOGO : globalAppLogoUrl)
         }

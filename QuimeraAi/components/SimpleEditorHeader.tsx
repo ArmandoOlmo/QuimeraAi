@@ -205,7 +205,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
 
               setPublishState('publishing');
               try {
-                // Wrap in timeout to prevent hanging indefinitely on Firestore issues
+                // Wrap in timeout to prevent hanging indefinitely on Supabase issues
                 const timeoutPromise = new Promise<boolean>((_, reject) =>
                   setTimeout(() => reject(new Error('Publish timed out after 30 seconds')), 30000)
                 );

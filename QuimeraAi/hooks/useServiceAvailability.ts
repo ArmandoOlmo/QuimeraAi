@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit, getDocs } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { supabase } from '../supabase';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import {
@@ -127,7 +127,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
 
     // Load audit log on mount (only for super admins who have read access)
     useEffect(() => {
-        if (userRole === 'owner' || userRole === 'superadmin' || userRole === 'Owner' || userRole === 'Superadmin' || userRole === 'SuperAdmin') {
+        if (userRole === 'owner' || userRole === 'superadmin') {
             refreshAuditLog();
         }
     }, [refreshAuditLog, userRole]);
@@ -149,7 +149,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
             console.log('[ServiceAvailability] Starting update:', {
                 serviceId,
                 newStatus,
-                userId: user.id || user.uid,
+                userId: user.id,
                 userEmail: user.email,
                 userRole: userDocument?.role
             });
@@ -166,7 +166,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
             if (currentSnap?.config) {
                 currentAvailability = currentSnap.config as GlobalServiceAvailability;
             } else {
-                currentAvailability = getInitialServiceAvailability(user.id || user.uid);
+                currentAvailability = getInitialServiceAvailability(user.id);
             }
 
             const previousStatus = currentAvailability.services[serviceId]?.status || 'public';
@@ -178,14 +178,14 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                     status: newStatus,
                     statusReason: reason || null,
                     updatedAt: new Date().toISOString(),
-                    updatedBy: user.id || user.uid,
+                    updatedBy: user.id,
                 } as ServiceConfig,
             };
 
             const updatedConfig = {
                 services: updatedServices,
                 lastUpdated: new Date().toISOString(),
-                updatedBy: user.id || user.uid,
+                updatedBy: user.id,
             };
 
             // Save updated availability
@@ -195,7 +195,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                     id: 'serviceAvailability',
                     config: updatedConfig,
                     updated_at: new Date().toISOString(),
-                    updated_by: user.id || user.uid
+                    updated_by: user.id
                 });
 
             if (updateError) throw updateError;
@@ -210,7 +210,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
                     previous_status: previousStatus,
                     new_status: newStatus,
                     reason: reason || null,
-                    user_id: user.id || user.uid,
+                    user_id: user.id,
                     user_email: user.email || 'unknown'
                 });
 

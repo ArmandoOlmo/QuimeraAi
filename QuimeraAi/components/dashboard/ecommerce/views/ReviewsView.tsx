@@ -28,6 +28,8 @@ import { useEditor } from '../../../../contexts/EditorContext';
 import { useReviews } from '../hooks/useReviews';
 import { useProducts } from '../hooks/useProducts';
 import { Review, ReviewStatus } from '../../../../types/ecommerce';
+import type { StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceContext } from '../EcommerceDashboard';
 
 type StatusFilter = ReviewStatus | 'all';
@@ -83,8 +85,8 @@ const ReviewsView: React.FC = () => {
     };
 
     // Format date
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',

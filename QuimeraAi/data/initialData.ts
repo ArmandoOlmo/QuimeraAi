@@ -3,7 +3,7 @@ import { PageData, NavLink, ThemeData, PageSection, BrandIdentity } from '../typ
 
 // FIX: Renamed original export to pageData and created a new initialData export structure
 // that includes theme, componentOrder, and sectionVisibility to resolve type errors.
-const pageData: PageData = {
+const pageData = {
   header: {
     style: 'sticky-solid',
     layout: 'minimal',
@@ -2744,7 +2744,7 @@ const sectionVisibility = componentOrder.reduce((acc, section) => {
 }, {} as Record<PageSection, boolean>);
 
 export const initialData = {
-    data: pageData,
+    data: pageData as PageData,
     theme,
     brandIdentity,
     componentOrder,

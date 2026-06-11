@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Calendar, Loader2, MapPin, Phone, Utensils } from 'lucide-react';
-import { doc, getDoc, updateDoc, increment } from '../../../firebase';
-import { db } from '../../../firebase';
+import { doc, getDoc, updateDoc, increment } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { RestaurantMenuItem, RestaurantSettings } from '../../../types/restaurants';
 
 interface PublicRestaurantMenuPayload {

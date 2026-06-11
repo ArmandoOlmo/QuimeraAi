@@ -56,7 +56,7 @@ interface ModernCMSEditorProps {
 
 // Settings sidebar content - shared across Desktop/Tablet/Mobile variants
 interface SettingsSidebarContentProps {
-    t: (key: string) => string;
+    t: (key: string, options?: Record<string, unknown>) => string;
     slug: string;
     setSlug: (value: string) => void;
     featuredImage: string;
@@ -129,7 +129,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                 <div>
                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2 flex items-center gap-1.5">
                         <Tag size={12} />
-                        {t('cms_editor.category', 'Categoría')}
+                        {t('cms_editor.category', { defaultValue: 'Categoría' })}
                     </label>
                     <select
                         value={categoryId}
@@ -146,7 +146,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Podcast Audio */}
             <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> {t('cms_editor.podcastAudio', 'Podcast Audio')}</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> {t('cms_editor.podcastAudio', { defaultValue: 'Podcast Audio' })}</h4>
                 {podcastAudioUrl ? (
                     <div className="space-y-3">
                         <audio controls className="w-full rounded-lg" style={{ height: '40px' }}>
@@ -158,7 +158,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onClick={() => setPodcastAudioUrl('')}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
                             >
-                                <Trash2 size={12} /> {t('common.delete', 'Delete')}
+                                <Trash2 size={12} /> {t('common.delete', { defaultValue: 'Delete' })}
                             </button>
                         </div>
                     </div>
@@ -175,12 +175,12 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             {isUploadingAudio ? (
                                 <>
                                     <Loader2 size={24} className="animate-spin text-primary" />
-                                    <span className="text-xs font-medium">{t('cms_editor.uploadingAudio', 'Uploading audio...')}</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadingAudio', { defaultValue: 'Uploading audio...' })}</span>
                                 </>
                             ) : (
                                 <>
                                     <Upload size={24} />
-                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragAudio', 'Upload or drag audio file')}</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragAudio', { defaultValue: 'Upload or drag audio file' })}</span>
                                     <span className="text-[10px] text-q-text-muted/60">MP3, WAV, OGG, AAC, M4A</span>
                                 </>
                             )}
@@ -190,7 +190,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 type="url"
                                 value={podcastAudioUrl}
                                 onChange={(e) => setPodcastAudioUrl(e.target.value)}
-                                placeholder={t('cms_editor.pasteAudioUrl', 'Or paste an audio URL...')}
+                                placeholder={t('cms_editor.pasteAudioUrl', { defaultValue: 'Or paste an audio URL...' })}
                                 className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-q-text-muted/50"
                             />
                         </div>
@@ -200,7 +200,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Podcast Video */}
             <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> {t('cms_editor.articleVideo', 'Article Video')}</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> {t('cms_editor.articleVideo', { defaultValue: 'Article Video' })}</h4>
                 {podcastVideoUrl ? (
                     <div className="space-y-3">
                         {(() => {
@@ -224,7 +224,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 onClick={() => setPodcastVideoUrl('')}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
                             >
-                                <Trash2 size={12} /> {t('common.delete', 'Delete')}
+                                <Trash2 size={12} /> {t('common.delete', { defaultValue: 'Delete' })}
                             </button>
                         </div>
                     </div>
@@ -241,7 +241,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             {isUploadingVideo ? (
                                 <>
                                     <Loader2 size={24} className="animate-spin text-primary" />
-                                    <span className="text-xs font-medium">{t('cms_editor.uploadingVideo', 'Uploading video...')} {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadingVideo', { defaultValue: 'Uploading video...' })} {uploadProgress > 0 ? `${uploadProgress}%` : ''}</span>
                                     {uploadProgress > 0 && (
                                         <div className="w-full bg-secondary rounded-full h-2 mt-1">
                                             <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
@@ -251,7 +251,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                             ) : (
                                 <>
                                     <VideoIcon size={24} />
-                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragVideo', 'Upload or drag video')}</span>
+                                    <span className="text-xs font-medium">{t('cms_editor.uploadOrDragVideo', { defaultValue: 'Upload or drag video' })}</span>
                                     <span className="text-[10px] text-q-text-muted/60">MP4, MOV, WEBM, AVI</span>
                                 </>
                             )}
@@ -261,7 +261,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                                 type="url"
                                 value={podcastVideoUrl}
                                 onChange={(e) => setPodcastVideoUrl(e.target.value)}
-                                placeholder={t('cms_editor.pasteVideoUrl', 'Or paste a video URL...')}
+                                placeholder={t('cms_editor.pasteVideoUrl', { defaultValue: 'Or paste a video URL...' })}
                                 className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground placeholder:text-q-text-muted/50"
                             />
                         </div>
@@ -271,17 +271,17 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
 
             {/* Author & Date Controls */}
             <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> {t('cms_editor.authorDate', 'Author & Date')}</h4>
+                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> {t('cms_editor.authorDate', { defaultValue: 'Author & Date' })}</h4>
                 <div className="space-y-4">
                     {/* Author Name */}
                     <div>
-                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.author', 'Author')}</label>
-                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.authorPlaceholder', 'Author name...')} />
+                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.author', { defaultValue: 'Author' })}</label>
+                        <input value={author} onChange={(e) => setAuthor(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.authorPlaceholder', { defaultValue: 'Author name...' })} />
                     </div>
 
                     {/* Publication Date */}
                     <div>
-                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.publicationDate', 'Publication Date')}</label>
+                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.publicationDate', { defaultValue: 'Publication Date' })}</label>
                         <input
                             type="datetime-local"
                             value={publishedAt ? new Date(publishedAt).toISOString().slice(0, 16) : ''}
@@ -294,7 +294,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                         <div className="flex items-center gap-2">
                             <User size={14} className="text-q-text-muted" />
-                            <span className="text-sm font-medium">{t('cms_editor.showAuthor', 'Show Author')}</span>
+                            <span className="text-sm font-medium">{t('cms_editor.showAuthor', { defaultValue: 'Show Author' })}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -311,7 +311,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
                         <div className="flex items-center gap-2">
                             <Calendar size={14} className="text-q-text-muted" />
-                            <span className="text-sm font-medium">{t('cms_editor.showDate', 'Show Date')}</span>
+                            <span className="text-sm font-medium">{t('cms_editor.showDate', { defaultValue: 'Show Date' })}</span>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -539,7 +539,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
-            alert(t('cms_editor.audioUploadError', 'Error uploading audio. Please try again.'));
+            alert(t('cms_editor.audioUploadError', { defaultValue: 'Error uploading audio. Please try again.' }));
         } finally {
             setIsUploadingAudio(false);
             // Reset file input
@@ -551,7 +551,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const handleAudioFileDrop = async (files: FileList) => {
         const file = files[0];
         if (!file || !file.type.startsWith('audio/')) {
-            alert(t('cms_editor.invalidAudioFile', 'Please drag a valid audio file.'));
+            alert(t('cms_editor.invalidAudioFile', { defaultValue: 'Please drag a valid audio file.' }));
             return;
         }
 
@@ -574,7 +574,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastAudioUrl(url);
         } catch (error) {
             console.error('Audio upload failed', error);
-            alert(t('cms_editor.audioUploadError', 'Error uploading audio. Please try again.'));
+            alert(t('cms_editor.audioUploadError', { defaultValue: 'Error uploading audio. Please try again.' }));
         } finally {
             setIsUploadingAudio(false);
         }
@@ -612,7 +612,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Upload] Failed:', error?.code, error?.message, error);
-            alert(`${t('cms_editor.videoUploadError', 'Error uploading video')}: ${error?.message || t('common.unknownError', 'Unknown error')}`);
+            alert(`${t('cms_editor.videoUploadError', { defaultValue: 'Error uploading video' })}: ${error?.message || t('common.unknownError', { defaultValue: 'Unknown error' })}`);
         } finally {
             setIsUploadingVideo(false);
             setUploadProgress(0);
@@ -624,7 +624,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const handleVideoFileDrop = async (files: FileList) => {
         const file = files[0];
         if (!file || !file.type.startsWith('video/')) {
-            alert(t('cms_editor.invalidVideoFile', 'Please drag a valid video file.'));
+            alert(t('cms_editor.invalidVideoFile', { defaultValue: 'Please drag a valid video file.' }));
             return;
         }
 
@@ -655,7 +655,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setPodcastVideoUrl(url);
         } catch (error: any) {
             console.error('[Video Drop] Failed:', error?.code, error?.message, error);
-            alert(`${t('cms_editor.videoUploadError', 'Error uploading video')}: ${error?.message || t('common.unknownError', 'Unknown error')}`);
+            alert(`${t('cms_editor.videoUploadError', { defaultValue: 'Error uploading video' })}: ${error?.message || t('common.unknownError', { defaultValue: 'Unknown error' })}`);
         } finally {
             setIsUploadingVideo(false);
             setUploadProgress(0);
@@ -755,7 +755,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         } catch (error) {
             console.error('Error saving CMS post:', error);
             if (!isAutoSave) {
-                setSaveError(t('cms_editor.saveFailed', 'Error al guardar. Intente de nuevo.'));
+                setSaveError(t('cms_editor.saveFailed', { defaultValue: 'Error al guardar. Intente de nuevo.' }));
                 setTimeout(() => setSaveError(null), 5000);
             }
         } finally {
@@ -1082,10 +1082,10 @@ IMPORTANT FORMATTING RULES:
                             onClick={handleSave}
                             disabled={isSaving}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                            title={t('common.save', 'Guardar')}
+                            title={t('common.save', { defaultValue: 'Guardar' })}
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}
-                            <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
+                            <span className="hidden sm:inline">{t('common.save', { defaultValue: 'Guardar' })}</span>
                         </button>
 
                         {/* Web Editor */}
@@ -1093,7 +1093,7 @@ IMPORTANT FORMATTING RULES:
                             <button
                                 onClick={() => navigate(ROUTES.EDITOR.replace(':projectId', activeProject.id))}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50"
-                                title={t('cms_editor.goToWebEditor', 'Ir al Web Editor')}
+                                title={t('cms_editor.goToWebEditor', { defaultValue: 'Ir al Web Editor' })}
                             >
                                 <Monitor className="w-4 h-4" />
                             </button>
@@ -1300,7 +1300,7 @@ IMPORTANT FORMATTING RULES:
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder={t('cms_editor.titlePlaceholder', 'Escribe el título del artículo...')}
+                                        placeholder={t('cms_editor.titlePlaceholder', { defaultValue: 'Escribe el título del artículo...' })}
                                         className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-q-text-muted/50 leading-tight"
                                     />
                                     <div className="mt-3 h-px bg-border/50" />

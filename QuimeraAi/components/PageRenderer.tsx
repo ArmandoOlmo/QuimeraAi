@@ -62,13 +62,11 @@ import SectionBackground from './ui/SectionBackground';
 // Import Lumina components
 import HeroLumina from './HeroLumina';
 import FeaturesLumina from './FeaturesLumina';
+import TestimonialsLumina from './TestimonialsLumina';
 import CtaLumina from './CtaLumina';
 import PortfolioLumina from './PortfolioLumina';
 import PricingLumina from './PricingLumina';
 import FaqLumina from './FaqLumina';
-
-// Import Neon components
-import HeroNeon from './HeroNeon';
 
 // Import Quimera components
 import HeroQuimera from './quimera/HeroQuimera';
@@ -276,29 +274,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     }, [baseData, mergeComponentData]);
 
     // Provide default theme values to prevent undefined errors
-    const theme = project.theme || {
-        primaryColor: '#4f46e5',
-        secondaryColor: '#78CDD7',
-        accentColor: '#ffffff',
-        backgroundColor: '#0f172a',
-        textColor: '#ffffff',
-        headingColor: '#ffffff',
-        fontFamily: 'Inter',
-        globalColors: {
-            primary: '#4f46e5',
-            secondary: '#78CDD7',
-            accent: '#ffffff',
-            background: '#0f172a',
-            surface: '#1e293b',
-            text: '#ffffff',
-            textMuted: '#94a3b8',
-            heading: '#ffffff',
-            border: '#334155',
-            success: '#22c55e',
-            error: '#ef4444',
-        }
-    };
-    const globalColors = theme.globalColors || theme;
+    const theme: ThemeData = { ...initialData.theme, ...(project.theme ?? {}) };
+    const globalColors = theme.globalColors;
 
     // Path-based navigation handlers for SSR (real URLs, not hash)
     const handleNavigateToProduct = (slug: string) => {
@@ -594,6 +571,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         <Video
                             key={key}
                             {...mergedData.video}
+                            borderRadius={cardBorderRadius}
                         />
                     </SectionBackground>
                 );
@@ -640,6 +618,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         <Newsletter
                             key={key}
                             {...mergedData.newsletter}
+                            cardBorderRadius={cardBorderRadius}
+                            buttonBorderRadius={buttonBorderRadius}
                         />
                     </SectionBackground>
                 );
@@ -952,7 +932,6 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
             // Dynamic page sections
             case 'productDetail':
-            case 'ProductDetailSection':
                 return (
                     <ProductDetailSection
                         key={key}
@@ -972,7 +951,6 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'categoryProducts':
-            case 'CategoryProductsSection':
                 return (
                     <CategoryProductsSection
                         key={key}
@@ -996,13 +974,12 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'articleContent':
-            case 'ArticleContentSection':
                 return (
                     <ArticleContentSection
                         key={key}
                         projectId={project.id}
                         articleSlug={routeParams?.slug}
-                        article={dynamicData?.article}
+                        article={dynamicData?.article as any}
                         colors={{
                             background: globalColors?.background,
                             heading: globalColors?.heading,
@@ -1015,7 +992,6 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'cart':
-            case 'CartSection':
                 return (
                     <CartSection
                         key={key}
@@ -1039,7 +1015,6 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'checkout':
-            case 'CheckoutSection':
                 return (
                     <CheckoutSection
                         key={key}
@@ -1065,7 +1040,6 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 );
 
             case 'productGrid':
-            case 'ProductGridSection':
                 return (
                     <ProductGridSection
                         key={key}
@@ -1095,7 +1069,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             projectId={project.id}
                             isPreviewMode={isPreview}
                             theme={theme}
-                            globalColors={globalColors}
+                            globalColors={globalColors as Record<string, string>}
                             onNavigate={handleLinkNavigation}
                         />
                     </SectionBackground>
@@ -1108,7 +1082,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         projectId={project.id}
                         data={mergedData.realEstateListings}
                         theme={theme}
-                        globalColors={globalColors}
+                        globalColors={globalColors as Record<string, string>}
                     />
                 );
 
@@ -1121,7 +1095,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         ownerId={project.userId}
                         propertySlug={propertySlug}
                         theme={theme}
-                        globalColors={globalColors}
+                        globalColors={globalColors as Record<string, string>}
                         onNavigateToListings={() => {
                             if (onNavigate) {
                                 onNavigate('/listados');

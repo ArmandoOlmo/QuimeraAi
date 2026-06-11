@@ -1,4 +1,4 @@
-// Analytics functionality - gracefully degrades if Firebase Analytics is not available
+// Analytics functionality - gracefully degrades when tracking is disabled.
 import { isDevelopmentHostname } from './subdomainUtils';
 
 let analytics: any = null;
@@ -16,12 +16,12 @@ const initAnalytics = async () => {
         return null;
       }
 
-      const { getAnalytics } = await import('firebase/analytics');
-      const { app } = await import('../firebase');
+      const { getAnalytics } = await import('@/utils/compatData');
+      const { app } = await import('@/utils/compatData');
       analytics = getAnalytics(app);
     }
   } catch (error) {
-    console.warn('Firebase Analytics not available, tracking disabled:', error);
+    console.warn('Analytics not available, tracking disabled:', error);
     analytics = null;
   }
   return analytics;
@@ -62,9 +62,8 @@ export const logEvent = async (eventName: AnalyticsEvent, params?: Record<string
   if (!analyticsInstance) return;
   
   try {
-    const { logEvent: firebaseLogEvent } = await import('firebase/analytics');
-    // Use 'as any' to allow custom event names that aren't in the standard Firebase Analytics types
-    firebaseLogEvent(analyticsInstance, eventName as any, {
+    const { logEvent: compatLogEvent } = await import('@/utils/compatData');
+    compatLogEvent(analyticsInstance, eventName as any, {
       ...params,
       timestamp: new Date().toISOString(),
     });
@@ -79,7 +78,7 @@ export const setAnalyticsUser = async (userId: string, properties?: Record<strin
   if (!analyticsInstance) return;
   
   try {
-    const { setUserProperties } = await import('firebase/analytics');
+    const { setUserProperties } = await import('@/utils/compatData');
     setUserProperties(analyticsInstance, {
       user_id: userId,
       ...properties,

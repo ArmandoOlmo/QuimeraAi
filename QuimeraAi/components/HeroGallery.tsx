@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sanitizeHtml } from '../utils/sanitize';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
-import { isFirebaseStorageUrl } from '../utils/imageUrlHelper';
+import { isLegacyStorageUrl } from '../utils/imageUrlHelper';
 
 // ─── Size mappings ───
 const headlineSizeClasses: Record<FontSize, string> = {
@@ -126,7 +126,7 @@ const HeroGallery: React.FC<HeroGalleryProps> = ({
                 const isActive = i === currentIndex;
                 // Support both new backgroundImage and legacy images[0].url
                 const rawBgImage = slide.backgroundImage || slide.images?.[0]?.url;
-                const bgImage = rawBgImage && !isFirebaseStorageUrl(rawBgImage) ? rawBgImage : null;
+                const bgImage = rawBgImage && !isLegacyStorageUrl(rawBgImage) ? rawBgImage : null;
                 const slideBg = slide.backgroundColor || bgColor;
 
                 return (

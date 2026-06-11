@@ -157,7 +157,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     createdAt: a.created_at,
                     metadata: a.metadata,
                     performedBy: a.metadata?.performedBy
-                })) as LeadActivity[];
+                })) as unknown as LeadActivity[];
                 setLeadActivities(activitiesData);
             } catch (error) {
                 console.error("[CRMContext] Error fetching activities:", error);
@@ -210,7 +210,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     createdAt: t.created_at,
                     updatedAt: t.updated_at,
                     assignedTo: t.metadata?.assignedTo
-                })) as LeadTask[];
+                })) as unknown as LeadTask[];
                 setLeadTasks(tasksData);
             } catch (error) {
                 console.error("[CRMContext] Error fetching tasks:", error);
@@ -345,7 +345,7 @@ export const CRMProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         try {
-            const BATCH_SIZE = 100; // Supabase can handle larger batches than Firestore easily
+            const BATCH_SIZE = 100; // Supabase can handle larger batches than Supabase easily
             const createdIds: string[] = [];
 
             for (let i = 0; i < leadsData.length; i += BATCH_SIZE) {

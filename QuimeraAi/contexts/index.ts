@@ -48,7 +48,7 @@ export { UpgradeProvider, useUpgrade, useSafeUpgrade } from './UpgradeContext';
 export type { UpgradeTrigger, UpgradeMetadata } from './UpgradeContext';
 
 // =============================================================================
-// PLANS CONTEXT (For dynamic plan features from Firestore)
+// PLANS CONTEXT (For dynamic plan features from Supabase)
 // =============================================================================
 export { PlansProvider, usePlans, useSafePlans } from './PlansContext';
 export type { StoredPlanData, PlansContextValue } from './PlansContext';

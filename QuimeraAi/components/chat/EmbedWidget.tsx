@@ -47,7 +47,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
     }, [projectId, apiUrl]);
 
     // Handle lead capture for embedded widget
-    const handleLeadCapture = async (leadData: any) => {
+    const handleLeadCapture = async (leadData: any): Promise<string> => {
         try {
             await fetch(`${apiUrl}/${projectId}/leads`, {
                 method: 'POST',
@@ -64,6 +64,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
         } catch (err) {
             console.error('Error capturing lead:', err);
         }
+        return '';
     };
 
     // Apply custom position

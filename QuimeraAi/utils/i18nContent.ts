@@ -1,7 +1,7 @@
 /**
  * i18n Content Resolution Utility
  * 
- * Resolves multilingual CMS content stored in Firestore.
+ * Resolves multilingual CMS content stored in Supabase.
  * Supports two formats:
  *   - Legacy (string):      "Título en español"
  *   - Multilingual (object): { es: "Título en español", en: "Title in English" }

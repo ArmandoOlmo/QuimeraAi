@@ -49,6 +49,7 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 };
 
 interface LeadsProps extends LeadsData {
+  projectId?: string;
   leadsVariant?: LeadsVariant;
   cardBorderRadius?: BorderRadiusSize;
   buttonBorderRadius?: BorderRadiusSize;

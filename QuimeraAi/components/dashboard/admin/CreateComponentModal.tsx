@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAdmin } from '../../../contexts/admin';
 import Modal from '../../ui/Modal';
 import { CustomComponent, EditableComponentID } from '../../../types';
 import { X } from 'lucide-react';

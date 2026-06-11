@@ -23,6 +23,7 @@ import { sanitizeHtml } from '../../utils/sanitize';
 
 // === Drag & Drop Sortable Profile Item ===
 const SortableProfileItem: React.FC<{ post: CMSPost; index: number }> = ({ post, index }) => {
+    const { t } = useTranslation();
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: post.id });
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
@@ -216,11 +217,11 @@ const CMSDashboard: React.FC = () => {
 
         try {
             // 1. Save the post — this is the ONLY save (no double-save).
-            //    saveCMSPost returns the Firebase-generated ID for new posts.
+            //    saveCMSPost returns the Supabase-generated ID for new posts.
             const savedId = await saveCMSPost(post);
-            console.log("✅ Post saved to Firestore with ID:", savedId);
+            console.log("✅ Post saved to Supabase with ID:", savedId);
 
-            // 2. Set the real Firebase ID on the post so the editor does
+            // 2. Set the real Supabase ID on the post so the editor does
             //    updateDoc (not addDoc) on subsequent saves.
             const postWithId: CMSPost = { ...post, id: savedId };
 

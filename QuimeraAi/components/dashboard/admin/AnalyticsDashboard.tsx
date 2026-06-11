@@ -20,7 +20,7 @@ const AnalyticsDashboard: React.FC = () => {
   const [sortBy, setSortBy] = useState<'usage' | 'projects' | 'name'>('usage');
   const [filterType, setFilterType] = useState<'all' | 'standard' | 'custom'>('all');
 
-  const componentNames: Record<PageSection, string> = {
+  const componentNames: Partial<Record<PageSection, string>> = {
     hero: 'Hero Section',
     heroSplit: 'Hero Split',
     features: 'Features Section',

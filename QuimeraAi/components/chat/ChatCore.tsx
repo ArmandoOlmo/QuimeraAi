@@ -332,7 +332,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
         const userId = match[1];
         const checkBranding = async () => {
             try {
-                const { db: fireDb, doc: fbDoc, getDoc: fbGetDoc } = await import('../../firebase');
+                const { db: fireDb, doc: fbDoc, getDoc: fbGetDoc } = await import('@/utils/compatData');
                 const tenantRef = fbDoc(fireDb, 'tenants', `tenant_${userId}`);
                 const snap = await fbGetDoc(tenantRef);
                 if (snap.exists()) {
@@ -438,6 +438,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const capturedLeadIdRef = useRef<string | null>(null);
     // High intent detected flag (for conversational mode)
     const highIntentDetectedRef = useRef(false);
+    const nextStartTimeRef = useRef(0);
 
     // Global chatbot prompts (from SuperAdmin configuration)
     const [globalPrompts, setGlobalPrompts] = useState<GlobalChatbotPrompts>(getDefaultPrompts());
@@ -1472,7 +1473,7 @@ ${suggestAvailableSlots()}
                     stopLiveSession();
                 },
                 onModeChange: (mode) => {
-                    if (mode === 'speaking') {
+                    if (mode.mode === 'speaking') {
                         // AI is speaking
                     }
                 },

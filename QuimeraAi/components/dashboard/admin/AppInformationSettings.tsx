@@ -25,7 +25,7 @@ import {
     uploadBytes,
     getDownloadURL,
     deleteObject
-} from '../../../firebase';
+} from '@/utils/compatData';
 
 interface AppInformationSettingsProps {
     onBack: () => void;
@@ -181,7 +181,7 @@ const AppInformationSettings: React.FC<AppInformationSettingsProps> = ({ onBack 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            // Build payload, converting undefined to empty string for Firestore compatibility
+            // Build payload, converting undefined to empty string for Supabase compatibility
             const payload: AppInfoConfig = {
                 appName,
                 tagline,

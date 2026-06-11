@@ -482,7 +482,7 @@ export async function seedChangelog(): Promise<void> {
           description: 'Expande o colapsa cada entrada para ver más o menos detalles según tu preferencia.',
         },
       ],
-      imageUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fchangelog-preview.png?alt=media',
+      imageUrl: '/logos/quimera-full-dark.png',
       imageAlt: 'Vista previa del sistema de changelog',
       version: '2.0.0',
       isPublished: true,
@@ -541,7 +541,7 @@ export async function seedChangelog(): Promise<void> {
           description: 'Panel completo para gestionar pedidos, envíos y devoluciones.',
         },
       ],
-      imageUrl: 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2Fecommerce-preview.png?alt=media',
+      imageUrl: '/logos/quimera-full-dark.png',
       imageAlt: 'Vista previa de la plataforma de ecommerce',
       version: '1.9.0',
       isPublished: true,
@@ -659,4 +659,3 @@ export async function seedChangelog(): Promise<void> {
     console.error('Error seeding changelog:', err);
   }
 }
-

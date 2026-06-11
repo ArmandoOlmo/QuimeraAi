@@ -11,8 +11,8 @@ import {
   setDoc,
   updateDoc,
   writeBatch,
-} from '../../firebase';
-import { db } from '../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { RestaurantMenuItem } from '../../types/restaurants';
 import { getMenuItemsPath, getRestaurantTenantId, RestaurantScope } from './restaurantPaths';
 

@@ -65,6 +65,7 @@ export const CreditOperationBadge: React.FC<CreditOperationBadgeProps> = ({
     operation,
     showCost = true,
 }) => {
+    const { t } = useTranslation();
     const cost = AI_CREDIT_COSTS[operation];
 
     const operationIcons: Record<AiCreditOperation, React.ReactNode> = {
@@ -516,6 +517,7 @@ export const CreditPackages: React.FC<CreditPackagesProps> = ({
     onSelectPackage,
     className = '',
 }) => {
+    const { t } = useTranslation();
     return (
         <div className={`grid grid-cols-2 gap-3 ${className}`}>
             {AI_CREDIT_PACKAGES.map((pkg) => (

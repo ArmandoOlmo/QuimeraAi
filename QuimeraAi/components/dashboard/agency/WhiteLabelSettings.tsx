@@ -147,7 +147,7 @@ export function WhiteLabelSettings() {
         }
     }, [currentTenant, uploadFile, updateField, t]);
 
-    // Save branding to Firestore
+    // Save branding to Supabase
     const handleSave = useCallback(async () => {
         if (!currentTenant) return;
 

@@ -210,16 +210,16 @@ export function monitorAsync<T>(
 }
 
 /**
- * Track Firebase errors
+ * Track data layer errors
  */
-export function trackFirebaseError(error: any, operation: string) {
-  const firebaseError = {
+export function trackDataLayerError(error: any, operation: string) {
+  const dataLayerError = {
     code: error.code,
     message: error.message,
     operation,
   };
   
-  logError(new Error(`Firebase Error: ${operation}`), firebaseError);
+  logError(new Error(`Data Layer Error: ${operation}`), dataLayerError);
 }
 
 /**
@@ -294,4 +294,3 @@ export class PerformanceMonitor {
 
 // Export singleton instance
 export const performanceMonitor = new PerformanceMonitor();
-

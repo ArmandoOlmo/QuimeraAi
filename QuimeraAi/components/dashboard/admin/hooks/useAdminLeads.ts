@@ -19,7 +19,7 @@ import {
     orderBy,
     onSnapshot,
     serverTimestamp,
-} from '../../../../firebase';
+} from '@/utils/compatData';
 
 // =============================================================================
 // TYPES

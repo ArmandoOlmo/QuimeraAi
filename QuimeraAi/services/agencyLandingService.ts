@@ -16,8 +16,8 @@ import {
     getDocs,
     serverTimestamp,
     Timestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import {
     AgencyLandingConfig,
     AgencyLandingSection,

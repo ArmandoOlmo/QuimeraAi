@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAdmin } from '../../../contexts/admin';
+import { useProject } from '../../../contexts/project';
 import { EditableComponentID, PreviewDevice, PreviewOrientation, AnimationConfig } from '../../../types';
 import { initialData } from '../../../data/initialData';
 import { deriveColorsFromPalette } from '../../../utils/colorUtils';

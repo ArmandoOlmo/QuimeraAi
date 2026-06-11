@@ -6,8 +6,8 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, X, Loader2, ShoppingBag, FileText, Tag, ArrowRight } from 'lucide-react';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { collection, query, where, getDocs, limit, orderBy } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 interface Product {
     id: string;
@@ -121,7 +121,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             
             setIsLoading(true);
             try {
-                // Search products in Firebase (publicStores is where published products live)
+                // Search products in Supabase (publicStores is where published products live)
                 const productsRef = collection(db, 'publicStores', storeId, 'products');
                 const searchLower = searchTerm.toLowerCase();
                 

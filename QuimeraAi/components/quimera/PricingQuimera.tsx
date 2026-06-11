@@ -20,7 +20,7 @@ interface PricingQuimeraProps {
     title?: string;
     subtitle?: string;
     plans?: PricingPlan[];
-    /** When true, use plans from the admin panel (Firestore) instead of static props */
+    /** When true, use plans from the admin panel (Supabase) instead of static props */
     useAdminPlans?: boolean;
     colors?: {
         background?: string;
@@ -119,7 +119,7 @@ const PricingQuimera: React.FC<PricingQuimeraProps> = ({
     const { t } = useTranslation();
     const [annual, setAnnual] = useState(false);
 
-    // Fetch plans from admin (Firestore) via the useLandingPlans hook
+    // Fetch plans from admin (Supabase) via the useLandingPlans hook
     const { plans: adminPlans, isLoading: isLoadingAdminPlans } = useLandingPlans();
 
     // Transform admin plans to the component's format

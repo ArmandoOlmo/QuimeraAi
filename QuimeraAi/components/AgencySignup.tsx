@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useAuth } from '../contexts/core/AuthContext';
+import { useSafeTenant } from '../contexts/tenant';
 import { usePlans } from '../contexts/PlansContext';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
@@ -130,6 +131,7 @@ const AGENCY_PLANS_CONFIG: Record<string, Omit<AgencyPlanDisplay, 'baseFee'>> = 
 const AgencySignup: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
+    const tenantContext = useSafeTenant();
     const { plans, isLoading: plansLoading } = usePlans();
     const { navigate } = useRouter();
 
@@ -142,7 +144,7 @@ const AgencySignup: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Build agency plans with prices from Firestore
+    // Build agency plans with prices from Supabase
     const agencyPlans = useMemo((): AgencyPlanDisplay[] => {
         return ['agency_starter', 'agency_pro', 'agency_scale'].map(planId => {
             const stored = plans[planId];
@@ -157,23 +159,6 @@ const AgencySignup: React.FC = () => {
 
     // Ref to track if auto-checkout was already triggered
     const autoCheckoutTriggered = useRef(false);
-
-    // Auto-trigger checkout when returning from login with plan param
-    useEffect(() => {
-        if (autoCheckoutTriggered.current) return;
-        if (!user || plansLoading) return;
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const planFromUrl = urlParams.get('plan');
-
-        if (planFromUrl && ['agency_starter', 'agency_pro', 'agency_scale'].includes(planFromUrl)) {
-            autoCheckoutTriggered.current = true;
-            // Small delay to ensure state is ready
-            setTimeout(() => {
-                handleSelectPlan(planFromUrl);
-            }, 500);
-        }
-    }, [user, plansLoading, handleSelectPlan]);
 
     // Handle plan selection and checkout
     const handleSelectPlan = useCallback(async (planId: string) => {
@@ -192,16 +177,17 @@ const AgencySignup: React.FC = () => {
                     action: 'createCheckoutSession',
                     planId,
                     billingCycle,
-                    tenantId: `tenant_${user.id}`, // Standard tenant ID pattern
+                    tenantId: tenantContext?.currentTenant?.id,
                     successUrl: `${window.location.origin}/dashboard?subscription=success&plan=${planId}`,
                     cancelUrl: `${window.location.origin}/agency-signup?cancelled=true`,
                 }
             });
 
             if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
 
-            if (result.data?.url) {
-                window.location.href = result.data.url;
+            if (data?.url) {
+                window.location.href = data.url;
             } else {
                 throw new Error('No checkout URL received');
             }
@@ -211,7 +197,23 @@ const AgencySignup: React.FC = () => {
         } finally {
             setIsCheckoutLoading(null);
         }
-    }, [user, billingCycle, navigate]);
+    }, [user, billingCycle, navigate, tenantContext?.currentTenant?.id]);
+
+    // Auto-trigger checkout when returning from login with plan param
+    useEffect(() => {
+        if (autoCheckoutTriggered.current) return;
+        if (!user || plansLoading) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const planFromUrl = urlParams.get('plan');
+
+        if (planFromUrl && ['agency_starter', 'agency_pro', 'agency_scale'].includes(planFromUrl)) {
+            autoCheckoutTriggered.current = true;
+            setTimeout(() => {
+                handleSelectPlan(planFromUrl);
+            }, 500);
+        }
+    }, [user, plansLoading, handleSelectPlan]);
 
     // Calculate annual savings
     const getAnnualSavings = (baseFee: { monthly: number; annually: number }) => {

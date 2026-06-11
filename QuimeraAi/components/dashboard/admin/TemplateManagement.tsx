@@ -893,7 +893,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
                     project={thumbnailEditTemplate}
                     onClose={() => setThumbnailEditTemplate(null)}
                     onUpdate={() => {
-                        // Refresh projects to get the updated thumbnail from Firestore
+                        // Refresh projects to get the updated thumbnail from Supabase
                         refreshProjects();
                     }}
                 />

@@ -1,7 +1,7 @@
 /**
  * usePlanFeatures Hook
  * Hook para obtener las features del plan actual del usuario
- * Usa el PlansContext para obtener datos en tiempo real de Firestore
+ * Usa el PlansContext para obtener datos en tiempo real de Supabase
  */
 
 import { useCallback, useMemo } from 'react';

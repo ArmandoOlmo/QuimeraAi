@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * Export Orders Utilities
  * Funciones para exportar pedidos a CSV/Excel
@@ -24,8 +25,8 @@ export interface ExportOrdersOptions {
 const formatOrderForExport = (order: Order, includeItems: boolean) => {
     const baseData = {
         'Número de Pedido': order.orderNumber,
-        'Fecha': new Date(order.createdAt.seconds * 1000).toLocaleDateString('es-MX'),
-        'Hora': new Date(order.createdAt.seconds * 1000).toLocaleTimeString('es-MX'),
+        'Fecha': timestampToDate(order.createdAt).toLocaleDateString('es-MX'),
+        'Hora': timestampToDate(order.createdAt).toLocaleTimeString('es-MX'),
         'Estado': getStatusLabel(order.status),
         'Estado de Pago': getPaymentStatusLabel(order.paymentStatus),
         'Cliente': order.customerName,
@@ -149,7 +150,7 @@ export const exportOrdersToCSV = (
     if (options.dateRange) {
         const { start, end } = options.dateRange;
         filteredOrders = filteredOrders.filter((order) => {
-            const orderDate = new Date(order.createdAt.seconds * 1000);
+            const orderDate = timestampToDate(order.createdAt);
             return orderDate >= start && orderDate <= end;
         });
     }
@@ -227,7 +228,7 @@ export const exportSingleOrder = (order: Order): void => {
     // Order details
     const orderDetails = [
         { 'Campo': 'Número de Pedido', 'Valor': order.orderNumber },
-        { 'Campo': 'Fecha', 'Valor': new Date(order.createdAt.seconds * 1000).toLocaleString('es-MX') },
+        { 'Campo': 'Fecha', 'Valor': timestampToDate(order.createdAt).toLocaleString('es-MX') },
         { 'Campo': 'Estado', 'Valor': getStatusLabel(order.status) },
         { 'Campo': 'Estado de Pago', 'Valor': getPaymentStatusLabel(order.paymentStatus) },
         { 'Campo': '', 'Valor': '' },

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
@@ -8,9 +8,11 @@ import { usePlans } from '../../contexts/PlansContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { useAppLogo } from '../../hooks/useAppLogo';
+import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
-import { Sparkles, Crown, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles } from 'lucide-react';
 
 interface DashboardWelcomeProps {
     allUserProjectsCount: number;
@@ -31,8 +33,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const { plansArray, getPlan } = usePlans();
     const { usage } = useCreditsUsage();
     const { logoUrl: appLogoUrl } = useAppLogo();
+    const { navigate } = useRouter();
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
+    const [aiPrompt, setAiPrompt] = useState('');
 
     const toggleUpgradeMinimized = () => setUpgradeMinimized((prev) => !prev);
 
@@ -55,13 +59,34 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         }
     };
 
-    const handleOpenAIStudio = () => {
+    const handleOpenAIStudio = (initialPrompt?: string, startVoice = false) => {
+        const prompt = initialPrompt?.trim();
+        if (prompt) {
+            localStorage.setItem('aiStudioInitialPrompt', prompt);
+        }
+        if (startVoice) {
+            localStorage.setItem('aiStudioStartVoice', 'true');
+        }
         setOnboardingMode('ai-studio');
         localStorage.setItem('onboardingMode', 'ai-studio');
         setIsOnboardingOpen(true);
     };
 
+    const handlePromptSubmit = (event?: React.FormEvent) => {
+        event?.preventDefault();
+        handleOpenAIStudio(aiPrompt);
+        setAiPrompt('');
+    };
+
     const showUpgradeButton = !canAccessSuperAdmin && nextPlan && currentPlanId !== 'enterprise';
+    const planNeedsAttention = !canAccessSuperAdmin && (
+        usage?.requiresPayment ||
+        ['expired', 'past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancelled', 'canceled'].includes(usage?.status || '')
+    );
+
+    const handlePlanAttentionClick = () => {
+        navigate(ROUTES.SETTINGS_SUBSCRIPTION);
+    };
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -107,24 +132,28 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         </span>
                     </h1>
 
-                    {/* Right-side CTA buttons */}
+                    {/* Right-side account CTAs */}
+                    {(planNeedsAttention || showUpgradeButton) && (
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:gap-3 flex-shrink-0 py-1 pb-3 overflow-visible">
-                        {/* Create with AI CTA - Opens AI Website Studio */}
-                        <button
-                            onClick={handleOpenAIStudio}
-                            className="group relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl shadow-md shadow-yellow-500/20 hover:shadow-md hover:shadow-yellow-500/30 transition-all duration-500 lg:hover:scale-[1.02] hover:bg-right flex-1 sm:flex-initial"
-                            aria-label={t('dashboard.createWithAI')}
-                        >
-                            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/30 rounded-lg sm:rounded-xl backdrop-blur-sm group-hover:bg-white/40 transition-colors flex-shrink-0">
-                                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-                            </div>
-                            <div className="flex flex-col items-start text-left min-w-0">
-                                <span className="text-sm sm:text-lg leading-tight">{t('dashboard.createWithAI')}</span>
-                                <span className="text-[10px] sm:text-xs opacity-80 font-medium text-left truncate">
-                                    {t('dashboard.createWithAIDesc')}
-                                </span>
-                            </div>
-                        </button>
+                        {planNeedsAttention && (
+                            <button
+                                onClick={handlePlanAttentionClick}
+                                className="group relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-[length:200%_100%] text-white font-bold rounded-xl sm:rounded-2xl border border-red-300/20 shadow-md shadow-red-500/20 hover:shadow-md hover:shadow-red-500/30 transition-all duration-500 lg:hover:scale-[1.02] hover:bg-right flex-1 sm:flex-initial"
+                                aria-label={t('dashboard.planExpiredTitle', 'Tu plan está expirado')}
+                            >
+                                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-white/25 rounded-lg sm:rounded-xl backdrop-blur-sm group-hover:bg-white/35 transition-colors flex-shrink-0">
+                                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+                                </div>
+                                <div className="flex flex-col items-start text-left min-w-0">
+                                    <span className="text-sm sm:text-lg leading-tight">
+                                        {t('dashboard.planExpiredTitle', 'Tu plan está expirado')}
+                                    </span>
+                                    <span className="text-[10px] sm:text-xs opacity-85 font-medium text-left truncate">
+                                        {t('dashboard.planExpiredDesc', 'Actualiza tu plan para seguir usando Quimera')} →
+                                    </span>
+                                </div>
+                            </button>
+                        )}
 
                         {/* Upgrade Plan CTA - Minimizable */}
                         {showUpgradeButton &&
@@ -167,11 +196,12 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                         className="absolute -top-1.5 -right-1.5 w-6 h-6 flex items-center justify-center bg-q-surface-overlay/90 border border-q-border rounded-full text-q-text-muted hover:text-q-text hover:bg-q-surface-overlay transition-colors shadow-sm z-10"
                                         aria-label="Minimize"
                                     >
-                                        <ChevronUp className="w-3.5 h-3.5" />
+                                    <ChevronUp className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             ))}
                     </div>
+                    )}
                 </div>
 
                 <p className="text-sm sm:text-lg text-q-text-muted max-w-3xl mb-4 lg:mb-8 leading-relaxed">
@@ -181,6 +211,69 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </span>{' '}
                     {t('dashboard.heroSubtitlePart3')}
                 </p>
+
+                <form
+                    onSubmit={handlePromptSubmit}
+                    className="quimera-ai-launcher mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
+                >
+                    <label className="sr-only" htmlFor="dashboard-ai-prompt">
+                        {t('dashboard.createWithAI')}
+                    </label>
+                    <div className="flex items-start gap-2">
+                        <button
+                            type="button"
+                            onClick={() => handleOpenAIStudio()}
+                            className="mt-0.5 h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors"
+                            title={t('dashboard.createWithAI')}
+                        >
+                            <Plus size={17} />
+                        </button>
+                        <textarea
+                            id="dashboard-ai-prompt"
+                            value={aiPrompt}
+                            onChange={(event) => setAiPrompt(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' && !event.shiftKey) {
+                                    event.preventDefault();
+                                    handlePromptSubmit();
+                                }
+                            }}
+                            rows={2}
+                            placeholder={t(
+                                'dashboard.aiPromptPlaceholder',
+                                'Describe el website que quieres crear...',
+                            )}
+                            className="min-h-[64px] flex-1 resize-none bg-transparent px-1 py-2 text-sm sm:text-base text-q-text placeholder:text-q-text-secondary/65 focus:outline-none"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => handleOpenAIStudio()}
+                            className="inline-flex min-w-0 items-center gap-2 rounded-full border border-q-border/70 bg-q-surface-overlay/35 px-3 py-1.5 text-xs font-medium text-q-text-secondary transition-colors hover:border-q-accent/50 hover:bg-q-accent/10 hover:text-q-text"
+                        >
+                            <Sparkles size={13} className="text-q-accent" />
+                            <span className="truncate">Web Design Studio</span>
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleOpenAIStudio(undefined, true)}
+                                className="h-9 w-9 flex items-center justify-center rounded-full text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors"
+                                title={t('aiWebsiteStudio.chat.startVoice', 'Iniciar voz')}
+                            >
+                                <Mic size={16} />
+                            </button>
+                            <button
+                                type="submit"
+                                className="h-9 w-9 flex items-center justify-center rounded-full bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                                title={t('dashboard.createWithAI')}
+                            >
+                                <ArrowUp size={17} />
+                            </button>
+                        </div>
+                    </div>
+                </form>
 
                 {/* Status Cards */}
                 <DashboardStatusCards />

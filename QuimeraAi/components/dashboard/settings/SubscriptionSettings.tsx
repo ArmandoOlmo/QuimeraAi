@@ -3,7 +3,7 @@
  * Modern subscription UI with hero plan card, animated usage bar, and plan comparison
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Crown,
@@ -23,6 +23,8 @@ import {
     Heart,
     Star,
     ArrowRight,
+    CreditCard,
+    ExternalLink,
 } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { usePlans } from '../../../contexts/PlansContext';
@@ -58,49 +60,65 @@ const PLAN_GRADIENTS: Record<string, string> = {
 
 interface SubscriptionDetails {
     stripe?: {
+        id: string;
         currentPeriodStart: string;
         currentPeriodEnd: string;
         cancelAtPeriodEnd: boolean;
         cancelAt: string | null;
         status: string;
+        latestInvoiceUrl?: string | null;
+        latestInvoiceStatus?: string | null;
+        amountDue?: number | null;
+        currency?: string;
+        paymentIssue?: {
+            code?: string;
+            declineCode?: string;
+            message?: string;
+        } | null;
+    };
+    local?: {
+        status?: string;
+        stripeCustomerId?: string | null;
+        stripeSubscriptionId?: string | null;
     };
     cancelAtPeriodEnd?: boolean;
 }
 
 const SubscriptionSettings: React.FC = () => {
     const { t } = useTranslation();
-    const { isUserOwner, user } = useAuth();
+    const { isUserOwner } = useAuth();
     const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
     const tenantContext = useTenant();
-    const { currentTenant, isLoadingTenant } = tenantContext;
+    const { currentTenant } = tenantContext;
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
     const [isCancelling, setIsCancelling] = useState(false);
     const [isReactivating, setIsReactivating] = useState(false);
+    const [isOpeningPortal, setIsOpeningPortal] = useState(false);
     const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
     const [pendingCancelImmediately, setPendingCancelImmediately] = useState(false);
 
+    const fetchSubscriptionDetails = useCallback(async () => {
+        if (!currentTenant?.id) return;
+
+        try {
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: { action: 'getSubscriptionDetails', tenantId: currentTenant.id }
+            });
+            if (result.error) throw result.error;
+            setSubscriptionDetails(result.data?.data?.subscription || result.data?.subscription);
+        } catch (error) {
+            console.error('Error fetching subscription details:', error);
+        }
+    }, [currentTenant?.id]);
+
     // Fetch subscription details on mount
     useEffect(() => {
-        const fetchSubscriptionDetails = async () => {
-            if (!currentTenant?.id) return;
-
-            try {
-                const result = await supabase.functions.invoke('stripe-api', {
-                    body: { action: 'getSubscriptionDetails', tenantId: currentTenant.id }
-                });
-                if (result.error) throw result.error;
-                setSubscriptionDetails(result.data?.data?.subscription || result.data?.subscription);
-            } catch (error) {
-                console.error('Error fetching subscription details:', error);
-            }
-        };
-
         fetchSubscriptionDetails();
-    }, [currentTenant?.id]);
+    }, [fetchSubscriptionDetails]);
 
     // Handle success redirect from Stripe checkout
     useEffect(() => {
@@ -114,13 +132,14 @@ const SubscriptionSettings: React.FC = () => {
             const refreshAfterCheckout = async () => {
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 refresh();
+                fetchSubscriptionDetails();
                 setTimeout(() => refresh(), 5000);
                 setTimeout(() => refresh(), 10000);
             };
 
             refreshAfterCheckout();
         }
-    }, [refresh]);
+    }, [refresh, fetchSubscriptionDetails]);
 
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
@@ -128,6 +147,22 @@ const SubscriptionSettings: React.FC = () => {
     const IconComponent = PLAN_ICONS[currentPlanId] || Sparkles;
     const PlanIcon = IconComponent || (() => <div className="w-7 h-7 bg-muted rounded-full" />);
     const currentGradient = PLAN_GRADIENTS[currentPlanId] || PLAN_GRADIENTS.free;
+    const subscriptionStatus = subscriptionDetails?.stripe?.status || usage?.status || 'active';
+    const requiresPayment = usage?.requiresPayment || ['past_due', 'unpaid', 'incomplete', 'incomplete_expired'].includes(subscriptionStatus);
+    const statusLabel = subscriptionStatus === 'past_due'
+        ? t('settings.subscription.statusPastDue', 'Pago pendiente')
+        : subscriptionStatus === 'active'
+            ? t('settings.subscription.statusActive', 'Activo')
+            : subscriptionStatus === 'trial'
+                ? t('settings.subscription.statusTrial', 'Trial')
+                : subscriptionStatus === 'cancelled' || subscriptionStatus === 'canceled'
+                    ? t('settings.subscription.statusCancelled', 'Cancelado')
+                    : subscriptionStatus;
+    const statusClass = requiresPayment
+        ? 'bg-red-500 text-white'
+        : subscriptionStatus === 'active'
+            ? `bg-gradient-to-r ${currentGradient} text-white`
+            : 'bg-amber-500 text-white';
 
     const handleUpgradeClick = (trigger: 'generic' | 'credits' = 'generic') => {
         if (upgradeContext) {
@@ -141,14 +176,47 @@ const SubscriptionSettings: React.FC = () => {
 
     const handleRefresh = () => {
         refresh();
+        fetchSubscriptionDetails();
+    };
+
+    const handleOpenBillingPortal = async () => {
+        if (!currentTenant?.id) return;
+        setIsOpeningPortal(true);
+        setCheckoutError(null);
+        try {
+            const result = await supabase.functions.invoke('stripe-api', {
+                body: {
+                    action: 'createBillingPortalSession',
+                    tenantId: currentTenant.id,
+                    returnUrl: `${window.location.origin}/settings/subscription`,
+                }
+            });
+            if (result.error) throw result.error;
+            const data = result.data?.data || result.data;
+            if (data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            throw new Error('No billing portal URL received');
+        } catch (error: any) {
+            console.error('Error opening billing portal:', error);
+            setCheckoutError(error.message || t('settings.subscription.portalError', 'No se pudo abrir el portal de pagos'));
+        } finally {
+            setIsOpeningPortal(false);
+        }
+    };
+
+    const handlePayInvoice = () => {
+        const invoiceUrl = subscriptionDetails?.stripe?.latestInvoiceUrl;
+        if (invoiceUrl) {
+            window.location.href = invoiceUrl;
+            return;
+        }
+        handleOpenBillingPortal();
     };
 
     const handleSelectPlan = async (planId: SubscriptionPlanId, billingCycle: 'monthly' | 'annually' = 'monthly') => {
         let tenantId = currentTenant?.id;
-
-        if (!tenantId && user?.id) {
-            tenantId = `tenant_${user.id}`;
-        }
 
         if (!tenantId) {
             setCheckoutError(t('settings.subscription.noTenantError', 'No workspace found. Please refresh the page and try again.'));
@@ -312,11 +380,11 @@ const SubscriptionSettings: React.FC = () => {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-bold text-foreground">
+                        <h2 className="text-xl font-bold text-foreground">
                                             {currentPlan.name}
                                         </h2>
-                                        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full bg-gradient-to-r ${currentGradient} text-white`}>
-                                            {t('settings.subscription.activePlan', 'Activo')}
+                                        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${statusClass}`}>
+                                            {statusLabel}
                                         </span>
                                     </div>
                                     <p className="text-sm text-q-text-muted mt-0.5">
@@ -458,6 +526,47 @@ const SubscriptionSettings: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {requiresPayment && (
+                <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-5 h-5 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-red-600 dark:text-red-400">
+                                    {t('settings.subscription.paymentRequiredTitle', 'Tu pago necesita atención')}
+                                </h3>
+                                <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">
+                                    {subscriptionDetails?.stripe?.paymentIssue?.message ||
+                                        t('settings.subscription.paymentRequiredDesc', 'Actualiza tu método de pago o paga la factura pendiente para mantener tu plan activo.')}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <button
+                                type="button"
+                                onClick={handlePayInvoice}
+                                disabled={isOpeningPortal}
+                                className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isOpeningPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                {t('settings.subscription.payInvoice', 'Pagar factura')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleOpenBillingPortal}
+                                disabled={isOpeningPortal}
+                                className="px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                {t('settings.subscription.managePayment', 'Método de pago')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════ */}
             {/* PLANS COMPARISON                               */}
@@ -620,7 +729,7 @@ const SubscriptionSettings: React.FC = () => {
                                 {t('settings.subscription.billingPeriod', 'Período de Facturación')}
                             </h4>
                             <p className="text-sm text-q-text-muted">
-                                {t('settings.subscription.billingDesc', 'Detalles de tu ciclo de facturación actual')}
+                                {t('settings.subscription.billingDesc', 'Detalles de tu ciclo de facturación actual')} · {statusLabel}
                             </p>
                         </div>
                     </div>
@@ -687,6 +796,31 @@ const SubscriptionSettings: React.FC = () => {
                                         {t('settings.subscription.reactivate', 'Reactivar')}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {subscriptionDetails.stripe.latestInvoiceUrl && (
+                            <div className="pt-4 border-t border-q-border flex flex-col sm:flex-row gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handlePayInvoice}
+                                    disabled={isOpeningPortal}
+                                    className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isOpeningPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                    {requiresPayment
+                                        ? t('settings.subscription.payPendingInvoice', 'Pagar factura pendiente')
+                                        : t('settings.subscription.viewInvoice', 'Ver última factura')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenBillingPortal}
+                                    disabled={isOpeningPortal}
+                                    className="px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    {t('settings.subscription.billingPortal', 'Portal de facturación')}
+                                </button>
                             </div>
                         )}
 

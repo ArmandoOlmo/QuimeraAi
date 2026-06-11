@@ -1,6 +1,6 @@
 /**
  * BioPageContext
- * Maneja Bio Pages (Link in Bio) con persistencia en Firestore
+ * Maneja Bio Pages (Link in Bio) con persistencia en Supabase
  * Soporta multi-tenant: usa /tenants/{tenantId}/bioPages cuando hay tenant activo
  */
 
@@ -16,7 +16,7 @@ import {
     query,
     orderBy,
     serverTimestamp,
-} from '../../firebase';
+} from '@/utils/compatData';
 import { useAuth } from '../core/AuthContext';
 import { useSafeTenant } from '../tenant';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
@@ -76,7 +76,7 @@ export interface BioTheme {
     patternColor?: string;
     patternSize?: number;
     buttonStyle: 'fill' | 'outline' | 'soft' | 'glass';
-    buttonShape: 'square' | 'rounded' | 'rounder' | 'pill';
+    buttonShape: 'square' | 'rounded' | 'rounder' | 'pill' | 'full' | 'lg' | 'xl';
     buttonShadow: 'none' | 'soft' | 'strong' | 'hard';
     buttonColor: string;
     buttonTextColor: string;
@@ -210,7 +210,15 @@ const getBioPagesCollectionPath = (userId: string, tenantId?: string | null): st
     return ['users', userId, 'bioPages'];
 };
 
-// Helper to remove undefined values (Firestore doesn't accept undefined)
+const getBioPageDocRef = (userId: string, tenantId: string | null | undefined, projectId: string) => {
+    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
+    if (tenantId && !isPersonalTenant) {
+        return doc(db, 'tenants', tenantId, 'bioPages', projectId);
+    }
+    return doc(db, 'users', userId, 'bioPages', projectId);
+};
+
+// Helper to remove undefined values (Supabase doesn't accept undefined)
 const removeUndefinedValues = <T extends Record<string, any>>(obj: T): Partial<T> => {
     const result: Partial<T> = {};
     for (const key of Object.keys(obj) as (keyof T)[]) {
@@ -316,8 +324,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         setIsLoading(true);
         try {
-            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
-            const bioPageRef = doc(db, ...pathSegments, projectId);
+            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, projectId);
             const bioPageSnap = await getDoc(bioPageRef);
 
             if (bioPageSnap.exists()) {
@@ -357,8 +364,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     const createBioPage = useCallback(async (projectId: string, username: string): Promise<string> => {
         if (!user) throw new Error('User not authenticated');
 
-        const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
-        const bioPageRef = doc(db, ...pathSegments, projectId);
+        const bioPageRef = getBioPageDocRef(user.id, currentTenantId, projectId);
 
         const newBioPage: BioPageData = {
             id: projectId,
@@ -398,8 +404,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         postSaveProtectionRef.current = true;
 
         try {
-            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
-            const bioPageRef = doc(db, ...pathSegments, bioPage.id);
+            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, bioPage.id);
 
             const updatedData = removeUndefinedValues({
                 profile,
@@ -531,8 +536,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             await saveBioPage();
 
             // Update isPublished flag in user's bio page
-            const pathSegments = getBioPagesCollectionPath(user.id, currentTenantId);
-            const bioPageRef = doc(db, ...pathSegments, bioPage.id);
+            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, bioPage.id);
 
             await updateDoc(bioPageRef, {
                 isPublished: true,

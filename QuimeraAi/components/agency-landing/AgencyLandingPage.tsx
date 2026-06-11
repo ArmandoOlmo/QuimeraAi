@@ -99,7 +99,7 @@ const AgencyLandingPageContent: React.FC = () => {
   const theme = (isEditorMode ? editorContext!.theme : projectContext.theme) || projectContext.theme;
   const componentOrder = (isEditorMode ? editorContext!.componentOrder : projectContext.componentOrder) || projectContext.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext!.sectionVisibility : projectContext.sectionVisibility) || projectContext.sectionVisibility;
-  const { activeProjectId, pages, activePage } = projectContext;
+  const { activeProjectId, pages, activePage, activeProject } = projectContext;
 
   const { cmsPosts, isLoadingCMS, menus, categories } = useCMS();
   const { componentStatus, customComponents, componentStyles } = useAdmin();
@@ -563,7 +563,7 @@ const AgencyLandingPageContent: React.FC = () => {
   // Helper function to merge componentStyles (defaults) with data (user changes)
   // User changes in data take priority over componentStyles defaults
   // Then derive any missing colors from the template palette
-  const mergeComponentData = (componentKey: keyof typeof componentStyles) => {
+  const mergeComponentData = (componentKey: PageSection) => {
     const componentData = data[componentKey];
     const styles = componentStyles[componentKey];
     // If neither exists, return undefined
@@ -705,7 +705,7 @@ const AgencyLandingPageContent: React.FC = () => {
     mergedAnnouncementBarData,
   ]);
 
-  const componentsMap: Record<PageSection, React.ReactNode> = {
+  const componentsMap: Partial<Record<PageSection, React.ReactNode>> = {
     hero: (
       <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition} glassEffect={mergedHeroData?.glassEffect}>
         {(() => {
@@ -853,7 +853,7 @@ const AgencyLandingPageContent: React.FC = () => {
 
   // Dynamic Menu Resolution - prioritize: CMS Menu > Pages > Manual Links
   const headerLinks = useMemo(() => {
-    const menus = (project as any)?.menus || [];
+    const menus = activeProject?.menus || [];
 
     // 0. Explicit manual override
     if (mergedHeaderData.menuId === 'manual') {
@@ -885,7 +885,7 @@ const AgencyLandingPageContent: React.FC = () => {
 
     // 3. Fall back to manual links
     return mergedHeaderData.links;
-  }, [mergedHeaderData.menuId, mergedHeaderData.links, menus, pages]);
+  }, [mergedHeaderData.menuId, mergedHeaderData.links, activeProject?.menus, pages]);
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {

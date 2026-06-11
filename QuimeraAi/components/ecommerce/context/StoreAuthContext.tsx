@@ -11,10 +11,10 @@ import {
     sendPasswordResetEmail,
     signOut,
     onAuthStateChanged,
-    User as FirebaseUser,
-} from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '../../../firebase';
+    User as StoreAuthUser,
+} from '@/utils/compatData';
+import { doc, getDoc, collection, query, where, getDocs } from '@/utils/compatData';
+import { auth, db } from '@/utils/compatData';
 import { supabase } from '../../../supabase';
 import { StoreUser, StoreAuthContextType, StoreAuthState } from '../../../types/storeUsers';
 
@@ -38,7 +38,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
 
     // Uses Supabase client inline.
 
-    // Fetch store user data from Firestore
+    // Fetch store user data from Supabase.
     const fetchStoreUser = useCallback(async (email: string): Promise<StoreUser | null> => {
         try {
             const usersRef = collection(db, `storeUsers/${storeId}/users`);
@@ -60,12 +60,12 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
         }
     }, [storeId]);
 
-    // Listen to Firebase Auth state changes
+    // Listen to storefront auth state changes.
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-            if (firebaseUser && firebaseUser.email) {
+        const unsubscribe = onAuthStateChanged(auth, async (authUser: StoreAuthUser | null) => {
+            if (authUser && authUser.email) {
                 // User is signed in, check if they belong to this store
-                const storeUser = await fetchStoreUser(firebaseUser.email);
+                const storeUser = await fetchStoreUser(authUser.email);
 
                 if (storeUser) {
                     // Check if user is banned
@@ -99,7 +99,7 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
                         error: null,
                     });
                 } else {
-                    // User exists in Firebase Auth but not in this store
+                    // User exists in auth but not in this store.
                     setState({
                         user: null,
                         isLoading: false,
@@ -141,7 +141,6 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
                 throw new Error('Tu cuenta está inactiva. Contacta al soporte.');
             }
 
-            // Sign in with Firebase Auth
             await signInWithEmailAndPassword(auth, email, password);
 
             // Record login (async, don't wait)
@@ -200,7 +199,6 @@ export const StoreAuthProvider: React.FC<StoreAuthProviderProps> = ({
                 throw new Error(data.message || 'Error al crear la cuenta');
             }
 
-            // Sign in with Firebase Auth
             await signInWithEmailAndPassword(auth, email, password);
 
         } catch (error: any) {
@@ -328,7 +326,6 @@ export const useStoreAuthOptional = (): StoreAuthContextType | null => {
 };
 
 export default StoreAuthContext;
-
 
 
 

@@ -72,7 +72,9 @@ export const calculateLeadScore = (factors: Partial<LeadScoringFactors>): number
         'manual': 5,
         'cold_call': 3,
         'voice-call': 9,
-        'quimera-chat': 8
+        'quimera-chat': 8,
+        'import-csv': 5,
+        'import-excel': 5,
     };
 
     if (factors.source) {
@@ -107,7 +109,9 @@ export const getSourceConfig = (source: Lead['source']) => {
         'linkedin': { icon: '💼', color: 'bg-blue-700', label: 'LinkedIn' },
         'manual': { icon: '✍️', color: 'bg-violet-500', label: 'Manual' },
         'cold_call': { icon: '☎️', color: 'bg-amber-600', label: 'Cold Call' },
-        'quimera-chat': { icon: '🤖', color: 'bg-indigo-600', label: 'Quimera Chat' }
+        'quimera-chat': { icon: '🤖', color: 'bg-indigo-600', label: 'Quimera Chat' },
+        'import-csv': { icon: '📥', color: 'bg-gray-500', label: 'Import CSV' },
+        'import-excel': { icon: '📊', color: 'bg-green-600', label: 'Import Excel' },
     };
 
     return configs[source] || { icon: '🌐', color: 'bg-violet-500', label: 'Otro' };
@@ -174,7 +178,9 @@ export const calculateConversionProbability = (lead: Lead): number => {
         'voice-call': 9,
         'manual': 5,
         'cold_call': 3,
-        'quimera-chat': 8
+        'quimera-chat': 8,
+        'import-csv': 5,
+        'import-excel': 5,
     };
     probability += sourceBonus[lead.source] || 5;
 

@@ -536,7 +536,7 @@ class DeploymentService {
             // but for the context bridge we'll handle the routing
             console.log(`Generic deploy call: project ${projectId}, domain ${domainName}, provider ${provider}`);
 
-            // In a real app, we'd fetch the project from Firestore here if not provided
+            // In a real app, we'd fetch the project from Supabase here if not provided
             // For now, we'll assume the caller of deployProject provides the full objects
             return {
                 success: false,
@@ -866,6 +866,7 @@ class DeploymentService {
     ): DeploymentLog {
         return {
             id: `log_${Date.now()}`,
+            projectId: '',
             timestamp: new Date().toISOString(),
             status,
             message,

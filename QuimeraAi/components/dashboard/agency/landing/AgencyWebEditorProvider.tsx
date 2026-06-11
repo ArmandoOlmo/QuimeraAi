@@ -11,7 +11,7 @@ import QuimeraLoader from '../../../ui/QuimeraLoader';
 import { toast } from 'react-hot-toast';
 import { AgencyLandingConfig } from '../../../../types/agencyLanding';
 import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
-import { db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from '../../../../firebase';
+import { db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from '@/utils/compatData';
 import { supabase } from '../../../../supabase';
 
 interface AgencyWebEditorProviderProps {

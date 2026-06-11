@@ -184,7 +184,7 @@ const AudiencesView: React.FC = () => {
         await duplicateAudience(audienceId);
     };
 
-    // Keep selectedAudience in sync with updated audiences from Firestore
+    // Keep selectedAudience in sync with updated audiences from Supabase
     React.useEffect(() => {
         if (selectedAudience && audiences) {
             const updatedAudience = audiences.find(a => a.id === selectedAudience.id);

@@ -54,17 +54,19 @@ export interface UserPreferences {
 
 export interface UserDocument {
     id: string;
-    uid?: string; // Firebase user ID (sometimes same as id)
+    uid?: string; // Supabase user ID (sometimes same as id)
     name: string;
     email: string;
     photoURL: string;
+    displayName?: string;
     role?: UserRole;
 
-    // User Preferences (synced across devices via Firebase)
+    // User Preferences (synced across devices via Supabase)
     preferences?: UserPreferences;
 
     // Onboarding State (persisted to not lose progress)
     onboardingState?: OnboardingState;
+    isOnboardingComplete?: boolean;
 
     // Tenant Relations
     tenantId?: string;
@@ -147,7 +149,9 @@ export interface Lead {
     // AI Features
     aiScore?: number;
     aiAnalysis?: string;
+    aiSummary?: string;
     recommendedAction?: string;
+    metadata?: Record<string, unknown>;
 
     // Custom Fields
     customFields?: LeadCustomField[];
@@ -167,16 +171,18 @@ export interface LeadActivity {
     id: string;
     projectId: string; // Required - activities are scoped to a project
     leadId: string;
-    type: ActivityType;
-    title: string;
+    type: ActivityType | string;
+    title?: string;
     description?: string;
-    createdAt: { seconds: number; nanoseconds: number };
+    createdAt: { seconds: number; nanoseconds: number } | string;
     createdBy?: string;
+    performedBy?: string;
     metadata?: {
         oldStatus?: LeadStatus;
         newStatus?: LeadStatus;
         duration?: number;
         emailSubject?: string;
+        [key: string]: unknown;
     };
 }
 
@@ -186,12 +192,15 @@ export interface LeadTask {
     leadId: string;
     title: string;
     description?: string;
-    dueDate: { seconds: number; nanoseconds: number };
-    priority: 'low' | 'medium' | 'high';
+    dueDate: { seconds: number; nanoseconds: number } | string;
+    priority?: 'low' | 'medium' | 'high';
     completed: boolean;
+    /** @deprecated Use completed */
+    isCompleted?: boolean;
     completedAt?: { seconds: number; nanoseconds: number };
     assignedTo?: string;
-    createdAt: { seconds: number; nanoseconds: number };
+    createdAt: { seconds: number; nanoseconds: number } | string;
+    updatedAt?: { seconds: number; nanoseconds: number } | string;
 }
 
 // =============================================================================
@@ -273,9 +282,16 @@ export interface ApiLog {
     model: string;
     feature: string;
     tokensUsed?: number;
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+    latencyMs?: number;
+    endpoint?: string;
+    metadata?: Record<string, unknown>;
     timestamp: any;
     success: boolean;
     errorMessage?: string;
+    error?: string;
 }
 
 export interface AiInsights {
@@ -333,6 +349,9 @@ export interface FileRecord {
     name: string;
     storagePath: string;
     downloadURL: string;
+    /** Alias for downloadURL used in some admin views */
+    url?: string;
+    tenantId?: string;
     size: number;
     type: string;
     createdAt: { seconds: number; nanoseconds: number; } | string;
@@ -396,8 +415,11 @@ export interface LLMPrompt {
     template: string;
     model: string;
     version: number;
-    createdAt: { seconds: number; nanoseconds: number; };
-    updatedAt: { seconds: number; nanoseconds: number; };
+    variables?: string[];
+    tags?: string[];
+    isSystem?: boolean;
+    createdAt: { seconds: number; nanoseconds: number; } | string;
+    updatedAt: { seconds: number; nanoseconds: number; } | string;
 }
 
 // =============================================================================

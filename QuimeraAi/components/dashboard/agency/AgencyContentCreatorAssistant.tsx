@@ -177,7 +177,7 @@ const AgencyContentCreatorAssistant: React.FC<AgencyContentCreatorAssistantProps
         try {
             // Generate the ID upfront so we can pass it to the editor
             // This prevents duplication: without this, the editor receives id: ''
-            // and its auto-save creates a second Firestore document
+            // and its auto-save creates a second Supabase document
             const generatedId = `article_${Date.now()}`;
 
             // Generate a unique slug with timestamp to avoid conflicts

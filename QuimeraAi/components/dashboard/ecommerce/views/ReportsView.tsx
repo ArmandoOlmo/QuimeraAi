@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * ReportsView
  * Vista para generar y descargar reportes
@@ -124,7 +125,7 @@ const ReportsView: React.FC = () => {
 
                 case 'orders_summary':
                     const filteredOrders = orders.filter((order) => {
-                        const orderDate = new Date(order.createdAt.seconds * 1000);
+                        const orderDate = timestampToDate(order.createdAt);
                         return orderDate >= startDate && orderDate <= endDate;
                     });
                     exportOrdersSummary(filteredOrders);
@@ -179,7 +180,7 @@ const ReportsView: React.FC = () => {
             'Total Pedidos': c.totalOrders,
             'Total Gastado': c.totalSpent.toFixed(2),
             'Acepta Marketing': c.acceptsMarketing ? 'Sí' : 'No',
-            'Fecha Registro': c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleDateString() : '',
+            'Fecha Registro': c.createdAt ? timestampToDate(c.createdAt).toLocaleDateString() : '',
         }));
 
         downloadCSV(data, `clientes_${new Date().toISOString().split('T')[0]}.csv`);

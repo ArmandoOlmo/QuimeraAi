@@ -285,9 +285,9 @@ const FinanceDashboard: React.FC = () => {
                     confidence: meta.confidence || 100,
                     notes: meta.notes || '',
                     status: (t.status === 'approved' ? 'approved' : 'pending') as 'pending' | 'approved',
-                    createdAt: t.created_at,
-                    updatedAt: t.updated_at,
-                    receiptUrl: t.receipt_url
+                    createdAt: t.createdAt,
+                    updatedAt: t.updatedAt,
+                    receiptUrl: t.receiptUrl
                 };
             })
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -466,7 +466,7 @@ const FinanceDashboard: React.FC = () => {
                         date: extractedData.date || new Date().toISOString().split('T')[0],
                         description: descriptionJSON,
                         status: 'pending',
-                        receipt_url: '' 
+                        receiptUrl: '' 
                     });
 
                     // Solo seleccionamos el último si se subieron varios

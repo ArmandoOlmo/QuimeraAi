@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { doc, onSnapshot } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { StorefrontThemeSettings, DEFAULT_STOREFRONT_THEME } from '../../../types/ecommerce';
 
 // Extended theme interface with all storefront properties

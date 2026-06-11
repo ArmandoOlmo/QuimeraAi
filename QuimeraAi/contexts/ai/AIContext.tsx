@@ -771,7 +771,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     userId: user?.id,
                 });
 
-                // Instead of returning a massive base64 string which exceeds Firestore limits (1MB),
+                // Instead of returning a massive base64 string which exceeds Supabase limits (1MB),
                 // upload it to Supabase storage and return the public URL.
                 try {
                     const byteCharacters = atob(result.image);

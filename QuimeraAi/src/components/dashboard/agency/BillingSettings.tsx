@@ -62,7 +62,7 @@ export function BillingSettings() {
 
       // Load sub-clients (would come from TenantContext in real implementation)
       // For now, mock data
-      // TODO: Replace with actual query from Firestore
+      // TODO: Replace with actual query from Supabase
       // const clientsQuery = query(
       //   collection(db, 'tenants'),
       //   where('ownerTenantId', '==', currentTenant.id)

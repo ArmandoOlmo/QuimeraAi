@@ -364,8 +364,8 @@ export interface ABTestConfig {
 // =============================================================================
 // COMPONENT STUDIO
 // =============================================================================
-export type EditableComponentID = 'hero' | 'heroSplit' | 'features' | 'services' | 'testimonials' | 'team' | 'cta' | 'slideshow' | 'screenshotCarousel' | 'pricing' | 'faq' | 'portfolio' | 'leads' | 'newsletter' | 'video' | 'howItWorks' | 'footer' | 'header' | 'chatbot' | 'typography' | 'map' | 'menu' | 'banner' | 'colors' | 'products' | 'storeSettings' | 'featuredProducts' | 'categoryGrid' | 'productHero' | 'saleCountdown' | 'trustBadges' | 'recentlyViewed' | 'productReviews' | 'collectionBanner' | 'productBundle' | 'announcementBar' | 'productDetail' | 'categoryProducts' | 'articleContent' | 'productGrid' | 'realEstateListings' | 'cart' | 'checkout';
-export type ComponentStyles = Record<EditableComponentID, any>;
+export type EditableComponentID = PageSection | 'screenshotCarousel';
+export type ComponentStyles = Partial<Record<EditableComponentID, any>>;
 export type ComponentCategory = 'hero' | 'cta' | 'form' | 'content' | 'navigation' | 'media' | 'other';
 
 export interface ComponentVersion {
@@ -432,7 +432,7 @@ export interface CustomComponent {
     styles: any;
 
     // Versioning
-    version: number;
+    version?: number;
     versions?: ComponentVersion[]; // Array of all versions
     versionHistory?: ComponentVersion[];
     currentVersion?: number;
@@ -455,7 +455,7 @@ export interface CustomComponent {
 
     // Metadata
     createdAt: { seconds: number; nanoseconds: number; };
-    updatedAt?: { seconds: number; nanoseconds: number; };
+    updatedAt?: { seconds: number; nanoseconds: number; } | string;
     usageCount?: number;
     projectsUsing?: string[];
 

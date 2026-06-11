@@ -409,7 +409,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           project={project}
           onClose={() => setShowThumbnailEditor(false)}
           onUpdate={() => {
-            // Refresh projects to get the updated thumbnail from Firestore
+            // Refresh projects to get the updated thumbnail from Supabase
             refreshProjects();
           }}
         />,

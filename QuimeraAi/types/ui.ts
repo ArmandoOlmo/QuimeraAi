@@ -87,6 +87,7 @@ export interface GlobalColors {
     border: string;
     success: string;
     error: string;
+    [key: string]: string;
 }
 
 // Theme Data
@@ -119,6 +120,8 @@ export interface ThemeData {
     backgroundColor?: string;
     textColor?: string;
     headingColor?: string;
+    colorPrimary?: string;
+    colorSecondary?: string;
     // Palette Colors - colores importados de Coolors.co u otras paletas
     // Se muestran en el selector de colores para acceso rápido
     paletteColors?: string[];

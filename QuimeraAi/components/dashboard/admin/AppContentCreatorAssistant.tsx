@@ -180,7 +180,7 @@ const AppContentCreatorAssistant: React.FC<AppContentCreatorAssistantProps> = ({
         try {
             // Generate the ID upfront so we can pass it to the editor
             // This prevents duplication: without this, the editor receives id: ''
-            // and its auto-save creates a second Firestore document
+            // and its auto-save creates a second Supabase document
             const generatedId = `article_${Date.now()}`;
 
             // Create the article ensuring no undefined fields

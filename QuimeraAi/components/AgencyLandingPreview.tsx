@@ -1,6 +1,6 @@
 import { resolveFontFamily } from "../utils/fontLoader";
 import React, { useState, useEffect } from 'react';
-import { db, doc, getDoc } from '../firebase';
+import { db, doc, getDoc } from '@/utils/compatData';
 import { Project, PageData, ThemeData, PageSection, SitePage } from '../types';
 import { AlertTriangle } from 'lucide-react';
 import { AgencyLandingConfig } from '../types/agencyLanding';
@@ -81,6 +81,8 @@ const AgencyLandingPreview: React.FC = () => {
             id: 'agency-landing-mode',
             userId: '',
             name: 'Agency Landing',
+            status: 'Draft',
+            lastUpdated: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             data: mappedData as PageData,
@@ -158,14 +160,18 @@ const AgencyLandingPreview: React.FC = () => {
   return (
     <div className="min-h-screen relative font-body text-q-text overflow-x-hidden antialiased flex flex-col">
       <PageRenderer
-        project={{
-            id: project.id,
-            name: project.name,
-            data: project.data,
-            theme: project.theme,
-            componentOrder: project.componentOrder,
-            sectionVisibility: project.sectionVisibility,
+        page={{
+          id: 'home',
+          title: project.name,
+          slug: '/',
+          isHomePage: true,
+          showInNavigation: true,
+          navigationOrder: 0,
+          sections: project.componentOrder,
+          sectionData: project.data,
         }}
+        project={project}
+        contentOnly
       />
     </div>
   );

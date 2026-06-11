@@ -357,11 +357,11 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIds, onChange
 export interface SingleProductSelectorProps {
     selectedProductId: string | undefined;
     onSelect: (productId: string | undefined) => void;
-    storeId: string;
+    storeId?: string;
     label?: string;
 }
 
-export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedProductId, onSelect, storeId, label = 'Producto Destacado' }) => {
+export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ selectedProductId, onSelect, storeId = '', label = 'Producto Destacado' }) => {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -519,15 +519,15 @@ export const SingleProductSelector: React.FC<SingleProductSelectorProps> = ({ se
 export interface SingleCollectionSelectorProps {
     selectedCollectionId: string | undefined;
     onSelect: (collectionId: string | undefined) => void;
-    storeId: string;
-    gridCategories: CategoryItem[];
+    storeId?: string;
+    gridCategories?: CategoryItem[];
     label?: string;
 }
 
 export const SingleCollectionSelector: React.FC<SingleCollectionSelectorProps> = ({
     selectedCollectionId,
-    storeId,
-    gridCategories,
+    storeId = '',
+    gridCategories = [],
     onSelect,
     label = 'Colección'
 }) => {
@@ -1657,13 +1657,13 @@ export const AnnouncementMessageEditor = ({ data, setNestedData }: AnnouncementM
 
                     <ColorControl
                         label={t('editor.controls.ecommerce.backgroundColor', 'Background Color')}
-                        color={d.backgroundColor || '#000000'}
+                        value={d.backgroundColor || '#000000'}
                         onChange={(c) => setNestedData('announcement.backgroundColor', c)}
                     />
 
                     <ColorControl
                         label={t('editor.controls.ecommerce.textColor', 'Text Color')}
-                        color={d.textColor || '#FFFFFF'}
+                        value={d.textColor || '#FFFFFF'}
                         onChange={(c) => setNestedData('announcement.textColor', c)}
                     />
                 </>

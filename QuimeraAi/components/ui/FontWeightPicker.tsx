@@ -27,18 +27,30 @@ const FONT_WEIGHT_OPTIONS: FontWeightOption[] = [
 
 interface FontWeightPickerProps {
     /** Currently selected weight value */
-    value: number;
+    value?: number;
+    /** @deprecated Use value */
+    weight?: number;
     /** Called when the user selects a new weight */
-    onChange: (weight: number) => void;
+    onChange?: (weight: number) => void;
+    /** @deprecated Use onChange */
+    onWeightChange?: (weight: number) => void;
+    style?: 'normal' | 'italic';
+    onStyleChange?: (style: 'normal' | 'italic') => void;
     /** Optional label (omit for inline use) */
     label?: string;
 }
 
 const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
     value,
+    weight,
     onChange,
+    onWeightChange,
+    style: fontStyle,
+    onStyleChange,
     label,
 }) => {
+    const selectedWeight = value ?? weight ?? 400;
+    const handleChange = onChange ?? onWeightChange ?? (() => {});
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
@@ -79,12 +91,12 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
         }
     }, [isOpen]);
 
-    const handleSelect = useCallback((weight: number) => {
-        onChange(weight);
+    const handleSelect = useCallback((nextWeight: number) => {
+        handleChange(nextWeight);
         setIsOpen(false);
-    }, [onChange]);
+    }, [handleChange]);
 
-    const selectedOption = FONT_WEIGHT_OPTIONS.find(opt => opt.value === value) || FONT_WEIGHT_OPTIONS[3]; // Default to Regular
+    const selectedOption = FONT_WEIGHT_OPTIONS.find(opt => opt.value === selectedWeight) || FONT_WEIGHT_OPTIONS[3]; // Default to Regular
 
     return (
         <div className="flex-1" ref={containerRef}>
@@ -104,7 +116,7 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
                         : 'border-q-border hover:border-q-accent/50'
                 }`}
             >
-                <span className="truncate" style={{ fontWeight: value }}>
+                <span className="truncate" style={{ fontWeight: selectedWeight, fontStyle }}>
                     {selectedOption.label}
                 </span>
                 <ChevronDown className={`h-3 w-3 text-q-text-secondary flex-shrink-0 ml-2 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -116,7 +128,7 @@ const FontWeightPicker: React.FC<FontWeightPickerProps> = ({
                     <div className="absolute top-1 left-0 right-0 bg-q-surface border border-q-border rounded-lg shadow-xl overflow-hidden">
                         <div ref={listRef} className="max-h-56 overflow-y-auto overscroll-contain">
                             {FONT_WEIGHT_OPTIONS.map(opt => {
-                                const isSelected = opt.value === value;
+                                const isSelected = opt.value === selectedWeight;
                                 return (
                                     <button
                                         key={opt.value}

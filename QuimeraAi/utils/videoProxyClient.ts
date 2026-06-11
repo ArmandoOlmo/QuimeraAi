@@ -12,6 +12,7 @@ import { CURATED_VIDEO_MODELS, resolveOmniModelId } from '../constants/curatedVi
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
 const AI_PROXY_URL = import.meta.env.VITE_VIDEO_PROXY_URL ||
+    import.meta.env.VITE_AI_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;
 const OPENROUTER_VIDEO_MODELS_URL = 'https://openrouter.ai/api/v1/videos/models';
 const OPENROUTER_ORIGIN = 'https://openrouter.ai';

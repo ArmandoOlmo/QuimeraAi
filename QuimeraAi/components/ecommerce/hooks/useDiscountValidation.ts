@@ -1,11 +1,12 @@
+import { getTimestampSeconds, timestampToDate } from '../../../utils/timestampUtils';
 /**
  * useDiscountValidation Hook
  * Hook para validar y aplicar cupones de descuento en el checkout
  */
 
 import { useState, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { collection, query, where, getDocs, doc, getDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { Discount, CartItem, DiscountType } from '../../../types/ecommerce';
 
 // Types
@@ -49,11 +50,11 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
     const isExpired = (discount: Discount): boolean => {
         const now = Math.floor(Date.now() / 1000);
         
-        if (discount.startsAt && discount.startsAt.seconds > now) {
+        if (discount.startsAt && getTimestampSeconds(discount.startsAt) > now) {
             return true; // Not started yet
         }
         
-        if (discount.endsAt && discount.endsAt.seconds < now) {
+        if (discount.endsAt && getTimestampSeconds(discount.endsAt) < now) {
             return true; // Already ended
         }
         
@@ -66,7 +67,7 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
             return false; // Max uses reached
         }
         
-        // TODO: Check per-customer usage from Firestore if customerId provided
+        // TODO: Check per-customer usage from Supabase if customerId provided
         // This would require querying the customer's discount usage history
         
         return true;
@@ -210,7 +211,7 @@ export const useDiscountValidation = (storeId: string): UseDiscountValidationRet
             setError(null);
 
             try {
-                // Fetch discount from Firestore
+                // Fetch discount from Supabase
                 const discountsRef = collection(db, 'publicStores', storeId, 'discounts');
                 const q = query(
                     discountsRef,

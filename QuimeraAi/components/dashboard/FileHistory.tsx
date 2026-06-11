@@ -10,6 +10,7 @@ import { FileText, Upload, Trash2, Download, Sparkles, ChevronDown, Zap, X, Cale
 import DragDropZone from '../ui/DragDropZone';
 import ImageDetailModal from '../ui/ImageDetailModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import { formatBytes, formatFileDate } from '../../utils/fileHelpers';
 import { useTranslation } from 'react-i18next';
 
@@ -343,6 +344,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                 return;
             }
             setReferenceImages(prev => [...prev, base64Data]);
+            window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: base64Data }));
             success(t('dashboard.assets.generator.imageAdded'));
             return;
         }
@@ -411,6 +413,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                 return;
             }
             setReferenceImages(prev => [...prev, imageData]);
+            window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: imageData }));
             success(t('dashboard.assets.generator.imageAdded'));
             return;
         }
@@ -420,6 +423,7 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
             const fullUrl = imageData.startsWith('//') ? `https:${imageData}` : imageData;
             const converted = await urlToBase64(fullUrl);
             setReferenceImages(prev => [...prev, converted]);
+            window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: converted }));
             success(t('dashboard.assets.generator.imageAdded'));
         } catch (error) {
             // CORS error - show helpful message
@@ -646,228 +650,14 @@ const FileHistory: React.FC<FileHistoryProps> = ({ variant = 'widget', onAddRefe
                 />
             )}
 
-            {/* IMAGE GENERATOR - Only show in full Assets view, not in dashboard widget or gallery-only */}
+            {/* MEDIA GENERATOR - Only show in full Assets view, not in dashboard widget or gallery-only */}
             {variant === 'full' && (
-                <div className="mb-8 p-6 bg-primary/5 border-2 border-primary/20 rounded-2xl">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-primary rounded-lg">
-                            <Zap className="w-6 h-6 text-primary-foreground" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-foreground">{t('dashboard.assets.generator.title')}</h2>
-                            <p className="text-sm text-q-text-muted">{t('dashboard.assets.generator.subtitle')}</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {/* Prompt */}
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-bold text-foreground">{t('dashboard.assets.generator.promptLabel')}</label>
-                                <button
-                                    onClick={handleEnhancePrompt}
-                                    disabled={isEnhancing || !prompt}
-                                    className="flex items-center text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                                    title="Use AI to improve your prompt"
-                                >
-                                    {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
-                                    {t('dashboard.assets.generator.enhance')}
-                                </button>
-                            </div>
-                            <textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                placeholder={t('dashboard.assets.generator.promptLabel')}
-                                className="w-full bg-q-bg border border-q-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
-                            />
-                        </div>
-
-                        {/* Reference Images */}
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-xs font-bold text-q-text-muted uppercase">{t('dashboard.assets.generator.referenceImages')}</label>
-                                <span className="text-xs text-q-text-muted">{referenceImages.length}/14</span>
-                            </div>
-
-                            <input
-                                type="file"
-                                ref={referenceFileInputRef}
-                                accept="image/*"
-                                multiple
-                                onChange={handleReferenceImageUpload}
-                                className="hidden"
-                            />
-
-                            <div
-                                className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-q-border hover:border-primary hover:bg-primary/5'}`}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                            >
-                                {referenceImages.length > 0 ? (
-                                    <div className="grid grid-cols-3 gap-2 mb-2">
-                                        {referenceImages.map((img, idx) => (
-                                            <div key={idx} className="relative aspect-square rounded-md overflow-hidden group border border-q-border">
-                                                <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                    className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X size={10} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {referenceImages.length < 14 && (
-                                            <button
-                                                onClick={() => referenceFileInputRef.current?.click()}
-                                                className="aspect-square flex flex-col items-center justify-center gap-1 border border-q-border rounded-md hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
-                                            >
-                                                <Plus size={16} />
-                                                <span className="text-[10px]">{t('dashboard.assets.generator.addButton')}</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => referenceFileInputRef.current?.click()}
-                                        className="w-full flex flex-col items-center gap-2 text-q-text-muted py-4"
-                                    >
-                                        <Upload size={24} />
-                                        <span className="text-xs font-medium">{t('dashboard.assets.generator.uploadText')}</span>
-                                        <span className="text-xs opacity-70">{t('dashboard.assets.generator.dragText')}</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Quick Controls Row */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.aspectRatio')}</label>
-                                <select
-                                    value={aspectRatio}
-                                    onChange={(e) => setAspectRatio(e.target.value)}
-                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    {ASPECT_RATIOS.map(ratio => (
-                                        <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.style')}</label>
-                                <select
-                                    value={style}
-                                    onChange={(e) => setStyle(e.target.value)}
-                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    {STYLES.map(s => (
-                                        <option key={s} value={s}>{s}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.resolution')}</label>
-                                <select
-                                    value={resolution}
-                                    onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    {RESOLUTIONS.map(res => (
-                                        <option key={res.value} value={res.value}>{res.label}</option>
-                                    ))}
-                                </select>
-                                {/* 4K Warning */}
-                                {resolution === '4K' && (
-                                    <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
-                                        <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                                            4K images are large and may slow down your website. Consider using 2K for better performance.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Advanced Controls Toggle */}
-                        <div className="border-t border-q-border/50 pt-3">
-                            <button
-                                onClick={() => setShowAdvanced(!showAdvanced)}
-                                className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
-                            >
-                                <span>{t('dashboard.assets.advancedControls')}</span>
-                                <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
-                            </button>
-                        </div>
-
-                        {showAdvanced && (
-                            <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-                                <div>
-                                    <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.lighting')}</label>
-                                    <select
-                                        value={lighting}
-                                        onChange={(e) => setLighting(e.target.value)}
-                                        className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        {LIGHTING_OPTIONS.map(l => (
-                                            <option key={l} value={l}>{l}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.cameraAngle')}</label>
-                                    <select
-                                        value={cameraAngle}
-                                        onChange={(e) => setCameraAngle(e.target.value)}
-                                        className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        {CAMERA_ANGLES.map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.colorGrading')}</label>
-                                    <select
-                                        value={colorGrading}
-                                        onChange={(e) => setColorGrading(e.target.value)}
-                                        className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        {COLOR_GRADING.map(c => (
-                                            <option key={c} value={c}>{c}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('dashboard.assets.controls.depthOfField')}</label>
-                                    <select
-                                        value={depthOfField}
-                                        onChange={(e) => setDepthOfField(e.target.value)}
-                                        className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        {DEPTH_OF_FIELD.map(d => (
-                                            <option key={d} value={d}>{d}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Generate Button */}
-                        <button
-                            onClick={handleGenerate}
-                            disabled={isGenerating || !prompt}
-                            className="w-full py-3 text-primary font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-primary/80"
-                        >
-                            {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                            {isGenerating ? t('dashboard.assets.generator.generating') : t('dashboard.assets.generator.generateButton')}
-                        </button>
-                    </div>
+                <div className="mb-8 overflow-hidden rounded-2xl border border-q-border bg-q-surface/80">
+                    <MediaGeneratorPanel
+                        destination="user"
+                        projectId={hasActiveProject ? activeProject?.id : undefined}
+                        className="h-[680px]"
+                    />
                 </div>
             )}
 

@@ -1673,7 +1673,7 @@ const GlobalAiAssistant: React.FC = () => {
                     if (matches.length > 0) results.posts = matches;
                 }
 
-                // 2. Firestore Search (Products, Orders, Appointments) -> Async
+                // 2. Supabase Search (Products, Orders, Appointments) -> Async
                 // We user limit() to avoid fetching too much, effectively doing a "recent + filter" 
                 // because we assume the item is likely relevant or recent. 
                 // Real deep search would require a dedicated search service (e.g. Algolia/Elastic).

@@ -19,7 +19,7 @@ export const exportProject = (project: Project, userEmail: string): string => {
     exportDate: new Date().toISOString(),
     project: {
       ...project,
-      // Clean up any Firebase-specific fields if needed
+      // Clean up any Supabase-specific fields if needed
     },
     metadata: {
       exportedBy: userEmail,

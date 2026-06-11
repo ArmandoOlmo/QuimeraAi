@@ -78,8 +78,8 @@ export const PLATFORM_SERVICES: ServiceMetadata[] = [
  */
 export interface ServiceConfig {
     status: ServiceStatus;
-    statusReason?: string;
-    updatedAt: { seconds: number; nanoseconds: number };
+    statusReason?: string | null;
+    updatedAt: { seconds: number; nanoseconds: number } | string;
     updatedBy: string;
 }
 

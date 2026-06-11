@@ -10,8 +10,8 @@ import {
     serverTimestamp,
     setDoc,
     updateDoc,
-} from 'firebase/firestore';
-import { db } from '../../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { Property, PropertyStatus } from '../../../../types/realEstate';
 
 const toSlug = (value: string) =>

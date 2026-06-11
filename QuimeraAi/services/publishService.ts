@@ -63,7 +63,7 @@ export interface PublishOptions {
  * Publica un proyecto completo escribiendo el snapshot a projects.published_data
  * 
  * Esta es la ÚNICA función que debe publicar proyectos.
- * Escribe directamente a Supabase — no requiere Edge Functions ni Firebase.
+ * Escribe directamente a Supabase — no requiere Edge Functions ni Supabase.
  * 
  * @param options - Opciones de publicación
  * @returns Resultado de la publicación

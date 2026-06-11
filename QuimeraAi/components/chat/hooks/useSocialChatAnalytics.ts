@@ -7,8 +7,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
     collection, query, where, getDocs, orderBy, Timestamp,
     limit, startAfter, endBefore
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { SocialChannel, SocialChatAnalytics } from '../../../types/socialChat';
 
 // =============================================================================

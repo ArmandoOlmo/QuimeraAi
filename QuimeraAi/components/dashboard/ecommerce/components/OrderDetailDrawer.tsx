@@ -23,7 +23,8 @@ import {
     Copy,
     ExternalLink,
 } from 'lucide-react';
-import { Order, OrderStatus, PaymentStatus, FulfillmentStatus } from '../../../../types/ecommerce';
+import { Order, OrderStatus, PaymentStatus, FulfillmentStatus, StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 
 interface OrderDetailDrawerProps {
@@ -79,8 +80,8 @@ const OrderDetailDrawer: React.FC<OrderDetailDrawerProps> = ({
         navigator.clipboard.writeText(text);
     };
 
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',

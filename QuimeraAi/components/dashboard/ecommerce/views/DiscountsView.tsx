@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * DiscountsView
  * Vista de gestión de códigos de descuento
@@ -111,9 +112,9 @@ const DiscountsView: React.FC = () => {
             value: discount.value,
             minimumPurchase: discount.minimumPurchase || 0,
             maxUses: discount.maxUses || 0,
-            startsAt: new Date(discount.startsAt.seconds * 1000).toISOString().split('T')[0],
+            startsAt: timestampToDate(discount.startsAt).toISOString().split('T')[0],
             endsAt: discount.endsAt
-                ? new Date(discount.endsAt.seconds * 1000).toISOString().split('T')[0]
+                ? timestampToDate(discount.endsAt).toISOString().split('T')[0]
                 : '',
         });
         setShowForm(true);
@@ -189,7 +190,7 @@ const DiscountsView: React.FC = () => {
 
     const isExpired = (discount: Discount) => {
         if (!discount.endsAt) return false;
-        return discount.endsAt.seconds * 1000 < Date.now();
+        return getTimestampSeconds(discount.endsAt) * 1000 < Date.now();
     };
 
     const isMaxUsesReached = (discount: Discount) => {

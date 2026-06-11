@@ -58,7 +58,8 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
             .eq('id', projectId)
             .single();
 
-        const tenantId = projectResult.data?.tenant_id;
+        const projectData = projectResult.data as any;
+        const tenantId = projectData?.tenant_id as string | undefined;
         const promises: any[] = [
             // 1. Get published posts. The remote posts table is tenant-scoped, not project-scoped.
             tenantId
@@ -73,7 +74,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         ];
 
         // Also fetch tenant branding. Prefer tenant_id because legacy project user_id values
-        // can be Firebase IDs, while tenants.owner_user_id is a UUID column in Supabase.
+        // can be Supabase IDs, while tenants.owner_user_id is a UUID column in Supabase.
         if (tenantId && UUID_RE.test(tenantId)) {
             promises.push(
                 supabase
@@ -103,19 +104,17 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         let tenantBranding: { logoUrl?: string; companyName?: string } | null = null;
 
         // Process project data
-        if (projectResult.data) {
-            const row = projectResult.data;
-            // Prefer draft data only when a Supabase session is available.
-            // Public preview/domain loads should use the published snapshot.
+        if (projectData) {
+            const row = projectData;
             const sourceData = (canLoadDraftData ? row.data : row.published_data) || row.published_data || {};
             project = {
                 id: row.id,
                 tenantId: row.tenant_id,
                 userId: row.user_id,
-                name: row.name || sourceData.name,
-                ...sourceData,
+                name: (row.name as string | undefined) || (sourceData as Record<string, unknown>).name,
+                ...(sourceData as Record<string, unknown>),
             };
-            menus = resolveProjectMenus(row);
+            menus = resolveProjectMenus(projectData);
             categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
             if (menus.length > 0) {
                 project.menus = menus;

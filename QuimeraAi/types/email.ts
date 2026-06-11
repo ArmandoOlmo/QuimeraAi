@@ -3,7 +3,7 @@
  * Tipos para el sistema de email de Quimera AI
  */
 
-import { FirebaseTimestamp } from './ecommerce';
+import { StoredTimestamp } from './ecommerce';
 
 // =============================================================================
 // EMAIL SETTINGS
@@ -35,8 +35,8 @@ export interface EmailSettings {
     marketing: MarketingEmailSettings;
 
     // Timestamps
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 export interface EmailSocialLinks {
@@ -81,7 +81,7 @@ export interface MarketingEmailSettings {
 // EMAIL CAMPAIGNS
 // =============================================================================
 
-export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'paused';
+export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'paused' | 'approved' | 'pending';
 export type CampaignType = 'newsletter' | 'promotion' | 'announcement' | 'automated';
 export type AudienceType = 'all' | 'segment' | 'custom';
 
@@ -107,8 +107,8 @@ export interface EmailCampaign {
 
     // Scheduling
     status: CampaignStatus;
-    scheduledAt?: FirebaseTimestamp;
-    sentAt?: FirebaseTimestamp;
+    scheduledAt?: StoredTimestamp;
+    sentAt?: StoredTimestamp;
 
     // Stats
     stats: CampaignStats;
@@ -116,8 +116,8 @@ export interface EmailCampaign {
     // Metadata
     tags?: string[];
     createdBy: string;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 export interface CampaignStats {
@@ -175,18 +175,18 @@ export interface EmailLog {
     provider: 'resend' | 'sendgrid';
 
     // Timestamps
-    sentAt: FirebaseTimestamp;
-    deliveredAt?: FirebaseTimestamp;
+    sentAt: StoredTimestamp;
+    deliveredAt?: StoredTimestamp;
     // Tracking details (populated by Resend webhooks)
     openCount?: number;
-    openedAt?: FirebaseTimestamp | FirebaseTimestamp[];
+    openedAt?: StoredTimestamp | StoredTimestamp[];
     clickCount?: number;
-    clickedLinks?: { url: string; at: FirebaseTimestamp }[];
-    clickedAt?: FirebaseTimestamp;
-    bouncedAt?: FirebaseTimestamp;
+    clickedLinks?: { url: string; at: StoredTimestamp }[];
+    clickedAt?: StoredTimestamp;
+    bouncedAt?: StoredTimestamp;
     bounceType?: string;       // 'hard' | 'soft'
     bounceMessage?: string;
-    complainedAt?: FirebaseTimestamp;
+    complainedAt?: StoredTimestamp;
 
     // Error info
     errorMessage?: string;
@@ -243,13 +243,13 @@ export interface EmailAudience {
 
     // Dynamic count (updated periodically)
     estimatedCount: number;
-    lastCountUpdate?: FirebaseTimestamp;
+    lastCountUpdate?: StoredTimestamp;
 
     // Metadata
     isDefault: boolean;
     createdBy: string;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -301,8 +301,8 @@ export interface EmailTemplate {
     // Thumbnail for gallery
     thumbnailUrl?: string;
 
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 export interface TemplateVariable {
@@ -417,8 +417,8 @@ export interface EmailAutomation {
         converted: number;
     };
 
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 export interface AutomationTrigger {
@@ -440,7 +440,7 @@ export interface EmailUnsubscribe {
     email: string;
     reason?: string;
     campaignId?: string;
-    unsubscribedAt: FirebaseTimestamp;
+    unsubscribedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -775,8 +775,8 @@ export interface EmailDocument {
     previewText?: string;
     blocks: EmailBlock[];
     globalStyles: EmailGlobalStyles;
-    createdAt?: FirebaseTimestamp;
-    updatedAt?: FirebaseTimestamp;
+    createdAt?: StoredTimestamp;
+    updatedAt?: StoredTimestamp;
 }
 
 /**

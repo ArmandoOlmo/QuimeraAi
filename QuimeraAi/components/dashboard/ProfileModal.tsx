@@ -17,7 +17,7 @@ import {
     ref,
     uploadBytes,
     getDownloadURL
-} from '../../firebase';
+} from '@/utils/compatData';
 import { X, Camera, Trash2, Save, AlertTriangle, Globe, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { validateUsernameFormat, validateUsername, claimSubdomain } from '../../services/subdomainService';
 
@@ -140,10 +140,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                 newPhotoURL = await getDownloadURL(snapshot.ref);
             }
 
-            // 2. Update Firebase Auth profile
-            // We only update displayName and photoURL here as custom claims/fields aren't on Auth object directly
-            if (name !== user.displayName || newPhotoURL !== user.photoURL) {
-                await updateProfile(user, {
+            // 2. Update auth profile metadata (Supabase user)
+            const currentDisplayName = userDocument?.name ?? user.user_metadata?.full_name ?? '';
+            const currentPhotoURL = userDocument?.photoURL ?? user.user_metadata?.avatar_url ?? '';
+            if (name !== currentDisplayName || newPhotoURL !== currentPhotoURL) {
+                await updateProfile(user as any, {
                     displayName: name,
                     photoURL: newPhotoURL,
                 });
@@ -160,7 +161,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
                 }
             }
 
-            // 4. Update Firestore document
+            // 4. Update Supabase document
             const updatedDocData: Record<string, any> = {
                 name,
                 photoURL: newPhotoURL,
@@ -198,12 +199,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
 
         try {
             const credential = EmailAuthProvider.credential(user.email, deletePassword);
-            await reauthenticateWithCredential(user, credential);
+            await reauthenticateWithCredential(user as any, credential);
 
             // Re-authentication successful, proceed with deletion
             const userDocRef = doc(db, 'users', user.id);
             await deleteDoc(userDocRef);
-            await deleteUser(user);
+            await deleteUser(user as any);
 
             // onAuthStateChanged will handle logout and redirect
             onClose();

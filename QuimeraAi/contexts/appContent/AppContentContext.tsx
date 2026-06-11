@@ -32,7 +32,7 @@ import { supabase } from '../../supabase';
 import { getUsableImageUrl } from '../../utils/imageUrl';
 
 // =============================================================================
-// UTILITY: Strip undefined values (Firestore rejects them)
+// UTILITY: Strip undefined values (Supabase rejects them)
 // =============================================================================
 
 function stripUndefined<T extends Record<string, any>>(obj: T): T {

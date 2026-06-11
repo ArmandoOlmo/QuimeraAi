@@ -39,8 +39,8 @@ import {
     CheckCircle2,
     Wallet,
 } from 'lucide-react';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { supabase } from '../../supabase';
 import { CartItem, Address, Order, StoreSettings } from '../../types/ecommerce';
 
@@ -1121,7 +1121,7 @@ const CheckoutPageEnhanced: React.FC<CheckoutPageEnhancedProps> = ({
                     setStripePromise(stripe);
                 }
 
-                // Get cart from localStorage for now (can be enhanced with Firestore)
+                // Get cart from localStorage for now (can be enhanced with Supabase)
                 const savedCart = localStorage.getItem(`cart_${storeId}`);
                 if (savedCart) {
                     const cart = JSON.parse(savedCart);

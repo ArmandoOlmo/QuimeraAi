@@ -12,13 +12,14 @@ import { useAI } from '../../../contexts/ai';
 import { useAppContent } from '../../../contexts/appContent';
 import { useToast } from '../../../contexts/ToastContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
-import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc } from '../../../firebase';
+import { db, collection, getDocs, addDoc, query, orderBy, doc, updateDoc } from '@/utils/compatData';
 import { supabase } from '../../../supabase';
 import DashboardSidebar from '../DashboardSidebar';
 import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import DragDropZone from '../../ui/DragDropZone';
 import Modal from '../../ui/Modal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
+import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
 import { formatBytes, formatFileDate } from '../../../utils/fileHelpers';
 import {
     Upload,
@@ -488,17 +489,6 @@ const AssetItem: React.FC<{
             </div>
         </div>
     );
-
-    if (noLayout) {
-        return content;
-    }
-
-    return (
-        <div className="flex h-screen bg-q-bg text-foreground">
-            <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-            {content}
-        </div>
-    );
 };
 
 const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout }) => {
@@ -732,6 +722,7 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
             }
             
             setReferenceImages(prev => [...prev, finalUrl]);
+            window.dispatchEvent(new CustomEvent('assets:add-reference-image', { detail: finalUrl }));
             success(t('adminAssets.addedReference', 'Added to reference images'));
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -963,266 +954,32 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
                         <>
                         <div className="bg-q-surface/80 border border-q-border rounded-2xl overflow-hidden">
 
-                            {/* AI IMAGE GENERATOR */}
-                            <div className="p-6 border-b border-q-border">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2 bg-primary rounded-lg">
-                                        <Zap className="w-6 h-6 text-primary-foreground" />
+                            {/* AI MEDIA GENERATOR */}
+                            <div className="border-b border-q-border">
+                                <div className="flex flex-col gap-3 border-b border-q-border/70 bg-q-bg/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                        <h2 className="text-sm font-bold text-q-text">{t('adminAssets.generator.title', 'AI Image Generator')}</h2>
+                                        <p className="text-xs text-q-text-secondary">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
                                     </div>
-                                    <div>
-                                        <h2 className="text-xl font-bold text-foreground">{t('adminAssets.generator.title', 'AI Image Generator')}</h2>
-                                        <p className="text-sm text-q-text-muted">{t('adminAssets.generator.subtitle', 'Create stunning images for your app content')}</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {/* Prompt */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <label className="block text-sm font-bold text-foreground">{t('adminAssets.generator.prompt', 'Describe your image')}</label>
-                                            <button
-                                                onClick={handleEnhancePrompt}
-                                                disabled={isEnhancing || !prompt}
-                                                className="flex items-center text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-                                            >
-                                                {isEnhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
-                                                {t('adminAssets.generator.enhance', 'Enhance')}
-                                            </button>
-                                        </div>
-                                        <textarea
-                                            value={prompt}
-                                            onChange={(e) => setPrompt(e.target.value)}
-                                            placeholder={t('adminAssets.generator.promptPlaceholder', 'A professional hero image for a SaaS landing page...')}
-                                            className="w-full bg-q-bg border border-q-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-primary outline-none resize-none h-24"
-                                        />
-                                    </div>
-
-                                    {/* Reference Images */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2 gap-2 flex-wrap">
-                                            <label className="block text-xs font-bold text-q-text-muted uppercase">{t('adminAssets.generator.references', 'Reference Images')}</label>
-                                            <div className="flex items-center gap-2">
-                                                {kit && kit.references.length > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setKitEnabled(!kitEnabled)}
-                                                        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium border transition-colors ${
-                                                            kitEnabled
-                                                                ? 'bg-primary/10 text-primary border-primary/30'
-                                                                : 'bg-secondary text-muted-foreground border-border'
-                                                        }`}
-                                                        title={t('visualKit.toggleTooltip', { defaultValue: 'Toggle visual kit references' })}
-                                                    >
-                                                        <Palette size={10} />
-                                                        Kit
-                                                    </button>
-                                                )}
-                                                <span className="text-xs text-q-text-muted">{referenceImages.length}/14</span>
-                                            </div>
-                                        </div>
-
-                                        <input
-                                            type="file"
-                                            ref={referenceFileInputRef}
-                                            accept="image/*"
-                                            multiple
-                                            onChange={handleReferenceImageUpload}
-                                            className="hidden"
-                                        />
-
-                                        <div
-                                            className={`border-2 border-dashed rounded-lg p-4 transition-all ${isDragging ? 'border-primary bg-primary/10' : 'border-q-border hover:border-primary hover:bg-primary/5'}`}
-                                            onDragOver={handleDragOver}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={handleDrop}
+                                    <label className="flex shrink-0 items-center gap-2 text-xs font-medium text-q-text-secondary">
+                                        <span>{t('adminAssets.generator.category', 'Save to Category')}</span>
+                                        <select
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
+                                            className="h-9 rounded-lg border border-q-border bg-q-surface px-3 text-xs font-semibold text-q-text focus:border-q-accent focus:outline-none"
                                         >
-                                            {referenceImages.length > 0 ? (
-                                                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-2 mb-2">
-                                                    {referenceImages.map((img, idx) => {
-                                                        const isKitRef = kitEnabled && defaultReferenceUrls.includes(img);
-                                                        const kitRef = isKitRef ? defaultReferences.find(r => r.imageUrl === img) : null;
-                                                        return (
-                                                        <div key={idx} className={`relative aspect-square rounded-md overflow-hidden group border ${isKitRef ? 'ring-1 ring-primary/40 border-primary/20' : 'border-q-border'}`}>
-                                                            <img src={img} alt={`Ref ${idx}`} className="w-full h-full object-cover" />
-                                                            {isKitRef && kitRef && (
-                                                                <span className={`absolute bottom-0 left-0 right-0 text-[8px] font-bold text-center truncate px-0.5 py-px ${IMAGE_REFERENCE_CATEGORY_COLORS[kitRef.category] || 'bg-secondary/90 text-foreground'}`}>
-                                                                    {kitRef.label.substring(0, 8)}
-                                                                </span>
-                                                            )}
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleRemoveReferenceImage(idx); }}
-                                                                className="absolute top-1 right-1 p-1 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            >
-                                                                <X size={10} />
-                                                            </button>
-                                                        </div>
-                                                        );
-                                                    })}
-                                                    {referenceImages.length < 14 && (
-                                                        <button
-                                                            onClick={() => referenceFileInputRef.current?.click()}
-                                                            className="aspect-square flex flex-col items-center justify-center gap-1 border border-q-border rounded-md hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
-                                                        >
-                                                            <Plus size={16} />
-                                                            <span className="text-[10px]">{t('common.add', 'Add')}</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => referenceFileInputRef.current?.click()}
-                                                    className="w-full flex flex-col items-center gap-2 text-q-text-muted py-4"
-                                                >
-                                                    <Upload size={24} />
-                                                    <span className="text-xs font-medium">{t('adminAssets.generator.uploadRef', 'Upload reference images')}</span>
-                                                    <span className="text-xs opacity-70">{t('adminAssets.generator.dragRef', 'or drag and drop')}</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Quick Controls Row */}
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div>
-                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.category', 'Save to Category')}</label>
-                                            <select
-                                                value={selectedCategory}
-                                                onChange={(e) => setSelectedCategory(e.target.value as AdminAssetCategory)}
-                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
-                                                    <option key={key} value={key}>{label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.aspectRatio', 'Aspect Ratio')}</label>
-                                            <select
-                                                value={aspectRatio}
-                                                onChange={(e) => setAspectRatio(e.target.value)}
-                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {ASPECT_RATIOS.map(ratio => (
-                                                    <option key={ratio.value} value={ratio.value}>{ratio.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.style', 'Style')}</label>
-                                            <select
-                                                value={style}
-                                                onChange={(e) => setStyle(e.target.value)}
-                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {STYLES.map(s => (
-                                                    <option key={s} value={s}>{s}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.resolution', 'Resolution')}</label>
-                                            <select
-                                                value={resolution}
-                                                onChange={(e) => setResolution(e.target.value as '1K' | '2K' | '4K')}
-                                                className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                            >
-                                                {RESOLUTIONS.map(res => (
-                                                    <option key={res.value} value={res.value}>{res.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* 4K Warning */}
-                                    {resolution === '4K' && (
-                                        <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
-                                            <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                            <p className="text-xs text-amber-600 dark:text-amber-400">
-                                                {t('adminAssets.generator.4kWarning', '4K images are large and may slow down loading. Consider 2K for web use.')}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {/* Advanced Controls Toggle */}
-                                    <div className="border-t border-q-border/50 pt-3">
-                                        <button
-                                            onClick={() => setShowAdvanced(!showAdvanced)}
-                                            className="text-xs text-primary hover:text-primary/80 font-bold uppercase transition-colors flex items-center justify-between w-full"
-                                        >
-                                            <span>{t('adminAssets.generator.advanced', 'Advanced Controls')}</span>
-                                            <span className="text-lg">{showAdvanced ? '−' : '+'}</span>
-                                        </button>
-                                    </div>
-
-                                    {showAdvanced && (
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
-                                            <div>
-                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.lighting', 'Lighting')}</label>
-                                                <select
-                                                    value={lighting}
-                                                    onChange={(e) => setLighting(e.target.value)}
-                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    {LIGHTING_OPTIONS.map(l => (
-                                                        <option key={l} value={l}>{l}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.camera', 'Camera Angle')}</label>
-                                                <select
-                                                    value={cameraAngle}
-                                                    onChange={(e) => setCameraAngle(e.target.value)}
-                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    {CAMERA_ANGLES.map(c => (
-                                                        <option key={c} value={c}>{c}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.color', 'Color Grading')}</label>
-                                                <select
-                                                    value={colorGrading}
-                                                    onChange={(e) => setColorGrading(e.target.value)}
-                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    {COLOR_GRADING.map(c => (
-                                                        <option key={c} value={c}>{c}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-bold text-q-text-muted mb-2 uppercase">{t('adminAssets.generator.dof', 'Depth of Field')}</label>
-                                                <select
-                                                    value={depthOfField}
-                                                    onChange={(e) => setDepthOfField(e.target.value)}
-                                                    className="w-full bg-q-bg border border-q-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    {DEPTH_OF_FIELD.map(d => (
-                                                        <option key={d} value={d}>{d}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Generate Button */}
-                                    <button
-                                        onClick={handleGenerate}
-                                        disabled={isGenerating || !prompt}
-                                        className="w-full py-3 text-primary font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center hover:text-primary/80"
-                                    >
-                                        {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Zap className="mr-2" />}
-                                        {isGenerating ? t('adminAssets.generator.generating', 'Generating...') : t('adminAssets.generator.generate', 'Generate Image')}
-                                    </button>
+                                            {Object.entries(CATEGORY_CONFIG).map(([key, { label }]) => (
+                                                <option key={key} value={key}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </label>
                                 </div>
+                                <MediaGeneratorPanel
+                                    destination="admin"
+                                    adminCategory={selectedCategory}
+                                    projectId={ADMIN_VISUAL_KIT_PROJECT_ID}
+                                    className="h-[680px]"
+                                />
                             </div>
 
                             {/* ASSET LIBRARY SECTION */}
@@ -1493,9 +1250,17 @@ const AdminAssetLibrary: React.FC<AdminAssetLibraryProps> = ({ onBack, noLayout 
             />
         </>
     );
+
+    if (noLayout) {
+        return content;
+    }
+
+    return (
+        <div className="flex h-screen bg-q-bg text-foreground">
+            <DashboardSidebar isMobileMenuOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+            {content}
+        </div>
+    );
 };
 
 export default AdminAssetLibrary;
-
-
-

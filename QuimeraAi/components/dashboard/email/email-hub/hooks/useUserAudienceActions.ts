@@ -9,8 +9,8 @@ import { useState } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import {
     db, doc, addDoc, updateDoc, deleteDoc, collection,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import type { UserEmailAudience, ConfirmModalState } from '../types';
 import type { UserEmailDataReturn } from './useUserEmailData';
 

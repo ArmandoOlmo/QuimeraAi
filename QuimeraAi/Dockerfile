@@ -3,33 +3,21 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Declarar ARGs para todas las API keys y configuraciones
-# Google Gemini API
-ARG VITE_GEMINI_API_KEY
-ENV VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+# Supabase Configuration
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_AI_PROXY_URL
+ARG VITE_VIDEO_PROXY_URL
 
-# Firebase Configuration
-ARG VITE_FIREBASE_API_KEY
-ARG VITE_FIREBASE_AUTH_DOMAIN
-ARG VITE_FIREBASE_PROJECT_ID
-ARG VITE_FIREBASE_STORAGE_BUCKET
-ARG VITE_FIREBASE_MESSAGING_SENDER_ID
-ARG VITE_FIREBASE_APP_ID
-ARG VITE_FIREBASE_MEASUREMENT_ID
-
-ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
-ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
-ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
-ENV VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
-ENV VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
-ENV VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
-ENV VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ENV VITE_AI_PROXY_URL=${VITE_AI_PROXY_URL}
+ENV VITE_VIDEO_PROXY_URL=${VITE_VIDEO_PROXY_URL}
 
 # Debug: Verificar que las variables están presentes (sin mostrar valores completos)
 RUN echo "🔍 Verificando variables de entorno..." && \
-    if [ -z "$VITE_GEMINI_API_KEY" ]; then echo "❌ WARNING: VITE_GEMINI_API_KEY is empty!"; else echo "✅ Gemini API Key is set (length: $(echo -n $VITE_GEMINI_API_KEY | wc -c) chars)"; fi && \
-    if [ -z "$VITE_FIREBASE_API_KEY" ]; then echo "⚠️  VITE_FIREBASE_API_KEY is empty (will use fallback)"; else echo "✅ Firebase API Key is set"; fi && \
-    if [ -z "$VITE_FIREBASE_PROJECT_ID" ]; then echo "⚠️  VITE_FIREBASE_PROJECT_ID is empty (will use fallback)"; else echo "✅ Firebase Project ID: $VITE_FIREBASE_PROJECT_ID"; fi
+    if [ -z "$VITE_SUPABASE_URL" ]; then echo "❌ WARNING: VITE_SUPABASE_URL is empty!"; else echo "✅ Supabase URL is set"; fi && \
+    if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then echo "❌ WARNING: VITE_SUPABASE_ANON_KEY is empty!"; else echo "✅ Supabase anon key is set"; fi
 
 # Copy package files
 COPY package*.json ./
@@ -48,46 +36,26 @@ COPY . .
 RUN rm -f .env* && echo "Removed any existing .env files"
 
 # Crear un NUEVO archivo .env con todas las variables de entorno necesarias
-RUN echo "VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}" > .env && \
-    echo "VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}" >> .env && \
-    echo "VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}" >> .env && \
-    echo "VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}" >> .env && \
-    echo "VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}" >> .env && \
-    echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}" >> .env && \
-    echo "VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}" >> .env && \
-    echo "VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}" >> .env && \
+RUN echo "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" > .env && \
+    echo "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" >> .env && \
+    echo "VITE_AI_PROXY_URL=${VITE_AI_PROXY_URL}" >> .env && \
+    echo "VITE_VIDEO_PROXY_URL=${VITE_VIDEO_PROXY_URL}" >> .env && \
     echo "Created new .env with build-time configuration"
 
 # Verificar el contenido del .env (sin mostrar keys completas)
 RUN echo "Contents of .env:" && cat .env | sed 's/AIza.*/AIza***REDACTED***/g' | sed 's/1:.*/1:***REDACTED***/g'
 
 # Build the application - pass ENV variables explicitly to Node.js process
-# Verificar que VITE_GEMINI_API_KEY no esté vacía antes de hacer build
-RUN if [ -z "$VITE_GEMINI_API_KEY" ]; then \
-        echo "❌ ERROR: VITE_GEMINI_API_KEY is empty! Build will fail."; \
-        exit 1; \
-    fi && \
-    echo "Building with environment variables..." && \
-    echo "  VITE_GEMINI_API_KEY length: $(echo -n $VITE_GEMINI_API_KEY | wc -c)" && \
-    VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY} \
-    VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY} \
-    VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN} \
-    VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID} \
-    VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET} \
-    VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID} \
-    VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID} \
-    VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID} \
+RUN echo "Building with environment variables..." && \
+    VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
+    VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY} \
+    VITE_AI_PROXY_URL=${VITE_AI_PROXY_URL} \
+    VITE_VIDEO_PROXY_URL=${VITE_VIDEO_PROXY_URL} \
     npm run build && \
     echo "Build complete!"
 
-# Verificar que el build generó archivos y buscar la API key en el código
-RUN ls -la dist/ && \
-    echo "🔍 Verificando que la API key está en el código compilado..." && \
-    if grep -r "AIza" dist/ > /dev/null 2>&1; then \
-        echo "✅ API key found in compiled code"; \
-    else \
-        echo "⚠️  WARNING: API key NOT found in compiled code - this might cause issues"; \
-    fi
+# Verificar que el build generó archivos
+RUN ls -la dist/
 
 # Production stage - Use nginx for better reliability
 FROM nginx:alpine
@@ -115,4 +83,3 @@ EXPOSE 8080
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
-

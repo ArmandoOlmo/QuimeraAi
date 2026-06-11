@@ -162,7 +162,7 @@ const AudienceDetailView: React.FC<AudienceDetailViewProps> = ({
         // Don't clean if there are no orphans
         if (orphanLeadIds.length === 0) return;
 
-        // Debounce to avoid race conditions with Firestore snapshot updates
+        // Debounce to avoid race conditions with Supabase snapshot updates
         const debounceTimer = setTimeout(async () => {
             console.log('[AudienceDetailView] Cleaning orphan lead IDs:', orphanLeadIds);
             try {

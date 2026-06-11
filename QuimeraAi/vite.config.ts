@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  // SECURITY: Gemini API keys are NEVER embedded in the client bundle.
+  // SECURITY: provider API keys are NEVER embedded in the client bundle.
   // All AI API calls go through the server-side Supabase/Vercel proxy.
   return {
     server: {
@@ -35,10 +35,10 @@ export default defineConfig(({ mode }) => {
       // All AI calls go through the secure server-side proxy.
       // These are set to null to prevent any client-side fallback from working.
       'process.env.API_KEY': 'null',
-      'process.env.GEMINI_API_KEY': 'null',
+      'process.env.OPENROUTER_API_KEY': 'null',
     },
     // SECURITY: Only expose VITE_ prefixed variables.
-    // Do NOT expose GEMINI_ or GOOGLE_AI_ prefixed vars to the client.
+    // Do NOT expose OPENROUTER_ or provider-key prefixed vars to the client.
     envPrefix: ['VITE_'],
     resolve: {
       alias: {

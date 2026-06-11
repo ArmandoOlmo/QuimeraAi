@@ -1,6 +1,6 @@
 /**
  * useLandingPlans Hook
- * Carga los planes de suscripción desde Firestore para mostrar en el Landing Page
+ * Carga los planes de suscripción desde Supabase para mostrar en el Landing Page
  * Conecta los planes del Super Admin con la UI pública
  */
 
@@ -195,7 +195,7 @@ function transformPlanForLanding(
 // =============================================================================
 
 /**
- * Hook para cargar planes de suscripción desde Firestore
+ * Hook para cargar planes de suscripción desde Supabase
  * Solo muestra planes que tienen showInLanding = true
  * @param options.fallbackToAll - Si no hay planes con showInLanding, mostrar todos (default: true)
  */
@@ -214,7 +214,7 @@ export function useLandingPlans(options?: {
             setIsLoading(true);
             setError(null);
 
-            // Force refresh from Firestore to ensure latest showInLanding settings are loaded
+            // Force refresh from Supabase to ensure latest showInLanding settings are loaded
             // This is important because the landing page needs to reflect admin changes immediately
             const activePlans = await getActivePlans(true);
             setRawPlans(activePlans);
@@ -238,7 +238,7 @@ export function useLandingPlans(options?: {
     // Transformar y filtrar planes
     const plans = useMemo(() => {
         // Debug: Log all plans and their showInLanding status
-        console.log('[useLandingPlans] Raw plans from Firestore:', rawPlans.map(p => ({
+        console.log('[useLandingPlans] Raw plans from Supabase:', rawPlans.map(p => ({
             id: p.id,
             name: p.name,
             showInLanding: p.showInLanding,

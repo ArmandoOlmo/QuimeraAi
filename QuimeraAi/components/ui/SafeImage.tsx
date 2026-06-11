@@ -1,20 +1,20 @@
 /**
  * SafeImage Component
  * 
- * Drop-in replacement for <img> that gracefully handles broken Firebase Storage URLs.
- * Shows an elegant placeholder when images fail to load (e.g., Firebase 402 errors).
+ * Drop-in replacement for <img> that gracefully handles broken legacy storage URLs.
+ * Shows an elegant placeholder when images fail to load (e.g., Supabase 402 errors).
  */
 
 import React, { useState, useCallback, ImgHTMLAttributes } from 'react';
-import { isFirebaseStorageUrl, getPlaceholderImage } from '../../utils/imageUrlHelper';
+import { isLegacyStorageUrl, getPlaceholderImage } from '../../utils/imageUrlHelper';
 
 interface SafeImageProps extends ImgHTMLAttributes<HTMLImageElement> {
     /** Fallback label shown on placeholder */
     fallbackLabel?: string;
     /** Custom fallback URL */
     fallbackSrc?: string;
-    /** Whether to preemptively block known-broken Firebase URLs */
-    blockFirebase?: boolean;
+    /** Whether to preemptively block known-broken Supabase URLs */
+    blockSupabase?: boolean;
 }
 
 const SafeImage: React.FC<SafeImageProps> = ({
@@ -22,7 +22,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
     alt,
     fallbackLabel,
     fallbackSrc,
-    blockFirebase = true,
+    blockSupabase = true,
     style,
     className,
     onError,
@@ -30,8 +30,8 @@ const SafeImage: React.FC<SafeImageProps> = ({
 }) => {
     const [hasError, setHasError] = useState(false);
 
-    // Preemptively detect broken Firebase URLs
-    const isKnownBroken = blockFirebase && isFirebaseStorageUrl(src);
+    // Preemptively detect broken Supabase URLs
+    const isKnownBroken = blockSupabase && isLegacyStorageUrl(src);
 
     const handleError = useCallback(
         (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

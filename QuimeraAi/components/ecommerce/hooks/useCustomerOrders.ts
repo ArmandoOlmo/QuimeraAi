@@ -12,8 +12,8 @@ import {
     getDocs,
     doc,
     getDoc,
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { Order, OrderStatus } from '../../../types/ecommerce';
 
 export interface UseCustomerOrdersReturn {

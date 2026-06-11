@@ -588,11 +588,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 negativePrompt: negativePrompt.trim() || undefined,
             });
 
-            // Save the generated image to the project library (Firebase Storage + Firestore)
+            // Save the generated image to the project library (legacy storage + Supabase)
             // useAI().generateImage only returns a base64 data URL, it does NOT persist
             const savedUrl = await saveToLibrary(imageDataUrl, prompt);
 
-            // Call callback with saved URL (Firebase Storage) or fallback to data URL
+            // Call callback with saved URL (legacy storage) or fallback to data URL
             if (onImageGenerated) {
                 onImageGenerated(savedUrl || imageDataUrl);
             }
@@ -649,25 +649,28 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     return (
         <div className={`bg-q-bg text-q-text font-sans flex flex-col h-full overflow-hidden ${className}`}>
             <style>{`
-            .imggen-vector-bg-container { background-color: var(--editor-bg); background-image: radial-gradient(circle at 50% 50%, var(--editor-panel-bg) 0%, var(--editor-bg) 100%); position: relative; }
-            .imggen-vector-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--editor-border) 1px, transparent 1px), linear-gradient(90deg, var(--editor-border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; mask-image: radial-gradient(circle at center, black 40%, transparent 100%); }
-            .imggen-vector-glow-points { position: absolute; inset: 0; background-image: radial-gradient(circle at center, color-mix(in srgb, var(--editor-accent) 15%, transparent) 0%, transparent 50%); }
-            .imggen-vector-lines { position: absolute; inset: 0; background: linear-gradient(135deg, transparent 49.5%, var(--editor-border) 49.5%, var(--editor-border) 50.5%, transparent 50.5%); background-size: 100px 100px; opacity: 0.15; mask-image: radial-gradient(circle at center, black 60%, transparent 100%); }
             input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--editor-accent); cursor: pointer; margin-top: -6px; }
             `}</style>
 
             {/* Header */}
             {!hideHeader && (
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-q-border bg-q-bg/80 backdrop-blur-md px-6 py-3 shrink-0 z-20">
-                <div className="flex items-center gap-4">
-                    <div className="w-6 h-6 text-q-accent flex items-center justify-center">
-                        <Wand2 size={24} />
+            <header className="flex items-center justify-between whitespace-nowrap border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl px-3 lg:px-5 py-2.5 lg:py-3 shrink-0 z-20">
+                <div className="flex items-center gap-2 lg:gap-3 min-w-0">
+                    <div className="h-8 w-8 rounded-xl bg-primary/10 text-q-accent flex items-center justify-center shrink-0">
+                        <Wand2 size={18} />
                     </div>
-                    <h2 className="text-q-text text-lg font-bold leading-tight tracking-[-0.015em]">
-                        {t('editor.quimeraImageGenerator', { defaultValue: 'Image Generator' })}
-                    </h2>
+                    <div className="min-w-0">
+                        <h2 className="text-q-text text-sm lg:text-lg font-bold leading-tight truncate">
+                            {t('editor.quimeraImageGenerator', { defaultValue: 'Image Generator' })}
+                        </h2>
+                        {generationContext === 'background' && (
+                            <p className="text-[10px] lg:text-xs text-q-text-secondary">
+                                {t('editor.generatingForBackground', { defaultValue: 'Generating for: Background' })}
+                            </p>
+                        )}
+                    </div>
                     {generationContext === 'background' && (
-                        <span className="flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-full text-xs font-medium">
+                        <span className="hidden md:flex items-center gap-1.5 bg-primary/10 text-q-accent border border-primary/20 px-2.5 py-1 rounded-full text-xs font-medium">
                             <ImageIcon size={12} />
                             {t('editor.generatingForBackground', { defaultValue: 'Generating for: Background' })}
                         </span>
@@ -676,7 +679,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                     <div className="relative">
                         <button
                             onClick={() => setShowModelSelector(!showModelSelector)}
-                            className="flex items-center gap-2 bg-q-surface hover:bg-muted border border-q-border/50 rounded-lg px-3 py-1.5 text-xs font-medium text-q-text transition-colors"
+                            className="flex items-center gap-2 bg-q-surface-overlay/40 hover:bg-primary/10 border border-q-border/50 rounded-lg px-3 py-1.5 text-xs font-medium text-q-text transition-colors"
                         >
                             {(() => {
                                 const m = IMAGE_MODELS.find(m => m.value === selectedModel);
@@ -759,16 +762,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             </header>
             )}
 
-            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
                 {/* Main Content Area */}
-                <main className="hidden md:flex flex-1 flex-col relative bg-q-bg overflow-hidden">
-                    <div className="flex-1 flex flex-col relative w-full h-full imggen-vector-bg-container overflow-y-auto">
-                        <div className="imggen-vector-grid pointer-events-none"></div>
-                        <div className="imggen-vector-lines pointer-events-none"></div>
-                        <div className="imggen-vector-glow-points pointer-events-none"></div>
-
-                        <div className="w-full h-full flex items-center justify-center p-4 md:p-8 lg:p-12 min-h-[300px] md:min-h-[600px] relative z-10">
-                            <div className="relative w-full max-w-4xl aspect-video bg-black/20 shadow-2xl flex flex-col rounded-xl overflow-hidden border border-q-border/30">
+                <main className="flex flex-1 flex-col relative overflow-hidden min-h-[360px] md:min-h-0">
+                    <div className="flex-1 flex flex-col relative w-full h-full quimera-media-workspace overflow-y-auto">
+                        <div className="w-full h-full flex items-center justify-center p-4 md:p-8 lg:p-10 min-h-[300px] md:min-h-[520px] relative z-10">
+                            <div className="relative w-full max-w-4xl aspect-video bg-q-surface/45 shadow-2xl flex flex-col rounded-2xl overflow-hidden border border-q-border/60 backdrop-blur-sm">
                                 {isGenerating ? (
                                     <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
                                         <Loader2 size={48} className="animate-spin text-q-accent" />
@@ -852,8 +851,8 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-black/20 backdrop-blur-sm">
-                                        <div className="w-24 h-24 rounded-3xl border border-q-border/30 bg-q-surface/30 flex items-center justify-center mb-6">
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-q-surface/30 backdrop-blur-sm">
+                                        <div className="w-20 h-20 rounded-2xl border border-q-border/50 bg-q-surface/50 flex items-center justify-center mb-5">
                                             <ImageIcon size={48} className="text-q-text-secondary/50" />
                                         </div>
                                         <h3 className="text-2xl font-medium text-q-text tracking-tight mb-2">Ready to generate</h3>
@@ -867,36 +866,39 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                     </div>
 
                     {/* Bottom Prompt Bar */}
-                    <div className="w-full p-6 bg-q-bg/60 backdrop-blur-xl border-t border-q-border shrink-0 z-30">
+                    <div className="w-full border-t border-q-border/70 bg-q-bg/85 p-3 backdrop-blur-xl lg:p-5 shrink-0 z-30">
                         <div className="max-w-4xl mx-auto w-full">
-                            <div className="flex w-full items-stretch rounded-xl bg-q-surface border border-q-border/50 transition-all relative">
-                                <div className="pl-4 flex items-center justify-center text-q-accent">
-                                    <Sparkles size={24} className={isGenerating ? 'animate-pulse' : ''} />
+                            <div className="quimera-ai-launcher">
+                            <div className="flex w-full items-center gap-2">
+                                <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-accent">
+                                    <Sparkles size={18} className={isGenerating ? 'animate-pulse' : ''} />
                                 </div>
                                 <input
-                                    className="flex-1 bg-transparent border-none text-q-text placeholder:text-q-text-secondary/40 px-4 py-4 focus:ring-0 text-base font-medium"
+                                    className="flex-1 bg-transparent border-none text-q-text placeholder:text-q-text-secondary/55 px-3 py-2.5 focus:ring-0 text-sm font-medium min-h-[40px]"
                                     placeholder={t('editor.describeImage', { defaultValue: 'Describe your image...' })}
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
                                 />
-                                <div className="flex items-center pr-2 gap-3 pl-2 border-l border-q-border my-2">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={handleEnhancePrompt}
                                         disabled={isEnhancing || !prompt}
-                                        className="p-2 text-q-accent bg-transparent transition-colors hover:text-q-accent/80 relative flex items-center justify-center disabled:opacity-50"
+                                        className="h-10 w-10 flex-shrink-0 rounded-xl text-q-accent bg-q-surface-overlay/40 transition-colors hover:bg-primary/10 relative flex items-center justify-center disabled:opacity-50"
                                         title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
                                     >
-                                        {isEnhancing ? <Loader2 size={24} className="animate-spin" /> : <Wand2 size={24} />}
+                                        {isEnhancing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
                                     </button>
                                     <button
                                         onClick={handleGenerate}
                                         disabled={isGenerating || !prompt}
-                                        className="hidden sm:flex items-center justify-center gap-2 bg-q-accent hover:bg-q-accent/80 text-primary-foreground px-6 py-2 rounded-lg font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed w-[120px]"
+                                        className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                        title={t('editor.generate', { defaultValue: 'Generate' })}
                                     >
-                                        {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
+                                        {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Zap size={16} />}
                                     </button>
                                 </div>
+                            </div>
                             </div>
                             <button
                                 onClick={handleGenerate}
@@ -910,40 +912,9 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 </main>
 
                 {/* Sidebar Configuration */}
-                {/* Mobile-only generated image preview */}
-                {generatedImage && (
-                    <div className="md:hidden w-full bg-q-bg p-4 border-b border-q-border shrink-0">
-                        <div className="relative w-full aspect-video bg-black/20 shadow-lg rounded-xl overflow-hidden border border-q-border/30">
-                            <img alt="Generated result" className="w-full h-full object-contain" src={generatedImage} />
-                            <div className="absolute top-2 left-0 w-full flex items-center justify-center gap-2 z-20">
-                                {onUseImage && (
-                                    <button
-                                        onClick={() => onUseImage(savedImageUrl || generatedImage)}
-                                        className="flex items-center gap-1.5 bg-q-accent hover:bg-q-accent/80 text-primary-foreground px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all"
-                                    >
-                                        <Check size={14} />
-                                        <span>{t('editor.useThisImage', { defaultValue: 'Use in Project' })}</span>
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => {
-                                        if (referenceImages.length < 14) {
-                                            setReferenceImages(prev => [...prev, generatedImage]);
-                                        }
-                                    }}
-                                    disabled={referenceImages.length >= 14}
-                                    className="flex items-center gap-1.5 bg-q-surface hover:bg-muted text-q-text px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg transition-all disabled:opacity-50"
-                                >
-                                    <ImageIcon size={14} />
-                                    <span>{t('editor.useAsReference', { defaultValue: 'Reference' })}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                <aside className="w-full md:w-80 border-t md:border-t-0 md:border-l border-q-border bg-q-surface flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
-                    <div className="flex items-center justify-between p-4 border-b border-q-border">
-                        <h3 className="text-q-text font-bold text-sm uppercase tracking-wider">Configuration</h3>
+                <aside className="w-full md:w-[360px] border-t md:border-t-0 md:border-l border-q-border/70 quimera-media-side-panel flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
+                    <div className="flex items-center justify-between p-4 border-b border-q-border/70">
+                        <h3 className="text-q-text font-bold text-sm">{t('editor.configuration', { defaultValue: 'Configuration' })}</h3>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar">
@@ -1219,39 +1190,6 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                         </div>
                     </div>
                 </aside>
-            </div>
-
-            {/* Mobile-only bottom prompt bar */}
-            <div className="md:hidden w-full p-3 bg-q-bg/90 backdrop-blur-xl border-t border-q-border shrink-0 z-50">
-                <div className="flex w-full items-stretch rounded-xl bg-q-surface border border-q-border/50 transition-all relative">
-                    <div className="pl-3 flex items-center justify-center text-q-accent">
-                        <Sparkles size={20} className={isGenerating ? 'animate-pulse' : ''} />
-                    </div>
-                    <input
-                        className="flex-1 bg-transparent border-none text-q-text placeholder:text-q-text-secondary/40 px-3 py-3 focus:ring-0 text-sm font-medium min-w-0"
-                        placeholder={t('editor.describeImage', { defaultValue: 'Describe la imagen...' })}
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
-                    />
-                    <div className="flex items-center pr-2 gap-2 pl-2 border-l border-q-border my-2">
-                        <button
-                            onClick={handleEnhancePrompt}
-                            disabled={isEnhancing || !prompt}
-                            className="p-1.5 text-q-accent bg-transparent transition-colors hover:text-q-accent/80 flex items-center justify-center disabled:opacity-50"
-                            title={t('editor.enhance', { defaultValue: 'Enhance Prompt' })}
-                        >
-                            {isEnhancing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
-                        </button>
-                    </div>
-                </div>
-                <button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !prompt}
-                    className="mt-2 w-full flex items-center justify-center gap-2 bg-q-accent hover:bg-q-accent/80 text-primary-foreground px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
-                >
-                    {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <><span>Generate</span><Zap size={16} /></>}
-                </button>
             </div>
 
             {/* Image Details Modal omitted for brevity, logic remains in state, but view might not be needed if it's rendered inline. To keep it functional, we can add a simple wrapper if showImageDetail is true, but the new UI design displays the tools directly on the image hover so we mapped it there. */}

@@ -1,4 +1,4 @@
-import { FirebaseTimestamp } from './ecommerce';
+import { StoredTimestamp } from './ecommerce';
 
 export type PropertyStatus = 'draft' | 'active' | 'pending' | 'sold' | 'archived';
 export type PropertyType = 'house' | 'condo' | 'apartment' | 'townhouse' | 'land' | 'commercial';
@@ -36,8 +36,8 @@ export interface Property {
     virtualTourUrl?: string;
     status: PropertyStatus;
     isFeatured: boolean;
-    publishedAt?: FirebaseTimestamp;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    publishedAt?: StoredTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 

@@ -57,7 +57,7 @@ import {
     generateTranslationGroupId,
 } from '../../../utils/articleTranslation';
 import ConfirmationModal from '../../ui/ConfirmationModal';
-import { getUsableImageUrl, isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
+import { getUsableImageUrl, isLegacyStorageUrl, normalizeImageUrl } from '../../../utils/imageUrl';
 
 interface ModernAppArticleEditorProps {
     article: AppArticle | null;
@@ -268,8 +268,8 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
             showToast('Esta imagen no tiene una URL valida', 'error');
             return;
         }
-        if (isLegacyFirebaseStorageUrl(imageUrl)) {
-            showToast('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.', 'error');
+        if (isLegacyStorageUrl(imageUrl)) {
+            showToast('Esta imagen viene de legacy storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.', 'error');
             return;
         }
         if (contentImagePickerMode === 'replace') {

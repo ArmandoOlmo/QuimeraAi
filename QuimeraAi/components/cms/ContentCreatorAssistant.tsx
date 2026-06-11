@@ -374,7 +374,7 @@ CRUCIAL: YOU MUST OUTPUT EXACTLY 1 VALID JSON OBJECT AND NOTHING ELSE.`;
         // Build the post object — DO NOT save here, the parent handles saving
         // to avoid creating duplicate articles (double-save bug).
         const newPost: CMSPost = {
-            id: '', // ID vacío para que Firebase genere uno nuevo
+            id: '', // ID vacío para que Supabase genere uno nuevo
             title: generatedPost.title || 'Untitled',
             slug: generatedPost.slug || `post-${Date.now()}`,
             content: generatedPost.content || '<p>Contenido generado por IA</p>',

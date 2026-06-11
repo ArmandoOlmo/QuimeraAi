@@ -21,7 +21,8 @@ import {
     Eye,
     X,
 } from 'lucide-react';
-import { Order, OrderStatus } from '../../types/ecommerce';
+import { timestampToDate } from '../../utils/timestampUtils';
+import { Order, OrderStatus, type StoredTimestamp } from '../../types/ecommerce';
 import { useCustomerOrders } from './hooks/useCustomerOrders';
 
 interface OrderHistoryPageProps {
@@ -70,16 +71,16 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({
         refunded: { label: 'Reembolsado', color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-500/20', icon: XCircle },
     };
 
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
         });
     };
 
-    const formatDateTime = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleString('es-MX', {
+    const formatDateTime = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleString('es-MX', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -479,7 +480,6 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({
 };
 
 export default OrderHistoryPage;
-
 
 
 

@@ -53,10 +53,10 @@ export function selectVariant(experiment: ABTestExperiment, userId: string): Exp
  * Track an impression (component view)
  */
 export function trackImpression(experimentId: string, variantId: string): void {
-    // In production, this would send data to Firebase/analytics
+    // In production, this would send data to Supabase/analytics
     console.log(`[A/B Test] Impression: ${experimentId} - ${variantId}`);
     
-    // Update metrics in memory (in production, update Firebase)
+    // Update metrics in memory (in production, update Supabase)
     // This is a placeholder for the actual implementation
 }
 

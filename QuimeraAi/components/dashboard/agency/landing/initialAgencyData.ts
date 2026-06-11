@@ -132,5 +132,5 @@ export const initialAgencyData = {
         gallery: true,
         typography: true,
         colors: true
-    } as Record<PageSection, boolean>
+    } as unknown as Record<PageSection, boolean>
 };

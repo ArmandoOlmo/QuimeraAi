@@ -14,7 +14,7 @@ import {
     Calendar, Heart, CheckCircle,
     type LucideIcon,
 } from 'lucide-react';
-import { db, doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from '../firebase';
+import { db, doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from '@/utils/compatData';
 import type { BioLink, BioProfile, BioTheme } from '../contexts/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
 import type { Lead } from '../types';
@@ -199,7 +199,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
         window.open(link.url, '_blank');
     };
 
-    // Email signup handler - saves subscriber to Firestore
+    // Email signup handler - saves subscriber to Supabase
     const handleEmailSignup = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         if (!bioPageData || !signupEmail.trim()) return;

@@ -590,7 +590,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                     <button
                         onClick={() => setActiveTab('generate')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'generate'
-                            ? 'text-purple-500 border-b-2 border-purple-500 bg-purple-500/5'
+                            ? 'text-q-accent border-b-2 border-q-accent bg-primary/5'
                             : 'text-q-text-muted hover:text-foreground'
                             }`}
                     >
@@ -838,10 +838,10 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
 
                     {/* Generate Tab */}
                     {activeTab === 'generate' && (
-                        <div className="space-y-4 p-4 bg-gradient-to-r from-purple-900/10 to-pink-900/10 rounded-xl border border-purple-500/20">
+                        <div className="space-y-4 quimera-ai-launcher">
                             <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="w-4 h-4 text-purple-400" />
-                                <span className="text-sm font-medium text-purple-300">
+                                <Sparkles className="w-4 h-4 text-q-accent" />
+                                <span className="text-sm font-semibold text-q-text">
                                     {t('superadmin.templateEditor.generatorTitle', 'AI Thumbnail Generator')}
                                 </span>
                             </div>
@@ -857,7 +857,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                             type="button"
                                             onClick={generatePromptSuggestion}
                                             disabled={isEnhancingPrompt}
-                                            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                                            className="flex items-center gap-1 text-xs text-q-accent hover:text-q-accent/80 disabled:opacity-50"
                                             title={t('superadmin.templateEditor.autoGenerate', 'Auto-generate prompt from template')}
                                         >
                                             {isEnhancingPrompt ? (
@@ -886,7 +886,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     value={thumbnailPrompt}
                                     onChange={(e) => setThumbnailPrompt(e.target.value)}
                                     placeholder={t('superadmin.templateEditor.describeThumbnail', 'Describe the thumbnail you want to generate...')}
-                                    className="w-full bg-q-bg border border-q-border rounded-lg p-3 text-sm text-foreground focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                                    className="w-full bg-transparent border border-q-border/70 rounded-xl p-3 text-sm text-q-text placeholder:text-q-text-secondary/55 focus:ring-1 focus:ring-q-accent outline-none resize-none h-24"
                                 />
                             </div>
 
@@ -912,8 +912,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                     className={`
                                         border-2 border-dashed rounded-lg p-2 transition-all cursor-pointer
                                         ${isDraggingRef
-                                            ? 'border-purple-500 bg-purple-500/10'
-                                            : 'border-q-border hover:border-purple-400 hover:bg-secondary/50'
+                                            ? 'border-q-accent bg-primary/10'
+                                            : 'border-q-border hover:border-q-accent/50 hover:bg-q-surface-overlay/40'
                                         }
                                     `}
                                     onDragOver={handleRefDragOver}
@@ -937,7 +937,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                             {referenceImages.length < 14 && (
                                                 <button
                                                     onClick={() => referenceFileInputRef.current?.click()}
-                                                    className="w-10 h-10 flex items-center justify-center border border-dashed border-q-border rounded-md hover:border-purple-400 hover:bg-secondary text-q-text-muted hover:text-purple-400 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center border border-dashed border-q-border rounded-md hover:border-q-accent/50 hover:bg-primary/10 text-q-text-muted hover:text-q-accent transition-all"
                                                 >
                                                     <Plus size={14} />
                                                 </button>
@@ -964,8 +964,8 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                             type="button"
                                             onClick={() => setThumbnailStyle(s.value)}
                                             className={`px-3 py-1.5 text-xs rounded-full transition-colors ${thumbnailStyle === s.value
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-secondary text-q-text-muted hover:bg-secondary/70'
+                                                ? 'bg-q-accent text-q-text-on-accent'
+                                                : 'bg-q-surface-overlay/50 text-q-text-muted hover:text-q-text'
                                                 }`}
                                         >
                                             {s.label}
@@ -979,7 +979,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                                 type="button"
                                 onClick={handleGenerateThumbnail}
                                 disabled={isGeneratingThumbnail || !thumbnailPrompt.trim()}
-                                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                className="w-full py-2.5 bg-q-accent text-q-text-on-accent font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                             >
                                 {isGeneratingThumbnail ? (
                                     <>
@@ -1018,7 +1018,7 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
                         <button
                             onClick={applyGeneratedThumbnail}
                             disabled={isUploading}
-                            className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-semibold bg-q-accent text-q-text-on-accent rounded-full transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
                             {isUploading ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />

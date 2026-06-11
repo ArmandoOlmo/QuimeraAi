@@ -23,8 +23,8 @@ import {
     MessageSquare,
     AlertCircle,
 } from 'lucide-react';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { doc, getDoc, updateDoc, serverTimestamp } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 interface ClientPermissions {
     canManageProjects: boolean;

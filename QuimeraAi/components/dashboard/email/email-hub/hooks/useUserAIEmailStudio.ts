@@ -3,15 +3,15 @@
  *
  * User-scoped version of useAIEmailStudio.
  * No dependency on useAdmin() — system prompt is project-scoped.
- * All created items go to user/project Firestore collections.
+ * All created items go to user/project Supabase collections.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import {
     db, collection, addDoc, doc, updateDoc,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../../../utils/genAiClient';
 import {

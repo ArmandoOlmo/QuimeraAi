@@ -21,7 +21,7 @@ import DashboardWaveRibbons from '../DashboardWaveRibbons';
 import { fetchBillingData } from '../../../data/mockBillingData';
 import { BillingData } from '../../../types';
 import { useAdmin } from '../../../contexts/admin';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from '@/utils/compatData';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
             const [, billing] = await Promise.all([
                 fetchTenants(),
                 fetchBillingData().catch(err => {
-                    console.warn('Stripe API failed, using Firestore fallback:', err);
+                    console.warn('Stripe API failed, using Supabase fallback:', err);
                     return null;
                 }),
             ]);
@@ -157,7 +157,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         }
     };
 
-    // ─── Tenant Stats (always from Firestore via useAdmin) ───────────────────
+    // ─── Tenant Stats (always from Supabase via useAdmin) ───────────────────
 
     const getCreatedDate = (tenant: Tenant): Date => {
         if (!tenant.createdAt) return new Date(2024, 0, 1);
@@ -181,8 +181,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         [tenants]
     );
 
-    // Plan distribution from Firestore (always available)
-    const firestorePlanDist = useMemo(() => {
+    // Plan distribution from tenant rows (always available)
+    const tenantPlanDist = useMemo(() => {
         const dist: Record<string, number> = {};
         tenants.forEach(t => {
             const plan = (t.subscriptionPlan || 'free');
@@ -198,8 +198,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
             .sort((a, b) => b.value - a.value);
     }, [tenants]);
 
-    // MRR from Firestore tenants
-    const firestoreMRR = useMemo(
+    // MRR from tenant rows
+    const tenantMRR = useMemo(
         () => tenants.reduce((sum, t) => sum + (t.billingInfo?.mrr || 0), 0),
         [tenants]
     );
@@ -226,17 +226,17 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
         [tenants]
     );
 
-    // ─── Final values: Stripe > Firestore fallback ──────────────────────────
+    // ─── Final values: Stripe > tenant fallback ─────────────────────────────
 
-    const mrr = stripeLoaded ? stripeData!.mrr : firestoreMRR;
+    const mrr = stripeLoaded ? stripeData!.mrr : tenantMRR;
     const activeSubscriptions = stripeLoaded ? stripeData!.activeSubscriptions : paidTenants.length;
-    const arpu = stripeLoaded ? stripeData!.arpu : (paidTenants.length > 0 ? firestoreMRR / paidTenants.length : 0);
+    const arpu = stripeLoaded ? stripeData!.arpu : (paidTenants.length > 0 ? tenantMRR / paidTenants.length : 0);
     const revenueTrend = stripeLoaded ? stripeData!.revenueTrend : [];
 
     const conversionRate = activeTenants.length > 0
         ? Math.round((paidTenants.length / activeTenants.length) * 100) : 0;
 
-    // Pie data: Stripe plan distribution if available, else Firestore counts
+    // Pie data: Stripe plan distribution if available, else Supabase counts
     const pieData = useMemo(() => {
         if (stripeLoaded && stripeData!.planDistribution?.length > 0) {
             return stripeData!.planDistribution.map((p, idx) => ({
@@ -245,8 +245,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                 fill: p.color || PLAN_COLORS[p.planName.toLowerCase()] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length],
             }));
         }
-        return firestorePlanDist;
-    }, [stripeLoaded, stripeData, firestorePlanDist]);
+        return tenantPlanDist;
+    }, [stripeLoaded, stripeData, tenantPlanDist]);
 
     // ─── Period filter ───────────────────────────────────────────────────────
 
@@ -304,7 +304,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                             onClick={syncBilling}
                             disabled={syncing || loading}
                             className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all disabled:opacity-50"
-                            title="Sync Stripe → Firestore"
+                            title="Sync Stripe → Supabase"
                         >
                             <CloudDownload size={14} className={syncing ? 'animate-bounce' : ''} />
                             <span>{syncing ? 'Syncing...' : 'Sync'}</span>
@@ -334,7 +334,7 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onBack }) => {
                     <div className="ml-auto flex items-center gap-1.5 shrink-0">
                         <div className={`w-2 h-2 rounded-full ${stripeLoaded ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`} />
                         <span className="text-[10px] text-q-text-muted font-medium hidden sm:inline">
-                            {stripeLoaded ? 'Stripe' : 'Firestore'}
+                            {stripeLoaded ? 'Stripe' : 'Supabase'}
                         </span>
                     </div>
                 </div>

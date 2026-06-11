@@ -17,10 +17,11 @@ import {
     Loader2,
     AlertCircle,
 } from 'lucide-react';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { doc, getDoc, collection, query, where, getDocs } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { supabase } from '../../supabase';
-import { Order, StoreSettings } from '../../types/ecommerce';
+import { Order, StoreSettings, StoredTimestamp } from '../../types/ecommerce';
+import { timestampToDate } from '../../utils/timestampUtils';
 
 // Props for direct order display
 interface OrderConfirmationDirectProps {
@@ -64,8 +65,8 @@ const OrderConfirmationDisplay: React.FC<{
     primaryColor = '#6366f1',
     storeName = 'Tu Tienda',
 }) => {
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',

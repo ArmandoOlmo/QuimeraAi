@@ -9,8 +9,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, query, orderBy, limit } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import AdminViewLayout from './AdminViewLayout';
 import {
     Globe, Search, Shield, Trash2, Ban, CheckCircle,

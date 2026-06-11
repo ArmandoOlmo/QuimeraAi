@@ -7,6 +7,8 @@ interface ModalProps {
   children: ReactNode;
   onClose: () => void;
   isOpen: boolean;
+  title?: string;
+  size?: string;
   maxWidth?: string;
   className?: string;
   /** If true, modal takes full screen on mobile */

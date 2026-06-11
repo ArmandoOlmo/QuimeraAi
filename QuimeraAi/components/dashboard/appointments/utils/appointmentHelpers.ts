@@ -21,14 +21,14 @@ import {
 // =============================================================================
 
 /**
- * Formatea una fecha de Firestore timestamp a Date
+ * Formatea una fecha de Supabase timestamp a Date
  */
 export const timestampToDate = (timestamp: { seconds: number; nanoseconds: number }): Date => {
     return new Date(timestamp.seconds * 1000);
 };
 
 /**
- * Convierte una Date a Firestore timestamp
+ * Convierte una Date a Supabase timestamp
  */
 export const dateToTimestamp = (date: Date): { seconds: number; nanoseconds: number } => {
     return {

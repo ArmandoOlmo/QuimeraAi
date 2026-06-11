@@ -4,7 +4,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
-import { db, collection, addDoc, getDocs, query, orderBy } from '../../../firebase';
+import { db, collection, addDoc, getDocs, query, orderBy } from '@/utils/compatData';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -203,7 +203,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     if (appointmentData.conversationTranscript && appointmentData.conversationTranscript.length > 0) {
                         leadData.conversationTranscript = appointmentData.conversationTranscript;
                     }
-                    // Only add email/phone if they have values (Firebase doesn't accept undefined)
+                    // Only add email/phone if they have values (Supabase doesn't accept undefined)
                     if (appointmentData.participantEmail) leadData.email = appointmentData.participantEmail;
                     if (appointmentData.participantPhone) leadData.phone = appointmentData.participantPhone;
 

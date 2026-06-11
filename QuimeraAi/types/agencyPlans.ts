@@ -3,7 +3,7 @@
  * Types for agency-created service plans that they offer to their clients
  */
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@/utils/compatData';
 
 // =============================================================================
 // AGENCY PLAN LIMITS

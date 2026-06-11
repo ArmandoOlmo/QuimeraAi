@@ -6,7 +6,7 @@ import React from 'react';
 import ColorControl from '../../ui/ColorControl';
 import TabbedControls from '../../ui/TabbedControls';
 import {
-  Input, TextArea, Select
+  Input, TextArea, Select, ToggleControl
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { ControlsDeps } from '../ControlsShared';
 import { MessageSquare, Settings, Palette , Layers } from 'lucide-react';

@@ -4,8 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // =============================================================================
 // TYPES

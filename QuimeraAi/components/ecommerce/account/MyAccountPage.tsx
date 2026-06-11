@@ -22,6 +22,8 @@ import {
     Loader2,
 } from 'lucide-react';
 import { useStoreAuth } from '../context';
+import type { StoredTimestamp } from '../../../types/ecommerce';
+import { timestampToDate } from '../../../utils/timestampUtils';
 import OrderHistoryPage from '../OrderHistoryPage';
 import { DEFAULT_ROLE_CONFIGS } from '../../../types/storeUsers';
 
@@ -101,9 +103,9 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
         { id: 'preferences' as AccountTab, label: t('storeAuth.preferences', 'Preferencias'), icon: Settings },
     ];
 
-    const formatDate = (timestamp?: { seconds: number }) => {
+    const formatDate = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
@@ -394,7 +396,6 @@ const MyAccountPage: React.FC<MyAccountPageProps> = ({
 };
 
 export default MyAccountPage;
-
 
 
 

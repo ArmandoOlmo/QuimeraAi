@@ -315,6 +315,139 @@ html.black {
   --site-body-color: #A1A1AA;
 }
 
+/* Dashboard home background — inspired by Lovable's immersive canvas, tuned to Quimera themes. */
+.quimera-dashboard-home-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--q-bg);
+  background-image:
+    radial-gradient(circle at 18% 18%, rgba(251, 185, 43, 0.24), transparent 26rem),
+    radial-gradient(circle at 76% 20%, rgba(127, 34, 221, 0.22), transparent 30rem),
+    radial-gradient(circle at 50% 96%, rgba(251, 185, 43, 0.2), transparent 26rem),
+    linear-gradient(180deg, var(--q-bg) 0%, var(--q-bg-secondary) 42%, var(--q-bg) 100%);
+}
+
+.quimera-dashboard-home-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.16), transparent 34rem),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.04), transparent 32%, rgba(0, 0, 0, 0.1));
+}
+
+html.light .quimera-dashboard-home-bg {
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(251, 185, 43, 0.42), transparent 28rem),
+    radial-gradient(circle at 72% 12%, rgba(127, 34, 221, 0.22), transparent 28rem),
+    radial-gradient(circle at 50% 88%, rgba(251, 185, 43, 0.5), transparent 32rem),
+    linear-gradient(180deg, #fdfbf7 0%, #f3e4bf 35%, #e9dfff 61%, #fbb92b 100%);
+}
+
+html.dark .quimera-dashboard-home-bg {
+  background-image:
+    radial-gradient(circle at 50% 4%, rgba(12, 9, 22, 0.92), transparent 22rem),
+    radial-gradient(circle at 22% 35%, rgba(127, 34, 221, 0.5), transparent 32rem),
+    radial-gradient(circle at 77% 42%, rgba(251, 185, 43, 0.36), transparent 30rem),
+    radial-gradient(circle at 50% 100%, rgba(251, 185, 43, 0.62), transparent 34rem),
+    linear-gradient(180deg, #160b23 0%, #28103a 34%, #5f2571 58%, #fbb92b 100%);
+}
+
+html.black .quimera-dashboard-home-bg {
+  background-image:
+    radial-gradient(circle at 50% 5%, rgba(5, 5, 5, 0.96), transparent 24rem),
+    radial-gradient(circle at 24% 35%, rgba(168, 85, 247, 0.4), transparent 34rem),
+    radial-gradient(circle at 76% 38%, rgba(251, 185, 43, 0.36), transparent 30rem),
+    radial-gradient(circle at 50% 100%, rgba(251, 185, 43, 0.74), transparent 34rem),
+    linear-gradient(180deg, #000000 0%, #09040f 35%, #211008 62%, #fbb92b 100%);
+}
+
+.quimera-ai-launcher {
+  border: 1px solid color-mix(in srgb, var(--q-border) 70%, transparent);
+  background: color-mix(in srgb, var(--q-surface) 88%, transparent);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(22px);
+  border-radius: 1.5rem;
+  padding: 0.875rem;
+}
+
+html.dark .quimera-ai-launcher,
+html.black .quimera-ai-launcher {
+  background: rgba(18, 18, 18, 0.9);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.quimera-dashboard-section-deck {
+  border: 1px solid color-mix(in srgb, var(--q-border) 62%, transparent);
+  background: color-mix(in srgb, var(--q-surface) 84%, transparent);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(24px);
+  border-radius: 1.75rem;
+  padding: 1rem;
+}
+
+html.dark .quimera-dashboard-section-deck,
+html.black .quimera-dashboard-section-deck {
+  background: rgba(12, 9, 12, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 1024px) {
+  .quimera-dashboard-section-deck {
+    padding: 1.5rem;
+    border-radius: 2rem;
+  }
+}
+
+/* Shared AI media studio surface — matches AI Web Studio while staying theme-aware. */
+.quimera-media-workspace {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--q-bg);
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(var(--q-accent-rgb), 0.16), transparent 24rem),
+    radial-gradient(circle at 82% 10%, rgba(var(--q-accent-tertiary-rgb), 0.14), transparent 26rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--q-bg) 92%, transparent), var(--q-bg));
+}
+
+.quimera-media-workspace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%, rgba(0, 0, 0, 0.05)),
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.08), transparent 32rem);
+}
+
+html.light .quimera-media-workspace {
+  background-image:
+    radial-gradient(circle at 18% 10%, rgba(251, 185, 43, 0.22), transparent 24rem),
+    radial-gradient(circle at 82% 8%, rgba(127, 34, 221, 0.13), transparent 26rem),
+    linear-gradient(180deg, #fdfbf7 0%, var(--q-bg) 62%, #f3efe6 100%);
+}
+
+html.dark .quimera-media-workspace,
+html.black .quimera-media-workspace {
+  background-image:
+    radial-gradient(circle at 20% 8%, rgba(251, 185, 43, 0.16), transparent 24rem),
+    radial-gradient(circle at 80% 12%, rgba(168, 85, 247, 0.18), transparent 26rem),
+    linear-gradient(180deg, var(--q-bg) 0%, color-mix(in srgb, var(--q-bg-secondary) 62%, #000) 100%);
+}
+
+.quimera-media-side-panel {
+  background: color-mix(in srgb, var(--q-surface) 58%, transparent);
+  backdrop-filter: blur(20px);
+}
+
+html.dark .quimera-media-side-panel,
+html.black .quimera-media-side-panel {
+  background: rgba(var(--q-surface-rgb), 0.62);
+}
+
 /* ============================================
    COLOR PALETTE OVERRIDES
    These use !important to override base theme values

@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
-import { db } from '../../../firebase';
-import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
+import { db } from '@/utils/compatData';
+import { collection, query, where, orderBy, getDocs, limit } from '@/utils/compatData';
 import {
     FileText,
     Download,

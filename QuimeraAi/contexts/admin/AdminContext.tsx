@@ -549,7 +549,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     isSystem: p.is_system,
                     createdAt: p.created_at,
                     updatedAt: p.updated_at
-                } as LLMPrompt)));
+                } as unknown as LLMPrompt)));
             }
         } catch (error) {
             console.error("Error fetching prompts:", error);
@@ -557,7 +557,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const getPrompt = (name: string): LLMPrompt | undefined => {
-        return prompts.find(p => p.name === name) || defaultPrompts.find(p => p.name === name);
+        return prompts.find(p => p.name === name) || (defaultPrompts.find(p => p.name === name) as LLMPrompt | undefined);
     };
 
     const savePrompt = async (prompt: Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {

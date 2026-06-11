@@ -17,7 +17,7 @@ import {
     query,
     orderBy,
     limit,
-} from '../../firebase';
+} from '@/utils/compatData';
 import { Lead } from '../../types';
 import {
     Users,

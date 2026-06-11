@@ -7,7 +7,7 @@
 // TENANT TYPES
 // =============================================================================
 
-export type TenantType = 'individual' | 'agency_client';
+export type TenantType = 'individual' | 'agency_client' | 'agency';
 export type TenantStatus = 'active' | 'trial' | 'suspended' | 'expired';
 
 export type AgencyRole = 'agency_owner' | 'agency_admin' | 'agency_member' | 'client';
@@ -118,7 +118,7 @@ export interface Tenant {
     type: TenantType;
 
     // Ownership
-    ownerUserId: string;           // Firebase Auth UID of owner
+    ownerUserId: string;           // Supabase Auth UID of owner
     ownerTenantId?: string;        // If this is a sub-client of an agency
 
     // Members & Projects

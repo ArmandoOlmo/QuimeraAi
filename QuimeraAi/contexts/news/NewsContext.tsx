@@ -104,7 +104,7 @@ export const NewsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  // Helper to remove undefined fields recursively (Firestore doesn't accept undefined values)
+  // Helper to remove undefined fields recursively (Supabase doesn't accept undefined values)
   const removeUndefinedFields = (obj: Record<string, unknown>): Record<string, unknown> => {
     const cleaned: Record<string, unknown> = { ...obj };
     Object.keys(cleaned).forEach(key => {

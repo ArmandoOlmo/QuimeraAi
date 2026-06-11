@@ -23,6 +23,8 @@ import {
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { Customer } from '../../../../types/ecommerce';
+import type { StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 import { useEcommerceTheme, withOpacity } from '../hooks/useEcommerceTheme';
 import { useEcommerceContext } from '../EcommerceDashboard';
 import AddToAudienceModal from '../../email/AddToAudienceModal';
@@ -67,9 +69,9 @@ const CustomersView: React.FC = () => {
 
     const topCustomers = getTopCustomers(5);
 
-    const formatDate = (timestamp?: { seconds: number }) => {
+    const formatDate = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',

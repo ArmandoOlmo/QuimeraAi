@@ -174,7 +174,7 @@ const ContentManagementDashboard: React.FC<ContentManagementDashboardProps> = ({
         setIsAiAssistantOpen(false);
         console.log("📋 Dashboard: Article created from AI", article);
 
-        // Article already has the correct Firestore ID from the assistant
+        // Article already has the correct Supabase ID from the assistant
         setEditingArticle(article);
         setIsEditorOpen(true);
     };

@@ -6,14 +6,17 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
 import { supabase } from '../../supabase';
-import { User } from '@supabase/supabase-js';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { toCompatUser, type User as CompatUser } from '../../utils/compatData';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
 import { getPermissions, isOwner, determineRole } from '../../constants/roles';
 
 interface AuthContextType {
     // User State
-    user: User | null;
+    user: CompatUser | null;
     loadingAuth: boolean;
+    /** @deprecated Use loadingAuth */
+    isLoading: boolean;
     userDocument: UserDocument | null;
     setUserDocument: React.Dispatch<React.SetStateAction<UserDocument | null>>;
 
@@ -38,6 +41,11 @@ interface AuthContextType {
     // Admin Access
     canAccessSuperAdmin: boolean;
 
+    // Auth actions (portal + login pages)
+    login?: (email: string, password: string) => Promise<void>;
+    signInWithGoogle?: () => Promise<void>;
+    sendMagicLink?: (email: string, redirectTo?: string) => Promise<void>;
+
     // Logout
     logout: () => Promise<void>;
 }
@@ -45,7 +53,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<CompatUser | null>(null);
     const [loadingAuth, setLoadingAuth] = useState(true);
     const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
     const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
@@ -67,11 +75,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         let authChangeRunId = 0;
 
-        const handleAuthChange = async (supabaseUser: User | null) => {
+        const handleAuthChange = async (supabaseUser: SupabaseUser | null) => {
             const runId = ++authChangeRunId;
             clearTimeout(timeout);
             console.log('[AuthProvider] Auth state changed:', supabaseUser ? `id=${supabaseUser.id}, email=${supabaseUser.email}` : 'null (signed out)');
-            setUser(supabaseUser);
+            setUser(toCompatUser(supabaseUser));
 
             if (supabaseUser) {
                 try {
@@ -178,7 +186,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
     }, []);
 
-    // isUserOwner: App Metadata (primary) OR email check (fallback) OR Firestore role
+    // isUserOwner: App Metadata (primary) OR email check (fallback) OR Supabase role
     const isUserOwner = isOwnerFromClaims || isOwner(user?.email || '') || userDocument?.role === 'owner';
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
@@ -201,9 +209,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const login = async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+    };
+
+    const signInWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin },
+        });
+        if (error) throw error;
+    };
+
+    const sendMagicLink = async (email: string, redirectTo?: string) => {
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: { emailRedirectTo: redirectTo || window.location.origin },
+        });
+        if (error) throw error;
+    };
+
     const value: AuthContextType = {
         user,
         loadingAuth,
+        isLoading: loadingAuth,
         userDocument,
         setUserDocument,
         verificationEmail,
@@ -217,6 +247,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentTenant,
         currentTenantRole,
         canAccessSuperAdmin,
+        login,
+        signInWithGoogle,
+        sendMagicLink,
         logout,
     };
 
@@ -234,7 +267,6 @@ export const useAuth = (): AuthContextType => {
 export const useSafeAuth = (): AuthContextType | null => {
     return useContext(AuthContext) || null;
 };
-
 
 
 

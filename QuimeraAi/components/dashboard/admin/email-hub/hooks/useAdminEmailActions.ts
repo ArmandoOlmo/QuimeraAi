@@ -9,8 +9,8 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import {
     db, collection, doc, addDoc, updateDoc, deleteDoc,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
@@ -283,7 +283,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     tenantId: 'admin', tenantName: 'Super Admin',
                     userId: user?.id || 'admin', projectId: 'admin',
                     createdAt: new Date(), updatedAt: new Date(),
-                } as CrossTenantCampaign, ...prev]);
+                } as unknown as CrossTenantCampaign, ...prev]);
             }
 
             setShowEmailEditor(false);
@@ -439,7 +439,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                     payload.subject = fullDoc.subject;
                     console.log('[Test Email] Generated HTML length:', payload.htmlContent.length, 'contains logo img:', payload.htmlContent.includes('logo_quimera'));
                 } else {
-                    console.log('[Test Email] No stored blocks — CF will use campaign.htmlContent from Firestore');
+                    console.log('[Test Email] No stored blocks — CF will use campaign.htmlContent from Supabase');
                 }
             }
 
@@ -544,7 +544,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
 
     const handleDuplicateCampaign = async (campaign: CrossTenantCampaign) => {
         try {
-            // Deep-clone emailDocument to strip any undefined values Firestore would reject
+            // Deep-clone emailDocument to strip any undefined values Supabase would reject
             const clonedEmailDoc = (campaign as any).emailDocument
                 ? JSON.parse(JSON.stringify((campaign as any).emailDocument))
                 : null;
@@ -569,7 +569,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
                 tenantId: 'admin', tenantName: 'Super Admin',
                 userId: user?.id || 'admin', projectId: 'admin',
                 createdAt: new Date(), updatedAt: new Date(),
-            } as CrossTenantCampaign, ...prev]);
+            } as unknown as CrossTenantCampaign, ...prev]);
         } catch (err) {
             console.error('Duplicate error:', err);
         }
@@ -585,7 +585,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
         try {
             const triggerEvent = selectedTemplate?.triggerEvent || 'customer.created';
             const automationType = selectedTemplate?.type || 'welcome';
-            // Sanitize steps for Firestore (strip undefined values)
+            // Sanitize steps for Supabase (strip undefined values)
             const sanitizedSteps = (newAutomation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
 
             const automationData = {
@@ -821,7 +821,7 @@ export function useAdminEmailActions(data: AdminEmailDataReturn): AdminEmailActi
             projectId: 'admin',
             createdAt: new Date(),
             updatedAt: new Date(),
-        } as CrossTenantCampaign, ...prev]);
+        } as unknown as CrossTenantCampaign, ...prev]);
 
         // Clear context
         setAutomationStepEmailContext(null);

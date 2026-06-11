@@ -346,7 +346,7 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                             <button 
                                 onClick={handleGenerateThumbnail}
                                 disabled={isGeneratingThumbnail}
-                                className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 bg-q-accent text-q-text-on-accent px-3 py-1.5 rounded-full text-xs font-bold transition-colors disabled:opacity-50"
                                 title="Generar thumbnail"
                             >
                                 {isGeneratingThumbnail ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}

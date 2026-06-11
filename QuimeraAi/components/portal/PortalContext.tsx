@@ -23,7 +23,7 @@ import {
     query,
     where,
     onSnapshot,
-} from '../../firebase';
+} from '@/utils/compatData';
 
 // =============================================================================
 // TYPES
@@ -52,6 +52,8 @@ interface PortalContextType {
     portalConfig: PortalConfig | null;
     isLoadingPortal: boolean;
     error: string | null;
+    branding: TenantBranding | null;
+    tenant: Tenant | null;
     
     // Theme
     theme: PortalTheme;
@@ -231,6 +233,8 @@ export const PortalProvider: React.FC<PortalProviderProps> = ({ tenantId, childr
         portalConfig,
         isLoadingPortal,
         error,
+        branding: portalConfig?.branding ?? null,
+        tenant: portalConfig?.tenant ?? null,
         theme,
         hasFeature,
         hasPermission,

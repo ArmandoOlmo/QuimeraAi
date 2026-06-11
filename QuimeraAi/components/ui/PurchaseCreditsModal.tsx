@@ -52,8 +52,9 @@ const PurchaseCreditsModal: React.FC<PurchaseCreditsModalProps> = ({ isOpen, onC
             if (result.error) throw result.error;
 
             // Redirect to Stripe Checkout
-            if (result.data?.url) {
-                window.location.href = result.data.url;
+            const data = result.data?.data || result.data;
+            if (data?.url) {
+                window.location.href = data.url;
             }
         } catch (err: any) {
             console.error('[PurchaseCreditsModal] Error:', err);

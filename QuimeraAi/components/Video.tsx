@@ -45,13 +45,13 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
 };
 
 interface VideoProps extends VideoData {
-    borderRadius: BorderRadiusSize;
+    borderRadius?: BorderRadiusSize;
     cornerGradient?: CornerGradientConfig;
 }
 
 const Video: React.FC<VideoProps> = ({
   glassEffect, title, description, source, videoId, videoUrl, autoplay, loop, showControls,
-    paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient
+    paddingY, paddingX, colors, borderRadius = 'xl', titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient
 }) => {
 
     let videoPlayer: React.ReactNode;

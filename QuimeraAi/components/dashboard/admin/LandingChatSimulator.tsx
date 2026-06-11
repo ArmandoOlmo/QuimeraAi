@@ -34,22 +34,23 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
     const customColors: LandingChatbotColors = config.appearance.customColors || defaultChatbotColors;
 
     // Derived colors from design tokens or custom
-    const colors = colorSource === 'app' && designTokens?.colors
+    const tokenColors = designTokens?.colors as Record<string, string | undefined> | undefined;
+    const colors = colorSource === 'app' && tokenColors
         ? {
-            headerBackground: designTokens.colors?.primary || '#6366f1',
+            headerBackground: tokenColors.primary || '#6366f1',
             headerText: '#ffffff',
-            botBubbleBackground: designTokens.colors?.muted || '#f4f4f5',
-            botBubbleText: designTokens.colors?.foreground || '#09090b',
-            userBubbleBackground: designTokens.colors?.primary || '#6366f1',
+            botBubbleBackground: tokenColors.muted || tokenColors.neutral || '#f4f4f5',
+            botBubbleText: tokenColors.foreground || '#09090b',
+            userBubbleBackground: tokenColors.primary || '#6366f1',
             userBubbleText: '#ffffff',
-            background: designTokens.colors?.background || '#ffffff',
-            inputBackground: designTokens.colors?.muted || '#f4f4f5',
-            inputBorder: designTokens.colors?.border || '#e4e4e7',
-            inputText: designTokens.colors?.foreground || '#09090b',
-            buttonBackground: designTokens.colors?.primary || '#6366f1',
+            background: tokenColors.background || '#ffffff',
+            inputBackground: tokenColors.muted || '#f4f4f5',
+            inputBorder: tokenColors.border || '#e4e4e7',
+            inputText: tokenColors.foreground || '#09090b',
+            buttonBackground: tokenColors.primary || '#6366f1',
             buttonIcon: '#ffffff',
-            primary: designTokens.colors?.primary || '#6366f1',
-            mutedText: designTokens.colors['muted-foreground'] || '#71717a',
+            primary: tokenColors.primary || '#6366f1',
+            mutedText: tokenColors['muted-foreground'] || '#71717a',
           }
         : customColors;
 
@@ -194,7 +195,7 @@ const LandingChatSimulator: React.FC<LandingChatSimulatorProps> = ({ config }) =
                     professional: `Gracias por contactarnos. Puedo ayudarte con información sobre Quimera.ai: funcionalidades, planes o cómo empezar. ¿Qué necesitas saber?`,
                     friendly: `¡Hey! 😊 Soy Quibo y estoy aquí para ayudarte.\n\nPuedo contarte sobre:\n• 💰 Planes y precios\n• ✨ Funcionalidades\n• 🚀 Cómo empezar\n\n¿Qué te interesa?`,
                     enthusiastic: `¡Genial que estés aquí! 🚀 Soy Quibo, tu asistente de IA.\n\n¿Sobre qué te cuento?\n• Planes y precios 💰\n• E-commerce 🛒\n• AI Chatbot 🤖\n• ¡Lo que quieras!`,
-                    technical: `Puedo darte info técnica sobre:\n• Stack: React + Firebase + Gemini AI\n• API REST e integraciones\n• Sistema de componentes\n• Arquitectura multi-tenant\n\n¿Qué te interesa?`
+                    technical: `Puedo darte info técnica sobre:\n• Stack: React + Supabase + Gemini AI\n• API REST e integraciones\n• Sistema de componentes\n• Arquitectura multi-tenant\n\n¿Qué te interesa?`
                 };
                 response = toneResponses[config.personality.tone] || toneResponses.enthusiastic;
             }

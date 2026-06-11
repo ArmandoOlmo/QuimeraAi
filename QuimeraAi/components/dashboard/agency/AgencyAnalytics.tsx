@@ -92,7 +92,7 @@ export function AgencyAnalytics() {
         loadCreditsBreakdown();
     }, [currentTenant?.id]);
 
-    // Generate mock MRR history data (in production, this would come from Firestore)
+    // Generate mock MRR history data (in production, this would come from Supabase)
     const mrrHistoryData = useMemo(() => {
         const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
         const currentMonth = new Date().getMonth();

@@ -68,17 +68,17 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 lg:backdrop-blur-sm" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
+        <div className="fixed inset-0 z-[9999] flex items-stretch justify-stretch bg-q-bg" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
             {/* Backdrop click — hidden on mobile since it's full-page */}
             <div className="absolute inset-0 hidden lg:block" onClick={studio.isGenerating ? undefined : handleClose} />
 
-            {/* Modal Container — full-page on mobile, floating card on desktop */}
+            {/* Modal Container — fullscreen clean workspace */}
             <div
-                className="relative z-10 w-full h-full lg:w-[96vw] lg:max-w-[1200px] lg:h-[min(88vh,840px)] bg-q-surface border-0 lg:border lg:border-q-border rounded-none lg:rounded-2xl shadow-none lg:shadow-2xl flex flex-col overflow-hidden"
+                className="relative z-10 w-full h-full bg-q-bg flex flex-col overflow-hidden"
                 style={{ animation: 'aws-slideUp 0.3s ease' }}
             >
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between px-3 lg:px-5 py-2.5 lg:py-3 border-b border-q-border bg-primary/5">
+                <div className="flex items-center justify-between px-3 lg:px-5 py-2.5 lg:py-3 border-b border-q-border/70 bg-q-bg/85 backdrop-blur-xl">
                     <div className="flex items-center gap-2 lg:gap-3 min-w-0">
                         {/* Branding icon */}
                         <div className="relative flex-shrink-0">
@@ -91,7 +91,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             <h2 className="text-sm lg:text-lg font-bold text-q-text flex items-center gap-1.5 lg:gap-2">
                                 <span className="truncate">{t('aiTemplateStudio.title')}</span>
                             </h2>
-                            <p className="text-[10px] lg:text-xs text-q-accent hidden sm:block">{t('aiTemplateStudio.poweredBy')}</p>
+                            <p className="text-[10px] lg:text-xs text-q-text-secondary hidden sm:block">{t('aiTemplateStudio.poweredBy')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
@@ -142,52 +142,55 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                     {/* LEFT: Chat Panel */}
                     <div className="flex-1 flex flex-col min-w-0">
                         {/* Messages */}
-                        <div ref={studio.chatRef} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar">
-                            {studio.messages.map((msg, i) => (
-                                <ChatBubble key={i} message={msg} />
-                            ))}
-                            {/* Live voice transcripts */}
-                            {studio.liveUserTranscript && (
-                                <div className="flex justify-end animate-pulse">
-                                    <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-primary/15 border border-primary/30 text-q-text">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
-                                            <Mic className="w-3 h-3" /> {t('aiTemplateStudio.chat.stopVoice')}
-                                        </span>
-                                        <p className="text-q-text">{studio.liveUserTranscript}</p>
+                        <div ref={studio.chatRef} className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8 custom-scrollbar">
+                            <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4">
+                                {studio.messages.map((msg, i) => (
+                                    <ChatBubble key={i} message={msg} />
+                                ))}
+                                {/* Live voice transcripts */}
+                                {studio.liveUserTranscript && (
+                                    <div className="flex justify-end animate-pulse">
+                                        <div className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed bg-primary/15 border border-primary/30 text-q-text">
+                                            <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
+                                                <Mic className="w-3 h-3" /> {t('aiTemplateStudio.chat.stopVoice')}
+                                            </span>
+                                            <p className="text-q-text">{studio.liveUserTranscript}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {studio.liveModelTranscript && (
-                                <div className="flex justify-start">
-                                    <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-q-surface border border-primary/20 text-q-text">
-                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
-                                            <Volume2 className="w-3 h-3" />
-                                        </span>
-                                        <p>{studio.liveModelTranscript}</p>
+                                )}
+                                {studio.liveModelTranscript && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm leading-relaxed bg-q-surface border border-primary/20 text-q-text">
+                                            <span className="inline-flex items-center gap-1.5 text-[10px] text-q-accent mb-1">
+                                                <Volume2 className="w-3 h-3" />
+                                            </span>
+                                            <p>{studio.liveModelTranscript}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {/* Thinking indicator */}
-                            {studio.isThinking && (
-                                <div className="flex justify-start">
-                                    <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
-                                        <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
-                                        {t('aiTemplateStudio.chat.thinking')}
+                                )}
+                                {/* Thinking indicator */}
+                                {studio.isThinking && (
+                                    <div className="flex justify-start">
+                                        <div className="bg-q-surface border border-q-border rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 text-sm text-q-text-secondary">
+                                            <Loader2 className="w-4 h-4 animate-spin text-q-accent" />
+                                            {t('aiTemplateStudio.chat.thinking')}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {/* Generation progress inline hint */}
-                            {studio.generationPhase && studio.generationPhase.phase !== 'done' && (
-                                <div className="mx-auto max-w-md bg-primary/10 border border-primary/20 rounded-xl p-3 text-center text-xs text-q-text-secondary">
-                                    <Loader2 size={14} className="animate-spin inline mr-1 text-q-accent" />
-                                    {t('aiTemplateStudio.chat.generatingHint')}
-                                </div>
-                            )}
+                                )}
+                                {/* Generation progress inline hint */}
+                                {studio.generationPhase && studio.generationPhase.phase !== 'done' && (
+                                    <div className="mx-auto max-w-md bg-primary/10 border border-primary/20 rounded-xl p-3 text-center text-xs text-q-text-secondary">
+                                        <Loader2 size={14} className="animate-spin inline mr-1 text-q-accent" />
+                                        {t('aiTemplateStudio.chat.generatingHint')}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* ── Input Bar — matches Email AI Studio pattern ── */}
-                        <div className="p-3 border-t border-q-border bg-q-surface/50">
-                            <div className="flex items-center gap-2 max-w-3xl mx-auto">
+                        <div className="border-t border-q-border/70 bg-q-bg/85 p-3 backdrop-blur-xl lg:p-5">
+                            <div className="quimera-ai-launcher mx-auto max-w-3xl">
+                            <div className="flex items-center gap-2">
                                 {/* Voice button — fixed h-10 w-10 */}
                                 {studio.isVoiceActive ? (
                                     <button
@@ -215,13 +218,13 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                     placeholder={studio.isVoiceActive ? t('aiTemplateStudio.chat.voicePlaceholder') : t('aiTemplateStudio.chat.textPlaceholder')}
                                     disabled={studio.isVoiceActive || studio.isGenerating}
                                     rows={1}
-                                    className="flex-1 bg-q-bg border border-q-border rounded-xl px-4 py-2.5 text-sm text-q-text placeholder:text-q-text-secondary/50 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
+                                    className="flex-1 bg-transparent px-3 py-2.5 text-sm text-q-text placeholder:text-q-text-secondary/55 resize-none focus:outline-none min-h-[40px] max-h-[120px] transition-all disabled:opacity-40"
                                 />
                                 {/* Send button — fixed h-10 w-10 */}
                                 <button
                                     onClick={() => studio.sendMessage(studio.input)}
                                     disabled={!studio.input.trim() || studio.isThinking || studio.isVoiceActive || studio.isGenerating}
-                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-accent text-primary-foreground hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                 >
                                     <Send className="w-4 h-4" />
                                 </button>
@@ -235,11 +238,12 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                                     </span>
                                 </div>
                             )}
+                            </div>
                         </div>
                     </div>
 
                     {/* RIGHT: Business Brief Panel (desktop) */}
-                    <div className="hidden lg:flex w-[300px] flex-col border-l border-q-border bg-q-surface/30 overflow-y-auto custom-scrollbar">
+                    <div className="hidden lg:flex w-[360px] flex-col border-l border-q-border/70 bg-q-surface/55 backdrop-blur-xl overflow-y-auto custom-scrollbar">
                         <BriefPanel brief={studio.businessBrief} canGenerate={studio.canGenerate} isGenerating={studio.isGenerating} onGenerate={studio.startGeneration} referenceImages={studio.referenceImages} onAddReferenceImage={studio.addReferenceImage} onRemoveReferenceImage={studio.removeReferenceImage} onUpdateColor={studio.updateBriefColor} onUpdateFont={studio.updateBriefFont} onToggleComponent={studio.toggleBriefComponent} onSetComponents={studio.setBriefComponents} />
                     </div>
 
@@ -299,6 +303,7 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
 // ═══════════════════════════════════════════════════════════════════════════
 
 const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; isVoice?: boolean } }> = ({ message }) => {
+    const { t } = useTranslation();
     const isUser = message.role === 'user';
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -524,7 +529,7 @@ const BriefPanel: React.FC<{
                         <div key={key} className="flex flex-col gap-1">
                             <span className="text-[10px] text-q-text-secondary uppercase">{key}</span>
                             <FontFamilyPicker
-                                value={brief.fontPairing[key]}
+                                value={brief.fontPairing[key] as import('../../../types').FontFamily}
                                 onChange={(val) => onUpdateFont(key, val as any)}
                             />
                         </div>

@@ -8,9 +8,9 @@ import {
     LLMPrompt, AdminView
 } from '../../types';
 import { isOwner, determineRole } from '../../constants/roles';
-import { defaultPrompts } from '../../data/defaultPrompts';
+import { defaultPrompts, type DefaultPrompt } from '../../data/defaultPrompts';
 import { supabase } from '../../supabase';
-import type { User } from '../../firebase'; // Note: User might come from AuthContext
+import type { User } from '@/utils/compatData';
 
 interface UseEditorAdminParams {
     user: User | null;
@@ -286,7 +286,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     const getPrompt = (name: string): LLMPrompt | undefined => {
         const dbPrompt = prompts.find(p => p.name === name);
-        const defaultPrompt = defaultPrompts.find(p => p.name === name) as LLMPrompt | undefined;
+        const defaultPrompt = defaultPrompts.find(p => p.name === name) as DefaultPrompt | undefined;
 
         if (dbPrompt && defaultPrompt && dbPrompt.version !== undefined && defaultPrompt.version !== undefined) {
             if (dbPrompt.version < defaultPrompt.version) {
@@ -334,7 +334,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
                             version: p.version,
                             createdAt: p.created_at,
                             updatedAt: p.updated_at
-                        } as LLMPrompt)));
+                        } as unknown as LLMPrompt)));
                     }
                 }
             } else {
@@ -349,7 +349,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
                     version: p.version,
                     createdAt: p.created_at,
                     updatedAt: p.updated_at
-                } as LLMPrompt)));
+                } as unknown as LLMPrompt)));
             }
         } catch (error) {
             console.error("Error fetching prompts:", error);

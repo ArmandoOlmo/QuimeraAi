@@ -15,8 +15,8 @@ import {
     serverTimestamp,
     getDocs,
     where,
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { PublicProduct } from './usePublicProduct';
 
 // Types
@@ -48,7 +48,7 @@ const WISHLIST_STORAGE_KEY = 'quimera_wishlist';
 
 /**
  * Hook para gestionar wishlist
- * Soporta usuarios autenticados (Firestore) y anónimos (localStorage)
+ * Soporta usuarios autenticados (Supabase) y anónimos (localStorage)
  */
 export const useWishlist = (
     storeId: string,
@@ -104,7 +104,7 @@ export const useWishlist = (
         setError(null);
 
         if (userId) {
-            // Authenticated user - use Firestore
+            // Authenticated user - use Supabase
             const wishlistRef = collection(
                 db,
                 'users',
@@ -165,7 +165,7 @@ export const useWishlist = (
             };
 
             if (userId) {
-                // Firestore
+                // Supabase
                 try {
                     const wishlistRef = doc(
                         db,
@@ -201,7 +201,7 @@ export const useWishlist = (
     const removeFromWishlist = useCallback(
         async (productId: string) => {
             if (userId) {
-                // Firestore
+                // Supabase
                 try {
                     const wishlistRef = doc(
                         db,
@@ -242,7 +242,7 @@ export const useWishlist = (
     // Clear wishlist
     const clearWishlist = useCallback(async () => {
         if (userId) {
-            // Firestore - delete all docs
+            // Supabase - delete all docs
             try {
                 const wishlistRef = collection(
                     db,

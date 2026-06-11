@@ -10,8 +10,8 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-} from '../../firebase';
-import { db } from '../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { RestaurantSettings } from '../../types/restaurants';
 import { getRestaurantPath, getRestaurantsPath, getRestaurantTenantId, RestaurantScope } from './restaurantPaths';
 

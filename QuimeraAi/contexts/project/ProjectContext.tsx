@@ -22,6 +22,7 @@ import { useSafeUndo } from '../undo/UndoContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 import { mapSupabaseRowToProject, resolveProjectMenus } from '../../utils/mapSupabaseProject';
+import { isLegacyStorageUrl } from '../../utils/imageUrl';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -113,7 +114,7 @@ const isLikelyImageUrl = (value: string): boolean => {
     const lower = value.toLowerCase();
     return (
         /\.(png|jpe?g|webp|gif|svg|avif|ico)(\?|#|$)/i.test(lower) ||
-        lower.includes('firebasestorage.googleapis.com') ||
+        isLegacyStorageUrl(lower) ||
         lower.includes('images.unsplash.com') ||
         lower.includes('lh3.googleusercontent.com')
     );
@@ -444,7 +445,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         projectsRef.current = projects;
     }, [projects]);
 
-    // Load templates from Firestore
+    // Load templates from Supabase
     
     const loadGlobalTemplates = async (): Promise<{ templates: Project[], deletedIds: Set<string> }> => {
         try {
@@ -544,7 +545,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 return dateB - dateA;
             });
 
-            const { templates: firestoreTemplates } = await loadGlobalTemplates();
+            const { templates: globalTemplates } = await loadGlobalTemplates();
             
             // Filter out any trashed templates that we manually marked as deleted 
             // but might still be returned via cached/duplicate status 
@@ -559,7 +560,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             });
             
             // Then add templates (overwriting any ghost templates in user projects)
-            firestoreTemplates.forEach(t => {
+            globalTemplates.forEach(t => {
                 mergedProjectsMap.set(t.id, t);
             });
             
@@ -663,9 +664,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Use projectOverride if provided (useful for newly created projects not yet in state)
         let project = projectOverride || projectsRef.current.find(p => p.id === projectId);
 
-        // If project not found locally, try to load it from Firebase
+        // If project not found locally, try to load it from Supabase
         if (!project && user) {
-            console.log('[ProjectContext] Project not in state, attempting to load from Firebase...');
+            console.log('[ProjectContext] Project not in state, attempting to load from Supabase...');
             try {
                 // Try loading from user's projects
                 
@@ -678,7 +679,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 if (projectSnap) {
                     project = normalizeProject(mapSupabaseRowToProject(projectSnap));
 
-                    console.log('[ProjectContext] Loaded project from Firebase:', project.name);
+                    console.log('[ProjectContext] Loaded project from Supabase:', project.name);
                     // Add to local state
                     setProjects(prev => {
                         if (prev.find(p => p.id === projectId)) return prev;
@@ -700,7 +701,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     if (templateSnap) {
                         project = normalizeProject(mapSupabaseRowToProject(templateSnap));
 
-                        console.log('[ProjectContext] Loaded template from Firebase:', project.name);
+                        console.log('[ProjectContext] Loaded template from Supabase:', project.name);
                         setProjects(prev => {
                             if (prev.find(p => p.id === projectId)) return prev;
                             return [project!, ...prev];
@@ -708,7 +709,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     }
                 }
             } catch (error) {
-                console.error('[ProjectContext] Error loading project from Firebase:', error);
+                console.error('[ProjectContext] Error loading project from Supabase:', error);
             }
         }
 
@@ -793,19 +794,19 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [user, currentTenantId]);
 
-    // Helper to deeply remove undefined values (Firestore doesn't accept undefined at any level)
+    // Helper to deeply remove undefined values (Supabase doesn't accept undefined at any level)
     const removeUndefinedValues = (obj: any): any => {
         if (obj === undefined) return undefined;
         if (obj === null) return null;
         if (typeof obj !== 'object') return obj;
 
-        // Firestore specific types (Date, Timestamp, GeoPoint, etc) shouldn't be stripped of their prototypes
+        // Supabase specific types (Date, Timestamp, GeoPoint, etc) shouldn't be stripped of their prototypes
         if (obj instanceof Date) return obj;
-        if (obj.toDate && typeof obj.toDate === 'function') return obj; // Firebase Timestamp
-        if (obj.isEqual && typeof obj.isEqual === 'function') return obj; // Firebase GeoPoint/Reference
+        if (obj.toDate && typeof obj.toDate === 'function') return obj; // Supabase Timestamp
+        if (obj.isEqual && typeof obj.isEqual === 'function') return obj; // Supabase GeoPoint/Reference
 
         if (Array.isArray(obj)) {
-            // Firestore arrays cannot contain undefined, so we map and filter
+            // Supabase arrays cannot contain undefined, so we map and filter
             return obj.map(item => removeUndefinedValues(item)).filter(item => item !== undefined);
         }
 
@@ -870,8 +871,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 ? 'Published'
                 : (project.status || 'Draft');
 
-        // Save ALL project fields to ensure Firestore stays in sync with editor
-        // Use removeUndefinedValues to filter out undefined (Firestore doesn't accept undefined)
+        // Save ALL project fields to ensure Supabase stays in sync with editor
+        // Use removeUndefinedValues to filter out undefined (Supabase doesn't accept undefined)
         const updatedProject = removeUndefinedValues(sanitizeForStorage({
             // Core page data (from React state)
             data,
@@ -949,7 +950,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Return complete snapshot of current editor state
         // This includes ALL fields that should be published
-        // All values must be defined (not undefined) for Firestore compatibility
+        // All values must be defined (not undefined) for Supabase compatibility
         const snapshot: Partial<Project> = {
             id: activeProjectId,
             name: project.name,
@@ -1325,7 +1326,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         setProjects(prev => [{ ...project } as Project, ...prev]);
     };
 
-    // Permanently delete a project (hard delete from Firestore)
+    // Permanently delete a project (hard delete from Supabase)
     const permanentlyDelete = async (projectId: string) => {
         if (!user) return;
 
@@ -1862,7 +1863,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     }, [activeProject, data, componentOrder, sectionVisibility]);
 
-    // Update AI config in-memory only (prevents auto-save from overwriting fresh Firestore data)
+    // Update AI config in-memory only (prevents auto-save from overwriting fresh Supabase data)
     const updateProjectAiConfig = useCallback((projectId: string, config: any) => {
         setProjects(prev => prev.map(p =>
             p.id === projectId ? { ...p, aiAssistantConfig: config } : p

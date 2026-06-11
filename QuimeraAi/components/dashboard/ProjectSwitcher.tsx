@@ -148,9 +148,13 @@ const ProjectSwitcher: React.FC<ProjectSwitcherProps> = ({
             <button
                 onClick={handleCreateProject}
                 className={`
-                    flex items-center gap-2 w-full p-2 rounded-lg
+                    flex items-center rounded-lg
                     bg-q-accent/10 border border-q-accent/30 border-dashed
                     text-q-accent hover:bg-q-accent/20 transition-colors
+                    ${collapsed
+                        ? 'w-10 h-10 justify-center mx-auto'
+                        : 'gap-2 w-full p-2'
+                    }
                     ${className}
                 `}
             >

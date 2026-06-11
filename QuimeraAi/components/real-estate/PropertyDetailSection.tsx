@@ -32,7 +32,7 @@ import { Property } from '../../types/realEstate';
 import { usePublicRealEstateListings } from '../../hooks/usePublicRealEstateListings';
 import { extractTextFromResponse, generateContentViaProxy } from '../../utils/geminiProxyClient';
 import { useSafeEditor } from '../../contexts/EditorContext';
-import { db, collection, addDoc, serverTimestamp } from '../../firebase';
+import { db, collection, addDoc, serverTimestamp } from '@/utils/compatData';
 
 interface PropertyDetailSectionProps {
     projectId: string;
@@ -366,7 +366,7 @@ const PropertyDetailSection: React.FC<PropertyDetailSectionProps> = ({
                 // Inside editor — use EditorContext
                 await addLead(leadPayload);
             } else if (resolvedOwnerId && resolvedProjectId) {
-                // Public site — write directly to Firestore
+                // Public site — write directly to Supabase
                 const leadsPath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/leads`;
                 await addDoc(collection(db, leadsPath), {
                     ...leadPayload,

@@ -9,7 +9,7 @@ import {
 } from '../../types';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
 import { supabase } from '../../supabase';
-import type { User } from '../../firebase'; // Or your updated auth types
+import type { User } from '@supabase/supabase-js';
 
 interface UseEditorComponentsParams {
     user: User | null;
@@ -112,8 +112,8 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
             if (customComp) {
                 const newVersion: ComponentVersion = {
                     version: ((customComp.versions?.length || 0) > 0 ? Math.max(...(customComp.versions || []).map(v => v.version)) : 0) + 1,
-                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 } as any, // Firebase legacy format? Let's keep compatible if needed or switch to ISO string
-                    author: user?.uid || user?.id || 'unknown',
+                    timestamp: { seconds: Date.now() / 1000, nanoseconds: 0 } as any, // Supabase legacy format? Let's keep compatible if needed or switch to ISO string
+                    author: user?.id || 'unknown',
                     changes: changeDescription || 'Component updated',
                     snapshot: customComp.styles
                 };
@@ -166,7 +166,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 styles: componentStyles[baseComponent],
                 created_at: now,
                 updated_at: now,
-                created_by: user?.uid || user?.id || null,
+                created_by: user?.id || null,
                 is_public: false,
                 usage_count: 0,
                 versions: [],
@@ -208,7 +208,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 styles: original.styles,
                 created_at: now,
                 updated_at: now,
-                created_by: user?.uid || user?.id || null,
+                created_by: user?.id || null,
                 is_public: false,
                 usage_count: 0,
                 versions: [],
@@ -297,7 +297,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 versions: importedData.versions || [],
                 variants: importedData.variants || [], 
                 is_public: false,
-                created_by: user?.uid || user?.id || null, 
+                created_by: user?.id || null, 
                 usage_count: 0, 
                 projects_using: [],
                 created_at: now, 
@@ -371,7 +371,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 id: 'designTokens',
                 config: tokens,
                 updated_at: new Date().toISOString(),
-                updated_by: user?.uid || user?.id || null
+                updated_by: user?.id || null
             });
             setDesignTokens(tokens);
         } catch (error) {
@@ -390,7 +390,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
                 id: 'components',
                 config: { status: newStatus },
                 updated_at: new Date().toISOString(),
-                updated_by: user?.uid || user?.id || null
+                updated_by: user?.id || null
             });
         } catch (error) {
             console.error('Failed to update component status:', error);

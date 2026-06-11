@@ -514,7 +514,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'banner': return renderBannerControlsWithTabs(deps);
             case 'signupFloat': return renderSignupFloatControlsWithTabs(deps);
             case 'chatbot': return renderChatbotControlsWithTabs(deps);
-            case 'separator': return renderSeparatorControlsWithTabs(deps);
+            case 'separator': return renderSeparatorControlsWithTabs(deps, 'separator1');
             case 'realEstateListings': return renderRealEstateListingsControlsWithTabs(deps);
             case 'restaurantReservation': return renderRestaurantReservationControlsWithTabs(deps);
 

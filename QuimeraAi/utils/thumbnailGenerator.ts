@@ -100,21 +100,21 @@ export const generateComponentThumbnail = async (
 };
 
 /**
- * Uploads thumbnail to Firebase Storage
+ * Uploads thumbnail to legacy storage
  * 
- * DESIGN DECISION: Using base64 Data URLs instead of Firebase Storage
+ * DESIGN DECISION: Using base64 Data URLs instead of legacy storage
  * 
  * Rationale:
  * - Thumbnails are small (300x200px, ~10-30KB as PNG)
- * - Base64 in Firestore is acceptable for small images
+ * - Base64 in Supabase is acceptable for small images
  * - Simpler implementation, no storage quota management
  * - Faster to load (no additional network request)
- * - Firestore document limit is 1MB, thumbnails ~2-3% of that
+ * - Supabase document limit is 1MB, thumbnails ~2-3% of that
  * 
  * Future Optimization (if needed):
  * If thumbnails become a performance issue (many components, large sizes):
- * 1. Upload to Firebase Storage: storage/thumbnails/{componentId}.png
- * 2. Store download URL in Firestore instead of base64
+ * 1. Upload to legacy storage: storage/thumbnails/{componentId}.png
+ * 2. Store download URL in Supabase instead of base64
  * 3. Implement cleanup for orphaned thumbnails
  * 4. Add CDN caching headers
  * 
@@ -124,7 +124,7 @@ export const uploadThumbnailToStorage = async (
   thumbnail: string,
   componentId: string
 ): Promise<string> => {
-  // Return base64 data URL - stores directly in Firestore
+  // Return base64 data URL - stores directly in Supabase
   // This is intentional and optimal for small thumbnails
   return thumbnail;
 };

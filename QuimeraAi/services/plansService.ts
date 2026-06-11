@@ -53,11 +53,6 @@ export interface PlanStats {
 
 const PLANS_TABLE = 'subscription_plans';
 
-// Stripe API routes are hosted on Vercel.
-const STRIPE_API_BASE = '/api/stripe';
-const CREATE_UPDATE_PLAN_URL = `${STRIPE_API_BASE}/createOrUpdatePlan`;
-const ARCHIVE_PLAN_URL = `${STRIPE_API_BASE}/archivePlan`;
-
 // =============================================================================
 // CACHE
 // =============================================================================
@@ -65,22 +60,6 @@ const ARCHIVE_PLAN_URL = `${STRIPE_API_BASE}/archivePlan`;
 let plansCache: Record<string, StoredPlan> | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-/**
- * SECURITY: Get auth token for authenticated Stripe API calls
- */
-async function getAuthHeaders(): Promise<Record<string, string>> {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-            headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-    } catch (e) {
-        console.warn('[plansService] Could not get auth token:', e);
-    }
-    return headers;
-}
 
 /**
  * Clear the plans cache
@@ -266,20 +245,16 @@ async function syncPlanToStripe(plan: Partial<StoredPlan>): Promise<{
 
         console.log('[syncPlanToStripe] Syncing plan to Stripe:', plan.id);
 
-        const headers = await getAuthHeaders();
-        const response = await fetch(CREATE_UPDATE_PLAN_URL, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ plan: stripePlan }),
+        const result = await supabase.functions.invoke('stripe-api', {
+            body: { action: 'createOrUpdatePlan', plan: stripePlan },
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            console.warn('[syncPlanToStripe] Stripe sync warning:', error);
-            return { success: false, error: error.message || error.error || 'Error al sincronizar con Stripe' };
+        if (result.error) {
+            console.warn('[syncPlanToStripe] Stripe sync warning:', result.error);
+            return { success: false, error: result.error.message || 'Error al sincronizar con Stripe' };
         }
 
-        const data = await response.json();
+        const data = result.data?.data || result.data;
         console.log('[syncPlanToStripe] Stripe sync successful:', data);
 
         return {
@@ -359,14 +334,11 @@ export async function archivePlan(planId: string, userId?: string, syncToStripe 
             const plan = await getPlanById(planId);
             if (plan?.stripeProductId) {
                 try {
-                    const headers = await getAuthHeaders();
-                    const response = await fetch(ARCHIVE_PLAN_URL, {
-                        method: 'POST', headers,
-                        body: JSON.stringify({ productId: plan.stripeProductId }),
+                    const result = await supabase.functions.invoke('stripe-api', {
+                        body: { action: 'archivePlan', productId: plan.stripeProductId },
                     });
-                    if (!response.ok) {
-                        const err = await response.json();
-                        stripeError = err.message || 'Error al archivar en Stripe';
+                    if (result.error) {
+                        stripeError = result.error.message || 'Error al archivar en Stripe';
                     }
                 } catch (e) {
                     stripeError = e instanceof Error ? e.message : 'Error de conexión con Stripe';
@@ -444,10 +416,10 @@ export async function deletePlan(planId: string): Promise<{ success: boolean; er
 // =============================================================================
 
 /**
- * Initialize Firestore with hardcoded plans if empty
+ * Initialize Supabase with hardcoded plans if empty
  * Call this once to seed the database
  */
-export async function initializePlansInFirestore(userId?: string): Promise<{ success: boolean; plansCreated: number; error?: string }> {
+export async function initializePlansInSupabase(userId?: string): Promise<{ success: boolean; plansCreated: number; error?: string }> {
     try {
         const { data: existing } = await supabase.from(PLANS_TABLE).select('id');
         if (existing && existing.length > 0) {
@@ -623,7 +595,7 @@ export function validatePlan(plan: Partial<StoredPlan>): { valid: boolean; error
 // =============================================================================
 
 /**
- * Plans to archive (legacy plans - kept for migration of existing Firestore data)
+ * Plans to archive (legacy plans - kept for migration of existing Supabase data)
  */
 const LEGACY_PLANS_TO_ARCHIVE = ['hobby', 'starter', 'pro', 'agency', 'agency_plus'];
 
@@ -656,10 +628,8 @@ export async function migrateToNewPlanStructure(userId?: string): Promise<{
                 if (plan && !plan.isArchived) {
                     if (plan.stripeProductId) {
                         try {
-                            const headers = await getAuthHeaders();
-                            await fetch(ARCHIVE_PLAN_URL, {
-                                method: 'POST', headers,
-                                body: JSON.stringify({ productId: plan.stripeProductId }),
+                            await supabase.functions.invoke('stripe-api', {
+                                body: { action: 'archivePlan', productId: plan.stripeProductId },
                             });
                         } catch (e) { console.warn(`[migrate] Stripe archive error for ${planId}:`, e); }
                     }
@@ -762,7 +732,7 @@ export default {
     archivePlan,
     restorePlan,
     deletePlan,
-    initializePlansInFirestore,
+    initializePlansInSupabase,
     syncPlansFromHardcoded,
     getPlanStatistics,
     getPlanDistribution,

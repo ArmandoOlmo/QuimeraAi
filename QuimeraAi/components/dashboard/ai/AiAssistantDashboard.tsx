@@ -72,11 +72,11 @@ const AiAssistantDashboard: React.FC = () => {
 
     // Load AI config from active project when it changes
     useEffect(() => {
-        // Skip if we just saved — avoid overwriting formData with stale Firestore snapshot
+        // Skip if we just saved — avoid overwriting formData with stale Supabase snapshot
         if (isSavingRef.current) return;
 
         if (activeProject?.aiAssistantConfig) {
-            // Load config from project (from Firestore)
+            // Load config from project (from Supabase)
             setFormData(activeProject.aiAssistantConfig);
             setAiAssistantConfig(activeProject.aiAssistantConfig);
         } else if (aiAssistantConfig) {
@@ -110,7 +110,7 @@ const AiAssistantDashboard: React.FC = () => {
             console.error('Error saving config:', error);
         }
         setIsSaving(false);
-        // Keep the guard for a short time to let Firestore listener settle
+        // Keep the guard for a short time to let Supabase listener settle
         setTimeout(() => { isSavingRef.current = false; }, 2000);
     };
 

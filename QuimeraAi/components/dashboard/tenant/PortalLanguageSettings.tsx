@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { doc, updateDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { useTenant } from '@/contexts/tenant/TenantContext';
 import {
   Globe,

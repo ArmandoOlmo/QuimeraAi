@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
         define: {
             // SECURITY: Keys are never embedded — proxy handles all AI API calls
             'process.env.API_KEY': 'null',
-            'process.env.GEMINI_API_KEY': 'null',
+            'process.env.OPENROUTER_API_KEY': 'null',
         },
         resolve: {
             alias: {
@@ -41,23 +41,16 @@ export default defineConfig(({ mode }) => {
         ssr: {
             // Externalize dependencies that shouldn't be bundled for SSR
             external: [
-                'firebase-admin',
                 'express',
                 'compression'
             ],
             // Don't externalize these (they need to be bundled)
             noExternal: [
-                'firebase',
-                '@firebase/app',
-                '@firebase/auth',
-                '@firebase/firestore',
                 'react-router-dom'
             ]
         }
     };
 });
-
-
 
 
 

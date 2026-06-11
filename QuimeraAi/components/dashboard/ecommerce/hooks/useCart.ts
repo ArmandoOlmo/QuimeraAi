@@ -8,11 +8,11 @@ import { supabase } from '../../../../supabase';
 import { Cart, CartItem, Product, ProductVariant } from '../../../../types/ecommerce';
 
 interface UseCartOptions {
-    persistToFirebase?: boolean; // legacy prop, mapped to Supabase
+    persistToSupabase?: boolean; // legacy prop, mapped to Supabase
 }
 
 export const useCart = (userId: string, storeId?: string, options: UseCartOptions = {}) => {
-    const { persistToFirebase = true } = options;
+    const { persistToSupabase = true } = options;
     
     const effectiveStoreId = storeId || '';
 
@@ -30,7 +30,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
     // Load cart from Supabase
     useEffect(() => {
-        if (!userId || !persistToFirebase) {
+        if (!userId || !persistToSupabase) {
             setIsLoading(false);
             return;
         }
@@ -89,7 +89,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                 table: 'store_carts', 
                 filter: channelFilter 
             }, (payload) => {
-                const data = payload.new;
+                const data = payload.new as Record<string, any>;
                 if (data && data.user_id === userId) {
                     setCart({
                         id: data.id,
@@ -119,11 +119,11 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [userId, effectiveStoreId, persistToFirebase]);
+    }, [userId, effectiveStoreId, persistToSupabase]);
 
     // Save cart to Supabase
     const saveCart = useCallback(async (updatedCart: Cart) => {
-        if (!persistToFirebase) return;
+        if (!persistToSupabase) return;
 
         try {
             const upsertData = {
@@ -145,7 +145,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
             console.error('Error saving cart:', err);
             setError(err.message);
         }
-    }, [persistToFirebase]);
+    }, [persistToSupabase]);
 
     // Calculate subtotal
     const calculateSubtotal = useCallback((items: CartItem[]): number => {
@@ -261,7 +261,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
 
         setCart(emptyCart);
 
-        if (persistToFirebase) {
+        if (persistToSupabase) {
             try {
                 let query = supabase.from('store_carts').delete().eq('user_id', userId);
                 if (effectiveStoreId) {
@@ -272,7 +272,7 @@ export const useCart = (userId: string, storeId?: string, options: UseCartOption
                 console.error('Error clearing cart:', err);
             }
         }
-    }, [userId, storeId, effectiveStoreId, cart.createdAt, persistToFirebase]);
+    }, [userId, storeId, effectiveStoreId, cart.createdAt, persistToSupabase]);
 
     // Apply discount code
     const applyDiscount = useCallback(async (discountCode: string, discountAmount: number) => {

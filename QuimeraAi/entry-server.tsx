@@ -10,6 +10,7 @@ import { renderToString } from 'react-dom/server';
 import { StorefrontCartProvider } from './components/ecommerce/context';
 import PageRenderer from './components/PageRenderer';
 import { Project, SitePage, PageMatch } from './types/project';
+import type { GlobalColors } from './types/ui';
 import { matchPage, getHomePage } from './utils/pageMatching';
 import { 
     generateMetaTags, 
@@ -34,7 +35,7 @@ export interface ProjectData extends Omit<Project, 'thumbnailUrl' | 'status' | '
 export interface RenderOptions {
     /** Current URL path */
     url: string;
-    /** Project data from Firestore */
+    /** Project data from Supabase */
     project: ProjectData;
     /** Pre-loaded dynamic data (optional, loaded separately if not provided) */
     dynamicData?: DynamicData;
@@ -198,7 +199,7 @@ function createLegacyHomePage(project: ProjectData): SitePage {
  * Render 404 page
  */
 function render404(project: ProjectData): string {
-    const colors = project.theme?.globalColors || {};
+    const colors = (project.theme?.globalColors || {}) as GlobalColors;
     const bg = colors.background || '#0f172a';
     const text = colors.text || '#94a3b8';
     const heading = colors.heading || '#f8fafc';

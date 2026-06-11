@@ -1,26 +1,22 @@
 /**
  * Image URL Helper
  * 
- * Handles the migration from Firebase Storage to Supabase Storage.
- * Firebase Storage URLs return 402 (Payment Required) because billing is disabled.
+ * Handles legacy media URLs while Supabase Storage becomes the canonical source.
  * This helper:
- * 1. Detects Firebase Storage URLs and flags them as broken
+ * 1. Detects old remote storage URLs and flags them as broken
  * 2. Returns a themed placeholder SVG for broken images
  * 3. Provides utilities for migrating to Supabase Storage
  */
 
+import { isLegacyStorageUrl as isLegacyRemoteStorageUrl } from './imageUrl';
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
 
 /**
- * Check if a URL points to Firebase Storage (which is broken due to 402)
+ * Check if a URL points to old remote storage that should no longer be rendered directly.
  */
-export function isFirebaseStorageUrl(url: string | null | undefined): boolean {
-    if (!url) return false;
-    return (
-        url.includes('firebasestorage.googleapis.com') ||
-        url.includes('quimeraai.firebasestorage.app') ||
-        url.includes('quimeraai.appspot.com')
-    );
+export function isLegacyStorageUrl(url: string | null | undefined): boolean {
+    return isLegacyRemoteStorageUrl(url);
 }
 
 /**
@@ -61,7 +57,7 @@ export function getPlaceholderImage(
 }
 
 /**
- * Get a safe image URL — replaces broken Firebase URLs with a placeholder.
+ * Get a safe image URL that replaces broken legacy URLs with a placeholder.
  * Use this throughout the app when rendering user-uploaded images.
  */
 export function getSafeImageUrl(
@@ -73,8 +69,8 @@ export function getSafeImageUrl(
         return getPlaceholderImage(options?.width, options?.height, options?.label);
     }
 
-    // Firebase Storage URL — known to be broken (402)
-    if (isFirebaseStorageUrl(url)) {
+    // Old remote storage URL, known to be unavailable in some projects.
+    if (isLegacyStorageUrl(url)) {
         return getPlaceholderImage(
             options?.width,
             options?.height,
@@ -98,8 +94,8 @@ export function getSupabasePublicUrl(bucket: string, path: string): string {
  */
 export function getImageClassName(url: string | null | undefined, baseClass?: string): string {
     const classes = [baseClass || ''].filter(Boolean);
-    if (isFirebaseStorageUrl(url)) {
-        classes.push('firebase-broken-image');
+    if (isLegacyStorageUrl(url)) {
+        classes.push('legacy-storage-image');
     }
     return classes.join(' ');
 }

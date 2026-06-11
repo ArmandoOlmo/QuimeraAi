@@ -18,7 +18,7 @@ import {
     query,
     orderBy,
     onSnapshot,
-} from '../../../../firebase';
+} from '@/utils/compatData';
 import { dateToTimestamp, timestampToDate } from '../utils/appointmentHelpers';
 
 // =============================================================================
@@ -55,7 +55,7 @@ export const useBlockedDates = (): UseBlockedDatesReturn => {
     const [error, setError] = useState<string | null>(null);
 
     // ==========================================================================
-    // FIREBASE LISTENER
+    // DATA LISTENER
     // ==========================================================================
 
     useEffect(() => {

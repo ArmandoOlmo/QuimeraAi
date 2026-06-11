@@ -111,7 +111,7 @@ export function OnboardingWorkflow({
         );
 
         try {
-          // TODO: Implement actual file upload to Firebase Storage
+          // TODO: Implement actual file upload to legacy storage
           // For now, just simulate
           await new Promise((resolve) => setTimeout(resolve, 1000));
           logoUrl = 'https://example.com/logo.png'; // Placeholder

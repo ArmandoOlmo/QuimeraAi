@@ -33,12 +33,12 @@ export default function TenantMediaAuditor() {
                     name: row.name,
                     size: row.size,
                     type: row.type,
+                    downloadURL: row.url,
                     url: row.url,
-                    folderId: row.folder_id,
+                    storagePath: row.storage_path || row.url,
                     projectId: row.project_id,
                     tenantId: row.tenant_id,
                     createdAt: row.created_at,
-                    updatedAt: row.updated_at
                 }));
                 
                 setFiles(formattedFiles);

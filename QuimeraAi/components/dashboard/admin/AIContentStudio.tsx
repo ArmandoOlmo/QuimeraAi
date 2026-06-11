@@ -111,7 +111,7 @@ const TONE_OPTIONS = [
     'Profesional', 'Amigable', 'Persuasivo', 'Informativo', 'Inspirador', 'Técnico'
 ];
 
-// NOTE: Switch to 'gemini-3.1-flash-lite-preview' after deploying updated Firebase Functions
+// NOTE: Switch to 'gemini-3.1-flash-lite-preview' after deploying updated Supabase Functions
 const MODEL_TEXT = 'gemini-3-flash-preview';
 const MODEL_VOICE = 'gemini-3.1-flash-live-preview';
 
@@ -637,7 +637,7 @@ const AIContentStudio: React.FC<AIContentStudioProps> = ({ onClose, onArticleCre
 
             console.log('[AIContentStudio] Article built:', newArticle.id, newArticle.title);
             await saveArticle(newArticle);
-            console.log('[AIContentStudio] ✅ Article saved to Firestore, opening editor...');
+            console.log('[AIContentStudio] ✅ Article saved to Supabase, opening editor...');
             setIsSavingArticle(false);
             onArticleCreated(newArticle);
         } catch (error) {

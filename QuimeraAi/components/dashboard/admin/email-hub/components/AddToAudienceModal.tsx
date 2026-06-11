@@ -4,7 +4,7 @@
  * Reusable modal for adding contacts (from Leads, Appointments, etc.)
  * to an email audience in the Admin Email Hub.
  * 
- * This component is self-contained — it reads/writes to Firestore directly
+ * This component is self-contained — it reads/writes to Supabase directly
  * so it can be used from any module without needing the Email Hub context.
  */
 
@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import {
     db, collection, getDocs, doc, updateDoc, addDoc,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import { useTranslation } from 'react-i18next';
 
@@ -73,7 +73,7 @@ export const AddToAudienceModal: React.FC<AddToAudienceModalProps> = ({
     const [newDescription, setNewDescription] = useState('');
     const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
-    // Load audiences from Firestore
+    // Load audiences from Supabase
     useEffect(() => {
         if (!isOpen) return;
         setIsLoading(true);

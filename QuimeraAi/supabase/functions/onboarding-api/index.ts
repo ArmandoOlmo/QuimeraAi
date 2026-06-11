@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts";
 
-type DomainAction =
+type OnboardingAction =
+  | "analyzeWebsite"
   | "domains-add"
   | "domains-remove"
   | "domains-verifyDNS"
@@ -53,9 +55,11 @@ serve(async (req) => {
       throw new Error("Invalid token");
     }
 
-    const { action, ...payload } = await req.json() as { action?: DomainAction; [key: string]: unknown };
+    const { action, ...payload } = await req.json() as { action?: OnboardingAction; [key: string]: unknown };
 
     switch (action) {
+      case "analyzeWebsite":
+        return jsonResponse(await analyzeWebsiteUrl(String(payload.url || ""), user.id));
       case "domains-add":
         return jsonResponse(await addDomain(user.id, payload));
       case "domains-remove":

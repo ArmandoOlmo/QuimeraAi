@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * useDiscounts Hook
  * Hook para gestión de descuentos en Supabase
@@ -208,11 +209,11 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
             }
 
             const now = Date.now() / 1000;
-            if (discount.startsAt.seconds > now) {
+            if (getTimestampSeconds(discount.startsAt) > now) {
                 return { valid: false, error: 'Este código de descuento aún no está disponible' };
             }
 
-            if (discount.endsAt && discount.endsAt.seconds < now) {
+            if (discount.endsAt && getTimestampSeconds(discount.endsAt) < now) {
                 return { valid: false, error: 'Este código de descuento ha expirado' };
             }
 
@@ -286,8 +287,8 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
         const now = Date.now() / 1000;
         return discounts.filter((d) => {
             if (!d.isActive) return false;
-            if (d.startsAt.seconds > now) return false;
-            if (d.endsAt && d.endsAt.seconds < now) return false;
+            if (getTimestampSeconds(d.startsAt) > now) return false;
+            if (d.endsAt && getTimestampSeconds(d.endsAt) < now) return false;
             if (d.maxUses && d.usedCount >= d.maxUses) return false;
             return true;
         });
@@ -296,7 +297,7 @@ export const useDiscounts = (userId: string, storeId?: string, options?: UseDisc
     // Get expired discounts
     const getExpiredDiscounts = useCallback((): Discount[] => {
         const now = Date.now() / 1000;
-        return discounts.filter((d) => d.endsAt && d.endsAt.seconds < now);
+        return discounts.filter((d) => d.endsAt && getTimestampSeconds(d.endsAt) < now);
     }, [discounts]);
 
     return {

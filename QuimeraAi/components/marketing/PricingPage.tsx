@@ -1,6 +1,6 @@
 /**
  * PricingPage — Public marketing page for Quimera.ai plans & pricing
- * Dynamically connected to Firestore plans via useLandingPlans hook.
+ * Dynamically connected to Supabase plans via useLandingPlans hook.
  * Uses MarketingLayout for consistent header/footer/scroll.
  */
 

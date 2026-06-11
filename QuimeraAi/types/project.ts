@@ -76,7 +76,7 @@ export interface SitePage {
     slug: string;
 
     /** Tipo de página */
-    type: PageType;
+    type?: PageType;
 
     /** Fuente de datos para páginas dinámicas */
     dynamicSource?: DynamicSource;
@@ -95,7 +95,7 @@ export interface SitePage {
     sectionData: Partial<PageData>;
 
     /** Configuración SEO de esta página */
-    seo: PageSEO;
+    seo?: PageSEO;
 
     /** ¿Es la página principal (home)? Solo una página puede ser home */
     isHomePage?: boolean;
@@ -172,10 +172,12 @@ export interface Project {
     id: string;
     name: string;
     userId?: string;                // Owner user ID
-    thumbnailUrl: string;
+    thumbnailUrl?: string;
     faviconUrl?: string;  // Favicon URL for the website
-    status: 'Published' | 'Draft' | 'Template';
-    lastUpdated: string;
+    status?: 'Published' | 'Draft' | 'Template';
+    lastUpdated?: string;
+    updatedAt?: string;
+    activePageId?: string;
 
     // ==========================================================================
     // MULTI-PAGE ARCHITECTURE (NEW)
@@ -193,7 +195,7 @@ export interface Project {
     // ==========================================================================
     data: PageData;
     theme: ThemeData;
-    brandIdentity: BrandIdentity;
+    brandIdentity?: BrandIdentity;
     componentOrder: PageSection[];
     sectionVisibility: Record<PageSection, boolean>;
 

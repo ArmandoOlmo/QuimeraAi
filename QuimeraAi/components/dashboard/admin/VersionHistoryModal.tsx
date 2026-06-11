@@ -58,7 +58,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
   const formatDate = (timestamp: any): string => {
     if (!timestamp) return 'Fecha desconocida';
 
-    // Handle Firestore Timestamp
+    // Handle Supabase Timestamp
     if (timestamp?.toDate) {
       return timestamp.toDate().toLocaleString('es-ES', {
         year: 'numeric',

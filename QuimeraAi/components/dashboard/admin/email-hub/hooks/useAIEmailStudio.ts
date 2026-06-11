@@ -12,8 +12,8 @@ import { useAuth } from '../../../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../../../contexts/admin/AdminContext';
 import {
     db, collection, addDoc, doc, updateDoc,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../../../../utils/genAiClient';
 import {
@@ -676,7 +676,7 @@ RESPONDE SOLO CON EL JSON:`;
                 updatedAt: serverTimestamp(),
             };
 
-            console.log('[AIEmailStudio] 💾 Saving to Firestore...');
+            console.log('[AIEmailStudio] 💾 Saving to Supabase...');
             const docRef = await addDoc(collection(db, 'adminEmailCampaigns'), newCampaign);
             console.log('[AIEmailStudio] ✅ Saved! Doc ID:', docRef.id);
 
@@ -939,7 +939,7 @@ RESPONDE SOLO CON EL JSON:`;
                 };
             }
 
-            // Sanitize steps for Firestore (strip undefined values)
+            // Sanitize steps for Supabase (strip undefined values)
             const sanitizedSteps = Array.isArray(autoData.steps)
                 ? autoData.steps.map((s: any) => JSON.parse(JSON.stringify(s)))
                 : [];
@@ -1084,7 +1084,7 @@ RESPONDE SOLO CON EL JSON:`;
 
                     const generatedHtml = generateEmailHtml(emailDocument as EmailDocument);
 
-                    // Save to Firestore as an automation-linked campaign
+                    // Save to Supabase as an automation-linked campaign
                     const campaignData = {
                         name: emailDocument.name,
                         subject: stepSubject,

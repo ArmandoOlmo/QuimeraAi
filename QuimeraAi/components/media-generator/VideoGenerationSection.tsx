@@ -432,10 +432,10 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
     const selectedComingSoon = capabilities?.comingSoon || (capabilities && !capabilities.available);
 
     return (
-        <div className={`flex flex-col h-full overflow-hidden ${className}`}>
-            <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className={`flex flex-col h-full overflow-hidden bg-q-bg text-q-text ${className}`}>
+            <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
                 {/* Controls sidebar */}
-                <aside className="w-full md:w-[320px] shrink-0 border-r border-q-border overflow-y-auto p-4 space-y-5 bg-q-surface/30">
+                <aside className="order-2 md:order-2 w-full md:w-[360px] shrink-0 border-t md:border-t-0 md:border-l border-q-border/70 overflow-y-auto p-4 space-y-5 quimera-media-side-panel">
                     {/* Model selector */}
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-q-text-secondary uppercase">{t('mediaGeneration.model', { defaultValue: 'Model' })}</label>
@@ -813,17 +813,39 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                 </aside>
 
                 {/* Main area */}
-                <div className="flex-1 flex flex-col min-w-0">
-                    <div className="p-4 border-b border-q-border space-y-3">
-                        <textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder={t('mediaGeneration.promptPlaceholder', { defaultValue: 'Describe the video you want to create...' })}
-                            rows={3}
-                            className="w-full bg-q-bg border border-q-border rounded-xl p-4 text-sm resize-none focus:ring-1 focus:ring-q-accent outline-none"
-                        />
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="text-xs text-q-text-secondary">
+                <div className="order-1 md:order-1 flex-1 flex flex-col min-w-0 min-h-[360px] md:min-h-0 overflow-hidden">
+                    <div className="order-2 w-full border-t border-q-border/70 bg-q-bg/85 p-3 backdrop-blur-xl lg:p-5 shrink-0 z-30 space-y-3">
+                        <div className="quimera-ai-launcher mx-auto max-w-4xl">
+                            <div className="flex items-center gap-2">
+                                <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-q-surface-overlay/40 text-q-accent">
+                                    <Film size={18} className={isGenerating ? 'animate-pulse' : ''} />
+                                </div>
+                                <textarea
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleGenerate();
+                                        }
+                                    }}
+                                    placeholder={t('mediaGeneration.promptPlaceholder', { defaultValue: 'Describe the video you want to create...' })}
+                                    rows={1}
+                                    className="flex-1 bg-transparent px-3 py-2.5 text-sm text-q-text placeholder:text-q-text-secondary/55 resize-none focus:outline-none min-h-[40px] max-h-[120px]"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleGenerate}
+                                    disabled={isGenerating || !prompt.trim() || !selectedModelId || selectedComingSoon}
+                                    className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
+                                    title={t('mediaGeneration.generate', { defaultValue: 'Generate video' })}
+                                >
+                                    {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-1 text-xs text-q-text-secondary">
+                            <span>
                                 {statusMessage || (selectedCreditCost
                                     ? t('mediaGeneration.creditsCost', {
                                         count: selectedCreditCost,
@@ -837,18 +859,9 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                     </span>
                                 ) : null}
                             </span>
-                            <button
-                                type="button"
-                                onClick={handleGenerate}
-                                disabled={isGenerating || !prompt.trim() || !selectedModelId || selectedComingSoon}
-                                className="flex items-center gap-2 bg-q-accent text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
-                            >
-                                {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
-                                {t('mediaGeneration.generate', { defaultValue: 'Generate video' })}
-                            </button>
                         </div>
                         {isGenerating && (
-                            <div className="space-y-2">
+                            <div className="mx-auto max-w-4xl space-y-2 px-1">
                                 <ProgressBar3D percentage={generationProgress} />
                                 <p className="text-xs text-q-text-secondary">
                                     {statusMessage || t('mediaGeneration.generatingVideo', { defaultValue: 'Generating video...' })}
@@ -858,15 +871,15 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                     </div>
 
                     {!hidePreview && (
-                        <div className="flex-1 flex items-center justify-center p-6 bg-q-bg/50 min-h-[200px]">
+                        <div className="order-1 flex-1 flex items-center justify-center p-4 md:p-8 lg:p-10 quimera-media-workspace min-h-[300px]">
                             {generatedVideo ? (
                                 <div className="w-full max-w-2xl space-y-4">
-                                    <video src={generatedVideo} controls className="w-full rounded-xl border border-q-border shadow-lg" />
+                                    <video src={generatedVideo} controls className="w-full rounded-2xl border border-q-border/60 bg-q-surface/45 shadow-2xl" />
                                     <div className="flex gap-2 justify-center">
                                         <a
                                             href={generatedVideo}
                                             download
-                                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-surface border border-q-border text-sm font-medium hover:bg-muted"
+                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-q-surface/70 border border-q-border/60 text-sm font-medium hover:bg-q-surface"
                                         >
                                             <Download size={16} />
                                             {t('mediaGeneration.download', { defaultValue: 'Download' })}
@@ -875,7 +888,7 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                             <button
                                                 type="button"
                                                 onClick={() => onUseVideo(savedVideoUrl)}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-q-accent text-primary-foreground text-sm font-bold"
+                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-q-accent text-q-text-on-accent text-sm font-bold"
                                             >
                                                 <CheckCircle2 size={16} />
                                                 {t('mediaGeneration.useVideo', { defaultValue: 'Use video' })}
@@ -884,8 +897,8 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center text-q-text-secondary">
-                                    <Film size={48} className="mx-auto mb-3 opacity-40" />
+                                <div className="text-center text-q-text-secondary rounded-2xl border border-q-border/60 bg-q-surface/35 backdrop-blur-sm px-10 py-12">
+                                    <Film size={44} className="mx-auto mb-3 opacity-40" />
                                     <p className="text-sm">{t('mediaGeneration.previewEmpty', { defaultValue: 'Your generated video will appear here' })}</p>
                                 </div>
                             )}

@@ -38,7 +38,7 @@
     })();
   </script>
   <meta charset="UTF-8" />
-  <!-- Favicon: SVG fallback, will be replaced dynamically by GlobalSEO from Firestore config -->
+  <!-- Favicon: SVG fallback, will be replaced dynamically by GlobalSEO from Supabase config -->
   <link rel="icon" type="image/png"
     href="/logos/quimera-icon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,15 +53,13 @@
   <!-- Performance: Preconnect to critical third-party origins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="%VITE_SUPABASE_URL%" crossorigin>
   <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
 
   <!-- DNS-prefetch for less critical origins (fallback for older browsers) -->
-  <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
+  <link rel="dns-prefetch" href="%VITE_SUPABASE_URL%">
   <link rel="dns-prefetch" href="https://storage.googleapis.com">
-  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
-  <link rel="dns-prefetch" href="https://securetoken.googleapis.com">
   <link rel="dns-prefetch" href="https://www.gstatic.com">
 
   <!-- Performance Optimization: Load only essential UI fonts. Project fonts are loaded dynamically. -->

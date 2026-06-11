@@ -4,7 +4,7 @@
  * Uses TipTap WYSIWYG editor for rich text editing
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEmailEditor } from '../EmailEditor';
 import { EmailBlock, EmailTextContent, EmailBlockStyles } from '../../../../../types/email';

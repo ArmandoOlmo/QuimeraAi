@@ -2,7 +2,7 @@
  * TemplateGallery Component
  * 
  * Displays available templates for manual selection during onboarding.
- * Uses dynamic templates from Firestore (Super Admin) - NOT hardcoded templates.
+ * Uses dynamic templates from Supabase (Super Admin) - NOT hardcoded templates.
  * Features compact horizontal card design, search, and filtering.
  */
 
@@ -26,7 +26,7 @@ import {
 // ============================================================================
 
 interface TemplateGalleryProps {
-  templates: Project[];  // Templates from Firestore (Super Admin)
+  templates: Project[];  // Templates from Supabase (Super Admin)
   onSelect: (templateId: string) => void;
   onSkip?: () => void;
   currentIndustry?: string;

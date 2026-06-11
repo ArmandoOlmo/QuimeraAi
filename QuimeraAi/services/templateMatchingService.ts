@@ -4,7 +4,7 @@
  * Provides intelligent template selection based on industry, aesthetic, and color preferences.
  * Designed to be scalable - automatically adapts when new templates are added.
  * 
- * NOTE: Templates are now loaded dynamically from Firestore (Super Admin) - NOT hardcoded.
+ * NOTE: Templates are now loaded dynamically from Supabase (Super Admin) - NOT hardcoded.
  * All functions receive templates as a parameter.
  */
 
@@ -252,7 +252,7 @@ export class TemplateMatchingService {
    * Generate context string for LLM with all template information
    * Automatically includes all templates - no manual updates needed
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static generateTemplateContextForLLM(templates: Project[]): string {
     if (!templates || templates.length === 0) {
@@ -307,7 +307,7 @@ export class TemplateMatchingService {
    * Pre-filter templates based on industry and aesthetic
    * Returns top candidates for LLM to choose from
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static preFilterTemplates(
     templates: Project[],
@@ -401,7 +401,7 @@ export class TemplateMatchingService {
   /**
    * Find the best template match (quick, without LLM)
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static findBestMatch(
     templates: Project[],
@@ -416,7 +416,7 @@ export class TemplateMatchingService {
   /**
    * Get template by ID
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static getTemplateById(templates: Project[], templateId: string): Project | undefined {
     return templates.find(t => t.id === templateId);
@@ -425,7 +425,7 @@ export class TemplateMatchingService {
   /**
    * Get coverage statistics - useful for admin dashboard
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static getCoverageStats(templates: Project[]): TemplateCoverageStats {
     if (!templates || templates.length === 0) {
@@ -472,7 +472,7 @@ export class TemplateMatchingService {
   /**
    * Suggest color adjustments when template colors don't match user's vibe
    * 
-   * @param templates - Templates from Firestore (Super Admin)
+   * @param templates - Templates from Supabase (Super Admin)
    */
   static suggestColorAdjustments(
     templates: Project[],
@@ -542,7 +542,7 @@ export class TemplateMatchingService {
     bestMatchId: string | null;
     bestMatchConfidence: number;
   }): void {
-    // In production, log to Firestore or analytics service
+    // In production, log to Supabase or analytics service
     // Template gap logging disabled for production - enable for debugging
     if (import.meta.env.DEV) {
       console.log('📊 [TemplateMatchingService] Template gap detected:', {

@@ -1,10 +1,10 @@
-import { FirebaseTimestamp } from '../types/ecommerce';
+import { StoredTimestamp } from '../types/ecommerce';
 
 /**
- * Converts a Supabase ISO date string to a FirebaseTimestamp object
- * for backward compatibility with frontend components expecting Firestore dates.
+ * Converts a Supabase ISO date string to a StoredTimestamp object
+ * for backward compatibility with frontend components expecting timestamp objects.
  */
-export const toFirebaseTimestamp = (isoString?: string | null): FirebaseTimestamp => {
+export const toStoredTimestamp = (isoString?: string | null): StoredTimestamp => {
     if (!isoString) {
         return { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 };
     }
@@ -13,13 +13,13 @@ export const toFirebaseTimestamp = (isoString?: string | null): FirebaseTimestam
 };
 
 /**
- * Converts a JavaScript Date or ISO string to a FirebaseTimestamp
+ * Converts a JavaScript Date or ISO string to a StoredTimestamp
  */
-export const dateToTimestamp = (date: Date | string): FirebaseTimestamp => {
+export const dateToTimestamp = (date: Date | string): StoredTimestamp => {
     const d = typeof date === 'string' ? new Date(date) : date;
     return { seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 };
 };
 
-export const currentTimestamp = (): FirebaseTimestamp => {
+export const currentTimestamp = (): StoredTimestamp => {
     return { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 };
 };

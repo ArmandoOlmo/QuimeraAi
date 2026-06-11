@@ -3,8 +3,8 @@ import { sanitizeHtml } from '../../../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import { Save, Globe, Bot, Shield, FileText, Plus, Edit2, Trash2, Menu } from 'lucide-react';
 import DashboardSidebar from '../DashboardSidebar';
-import { doc, setDoc, getDoc } from '../../../firebase';
-import { db } from '../../../firebase';
+import { doc, setDoc, getDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 
 interface GlobalSEOSettingsProps {
@@ -47,7 +47,7 @@ const GlobalSEOSettings: React.FC<GlobalSEOSettingsProps> = ({ onBack }) => {
     const [aiDescriptionTemplate, setAiDescriptionTemplate] = useState('Built with Quimera.ai, a powerful no-code website builder. ');
     const [defaultAiTopics, setDefaultAiTopics] = useState('AI, Website Builder, No-Code');
 
-    // Load settings from Firebase
+    // Load settings from Supabase
     useEffect(() => {
         const loadSettings = async () => {
             try {

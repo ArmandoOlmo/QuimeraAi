@@ -75,7 +75,7 @@ export const validateFileType = (file: File, allowedTypes: string[]): { valid: b
 };
 
 /**
- * Format date from Firestore timestamp or ISO string
+ * Format date from Supabase timestamp or ISO string
  */
 export const formatFileDate = (timestamp: { seconds?: number } | string | null | undefined): string => {
     if (!timestamp) return 'Just now';
@@ -91,7 +91,7 @@ export const formatFileDate = (timestamp: { seconds?: number } | string | null |
         });
     }
     
-    // Handle Firestore timestamp format
+    // Handle Supabase timestamp format
     if (!timestamp.seconds) return 'Just now';
     return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
         month: 'short',

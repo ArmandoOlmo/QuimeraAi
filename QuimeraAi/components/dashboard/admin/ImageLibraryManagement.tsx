@@ -419,7 +419,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                             {!noLayout && <HeaderBackButton onClick={onBack} label={t('superadmin.backToAdmin', 'Back to Admin')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />}
                             <button
                                 onClick={() => setIsGeneratorOpen(true)}
-                                className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-purple-500 hover:text-purple-400"
+                                className="flex items-center gap-2 h-9 px-3 text-sm font-bold transition-all text-q-accent hover:text-q-accent/80"
                             >
                                 <Zap className="w-4 h-4" />
                                 {t('superadmin.imageLibraryManagement.generateImage', 'Generate Image')}
@@ -588,12 +588,10 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                     ) : (
                                         <div className="space-y-4">
                                             {/* AI Generator Card - Global Library */}
-                                            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-orange-500/10 border-2 border-purple-500/20 p-10 text-center group hover:border-purple-500/40 transition-all">
-                                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-110 transition-transform"></div>
-
+                                            <div className="relative overflow-hidden rounded-2xl border border-q-border bg-q-surface/80 p-10 text-center transition-all hover:border-q-accent/40">
                                                 <div className="relative z-10">
-                                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 mb-6 shadow-xl group-hover:scale-110 transition-transform">
-                                                        <Zap className="w-10 h-10 text-white animate-pulse" />
+                                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 text-q-accent mb-6 shadow-xl">
+                                                        <Zap className="w-10 h-10 animate-pulse" />
                                                     </div>
 
                                                     <h3 className="text-2xl font-bold text-q-text mb-3">
@@ -606,7 +604,7 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
 
                                                     <button
                                                         onClick={() => setIsGeneratorOpen(true)}
-                                                        className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-base font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl hover:shadow-2xl hover:scale-105 transform"
+                                                        className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-bold transition-all bg-q-accent text-q-text-on-accent shadow-xl hover:shadow-2xl hover:shadow-primary/20"
                                                     >
                                                         <Zap className="w-6 h-6" />
                                                         {t('superadmin.imageLibraryManagement.generator.open', 'Open Image Generator')}
@@ -614,15 +612,15 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
 
                                                     <div className="mt-8 flex items-center justify-center gap-8 text-sm text-q-text-secondary">
                                                         <div className="flex items-center gap-2">
-                                                            <Sparkles size={16} className="text-purple-400" />
+                                                            <Sparkles size={16} className="text-q-accent" />
                                                             <span>{t('superadmin.imageLibraryManagement.generator.resolution', 'Up to 4K Resolution')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Sparkles size={16} className="text-pink-400" />
+                                                            <Sparkles size={16} className="text-q-accent" />
                                                             <span>{t('superadmin.imageLibraryManagement.generator.lighting', 'Advanced Lighting & Camera')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Sparkles size={16} className="text-orange-400" />
+                                                            <Sparkles size={16} className="text-q-accent" />
                                                             <span>{t('superadmin.imageLibraryManagement.generator.reference', 'Reference Image Support')}</span>
                                                         </div>
                                                     </div>

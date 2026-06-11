@@ -1,5 +1,5 @@
-import { addDoc, collection, serverTimestamp } from '../../firebase';
-import { db } from '../../firebase';
+import { addDoc, collection, serverTimestamp } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import {
   AiGeneratedRestaurantMenu,

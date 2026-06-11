@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import { isPendingImage } from '../../utils/imagePlaceholders';
-import { isFirebaseStorageUrl } from '../../utils/imageUrlHelper';
+import { isLegacyStorageUrl } from '../../utils/imageUrlHelper';
 
 interface SectionBackgroundProps {
     /** The background image URL set from the editor */
@@ -43,7 +43,7 @@ const SectionBackground: React.FC<SectionBackgroundProps> = ({
     glassEffect = false,
     children,
 }) => {
-    const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl) && !isFirebaseStorageUrl(backgroundImageUrl);
+    const hasValidImage = backgroundImageUrl && !isPendingImage(backgroundImageUrl) && !isLegacyStorageUrl(backgroundImageUrl);
     const scopeId = useId().replace(/:/g, '');
 
     // No background image → render children directly with zero overhead

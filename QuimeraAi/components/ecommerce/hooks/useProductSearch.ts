@@ -13,8 +13,8 @@ import {
     startAfter,
     getDocs,
     QueryDocumentSnapshot,
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { PublicProduct } from './usePublicProduct';
 
 // Types

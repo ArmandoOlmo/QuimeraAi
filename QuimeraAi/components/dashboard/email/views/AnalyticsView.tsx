@@ -33,7 +33,7 @@ const AnalyticsView: React.FC = () => {
     const { t } = useTranslation();
     const { userId, projectId } = useEmailDashboardContext();
     
-    // Use real data from Firebase
+    // Use real data from Supabase
     const { logs, stats, isLoading: logsLoading } = useEmailLogs(userId, projectId);
     const { campaigns, isLoading: campaignsLoading } = useEmailCampaigns(userId, projectId);
 

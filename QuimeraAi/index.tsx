@@ -4,15 +4,16 @@ import './src/styles/main.css'; // Tailwind v4 + Theme (OKLCH from tweakcn)
 import App from './App';
 import './i18n'; // Inicializar i18next
 import './utils/serviceWorkerCleanup';
+import { isLegacyStorageUrl } from './utils/imageUrl';
 
 // Help Center seeding utilities are only needed locally. Loading them in
-// production pulls Firestore plus a large article dataset into the public boot.
+// production pulls a large article dataset into the public boot.
 if (import.meta.env.DEV) {
   void import('./utils/seedHelpArticles');
 }
 
 // ─── Global Image Error Interceptor ──────────────────────────────────
-// Some legacy storage URLs can return 402 (Payment Required) for all images.
+// Some legacy storage URLs can return errors for all images.
 // This capture-phase listener intercepts broken images globally and
 // replaces them with an elegant SVG placeholder — no per-component changes needed.
 document.addEventListener('error', (e) => {
@@ -20,11 +21,7 @@ document.addEventListener('error', (e) => {
     if (target.tagName === 'IMG') {
         const img = target as HTMLImageElement;
         const src = img.src || '';
-        if (
-            src.includes('firebasestorage.googleapis.com') ||
-            src.includes('quimeraai.firebasestorage.app') ||
-            src.includes('quimeraai.appspot.com')
-        ) {
+        if (isLegacyStorageUrl(src)) {
             // Prevent infinite error loops
             if (img.dataset.legacyStorageFallback) return;
             img.dataset.legacyStorageFallback = 'true';

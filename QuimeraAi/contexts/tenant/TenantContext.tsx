@@ -229,7 +229,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [user, userDocument]);
 
-    const createPersonalTenant = useCallback(async (authUser: { id: string; email: string | null; displayName?: string | null }): Promise<string> => {
+    const createPersonalTenant = useCallback(async (authUser: { id: string; email?: string | null; displayName?: string | null }): Promise<string> => {
         const userName = authUser.displayName || authUser.email?.split('@')[0] || 'Usuario';
         const tenantName = `${userName}'s Workspace`;
         const slug = generateSlug(tenantName) + '-' + authUser.id.slice(0, 6);
@@ -787,7 +787,6 @@ export const useTenant = (): TenantContextType => {
 export const useSafeTenant = (): TenantContextType | null => {
     return useContext(TenantContext) || null;
 };
-
 
 
 

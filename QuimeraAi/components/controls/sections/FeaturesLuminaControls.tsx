@@ -76,6 +76,7 @@ export const renderFeaturesLuminaControls = (deps: ControlsDeps) => {
                   <ImageIcon size={12} /> {t('editor.controls.image', 'Image')}
                 </label>
                 <ImagePicker 
+                  label={t('editor.controls.image', 'Image')}
                   value={feature.image || ''} 
                   onChange={(url) => setNestedData(`featuresLumina.features.${idx}.image`, url)} 
                 />

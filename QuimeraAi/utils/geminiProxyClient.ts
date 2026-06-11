@@ -5,9 +5,10 @@
  * This keeps API keys secure and allows chatbots to work on any domain.
  */
 
-// Configuration — Use Supabase Edge Function (OpenRouter) instead of Firebase Cloud Function
+// Configuration — Use Supabase Edge Function (OpenRouter) instead of Supabase Cloud Function
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';
-const AI_PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL ||
+const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_URL ||
+    import.meta.env.VITE_VIDEO_PROXY_URL ||
     `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
 /**
@@ -51,6 +52,12 @@ export interface GeminiProxyResponse {
             totalTokenCount: number;
         };
     };
+    /** Legacy flat shape returned by some proxy handlers */
+    candidates?: Array<{
+        content?: {
+            parts?: Array<{ text?: string }>;
+        };
+    }>;
     metadata: {
         tokensUsed: number;
         model: string;
@@ -693,11 +700,10 @@ export function extractTextFromResponse(response: GeminiProxyResponse | any): st
  * SECURITY: Always use proxy to keep API key secure on the server
  */
 export function shouldUseProxy(): boolean {
-    // ALWAYS use proxy - API key is stored securely in Firebase Functions
+    // ALWAYS use proxy - API key is stored securely in Supabase Functions
     // This ensures the API key is NEVER exposed in the browser
     return true;
 }
-
 
 
 

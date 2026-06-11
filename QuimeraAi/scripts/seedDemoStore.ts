@@ -6,13 +6,13 @@
  */
 
 import {
+    db,
     collection,
     doc,
     setDoc,
     writeBatch,
     serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+} from '@/utils/compatData';
 
 // =============================================================================
 // TYPES
@@ -730,7 +730,6 @@ export const seedDemoStore = async (
 };
 
 export default seedDemoStore;
-
 
 
 

@@ -1,4 +1,4 @@
-import { FirebaseTimestamp } from './ecommerce';
+import { StoredTimestamp } from './ecommerce';
 
 export type DietaryTag = 'vegan' | 'vegetarian' | 'glutenFree' | 'spicy' | 'keto' | 'dairyFree' | 'nutFree';
 
@@ -26,8 +26,8 @@ export interface RestaurantSettings {
   taxRate?: number;
   qrMenuEnabled: boolean;
   publicSlug: string;
-  createdAt: FirebaseTimestamp;
-  updatedAt: FirebaseTimestamp;
+  createdAt: StoredTimestamp;
+  updatedAt: StoredTimestamp;
 }
 
 export interface RestaurantMenuItem {
@@ -49,8 +49,8 @@ export interface RestaurantMenuItem {
   upsellItems: string[];
   aiGenerated: boolean;
   position: number;
-  createdAt: FirebaseTimestamp;
-  updatedAt: FirebaseTimestamp;
+  createdAt: StoredTimestamp;
+  updatedAt: StoredTimestamp;
 }
 
 export interface RestaurantReservation {
@@ -67,8 +67,8 @@ export interface RestaurantReservation {
   status: RestaurantReservationStatus;
   notes?: string;
   source: RestaurantReservationSource;
-  createdAt: FirebaseTimestamp;
-  updatedAt: FirebaseTimestamp;
+  createdAt: StoredTimestamp;
+  updatedAt: StoredTimestamp;
 }
 
 export interface RestaurantMarketingOutput {
@@ -78,7 +78,7 @@ export interface RestaurantMarketingOutput {
   type: 'instagram' | 'weeklyPromotion' | 'email' | 'smsWhatsapp' | 'birthday' | 'inactiveCustomers';
   prompt: string;
   output: string;
-  createdAt: FirebaseTimestamp;
+  createdAt: StoredTimestamp;
   createdBy: string;
 }
 
@@ -89,8 +89,8 @@ export interface RestaurantReviewTemplate {
   type: 'request' | 'positiveReply' | 'negativeReply';
   title: string;
   content: string;
-  createdAt: FirebaseTimestamp;
-  updatedAt: FirebaseTimestamp;
+  createdAt: StoredTimestamp;
+  updatedAt: StoredTimestamp;
 }
 
 export interface RestaurantAnalyticsEvent {
@@ -106,7 +106,7 @@ export interface RestaurantAnalyticsEvent {
     | 'ai_menu_generated'
     | 'ai_description_generated';
   metadata?: Record<string, unknown>;
-  createdAt?: FirebaseTimestamp;
+  createdAt?: StoredTimestamp;
 }
 
 export interface AiRestaurantMenuInput {

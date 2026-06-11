@@ -17,8 +17,8 @@ import {
     query,
     where,
     deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // =============================================================================
 // ARTICLE DATA

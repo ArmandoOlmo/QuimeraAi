@@ -589,7 +589,7 @@ const AINewsStudio: React.FC<AINewsStudioProps> = ({ onClose, onNewsCreated }) =
 
             console.log('[AINewsStudio] News data built:', newsData.title);
             const newId = await createNews(newsData);
-            console.log('[AINewsStudio] ✅ News saved to Firestore with ID:', newId);
+            console.log('[AINewsStudio] ✅ News saved to Supabase with ID:', newId);
 
             const savedNewsItem: NewsItem = {
                 ...newsData,

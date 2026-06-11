@@ -35,7 +35,6 @@ const TRUSTED_EMBED_DOMAINS = [
     'stackblitz.com',
     'figma.com',
     'www.figma.com',
-    'firebasestorage.googleapis.com',
 ];
 
 /**

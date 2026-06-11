@@ -50,7 +50,7 @@ export function ReportsGenerator() {
     if (!currentTenant) return;
 
     try {
-      // TODO: Replace with actual query from Firestore
+      // TODO: Replace with actual query from Supabase
       // Mock data for now
       setSubClients([]);
     } catch (error: any) {

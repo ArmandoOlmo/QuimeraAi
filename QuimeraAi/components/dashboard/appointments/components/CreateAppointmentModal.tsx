@@ -987,7 +987,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
             const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
             const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
-            // Build location object without undefined values (Firebase doesn't accept undefined)
+            // Build location object without undefined values (Supabase doesn't accept undefined)
             const location: AppointmentLocation = {
                 type: formData.locationType,
             };

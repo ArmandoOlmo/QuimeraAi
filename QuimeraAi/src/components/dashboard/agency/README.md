@@ -156,40 +156,32 @@ cd QuimeraAi
 npm install
 ```
 
-### 2. Configurar Firebase Functions
+### 2. Configurar Supabase Edge Functions
 
 ```bash
-cd functions
-
-# Configurar Stripe
-firebase functions:config:set stripe.secret_key="sk_live_..."
-firebase functions:config:set stripe.webhook_secret="whsec_..."
-
-# Configurar URL base
-firebase functions:config:set app.base_url="https://quimera.ai"
+supabase secrets set STRIPE_SECRET_KEY="sk_live_..."
+supabase secrets set STRIPE_WEBHOOK_SECRET="whsec_..."
+supabase secrets set APP_URL="https://quimera.ai"
 ```
 
-### 3. Desplegar Cloud Functions
+### 3. Desplegar funciones
 
 ```bash
-# Desplegar todas las funciones
-firebase deploy --only functions
-
-# O solo las del Agency Plan
-firebase deploy --only functions:agencyBilling,functions:agencyReports,functions:agencyOnboarding,functions:agencyApi
+supabase functions deploy stripe-api
+supabase functions deploy stripe-webhook
 ```
 
 ### 4. Configurar Webhooks de Stripe
 
 1. Ve a Stripe Dashboard → Webhooks
-2. Agrega endpoint: `https://us-central1-quimeraai.cloudfunctions.net/agencyBilling-webhook`
+2. Agrega endpoint: `https://<project-ref>.supabase.co/functions/v1/stripe-webhook`
 3. Selecciona eventos:
    - `payment_intent.succeeded`
    - `payment_intent.failed`
    - `invoice.payment_failed`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
-4. Copia el webhook secret y configúralo en Firebase
+4. Copia el webhook secret y configúralo en Supabase
 
 ---
 
@@ -299,14 +291,11 @@ try {
 
 ## Testing
 
-### Testing Local con Emulators
+### Testing Local
 
 ```bash
-# Iniciar emulators
-firebase emulators:start
-
-# Las funciones estarán disponibles en:
-# http://localhost:5001/quimeraai/us-central1/agencyBilling-createStripeConnectAccount
+supabase functions serve stripe-api
+supabase functions serve stripe-webhook
 ```
 
 ### Testing de Componentes
@@ -336,16 +325,12 @@ describe('BillingSettings', () => {
 ### Ver logs en tiempo real
 
 ```bash
-# Ver todos los logs
-firebase functions:log --follow
-
-# Ver logs específicos
-firebase functions:log --only agencyBilling
+supabase functions logs stripe-api
+supabase functions logs stripe-webhook
 ```
 
-### Métricas en Firebase Console
+### Métricas en Supabase/Vercel
 
-- **URL**: https://console.firebase.google.com/project/quimeraai/functions
 - Métricas disponibles:
   - Invocaciones
   - Errores
@@ -358,18 +343,18 @@ firebase functions:log --only agencyBilling
 
 ### Error: "API key required"
 
-**Problema**: Las Cloud Functions requieren autenticación pero no se está enviando el token.
+**Problema**: Las funciones requieren autenticación pero no se está enviando el token.
 
 **Solución**: Asegúrate de que el usuario esté autenticado:
 ```tsx
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getAuth } from 'firebase/auth';
+import { supabase } from '../../../supabase';
 
-const auth = getAuth();
-const functions = getFunctions();
+const { data: { session } } = await supabase.auth.getSession();
 
-// Automáticamente incluye el token de autenticación
-const myFunction = httpsCallable(functions, 'myFunction');
+const { data, error } = await supabase.functions.invoke('stripe-api', {
+  body: { action: 'agency-action' },
+  headers: { Authorization: `Bearer ${session?.access_token}` },
+});
 ```
 
 ### Error: "Permission denied"
@@ -394,7 +379,7 @@ Considera actualizar el plan o esperar 1 minuto.
 ## Recursos Adicionales
 
 - [Documentación de Stripe Connect](https://stripe.com/docs/connect)
-- [Firebase Cloud Functions](https://firebase.google.com/docs/functions)
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
 - [Agency Plan Features Guide](../../../docs/AGENCY_PLAN_FEATURES.md)
 - [API Documentation](../../../docs/API_DOCUMENTATION.md)
 

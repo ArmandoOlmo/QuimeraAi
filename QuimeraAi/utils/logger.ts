@@ -119,12 +119,12 @@ class Logger {
   }
 
   /**
-   * Log Firebase operation - only in development
+   * Log data operation - only in development
    */
-  firebase(operation: string, collection: string, data?: any): void {
+  data(operation: string, collection: string, data?: any): void {
     if (!this.enabled || isProduction) return;
     
-    console.debug(`🔥 [Firebase] ${operation} ${collection}`, data ?? '');
+    console.debug(`🗄️ [Data] ${operation} ${collection}`, data ?? '');
   }
 
   /**
@@ -175,7 +175,7 @@ export const log = {
   warn: (message: string, data?: any) => logger.warn(message, data),
   error: (message: string, error?: Error | any, data?: any) => logger.error(message, error, data),
   api: (method: string, url: string, data?: any) => logger.api(method, url, data),
-  firebase: (operation: string, collection: string, data?: any) => logger.firebase(operation, collection, data),
+  data: (operation: string, collection: string, data?: any) => logger.data(operation, collection, data),
   action: (action: string, data?: any) => logger.action(action, data),
   perf: (label: string, durationMs: number) => logger.perf(label, durationMs),
 };
@@ -189,7 +189,7 @@ export const createLogger = (context: string) => Logger.create(context);
 export const loggers = {
   auth: Logger.create('Auth'),
   api: Logger.create('API'),
-  firebase: Logger.create('Firebase'),
+  data: Logger.create('Data'),
   editor: Logger.create('Editor'),
   ai: Logger.create('AI'),
   chat: Logger.create('Chat'),
@@ -197,7 +197,6 @@ export const loggers = {
   leads: Logger.create('Leads'),
   deployment: Logger.create('Deployment'),
 };
-
 
 
 

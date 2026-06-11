@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * useStoreUsers Hook
  * Hook para gestión de usuarios de tienda en el dashboard usando Supabase
@@ -203,13 +204,13 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
         if (filters.createdAfter) {
             const afterTs = filters.createdAfter.getTime() / 1000;
             filtered = filtered.filter(
-                (u) => u.createdAt && u.createdAt.seconds >= afterTs
+                (u) => u.createdAt && getTimestampSeconds(u.createdAt) >= afterTs
             );
         }
         if (filters.createdBefore) {
             const beforeTs = filters.createdBefore.getTime() / 1000;
             filtered = filtered.filter(
-                (u) => u.createdAt && u.createdAt.seconds <= beforeTs
+                (u) => u.createdAt && getTimestampSeconds(u.createdAt) <= beforeTs
             );
         }
 
@@ -254,11 +255,11 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 
             // New users
             if (user.createdAt) {
-                if (user.createdAt.seconds >= thisMonthStartTs) {
+                if (getTimestampSeconds(user.createdAt) >= thisMonthStartTs) {
                     newUsersThisMonth++;
                 } else if (
-                    user.createdAt.seconds >= lastMonthStartTs &&
-                    user.createdAt.seconds <= lastMonthEndTs
+                    getTimestampSeconds(user.createdAt) >= lastMonthStartTs &&
+                    getTimestampSeconds(user.createdAt) <= lastMonthEndTs
                 ) {
                     newUsersLastMonth++;
                 }
@@ -348,8 +349,7 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
     const resetUserPassword = useCallback(
         async (userId: string): Promise<void> => {
             try {
-                // Para resetear el password habría que llamar a AuthAdmin o a un Edge Function
-                const result = await supabase.functions.invoke('publish-project', { // Dummy func just for reference, needs right edge function
+                const result = await supabase.functions.invoke('stripe-api', {
                     body: { action: 'storeUsers-resetPassword', storeId, userId }
                 });
                 if (result.error) throw result.error;
@@ -618,7 +618,6 @@ export const useStoreUsers = (storeId: string, options?: UseStoreUsersOptions) =
 };
 
 export default useStoreUsers;
-
 
 
 

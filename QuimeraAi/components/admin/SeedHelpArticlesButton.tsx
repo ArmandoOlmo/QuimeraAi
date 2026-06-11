@@ -1,7 +1,7 @@
 /**
  * SeedHelpArticlesButton Component
  * 
- * Botón de administración para cargar los artículos del Help Center a Firebase.
+ * Botón de administración para cargar los artículos del Help Center a Supabase.
  * Solo visible para administradores.
  * 
  * Uso: Importar y colocar en cualquier página de admin.
@@ -15,8 +15,8 @@ import {
     getDocs,
     query,
     where,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // Tipos
 interface HelpArticle {
@@ -811,7 +811,7 @@ export function SeedHelpArticlesButton(): React.ReactElement {
                 📚 Seed Help Center Articles
             </h3>
             <p className="text-zinc-400 text-sm mb-4">
-                Carga los artículos del Help Center a Firebase.
+                Carga los artículos del Help Center a Supabase.
             </p>
 
             {existingCount !== null && (

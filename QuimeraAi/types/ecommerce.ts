@@ -7,7 +7,11 @@
 // COMMON TYPES
 // =============================================================================
 
-export type FirebaseTimestamp = { seconds: number; nanoseconds: number };
+export type StoredTimestamp =
+    | { seconds: number; nanoseconds?: number }
+    | string
+    | number
+    | Date;
 
 // =============================================================================
 // PRODUCTS
@@ -85,9 +89,9 @@ export interface Product {
     weightUnit?: 'kg' | 'lb' | 'g' | 'oz';
     
     // Timestamps
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
-    publishedAt?: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
+    publishedAt?: StoredTimestamp;
 }
 
 // =============================================================================
@@ -102,8 +106,8 @@ export interface Category {
     imageUrl?: string;
     parentId?: string;              // Para subcategorías
     position: number;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -213,15 +217,15 @@ export interface Order {
     // Payment
     paymentMethod: string;          // "stripe", "paypal", "cash"
     paymentIntentId?: string;       // Stripe Payment Intent ID
-    paidAt?: FirebaseTimestamp;
+    paidAt?: StoredTimestamp;
     
     // Shipping
     shippingMethod?: string;
     trackingNumber?: string;
     trackingUrl?: string;
     carrier?: string;               // Shipping carrier name
-    shippedAt?: FirebaseTimestamp;
-    deliveredAt?: FirebaseTimestamp;
+    shippedAt?: StoredTimestamp;
+    deliveredAt?: StoredTimestamp;
     
     // Notes
     notes?: string;                 // General notes (alias for internalNotes)
@@ -229,10 +233,10 @@ export interface Order {
     internalNotes?: string;
     
     // Timestamps
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
-    cancelledAt?: FirebaseTimestamp;
-    refundedAt?: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
+    cancelledAt?: StoredTimestamp;
+    refundedAt?: StoredTimestamp;
 }
 
 // =============================================================================
@@ -240,8 +244,11 @@ export interface Order {
 // =============================================================================
 
 export interface CartItem {
+    id?: string;
     productId: string;
     variantId?: string;
+    /** @deprecated Use variantId */
+    variant?: string;
     name?: string;          // Product name (legacy)
     productName?: string;   // Alias for name, used in some components
     variantName?: string;
@@ -261,9 +268,9 @@ export interface Cart {
     subtotal: number;
     discountCode?: string;
     discountAmount?: number;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
-    expiresAt?: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
+    expiresAt?: StoredTimestamp;
 }
 
 // =============================================================================
@@ -280,7 +287,7 @@ export interface Customer {
     // Stats
     totalOrders: number;
     totalSpent: number;
-    lastOrderAt?: FirebaseTimestamp;
+    lastOrderAt?: StoredTimestamp;
     
     // Addresses
     defaultShippingAddress?: Address;
@@ -292,8 +299,8 @@ export interface Customer {
     tags?: string[];
     notes?: string;
     
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -347,8 +354,8 @@ export interface Discount {
     canCombine: boolean;            // Can combine with other discounts
     
     // Date range
-    startsAt: FirebaseTimestamp;
-    endsAt?: FirebaseTimestamp;
+    startsAt: StoredTimestamp;
+    endsAt?: StoredTimestamp;
     
     // Status
     isActive: boolean;
@@ -358,8 +365,8 @@ export interface Discount {
     description?: string;
     internalNotes?: string;
     
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -383,9 +390,9 @@ export interface Review {
     helpfulVotes: number;
     images?: string[];
     adminResponse?: string;
-    adminResponseAt?: FirebaseTimestamp;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    adminResponseAt?: StoredTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 export interface ReviewStats {
@@ -598,7 +605,7 @@ export interface StoreSettings {
     stripeConnectChargesEnabled?: boolean;  // Puede recibir pagos
     stripeConnectPayoutsEnabled?: boolean;  // Puede recibir transferencias a su banco
     stripeConnectDetailsSubmitted?: boolean; // Completó el onboarding
-    stripeConnectCreatedAt?: FirebaseTimestamp;
+    stripeConnectCreatedAt?: StoredTimestamp;
     
     // Notifications - Admin
     orderNotificationEmail: string;
@@ -617,9 +624,11 @@ export interface StoreSettings {
     termsAndConditionsUrl?: string;
     privacyPolicyUrl?: string;
     
+    isActive?: boolean;
+
     // Timestamps
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -696,8 +705,8 @@ export interface ProjectEcommerceConfig {
     ecommerceEnabled: boolean;
     storeId: string;              // Igual a projectId para relación 1:1
     storeName: string;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 /**
@@ -738,7 +747,7 @@ export interface PublicProduct {
     averageRating?: number;
     reviewCount?: number;
     reviewStats?: ReviewStats;      // Review statistics
-    createdAt?: FirebaseTimestamp;
-    updatedAt?: FirebaseTimestamp;
+    createdAt?: StoredTimestamp;
+    updatedAt?: StoredTimestamp;
 }
 

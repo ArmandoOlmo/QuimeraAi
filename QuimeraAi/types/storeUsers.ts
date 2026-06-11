@@ -3,7 +3,7 @@
  * Tipos para el sistema de autenticación de usuarios de tienda multi-tenant
  */
 
-import { FirebaseTimestamp } from './ecommerce';
+import { StoredTimestamp } from './ecommerce';
 
 // =============================================================================
 // ROLES & STATUS
@@ -57,10 +57,10 @@ export interface StoreUser {
     averageOrderValue: number;
     
     // Timestamps
-    lastLoginAt?: FirebaseTimestamp;
-    lastOrderAt?: FirebaseTimestamp;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    lastLoginAt?: StoredTimestamp;
+    lastOrderAt?: StoredTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
     
     // Metadata
     metadata: StoreUserMetadata;
@@ -113,8 +113,8 @@ export interface UserSegment {
     type: SegmentType;
     rules?: SegmentRule[];              // For automatic segments
     userCount: number;
-    createdAt: FirebaseTimestamp;
-    updatedAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
+    updatedAt: StoredTimestamp;
 }
 
 // =============================================================================
@@ -141,7 +141,7 @@ export interface UserActivity {
     metadata?: Record<string, any>;
     ipAddress?: string;
     userAgent?: string;
-    createdAt: FirebaseTimestamp;
+    createdAt: StoredTimestamp;
 }
 
 // =============================================================================

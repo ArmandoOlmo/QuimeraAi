@@ -171,22 +171,22 @@ export const renderTestimonialsNeonControls = (deps: ControlsDeps) => {
                 </label>
                 <ColorControl
                     label={t('editor.controls.background', 'Fondo Base')}
-                    color={colors.background}
+                    value={colors.background}
                     onChange={(color) => setNestedData('testimonialsNeon.colors.background', color)}
                 />
                 <ColorControl
                     label={t('editor.controls.headingColor', 'Color del Titular')}
-                    color={colors.heading}
+                    value={colors.heading}
                     onChange={(color) => setNestedData('testimonialsNeon.colors.heading', color)}
                 />
                 <ColorControl
                     label={t('editor.controls.textColor', 'Color del Texto')}
-                    color={colors.text}
+                    value={colors.text}
                     onChange={(color) => setNestedData('testimonialsNeon.colors.text', color)}
                 />
                 <ColorControl
                     label={t('editor.heroNeonControls.neonColor', 'Color Neon')}
-                    color={colors.neonGlow}
+                    value={colors.neonGlow}
                     onChange={(color) => setNestedData('testimonialsNeon.colors.neonGlow', color)}
                 />
                 <ColorControl

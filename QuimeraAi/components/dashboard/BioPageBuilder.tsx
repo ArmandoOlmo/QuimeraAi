@@ -109,7 +109,7 @@ import ColorControl from '../ui/ColorControl';
 import ChatCore from '../chat/ChatCore';
 import { hexToRgba } from '../../utils/colorUtils';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
-import { db, collection, getDocs, deleteDoc, doc, query, orderBy } from '../../firebase';
+import { db, collection, getDocs, deleteDoc, doc, query, orderBy } from '@/utils/compatData';
 
 // =============================================================================
 // TYPES
@@ -183,6 +183,7 @@ interface Integration {
     category: LinkCategory;
     platform: string;
     color: string;
+    linkType?: string;
 }
 
 const INTEGRATIONS: Integration[] = [
@@ -568,7 +569,7 @@ const BioPageBuilder: React.FC = () => {
                     oldIndex,
                     newIndex
                 );
-                // Call context reorderLinks to persist to Firestore
+                // Call context reorderLinks to persist to Supabase
                 contextReorderLinks(reorderedIds);
             }
         }

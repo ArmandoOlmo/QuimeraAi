@@ -57,8 +57,9 @@ import Separator from './Separator';
 import RealEstateListingsSection from './real-estate/RealEstateListingsSection';
 import RestaurantReservation from './RestaurantReservation';
 import PropertyDetailSection from './real-estate/PropertyDetailSection';
-import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../types';
+import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
+import { initialData } from '../data/initialData';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useUI } from '../contexts/core/UIContext';
 import { useProject } from '../contexts/project';
@@ -124,7 +125,10 @@ const LandingPageContent: React.FC = () => {
   const rawData = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
   const data = useMemo(() => sanitizeI18nObject(rawData, preferredLanguage), [rawData, preferredLanguage]);
   
-  const theme = (isEditorMode ? editorContext?.theme : projectContext?.theme) || projectContext?.theme || {};
+  const theme: ThemeData = {
+    ...initialData.theme,
+    ...(((isEditorMode ? editorContext?.theme : projectContext?.theme) || projectContext?.theme) ?? {}),
+  };
   const componentOrder = (isEditorMode ? editorContext?.componentOrder : projectContext?.componentOrder) || projectContext?.componentOrder;
   const sectionVisibility = (isEditorMode ? editorContext?.sectionVisibility : projectContext?.sectionVisibility) || projectContext?.sectionVisibility;
   const { activeProjectId, activeProject, pages, activePage, setActivePage, addPage } = projectContext || {};
@@ -956,7 +960,7 @@ const LandingPageContent: React.FC = () => {
     mergedAnnouncementBarData,
   ]);
 
-  const componentsMap: Record<PageSection, React.ReactNode> = {
+  const componentsMap: Partial<Record<PageSection, React.ReactNode>> = {
     hero: (
       <SectionBackground backgroundImageUrl={mergedHeroData?.backgroundImageUrl} backgroundColor={mergedHeroData?.colors?.background} backgroundOverlayEnabled={mergedHeroData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedHeroData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedHeroData?.backgroundOverlayColor} backgroundPosition={mergedHeroData?.backgroundPosition} glassEffect={mergedHeroData?.glassEffect}>
         {(() => {

@@ -20,9 +20,15 @@ export interface CreditsUsageData {
     percentage: number;
     plan: string;
     planId: SubscriptionPlanId;
+    status: string;
+    billingCycle?: string;
+    currentPeriodEnd?: string | null;
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
     color: string;
     isNearLimit: boolean;
     hasExceededLimit: boolean;
+    requiresPayment: boolean;
 }
 
 interface UseCreditsUsageReturn {
@@ -55,7 +61,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         try {
             const { data, error } = await supabase
                 .from('subscriptions')
-                .select('plan_id, ai_credits_usage')
+                .select('plan_id, billing_cycle, status, current_period_end, stripe_customer_id, stripe_subscription_id, ai_credits_usage')
                 .eq('tenant_id', tenantId)
                 .maybeSingle();
 
@@ -65,9 +71,10 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 
             let planKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || 'free';
             let plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
+            const status = data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
-            let used = aiUsage?.creditsUsed || 0;
+            let used = aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0;
             let limit = aiUsage?.creditsIncluded || plan.limits.maxAiCredits;
             
             let planName = plan.name;
@@ -91,9 +98,15 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 percentage,
                 plan: planName,
                 planId,
+                status,
+                billingCycle: data?.billing_cycle,
+                currentPeriodEnd: data?.current_period_end,
+                stripeCustomerId: data?.stripe_customer_id,
+                stripeSubscriptionId: data?.stripe_subscription_id,
                 color: getUsageColor(percentage),
                 isNearLimit: percentage >= 80 && percentage < 100,
                 hasExceededLimit: percentage >= 100,
+                requiresPayment: ['past_due', 'unpaid', 'incomplete', 'incomplete_expired'].includes(status),
             });
         } catch (err: any) {
             console.error('Error fetching credits usage:', err);
@@ -145,7 +158,6 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 }
 
 export default useCreditsUsage;
-
 
 
 

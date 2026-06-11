@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts"
 
 /**
  * AI Proxy for OpenRouter
@@ -637,6 +638,16 @@ serve(async (req) => {
 
         if (payload.action === 'credits_consume') {
             return await handleCreditsConsume(payload, await getAuthenticatedUserId(req));
+        }
+
+        if (payload.action === 'analyzeWebsite') {
+            const url = String(payload.url || '').trim();
+            if (!url) {
+                return jsonResponse({ error: 'URL is required' }, { status: 400 });
+            }
+            const userId = (await getAuthenticatedUserId(req)) || 'anonymous';
+            const analysis = await analyzeWebsiteUrl(url, userId);
+            return jsonResponse(analysis);
         }
 
         const { prompt, history, systemInstruction, model = 'gemini-2.5-flash', config = {}, images, referenceImages, tools } = payload;

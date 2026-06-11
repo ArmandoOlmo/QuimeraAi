@@ -26,7 +26,7 @@ import {
     TenantMembership,
     getMembershipId
 } from '../../../types/multiTenant';
-import { db, doc, updateDoc, deleteDoc, serverTimestamp } from '../../../firebase';
+import { db, doc, updateDoc, deleteDoc, serverTimestamp } from '@/utils/compatData';
 
 interface EditMemberModalProps {
     isOpen: boolean;

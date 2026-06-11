@@ -1,6 +1,6 @@
-import { Product, Category, Customer, Order, OrderItem, Review, Discount, StoreSettings, Cart, WishlistItem, FirebaseTimestamp } from '../types/ecommerce';
+import { Product, Category, Customer, Order, OrderItem, Review, Discount, DiscountType, StoreSettings, Cart, StoredTimestamp } from '../types/ecommerce';
 import { StoreUser, StoreUserRole, StoreUserStatus, UserSegment, SegmentType, UserActivity, ActivityType } from '../types/storeUsers';
-import { toFirebaseTimestamp } from './supabaseMappers';
+import { toStoredTimestamp } from './supabaseMappers';
 
 export const mapProductFromDB = (row: any): Product => ({
     id: row.id,
@@ -28,8 +28,8 @@ export const mapProductFromDB = (row: any): Product => ({
     weight: row.weight ? Number(row.weight) : undefined,
     weightUnit: row.weight_unit,
     categoryId: row.category_id,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapProductToDB = (product: Partial<Product>): any => {
@@ -69,8 +69,8 @@ export const mapCategoryFromDB = (row: any): Category => ({
     imageUrl: row.image_url,
     parentId: row.parent_id,
     position: row.position,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapCategoryToDB = (category: Partial<Category>): any => {
@@ -111,20 +111,20 @@ export const mapOrderFromDB = (row: any): Order => ({
     fulfillmentStatus: row.fulfillment_status,
     paymentMethod: row.payment_method,
     paymentIntentId: row.payment_intent_id,
-    paidAt: toFirebaseTimestamp(row.paid_at),
+    paidAt: toStoredTimestamp(row.paid_at),
     shippingMethod: row.shipping_method,
     trackingNumber: row.tracking_number,
     trackingUrl: row.tracking_url,
     carrier: row.carrier,
-    shippedAt: toFirebaseTimestamp(row.shipped_at),
-    deliveredAt: toFirebaseTimestamp(row.delivered_at),
+    shippedAt: toStoredTimestamp(row.shipped_at),
+    deliveredAt: toStoredTimestamp(row.delivered_at),
     notes: row.notes,
     customerNotes: row.customer_notes,
     internalNotes: row.internal_notes,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
-    cancelledAt: toFirebaseTimestamp(row.cancelled_at),
-    refundedAt: toFirebaseTimestamp(row.refunded_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
+    cancelledAt: toStoredTimestamp(row.cancelled_at),
+    refundedAt: toStoredTimestamp(row.refunded_at),
 });
 
 export const mapOrderToDB = (order: Partial<Order>): any => {
@@ -173,15 +173,15 @@ export const mapCustomerFromDB = (row: any): Customer => ({
     phone: row.phone,
     totalOrders: Number(row.total_orders || 0),
     totalSpent: Number(row.total_spent || 0),
-    lastOrderAt: toFirebaseTimestamp(row.last_order_at),
+    lastOrderAt: toStoredTimestamp(row.last_order_at),
     defaultShippingAddress: row.default_shipping_address,
     defaultBillingAddress: row.default_billing_address,
     addresses: row.addresses || [],
     acceptsMarketing: row.accepts_marketing,
     tags: row.tags || [],
     notes: row.notes,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapCustomerToDB = (customer: Partial<Customer>): any => {
@@ -214,9 +214,9 @@ export const mapReviewFromDB = (row: any): Review => ({
     status: row.status,
     helpfulVotes: row.helpful_votes,
     adminResponse: row.admin_response,
-    adminResponseAt: toFirebaseTimestamp(row.admin_response_at), // Not in original DB schema, but map if present
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    adminResponseAt: toStoredTimestamp(row.admin_response_at), // Not in original DB schema, but map if present
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapReviewToDB = (review: Partial<Review>): any => {
@@ -239,14 +239,18 @@ export const mapDiscountFromDB = (row: any): Discount => ({
     code: row.code,
     type: row.type as DiscountType,
     value: Number(row.value || 0),
+    appliesTo: row.applies_to || 'all',
+    customerEligibility: row.customer_eligibility || 'all',
+    canCombine: row.can_combine ?? false,
+    isAutomatic: row.is_automatic ?? false,
     minimumPurchase: row.minimum_purchase ? Number(row.minimum_purchase) : undefined,
     maxUses: row.max_uses,
     usedCount: row.used_count || 0,
-    startsAt: toFirebaseTimestamp(row.starts_at),
-    endsAt: row.ends_at ? toFirebaseTimestamp(row.ends_at) : undefined,
+    startsAt: toStoredTimestamp(row.starts_at),
+    endsAt: row.ends_at ? toStoredTimestamp(row.ends_at) : undefined,
     isActive: row.is_active,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapDiscountToDB = (discount: Partial<Discount>): any => {
@@ -290,8 +294,8 @@ export const mapStoreSettingsFromDB = (row: any): StoreSettings => ({
     requirePhone: row.require_phone,
     requireShippingAddress: row.require_shipping_address,
     isActive: row.is_active ?? true,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapStoreSettingsToDB = (settings: Partial<StoreSettings>): any => {
@@ -345,10 +349,10 @@ export const mapStoreUserFromDB = (row: any): StoreUser => ({
     totalOrders: row.total_orders,
     totalSpent: Number(row.total_spent),
     averageOrderValue: Number(row.average_order_value),
-    lastLoginAt: row.last_login_at ? toFirebaseTimestamp(row.last_login_at) : undefined,
-    lastOrderAt: row.last_order_at ? toFirebaseTimestamp(row.last_order_at) : undefined,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    lastLoginAt: row.last_login_at ? toStoredTimestamp(row.last_login_at) : undefined,
+    lastOrderAt: row.last_order_at ? toStoredTimestamp(row.last_order_at) : undefined,
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
     metadata: row.metadata || {},
     acceptsMarketing: row.accepts_marketing,
     preferredLanguage: row.preferred_language,
@@ -387,8 +391,8 @@ export const mapStoreUserSegmentFromDB = (row: any): UserSegment => ({
     type: row.type as SegmentType,
     rules: row.rules || [],
     userCount: row.user_count,
-    createdAt: toFirebaseTimestamp(row.created_at),
-    updatedAt: toFirebaseTimestamp(row.updated_at),
+    createdAt: toStoredTimestamp(row.created_at),
+    updatedAt: toStoredTimestamp(row.updated_at),
 });
 
 export const mapStoreUserSegmentToDB = (segment: Partial<UserSegment>): any => {
@@ -410,7 +414,7 @@ export const mapStoreUserActivityFromDB = (row: any): UserActivity => ({
     metadata: row.metadata || {},
     ipAddress: row.ip_address,
     userAgent: row.user_agent,
-    createdAt: toFirebaseTimestamp(row.created_at),
+    createdAt: toStoredTimestamp(row.created_at),
 });
 
 export const mapStoreUserActivityToDB = (activity: Partial<UserActivity>): any => {

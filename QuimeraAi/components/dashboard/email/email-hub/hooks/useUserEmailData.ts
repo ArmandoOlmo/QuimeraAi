@@ -2,13 +2,13 @@
  * useUserEmailData
  *
  * User-scoped version of useAdminEmailData.
- * All Firestore subscriptions are scoped to users/{userId}/projects/{projectId}/...
+ * All Supabase subscriptions are scoped to users/{userId}/projects/{projectId}/...
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import {
     db, collection, query, orderBy, onSnapshot,
-} from '../../../../../firebase';
+} from '@/utils/compatData';
 import type { EmailAutomation } from '../../../../../types/email';
 import type { CampaignStatus } from '../../../../../types/email';
 import type {

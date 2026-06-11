@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Domain, DeploymentLog, Project } from '../../types';
 import { supabase } from '../../supabase';
 import { deploymentService } from '../../utils/deploymentService';
-import type { User } from '../../firebase';
+import type { User } from '@/utils/compatData';
 
 interface UseEditorDomainsParams {
     user: User | null;

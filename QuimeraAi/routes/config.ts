@@ -37,8 +37,10 @@ export interface RouteParams {
 export const ROUTES = {
   // Public Routes
   LANDING: '/',
+  HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
+  SIGNUP: '/register',
   BLOG: '/blog',
   BLOG_ARTICLE: '/blog/:slug',
 
@@ -162,6 +164,10 @@ export const ROUTES = {
   ADMIN_LEADS: '/admin/leads',
   ADMIN_APPOINTMENTS: '/admin/appointments',
   ADMIN_EMAIL: '/admin/email',
+
+  // Portal (white-label client)
+  PORTAL_LOGIN: '/portal/login',
+  PORTAL_DASHBOARD: '/portal/dashboard',
 } as const;
 
 // =============================================================================

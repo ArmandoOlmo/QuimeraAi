@@ -240,7 +240,7 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
 
 **Nuestra misión:** Democratizar la creación web, haciendo que cualquier persona pueda tener presencia digital profesional en minutos, no días.
 
-**Tecnología:** Utilizamos Google Gemini AI para generación de contenido, diseño inteligente y asistencia en tiempo real. Nuestra plataforma está construida con React, TypeScript, Firebase y Tailwind CSS.
+**Tecnología:** Utilizamos Google Gemini AI para generación de contenido, diseño inteligente y asistencia en tiempo real. Nuestra plataforma está construida con React, TypeScript, Supabase y Tailwind CSS.
 
 **Fundada:** 2024
 **Sede:** Ciudad de México, México
@@ -454,7 +454,7 @@ export const defaultLandingChatbotConfig: LandingChatbotConfig = {
             { id: 'faq-12', question: '¿Cómo funciona el plan Agency?', answer: 'El plan Agency está diseñado para agencias digitales. Incluye hasta 10 sub-clientes con sus propios workspaces aislados, white-label completo (tu marca, no la nuestra), portal personalizado y herramientas de gestión de equipo.' },
             { id: 'faq-13', question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) procesadas de forma segura con Stripe. Para el plan Enterprise también ofrecemos facturación y transferencia bancaria.' },
             { id: 'faq-14', question: '¿Puedo cancelar en cualquier momento?', answer: 'Sí, puedes cancelar tu suscripción en cualquier momento desde tu panel de configuración. Tu cuenta permanecerá activa hasta el final del período de facturación actual.' },
-            { id: 'faq-15', question: '¿Mis datos están seguros?', answer: 'Absolutamente. Usamos Firebase de Google para almacenamiento, con encriptación de datos en tránsito y en reposo. Cumplimos con estándares de seguridad de la industria y nunca compartimos tus datos con terceros.' },
+            { id: 'faq-15', question: '¿Mis datos están seguros?', answer: 'Absolutamente. Usamos Supabase de Google para almacenamiento, con encriptación de datos en tránsito y en reposo. Cumplimos con estándares de seguridad de la industria y nunca compartimos tus datos con terceros.' },
         ],
         documents: [],
         additionalContext: `**Información Adicional:**

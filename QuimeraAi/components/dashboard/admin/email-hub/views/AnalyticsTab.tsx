@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../../utils/timestampUtils';
 /**
  * AnalyticsTab — Cross-tenant analytics dashboard with charts and detailed metrics.
  */
@@ -183,8 +184,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
                             {campaigns
                                 .filter(c => c.status === 'sent' || c.status === 'sending')
                                 .sort((a, b) => {
-                                    const aTime = a.sentAt?.seconds || a.createdAt?.seconds || 0;
-                                    const bTime = b.sentAt?.seconds || b.createdAt?.seconds || 0;
+                                    const aTime = getTimestampSeconds(a.sentAt) || getTimestampSeconds(a.createdAt) || 0;
+                                    const bTime = getTimestampSeconds(b.sentAt) || getTimestampSeconds(b.createdAt) || 0;
                                     return bTime - aTime;
                                 })
                                 .map(campaign => {

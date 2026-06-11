@@ -1,7 +1,7 @@
 
 import { LLMPrompt } from '../types';
 
-type DefaultPrompt = Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'>;
+export type DefaultPrompt = Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'>;
 
 export const defaultPrompts: DefaultPrompt[] = [
   // Onboarding - Design Plan (used in GlobalAiAssistant.tsx)

@@ -2,7 +2,7 @@
  * Voice Proxy Client
  * 
  * Client-side utility for TTS and voice chat through the Supabase Edge Function.
- * Routes through OpenRouter for AI, no Firebase dependency.
+ * Routes through OpenRouter for AI, no Supabase dependency.
  */
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co';

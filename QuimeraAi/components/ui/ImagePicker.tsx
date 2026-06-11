@@ -13,7 +13,7 @@ import { searchFiles } from '../../utils/fileHelpers';
 import { FileRecord } from '../../types';
 import MediaGeneratorPanel from '../media-generator/MediaGeneratorPanel';
 import ImageDetailModal from './ImageDetailModal';
-import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
+import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 interface ImagePickerProps {
     label: string;
@@ -34,6 +34,8 @@ interface ImagePickerProps {
     adminCategory?: string;
     /** Optional flag to hide the raw URL text input */
     hideUrlInput?: boolean;
+    showAIGeneration?: boolean;
+    aspectRatio?: string;
     /** Generation context hint for AI image generator. 'background' optimizes for website section backgrounds. */
     generationContext?: 'background' | 'general';
     /** Initial modal tab when opened programmatically. */
@@ -136,8 +138,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
             return;
         }
 
-        if (isLegacyFirebaseStorageUrl(selectedImageUrl)) {
-            showError('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
+        if (isLegacyStorageUrl(selectedImageUrl)) {
+            showError('Esta imagen viene de legacy storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
             return;
         }
 
@@ -475,7 +477,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, store
                                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                                                 {imageFiles.map(file => {
                                                     const fileUrl = normalizeImageUrl(file.downloadURL);
-                                                    const isLegacyImage = isLegacyFirebaseStorageUrl(fileUrl);
+                                                    const isLegacyImage = isLegacyStorageUrl(fileUrl);
                                                     const isSelected = normalizeImageUrl(value) === fileUrl;
 
                                                     return (

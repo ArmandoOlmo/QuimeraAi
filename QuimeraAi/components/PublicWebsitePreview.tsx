@@ -18,29 +18,29 @@ import { initialData } from '../data/initialData';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
-import { getSafeImageUrl, isFirebaseStorageUrl } from '../utils/imageUrlHelper';
+import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import SectionBackground from './ui/SectionBackground';
 import { usePublicRealEstateListings } from '../hooks/usePublicRealEstateListings';
 import { Property } from '../types/realEstate';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
-function replaceBrokenFirebaseStorageUrls<T>(value: T): T {
+function replaceBrokenSupabaseStorageUrls<T>(value: T): T {
   if (typeof value === 'string') {
-    return (isFirebaseStorageUrl(value)
+    return (isLegacyStorageUrl(value)
       ? getSafeImageUrl(value, { label: 'Imagen pendiente' })
       : value) as T;
   }
 
   if (Array.isArray(value)) {
-    return value.map(item => replaceBrokenFirebaseStorageUrls(item)) as T;
+    return value.map(item => replaceBrokenSupabaseStorageUrls(item)) as T;
   }
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>).map(([key, item]) => [
         key,
-        replaceBrokenFirebaseStorageUrls(item),
+        replaceBrokenSupabaseStorageUrls(item),
       ])
     ) as T;
   }
@@ -465,7 +465,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         if (prefetch) {
           const prefetched = await prefetch;
           if (prefetched.project) {
-            projectData = replaceBrokenFirebaseStorageUrls(prefetched.project) as Project;
+            projectData = replaceBrokenSupabaseStorageUrls(prefetched.project) as Project;
             if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts as CMSPost[]);
             if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
             if (prefetched.categories && prefetched.categories.length > 0) {
@@ -484,14 +484,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           }
         }
 
-        // PRIORITY 0: Check for SSR-injected data (fastest path - no Firestore call needed)
+        // PRIORITY 0: Check for SSR-injected data (fastest path - no Supabase call needed)
         // This is set by the SSR server for custom domains
         const ssrData = typeof window !== 'undefined' ? (window as any).__INITIAL_DATA__ : null;
 
         if (ssrData?.project) {
-          projectData = replaceBrokenFirebaseStorageUrls({ id: ssrData.projectId, ...ssrData.project }) as Project;
+          projectData = replaceBrokenSupabaseStorageUrls({ id: ssrData.projectId, ...ssrData.project }) as Project;
 
-          console.log('[PublicWebsitePreview] ✅ Using SSR-injected data (no Firestore call)', {
+          console.log('[PublicWebsitePreview] ✅ Using SSR-injected data (no Supabase call)', {
             projectName: projectData.name,
             hasMenus: !!(projectData as any).menus?.length,
             menusCount: (projectData as any).menus?.length || 0,
@@ -602,11 +602,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               .select(projectSelect)
               .eq('id', resolvedProjectId)
               .maybeSingle();
-            const postsResult = projectResult.data?.tenant_id
+            const projectRow = projectResult.data as any;
+            const postsResult = projectRow?.tenant_id
               ? await supabase
                   .from('posts')
                   .select('*')
-                  .eq('tenant_id', projectResult.data.tenant_id)
+                  .eq('tenant_id', projectRow.tenant_id)
                   .eq('status', 'published')
                   .contains('tags', [`project:${resolvedProjectId}`])
                   .order('published_at', { ascending: false })
@@ -627,7 +628,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                   name: row.name || rawData.name,
                   ...rawData,
                 } as Project;
-                projectData = replaceBrokenFirebaseStorageUrls(projectData);
+                projectData = replaceBrokenSupabaseStorageUrls(projectData);
                 console.log('[PublicWebsitePreview] ✅ Loaded from Supabase:', {
                   source: rawData === row.data ? 'data' : 'published_data',
                   hasCategories: !!rawData?.categories,
@@ -673,7 +674,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               : null;
 
           if (brandingQuery) {
-            brandingQuery.then(({ data, error }) => {
+            void Promise.resolve(brandingQuery).then(({ data, error }) => {
               if (!error && data) {
                 const branding = (data as any).branding;
                 if (branding?.companyName || branding?.logoUrl) {
@@ -1849,7 +1850,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           projectId={storeProjectId || ''}
           data={mergedData.realEstateListings}
           theme={theme}
-          globalColors={theme?.globalColors}
+          globalColors={theme?.globalColors as Record<string, string> | undefined}
         />
       );
     }
@@ -1862,7 +1863,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           projectId={storeProjectId || ''}
           propertySlug={propertySlug}
           theme={theme}
-          globalColors={theme?.globalColors}
+          globalColors={theme?.globalColors as Record<string, string> | undefined}
           onNavigateToListings={() => handleLinkNavigation('/listados')}
           onNavigateToProperty={(slug) => handleLinkNavigation(`/listados/${slug}`)}
         />
@@ -1928,7 +1929,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             projectId={storeProjectId || null}
             isPreviewMode={false}
             theme={theme}
-            globalColors={theme?.globalColors}
+            globalColors={theme?.globalColors as Record<string, string> | undefined}
             onNavigate={handleLinkNavigation}
           />
         );

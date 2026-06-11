@@ -32,9 +32,6 @@ export const DEFAULT_FOLDERS: AssetFolder[] = [
     { id: 'generated', name: 'Generadas con IA', icon: 'sparkles', description: 'Imágenes generadas con IA' },
 ];
 
-// Firebase Storage base URL
-const FIREBASE_STORAGE_BASE = 'https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o';
-
 // Quimera app brand assets
 export const BRAND_ASSETS: BrandAsset[] = [
     // Main Logo
@@ -52,7 +49,7 @@ export const BRAND_ASSETS: BrandAsset[] = [
         id: 'preview-changelog',
         name: 'Changelog Preview',
         folder: 'previews',
-        downloadURL: `${FIREBASE_STORAGE_BASE}/quimera%2Fchangelog-preview.png?alt=media`,
+        downloadURL: '/logos/quimera-full-dark.png',
         type: 'image/png',
         size: 120000,
         isSystemAsset: true,
@@ -61,7 +58,7 @@ export const BRAND_ASSETS: BrandAsset[] = [
         id: 'preview-ecommerce',
         name: 'E-commerce Preview',
         folder: 'previews',
-        downloadURL: `${FIREBASE_STORAGE_BASE}/quimera%2Fecommerce-preview.png?alt=media`,
+        downloadURL: '/logos/quimera-full-light.png',
         type: 'image/png',
         size: 150000,
         isSystemAsset: true,

@@ -37,7 +37,7 @@ import {
     serverTimestamp,
     writeBatch,
     Timestamp,
-} from '../../firebase';
+} from '@/utils/compatData';
 import { useAuth } from '../core/AuthContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 
@@ -218,7 +218,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             name: tenantName,
             slug,
             ownerId: authUser.id,
-            ownerUserId: authUser.id, // Required by Firestore rules
+            ownerUserId: authUser.id, // Required by Supabase rules
             type: 'personal',
             subscriptionPlan: 'free',
             settings: {
@@ -246,7 +246,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             userId: authUser.id,
             email: authUser.email,
             displayName: userName,
-            role: 'agency_owner', // Required by Firestore rules for initial creation
+            role: 'agency_owner', // Required by Supabase rules for initial creation
             permissions: DEFAULT_PERMISSIONS.agency_owner,
             status: 'active',
             joinedAt: now,
@@ -657,7 +657,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
 
-        // Log agency activity (non-blocking - may fail if Firestore rules restrict)
+        // Log agency activity (non-blocking - may fail if Supabase rules restrict)
         try {
             await addDoc(collection(db, 'agencyActivity'), {
                 agencyTenantId: currentTenant.id,

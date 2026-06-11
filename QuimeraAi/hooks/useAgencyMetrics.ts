@@ -197,7 +197,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
             // Check for trial end date
             if (client.trialEndsAt) {
-                // Handle both Firestore timestamps and ISO strings
+                // Handle both Supabase timestamps and ISO strings
                 renewalDate = typeof client.trialEndsAt === 'string' 
                     ? new Date(client.trialEndsAt)
                     : new Date((client.trialEndsAt as any).seconds * 1000);

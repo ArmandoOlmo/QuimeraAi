@@ -83,6 +83,8 @@ export interface AppNavigation {
   id: string;
   header: AppNavSection;
   footer: AppFooterConfig;
+  /** Legacy flat links array used by Supabase persistence */
+  links?: AppNavItem[];
   updatedAt: string;
   updatedBy?: string;
 }
@@ -151,6 +153,12 @@ export interface AppLandingConfig {
   testimonials?: AppTestimonialsConfig;
   blog: AppBlogSectionConfig;
   cta?: AppCTASectionConfig;
+  /** Legacy flat fields used by Supabase column mapping */
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroImage?: string;
+  ctaText?: string;
+  ctaLink?: string;
   updatedAt: string;
 }
 
@@ -469,7 +477,7 @@ export const DEFAULT_PRIVACY_POLICY: LegalPage = {
       id: 'data-sharing',
       title: 'Compartición de Datos',
       icon: 'Shield',
-      content: 'No vendemos su información personal. Podemos compartir información con:\n\n- **Google Calendar API:** Para sincronizar sus citas (solo cuando usted autoriza la conexión)\n- **Proveedores de servicios:** Google Cloud, Firebase para infraestructura; Stripe para procesamiento de pagos\n- **Socios de IA:** Google (Gemini) para procesamiento de lenguaje natural\n- **Meta Platforms:** Facebook, Instagram, WhatsApp cuando usted conecta estas integraciones\n- **Autoridades legales:** Cuando sea requerido por ley\n\n**Importante:** Los datos obtenidos de Google Calendar no se comparten con ningún tercero ni se utilizan para fines publicitarios.'
+      content: 'No vendemos su información personal. Podemos compartir información con:\n\n- **Google Calendar API:** Para sincronizar sus citas (solo cuando usted autoriza la conexión)\n- **Proveedores de servicios:** Google Cloud, Supabase para infraestructura; Stripe para procesamiento de pagos\n- **Socios de IA:** Google (Gemini) para procesamiento de lenguaje natural\n- **Meta Platforms:** Facebook, Instagram, WhatsApp cuando usted conecta estas integraciones\n- **Autoridades legales:** Cuando sea requerido por ley\n\n**Importante:** Los datos obtenidos de Google Calendar no se comparten con ningún tercero ni se utilizan para fines publicitarios.'
     },
     {
       id: 'data-retention',
@@ -481,7 +489,7 @@ export const DEFAULT_PRIVACY_POLICY: LegalPage = {
       id: 'security',
       title: 'Seguridad de Datos',
       icon: 'Lock',
-      content: 'Implementamos medidas de seguridad técnicas y organizativas para proteger su información:\n\n- Encriptación SSL/TLS para todas las comunicaciones\n- Almacenamiento seguro con Firebase/Google Cloud\n- Autenticación de dos factores disponible\n- Auditorías de seguridad regulares\n- Acceso restringido a datos personales\n- Tokens de Google OAuth almacenados únicamente en sesión del navegador\n- Comunicaciones con Google Calendar cifradas mediante HTTPS'
+      content: 'Implementamos medidas de seguridad técnicas y organizativas para proteger su información:\n\n- Encriptación SSL/TLS para todas las comunicaciones\n- Almacenamiento seguro con Supabase/Google Cloud\n- Autenticación de dos factores disponible\n- Auditorías de seguridad regulares\n- Acceso restringido a datos personales\n- Tokens de Google OAuth almacenados únicamente en sesión del navegador\n- Comunicaciones con Google Calendar cifradas mediante HTTPS'
     },
     {
       id: 'your-rights',
@@ -577,7 +585,7 @@ export const DEFAULT_COOKIE_POLICY: LegalPage = {
       id: 'types-of-cookies',
       title: 'Tipos de Cookies que Utilizamos',
       icon: 'Database',
-      content: '**Cookies Propias:**\n- Cookies de autenticación (Firebase Auth)\n- Cookies de preferencias de idioma\n- Cookies de configuración del editor\n\n**Cookies de Terceros:**\n- Google Analytics (análisis de uso)\n- Stripe (procesamiento de pagos)\n- Firebase (servicios de backend)'
+      content: '**Cookies Propias:**\n- Cookies de autenticación (Supabase Auth)\n- Cookies de preferencias de idioma\n- Cookies de configuración del editor\n\n**Cookies de Terceros:**\n- Google Analytics (análisis de uso)\n- Stripe (procesamiento de pagos)\n- Supabase (servicios de backend)'
     },
     {
       id: 'manage-cookies',
@@ -743,7 +751,7 @@ export const DEFAULT_PRIVACY_POLICY_EN: LegalPage = {
       id: 'data-sharing',
       title: 'Data Sharing',
       icon: 'Shield',
-      content: 'We do not sell your personal information. We may share information with:\\n\\n- **Google Calendar API:** To sync your appointments (only when you authorize the connection)\\n- **Service providers:** Google Cloud, Firebase for infrastructure; Stripe for payment processing\\n- **AI partners:** Google (Gemini) for natural language processing\\n- **Meta Platforms:** Facebook, Instagram, WhatsApp when you connect these integrations\\n- **Legal authorities:** When required by law\\n\\n**Important:** Data obtained from Google Calendar is not shared with any third party and is not used for advertising purposes.'
+      content: 'We do not sell your personal information. We may share information with:\\n\\n- **Google Calendar API:** To sync your appointments (only when you authorize the connection)\\n- **Service providers:** Google Cloud, Supabase for infrastructure; Stripe for payment processing\\n- **AI partners:** Google (Gemini) for natural language processing\\n- **Meta Platforms:** Facebook, Instagram, WhatsApp when you connect these integrations\\n- **Legal authorities:** When required by law\\n\\n**Important:** Data obtained from Google Calendar is not shared with any third party and is not used for advertising purposes.'
     },
     {
       id: 'data-retention',
@@ -755,7 +763,7 @@ export const DEFAULT_PRIVACY_POLICY_EN: LegalPage = {
       id: 'security',
       title: 'Data Security',
       icon: 'Lock',
-      content: 'We implement technical and organizational security measures to protect your information:\\n\\n- SSL/TLS encryption for all communications\\n- Secure storage with Firebase/Google Cloud\\n- Two-factor authentication available\\n- Regular security audits\\n- Restricted access to personal data\\n- Google OAuth tokens stored only in browser session\\n- Communications with Google Calendar encrypted via HTTPS'
+      content: 'We implement technical and organizational security measures to protect your information:\\n\\n- SSL/TLS encryption for all communications\\n- Secure storage with Supabase/Google Cloud\\n- Two-factor authentication available\\n- Regular security audits\\n- Restricted access to personal data\\n- Google OAuth tokens stored only in browser session\\n- Communications with Google Calendar encrypted via HTTPS'
     },
     {
       id: 'your-rights',
@@ -851,7 +859,7 @@ export const DEFAULT_COOKIE_POLICY_EN: LegalPage = {
       id: 'types-of-cookies',
       title: 'Types of Cookies We Use',
       icon: 'Database',
-      content: '**First-Party Cookies:**\\n- Authentication cookies (Firebase Auth)\\n- Language preference cookies\\n- Editor configuration cookies\\n\\n**Third-Party Cookies:**\\n- Google Analytics (usage analysis)\\n- Stripe (payment processing)\\n- Firebase (backend services)'
+      content: '**First-Party Cookies:**\\n- Authentication cookies (Supabase Auth)\\n- Language preference cookies\\n- Editor configuration cookies\\n\\n**Third-Party Cookies:**\\n- Google Analytics (usage analysis)\\n- Stripe (payment processing)\\n- Supabase (backend services)'
     },
     {
       id: 'manage-cookies',

@@ -1,3 +1,4 @@
+import { getTimestampSeconds, timestampToDate } from '../../../../utils/timestampUtils';
 /**
  * useEcommerceAnalytics Hook
  * Hook para analytics y métricas de ecommerce usando Supabase
@@ -174,7 +175,7 @@ export const useEcommerceAnalytics = (
         orders
             .filter((o) => o.paymentStatus === 'paid')
             .forEach((order) => {
-                const date = new Date(order.createdAt.seconds * 1000);
+                const date = timestampToDate(order.createdAt);
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
                 if (!monthlyData[monthKey]) {
@@ -246,9 +247,9 @@ export const useEcommerceAnalytics = (
         const thirtyDaysAgo = Date.now() / 1000 - 30 * 24 * 60 * 60;
 
         orders
-            .filter((o) => o.paymentStatus === 'paid' && o.createdAt.seconds >= thirtyDaysAgo)
+            .filter((o) => o.paymentStatus === 'paid' && getTimestampSeconds(o.createdAt) >= thirtyDaysAgo)
             .forEach((order) => {
-                const date = new Date(order.createdAt.seconds * 1000);
+                const date = timestampToDate(order.createdAt);
                 const dayKey = date.toISOString().split('T')[0];
 
                 if (!dailyData[dayKey]) {
@@ -321,15 +322,15 @@ export const useEcommerceAnalytics = (
             const currentPeriodOrders = orders.filter(
                 (o) =>
                     o.paymentStatus === 'paid' &&
-                    o.createdAt.seconds >= currentStartTs &&
-                    o.createdAt.seconds <= currentEndTs
+                    getTimestampSeconds(o.createdAt) >= currentStartTs &&
+                    getTimestampSeconds(o.createdAt) <= currentEndTs
             );
 
             const previousPeriodOrders = orders.filter(
                 (o) =>
                     o.paymentStatus === 'paid' &&
-                    o.createdAt.seconds >= previousStartTs &&
-                    o.createdAt.seconds <= previousEndTs
+                    getTimestampSeconds(o.createdAt) >= previousStartTs &&
+                    getTimestampSeconds(o.createdAt) <= previousEndTs
             );
 
             const currentRevenue = currentPeriodOrders.reduce((sum, o) => sum + o.total, 0);

@@ -38,6 +38,8 @@ import {
     DEFAULT_ROLE_CONFIGS,
 } from '../../../../types/storeUsers';
 import { supabase } from '../../../../supabase';
+import type { StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 
 interface StoreUserDetailDrawerProps {
     user: StoreUser | null;
@@ -113,18 +115,18 @@ const StoreUserDetailDrawer: React.FC<StoreUserDetailDrawerProps> = ({
         }
     };
 
-    const formatDate = (timestamp?: { seconds: number }) => {
+    const formatDate = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
         });
     };
 
-    const formatDateTime = (timestamp?: { seconds: number }) => {
+    const formatDateTime = (timestamp?: StoredTimestamp) => {
         if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleString('es-MX', {
+        return timestampToDate(timestamp).toLocaleString('es-MX', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',

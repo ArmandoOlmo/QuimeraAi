@@ -10,6 +10,8 @@ export interface SEOConfig {
     // Basic SEO
     title: string;
     description: string;
+    /** @deprecated Use description */
+    siteDescription?: string;
     keywords: string[];
     author?: string;
     language: string;
@@ -22,6 +24,8 @@ export interface SEOConfig {
     ogTitle?: string;
     ogDescription?: string;
     ogImage?: string;
+    /** Default Open Graph image fallback */
+    defaultOGImage?: string;
     ogImageAlt?: string;
     ogUrl?: string;
     ogSiteName?: string;

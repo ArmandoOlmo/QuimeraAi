@@ -12,8 +12,8 @@ import {
     query,
     where,
     deleteDoc,
-} from 'firebase/firestore';
-import { db } from '../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // Import comprehensive article data
 import { ALL_HELP_ARTICLES } from '../../data/helpArticles';
@@ -52,7 +52,7 @@ export default function SeedArticlesPage() {
 
             let count = 0;
 
-            // Process in batches of 10 to avoid Firestore limits
+            // Process in batches of 10 to avoid Supabase limits
             const batchSize = 10;
             for (let i = 0; i < totalArticles; i += batchSize) {
                 const batch = writeBatch(db);

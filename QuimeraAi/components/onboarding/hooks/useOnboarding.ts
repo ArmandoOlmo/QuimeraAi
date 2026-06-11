@@ -13,6 +13,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { extractHeroImage } from '../../../contexts/project/ProjectContext';
 import { useTranslation } from 'react-i18next';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
+import { analyzeWebsite } from '../../../utils/analyzeWebsiteClient';
 import { generateComponentColorMappings, generateHeroWaveGradientColors } from '../../ui/GlobalStylesControl';
 import { getDefaultGlobalColors } from '../../../data/colorPalettes';
 import { logApiCall } from '../../../services/apiLoggingService';
@@ -201,9 +202,9 @@ export const useOnboarding = () => {
     const { t, i18n } = useTranslation();
     // CRITICAL FIX: addNewProject comes from ProjectContext (single source of truth)
     // to prevent cross-contamination between the dual auto-save systems.
-    // generateImage stays from useEditor because it handles Firebase Storage upload
+    // generateImage stays from useEditor because it handles legacy storage upload
     // and returns permanent URLs (AIContext returns base64 data URLs which can exceed
-    // Firestore's 1MB document size limit).
+    // Supabase's 1MB document size limit).
     const { user } = useAuth();
     const {
         projects,
@@ -229,7 +230,7 @@ export const useOnboarding = () => {
     const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
-    // Templates from Firestore (loaded from EditorContext projects with status 'Template')
+    // Templates from Supabase (loaded from EditorContext projects with status 'Template')
     const templates = projects.filter((p: Project) => p.status === 'Template');
 
     // Ref to track if we've loaded progress
@@ -431,7 +432,7 @@ export const useOnboarding = () => {
         if (!progress) return;
         const newProgress = { ...progress, ...updates };
         setProgress(newProgress);
-        // Throttle Firestore saves during image generation to avoid resource-exhausted errors.
+        // Throttle Supabase saves during image generation to avoid resource-exhausted errors.
         // generationProgress updates fire many times per minute; save max once every 10s.
         if ('generationProgress' in updates && Object.keys(updates).length === 1) {
             const now = Date.now();
@@ -583,17 +584,7 @@ export const useOnboarding = () => {
         setError(null);
 
         try {
-            // Import Supabase
-            const { supabase } = await import('../../../supabase');
-            const response = await supabase.functions.invoke('onboarding-api', {
-                body: { action: 'analyzeWebsite', url }
-            });
-            
-            const data = response.data?.data || response.data;
-
-            if (!data.success || !data.result) {
-                throw new Error('Analysis failed');
-            }
+            const data = await analyzeWebsite(url);
 
             const result = data.result;
 
@@ -1909,7 +1900,7 @@ TEMPLATE #${t.index}: "${t.name}"
             }
 
             // Contact information (address, phone, email, business hours)
-            // Use empty strings instead of undefined to avoid Firestore errors
+            // Use empty strings instead of undefined to avoid Supabase errors
             if (contact) {
                 data.footer.contactInfo = {
                     address: contact.address || '',
@@ -2075,7 +2066,7 @@ TEMPLATE #${t.index}: "${t.name}"
                             resolution: '1K',
                             model: 'gemini-3-pro-image-preview', // Use dedicated image model for reliability
                             personGeneration: 'allow_adult', // Allow people in generated images
-                            skipFirestore: true, // Bulk mode: skip per-image Firestore writes to avoid resource-exhausted
+                            skipSupabase: true, // Bulk mode: skip per-image Supabase writes to avoid resource-exhausted
                         } as any);
 
                         if (imageUrl) {
@@ -2262,7 +2253,7 @@ TEMPLATE #${t.index}: "${t.name}"
                 aiAssistantConfig, // Add the generated AI Assistant configuration
             };
 
-            // Save project with timeout to prevent hanging on Firestore resource-exhausted
+            // Save project with timeout to prevent hanging on Supabase resource-exhausted
             try {
                 await Promise.race([
                     addNewProject(newProject),

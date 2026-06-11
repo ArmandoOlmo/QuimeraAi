@@ -331,7 +331,7 @@ export async function getCurrentPlan(tenantId: string): Promise<SubscriptionPlan
  */
 export async function startTrial(
     tenantId: string,
-    planId: SubscriptionPlanId = 'pro'
+    planId: SubscriptionPlanId = 'individual'
 ): Promise<{ success: boolean; trialEndsAt?: Date; error?: string }> {
     try {
         const existingSub = await getTenantSubscription(tenantId);
@@ -488,7 +488,7 @@ export function comparePlans(
  * Obtiene la feature diferenciadora entre el plan actual y el siguiente
  */
 export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[] {
-    const highlights: Record<SubscriptionPlanId, string[]> = {
+    const highlights: Partial<Record<SubscriptionPlanId, string[]>> = {
         free: [
             'Todas las features incluidas',
             '7 días de prueba gratis',

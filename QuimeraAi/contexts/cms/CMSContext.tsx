@@ -343,7 +343,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    const cleanCategoryForFirestore = (c: CMSCategory) => ({
+    const cleanCategoryForSupabase = (c: CMSCategory) => ({
         id: c.id,
         name: c.name || '',
         slug: c.slug || '',
@@ -358,7 +358,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!user || !activeProjectId) return;
 
         try {
-            const cleanCategory = cleanCategoryForFirestore(category);
+            const cleanCategory = cleanCategoryForSupabase(category);
             let updatedCategoriesList: CMSCategory[];
             const currentCategories = [...categories];
 
@@ -368,7 +368,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 updatedCategoriesList = [...currentCategories, cleanCategory];
             }
 
-            const cleanCategories = updatedCategoriesList.map(cleanCategoryForFirestore);
+            const cleanCategories = updatedCategoriesList.map(cleanCategoryForSupabase);
             setCategories(cleanCategories);
 
             const { error } = await supabase

@@ -98,7 +98,7 @@ const ChatCustomizationSettings: React.FC = () => {
             ...aiAssistantConfig,
             appearance: newAppearanceConfig
         };
-        // Save to AIContext + Firestore
+        // Save to AIContext + Supabase
         saveAiAssistantConfig(fullConfig, activeProject.id);
         // Sync to EditorContext so ChatbotWidget preview updates immediately
         if (editorContext?.saveAiAssistantConfig) {

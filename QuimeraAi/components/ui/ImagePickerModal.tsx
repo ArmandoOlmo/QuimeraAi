@@ -12,7 +12,7 @@ import { useSafeMedia } from '../../contexts/media';
 import type { MediaCategory } from '../../types/media';
 import { BRAND_ASSETS } from '../../constants/brandAssets';
 import { FileRecord } from '../../types';
-import { isLegacyFirebaseStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
+import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 
 interface ImagePickerModalProps {
     isOpen: boolean;
@@ -145,7 +145,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
 
     const handleSelect = () => {
         const imageUrl = normalizeImageUrl(selectedUrl);
-        if (imageUrl && !isLegacyFirebaseStorageUrl(imageUrl)) {
+        if (imageUrl && !isLegacyStorageUrl(imageUrl)) {
             onSelect(imageUrl);
             onClose();
         }
@@ -260,7 +260,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                             {filteredImages.map((img) => {
                                 const imageUrl = normalizeImageUrl(img.downloadURL);
-                                const isLegacyImage = isLegacyFirebaseStorageUrl(imageUrl);
+                                const isLegacyImage = isLegacyStorageUrl(imageUrl);
                                 const isSelected = selectedUrl === imageUrl;
 
                                 return (
@@ -268,7 +268,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
                                         key={img.id}
                                         onClick={() => {
                                             if (isLegacyImage) {
-                                                setUploadError('Esta imagen viene de Firebase Storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
+                                                setUploadError('Esta imagen viene de legacy storage desactivado. Sube la imagen nuevamente a Supabase antes de usarla.');
                                                 return;
                                             }
                                             setSelectedUrl(imageUrl);

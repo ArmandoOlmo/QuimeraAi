@@ -6,7 +6,7 @@ import { useUI } from '../../contexts/core/UIContext';
 import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import ProjectSwitcher from './ProjectSwitcher';
@@ -86,7 +86,17 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }
   };
 
-  // Get plan access functions from the dynamic hook (reads from Firestore)
+  const planNeedsAttention = !isLoadingCredits && !isOwner && (
+    creditsUsage?.requiresPayment ||
+    ['expired', 'past_due', 'unpaid', 'incomplete', 'incomplete_expired', 'cancelled', 'canceled'].includes(creditsUsage?.status || '')
+  );
+
+  const handlePlanAttentionClick = () => {
+    navigate(ROUTES.SETTINGS_SUBSCRIPTION);
+    onClose();
+  };
+
+  // Get plan access functions from the dynamic hook (reads from Supabase)
   const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature, isLoading: isLoadingPlan } = usePlanAccess();
 
   // Get global service availability control
@@ -252,12 +262,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     return [...ordered, ...newItems];
   };
 
-  // Load order from context (synced from Firebase) or use default
+  // Load order from context (synced from Supabase) or use default
   const [navItems, setNavItems] = useState<NavItemData[]>(() => {
     return getOrderedItems(sidebarOrder);
   });
 
-  // Sync navItems when sidebarOrder changes (e.g., loaded from Firebase)
+  // Sync navItems when sidebarOrder changes (e.g., loaded from Supabase)
   useEffect(() => {
     if (sidebarOrder.length > 0) {
       setNavItems(getOrderedItems(sidebarOrder));
@@ -272,7 +282,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }));
   }, [t]);
 
-  // Save order to context (which syncs to localStorage and Firebase)
+  // Save order to context (which syncs to localStorage and Supabase)
   const saveOrder = (items: NavItemData[]) => {
     const orderIds = items.map(item => item.id);
     setSidebarOrder(orderIds);
@@ -858,7 +868,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               {/* REFINED PRO PLAN WIDGET - Collapsible */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
-                : 'max-h-28 opacity-100 mb-3 md:mb-4'
+                : planNeedsAttention
+                  ? 'max-h-44 opacity-100 mb-3 md:mb-4'
+                  : 'max-h-28 opacity-100 mb-3 md:mb-4'
                 }`}>
                 <div className="px-1">
                   <div className="flex justify-between items-end mb-2 px-1">
@@ -895,6 +907,27 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       </span>
                     )}
                   </div>
+
+                  {planNeedsAttention && (
+                    <button
+                      onClick={handlePlanAttentionClick}
+                      className="group mt-2 w-full rounded-lg border border-red-300/20 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 bg-[length:200%_100%] px-2.5 py-2 text-left text-white shadow-sm shadow-red-500/20 transition-all duration-500 hover:bg-right hover:shadow-red-500/30"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-white/25 backdrop-blur-sm transition-colors group-hover:bg-white/35">
+                          <AlertTriangle size={14} className="flex-shrink-0" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[11px] font-bold leading-tight">
+                            {t('dashboard.planExpiredTitle', 'Tu plan está expirado')}
+                          </span>
+                          <span className="block text-[10px] font-semibold leading-tight text-white/85">
+                            {t('dashboard.planExpiredAction', 'Actualizar plan')} →
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
 

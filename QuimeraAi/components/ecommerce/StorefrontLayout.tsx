@@ -6,8 +6,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { doc, getDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import Header from '../Header';
 import { HeaderData, ThemeData, Project } from '../../types';
 import { Loader2 } from 'lucide-react';

@@ -18,6 +18,7 @@ import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
 import { PageSection } from '../../types';
+import { SitePage } from '../../types/project';
 import PageSettings from '../dashboard/PageSettings';
 import { PageTemplateId, PAGE_TEMPLATES } from '../../types/onboarding';
 import GlobalStylesControl from '../ui/GlobalStylesControl';
@@ -338,7 +339,7 @@ const Controls: React.FC = () => {
   };
 
   // ─── Section config ───────────────────────────────────────────────────────
-  const sectionConfig: Record<PageSection, { label: string; icon: React.ElementType; renderer: () => React.ReactNode }> = {
+  const sectionConfig: Partial<Record<PageSection, { label: string; icon: React.ElementType; renderer: () => React.ReactNode }>> = {
     hero: { label: 'Hero Section', icon: Image, renderer: () => renderHeroControls(deps) },
     heroSplit: { label: 'Hero Split', icon: Image, renderer: () => renderHeroSplitControls(deps) },
     heroGallery: { label: 'Hero Gallery', icon: Image, renderer: () => renderHeroGalleryControls(deps) },

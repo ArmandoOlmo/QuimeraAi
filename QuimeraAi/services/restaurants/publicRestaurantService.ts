@@ -5,8 +5,8 @@
  * Writes to `publicRestaurantMenus/{restaurantId}/publicReservations`
  * which can be read by the dashboard or synced via Cloud Function.
  */
-import { addDoc, collection, serverTimestamp } from '../../firebase';
-import { db } from '../../firebase';
+import { addDoc, collection, serverTimestamp } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 export interface PublicReservationData {
   customerName: string;
@@ -20,7 +20,7 @@ export interface PublicReservationData {
 }
 
 /**
- * Creates a public reservation in Firestore.
+ * Creates a public reservation in Supabase.
  * Validates required fields before writing.
  */
 export async function createPublicReservation(

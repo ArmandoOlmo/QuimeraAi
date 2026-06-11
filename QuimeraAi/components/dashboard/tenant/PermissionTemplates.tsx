@@ -6,8 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
-import { db } from '../../../firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { db } from '@/utils/compatData';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from '@/utils/compatData';
 import type { PermissionTemplate } from '../../../types/permissionTemplates';
 import {
     SYSTEM_PERMISSION_TEMPLATES,

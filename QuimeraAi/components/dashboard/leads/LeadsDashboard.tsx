@@ -37,7 +37,7 @@ import AddToAudienceModal from '../email/AddToAudienceModal';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { INDUSTRY_STAGES, INDUSTRY_FIELDS, INDUSTRY_META } from '../../../utils/crmIndustryPresets';
-import { db, doc, updateDoc } from '../../../firebase';
+import { db, doc, updateDoc } from '@/utils/compatData';
 
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
@@ -391,7 +391,7 @@ const LeadsDashboard: React.FC = () => {
         if (!activeProject || !user) return;
         // Mutate in-memory for immediate UI update
         (activeProject as any).crmConfig = newConfig;
-        // Persist to Firestore
+        // Persist to Supabase
         const pathSegments = activeProject.status === 'Template'
             ? ['templates', activeProject.id]
             : ['users', user.id, 'projects', activeProject.id];

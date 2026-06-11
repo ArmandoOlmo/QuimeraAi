@@ -323,7 +323,7 @@ const AppointmentsDashboard: React.FC = () => {
             notes: [...currentNotes, newNote]
         });
 
-        // Note: Don't update local state manually - Firebase onSnapshot will handle it
+        // Note: Don't update local state manually - Supabase onSnapshot will handle it
     }, [selectedAppointment, updateAppointment, user]);
 
     const handleUpdateAiInsights = useCallback(async (insights: any) => {
@@ -334,7 +334,7 @@ const AppointmentsDashboard: React.FC = () => {
         });
 
         setIsGeneratingAiPrep(false);
-        // Note: Don't update local state manually - Firebase onSnapshot will handle it
+        // Note: Don't update local state manually - Supabase onSnapshot will handle it
     }, [selectedAppointment, updateAppointment]);
 
     // Google Calendar state

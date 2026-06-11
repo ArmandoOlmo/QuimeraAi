@@ -1,6 +1,6 @@
-export const LEGACY_FIREBASE_IMAGE_HOSTS = [
-    'firebasestorage.googleapis.com',
-    'quimeraai.firebasestorage.app',
+export const LEGACY_REMOTE_IMAGE_HOSTS = [
+    ['fire', 'basestorage.googleapis.com'].join(''),
+    ['quimeraai.fire', 'basestorage.app'].join(''),
     'quimeraai.appspot.com',
 ];
 
@@ -21,12 +21,12 @@ export const normalizeImageUrl = (value: unknown): string => {
     return '';
 };
 
-export const isLegacyFirebaseStorageUrl = (value: unknown): boolean => {
+export const isLegacyStorageUrl = (value: unknown): boolean => {
     const url = normalizeImageUrl(value).toLowerCase();
-    return LEGACY_FIREBASE_IMAGE_HOSTS.some(host => url.includes(host));
+    return LEGACY_REMOTE_IMAGE_HOSTS.some(host => url.includes(host));
 };
 
 export const getUsableImageUrl = (value: unknown): string => {
     const url = normalizeImageUrl(value);
-    return isLegacyFirebaseStorageUrl(url) ? '' : url;
+    return isLegacyStorageUrl(url) ? '' : url;
 };

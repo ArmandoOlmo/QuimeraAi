@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from '../firebase';
-import { db } from '../firebase';
+import { doc, getDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { RestaurantMenuItem, RestaurantSettings } from '../types/restaurants';
 
 interface PublicRestaurantMenuPayload {
@@ -9,7 +9,7 @@ interface PublicRestaurantMenuPayload {
 }
 
 /**
- * Hook to fetch public restaurant menu data from Firestore.
+ * Hook to fetch public restaurant menu data from Supabase.
  * Reads from the `publicRestaurantMenus/{restaurantId}` collection,
  * which is synced by the restaurant dashboard when menu items are updated.
  */

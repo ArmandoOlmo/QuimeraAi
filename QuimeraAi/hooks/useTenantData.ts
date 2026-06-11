@@ -21,7 +21,7 @@ import {
     limit,
     onSnapshot,
     serverTimestamp,
-} from '../firebase';
+} from '@/utils/compatData';
 import { useTenant } from '../contexts/tenant';
 import { Project, PageData, ThemeData, PageSection, BrandIdentity } from '../types';
 import { Lead, CMSPost } from '../types/business';

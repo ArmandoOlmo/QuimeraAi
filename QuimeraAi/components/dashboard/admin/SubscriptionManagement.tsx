@@ -59,7 +59,7 @@ import {
     doc,
     updateDoc,
     serverTimestamp,
-} from '../../../firebase';
+} from '@/utils/compatData';
 import {
     SUBSCRIPTION_PLANS,
     AI_CREDIT_PACKAGES,
@@ -76,7 +76,7 @@ import {
     savePlan,
     archivePlan,
     restorePlan,
-    initializePlansInFirestore,
+    initializePlansInSupabase,
     syncPlansFromHardcoded,
     getPlanStatistics,
     migrateToNewPlanStructure,
@@ -686,7 +686,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
 
             setRecentTransactions(transactions);
 
-            // Cargar planes desde Firestore
+            // Cargar planes desde Supabase
             const loadedPlans = await getAllPlans();
             setPlans(loadedPlans);
 
@@ -728,9 +728,9 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         const result = await savePlan(plan, user?.id);
         if (result.success) {
             await loadData();
-            // Show warning if Stripe sync failed but Firestore succeeded
+            // Show warning if Stripe sync failed but Supabase succeeded
             if (result.stripeError) {
-                setError(`Plan guardado en Firestore pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
+                setError(`Plan guardado en Supabase pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
             }
         } else {
             throw new Error(result.error);
@@ -758,7 +758,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
                 if (result.success) {
                     await loadData();
                     if (result.stripeError) {
-                        setError(`Plan archivado en Firestore pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
+                        setError(`Plan archivado en Supabase pero no se pudo sincronizar con Stripe: ${result.stripeError}`);
                     }
                 } else {
                     setError(result.error || 'Error al archivar el plan');
@@ -780,12 +780,12 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         setConfirmModal({
             isOpen: true,
             title: '¿Inicializar planes?',
-            message: '¿Inicializar los planes en Firestore? Esto solo funciona si no hay planes existentes.',
+            message: '¿Inicializar los planes en Supabase? Esto solo funciona si no hay planes existentes.',
             variant: 'warning',
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setIsRefreshing(true);
-                const result = await initializePlansInFirestore(user?.id);
+                const result = await initializePlansInSupabase(user?.id);
                 if (result.success) {
                     await loadData();
                 } else {
@@ -800,7 +800,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         setConfirmModal({
             isOpen: true,
             title: '¿Sincronizar planes?',
-            message: '¿Sincronizar los planes del código a Firestore? Esto actualizará los planes existentes y creará nuevos planes como "Hobby".',
+            message: '¿Sincronizar los planes del código a Supabase? Esto actualizará los planes existentes y creará nuevos planes como "Hobby".',
             variant: 'warning',
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -1325,7 +1325,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                             onClick={handleSyncPlansFromCode}
                                             disabled={isRefreshing}
                                             className="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-colors flex items-center gap-2"
-                                            title="Sincronizar planes del código a Firestore"
+                                            title="Sincronizar planes del código a Supabase"
                                         >
                                             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                                             Sync desde Código

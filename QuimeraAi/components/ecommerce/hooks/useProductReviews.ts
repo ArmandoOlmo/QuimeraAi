@@ -19,8 +19,8 @@ import {
     increment,
     DocumentSnapshot,
     QueryDocumentSnapshot,
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { Review, ReviewStats, ReviewStatus } from '../../../types/ecommerce';
 
 // Types

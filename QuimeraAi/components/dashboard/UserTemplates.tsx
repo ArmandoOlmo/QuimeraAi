@@ -180,18 +180,8 @@ const UserTemplates: React.FC = () => {
 
                         {/* Instructions Banner - Dismissible */}
                         {showInstructions && (
-                            <div className="mb-8 relative flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0">
-                                {/* Floating Image - Outside the box, full height */}
-                                <div className="hidden lg:flex relative z-10 flex-shrink-0 -mr-6 items-end">
-                                    <img
-                                        src="https://firebasestorage.googleapis.com/v0/b/quimeraai.firebasestorage.app/o/quimera%2FEP2SSUCSsy2EeQtokqlp3.jpg?alt=media&token=193cba94-d249-4bcb-b521-7c2639eb091c"
-                                        alt="Templates Guide"
-                                        className="w-auto h-full max-h-[280px] object-contain"
-                                    />
-                                </div>
-
-                                {/* Content Box */}
-                                <div className="relative flex-1 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden lg:pl-10">
+                            <div className="mb-8 relative">
+                                <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl overflow-hidden">
                                     {/* Background decoration */}
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 

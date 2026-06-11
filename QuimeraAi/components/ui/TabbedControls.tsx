@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { FileText, Palette, Settings } from 'lucide-react';
 
 interface TabbedControlsProps {
-    contentTab: React.ReactNode;
-    styleTab: React.ReactNode;
+    contentTab?: React.ReactNode;
+    styleTab?: React.ReactNode;
     advancedTab?: React.ReactNode;
+    /** @deprecated Use contentTab */
+    contentControls?: React.ReactNode;
 }
 
 type TabType = 'content' | 'style' | 'advanced';
@@ -13,14 +15,17 @@ type TabType = 'content' | 'style' | 'advanced';
 const TabbedControls: React.FC<TabbedControlsProps> = ({
     contentTab,
     styleTab,
-    advancedTab
+    advancedTab,
+    contentControls,
 }) => {
+    const resolvedContentTab = contentTab ?? contentControls ?? null;
+    const resolvedStyleTab = styleTab ?? null;
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<TabType>('content');
 
     const tabs = [
-        { id: 'content' as TabType, label: t('controls.contentTab'), icon: FileText, content: contentTab },
-        { id: 'style' as TabType, label: t('controls.styleTab'), icon: Palette, content: styleTab },
+        { id: 'content' as TabType, label: t('controls.contentTab'), icon: FileText, content: resolvedContentTab },
+        { id: 'style' as TabType, label: t('controls.styleTab'), icon: Palette, content: resolvedStyleTab },
     ];
 
     if (advancedTab) {

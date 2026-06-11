@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '../../ui/HeaderBackButton';
-import { db, collection, getDocs, query, where, orderBy, limit } from '../../../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { db, collection, getDocs, query, where, orderBy, limit } from '@/utils/compatData';
+import { doc, getDoc } from '@/utils/compatData';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
 import { addCredits } from '../../../services/aiCreditsService';
 

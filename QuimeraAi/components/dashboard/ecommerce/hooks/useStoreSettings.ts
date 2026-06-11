@@ -193,7 +193,7 @@ export const useStoreSettings = (userId: string, storeId?: string) => {
                     if (error) throw error;
                 }
 
-                // Note: The public store sync logic from Firebase might need a Supabase Edge Function to properly sync
+                // Note: The public store sync logic from Supabase might need a Supabase Edge Function to properly sync
                 // to a public store read-replica or just rely on public RLS to `store_settings`.
                 // In Supabase, if the storefront queries `store_settings` with public read access, direct sync is not needed.
                 // Assuming we use public policies or edge functions, we'll log it as migrated.

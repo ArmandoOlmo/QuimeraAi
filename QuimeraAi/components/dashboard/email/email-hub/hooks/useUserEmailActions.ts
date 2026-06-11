@@ -2,15 +2,15 @@
  * useUserEmailActions
  *
  * User-scoped version of useAdminEmailActions.
- * All Firestore operations target users/{userId}/projects/{projectId}/...
+ * All Supabase operations target users/{userId}/projects/{projectId}/...
  */
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
 import {
     db, collection, doc, addDoc, updateDoc, deleteDoc,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
@@ -287,7 +287,7 @@ export function useUserEmailActions(
                     id: docRef.id, ...newCampaign,
                     userId, projectId,
                     createdAt: new Date(), updatedAt: new Date(),
-                } as UserEmailCampaign, ...prev]);
+                } as unknown as UserEmailCampaign, ...prev]);
             }
 
             setShowEmailEditor(false);
@@ -543,7 +543,7 @@ export function useUserEmailActions(
                 id: docRef.id, ...dupData,
                 userId, projectId,
                 createdAt: new Date(), updatedAt: new Date(),
-            } as UserEmailCampaign, ...prev]);
+            } as unknown as UserEmailCampaign, ...prev]);
         } catch (err) {
             console.error('Duplicate error:', err);
         }
@@ -773,7 +773,7 @@ export function useUserEmailActions(
             ...campaignData,
             userId, projectId,
             createdAt: new Date(), updatedAt: new Date(),
-        } as UserEmailCampaign, ...prev]);
+        } as unknown as UserEmailCampaign, ...prev]);
 
         setAutomationStepEmailContext(null);
         return docRef.id;

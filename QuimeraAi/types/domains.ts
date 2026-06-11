@@ -79,10 +79,13 @@ export interface Domain {
     // Agency Landing Page binding (alternative to projectId)
     // When set, the SSR server should serve the agency landing page for this tenant
     agencyLandingTenantId?: string;
+    dnsVerified?: boolean;
+    cloudRunTarget?: string;
+    data?: Record<string, unknown>;
 }
 
 // =============================================================================
-// CUSTOM DOMAIN MAPPING (Global Firestore Collection)
+// CUSTOM DOMAIN MAPPING (Global Supabase Collection)
 // This is stored in /customDomains/{domain} for fast lookups
 // =============================================================================
 export interface CustomDomainMapping {

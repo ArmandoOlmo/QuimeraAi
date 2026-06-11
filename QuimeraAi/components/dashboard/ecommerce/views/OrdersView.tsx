@@ -23,6 +23,8 @@ import { useEditor } from '../../../../contexts/EditorContext';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useOrders } from '../hooks/useOrders';
 import { Order, OrderStatus } from '../../../../types/ecommerce';
+import type { StoredTimestamp } from '../../../../types/ecommerce';
+import { timestampToDate } from '../../../../utils/timestampUtils';
 import OrderDetailDrawer from '../components/OrderDetailDrawer';
 import { useEcommerceContext } from '../EcommerceDashboard';
 
@@ -85,8 +87,8 @@ const OrdersView: React.FC = () => {
         return configs[status];
     };
 
-    const formatDate = (timestamp: { seconds: number }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('es-MX', {
+    const formatDate = (timestamp: StoredTimestamp) => {
+        return timestampToDate(timestamp).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',

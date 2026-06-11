@@ -44,7 +44,7 @@ interface ComponentTreeProps {
     availableComponents: PageSection[];
 }
 
-const sectionIcons: Record<PageSection, React.ElementType> = {
+const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     hero: Image,
     heroSplit: Columns,
     heroGallery: Image,
@@ -347,7 +347,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         })
     );
 
-    const sectionLabels: Record<PageSection, string> = {
+    const sectionLabels: Partial<Record<PageSection, string>> = {
         hero: t('editor.heroSection'),
         heroSplit: t('editor.heroSplitSection'),
         heroGallery: 'Hero Gallery',

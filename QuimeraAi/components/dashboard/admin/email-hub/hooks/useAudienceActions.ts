@@ -10,8 +10,8 @@ import { useAuth } from '../../../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../../../contexts/admin/AdminContext';
 import {
     db, doc, addDoc, updateDoc, deleteDoc, collection,
-} from '../../../../../firebase';
-import { serverTimestamp } from 'firebase/firestore';
+} from '@/utils/compatData';
+import { serverTimestamp } from '@/utils/compatData';
 import type { CrossTenantAudience, ConfirmModalState } from '../types';
 import type { AdminEmailDataReturn } from './useAdminEmailData';
 

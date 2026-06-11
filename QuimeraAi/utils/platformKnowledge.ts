@@ -10,7 +10,7 @@
  * the knowledge it needs to write great content about Quimera.ai.
  */
 
-import { db, doc, getDoc } from '../firebase';
+import { db, doc, getDoc } from '@/utils/compatData';
 
 // =============================================================================
 // STATIC PLATFORM KNOWLEDGE
@@ -365,7 +365,7 @@ export interface DynamicPlatformContext {
 }
 
 /**
- * Fetches current branding and dynamic context from Firestore.
+ * Fetches current branding and dynamic context from Supabase.
  * Falls back to defaults if fetch fails.
  */
 export async function loadDynamicPlatformContext(
@@ -408,7 +408,7 @@ export async function loadDynamicPlatformContext(
 
 /**
  * Builds the complete system instruction for the AI Content Studio.
- * Combines static platform knowledge with dynamic Firestore data.
+ * Combines static platform knowledge with dynamic Supabase data.
  */
 export function buildContentStudioSystemPrompt(
     dynamicContext: DynamicPlatformContext,

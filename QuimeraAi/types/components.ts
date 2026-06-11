@@ -3,7 +3,7 @@
  * Tipos para todos los componentes de la página
  */
 
-import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, ComponentColors } from './ui';
+import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, FontFamily } from './ui';
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
@@ -16,22 +16,18 @@ import { FaqLuminaData } from '../components/FaqLumina';
 import { TestimonialsNeonData } from '../components/TestimonialsNeon';
 import { CtaLuminaData } from '../components/CtaLumina';
 import { PortfolioLuminaData } from '../components/PortfolioLumina';
+import { PricingLuminaData } from '../components/PricingLumina';
 
-// Skeuo Data Interfaces
-import { HeroSkeuoData } from '../components/HeroSkeuo';
-import { FeaturesSkeuoData } from '../components/FeaturesSkeuo';
-import { PricingSkeuoData } from '../components/PricingSkeuo';
-
-// Auralis Data Interfaces
-import { HeroAuralisData } from '../components/hero/HeroAuralis';
-import { FeaturesAuralisData } from '../components/features/FeaturesAuralis';
-import { PricingAuralisData } from '../components/pricing/PricingAuralis';
-import { CtaAuralisData } from '../components/cta/CtaAuralis';
-import { TestimonialsAuralisData } from '../components/testimonials/TestimonialsAuralis';
-import { FaqAuralisData } from '../components/faq/FaqAuralis';
-
-// Neon Data Interfaces
-import { HeroNeonData } from '../components/HeroNeon';
+// Placeholder types for removed Skeuo / Auralis component suites
+type HeroSkeuoData = Record<string, unknown>;
+type FeaturesSkeuoData = Record<string, unknown>;
+type PricingSkeuoData = Record<string, unknown>;
+type HeroAuralisData = Record<string, unknown>;
+type FeaturesAuralisData = Record<string, unknown>;
+type PricingAuralisData = Record<string, unknown>;
+type CtaAuralisData = Record<string, unknown>;
+type TestimonialsAuralisData = Record<string, unknown>;
+type FaqAuralisData = Record<string, unknown>;
 
 
 // =============================================================================
@@ -100,15 +96,18 @@ export type NavbarStyle =
     | 'transparent-gradient-dark' // Gradiente oscuro en bordes hacia color principal
     // NUEVOS: Diseños Especiales
     | 'tabbed'               // Pestañas sobre línea gruesa
-    | 'segmented-pill';      // Barra de píldora con bloque activo
+    | 'segmented-pill'      // Barra de píldora con bloque activo
+    | 'transparent';        // Legacy alias for transparent-blur
+
+export type LocalizedText = string | Record<string, string>;
 
 export interface NavLink {
-    text: string;
+    text: LocalizedText;
     href: string;
     icon?: string;
 }
 
-export interface HeaderData {
+export interface HeaderData extends SectionBackgroundFields {
     style: NavbarStyle;
     layout: NavbarLayout;
     isSticky: boolean;
@@ -118,6 +117,9 @@ export interface HeaderData {
     logoText: string;
     logoImageUrl: string;
     logoWidth: number;
+    logoHeight?: number;
+    segmentedPillSlanted?: boolean;
+    segmentedPillSlantedAngle?: number;
     links: NavLink[];
     hoverStyle: NavLinkHoverStyle;
     ctaText: string;
@@ -135,7 +137,7 @@ export interface HeaderData {
     showCart?: boolean;
     cartItemCount?: number;
     onCartClick?: () => void;
-    colors: { background: string; text: string; accent: string; border?: string; gradientFadeColor?: string; gradientDarkColor?: string; buttonBackground?: string; buttonText?: string };
+    colors: { background: string; text: string; accent: string; border?: string; gradientFadeColor?: string; gradientDarkColor?: string; buttonBackground?: string; buttonText?: string; tabBorderColor?: string; tabActiveColor?: string };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
     linkFontSize?: number;
@@ -145,13 +147,24 @@ export interface HeaderData {
 }
 
 // =============================================================================
+// SHARED SECTION BACKGROUND FIELDS
+// =============================================================================
+export interface SectionBackgroundFields {
+    backgroundImageUrl?: string;
+    backgroundOverlayEnabled?: boolean;
+    backgroundOverlayOpacity?: number;
+    backgroundOverlayColor?: string;
+    backgroundPosition?: string;
+}
+
+// =============================================================================
 // HERO
 // =============================================================================
 export type HeroVariant = 'classic' | 'modern' | 'gradient' | 'fitness' | 'editorial' | 'cinematic' | 'cinematic-gym' | 'minimal' | 'bold' | 'overlap' | 'verticalSplit' | 'glass' | 'stacked';
 
 export type HeroTextLayout = 'left-top' | 'left-bottom' | 'center' | 'center-top' | 'center-bottom' | 'right-top' | 'right-bottom';
 
-export interface HeroData {
+export interface HeroData extends SectionBackgroundFields {
     glassEffect?: boolean;
     heroVariant?: HeroVariant;
     textLayout?: HeroTextLayout;
@@ -224,7 +237,7 @@ export interface HeroData {
 // =============================================================================
 export type ImageSide = 'left' | 'right';
 
-export interface HeroSplitData {
+export interface HeroSplitData extends SectionBackgroundFields {
     glassEffect?: boolean;
     headline: string;
     subheadline: string;
@@ -237,6 +250,7 @@ export interface HeroSplitData {
     colors: {
         textBackground: string; // Background color for text side
         imageBackground: string; // Background color for image side (visible if image doesn't cover)
+        background?: string;
         heading: string;
         text: string;
         buttonBackground: string;
@@ -272,7 +286,7 @@ export interface HeroGallerySlide {
     images?: HeroGalleryImage[];
 }
 
-export interface HeroGalleryData {
+export interface HeroGalleryData extends SectionBackgroundFields {
     glassEffect?: boolean;
     slides: HeroGallerySlide[];
     autoPlaySpeed?: number;
@@ -338,7 +352,7 @@ export interface HeroNovaSlide {
     backgroundColor?: string;
 }
 
-export interface HeroNovaData {
+export interface HeroNovaData extends SectionBackgroundFields {
     glassEffect?: boolean;
     slides: HeroNovaSlide[];
     /** Large centered display text (brand name, etc.) */
@@ -374,7 +388,7 @@ export interface HeroNovaData {
 // =============================================================================
 // HERO LEAD (Split hero with integrated lead form)
 // =============================================================================
-export interface HeroLeadData {
+export interface HeroLeadData extends SectionBackgroundFields {
     // Layout
     formPosition: 'left' | 'right';  // Which side the form is on
 
@@ -457,7 +471,7 @@ export interface HeroNeonSlide {
     secondaryCtaLinkType?: 'manual' | 'product' | 'collection' | 'section' | 'content';
 }
 
-export interface HeroNeonData {
+export interface HeroNeonData extends SectionBackgroundFields {
     // Shared Background
     backgroundImageUrl?: string;
     backgroundOverlayEnabled?: boolean;
@@ -506,7 +520,7 @@ export interface HeroNeonData {
     };
 }
 
-export interface FeaturesNeonData {
+export interface FeaturesNeonData extends SectionBackgroundFields {
     headline?: string;
     subheadline?: string;
     features?: {
@@ -535,7 +549,7 @@ export interface FeaturesNeonData {
     };
 }
 
-export interface CtaNeonData {
+export interface CtaNeonData extends SectionBackgroundFields {
     headline?: string;
     subheadline?: string;
     primaryCta?: string;
@@ -567,7 +581,7 @@ export interface CtaNeonData {
     };
 }
 
-export interface PortfolioNeonData {
+export interface PortfolioNeonData extends SectionBackgroundFields {
     headline?: string;
     subheadline?: string;
     images?: {
@@ -601,7 +615,7 @@ export interface PortfolioNeonData {
     };
 }
 
-export interface PricingNeonData {
+export interface PricingNeonData extends SectionBackgroundFields {
     cardsAlignment?: 'start' | 'center' | 'end';
     headline?: string;
     subheadline?: string;
@@ -641,7 +655,7 @@ export interface PricingNeonData {
     };
 }
 
-export interface FaqNeonData {
+export interface FaqNeonData extends SectionBackgroundFields {
     headline?: string;
     subheadline?: string;
     faqs?: {
@@ -682,7 +696,7 @@ export interface FeatureItem {
     linkText?: string;
 }
 
-export interface FeaturesData {
+export interface FeaturesData extends SectionBackgroundFields {
     glassEffect?: boolean;
     featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release';
     title: string;
@@ -725,7 +739,7 @@ export interface TestimonialItem {
     imageUrl?: string;
 }
 
-export interface TestimonialsData {
+export interface TestimonialsData extends SectionBackgroundFields {
     glassEffect?: boolean;
     testimonialsVariant?: TestimonialsVariant;
     title: string;
@@ -763,7 +777,7 @@ export interface SlideItem {
     caption?: string;
 }
 
-export interface SlideshowData {
+export interface SlideshowData extends SectionBackgroundFields {
     glassEffect?: boolean;
     slideshowVariant?: SlideshowVariant;
     title: string;
@@ -815,7 +829,7 @@ export interface PricingTier {
     featured: boolean;
 }
 
-export interface PricingData {
+export interface PricingData extends SectionBackgroundFields {
     cardsAlignment?: 'start' | 'center' | 'end';
     glassEffect?: boolean;
     pricingVariant?: PricingVariant;
@@ -861,7 +875,7 @@ export interface FaqItem {
     answer: string;
 }
 
-export interface FaqData {
+export interface FaqData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
@@ -890,10 +904,11 @@ export interface FaqData {
 // =============================================================================
 export type LeadsVariant = 'classic' | 'split-gradient' | 'floating-glass' | 'minimal-border';
 
-export interface LeadsData {
+export interface LeadsData extends SectionBackgroundFields {
     glassEffect?: boolean;
     leadsVariant?: LeadsVariant;
     title: string;
+    subtitle?: string;
     description: string;
     namePlaceholder: string;
     emailPlaceholder: string;
@@ -931,7 +946,7 @@ export interface LeadsData {
 // =============================================================================
 // NEWSLETTER
 // =============================================================================
-export interface NewsletterData {
+export interface NewsletterData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -965,7 +980,7 @@ export interface NewsletterData {
 // =============================================================================
 // CTA
 // =============================================================================
-export interface CtaData {
+export interface CtaData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     headline?: string;              // Alias for title
@@ -1010,7 +1025,7 @@ export interface PortfolioItem {
     linkText?: string;
 }
 
-export interface PortfolioData {
+export interface PortfolioData extends SectionBackgroundFields {
     glassEffect?: boolean;
     portfolioVariant?: 'classic' | 'image-overlay';
     title: string;
@@ -1081,7 +1096,7 @@ export interface ServiceItem {
     icon: ServiceIcon;
 }
 
-export interface ServicesData {
+export interface ServicesData extends SectionBackgroundFields {
     glassEffect?: boolean;
     servicesVariant?: 'cards' | 'grid' | 'minimal' | 'neon-glow';
     title: string;
@@ -1115,7 +1130,7 @@ export interface TeamMember {
     linkType?: 'manual' | 'content';
 }
 
-export interface TeamData {
+export interface TeamData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
@@ -1136,7 +1151,7 @@ export interface TeamData {
 // =============================================================================
 // VIDEO
 // =============================================================================
-export interface VideoData {
+export interface VideoData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1166,7 +1181,7 @@ export interface HowItWorksItem {
     icon: HowItWorksIcon;
 }
 
-export interface HowItWorksData {
+export interface HowItWorksData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1189,7 +1204,7 @@ export interface HowItWorksData {
  * The chatbot is now configured through the AI Assistant Dashboard.
  * This interface is kept for backwards compatibility with existing projects.
  */
-export interface ChatbotData {
+export interface ChatbotData extends SectionBackgroundFields {
     glassEffect?: boolean;
     welcomeMessage: string;
     placeholderText: string;
@@ -1266,7 +1281,7 @@ export interface FooterContactInfo {
     businessHours?: FooterBusinessHours;
 }
 
-export interface FooterData {
+export interface FooterData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1293,7 +1308,7 @@ export interface FooterData {
 // =============================================================================
 export type MapVariant = 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night' | 'card-overlay';
 
-export interface MapData {
+export interface MapData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1343,7 +1358,7 @@ export interface MenuItem {
     isSpecial?: boolean;
 }
 
-export interface MenuData {
+export interface MenuData extends SectionBackgroundFields {
     glassEffect?: boolean;
     menuVariant?: MenuVariant;
     title: string;
@@ -1383,7 +1398,7 @@ export interface MenuData {
 // =============================================================================
 // RESTAURANT RESERVATION (Website Section)
 // =============================================================================
-export interface RestaurantReservationData {
+export interface RestaurantReservationData extends SectionBackgroundFields {
     title: string;
     subtitle?: string;
     description?: string;
@@ -1435,7 +1450,7 @@ export interface RestaurantReservationData {
 export type BannerVariant = 'classic' | 'gradient-overlay' | 'side-text' | 'centered';
 export type TextAlignment = 'left' | 'center' | 'right';
 
-export interface BannerData {
+export interface BannerData extends SectionBackgroundFields {
     glassEffect?: boolean;
     bannerVariant?: BannerVariant;
     headline: string;
@@ -1444,6 +1459,7 @@ export interface BannerData {
     buttonUrl?: string;
     showButton?: boolean;
     backgroundImageUrl: string;
+    backgroundPosition?: string;
     overlayEnabled?: boolean; // true by default for backward compat
     backgroundOverlayOpacity: number; // 0-100
     height: number; // en px
@@ -1475,7 +1491,7 @@ export interface TopBarMessage {
     linkType?: 'manual' | 'content';
 }
 
-export interface TopBarData {
+export interface TopBarData extends SectionBackgroundFields {
     glassEffect?: boolean;
     messages: TopBarMessage[];
     scrollEnabled?: boolean;
@@ -1510,7 +1526,7 @@ export interface LogoBannerItem {
     linkType?: 'manual' | 'content';
 }
 
-export interface LogoBannerData {
+export interface LogoBannerData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title?: string;
     subtitle?: string;
@@ -1556,7 +1572,7 @@ export interface StorefrontProductItem {
     rating?: number;
     reviewCount?: number;
     slug?: string;
-    updatedAt?: any; // Firestore Timestamp
+    updatedAt?: any; // Supabase Timestamp
 }
 
 export interface ProductsProps {
@@ -1581,7 +1597,7 @@ export interface ProductsProps {
     storeUrl?: string; // URL to view all products in the store
 }
 
-export interface ProductsData {
+export interface ProductsData extends SectionBackgroundFields {
     glassEffect?: boolean;
     title: string;
     subtitle: string;
@@ -1630,7 +1646,7 @@ export type ComponentVisibilityContext = 'landing' | 'store' | 'both';
 export type FeaturedProductsVariant = 'carousel' | 'grid' | 'showcase';
 export type ProductSourceType = 'manual' | 'category' | 'bestsellers' | 'newest' | 'on-sale';
 
-export interface FeaturedProductsData {
+export interface FeaturedProductsData extends SectionBackgroundFields {
     variant: FeaturedProductsVariant;
     title: string;
     description: string;
@@ -1641,6 +1657,8 @@ export interface FeaturedProductsData {
     productIds?: string[];
     columns: 2 | 3 | 4 | 5;
     productsToShow: number;
+    /** @deprecated Use productsToShow */
+    limitCount?: number;
     // Carousel settings
     autoScroll?: boolean;
     scrollSpeed?: number;
@@ -1676,6 +1694,9 @@ export interface FeaturedProductsData {
         buttonText?: string;
         badgeBackground?: string;
         badgeText?: string;
+        priceColor?: string;
+        salePriceColor?: string;
+        borderColor?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1694,7 +1715,7 @@ export interface CategoryItem {
     slug?: string;
 }
 
-export interface CategoryGridData {
+export interface CategoryGridData extends SectionBackgroundFields {
     variant: CategoryGridVariant;
     title: string;
     description: string;
@@ -1702,6 +1723,8 @@ export interface CategoryGridData {
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
     columns: 2 | 3 | 4 | 5 | 6;
+    showTitle?: boolean;
+    layout?: 'grid' | 'carousel' | 'masonry';
     showProductCount?: boolean;
     imageAspectRatio: AspectRatio;
     imageObjectFit: ObjectFit;
@@ -1723,6 +1746,7 @@ export interface CategoryGridData {
         cardText?: string;
         overlayStart?: string;
         overlayEnd?: string;
+        borderColor?: string;
     };
     cornerGradient?: CornerGradientConfig;
 }
@@ -1734,7 +1758,7 @@ export type ProductHeroVariant = 'featured' | 'collection' | 'sale' | 'new-arriv
 export type ProductHeroLayout = 'split' | 'split-right' | 'full' | 'centered';
 export type ProductHeroImageSize = 'small' | 'medium' | 'large';
 
-export interface ProductHeroData {
+export interface ProductHeroData extends SectionBackgroundFields {
     variant: ProductHeroVariant;
     layout: ProductHeroLayout;
     headline: string;
@@ -1794,10 +1818,16 @@ export interface ProductHeroData {
 // =============================================================================
 export type SaleCountdownVariant = 'banner' | 'floating' | 'inline' | 'fullwidth';
 
-export interface SaleCountdownData {
+export interface SaleCountdownData extends SectionBackgroundFields {
     variant: SaleCountdownVariant;
     title: string;
+    subtitle?: string;
     description: string;
+    style?: string;
+    targetType?: 'product' | 'collection' | 'url' | 'none' | 'custom';
+    targetId?: string;
+    targetUrl?: string;
+    buttonText?: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
     // Countdown settings
@@ -1853,11 +1883,13 @@ export interface TrustBadgeItem {
     description?: string;
 }
 
-export interface TrustBadgesData {
+export interface TrustBadgesData extends SectionBackgroundFields {
     variant: TrustBadgesVariant;
     title?: string;
     badges: TrustBadgeItem[];
     showLabels: boolean;
+    layout?: 'horizontal' | 'grid' | 'vertical';
+    columns?: 2 | 3 | 4 | 5 | 6;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
     iconSize: 'sm' | 'md' | 'lg';
@@ -1873,6 +1905,7 @@ export interface TrustBadgesData {
         text: string;
         iconColor: string;
         borderColor?: string;
+        accent?: string;
     };
 }
 
@@ -1881,11 +1914,13 @@ export interface TrustBadgesData {
 // =============================================================================
 export type RecentlyViewedVariant = 'carousel' | 'grid' | 'compact';
 
-export interface RecentlyViewedData {
+export interface RecentlyViewedData extends SectionBackgroundFields {
     variant: RecentlyViewedVariant;
     title: string;
     description?: string;
+    enabled?: boolean;
     maxProducts: number;
+    maxItems?: number;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
     columns: 2 | 3 | 4 | 5 | 6;
@@ -1937,10 +1972,11 @@ export interface ProductReviewItem {
     helpful?: number;
 }
 
-export interface ProductReviewsData {
+export interface ProductReviewsData extends SectionBackgroundFields {
     variant: ProductReviewsVariant;
     title: string;
     description?: string;
+    enabled?: boolean;
     reviews: ProductReviewItem[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
@@ -1982,7 +2018,7 @@ export interface ProductReviewsData {
 // =============================================================================
 export type CollectionBannerVariant = 'hero' | 'split' | 'minimal' | 'overlay';
 
-export interface CollectionBannerData {
+export interface CollectionBannerData extends SectionBackgroundFields {
     variant: CollectionBannerVariant;
     title: string;
     description: string;
@@ -2015,6 +2051,7 @@ export interface CollectionBannerData {
         overlayColor: string;
         heading: string;
         text: string;
+        accent?: string;
         buttonBackground?: string;
         buttonText?: string;
     };
@@ -2026,10 +2063,11 @@ export interface CollectionBannerData {
 // =============================================================================
 export type ProductBundleVariant = 'horizontal' | 'vertical' | 'compact';
 
-export interface ProductBundleData {
+export interface ProductBundleData extends SectionBackgroundFields {
     variant: ProductBundleVariant;
     title: string;
     description: string;
+    enabled?: boolean;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
     // Bundle products (IDs to fetch from store)
@@ -2087,7 +2125,7 @@ export interface AnnouncementMessage {
     linkType?: AnnouncementLinkType;
 }
 
-export interface AnnouncementBarData {
+export interface AnnouncementBarData extends SectionBackgroundFields {
     variant: AnnouncementBarVariant;
     messages: AnnouncementMessage[];
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
@@ -2122,8 +2160,11 @@ export interface AnnouncementBarData {
 export type StoreSettingsVariant = 'grid' | 'list';
 export type StoreSettingsCardStyle = 'minimal' | 'modern' | 'elegant' | 'overlay';
 
-export interface StoreSettingsData {
+export interface StoreSettingsData extends SectionBackgroundFields {
     variant?: StoreSettingsVariant;
+    storeName?: string;
+    currency?: string;
+    currencySymbol?: string;
     /** Dónde mostrar este componente: 'landing', 'store', o 'both' (default) */
     visibleIn?: ComponentVisibilityContext;
 
@@ -2461,7 +2502,7 @@ export interface SignupFloatSocialLink {
     href: string;
 }
 
-export interface SignupFloatData {
+export interface SignupFloatData extends SectionBackgroundFields {
     glassEffect?: boolean;
     // Content
     headerText: string;
@@ -2537,10 +2578,10 @@ export interface SignupFloatData {
 // =============================================================================
 // SEPARATOR
 // =============================================================================
-export interface SeparatorData {
+export interface SeparatorData extends SectionBackgroundFields {
     height: number; // In pixels
     color?: string; // Legacy fallback
-    colors?: ComponentColors; // Coolors.co support
+    colors?: Record<string, string>; // Coolors.co support
     glassEffect?: boolean;
     backgroundImageUrl?: string;
     backgroundPosition?: string; // Added backgroundPosition support
@@ -2685,4 +2726,7 @@ export interface PageData {
     // ==========================================================================
     /** Floating sign-up overlay component */
     signupFloat?: SignupFloatData;
+
+    /** Allow dynamic/legacy section keys during migration */
+    [key: string]: any;
 }

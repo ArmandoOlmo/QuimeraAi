@@ -1,11 +1,11 @@
 /**
  * Global Chatbot Prompts Utility
  * 
- * This utility fetches and caches global chatbot prompts from Firestore.
+ * This utility fetches and caches global chatbot prompts from Supabase.
  * Used by ChatCore.tsx to apply admin-configured prompts to all project chatbots.
  */
 
-import { db, doc, getDoc } from '../firebase';
+import { db, doc, getDoc } from '@/utils/compatData';
 import { GlobalChatbotPrompts } from '../types';
 
 // Default prompts (fallback when no global config exists)
@@ -130,7 +130,7 @@ export async function getGlobalChatbotPrompts(): Promise<GlobalChatbotPrompts> {
             const data = docSnap.data() as GlobalChatbotPrompts;
             cachedPrompts = { ...DEFAULT_PROMPTS, ...data };
             cacheTimestamp = now;
-            console.log('[GlobalChatbotPrompts] Loaded from Firestore');
+            console.log('[GlobalChatbotPrompts] Loaded from Supabase');
             return cachedPrompts;
         }
     } catch (error) {

@@ -6,7 +6,7 @@
  * - CoreProviders: Always initialized (Auth, Toast, Language, UI, AppContent, Tenant, Plans)
  * - FeatureProviders: Deferred until user is authenticated (Editor, Project, Files, CRM, etc.)
  * 
- * This two-tier approach prevents ~12 unnecessary Firestore queries and 
+ * This two-tier approach prevents ~12 unnecessary Supabase queries and 
  * heavy module loads (EditorContext = 212KB) when the user hasn't logged in yet.
  */
 

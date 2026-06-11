@@ -5,8 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../firebase';
+import { collection, getDocs, query, where, orderBy, doc, getDoc } from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { ShoppingBag, ChevronLeft, Filter, Loader2 } from 'lucide-react';
 
 interface StorefrontCategoryProps {

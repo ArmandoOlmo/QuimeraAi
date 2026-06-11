@@ -44,9 +44,9 @@ function startListening() {
 }
 
 /**
- * Hook that provides the global app logo URL from Firestore.
+ * Hook that provides the global app logo URL from Supabase.
  * Uses a shared real-time listener so all consumers stay in sync
- * with zero redundant Firestore reads.
+ * with zero redundant Supabase reads.
  *
  * Falls back to the default hardcoded Quimera logo if no custom
  * logo has been uploaded via Super Admin > App Information.

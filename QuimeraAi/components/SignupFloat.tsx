@@ -24,7 +24,7 @@ import {
   addDoc,
   updateDoc,
   serverTimestamp,
-} from '../firebase';
+} from '@/utils/compatData';
 
 // Map border radius tokens to CSS values
 const borderRadiusMap: Record<BorderRadiusSize, string> = {
@@ -58,7 +58,7 @@ const socialIconMap: Record<SocialPlatform, React.ElementType> = {
 interface SignupFloatProps extends SignupFloatData {
   /** Project ID for lead capture */
   projectId?: string;
-  /** Owner (user) ID — needed for Firestore writes on published sites */
+  /** Owner (user) ID — needed for Supabase writes on published sites */
   ownerId?: string;
   /** Whether this is preview mode in the editor */
   isPreviewMode?: boolean;
@@ -244,11 +244,11 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
             })
           );
         } else {
-          console.error('[SignupFloat] Missing ownerId or projectId for Firestore CRM writes');
+          console.error('[SignupFloat] Missing ownerId or projectId for Supabase CRM writes');
         }
       }
 
-      // 2. Add to Email Audience (always direct Firestore)
+      // 2. Add to Email Audience (always direct Supabase)
       if (shouldSaveToAudience && targetAudienceId) {
         if (resolvedOwnerId && resolvedProjectId) {
           const audiencePath = `users/${resolvedOwnerId}/projects/${resolvedProjectId}/emailAudiences/${targetAudienceId}`;
@@ -283,7 +283,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
             })()
           );
         } else {
-          console.error('[SignupFloat] Missing ownerId or projectId for Firestore Audience writes');
+          console.error('[SignupFloat] Missing ownerId or projectId for Supabase Audience writes');
         }
       }
 

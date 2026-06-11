@@ -16,7 +16,7 @@ import {
     orderBy,
     where,
     serverTimestamp,
-} from '../firebase';
+} from '@/utils/compatData';
 import {
     AgencyPlan,
     AgencyPlanStats,
@@ -60,14 +60,14 @@ export function clearAgencyPlansCache(tenantId?: string): void {
 // =============================================================================
 
 /**
- * Clean object for Firestore (remove undefined values)
+ * Clean object for Supabase (remove undefined values)
  */
-function cleanForFirestore(obj: Record<string, any>): Record<string, any> {
+function cleanForSupabase(obj: Record<string, any>): Record<string, any> {
     const cleaned: Record<string, any> = {};
     for (const [key, value] of Object.entries(obj)) {
         if (value !== undefined) {
             if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
-                cleaned[key] = cleanForFirestore(value);
+                cleaned[key] = cleanForSupabase(value);
             } else {
                 cleaned[key] = value;
             }
@@ -253,7 +253,7 @@ export async function saveAgencyPlan(
         }
 
         // Clean and save
-        const cleanedData = cleanForFirestore(planData);
+        const cleanedData = cleanForSupabase(planData);
         await setDoc(docRef, cleanedData, { merge: !isNew });
 
         // Clear cache

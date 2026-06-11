@@ -14,8 +14,8 @@ import {
     where,
     serverTimestamp,
     onSnapshot,
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // Types
 export interface StockNotificationRequest {

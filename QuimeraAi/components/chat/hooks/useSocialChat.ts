@@ -7,8 +7,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
     collection, query, where, orderBy, limit, onSnapshot, 
     doc, updateDoc, addDoc, getDocs, Timestamp, writeBatch
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 import { SocialChannel, SocialMessage, SocialConversation } from '../../../types/socialChat';
 
 // =============================================================================
@@ -230,7 +230,7 @@ export const useSocialChat = (projectId: string, userId?: string) => {
             });
 
             // Call Cloud Function to actually send the message
-            // This would be done via Firebase callable function
+            // This would be done via Supabase callable function
             // For now, we'll simulate success
 
             return true;

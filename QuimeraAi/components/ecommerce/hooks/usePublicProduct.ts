@@ -13,8 +13,8 @@ import {
     limit, 
     getDocs,
     orderBy 
-} from 'firebase/firestore';
-import { db } from '../../../firebase';
+} from '@/utils/compatData';
+import { db } from '@/utils/compatData';
 
 // Types
 export interface PublicProductImage {

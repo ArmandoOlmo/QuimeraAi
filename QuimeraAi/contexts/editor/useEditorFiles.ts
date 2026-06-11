@@ -7,7 +7,7 @@ import { FileRecord, LLMPrompt } from '../../types';
 import { supabase } from '../../supabase';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
-import type { User } from '../../firebase'; // keep using User interface
+import type { User } from '@supabase/supabase-js';
 
 interface UseEditorFilesParams {
     user: User | null;

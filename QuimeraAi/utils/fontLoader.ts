@@ -8,7 +8,7 @@ import { FontFamily } from '../types';
 
 /**
  * Maps OLD font keys (removed from catalog) to their closest NEW equivalent.
- * Existing projects in Firestore may have these old keys.
+ * Existing projects in Supabase may have these old keys.
  * Any key that still exists in the new catalog is NOT listed here.
  */
 const legacyFontMigration: Record<string, FontFamily> = {
@@ -103,7 +103,7 @@ export const fontStacks: Record<FontFamily, string> = {
 
 /**
  * Resolves a font family key — migrates old/removed fonts to new equivalents.
- * Use this EVERYWHERE a font key from Firestore/theme is consumed.
+ * Use this EVERYWHERE a font key from Supabase/theme is consumed.
  */
 export const resolveFontFamily = (font: string | undefined): FontFamily => {
     if (!font) return 'inter';

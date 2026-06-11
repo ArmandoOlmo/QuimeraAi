@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { Lead, LeadStatus, LeadActivity, LeadTask, LibraryLead } from '../../types';
 import { supabase } from '../../supabase';
-import type { User } from '../../firebase';
+import type { User } from '@supabase/supabase-js';
 
 interface UseEditorLeadsParams {
     user: User | null;
@@ -128,7 +128,7 @@ export const useEditorLeads = ({ user, activeProjectId }: UseEditorLeadsParams) 
                     createdAt: a.created_at,
                     metadata: a.metadata,
                     performedBy: a.metadata?.performedBy
-                })) as LeadActivity[];
+                })) as unknown as LeadActivity[];
                 setLeadActivities(activitiesData);
             } catch (e) {
                 console.error("[useEditorLeads] Error setting up Lead Activities subscription:", e);
@@ -181,7 +181,7 @@ export const useEditorLeads = ({ user, activeProjectId }: UseEditorLeadsParams) 
                     createdAt: t.created_at,
                     updatedAt: t.updated_at,
                     assignedTo: t.metadata?.assignedTo
-                })) as LeadTask[];
+                })) as unknown as LeadTask[];
                 setLeadTasks(tasksData);
             } catch (e) {
                 console.error("[useEditorLeads] Error setting up Lead Tasks subscription:", e);

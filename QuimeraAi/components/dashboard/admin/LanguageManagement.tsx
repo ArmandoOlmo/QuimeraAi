@@ -50,12 +50,12 @@ const LanguageManagement: React.FC<LanguageManagementProps> = ({ onBack }) => {
 
   // Guardar configuración (Simulado por ahora ya que updateLanguageConfig guarda directamente)
   // En una implementación real, updateLanguageConfig podría ser solo local y este save persistiría
-  // Pero como updateLanguageConfig ya persiste a Firestore, este botón podría ser redundante o para feedback visual
+  // Pero como updateLanguageConfig ya persiste a Supabase, este botón podría ser redundante o para feedback visual
   const handleSave = async () => {
     setSaveStatus('saving');
 
     try {
-      // Como updateLanguageConfig ya guarda en Firestore cada cambio, 
+      // Como updateLanguageConfig ya guarda en Supabase cada cambio, 
       // aquí solo simulamos un "guardado final" o forzamos una actualización si fuera necesario.
       // Para mantener la UX, podemos simplemente mostrar éxito.
       await new Promise(resolve => setTimeout(resolve, 500));
